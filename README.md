@@ -11,7 +11,8 @@ npm install -g @tscircuit/cli
 
 ## Usage
 
-The `tsci` CLI is 
+The `tsci` CLI is interactive by default. You can specify the `-y` or any fully-
+qualified with all required arguments to skip the interactive mode.
 
 ```bash
 # Interactively choose a command and options:
