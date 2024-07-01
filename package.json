@@ -78,7 +78,7 @@
     "@tscircuit/builder": "1.5.128",
     "@tscircuit/layout": "^0.0.20",
     "@tscircuit/react-fiber": "^1.1.29",
-    "@tscircuit/soup-util": "^0.0.1",
+    "@tscircuit/soup-util": "^0.0.11",
     "@tscircuit/manual-edit-events": "^0.0.4",
     "@types/archiver": "^6.0.2",
     "@types/bun": "^1.0.8",
