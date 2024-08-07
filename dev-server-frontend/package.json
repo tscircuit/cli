@@ -30,7 +30,7 @@
     "@radix-ui/react-toggle": "^1.0.3",
     "@radix-ui/react-toggle-group": "^1.0.4",
     "@radix-ui/react-tooltip": "^1.0.7",
-    "@tscircuit/3d-viewer": "^0.0.14",
+    "@tscircuit/3d-viewer": "^0.0.16",
     "@tscircuit/builder": "^1.9.0",
     "@tscircuit/pcb-viewer": "^1.4.4",
     "@tscircuit/schematic-viewer": "^1.2.14",
