@@ -83,7 +83,7 @@
     "@tscircuit/layout": "^0.0.25",
     "@tscircuit/manual-edit-events": "^0.0.4",
     "@tscircuit/react-fiber": "*",
-    "@tscircuit/soup-util": "^0.0.13",
+    "@tscircuit/soup-util": "^0.0.15",
     "@types/archiver": "^6.0.2",
     "@types/bun": "^1.0.8",
     "@types/chokidar": "^2.1.3",
