@@ -67,6 +67,14 @@ export const getProgram = (ctx: AppContext) => {
     .option("-t, --type <type>", "Output file type (png or svg)")
     .action((args) => CMDFN.render(ctx, args))
 
+  const genCmd = cmd.command("gen").description("Generate components")
+  genCmd
+    .command("jlcpcb <jlcpcbPartNumber>")
+    .description("Generate JLCPCB-specific files")
+    .action((partNumber, args) =>
+      CMDFN.genJlcpcbComponent(ctx, { partNumber, ...args }),
+    )
+
   const authCmd = cmd.command("auth").description("Login/logout")
   authCmd
     .command("login")
