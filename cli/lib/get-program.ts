@@ -304,6 +304,17 @@ export const getProgram = (ctx: AppContext) => {
     .option("--outputfile <outputfile>", "Output file name", "output.kicad_pcb")
     .action((args) => CMDFN.exportKicadPcb(ctx, args))
 
+  exportCmd
+    .command("pnp_csv")
+    .description("Export Plug n Play CSV file from an example file")
+    .option("--input <input>", "Input example file")
+    .option(
+      "--export <export_name>",
+      "Name of export to soupify, if not specified, soupify the default/only export",
+    )
+    .option("--outputfile <outputfile>", "Output file name", "pnp.csv")
+    .action((args) => CMDFN.exportPnpCsv(ctx, args))
+
   cmd
     .command("soupify")
     .description("Convert an example file to tscircuit soup")
