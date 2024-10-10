@@ -110,7 +110,7 @@
     "@tscircuit/manual-edit-events": "^0.0.4",
     "@tscircuit/pcb-viewer": "^1.10.8",
     "@tscircuit/schematic-viewer": "^1.2.14",
-    "@tscircuit/soup-util": "^0.0.36",
+    "@tscircuit/soup-util": "^0.0.38",
     "@tscircuit/table-viewer": "0.0.8",
     "@types/archiver": "^6.0.2",
     "@types/bun": "^1.0.8",
