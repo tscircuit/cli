@@ -40,7 +40,7 @@
     "@edge-runtime/primitives": "^4.1.0",
     "@hono/node-server": "^1.8.2",
     "@tscircuit/core": "^0.0.121",
-    "@tscircuit/props": "^0.0.73",
+    "@tscircuit/props": "^0.0.74",
     "@tscircuit/soup": "^0.0.73",
     "archiver": "^7.0.1",
     "axios": "^1.6.7",
