@@ -39,7 +39,7 @@
   "dependencies": {
     "@edge-runtime/primitives": "^4.1.0",
     "@hono/node-server": "^1.8.2",
-    "@tscircuit/core": "^0.0.124",
+    "@tscircuit/core": "^0.0.126",
     "@tscircuit/props": "^0.0.75",
     "@tscircuit/soup": "^0.0.73",
     "archiver": "^7.0.1",
