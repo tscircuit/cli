@@ -1,5 +1,5 @@
-import { Command } from "commander"
 import * as CMDFN from "cli/lib/cmd-fns"
+import { Command } from "commander"
 import type { AppContext } from "./util/app-context"
 
 export const getProgram = (ctx: AppContext) => {
@@ -322,6 +322,17 @@ export const getProgram = (ctx: AppContext) => {
     )
     .option("--outputfile <outputfile>", "Output file name", "pnp.csv")
     .action((args) => CMDFN.exportPnpCsv(ctx, args))
+
+  exportCmd
+    .command("bom_csv")
+    .description("Export BOM CSV file from an example file")
+    .option("--input <input>", "Input example file")
+    .option(
+      "--export <export_name>",
+      "Name of export to soupify, if not specified, soupify the default/only export",
+    )
+    .option("--outputfile <outputfile>", "Output file name", "bom.csv")
+    .action((args) => CMDFN.exportBomCsv(ctx, args))
 
   cmd
     .command("soupify")
