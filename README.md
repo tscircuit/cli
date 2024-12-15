@@ -19,6 +19,14 @@ snippets dev ./path/to/file.tsx
 npm install -g @tscircuit/snippets-cli
 ```
 
+## Development
+
+This command will open the `snippets.tsx` file for editing.
+
+```bash
+bun run dev
+```
+
 ## How it Works
 
 When you run `snippets dev`, we start a local
