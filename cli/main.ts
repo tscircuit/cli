@@ -26,21 +26,18 @@ program
     // Start the server
     await createServer(port)
 
-    await fetch(
-      `http://localhost:${port}/api/files/upsert`,
-      {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          file_path: "entrypoint.tsx",
-          text_content: `
+    await fetch(`http://localhost:${port}/api/files/upsert`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        file_path: "entrypoint.tsx",
+        text_content: `
 import MyCircuit from "./snippet.tsx"
 
 circuit.add(<MyCircuit />)
 `,
-        }),
-      },
-    )
+      }),
+    })
 
     // Function to update file content
     const updateFile = async (filePath: string) => {

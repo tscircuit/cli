@@ -1,7 +1,7 @@
 import * as http from "http"
 import { getNodeHandler } from "winterspec/adapters/node"
 // @ts-ignore
-import winterspecBundle from "@tscircuit/file-server/dist/bundle"
+import winterspecBundle from "@tscircuit/file-server/dist/bundle.js"
 import { getIndex } from "../site/getIndex"
 
 export const createServer = async (port: number = 3000) => {

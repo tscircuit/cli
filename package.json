@@ -2,8 +2,12 @@
   "name": "@tscircuit/snippets-cli",
   "main": "dist/lib/index.js",
   "type": "module",
+  "bin": {
+    "snippets": "./dist/cli/main.js"
+  },
   "scripts": {
     "dev": "bun run ./cli/main.ts dev ./example-dir/snippet.tsx",
+    "build": "tsup-node cli/main.ts lib/index.ts --format esm --dts --clean",
     "format": "biome format --write .",
     "format:check": "biome format ."
   },
