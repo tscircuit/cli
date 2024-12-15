@@ -23,3 +23,8 @@ npm install -g @tscircuit/snippets-cli
 
 When you run `snippets dev`, we start a local
 server that uses the [@tscircuit/file-server](https://github.com/tscircuit/file-server) and [@tscircuit/runframe](https://github.com/tscircuit/runframe) (on the browser)
+
+We use commanderjs to define the CLI commands inside
+of `cli/main.ts`
+
+Utility functions are defined in `lib/*`
