@@ -20,10 +20,27 @@ program
   .option("-p, --port <number>", "Port to run server on", "3000")
   .action(async (file: string, options: { port: string }) => {
     const absolutePath = path.resolve(file)
+    const fileDir = path.dirname(absolutePath)
     const port = parseInt(options.port)
 
     // Start the server
     await createServer(port)
+
+    await fetch(
+      `http://localhost:${port}/api/files/upsert`,
+      {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          file_path: "entrypoint.tsx",
+          text_content: `
+import MyCircuit from "./snippet.tsx"
+
+circuit.add(<MyCircuit />)
+`,
+        }),
+      },
+    )
 
     // Function to update file content
     const updateFile = async (filePath: string) => {
@@ -35,7 +52,7 @@ program
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({
-              file_path: path.relative(process.cwd(), filePath),
+              file_path: path.relative(fileDir, filePath),
               text_content: content,
             }),
           },

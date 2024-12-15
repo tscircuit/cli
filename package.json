@@ -3,14 +3,16 @@
   "main": "dist/lib/index.js",
   "type": "module",
   "scripts": {
-    "dev": "bun run cli/main.ts dev ./example-dir/snippet.tsx",
+    "dev": "bun run ./cli/main.ts dev ./example-dir/snippet.tsx",
     "format": "biome format --write .",
     "format:check": "biome format ."
   },
   "devDependencies": {
     "@biomejs/biome": "^1.9.4",
+    "@tscircuit/core": "^0.0.229",
     "@types/bun": "latest",
     "@types/configstore": "^6.0.2",
+    "@types/react": "^19.0.1",
     "tsup": "^8.3.5"
   },
   "peerDependencies": {

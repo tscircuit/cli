@@ -1,5 +1,6 @@
 import * as http from "http"
 import { getNodeHandler } from "winterspec/adapters/node"
+// @ts-ignore
 import winterspecBundle from "@tscircuit/file-server/dist/bundle"
 import { getIndex } from "../site/getIndex"
 
@@ -8,7 +9,6 @@ export const createServer = async (port: number = 3000) => {
 
   const server = http.createServer(async (req, res) => {
     if (req.url === "/") {
-      console.log("getting index")
       const html = await getIndex()
       res.writeHead(200, { "Content-Type": "text/html" })
       res.end(html)
