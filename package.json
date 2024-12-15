@@ -2,7 +2,13 @@
   "name": "@tscircuit/snippets-cli",
   "main": "dist/lib/index.js",
   "type": "module",
+  "scripts": {
+    "dev": "bun run cli/main.ts dev ./example-dir/snippet.tsx",
+    "format": "biome format --write .",
+    "format:check": "biome format ."
+  },
   "devDependencies": {
+    "@biomejs/biome": "^1.9.4",
     "@types/bun": "latest",
     "@types/configstore": "^6.0.2",
     "tsup": "^8.3.5"
@@ -12,6 +18,7 @@
   },
   "dependencies": {
     "@tscircuit/file-server": "^0.0.5",
+    "chokidar": "^4.0.1",
     "commander": "^12.1.0",
     "configstore": "^7.0.0"
   }
