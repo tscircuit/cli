@@ -1,9 +1,14 @@
 {
   "name": "@tscircuit/snippets-cli",
-  "main": "dist/lib/index.js",
+  "main": "dist/main.js",
   "type": "module",
+  "version": "0.0.1",
+  "bin": {
+    "snippets": "./dist/main.js"
+  },
   "scripts": {
     "dev": "bun run ./cli/main.ts dev ./example-dir/snippet.tsx",
+    "build": "tsup-node cli/main.ts --format esm --sourcemap inline",
     "format": "biome format --write .",
     "format:check": "biome format ."
   },
