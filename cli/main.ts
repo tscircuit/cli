@@ -1,10 +1,11 @@
 #!/usr/bin/env node
 import { Command } from "commander"
-import * as path from "path"
+import * as path from "node:path"
 import * as chokidar from "chokidar"
-import * as fs from "fs"
+import * as fs from "node:fs"
 import { createServer } from "../lib/server/createServer"
 import { getLocalFileDependencies } from "../lib/dependency-analysis/getLocalFileDependencies"
+import { installTypes } from "./installTypes"
 
 const program = new Command()
 
@@ -23,24 +24,29 @@ program
     const fileDir = path.dirname(absolutePath)
     const port = parseInt(options.port)
 
+    try {
+      console.log("Installing types for imported snippets...")
+      await installTypes(absolutePath)
+      console.log("Types installed successfully")
+    } catch (error) {
+      console.warn("Failed to install types:", error)
+    }
+
     // Start the server
     await createServer(port)
 
-    await fetch(
-      `http://localhost:${port}/api/files/upsert`,
-      {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          file_path: "entrypoint.tsx",
-          text_content: `
+    await fetch(`http://localhost:${port}/api/files/upsert`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        file_path: "entrypoint.tsx",
+        text_content: `
 import MyCircuit from "./snippet.tsx"
 
 circuit.add(<MyCircuit />)
 `,
-        }),
-      },
-    )
+      }),
+    })
 
     // Function to update file content
     const updateFile = async (filePath: string) => {
@@ -66,7 +72,7 @@ circuit.add(<MyCircuit />)
     }
 
     // Get initial dependencies
-    let dependencies = new Set([absolutePath])
+    const dependencies = new Set([absolutePath])
     try {
       const deps = getLocalFileDependencies(absolutePath)
       deps.forEach((dep) => dependencies.add(dep))
