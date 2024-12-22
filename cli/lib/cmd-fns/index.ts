@@ -44,3 +44,4 @@ export { devServerFulfillExportRequests } from "./dev-server-fulfill-export-requ
 export { lintCmd as lint } from "./lint"
 export { renderCmd as render } from "./render"
 export { genJlcpcbComponent } from "./gen-jlcpcb-component"
+export { exportBomCsv } from "./export-bom-csv"
