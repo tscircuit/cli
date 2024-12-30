@@ -10,8 +10,9 @@ export const getIndex = async () => {
       <script>
       globalThis.process = { env: { NODE_ENV: "production" } }
       </script>
-      <script src="https://cdn.jsdelivr.net/npm/@tscircuit/runframe@${pkg.dependencies["@tscircuit/runframe"].replace(/^[^0-9]+/, "")}/dist/standalone.min.js"></script>
+      <script src="/standalone.min.js"></script>
     </body>
   </html>`
 }
-// <script src="http://localhost:8000/standalone.umd.cjs"></script>
+
+// <script src="https://cdn.jsdelivr.net/npm/@tscircuit/runframe@${pkg.dependencies["@tscircuit/runframe"].replace(/^[^0-9]+/, "")}/dist/standalone.min.js"></script>
