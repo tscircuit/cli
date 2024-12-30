@@ -1,3 +1,5 @@
+import pkg from "../../package.json"
+
 export const getIndex = async () => {
   return `<html>
     <head>
@@ -8,7 +10,7 @@ export const getIndex = async () => {
       <script>
       globalThis.process = { env: { NODE_ENV: "production" } }
       </script>
-      <script src="https://cdn.jsdelivr.net/npm/@tscircuit/runframe@0.0.10/dist/standalone.min.js"></script>
+      <script src="https://cdn.jsdelivr.net/npm/@tscircuit/runframe@${pkg.dependencies["@tscircuit/runframe"].replace(/^[^0-9]+/, "")}/dist/standalone.min.js"></script>
     </body>
   </html>`
 }

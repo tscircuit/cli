@@ -7,7 +7,8 @@
     "snippets": "./dist/main.js"
   },
   "scripts": {
-    "dev": "bun run ./cli/main.ts dev ./example-dir/snippet.tsx",
+    "start": "bun run dev",
+    "dev": "bun run --hot ./cli/main.ts dev ./example-dir/snippet.tsx",
     "build": "tsup-node cli/main.ts --format esm --sourcemap inline",
     "format": "biome format --write .",
     "format:check": "biome format ."
@@ -25,6 +26,7 @@
   },
   "dependencies": {
     "@tscircuit/file-server": "^0.0.5",
+    "@tscircuit/runframe": "^0.0.35",
     "chokidar": "^4.0.1",
     "commander": "^12.1.0",
     "configstore": "^7.0.0"
