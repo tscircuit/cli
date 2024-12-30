@@ -6,6 +6,7 @@ import * as fs from "node:fs"
 import { createServer } from "../lib/server/createServer"
 import { getLocalFileDependencies } from "../lib/dependency-analysis/getLocalFileDependencies"
 import { installTypes } from "./installTypes"
+import { EventsWatcher } from "../lib/server/EventsWatcher"
 
 const program = new Command()
 
@@ -34,6 +35,8 @@ program
 
     // Start the server
     await createServer(port)
+
+    const eventsWatcher = new EventsWatcher(`http://localhost:${port}`)
 
     await fetch(`http://localhost:${port}/api/files/upsert`, {
       method: "POST",
