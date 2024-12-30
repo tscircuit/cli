@@ -15,7 +15,7 @@
   },
   "devDependencies": {
     "@biomejs/biome": "^1.9.4",
-    "@tscircuit/core": "^0.0.229",
+    "@tscircuit/core": "^0.0.247",
     "@types/bun": "latest",
     "@types/configstore": "^6.0.2",
     "@types/react": "^19.0.1",

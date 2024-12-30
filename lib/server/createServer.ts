@@ -45,7 +45,6 @@ export const createServer = async (port: number = 3000) => {
 
     if (url.pathname.startsWith("/api/")) {
       req.url = req.url!.replace("/api/", "/")
-      console.log("passing to file server handler", url.pathname)
       fileServerHandler(req, res)
       return
     }
