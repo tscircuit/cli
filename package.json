@@ -15,7 +15,7 @@
   },
   "devDependencies": {
     "@biomejs/biome": "^1.9.4",
-    "@tscircuit/core": "^0.0.247",
+    "@tscircuit/core": "^0.0.249",
     "@types/bun": "latest",
     "@types/configstore": "^6.0.2",
     "@types/react": "^19.0.1",
@@ -26,7 +26,7 @@
   },
   "dependencies": {
     "@tscircuit/file-server": "^0.0.11",
-    "@tscircuit/runframe": "^0.0.39",
+    "@tscircuit/runframe": "^0.0.47",
     "chokidar": "^4.0.1",
     "commander": "^12.1.0",
     "configstore": "^7.0.0"
