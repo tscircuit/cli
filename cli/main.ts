@@ -6,6 +6,7 @@ import * as fs from "node:fs"
 import { createServer } from "../lib/server/createServer"
 import { getLocalFileDependencies } from "../lib/dependency-analysis/getLocalFileDependencies"
 import { installTypes } from "./installTypes"
+import { EventsWatcher } from "../lib/server/EventsWatcher"
 
 const program = new Command()
 
@@ -34,6 +35,9 @@ program
 
     // Start the server
     await createServer(port)
+
+    const eventsWatcher = new EventsWatcher(`http://localhost:${port}`)
+    eventsWatcher.start()
 
     await fetch(`http://localhost:${port}/api/files/upsert`, {
       method: "POST",
@@ -81,19 +85,32 @@ circuit.add(<MyCircuit />)
     }
 
     // Watch the main file and its dependencies
-    const watcher = chokidar.watch(Array.from(dependencies), {
+    const filesystemWatcher = chokidar.watch(Array.from(dependencies), {
       persistent: true,
       ignoreInitial: false,
     })
 
-    watcher.on("change", async (filePath) => {
+    filesystemWatcher.on("change", async (filePath) => {
       console.log(`File ${filePath} changed`)
       await updateFile(filePath)
     })
 
-    watcher.on("add", async (filePath) => {
+    filesystemWatcher.on("add", async (filePath) => {
       console.log(`File ${filePath} added`)
       await updateFile(filePath)
+    })
+
+    eventsWatcher.on("FILE_UPDATED", async (ev) => {
+      if (ev.file_path === "manual-edits.json") {
+        console.log("Manual edits updated, updating on filesystem...")
+        const { file } = await fetch(
+          `http://localhost:${port}/api/files/get?file_path=manual-edits.json`,
+        ).then((r) => r.json())
+        fs.writeFileSync(
+          path.join(fileDir, "manual-edits.json"),
+          file.text_content,
+        )
+      }
     })
 
     console.log(`Watching ${file} and its dependencies...`)

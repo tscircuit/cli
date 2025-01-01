@@ -7,14 +7,15 @@
     "snippets": "./dist/main.js"
   },
   "scripts": {
-    "dev": "bun run ./cli/main.ts dev ./example-dir/snippet.tsx",
+    "start": "bun run dev",
+    "dev": "bun run --hot ./cli/main.ts dev ./example-dir/snippet.tsx",
     "build": "tsup-node cli/main.ts --format esm --sourcemap inline",
     "format": "biome format --write .",
     "format:check": "biome format ."
   },
   "devDependencies": {
     "@biomejs/biome": "^1.9.4",
-    "@tscircuit/core": "^0.0.229",
+    "@tscircuit/core": "^0.0.249",
     "@types/bun": "latest",
     "@types/configstore": "^6.0.2",
     "@types/react": "^19.0.1",
@@ -24,7 +25,8 @@
     "typescript": "^5.0.0"
   },
   "dependencies": {
-    "@tscircuit/file-server": "^0.0.5",
+    "@tscircuit/file-server": "^0.0.11",
+    "@tscircuit/runframe": "^0.0.47",
     "chokidar": "^4.0.1",
     "commander": "^12.1.0",
     "configstore": "^7.0.0"

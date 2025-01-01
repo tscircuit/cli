@@ -36,3 +36,16 @@ We use commanderjs to define the CLI commands inside
 of `cli/main.ts`
 
 Utility functions are defined in `lib/*`
+
+## Development
+
+### Dynamically Loading Runframe
+
+Use the `RUNFRAME_STANDALONE_FILE_PATH` environment variable to point to the runframe standalone file. You will still need to run `bun run build` inside
+runframe each time you'd like to load a new version of runframe.
+
+```bash
+export RUNFRAME_STANDALONE_FILE_PATH=../runframe/dist/standalone.min.js
+cd ../runframe && bun run build
+cd ../snippets-cli && bun run dev
+```
