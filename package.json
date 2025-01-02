@@ -29,6 +29,7 @@
     "@tscircuit/runframe": "^0.0.47",
     "chokidar": "^4.0.1",
     "commander": "^12.1.0",
-    "configstore": "^7.0.0"
+    "configstore": "^7.0.0",
+    "cosmiconfig": "^9.0.0"
   }
 }
