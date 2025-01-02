@@ -2,7 +2,7 @@
   "name": "@tscircuit/snippets-cli",
   "main": "dist/main.js",
   "type": "module",
-  "version": "0.0.4",
+  "version": "0.0.5",
   "bin": {
     "snippets": "./dist/main.js"
   },
