@@ -1,9 +1,9 @@
-import * as http from "http"
-import * as fs from "fs"
-import * as path from "path"
+import * as http from "node:http"
+import * as fs from "node:fs"
+import * as path from "node:path"
 import { getNodeHandler } from "winterspec/adapters/node"
 // @ts-ignore
-import winterspecBundle from "@tscircuit/file-server/dist/bundle"
+import winterspecBundle from "@tscircuit/file-server/dist/bundle.js"
 import { getIndex } from "../site/getIndex"
 
 export const createServer = async (port: number = 3000) => {
