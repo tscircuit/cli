@@ -1,6 +1,6 @@
-# @tscircuit/snippets-cli
+# tscircuit command line interface (CLI)
 
-A CLI for developing, managing and publishing snippets on [tscircuit.com](https://tscircuit.com).
+A CLI for developing, managing and publishing tscircuit code (the "npm for tscircuit")
 
 ## Usage
 
@@ -8,7 +8,10 @@ A CLI for developing, managing and publishing snippets on [tscircuit.com](https:
 # Start a local server that watches for changes in
 # this file or it's dependencies and updates the
 # browser preview
-snippets dev ./path/to/file.tsx
+tsci dev ./path/to/file.tsx
+
+# Clone a snippet from the registry
+tsci clone author/snippetName
 ```
 
 > Note: The snippets CLI uses the same configuration files as the [@tscircuit/cli](https://github.com/tscircuit/cli), so you may need to also install `npm install -g @tscircuit/cli` and run `tsci login` to authenticate!
@@ -16,7 +19,7 @@ snippets dev ./path/to/file.tsx
 ## Installation
 
 ```bash
-npm install -g @tscircuit/snippets-cli
+npm install -g @tscircuit/cli
 ```
 
 ## Development
@@ -47,5 +50,5 @@ runframe each time you'd like to load a new version of runframe.
 ```bash
 export RUNFRAME_STANDALONE_FILE_PATH=../runframe/dist/standalone.min.js
 cd ../runframe && bun run build
-cd ../snippets-cli && bun run dev
+cd ../cli && bun run dev
 ```
