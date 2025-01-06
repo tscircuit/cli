@@ -6,6 +6,7 @@ import { registerAuthLogout } from "./auth/logout/register"
 import { registerAuth } from "./auth/register"
 import { registerConfig } from "./config/register"
 import { registerConfigPrint } from "./config/print/register"
+import { registerClone } from "./clone/register"
 import { perfectCli } from "perfect-cli"
 
 const program = new Command()
@@ -16,6 +17,7 @@ program
   .version("1.0.0")
 
 registerDev(program)
+registerClone(program)
 
 registerAuth(program)
 registerAuthLogin(program)
