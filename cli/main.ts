@@ -8,13 +8,14 @@ import { registerConfig } from "./config/register"
 import { registerConfigPrint } from "./config/print/register"
 import { registerClone } from "./clone/register"
 import { perfectCli } from "perfect-cli"
+import pkg from "../package.json"
 
 const program = new Command()
 
 program
   .name("tsci")
   .description("CLI for developing tscircuit snippets")
-  .version("1.0.0")
+  .version(pkg.version)
 
 registerDev(program)
 registerClone(program)
