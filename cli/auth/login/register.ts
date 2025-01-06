@@ -2,7 +2,7 @@ import type { Command } from "commander"
 import { cliConfig } from "lib/cli-config"
 import delay from "delay"
 import { getKy } from "lib/registry-api/get-ky"
-import { EndpointResponse } from "lib/registry-api/endpoint-types"
+import type { EndpointResponse } from "lib/registry-api/endpoint-types"
 
 export const registerAuthLogin = (program: Command) => {
   program.commands
