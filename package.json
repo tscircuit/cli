@@ -2,7 +2,7 @@
   "name": "@tscircuit/cli",
   "main": "dist/main.js",
   "type": "module",
-  "version": "0.1.2",
+  "version": "0.1.3",
   "bin": {
     "tsci": "./dist/main.js"
   },
