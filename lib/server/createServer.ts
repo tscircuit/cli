@@ -2,6 +2,8 @@ import * as http from "node:http"
 import * as fs from "node:fs"
 import * as path from "node:path"
 import { getNodeHandler } from "winterspec/adapters/node"
+import pkg from "../../package.json"
+
 // @ts-ignore
 import winterspecBundle from "@tscircuit/file-server/dist/bundle.js"
 import { getIndex } from "../site/getIndex"
@@ -30,10 +32,13 @@ export const createServer = async (port: number = 3000) => {
         return
       } catch (error) {
         console.error("Error serving standalone.min.js:", error)
-        res.writeHead(404)
-        res.end("File not found")
-        return
       }
+
+      res.writeHead(302, {
+        Location: `https://cdn.jsdelivr.net/npm/@tscircuit/runframe@${pkg.dependencies["@tscircuit/runframe"].replace(/^[^0-9]+/, "")}/dist/standalone.min.js`,
+      })
+      res.end()
+      return
     }
 
     if (url.pathname === "/") {
