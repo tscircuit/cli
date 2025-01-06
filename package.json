@@ -1,17 +1,18 @@
 {
-  "name": "@tscircuit/snippets-cli",
+  "name": "@tscircuit/cli",
   "main": "dist/main.js",
   "type": "module",
-  "version": "0.0.5",
+  "version": "0.1.0",
   "bin": {
-    "snippets": "./dist/main.js"
+    "tsci": "./dist/main.js"
   },
   "scripts": {
     "start": "bun run dev",
-    "dev": "bun run --hot ./cli/main.ts dev ./example-dir/snippet.tsx",
+    "dev": "bun --hot ./cli/main.ts dev ./example-dir/snippet.tsx",
     "build": "tsup-node cli/main.ts --format esm --sourcemap inline",
     "format": "biome format --write .",
-    "format:check": "biome format ."
+    "format:check": "biome format .",
+    "cli": "bun ./cli/main.ts"
   },
   "devDependencies": {
     "@biomejs/biome": "^1.9.4",
@@ -29,6 +30,10 @@
     "@tscircuit/runframe": "^0.0.47",
     "chokidar": "^4.0.1",
     "commander": "^12.1.0",
-    "configstore": "^7.0.0"
+    "configstore": "^7.0.0",
+    "cosmiconfig": "^9.0.0",
+    "delay": "^6.0.0",
+    "ky": "^1.7.4",
+    "perfect-cli": "^1.0.20"
   }
 }

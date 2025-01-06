@@ -9,7 +9,8 @@
     "allowJs": true,
     "baseUrl": ".",
     "paths": {
-      "lib/*": ["lib/*"]
+      "lib/*": ["lib/*"],
+      "cli/*": ["cli/*"]
     },
 
     // Bundler mode
