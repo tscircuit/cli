@@ -12,15 +12,27 @@ test("test1 basic dev server filesystem watching", async () => {
         </board>
       )
       `,
+      "manual-edits.json": "{}",
     },
   })
 
   const devServer = new DevServer({
     port: devServerPort,
-    entrypoint: `${tempDirPath}/snippet.tsx`,
+    componentFilePath: `${tempDirPath}/snippet.tsx`,
   })
 
   await devServer.start()
+  await devServer.addEntrypoint()
+
+  const { file_list } = await devServer.fsKy.get("api/files/list").json()
+
+  expect(file_list.map((f) => f.file_path).sort()).toMatchInlineSnapshot(`
+[
+  "entrypoint.tsx",
+  "manual-edits.json",
+  "snippet.tsx",
+]
+`)
 
   afterEach(async () => {
     await devServer.stop()

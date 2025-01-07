@@ -28,4 +28,11 @@ export interface FileServerRoutes {
       }
     }
   }
+  "api/files/list": {
+    GET: {
+      responseJson: {
+        file_list: { file_id: string; file_path: string }[]
+      }
+    }
+  }
 }

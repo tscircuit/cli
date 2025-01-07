@@ -33,16 +33,6 @@ export const registerDev = (program: Command) => {
       })
 
       await server.start()
-
-      await server.fsKy.post("api/files/upsert", {
-        json: {
-          file_path: "entrypoint.tsx",
-          text_content: `
-import MyCircuit from "./snippet.tsx"
-
-circuit.add(<MyCircuit />)
-`,
-        },
-      })
+      await server.addEntrypoint()
     })
 }

@@ -11,7 +11,11 @@ import * as chokidar from "chokidar"
 
 export class DevServer {
   port: number
-  entrypoint: string
+  /**
+   * The path to a component that exports a <board /> or <group /> component
+   */
+  componentFilePath: string
+
   projectDir: string
 
   /**
@@ -35,14 +39,14 @@ export class DevServer {
 
   constructor({
     port,
-    entrypoint,
+    componentFilePath,
   }: {
     port: number
-    entrypoint: string
+    componentFilePath: string
   }) {
     this.port = port
-    this.entrypoint = entrypoint
-    this.projectDir = path.dirname(entrypoint)
+    this.componentFilePath = componentFilePath
+    this.projectDir = path.dirname(componentFilePath)
     this.fsKy = ky.create({
       prefixUrl: `http://localhost:${port}`,
     }) as any
@@ -62,15 +66,34 @@ export class DevServer {
 
     this.filesystemWatcher = chokidar.watch(this.projectDir, {
       persistent: true,
-      ignoreInitial: false,
+      ignoreInitial: true,
     })
 
     this.filesystemWatcher.on("change", (filePath) =>
       this.handleFileChangedOnFilesystem(filePath),
     )
-    // this.filesystemWatcher.on("add", (filePath) =>
-    //   this.handleFileChangedOnFilesystem(filePath),
-    // )
+    this.filesystemWatcher.on("add", (filePath) =>
+      this.handleFileChangedOnFilesystem(filePath),
+    )
+
+    this.upsertInitialFiles()
+  }
+
+  async addEntrypoint() {
+    const relativeComponentFilePath = path.relative(
+      this.projectDir,
+      this.componentFilePath,
+    )
+    await this.fsKy.post("api/files/upsert", {
+      json: {
+        file_path: "entrypoint.tsx",
+        text_content: `
+import MyCircuit from "${relativeComponentFilePath}"
+
+circuit.add(<MyCircuit />)
+`,
+      },
+    })
   }
 
   async handleFileUpdatedEventFromServer(ev: FileUpdatedEvent) {
@@ -106,6 +129,22 @@ export class DevServer {
         },
       })
       .json()
+  }
+
+  async upsertInitialFiles() {
+    // Scan project directory for all files and upsert them
+    const fileNames = fs.readdirSync(this.projectDir)
+    for (const fileName of fileNames) {
+      await this.fsKy.post("api/files/upsert", {
+        json: {
+          file_path: fileName,
+          text_content: fs.readFileSync(
+            path.join(this.projectDir, fileName),
+            "utf-8",
+          ),
+        },
+      })
+    }
   }
 
   async stop() {
