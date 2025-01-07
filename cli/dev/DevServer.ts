@@ -135,13 +135,16 @@ circuit.add(<MyCircuit />)
     // Scan project directory for all files and upsert them
     const fileNames = fs.readdirSync(this.projectDir)
     for (const fileName of fileNames) {
+      if (fs.statSync(path.join(this.projectDir, fileName)).isDirectory())
+        continue
+      const fileContent = fs.readFileSync(
+        path.join(this.projectDir, fileName),
+        "utf-8",
+      )
       await this.fsKy.post("api/files/upsert", {
         json: {
           file_path: fileName,
-          text_content: fs.readFileSync(
-            path.join(this.projectDir, fileName),
-            "utf-8",
-          ),
+          text_content: fileContent,
           initiator: "filesystem_change",
         },
       })
