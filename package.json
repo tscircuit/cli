@@ -38,6 +38,7 @@
     "cosmiconfig": "^9.0.0",
     "delay": "^6.0.0",
     "ky": "^1.7.4",
+    "make-vfs": "^1.0.15",
     "perfect-cli": "^1.0.20",
     "semver": "^7.6.3"
   }
