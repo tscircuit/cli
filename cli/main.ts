@@ -10,6 +10,7 @@ import { registerClone } from "./clone/register"
 import { perfectCli } from "perfect-cli"
 import pkg from "../package.json"
 import semver from "semver"
+import { registerExport } from "./export/register"
 
 const program = new Command()
 
@@ -29,6 +30,8 @@ registerAuthLogout(program)
 
 registerConfig(program)
 registerConfigPrint(program)
+
+registerExport(program)
 
 if (process.argv.length === 2) {
   perfectCli(program, process.argv)
