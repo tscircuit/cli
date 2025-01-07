@@ -8,7 +8,7 @@ interface SnippetApiResponse {
   }
 }
 
-export async function installTypes(snippetPath: string) {
+export async function installNodeModuleTypesForSnippet(snippetPath: string) {
   const content = fs.readFileSync(snippetPath, "utf-8")
   const sourceFile = ts.createSourceFile(
     snippetPath,

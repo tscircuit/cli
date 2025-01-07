@@ -2,10 +2,11 @@ import type { Command } from "commander"
 import * as path from "node:path"
 import * as chokidar from "chokidar"
 import * as fs from "node:fs"
-import { createServer } from "lib/server/createServer"
+import { createHttpServer } from "lib/server/createHttpServer"
 import { getLocalFileDependencies } from "lib/dependency-analysis/getLocalFileDependencies"
-import { installTypes } from "../../lib/dependency-analysis/installNodeModuleTypes"
+import { installNodeModuleTypesForSnippet } from "../../lib/dependency-analysis/installNodeModuleTypesForSnippet"
 import { EventsWatcher } from "../../lib/server/EventsWatcher"
+import { DevServer } from "./DevServer"
 
 export const registerDev = (program: Command) => {
   program
@@ -20,17 +21,18 @@ export const registerDev = (program: Command) => {
 
       try {
         console.log("Installing types for imported snippets...")
-        await installTypes(absolutePath)
+        await installNodeModuleTypesForSnippet(absolutePath)
         console.log("Types installed successfully")
       } catch (error) {
         console.warn("Failed to install types:", error)
       }
 
-      // Start the server
-      await createServer(port)
+      const server = new DevServer({
+        port,
+        entrypoint: absolutePath,
+      })
 
-      const eventsWatcher = new EventsWatcher(`http://localhost:${port}`)
-      eventsWatcher.start()
+      await server.start()
 
       await fetch(`http://localhost:${port}/api/files/upsert`, {
         method: "POST",
@@ -91,19 +93,6 @@ circuit.add(<MyCircuit />)
       filesystemWatcher.on("add", async (filePath) => {
         console.log(`File ${filePath} added`)
         await updateFile(filePath)
-      })
-
-      eventsWatcher.on("FILE_UPDATED", async (ev) => {
-        if (ev.file_path === "manual-edits.json") {
-          console.log("Manual edits updated, updating on filesystem...")
-          const { file } = await fetch(
-            `http://localhost:${port}/api/files/get?file_path=manual-edits.json`,
-          ).then((r) => r.json())
-          fs.writeFileSync(
-            path.join(fileDir, "manual-edits.json"),
-            file.text_content,
-          )
-        }
       })
 
       console.log(`Watching ${file} and its dependencies...`)

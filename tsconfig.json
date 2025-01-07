@@ -10,7 +10,8 @@
     "baseUrl": ".",
     "paths": {
       "lib/*": ["lib/*"],
-      "cli/*": ["cli/*"]
+      "cli/*": ["cli/*"],
+      "tests/*": ["tests/*"]
     },
 
     // Bundler mode
