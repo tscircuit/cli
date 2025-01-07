@@ -29,7 +29,7 @@
     "typescript": "^5.0.0"
   },
   "dependencies": {
-    "@tscircuit/file-server": "^0.0.11",
+    "@tscircuit/file-server": "^0.0.13",
     "@tscircuit/runframe": "^0.0.47",
     "chokidar": "^4.0.1",
     "commander": "^12.1.0",

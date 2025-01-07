@@ -68,17 +68,15 @@ export class DevServer {
     this.filesystemWatcher.on("change", (filePath) =>
       this.handleFileChangedOnFilesystem(filePath),
     )
-    this.filesystemWatcher.on("add", (filePath) =>
-      this.handleFileChangedOnFilesystem(filePath),
-    )
+    // this.filesystemWatcher.on("add", (filePath) =>
+    //   this.handleFileChangedOnFilesystem(filePath),
+    // )
   }
 
   async handleFileUpdatedEventFromServer(ev: FileUpdatedEvent) {
-    console.log(ev)
-    if (
-      ev.file_path === "manual-edits.json" &&
-      ev.initiator !== "filesystem_change"
-    ) {
+    if (ev.initiator === "filesystem_change") return
+
+    if (ev.file_path === "manual-edits.json") {
       console.log("Manual edits updated, updating on filesystem...")
       const { file } = await this.fsKy
         .get("api/files/get", {
@@ -92,13 +90,18 @@ export class DevServer {
     }
   }
 
-  async handleFileChangedOnFilesystem(filePath: string) {
-    console.log(`File ${filePath} changed on filesystem`)
+  async handleFileChangedOnFilesystem(absoluteFilePath: string) {
+    const relativeFilePath = path.relative(this.projectDir, absoluteFilePath)
+
+    // We've temporarily disabled upserting manual edits from filesystem changes
+    // because it can be edited by the browser
+    if (relativeFilePath.includes("manual-edits.json")) return
+
     await this.fsKy
       .post("api/files/upsert", {
         json: {
-          file_path: filePath,
-          text_content: fs.readFileSync(filePath, "utf-8"),
+          file_path: relativeFilePath,
+          text_content: fs.readFileSync(absoluteFilePath, "utf-8"),
           initiator: "filesystem_change",
         },
       })
