@@ -83,6 +83,8 @@ circuit.add(<MyCircuit />)
 
       fs.writeFileSync(outputPath, JSON.stringify(circuitJson))
 
+      console.log(`Exported to ${outputPath}`)
+
       process.exit(0)
     })
 }
