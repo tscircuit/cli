@@ -29,7 +29,7 @@ export const registerDev = (program: Command) => {
 
       const server = new DevServer({
         port,
-        entrypoint: absolutePath,
+        componentFilePath: absolutePath,
       })
 
       await server.start()

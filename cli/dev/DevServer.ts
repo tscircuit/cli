@@ -88,7 +88,7 @@ export class DevServer {
       json: {
         file_path: "entrypoint.tsx",
         text_content: `
-import MyCircuit from "${relativeComponentFilePath}"
+import MyCircuit from "./${relativeComponentFilePath}"
 
 circuit.add(<MyCircuit />)
 `,
@@ -142,6 +142,7 @@ circuit.add(<MyCircuit />)
             path.join(this.projectDir, fileName),
             "utf-8",
           ),
+          initiator: "filesystem_change",
         },
       })
     }
