@@ -1,2 +1,2 @@
-export { createServer } from "./server/createServer"
+export { createHttpServer } from "./server/createHttpServer"
 export { getLocalFileDependencies } from "./dependency-analysis/getLocalFileDependencies"
