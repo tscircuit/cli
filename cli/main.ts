@@ -1,5 +1,6 @@
 #!/usr/bin/env node
 import { Command } from "commander"
+import { registerInit } from "./init/register"
 import { registerDev } from "./dev/register"
 import { registerAuthLogin } from "./auth/login/register"
 import { registerAuthLogout } from "./auth/logout/register"
@@ -20,6 +21,8 @@ program
   // HACK: at build time the version is old, we need to
   // fix this at some point...
   .version(semver.inc(pkg.version, "patch") ?? pkg.version)
+
+registerInit(program)
 
 registerDev(program)
 registerClone(program)
