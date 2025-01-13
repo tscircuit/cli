@@ -12,12 +12,28 @@ export const registerDev = (program: Command) => {
   program
     .command("dev")
     .description("Start development server for a snippet")
-    .argument("<file>", "Path to the snippet file")
+    .argument("[file]", "Path to the snippet file")
     .option("-p, --port <number>", "Port to run server on", "3000")
     .action(async (file: string, options: { port: string }) => {
-      const absolutePath = path.resolve(file)
-      const fileDir = path.dirname(absolutePath)
       const port = parseInt(options.port)
+      let absolutePath: string
+
+      if (file) {
+        absolutePath = path.resolve(file)
+      } else {
+        const entrypointPath = path.resolve("index.tsx")
+        if (fs.existsSync(entrypointPath)) {
+          absolutePath = entrypointPath
+          console.log("No file provided. Using 'index.tsx' as the entrypoint.")
+        } else {
+          console.log(
+            "No entrypoint found. Run 'tsci init' to bootstrap a basic project.",
+          )
+          return
+        }
+      }
+
+      const fileDir = path.dirname(absolutePath)
 
       try {
         console.log("Installing types for imported snippets...")
