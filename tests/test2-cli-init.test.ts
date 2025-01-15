@@ -3,22 +3,18 @@ import { test, expect } from "bun:test"
 import { readdir } from "node:fs/promises"
 
 test("basic init", async () => {
-  const { tmpDir, runCommand, cleanup } = await getCliTestFixture()
+  const { tmpDir, runCommand } = await getCliTestFixture()
 
-  try {
-    // Run the `tsci init` command
-    const { stdout, stderr } = await runCommand("tsci init")
-    expect(stderr).toBe("")
+  // Run the `tsci init` command
+  const { stdout, stderr } = await runCommand("tsci init")
+  expect(stderr).toBe("")
 
-    // List directory contents
-    const dirContents = await readdir(tmpDir)
-    expect(dirContents).toMatchInlineSnapshot(`
+  // List directory contents
+  const dirContents = await readdir(tmpDir)
+  expect(dirContents).toMatchInlineSnapshot(`
 [
   ".npmrc",
   "index.tsx",
 ]
 `)
-  } finally {
-    await cleanup()
-  }
 })

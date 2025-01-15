@@ -3,13 +3,13 @@ import { join, resolve } from "node:path"
 import { tmpdir } from "node:os"
 import { exec } from "node:child_process"
 import { promisify } from "node:util"
+import { afterEach } from "bun:test"
 
 const execAsync = promisify(exec)
 
 export interface CliTestFixture {
   tmpDir: string
   runCommand: (command: string) => Promise<{ stdout: string; stderr: string }>
-  cleanup: () => Promise<void>
 }
 
 export async function getCliTestFixture(): Promise<CliTestFixture> {
@@ -33,9 +33,10 @@ export async function getCliTestFixture(): Promise<CliTestFixture> {
     await rm(tmpDir, { recursive: true, force: true })
   }
 
+  afterEach(cleanup)
+
   return {
     tmpDir,
     runCommand,
-    cleanup,
   }
 }
