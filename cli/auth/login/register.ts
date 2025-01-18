@@ -78,6 +78,6 @@ export const registerAuthLogin = (program: Command) => {
   // Register the top-level login command as an alias
   program
     .command("login")
-    .description("Alias for 'tsci auth login'")
+    .description("Login to tscircuit registry")
     .action(loginAction)
 }
