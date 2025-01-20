@@ -115,11 +115,11 @@ circuit.add(<MyCircuit />)
 
   async handleFileChangedOnFilesystem(absoluteFilePath: string) {
     const relativeFilePath = path.relative(this.projectDir, absoluteFilePath)
-
     // We've temporarily disabled upserting manual edits from filesystem changes
     // because it can be edited by the browser
     if (relativeFilePath.includes("manual-edits.json")) return
 
+    console.log(`${relativeFilePath} saved, server is refreshing...`)
     await this.fsKy
       .post("api/files/upsert", {
         json: {
