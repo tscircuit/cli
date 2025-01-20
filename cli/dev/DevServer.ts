@@ -130,8 +130,8 @@ circuit.add(<MyCircuit />)
     if (relativeFilePath.includes("manual-edits.json")) return
 
     if (await checkIfFileImportsUpdated(absoluteFilePath, this.imports)) {
+      console.log("Types refreshing...")
       await installNodeModuleTypesForSnippet(absoluteFilePath)
-      console.log("Types updated successfully")
     }
     await this.fsKy
       .post("api/files/upsert", {
