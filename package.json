@@ -8,7 +8,7 @@
   },
   "scripts": {
     "start": "bun run dev",
-    "dev": "bun --hot ./cli/main.ts dev ./example-dir/snippet.tsx",
+    "dev": "bun --hot ./cli/main.ts dev ./example-dir/snippet1-basic.tsx",
     "build": "tsup-node cli/main.ts --format esm --sourcemap inline",
     "format": "biome format --write .",
     "format:check": "biome format .",
