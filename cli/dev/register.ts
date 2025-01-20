@@ -32,12 +32,12 @@ export const registerDev = (program: Command) => {
           return
         }
       }
-
       const fileDir = path.dirname(absolutePath)
+      let imports: string[] = []
 
       try {
         console.log("Installing types for imported snippets...")
-        await installNodeModuleTypesForSnippet(absolutePath)
+        imports = await installNodeModuleTypesForSnippet(absolutePath)
         console.log("Types installed successfully")
       } catch (error) {
         console.warn("Failed to install types:", error)
@@ -46,6 +46,7 @@ export const registerDev = (program: Command) => {
       const server = new DevServer({
         port,
         componentFilePath: absolutePath,
+        imports,
       })
 
       await server.start()

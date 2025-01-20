@@ -71,4 +71,6 @@ export async function installNodeModuleTypesForSnippet(snippetPath: string) {
       console.warn(`Error fetching types for ${importPath}:`, error)
     }
   }
+
+  return imports
 }

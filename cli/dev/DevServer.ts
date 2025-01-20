@@ -8,6 +8,8 @@ import path from "node:path"
 import fs from "node:fs"
 import type { FileUpdatedEvent } from "lib/file-server/FileServerEvent"
 import * as chokidar from "chokidar"
+import { checkIfFileImportsUpdated } from "lib/dependency-analysis/check-if-file-imports-updated"
+import { installNodeModuleTypesForSnippet } from "lib/dependency-analysis/installNodeModuleTypesForSnippet"
 
 export class DevServer {
   port: number
@@ -17,6 +19,11 @@ export class DevServer {
   componentFilePath: string
 
   projectDir: string
+
+  /**
+   * List of imports whose type declarations are there
+   */
+  imports: string[]
 
   /**
    * The HTTP server that hosts the file server and event bus. You can use
@@ -40,11 +47,14 @@ export class DevServer {
   constructor({
     port,
     componentFilePath,
+    imports,
   }: {
     port: number
     componentFilePath: string
+    imports: string[]
   }) {
     this.port = port
+    this.imports = imports
     this.componentFilePath = componentFilePath
     this.projectDir = path.dirname(componentFilePath)
     this.fsKy = ky.create({
@@ -120,6 +130,10 @@ circuit.add(<MyCircuit />)
     if (relativeFilePath.includes("manual-edits.json")) return
 
     console.log(`${relativeFilePath} saved, server is refreshing...`)
+    if (await checkIfFileImportsUpdated(absoluteFilePath, this.imports)) {
+      await installNodeModuleTypesForSnippet(absoluteFilePath)
+      console.log("Types updated successfully")
+    }
     await this.fsKy
       .post("api/files/upsert", {
         json: {
