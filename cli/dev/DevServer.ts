@@ -129,7 +129,6 @@ circuit.add(<MyCircuit />)
     // because it can be edited by the browser
     if (relativeFilePath.includes("manual-edits.json")) return
 
-    console.log(`${relativeFilePath} saved, server is refreshing...`)
     if (await checkIfFileImportsUpdated(absoluteFilePath, this.imports)) {
       await installNodeModuleTypesForSnippet(absoluteFilePath)
       console.log("Types updated successfully")
