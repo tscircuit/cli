@@ -51,10 +51,10 @@ export class DevServer {
   }: {
     port: number
     componentFilePath: string
-    imports: string[]
+    imports?: string[]
   }) {
     this.port = port
-    this.imports = imports
+    this.imports = imports ?? []
     this.componentFilePath = componentFilePath
     this.projectDir = path.dirname(componentFilePath)
     this.fsKy = ky.create({
