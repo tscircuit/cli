@@ -119,7 +119,7 @@ circuit.add(<MyCircuit />)
     // because it can be edited by the browser
     if (relativeFilePath.includes("manual-edits.json")) return
 
-    console.log(`${relativeFilePath} saved, server is refreshing...`)
+    console.log(`${relativeFilePath} saved. Applying changes...`)
     await this.fsKy
       .post("api/files/upsert", {
         json: {
