@@ -2,10 +2,10 @@ import * as fs from "node:fs"
 import * as path from "node:path"
 import * as ts from "typescript"
 
-export async function checkIfFileImportsUpdated(
+export function isFileImportsTyped(
   snippetPath: string,
-  expectedImports: string[],
-): Promise<boolean> {
+  typedImports: string[],
+): boolean {
   const content = fs.readFileSync(snippetPath, "utf-8")
   const sourceFile = ts.createSourceFile(
     snippetPath,
@@ -30,9 +30,13 @@ export async function checkIfFileImportsUpdated(
   }
 
   visit(sourceFile)
-  const allImportsPresent = expectedImports.every((item) =>
-    imports.includes(item),
+  const result = imports.every((item) => typedImports.includes(item))
+  console.log(
+    !result,
+    "\nEXPECTED:- ",
+    typedImports,
+    "\nFILE IMPORTS:-",
+    imports,
   )
-
-  return allImportsPresent
+  return result
 }

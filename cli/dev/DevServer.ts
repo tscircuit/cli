@@ -8,7 +8,7 @@ import path from "node:path"
 import fs from "node:fs"
 import type { FileUpdatedEvent } from "lib/file-server/FileServerEvent"
 import * as chokidar from "chokidar"
-import { checkIfFileImportsUpdated } from "lib/dependency-analysis/check-if-file-imports-updated"
+import { isFileImportsTyped } from "lib/dependency-analysis/isFileImportsTyped"
 import { installNodeModuleTypesForSnippet } from "lib/dependency-analysis/installNodeModuleTypesForSnippet"
 
 export class DevServer {
@@ -23,7 +23,7 @@ export class DevServer {
   /**
    * List of imports whose type declarations are there
    */
-  imports: string[]
+  resolvedTypedImports: string[]
 
   /**
    * The HTTP server that hosts the file server and event bus. You can use
@@ -47,14 +47,14 @@ export class DevServer {
   constructor({
     port,
     componentFilePath,
-    imports,
+    resolvedTypedImports,
   }: {
     port: number
     componentFilePath: string
-    imports?: string[]
+    resolvedTypedImports?: string[]
   }) {
     this.port = port
-    this.imports = imports ?? []
+    this.resolvedTypedImports = resolvedTypedImports ?? []
     this.componentFilePath = componentFilePath
     this.projectDir = path.dirname(componentFilePath)
     this.fsKy = ky.create({
@@ -129,9 +129,13 @@ circuit.add(<MyCircuit />)
     // because it can be edited by the browser
     if (relativeFilePath.includes("manual-edits.json")) return
 
-    if (await checkIfFileImportsUpdated(absoluteFilePath, this.imports)) {
+    if (!isFileImportsTyped(absoluteFilePath, this.resolvedTypedImports)) {
       console.log("Types refreshing...")
-      await installNodeModuleTypesForSnippet(absoluteFilePath)
+      const updatedImports =
+        await installNodeModuleTypesForSnippet(absoluteFilePath)
+      this.resolvedTypedImports = [
+        ...new Set([...this.resolvedTypedImports, ...updatedImports]),
+      ]
     }
     await this.fsKy
       .post("api/files/upsert", {
