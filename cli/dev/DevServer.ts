@@ -137,6 +137,8 @@ circuit.add(<MyCircuit />)
         ...new Set([...this.resolvedTypedImports, ...updatedImports]),
       ]
     }
+
+    console.log(`${relativeFilePath} saved. Applying changes...`)
     await this.fsKy
       .post("api/files/upsert", {
         json: {
