@@ -30,13 +30,5 @@ export function isFileImportsTyped(
   }
 
   visit(sourceFile)
-  const result = imports.every((item) => typedImports.includes(item))
-  console.log(
-    !result,
-    "\nEXPECTED:- ",
-    typedImports,
-    "\nFILE IMPORTS:-",
-    imports,
-  )
-  return result
+  return imports.every((item) => typedImports.includes(item))
 }
