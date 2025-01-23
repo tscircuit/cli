@@ -1,26 +1,7 @@
 import { test, expect, afterEach } from "bun:test"
-import * as net from "node:net"
 import { DevServer } from "cli/dev/DevServer"
 import { getTestFixture } from "tests/fixtures/get-test-fixture"
-
-const isPortAvailable = (port: number): Promise<boolean> => {
-  return new Promise((resolve) => {
-    const server = net.createServer()
-    server.once("error", () => resolve(false))
-    server.once("listening", () => {
-      server.close(() => resolve(true))
-    })
-    server.listen(port)
-  })
-}
-
-const getAvailablePort = async (startPort: number): Promise<number> => {
-  let port = startPort
-  while (!(await isPortAvailable(port))) {
-    port++
-  }
-  return port
-}
+import * as http from "node:http"
 
 test("test3 dev server port handling", async () => {
   const { tempDirPath } = await getTestFixture({
@@ -35,20 +16,21 @@ test("test3 dev server port handling", async () => {
     },
   })
 
-  const availablePort = await getAvailablePort(3020)
+  const server = http.createServer(() => {}).listen(3020)
+  
   const devServer = new DevServer({
-    port: availablePort,
+    port: 3021,
     componentFilePath: `${tempDirPath}/snippet.tsx`,
   })
   await devServer.start()
 
-  const is3020Available = await isPortAvailable(3020)
-  expect(is3020Available).toBe(false)
+  await new Promise(resolve => setTimeout(resolve, 1000))
 
-  const isPortAvailableForDevServer = await isPortAvailable(availablePort)
-  expect(isPortAvailableForDevServer).toBe(false)
+  const res = await fetch(`http://localhost:3021`)
+  expect(res.status).toBe(200)
 
   afterEach(async () => {
+    server.close()
     await devServer.stop()
   })
 })
