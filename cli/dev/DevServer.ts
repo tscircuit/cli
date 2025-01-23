@@ -56,6 +56,16 @@ export class DevServer {
     const { server } = await createHttpServer(this.port)
     this.httpServer = server
 
+    // Update port if a different one was assigned
+    const address = server.address()
+    if (address && typeof address !== "string") {
+      this.port = address.port
+      // Update fsKy with new port
+      this.fsKy = ky.create({
+        prefixUrl: `http://localhost:${this.port}`,
+      }) as any
+    }
+
     this.eventsWatcher = new EventsWatcher(`http://localhost:${this.port}`)
     this.eventsWatcher.start()
 

@@ -13,7 +13,7 @@ export const registerDev = (program: Command) => {
     .command("dev")
     .description("Start development server for a snippet")
     .argument("[file]", "Path to the snippet file")
-    .option("-p, --port <number>", "Port to run server on", "3000")
+    .option("-p, --port <number>", "Port to run server on", "3020")
     .action(async (file: string, options: { port: string }) => {
       const port = parseInt(options.port)
       let absolutePath: string
@@ -48,7 +48,12 @@ export const registerDev = (program: Command) => {
         componentFilePath: absolutePath,
       })
 
-      await server.start()
-      await server.addEntrypoint()
+      try {
+        await server.start()
+        await server.addEntrypoint()
+      } catch (error) {
+        console.error("Failed to start server:", (error as Error).message)
+        process.exit(1)
+      }
     })
 }
