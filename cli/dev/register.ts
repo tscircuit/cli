@@ -7,15 +7,33 @@ import { getLocalFileDependencies } from "lib/dependency-analysis/getLocalFileDe
 import { installNodeModuleTypesForSnippet } from "../../lib/dependency-analysis/installNodeModuleTypesForSnippet"
 import { EventsWatcher } from "../../lib/server/EventsWatcher"
 import { DevServer } from "./DevServer"
+import * as net from "node:net"
 
 export const registerDev = (program: Command) => {
   program
     .command("dev")
     .description("Start development server for a snippet")
     .argument("[file]", "Path to the snippet file")
-    .option("-p, --port <number>", "Port to run server on", "3000")
+    .option("-p, --port <number>", "Port to run server on", "3020")
     .action(async (file: string, options: { port: string }) => {
-      const port = parseInt(options.port)
+      let port = parseInt(options.port)
+
+      const isPortAvailable = (port: number): Promise<boolean> => {
+        return new Promise((resolve) => {
+          const server = net.createServer()
+          server.once("error", () => resolve(false))
+          server.once("listening", () => {
+            server.close(() => resolve(true))
+          })
+          server.listen(port)
+        })
+      }
+
+      while (!(await isPortAvailable(port))) {
+        console.log(`Port ${port} is in use, trying port ${port + 1}...`)
+        port += 1
+      }
+
       let absolutePath: string
 
       if (file) {
