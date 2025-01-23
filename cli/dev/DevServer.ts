@@ -8,7 +8,7 @@ import path from "node:path"
 import fs from "node:fs"
 import type { FileUpdatedEvent } from "lib/file-server/FileServerEvent"
 import * as chokidar from "chokidar"
-import { isFileImportsTyped } from "lib/dependency-analysis/isFileImportsTyped"
+import { isFileTypesImported } from "lib/dependency-analysis/isFileTypesImported"
 import { installNodeModuleTypesForSnippet } from "lib/dependency-analysis/installNodeModuleTypesForSnippet"
 
 export class DevServer {
@@ -129,7 +129,7 @@ circuit.add(<MyCircuit />)
     // because it can be edited by the browser
     if (relativeFilePath.includes("manual-edits.json")) return
 
-    if (!isFileImportsTyped(absoluteFilePath, this.resolvedTypedImports)) {
+    if (!isFileTypesImported(absoluteFilePath, this.resolvedTypedImports)) {
       console.log("Types refreshing...")
       const updatedImports =
         await installNodeModuleTypesForSnippet(absoluteFilePath)

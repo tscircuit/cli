@@ -2,7 +2,7 @@ import * as fs from "node:fs"
 import * as path from "node:path"
 import * as ts from "typescript"
 
-export function isFileImportsTyped(
+export function isFileTypesImported(
   snippetPath: string,
   typedImports: string[],
 ): boolean {
