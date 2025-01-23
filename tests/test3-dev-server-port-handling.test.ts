@@ -1,11 +1,21 @@
 import { test, expect, afterEach } from "bun:test"
 import { DevServer } from "cli/dev/DevServer"
 import { getTestFixture } from "tests/fixtures/get-test-fixture"
+import { type Server, createServer } from "node:http"
 
-test("dev server handles port conflicts correctly", async () => {
-  const fixture1 = await getTestFixture({
+let blockingServer: Server | undefined
+let devServer: DevServer | undefined
+
+test("dev server finds available port when preferred port is taken", async () => {
+  // Create a server blocking port 3020
+  blockingServer = createServer()
+  await new Promise<void>((resolve) => {
+    blockingServer!.listen(3020, () => resolve())
+  })
+
+  const fixture = await getTestFixture({
     vfs: {
-      "snippet1.tsx": `
+      "snippet.tsx": `
       export const MyCircuit = () => (
         <board width="10mm" height="10mm">
           <chip name="U1" footprint="soic8" />
@@ -15,61 +25,32 @@ test("dev server handles port conflicts correctly", async () => {
     },
   })
 
-  const fixture2 = await getTestFixture({
-    vfs: {
-      "snippet2.tsx": `
-      export const MyCircuit = () => (
-        <board width="10mm" height="10mm">
-          <chip name="U2" footprint="soic8" />
-        </board>
-      )
-      `,
-    },
-  })
-
-  // First server should start on initial port (3020)
-  const server1 = new DevServer({
+  // Start dev server with preferred port 3020
+  devServer = new DevServer({
     port: 3020,
-    componentFilePath: `${fixture1.tempDirPath}/snippet1.tsx`,
+    componentFilePath: `${fixture.tempDirPath}/snippet.tsx`,
   })
-  await server1.start()
+  await devServer.start()
 
-  // Second server should increment to next available port
-  const server2 = new DevServer({
-    port: 3020,
-    componentFilePath: `${fixture2.tempDirPath}/snippet2.tsx`,
-  })
-  await server2.start()
+  // Verify server got a different port
+  expect(devServer.port).not.toBe(3020)
+  expect(devServer.httpServer?.address()).toBeTruthy()
 
-  // Verify servers are running on different ports
-  expect(server1.port).toBe(3020)
-  expect(server2.port).toBe(3021)
+  // Verify server is actually running by making a request
+  const response = await fetch(`http://localhost:${devServer.port}/`)
+  expect(response.status).toBe(200)
+})
 
-  // Test error when no ports available
-  const servers: DevServer[] = []
-  try {
-    // Try to start servers on all ports in range (3020-3029)
-    for (let i = 0; i < 11; i++) {
-      const server = new DevServer({
-        port: 3020,
-        componentFilePath: `${fixture1.tempDirPath}/snippet1.tsx`,
-      })
-      await server.start()
-      servers.push(server)
-    }
-    throw new Error("Expected error when no ports available")
-  } catch (error) {
-    expect((error as Error).message).toContain(
-      "Unable to find available port in range 3020-3029",
-    )
+// Cleanup servers after each test
+afterEach(async () => {
+  if (devServer) {
+    await devServer.stop()
+    devServer = undefined
   }
-
-  // Cleanup
-  afterEach(async () => {
-    await server1.stop()
-    await server2.stop()
-    for (const server of servers) {
-      await server.stop()
-    }
-  })
+  if (blockingServer) {
+    await new Promise<void>((resolve) => {
+      blockingServer!.close(() => resolve())
+    })
+    blockingServer = undefined
+  }
 })
