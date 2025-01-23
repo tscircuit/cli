@@ -37,5 +37,5 @@ test("print and set token explicitly", async () => {
   const { stdout: reprintTokenStdout } = await runCommand(
     "tsci auth print-token",
   )
-  expect(reprintTokenStdout).toContain(demoJwtToken) 
+  expect(reprintTokenStdout).toContain(demoJwtToken)
 })
