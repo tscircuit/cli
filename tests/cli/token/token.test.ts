@@ -33,9 +33,9 @@ test("print and set token explicitly", async () => {
   expect(validTokenPrintStdout).toContain(demoJwtToken)
   expect(validTokenPrintStderr).toBeFalsy()
 
-  // Additional test: Verify token is correctly stored and can be reused
+  // Verify token is correctly stored and can be reused
   const { stdout: reprintTokenStdout } = await runCommand(
     "tsci auth print-token",
   )
-  expect(reprintTokenStdout).toContain(demoJwtToken) // Ensure token persists
+  expect(reprintTokenStdout).toContain(demoJwtToken) 
 })
