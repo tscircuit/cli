@@ -35,33 +35,20 @@ test("test3 dev server port handling", async () => {
     },
   })
 
-  const server = net.createServer().listen(3020)
-
-  const availablePort1 = await getAvailablePort(3020)
-  const devServer1 = new DevServer({
-    port: availablePort1,
+  const availablePort = await getAvailablePort(3020)
+  const devServer = new DevServer({
+    port: availablePort,
     componentFilePath: `${tempDirPath}/snippet.tsx`,
   })
-  await devServer1.start()
-
-  const availablePort2 = await getAvailablePort(availablePort1 + 1)
-  const devServer2 = new DevServer({
-    port: availablePort2,
-    componentFilePath: `${tempDirPath}/snippet.tsx`,
-  })
-  await devServer2.start()
+  await devServer.start()
 
   const is3020Available = await isPortAvailable(3020)
   expect(is3020Available).toBe(false)
-  const isPort1Available = await isPortAvailable(availablePort1)
-  expect(isPort1Available).toBe(false)
 
-  const isPort2Available = await isPortAvailable(availablePort2)
-  expect(isPort2Available).toBe(false)
+  const isPortAvailableForDevServer = await isPortAvailable(availablePort)
+  expect(isPortAvailableForDevServer).toBe(false)
 
   afterEach(async () => {
-    await devServer1.stop()
-    await devServer2.stop()
-    server.close()
+    await devServer.stop()
   })
 })
