@@ -3,15 +3,16 @@ import * as fs from "node:fs"
 import * as path from "node:path"
 import { getNodeHandler } from "winterspec/adapters/node"
 import pkg from "../../package.json"
-import type { AddressInfo } from "node:net"
+import getPort from "get-port"
 
 // @ts-ignore
 import winterspecBundle from "@tscircuit/file-server/dist/bundle.js"
 import { getIndex } from "../site/getIndex"
 
-export const createHttpServer = async (initialPort = 3020) => {
-  const fileServerHandler = getNodeHandler(winterspecBundle as any, {})
+export const createHttpServer = async (preferredPort = 3020) => {
+  const port = await getPort({ port: preferredPort })
 
+  const fileServerHandler = getNodeHandler(winterspecBundle as any, {})
   const server = http.createServer(async (req, res) => {
     const url = new URL(req.url!, `http://${req.headers.host}`)
 
@@ -59,35 +60,10 @@ export const createHttpServer = async (initialPort = 3020) => {
     res.end("Not found")
   })
 
-  return new Promise<{ server: http.Server }>((resolve, reject) => {
-    const tryPort = (currentPort: number) => {
-      server.once("error", (err: NodeJS.ErrnoException) => {
-        if (err.code === "EADDRINUSE") {
-          // Try next port
-          const nextPort = currentPort + 1
-          if (nextPort < initialPort + 10) {
-            // Try up to 10 ports
-            console.log(`Port ${currentPort} in use, trying ${nextPort}...`)
-            tryPort(nextPort)
-          } else {
-            reject(
-              new Error(
-                `Unable to find available port in range ${initialPort}-${initialPort + 9}`,
-              ),
-            )
-          }
-        } else {
-          reject(err)
-        }
-      })
-
-      server.listen(currentPort, () => {
-        const address = server.address() as AddressInfo
-        console.log(`Server running at http://localhost:${address.port}`)
-        resolve({ server })
-      })
-    }
-
-    tryPort(initialPort)
+  return new Promise<{ server: http.Server }>((resolve) => {
+    server.listen(port, () => {
+      console.log(`Server running at http://localhost:${port}`)
+      resolve({ server })
+    })
   })
 }

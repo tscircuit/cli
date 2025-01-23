@@ -29,9 +29,9 @@ export class DevServer {
   eventsWatcher?: EventsWatcher
   /**
    * A ky instance that can be used to communicate with the file server and
-   * event bus
+   * event bus. Only available after server starts.
    */
-  fsKy: TypedKyInstance<keyof FileServerRoutes, FileServerRoutes>
+  fsKy: TypedKyInstance<keyof FileServerRoutes, FileServerRoutes> | null = null
   /**
    * A chokidar instance that watches the project directory for file changes
    */
@@ -47,24 +47,24 @@ export class DevServer {
     this.port = port
     this.componentFilePath = componentFilePath
     this.projectDir = path.dirname(componentFilePath)
-    this.fsKy = ky.create({
-      prefixUrl: `http://localhost:${port}`,
-    }) as any
+    // fsKy will be initialized after server starts
   }
 
   async start() {
     const { server } = await createHttpServer(this.port)
     this.httpServer = server
 
-    // Update port if a different one was assigned
+    // Get the actual port that was assigned
     const address = server.address()
-    if (address && typeof address !== "string") {
-      this.port = address.port
-      // Update fsKy with new port
-      this.fsKy = ky.create({
-        prefixUrl: `http://localhost:${this.port}`,
-      }) as any
+    if (!address || typeof address === "string") {
+      throw new Error("Failed to get server address")
     }
+    this.port = address.port
+
+    // Initialize fsKy with assigned port
+    this.fsKy = ky.create({
+      prefixUrl: `http://localhost:${this.port}`,
+    }) as any
 
     this.eventsWatcher = new EventsWatcher(`http://localhost:${this.port}`)
     this.eventsWatcher.start()
@@ -86,10 +86,12 @@ export class DevServer {
       this.handleFileChangedOnFilesystem(filePath),
     )
 
-    this.upsertInitialFiles()
+    await this.upsertInitialFiles()
   }
 
   async addEntrypoint() {
+    if (!this.fsKy) throw new Error("Server not started")
+
     const relativeComponentFilePath = path.relative(
       this.projectDir,
       this.componentFilePath,
@@ -108,6 +110,8 @@ circuit.add(<MyCircuit />)
 
   async handleFileUpdatedEventFromServer(ev: FileUpdatedEvent) {
     if (ev.initiator === "filesystem_change") return
+
+    if (!this.fsKy) return
 
     if (ev.file_path === "manual-edits.json") {
       console.log("Manual edits updated, updating on filesystem...")
@@ -129,6 +133,8 @@ circuit.add(<MyCircuit />)
     // because it can be edited by the browser
     if (relativeFilePath.includes("manual-edits.json")) return
 
+    if (!this.fsKy) return
+
     console.log(`${relativeFilePath} saved. Applying changes...`)
     await this.fsKy
       .post("api/files/upsert", {
@@ -142,6 +148,8 @@ circuit.add(<MyCircuit />)
   }
 
   async upsertInitialFiles() {
+    if (!this.fsKy) return
+
     // Scan project directory for all files and upsert them
     const fileNames = fs.readdirSync(this.projectDir)
     for (const fileName of fileNames) {
@@ -162,7 +170,23 @@ circuit.add(<MyCircuit />)
   }
 
   async stop() {
-    this.httpServer?.close()
+    // Stop event watcher first to prevent connection errors
     this.eventsWatcher?.stop()
+    this.eventsWatcher = undefined
+
+    // Stop file watcher
+    this.filesystemWatcher?.close()
+    this.filesystemWatcher = undefined
+
+    // Close server last
+    if (this.httpServer) {
+      await new Promise<void>((resolve) => {
+        this.httpServer!.close(() => resolve())
+      })
+      this.httpServer = undefined
+    }
+
+    // Clear fsKy
+    this.fsKy = null
   }
 }
