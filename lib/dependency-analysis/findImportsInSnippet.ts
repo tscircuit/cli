@@ -1,11 +1,7 @@
 import * as fs from "node:fs"
-import * as path from "node:path"
 import * as ts from "typescript"
 
-export function isFileTypesImported(
-  snippetPath: string,
-  typedImports: string[],
-): boolean {
+export function findImportsInSnippet(snippetPath: string): string[] {
   const content = fs.readFileSync(snippetPath, "utf-8")
   const sourceFile = ts.createSourceFile(
     snippetPath,
@@ -30,5 +26,5 @@ export function isFileTypesImported(
   }
 
   visit(sourceFile)
-  return imports.every((item) => typedImports.includes(item))
+  return imports
 }

@@ -8,8 +8,8 @@ import path from "node:path"
 import fs from "node:fs"
 import type { FileUpdatedEvent } from "lib/file-server/FileServerEvent"
 import * as chokidar from "chokidar"
-import { isFileTypesImported } from "lib/dependency-analysis/isFileTypesImported"
 import { installNodeModuleTypesForSnippet } from "lib/dependency-analysis/installNodeModuleTypesForSnippet"
+import { findImportsInSnippet } from "lib/dependency-analysis/findImportsInSnippet"
 
 export class DevServer {
   port: number
@@ -19,11 +19,6 @@ export class DevServer {
   componentFilePath: string
 
   projectDir: string
-
-  /**
-   * List of imports whose type declarations are there
-   */
-  resolvedTypedImports: string[]
 
   /**
    * The HTTP server that hosts the file server and event bus. You can use
@@ -47,14 +42,11 @@ export class DevServer {
   constructor({
     port,
     componentFilePath,
-    resolvedTypedImports,
   }: {
     port: number
     componentFilePath: string
-    resolvedTypedImports?: string[]
   }) {
     this.port = port
-    this.resolvedTypedImports = resolvedTypedImports ?? []
     this.componentFilePath = componentFilePath
     this.projectDir = path.dirname(componentFilePath)
     this.fsKy = ky.create({
@@ -87,6 +79,8 @@ export class DevServer {
     )
 
     this.upsertInitialFiles()
+
+    await this.handleTypeDependencies(this.componentFilePath)
   }
 
   async addEntrypoint() {
@@ -129,13 +123,13 @@ circuit.add(<MyCircuit />)
     // because it can be edited by the browser
     if (relativeFilePath.includes("manual-edits.json")) return
 
-    if (!isFileTypesImported(absoluteFilePath, this.resolvedTypedImports)) {
-      console.log("Types refreshing...")
-      const updatedImports =
+    try {
+      if (!this.areTypesInstalled(absoluteFilePath)) {
+        console.log("Types outdated, installing...")
         await installNodeModuleTypesForSnippet(absoluteFilePath)
-      this.resolvedTypedImports = [
-        ...new Set([...this.resolvedTypedImports, ...updatedImports]),
-      ]
+      }
+    } catch (error) {
+      console.warn("Failed to verify types:", error)
     }
 
     console.log(`${relativeFilePath} saved. Applying changes...`)
@@ -173,5 +167,48 @@ circuit.add(<MyCircuit />)
   async stop() {
     this.httpServer?.close()
     this.eventsWatcher?.stop()
+  }
+
+  private async handleTypeDependencies(absoluteFilePath: string) {
+    console.log("Checking type dependencies...")
+    try {
+      const needsInstallation = !this.areTypesInstalled(absoluteFilePath)
+      if (needsInstallation) {
+        console.log("Installing missing types...")
+        await installNodeModuleTypesForSnippet(absoluteFilePath)
+      }
+    } catch (error) {
+      console.warn("Error handling type dependencies:", error)
+    }
+  }
+
+  private areTypesInstalled(absoluteFilePath: string): boolean {
+    const imports = findImportsInSnippet(absoluteFilePath)
+    return imports.every((imp) => this.checkTypeExists(imp))
+  }
+
+  private checkTypeExists(importPath: string): boolean {
+    if (!importPath.startsWith("@tsci/")) return true
+
+    let projectRoot = this.projectDir
+    while (projectRoot !== path.parse(projectRoot).root) {
+      if (fs.existsSync(path.join(projectRoot, "package.json"))) {
+        break
+      }
+      projectRoot = path.dirname(projectRoot)
+    }
+
+    const pathWithoutPrefix = importPath.replace("@tsci/", "")
+    const [owner, name] = pathWithoutPrefix.split(".")
+
+    const typePath = path.join(
+      projectRoot,
+      "node_modules",
+      "@tsci",
+      `${owner}.${name}`,
+      "index.d.ts",
+    )
+
+    return fs.existsSync(typePath)
   }
 }
