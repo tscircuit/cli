@@ -86,6 +86,9 @@ export const registerClone = (program: Command) => {
           fs.writeFileSync(fullPath, fileContent.package_file.content_text)
         }
 
+        const npmrcPath = path.join(dirPath, ".npmrc")
+        fs.writeFileSync(npmrcPath, "@tsci:registry=https://npm.tscircuit.com")
+
         console.log(`Successfully cloned to ./${author}.${snippetName}/`)
       } catch (error) {
         if (error instanceof Error) {
