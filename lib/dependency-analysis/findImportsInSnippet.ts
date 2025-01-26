@@ -26,5 +26,6 @@ export function findImportsInSnippet(snippetPath: string): string[] {
   }
 
   visit(sourceFile)
+
   return imports
 }
