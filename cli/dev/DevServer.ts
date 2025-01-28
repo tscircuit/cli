@@ -53,6 +53,7 @@ export class DevServer {
     this.fsKy = ky.create({
       prefixUrl: `http://localhost:${port}`,
     }) as any
+    this.typesHandler = new FilesystemTypesHandler(this.projectDir)
   }
 
   async start() {
@@ -81,7 +82,7 @@ export class DevServer {
 
     this.upsertInitialFiles()
 
-    this.typesHandler = new FilesystemTypesHandler(this.projectDir)
+    this.typesHandler?.handleInitialTypeDependencies(this.componentFilePath)
   }
 
   async addEntrypoint() {

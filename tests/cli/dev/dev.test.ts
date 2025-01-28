@@ -1,8 +1,23 @@
-import { test, expect, afterEach, beforeEach, mock } from "bun:test"
+import { test, expect, afterEach } from "bun:test"
 import { DevServer } from "cli/dev/DevServer"
 import { getTestFixture } from "tests/fixtures/get-test-fixture"
 import fs from "node:fs"
 import path from "node:path"
+
+async function waitForFile(
+  filePath: string,
+  timeout: number = 5000,
+  interval: number = 500,
+): Promise<boolean> {
+  const endTime = Date.now() + timeout
+  while (Date.now() < endTime) {
+    if (fs.existsSync(filePath)) {
+      return true
+    }
+    await new Promise((resolve) => setTimeout(resolve, interval))
+  }
+  return false
+}
 
 test("types are installed and refreshed when files change", async () => {
   const { tempDirPath, devServerPort } = await getTestFixture({
@@ -21,14 +36,14 @@ test("types are installed and refreshed when files change", async () => {
   })
 
   await devServer.start()
-  await devServer.handleFileChangedOnFilesystem(`${tempDirPath}/snippet.tsx`)
 
-  // Verify initial type installation
+  // Wait for the initial type file to be installed
   const typePath = path.join(
     tempDirPath,
     "node_modules/@tsci/seveibar.red-led/index.d.ts",
   )
-  expect(fs.existsSync(typePath)).toBe(true)
+  const typeFileExists = await waitForFile(typePath)
+  expect(typeFileExists).toBe(true)
 
   // Simulate file change with new import
   const updatedContent = `
@@ -37,17 +52,14 @@ test("types are installed and refreshed when files change", async () => {
   `
   fs.writeFileSync(`${tempDirPath}/snippet.tsx`, updatedContent)
 
-  // Trigger file change handler
-  await devServer.handleFileChangedOnFilesystem(`${tempDirPath}/snippet.tsx`)
-
-  // Verify new types file still exists after update
+  // Wait for the new type file to be installed after update
   const typePath2 = path.join(
     tempDirPath,
     "node_modules/@tsci/seveibar.smd-usb-c/index.d.ts",
   )
-  expect(fs.existsSync(typePath2)).toBe(true)
+  const typeFileExists2 = await waitForFile(typePath2)
+  expect(typeFileExists2).toBe(true)
 
-  afterEach(async () => {
-    await devServer.stop()
-  })
+  // Stop the dev server after the test
+  await devServer.stop()
 }, 10_000)
