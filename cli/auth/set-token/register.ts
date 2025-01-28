@@ -1,5 +1,5 @@
 import type { Command } from "commander"
-import { cliConfig } from "lib/cli-config"
+import { setSessionToken } from "lib/cli-config"
 
 function validateJWTLength(token: string) {
   const parts = token.split(".")
@@ -19,7 +19,7 @@ export const registerAuthSetToken = (program: Command) => {
     .action((token) => {
       if (!validateJWTLength(token))
         return console.log("Invalid token provided")
-      cliConfig.set("sessionToken", token)
+      setSessionToken(token)
       console.log("Token manually updated.")
     })
 }
