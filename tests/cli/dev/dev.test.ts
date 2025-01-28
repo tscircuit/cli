@@ -4,7 +4,7 @@ import { getTestFixture } from "tests/fixtures/get-test-fixture"
 import fs from "node:fs"
 import path from "node:path"
 
-test.skip("types are installed and refreshed when files change", async () => {
+test("types are installed and refreshed when files change", async () => {
   const { tempDirPath, devServerPort } = await getTestFixture({
     vfs: {
       "snippet.tsx": `
@@ -21,6 +21,7 @@ test.skip("types are installed and refreshed when files change", async () => {
   })
 
   await devServer.start()
+  await devServer.handleFileChangedOnFilesystem(`${tempDirPath}/snippet.tsx`)
 
   // Verify initial type installation
   const typePath = path.join(
