@@ -46,5 +46,7 @@ test.skip("types are installed and refreshed when files change", async () => {
   )
   expect(fs.existsSync(typePath2)).toBe(true)
 
-  devServer.stop()
+  afterEach(async () => {
+    await devServer.stop()
+  })
 }, 10_000)
