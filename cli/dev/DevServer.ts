@@ -8,8 +8,7 @@ import path from "node:path"
 import fs from "node:fs"
 import type { FileUpdatedEvent } from "lib/file-server/FileServerEvent"
 import * as chokidar from "chokidar"
-import { installNodeModuleTypesForSnippet } from "lib/dependency-analysis/installNodeModuleTypesForSnippet"
-import { findImportsInSnippet } from "lib/dependency-analysis/findImportsInSnippet"
+import { FilesystemTypesHandler } from "lib/dependency-analysis/FilesystemTypesHandler"
 
 export class DevServer {
   port: number
@@ -38,6 +37,8 @@ export class DevServer {
    * A chokidar instance that watches the project directory for file changes
    */
   filesystemWatcher?: chokidar.FSWatcher
+
+  private typesHandler?: FilesystemTypesHandler
 
   constructor({
     port,
@@ -80,7 +81,7 @@ export class DevServer {
 
     this.upsertInitialFiles()
 
-    await this.handleTypeDependencies(this.componentFilePath)
+    this.typesHandler = new FilesystemTypesHandler(this.projectDir)
   }
 
   async addEntrypoint() {
@@ -123,14 +124,7 @@ circuit.add(<MyCircuit />)
     // because it can be edited by the browser
     if (relativeFilePath.includes("manual-edits.json")) return
 
-    try {
-      if (!this.areTypesInstalled(absoluteFilePath)) {
-        console.log("Types outdated, installing...")
-        await installNodeModuleTypesForSnippet(absoluteFilePath)
-      }
-    } catch (error) {
-      console.warn("Failed to verify types:", error)
-    }
+    await this.typesHandler?.handleFileTypeDependencies(absoluteFilePath)
 
     console.log(`${relativeFilePath} saved. Applying changes...`)
     await this.fsKy
@@ -167,48 +161,5 @@ circuit.add(<MyCircuit />)
   async stop() {
     this.httpServer?.close()
     this.eventsWatcher?.stop()
-  }
-
-  private async handleTypeDependencies(absoluteFilePath: string) {
-    console.log("Checking type dependencies...")
-    try {
-      const needsInstallation = !this.areTypesInstalled(absoluteFilePath)
-      if (needsInstallation) {
-        console.log("Installing missing types...")
-        await installNodeModuleTypesForSnippet(absoluteFilePath)
-      }
-    } catch (error) {
-      console.warn("Error handling type dependencies:", error)
-    }
-  }
-
-  private areTypesInstalled(absoluteFilePath: string): boolean {
-    const imports = findImportsInSnippet(absoluteFilePath)
-    return imports.every((imp) => this.checkTypeExists(imp))
-  }
-
-  private checkTypeExists(importPath: string): boolean {
-    if (!importPath.startsWith("@tsci/")) return true
-
-    let projectRoot = this.projectDir
-    while (projectRoot !== path.parse(projectRoot).root) {
-      if (fs.existsSync(path.join(projectRoot, "package.json"))) {
-        break
-      }
-      projectRoot = path.dirname(projectRoot)
-    }
-
-    const pathWithoutPrefix = importPath.replace("@tsci/", "")
-    const [owner, name] = pathWithoutPrefix.split(".")
-
-    const typePath = path.join(
-      projectRoot,
-      "node_modules",
-      "@tsci",
-      `${owner}.${name}`,
-      "index.d.ts",
-    )
-
-    return fs.existsSync(typePath)
   }
 }
