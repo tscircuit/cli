@@ -14,6 +14,7 @@ import semver from "semver"
 import { registerExport } from "./export/register"
 import { registerAuthPrintToken } from "./auth/print-token/register"
 import { registerAuthSetToken } from "./auth/set-token/register"
+import { registerPush } from "./push/register"
 
 const program = new Command()
 
@@ -28,6 +29,7 @@ registerInit(program)
 
 registerDev(program)
 registerClone(program)
+registerPush(program)
 
 registerAuth(program)
 registerAuthLogin(program)
