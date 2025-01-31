@@ -122,7 +122,6 @@ export const registerPush = (program: Command) => {
             throwHttpErrors: false,
           })
           .json()
-
         if (existingRelease.package_release?.version) {
           packageVersion = existingRelease.package_release.version
           updatePackageJsonVersion(existingRelease.package_release.version)
@@ -135,7 +134,7 @@ export const registerPush = (program: Command) => {
 
       if (doesReleaseExist) {
         const bumpedVersion =
-          semver.inc(packageVersion, "patch") ??
+          semver.inc(packageVersion, "minor") ??
           (parseFloat(packageVersion) + 0.1).toString()
         console.log(
           `⬆️ Incrementing Package Version ${packageVersion} -> ${bumpedVersion}`,
@@ -156,6 +155,8 @@ export const registerPush = (program: Command) => {
         console.error("❌ Error while creating package release:", error.message)
         process.exit(1)
       }
+
+      console.log("\n")
 
       const directoryFiles = fs.readdirSync(path.dirname(snippetFilePath))
       for (const file of directoryFiles) {
@@ -182,7 +183,9 @@ export const registerPush = (program: Command) => {
       }
 
       console.log(
-        `🎉 Successfully pushed snippet to the registry! https://registry.tscircuit.com/${packageIdentifier}`,
+        `\n🎉 Successfully pushed snippet to the registry!${Bun.color("blue", "ansi")}`,
+        `https://registry.tscircuit.com/${packageIdentifier}`,
+        "\x1b[0m",
       )
     })
 }
