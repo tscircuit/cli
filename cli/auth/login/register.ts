@@ -2,7 +2,6 @@ import type { Command } from "commander"
 import { cliConfig } from "lib/cli-config"
 import delay from "delay"
 import { getKy } from "lib/registry-api/get-ky"
-import type { EndpointResponse } from "lib/registry-api/endpoint-types"
 
 export const registerAuthLogin = (program: Command) => {
   program.commands
@@ -13,12 +12,9 @@ export const registerAuthLogin = (program: Command) => {
       const ky = getKy()
 
       const { login_page } = await ky
-        .post<EndpointResponse["sessions/login_page/create"]>(
-          "sessions/login_page/create",
-          {
-            json: {},
-          },
-        )
+        .post("sessions/login_page/create", {
+          json: {},
+        })
         .json()
 
       console.log("Please visit the following URL to log in:")
@@ -27,17 +23,14 @@ export const registerAuthLogin = (program: Command) => {
       // Wait until we receive confirmation
       while (true) {
         const { login_page: new_login_page } = await ky
-          .post<EndpointResponse["sessions/login_page/get"]>(
-            "sessions/login_page/get",
-            {
-              json: {
-                login_page_id: login_page.login_page_id,
-              },
-              headers: {
-                Authorization: `Bearer ${login_page.login_page_auth_token}`,
-              },
+          .post("sessions/login_page/get", {
+            json: {
+              login_page_id: login_page.login_page_id,
             },
-          )
+            headers: {
+              Authorization: `Bearer ${login_page.login_page_auth_token}`,
+            },
+          })
           .json()
 
         if (new_login_page.was_login_successful) {
@@ -53,17 +46,14 @@ export const registerAuthLogin = (program: Command) => {
       }
 
       const { session } = await ky
-        .post<EndpointResponse["sessions/login_page/exchange_for_cli_session"]>(
-          "sessions/login_page/exchange_for_cli_session",
-          {
-            json: {
-              login_page_id: login_page.login_page_id,
-            },
-            headers: {
-              Authorization: `Bearer ${login_page.login_page_auth_token}`,
-            },
+        .post("sessions/login_page/exchange_for_cli_session", {
+          json: {
+            login_page_id: login_page.login_page_id,
           },
-        )
+          headers: {
+            Authorization: `Bearer ${login_page.login_page_auth_token}`,
+          },
+        })
         .json()
 
       cliConfig.set("sessionToken", session.token)
