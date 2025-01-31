@@ -206,7 +206,7 @@ export const registerPush = (program: Command) => {
 
       console.log(
         `\n🎉 Successfully pushed package ${packageIdentifier}@${packageVersion} to the registry!${Bun.color("blue", "ansi")}`,
-        `https://registry.tscircuit.com/${packageIdentifier} \x1b[0m`,
+        `https://tscircuit.com/${packageIdentifier} \x1b[0m`,
       )
     })
 }
