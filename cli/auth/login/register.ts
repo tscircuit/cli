@@ -1,5 +1,5 @@
 import type { Command } from "commander"
-import { cliConfig } from "lib/cli-config"
+import { setSessionToken } from "lib/cli-config"
 import delay from "delay"
 import { getKy } from "lib/registry-api/get-ky"
 import type { EndpointResponse } from "lib/registry-api/endpoint-types"
@@ -63,9 +63,8 @@ export const registerAuthLogin = (program: Command) => {
       )
       .json()
 
-    cliConfig.set("sessionToken", session.token)
-
-    console.log("Ready to use!")
+    setSessionToken(session.token)
+    console.log("\nReady to use!")
   }
 
   // Register the auth login subcommand

@@ -8,6 +8,7 @@ import path from "node:path"
 import fs from "node:fs"
 import type { FileUpdatedEvent } from "lib/file-server/FileServerEvent"
 import * as chokidar from "chokidar"
+import { FilesystemTypesHandler } from "lib/dependency-analysis/FilesystemTypesHandler"
 
 export class DevServer {
   port: number
@@ -37,6 +38,8 @@ export class DevServer {
    */
   filesystemWatcher?: chokidar.FSWatcher
 
+  private typesHandler?: FilesystemTypesHandler
+
   constructor({
     port,
     componentFilePath,
@@ -50,6 +53,7 @@ export class DevServer {
     this.fsKy = ky.create({
       prefixUrl: `http://localhost:${port}`,
     }) as any
+    this.typesHandler = new FilesystemTypesHandler(this.projectDir)
   }
 
   async start() {
@@ -77,6 +81,8 @@ export class DevServer {
     )
 
     this.upsertInitialFiles()
+
+    this.typesHandler?.handleInitialTypeDependencies(this.componentFilePath)
   }
 
   async addEntrypoint() {
@@ -118,6 +124,8 @@ circuit.add(<MyCircuit />)
     // We've temporarily disabled upserting manual edits from filesystem changes
     // because it can be edited by the browser
     if (relativeFilePath.includes("manual-edits.json")) return
+
+    await this.typesHandler?.handleFileTypeDependencies(absoluteFilePath)
 
     console.log(`${relativeFilePath} saved. Applying changes...`)
     await this.fsKy
