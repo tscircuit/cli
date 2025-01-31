@@ -1,6 +1,7 @@
 import { getRegistryApiUrl } from "lib/cli-config"
 import ky, { type AfterResponseHook } from "ky"
 import type { TypedKyInstance } from "typed-ky"
+import type { EndpointTypes } from "./endpoint-types"
 
 const prettyResponseErrorHook: AfterResponseHook = async (
   _request,
@@ -55,6 +56,15 @@ export type LiteSnippet = Omit<
 >
 
 export interface RegistryApi {
+  "sessions/login_page/create": {
+    POST: EndpointTypes["sessions/login_page/create"]
+  }
+  "sessions/login_page/get": {
+    POST: EndpointTypes["sessions/login_page/get"]
+  }
+  "sessions/login_page/exchange_for_cli_session": {
+    POST: EndpointTypes["sessions/login_page/exchange_for_cli_session"]
+  }
   "snippets/create": {
     POST: {
       requestJson: {

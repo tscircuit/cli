@@ -33,14 +33,7 @@ export const registerClone = (program: Command) => {
         console.log(`Cloning ${author}/${snippetName}...`)
 
         const packageFileList = await ky
-          .post<{
-            package_files: Array<{
-              package_file_id: string
-              package_release_id: string
-              file_path: string
-              created_at: string
-            }>
-          }>("package_files/list", {
+          .post("package_files/list", {
             json: {
               package_name: `${author}/${snippetName}`,
               use_latest_version: true,
@@ -63,11 +56,7 @@ export const registerClone = (program: Command) => {
           if (filePath.startsWith("dist/")) continue
 
           const fileContent = await ky
-            .post<{
-              package_file: {
-                content_text: string
-              }
-            }>("package_files/get", {
+            .post("package_files/get", {
               json: {
                 package_name: `${author}/${snippetName}`,
                 file_path: fileInfo.file_path,
@@ -75,12 +64,30 @@ export const registerClone = (program: Command) => {
             })
             .json()
 
+          if ("error" in fileContent) {
+            throw new Error(
+              `Failed to get file ${filePath}: ${fileContent.error.message}`,
+            )
+          }
+          // Check if we have the package file
+          if (!fileContent.ok || !fileContent.package_file) {
+            throw new Error(
+              `Failed to get file ${filePath}: No package file returned`,
+            )
+          }
+
           const fullPath = path.join(dirPath, filePath)
           const dirName = path.dirname(fullPath)
 
           // Create nested directories if they don't exist
           if (!fs.existsSync(dirName)) {
             fs.mkdirSync(dirName, { recursive: true })
+          }
+
+          if (!fileContent.package_file.content_text) {
+            throw new Error(
+              `Failed to get file ${filePath}: No content text available`,
+            )
           }
 
           fs.writeFileSync(fullPath, fileContent.package_file.content_text)
