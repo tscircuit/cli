@@ -8,7 +8,7 @@ import pkg from "../../package.json"
 import winterspecBundle from "@tscircuit/file-server/dist/bundle.js"
 import { getIndex } from "../site/getIndex"
 
-export const createHttpServer = async (port = 3000) => {
+export const createHttpServer = async (port = 3020) => {
   const fileServerHandler = getNodeHandler(winterspecBundle as any, {})
 
   const server = http.createServer(async (req, res) => {
