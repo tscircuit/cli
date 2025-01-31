@@ -154,9 +154,7 @@ export const registerPush = (program: Command) => {
         })
 
       if (doesReleaseExist) {
-        const bumpedVersion =
-          semver.inc(packageVersion, "patch") ??
-          (parseFloat(packageVersion) + 0.1).toString()
+        const bumpedVersion = semver.inc(packageVersion, "patch")!
         console.log(
           `Incrementing Package Version ${packageVersion} -> ${bumpedVersion}`,
         )
