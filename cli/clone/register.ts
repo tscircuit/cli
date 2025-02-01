@@ -75,7 +75,9 @@ export const registerClone = (program: Command) => {
             })
             .json()
 
-          const fullPath = path.join(dirPath, filePath)
+          let fullPath = path.join(dirPath, filePath)
+          if (filePath === "index.ts")
+            fullPath = fullPath.replace(".ts", ".tsx")
           const dirName = path.dirname(fullPath)
 
           // Create nested directories if they don't exist
