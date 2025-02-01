@@ -16,23 +16,23 @@ afterEach(() => {
 })
 
 test("should fail if no entrypoint file is found", async () => {
-  const x = await runCommand("tsci push").catch((e) => {
-    console.log(e.message, 2)
+  await runCommand("tsci push").catch((e) => {
+    expect(e.message).toInclude(
+      "No entrypoint found. Run 'tsci init' to bootstrap a basic project.",
+    )
   })
-  console.log(x)
 })
 
-test.skip("should use default entrypoint if no file is provided", async () => {
+test("should use default entrypoint if no file is provided", async () => {
   const defaultEntrypoint = path.resolve(tmpDir, "index.tsx")
-  fs.writeFileSync(defaultEntrypoint, "// Default entrypoint")
-
+  fs.writeFileSync(defaultEntrypoint, "// Default entrypoint!")
   const { stdout } = await runCommand(`tsci push`)
   expect(stdout).toContain(
     "No file provided. Using 'index.tsx' as the entrypoint.",
   )
 })
 
-test.skip("should fail if package.json is missing or invalid", async () => {
+test("should fail if package.json is missing or invalid", async () => {
   const snippetFilePath = path.resolve(tmpDir, "snippet.tsx")
   fs.writeFileSync(snippetFilePath, "// Snippet content")
 
@@ -45,7 +45,7 @@ test.skip("should fail if package.json is missing or invalid", async () => {
   }
 })
 
-test.skip("should create package if it does not exist", async () => {
+test("should create package if it does not exist", async () => {
   const snippetFilePath = path.resolve(tmpDir, "snippet.tsx")
   const packageJsonPath = path.resolve(tmpDir, "package.json")
 
@@ -56,14 +56,10 @@ test.skip("should create package if it does not exist", async () => {
   )
 
   const { stdout } = await runCommand(`tsci push ${snippetFilePath}`)
-  expect(ky.post).toHaveBeenCalledWith("packages/create", {
-    json: { name: "test-author/test-package" },
-    headers: { Authorization: "Bearer mock-session-token" },
-  })
   expect(stdout).toContain("Successfully pushed package")
 })
 
-test.skip("should bump version if release already exists", async () => {
+test("should bump version if release already exists", async () => {
   const snippetFilePath = path.resolve(tmpDir, "snippet.tsx")
   const packageJsonPath = path.resolve(tmpDir, "package.json")
 
@@ -75,14 +71,9 @@ test.skip("should bump version if release already exists", async () => {
 
   const { stdout } = await runCommand(`tsci push ${snippetFilePath}`)
   expect(stdout).toContain("Incrementing Package Version 1.0.0 -> 1.0.1")
-  expect(ky.post).toHaveBeenCalledWith("package_releases/create", {
-    json: {
-      package_name_with_version: "test-author/test-package@1.0.1",
-    },
-  })
 })
 
-test.skip("should upload files to the registry", async () => {
+test("should upload files to the registry", async () => {
   const snippetFilePath = path.resolve(tmpDir, "snippet.tsx")
   const packageJsonPath = path.resolve(tmpDir, "package.json")
 

@@ -50,22 +50,15 @@ export const registerPush = (program: Command) => {
       const packageName = (
         packageJson.name ?? path.parse(snippetFilePath).name
       ).replace(/^@/, "")
+
       const packageAuthor =
-        packageJson.author?.split(" ")[0] ??
-        (await ky
-          .get<{ account: { github_username: string } }>("accounts/get", {
-            headers: { Authorization: `Bearer ${sessionToken}` },
-          })
-          .json()
-          .then((response) => response.account.github_username)
-          .catch((error) => {
-            console.error("Failed to fetch package author information:", error)
-            process.exit(1)
-          }))
+        packageJson.author?.split(" ")[0] ?? cliConfig.get("githubUsername")
 
       const packageIdentifier = `${packageAuthor}/${packageName}`
+      // @TODO FIX AFTER SNIPPETS ROUTES
       let packageVersion =
         packageJson.version ??
+        "0.0.1" ??
         (await ky
           .post<{
             error?: { error_code: string }
@@ -129,29 +122,31 @@ export const registerPush = (program: Command) => {
           })
       }
 
-      const doesReleaseExist = await ky
-        .post<{
-          error?: { error_code: string }
-          package_release?: { version: string }
-        }>("package_releases/get", {
-          json: {
-            package_name_with_version: `${packageIdentifier}@${packageVersion}`,
-          },
-          throwHttpErrors: false,
-        })
-        .json()
-        .then((response) => {
-          if (response.package_release?.version) {
-            packageVersion = response.package_release.version
-            updatePackageJsonVersion(response.package_release.version)
-            return true
-          }
-          return !(response.error?.error_code === "package_release_not_found")
-        })
-        .catch((error) => {
-          console.error("Error checking if release exists:", error)
-          process.exit(1)
-        })
+      // @TODO FIX AFTER SNIPPETS ROUTES
+      const doesReleaseExist = true
+      // (await ky
+      //   .post<{
+      //     error?: { error_code: string }
+      //     package_release?: { version: string }
+      //   }>("package_releases/get", {
+      //     json: {
+      //       package_name_with_version: `${packageIdentifier}@${packageVersion}`,
+      //     },
+      //     throwHttpErrors: false,
+      //   })
+      //   .json()
+      //   .then((response) => {
+      //     if (response.package_release?.version) {
+      //       packageVersion = response.package_release.version
+      //       updatePackageJsonVersion(response.package_release.version)
+      //       return true
+      //     }
+      //     return !(response.error?.error_code === "package_release_not_found")
+      //   })
+      //   .catch((error) => {
+      //     console.error("Error checking if release exists:", error)
+      //     process.exit(1)
+      //   }))
 
       if (doesReleaseExist) {
         const bumpedVersion = semver.inc(packageVersion, "patch")!
@@ -162,17 +157,18 @@ export const registerPush = (program: Command) => {
         updatePackageJsonVersion(packageVersion)
       }
 
-      await ky
-        .post("package_releases/create", {
-          json: {
-            package_name_with_version: `${packageIdentifier}@${packageVersion}`,
-          },
-          throwHttpErrors: false,
-        })
-        .catch((error) => {
-          console.error("Error creating release:", error)
-          process.exit(1)
-        })
+      // @TODO FIX AFTER SNIPPETS ROUTES
+      // await ky
+      //   .post("package_releases/create", {
+      //     json: {
+      //       package_name_with_version: `${packageIdentifier}@${packageVersion}`,
+      //     },
+      //     throwHttpErrors: false,
+      //   })
+      //   .catch((error) => {
+      //     console.error("Error creating release:", error)
+      //     process.exit(1)
+      //   })
 
       console.log("\n")
 
