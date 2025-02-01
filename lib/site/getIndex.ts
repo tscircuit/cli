@@ -6,7 +6,17 @@ export const getIndex = async () => {
     </head>
     <body>
       <script src="https://cdn.tailwindcss.com"></script>
-      <div id="root">loading...</div>
+      <style>
+        @tailwind base;
+        @tailwind components;
+        @tailwind utilities;
+      </style>
+    </head>
+    <body class="flex justify-center items-center h-screen bg-gray-100">
+      <div id="root" class="text-center">
+        <div class="spinner border-t-4 border-blue-500 rounded-full w-12 h-12 animate-spin mx-auto mb-4"></div>
+        <div class="text-lg text-gray-700">Loading, please wait...</div>
+      </div>
       <script>
       globalThis.process = { env: { NODE_ENV: "production" } }
       </script>

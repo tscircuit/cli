@@ -16,6 +16,8 @@ export const registerDev = (program: Command) => {
     .argument("[file]", "Path to the snippet file")
     .option("-p, --port <number>", "Port to run server on", "3020")
     .action(async (file: string, options: { port: string }) => {
+      console.log("Starting the development server, please wait...")
+
       let port = parseInt(options.port)
 
       const isPortAvailable = (port: number): Promise<boolean> => {
@@ -72,5 +74,6 @@ export const registerDev = (program: Command) => {
 
       await server.start()
       await server.addEntrypoint()
+      console.log("Development server started successfully.")
     })
 }
