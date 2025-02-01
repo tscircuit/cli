@@ -39,9 +39,7 @@ export const registerDev = (program: Command) => {
       if (file) {
         absolutePath = path.resolve(file)
         if (!absolutePath.endsWith(".tsx")) {
-          console.error(
-            "Error: Only .tsx files are supported",
-          )
+          console.error("Error: Only .tsx files are supported")
           return
         }
       } else {
