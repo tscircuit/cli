@@ -23,7 +23,7 @@ export async function getCliTestFixture(): Promise<CliTestFixture> {
     }
     args[0] = resolve(process.cwd(), "cli/main.ts")
 
-    const result = await execAsync(`npx bun ${args.join(" ")}`, {
+    const result = await execAsync(`bun ${args.join(" ")}`, {
       cwd: tmpDir,
     })
     return result
