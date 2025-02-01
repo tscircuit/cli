@@ -36,7 +36,7 @@ export const getTestSnippetsServer = async (): Promise<TestFixture> => {
   })
 
   cliConfig.set("sessionToken", db.accounts[0].account_id)
-  cliConfig.set("registryApiUrl", `${url}`)
+  cliConfig.set("registryApiUrl", url)
 
   afterAll(async () => {
     if (server && typeof server.stop === "function") {
