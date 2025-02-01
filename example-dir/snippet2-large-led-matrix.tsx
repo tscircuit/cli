@@ -1,3 +1,4 @@
+import React from "react"
 import { useHS91L02W2C01 } from "@tsci/seveibar.HS91L02W2C01"
 import manualEdits from "./manual-edits.json"
 import { WS2812B_2020 as LedWithIc } from "@tsci/seveibar.WS2812B_2020"
@@ -104,7 +105,7 @@ export default () => {
         ySpacing: 5,
         offsetX: 3 - 122,
         offsetY: -32 / 2 - 7.5,
-      }).map(({ center, index, row, col }) => {
+      }).map(({ center, index }) => {
         const ledName = `LED${index + 1}`
         const prevLedName = index > 0 ? `LED${index}` : null
         const capName = `C_${ledName}`
