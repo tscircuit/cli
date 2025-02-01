@@ -38,6 +38,12 @@ export const registerDev = (program: Command) => {
 
       if (file) {
         absolutePath = path.resolve(file)
+        if (!absolutePath.endsWith(".tsx")) {
+          console.error(
+            "Error: Only .tsx file is supported for the dev command.",
+          )
+          return
+        }
       } else {
         const entrypointPath = path.resolve("index.tsx")
         if (fs.existsSync(entrypointPath)) {
