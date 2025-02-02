@@ -10,9 +10,32 @@ import { getIndex } from "../site/getIndex"
 
 export const createHttpServer = async (port = 3020) => {
   const fileServerHandler = getNodeHandler(winterspecBundle as any, {})
+  let sseClients = new Set<http.ServerResponse>()
 
   const server = http.createServer(async (req, res) => {
     const url = new URL(req.url!, `http://${req.headers.host}`)
+
+    if (url.pathname === "/api/events/stream") {
+      console.log("Client connecting to SSE stream")
+      res.writeHead(200, {
+        "Content-Type": "text/event-stream",
+        "Cache-Control": "no-cache",
+        Connection: "keep-alive",
+      })
+
+      sseClients.add(res)
+      console.log(`SSE client connected. Total clients: ${sseClients.size}`)
+
+      res.write('data: {"type":"connected"}\n\n')
+
+      req.on("close", () => {
+        console.log("SSE client disconnected")
+        sseClients.delete(res)
+        console.log(`Remaining clients: ${sseClients.size}`)
+      })
+
+      return
+    }
 
     if (url.pathname === "/standalone.min.js") {
       const standaloneFilePath =
@@ -59,6 +82,7 @@ export const createHttpServer = async (port = 3020) => {
   })
 
   return new Promise<{ server: http.Server }>((resolve) => {
+    ;(server as any).sseClients = sseClients // Make clients accessible
     server.listen(port, () => {
       console.log(`Server running at http://localhost:${port}`)
       resolve({ server })

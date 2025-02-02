@@ -5,68 +5,95 @@ export const getIndex = async () => {
     <head>
       <script src="https://cdn.tailwindcss.com"></script>
       <style>
-        @tailwind base;
-        @tailwind components;
-        @tailwind utilities;
+        .circuit-loading {
+          position: fixed;
+          top: 0;
+          left: 0;
+          right: 0;
+          bottom: 0;
+          background: rgba(255, 255, 255, 0.9);
+          display: none;
+          justify-content: center;
+          align-items: center;
+          z-index: 1000;
+        }
+        .circuit-loading.active {
+          display: flex;
+        }
+        .loading-content {
+          background: white;
+          padding: 2rem;
+          border-radius: 8px;
+          box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+          text-align: center;
+        }
+        .loading-spinner {
+          border: 3px solid #e5e7eb;
+          border-top: 3px solid #3b82f6;
+          border-radius: 50%;
+          width: 2rem;
+          height: 2rem;
+          animation: spin 1s linear infinite;
+          margin: 0 auto 1rem;
+        }
+        @keyframes spin {
+          0% { transform: rotate(0deg); }
+          100% { transform: rotate(360deg); }
+        }
       </style>
     </head>
-    <body class="flex justify-center items-center h-screen bg-gray-100">
-      <div id="root" class="text-center">
-        <div class="spinner border-t-4 border-blue-500 rounded-full w-12 h-12 animate-spin mx-auto mb-4"></div>
-        <div id="status" class="text-lg text-gray-700">Loading, please wait...</div>
+    <body>
+      <script src="https://cdn.tailwindcss.com"></script>
+      <div id="root">loading...</div>
+      <div class="circuit-loading">
+        <div class="loading-content">
+          <div class="loading-spinner"></div>
+          <p>Circuit is rendering...</p>
+        </div>
       </div>
       <script>
         globalThis.process = { env: { NODE_ENV: "production" } }
-
-        // Function to load the circuit script
-        function loadCircuitScript() {
-          const script = document.createElement('script')
-          script.src = '/standalone.min.js'
-          document.body.appendChild(script)
-          console.log("Circuit script loaded") // Log when the script is loaded
-        }
-
-        // WebSocket connection to receive messages from the server
-        const ws = new WebSocket("ws://localhost:3020")
-        ws.onopen = () => {
-          console.log("WebSocket connection established")
-        }
-        ws.onmessage = (event) => {
-          console.log("WebSocket message received:", event.data) // Log to browser console
-
-          const statusElement = document.getElementById('status')
-          const spinnerElement = document.querySelector('.spinner')
-
-          if (!statusElement || !spinnerElement) {
-            console.error("Status or spinner element not found")
-            return
+        console.log('Setting up EventSource connection...');
+        
+        const loadingOverlay = document.querySelector('.circuit-loading');
+        const evtSource = new EventSource('/api/events/stream');
+        
+        evtSource.onopen = () => {
+          console.log('EventSource connection established');
+        };
+        
+        evtSource.onerror = (error) => {
+          console.error('EventSource error:', error);
+        };
+        
+        evtSource.onmessage = (event) => {
+          console.log('Received event:', event.data);
+          const data = JSON.parse(event.data);
+          
+          if (data.type === 'FILE_UPDATED') {
+            console.log('File update detected, showing loading overlay');
+            loadingOverlay.classList.add('active');
+            
+            console.log('Replacing standalone.js script');
+            const oldScript = document.querySelector('script[src="/standalone.min.js"]');
+            const newScript = document.createElement('script');
+            newScript.src = '/standalone.min.js';
+            
+            newScript.onload = () => {
+              console.log('New script loaded, hiding overlay after delay');
+              setTimeout(() => {
+                loadingOverlay.classList.remove('active');
+                console.log('Loading overlay hidden');
+              }, 500);
+            };
+            
+            newScript.onerror = (error) => {
+              console.error('Error loading new script:', error);
+            };
+            
+            oldScript.parentNode.replaceChild(newScript, oldScript);
           }
-
-          console.log("Before updating UI: statusElement.textContent =", statusElement.textContent)
-
-          if (event.data === " circuit is rendering...") {
-            console.log("Updating UI: circuit is rendering...")
-            statusElement.textContent = "Circuit is rendering..."
-            statusElement.className = "text-lg text-orange-500"
-            spinnerElement.className = "spinner border-t-4 border-orange-500 rounded-full w-12 h-12 animate-spin mx-auto mb-4"
-            console.log("After updating UI: statusElement.textContent =", statusElement.textContent)
-          } else if (event.data === "circuit is ready") {
-            console.log("Updating UI: circuit is ready")
-            statusElement.textContent = "Circuit is ready"
-            statusElement.className = "text-lg text-green-500"
-            spinnerElement.className = "hidden"
-            console.log("After updating UI: statusElement.textContent =", statusElement.textContent)
-            // Load the circuit script after rendering is complete
-            loadCircuitScript()
-          }
-        }
-
-        ws.onclose = () => {
-          console.log("WebSocket connection closed")
-        }
-
-        // Always load the circuit script initially
-        loadCircuitScript()
+        };
       </script>
       <script src="/standalone.min.js"></script>
     </body>

@@ -9,7 +9,6 @@ import fs from "node:fs"
 import type { FileUpdatedEvent } from "lib/file-server/FileServerEvent"
 import * as chokidar from "chokidar"
 import { FilesystemTypesHandler } from "lib/dependency-analysis/FilesystemTypesHandler"
-import { WebSocketServer } from "ws"
 
 export class DevServer {
   port: number
@@ -40,8 +39,6 @@ export class DevServer {
   filesystemWatcher?: chokidar.FSWatcher
 
   private typesHandler?: FilesystemTypesHandler
-  private wsServer?: WebSocketServer
-  private isRendering: boolean = false
 
   constructor({
     port,
@@ -60,14 +57,8 @@ export class DevServer {
   }
 
   async start() {
-    console.log("Starting server, please wait...")
     const { server } = await createHttpServer(this.port)
     this.httpServer = server
-
-    this.wsServer = new WebSocketServer({ server })
-    this.wsServer.on("connection", (ws) => {
-      ws.send("Server connected")
-    })
 
     this.eventsWatcher = new EventsWatcher(`http://localhost:${this.port}`)
     this.eventsWatcher.start()
@@ -82,17 +73,16 @@ export class DevServer {
       ignoreInitial: true,
     })
 
-    this.filesystemWatcher.on("change", async (filePath) => {
-      await this.handleFileChanged(filePath)
-    })
-    this.filesystemWatcher.on("add", async (filePath) => {
-      await this.handleFileChanged(filePath)
-    })
+    this.filesystemWatcher.on("change", (filePath) =>
+      this.handleFileChangedOnFilesystem(filePath),
+    )
+    this.filesystemWatcher.on("add", (filePath) =>
+      this.handleFileChangedOnFilesystem(filePath),
+    )
 
     this.upsertInitialFiles()
 
     this.typesHandler?.handleInitialTypeDependencies(this.componentFilePath)
-    console.log("Server started successfully")
   }
 
   async addEntrypoint() {
@@ -129,45 +119,54 @@ circuit.add(<MyCircuit />)
     }
   }
 
-  async handleFileChanged(filePath: string) {
-    if (this.isRendering) return
-    this.isRendering = true
-
-    console.log("circuit is rendering...")
-    this.notifyBrowser("circuit is rendering...")
-    await this.handleFileChangedOnFilesystem(filePath)
-
-    console.log("circuit is ready")
-    this.notifyBrowser("circuit is ready")
-
-    this.isRendering = false
-  }
-
   async handleFileChangedOnFilesystem(absoluteFilePath: string) {
     const relativeFilePath = path.relative(this.projectDir, absoluteFilePath)
-    if (relativeFilePath.includes("manual-edits.json")) return
+    console.log(`\nFile change detected: ${relativeFilePath}`)
+
+    if (relativeFilePath.includes("manual-edits.json")) {
+      console.log("Skipping manual-edits.json update")
+      return
+    }
 
     await this.typesHandler?.handleFileTypeDependencies(absoluteFilePath)
 
-    console.log(`${relativeFilePath} saved. Applying changes...`)
-    await this.fsKy
-      .post("api/files/upsert", {
-        json: {
-          file_path: relativeFilePath,
-          text_content: fs.readFileSync(absoluteFilePath, "utf-8"),
-          initiator: "filesystem_change",
-        },
-      })
-      .json()
-  }
+    console.log("Sending file update event to clients...")
+    try {
+      if (this.httpServer) {
+        const sseClients = (this.httpServer as any).sseClients
+        if (sseClients?.size > 0) {
+          console.log(`Broadcasting to ${sseClients.size} clients`)
+          const event = {
+            type: "FILE_UPDATED",
+            file: relativeFilePath,
+            timestamp: Date.now(),
+          }
 
-  notifyBrowser(message: string) {
-    console.log(`Sending message to browser: ${message}`)
-    this.wsServer?.clients.forEach((client) => {
-      if (client.readyState === WebSocket.OPEN) {
-        client.send(message)
+          for (const client of sseClients) {
+            client.write(`data: ${JSON.stringify(event)}\n\n`)
+          }
+          console.log("Event broadcast complete")
+        } else {
+          console.log("No SSE clients connected")
+        }
+      } else {
+        console.log("HTTP server not initialized")
       }
-    })
+
+      console.log("Updating file on server...")
+      await this.fsKy
+        .post("api/files/upsert", {
+          json: {
+            file_path: relativeFilePath,
+            text_content: fs.readFileSync(absoluteFilePath, "utf-8"),
+            initiator: "filesystem_change",
+          },
+        })
+        .json()
+      console.log("File update complete")
+    } catch (error) {
+      console.error("Error in handleFileChangedOnFilesystem:", error)
+    }
   }
 
   async upsertInitialFiles() {
@@ -192,6 +191,5 @@ circuit.add(<MyCircuit />)
   async stop() {
     this.httpServer?.close()
     this.eventsWatcher?.stop()
-    this.wsServer?.close()
   }
 }
