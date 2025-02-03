@@ -1,7 +1,7 @@
 import { getRegistryApiUrl } from "lib/cli-config"
 import ky, { type AfterResponseHook } from "ky"
 
-const prettyResponseErrorHook: AfterResponseHook = async (
+export const prettyResponseErrorHook: AfterResponseHook = async (
   _request,
   _options,
   response,
