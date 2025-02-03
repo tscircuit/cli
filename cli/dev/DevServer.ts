@@ -121,26 +121,55 @@ circuit.add(<MyCircuit />)
 
   async handleFileChangedOnFilesystem(absoluteFilePath: string) {
     const relativeFilePath = path.relative(this.projectDir, absoluteFilePath)
-    // We've temporarily disabled upserting manual edits from filesystem changes
-    // because it can be edited by the browser
-    if (relativeFilePath.includes("manual-edits.json")) return
+    console.log(`\nFile change detected: ${relativeFilePath}`)
+
+    if (relativeFilePath.includes("manual-edits.json")) {
+      console.log("Skipping manual-edits.json update")
+      return
+    }
 
     await this.typesHandler?.handleFileTypeDependencies(absoluteFilePath)
 
-    console.log(`${relativeFilePath} saved. Applying changes...`)
-    await this.fsKy
-      .post("api/files/upsert", {
-        json: {
-          file_path: relativeFilePath,
-          text_content: fs.readFileSync(absoluteFilePath, "utf-8"),
-          initiator: "filesystem_change",
-        },
-      })
-      .json()
+    console.log("Sending file update event to clients...")
+    try {
+      if (this.httpServer) {
+        const sseClients = (this.httpServer as any).sseClients
+        if (sseClients?.size > 0) {
+          console.log(`Broadcasting to ${sseClients.size} clients`)
+          const event = {
+            type: "FILE_UPDATED",
+            file: relativeFilePath,
+            timestamp: Date.now(),
+          }
+
+          for (const client of sseClients) {
+            client.write(`data: ${JSON.stringify(event)}\n\n`)
+          }
+          console.log("Event broadcast complete")
+        } else {
+          console.log("No SSE clients connected")
+        }
+      } else {
+        console.log("HTTP server not initialized")
+      }
+
+      console.log("Updating file on server...")
+      await this.fsKy
+        .post("api/files/upsert", {
+          json: {
+            file_path: relativeFilePath,
+            text_content: fs.readFileSync(absoluteFilePath, "utf-8"),
+            initiator: "filesystem_change",
+          },
+        })
+        .json()
+      console.log("File update complete")
+    } catch (error) {
+      console.error("Error in handleFileChangedOnFilesystem:", error)
+    }
   }
 
   async upsertInitialFiles() {
-    // Scan project directory for all files and upsert them
     const fileNames = fs.readdirSync(this.projectDir)
     for (const fileName of fileNames) {
       if (fs.statSync(path.join(this.projectDir, fileName)).isDirectory())
