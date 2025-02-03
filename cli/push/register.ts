@@ -38,7 +38,12 @@ export const registerPush = (program: Command) => {
       )
       let packageJson: { name?: string; author?: string; version?: string } = {}
       if (fs.existsSync(packageJsonPath)) {
-        packageJson = JSON.parse(fs.readFileSync(packageJsonPath).toString())
+        try {
+          packageJson = JSON.parse(fs.readFileSync(packageJsonPath).toString())
+        } catch {
+          console.error("Invalid package.json provided")
+          process.exit(1)
+        }
       }
 
       if (!fs.existsSync(snippetFilePath)) {
@@ -104,10 +109,6 @@ export const registerPush = (program: Command) => {
         .then(
           (response) => !(response.error?.error_code === "package_not_found"),
         )
-        .catch((error) => {
-          console.error("Error checking if package exists:", error)
-          process.exit(1)
-        })
 
       if (!doesPackageExist) {
         await ky
@@ -139,10 +140,6 @@ export const registerPush = (program: Command) => {
             return true
           }
           return !(response.error?.error_code === "package_release_not_found")
-        })
-        .catch((error) => {
-          console.error("Error checking if release exists:", error)
-          process.exit(1)
         })
 
       if (doesReleaseExist) {

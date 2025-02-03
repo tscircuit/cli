@@ -42,6 +42,7 @@ export const getTestSnippetsServer = async (): Promise<TestFixture> => {
     if (server && typeof server.stop === "function") {
       await server.stop()
     }
+    cliConfig.clear()
   })
 
   return {
