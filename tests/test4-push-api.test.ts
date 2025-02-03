@@ -61,7 +61,7 @@ test("should create package if it does not exist", async () => {
   expect(stdout).toContain("Successfully pushed package")
 })
 
-test.skip("should bump version if release already exists", async () => {
+test("should bump version if release already exists", async () => {
   const snippetFilePath = path.resolve(tmpDir, "snippet.tsx")
   const packageJsonPath = path.resolve(tmpDir, "package.json")
 
