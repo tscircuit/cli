@@ -20,7 +20,7 @@ export const setSessionToken = (token: string) => {
   cliConfig.set("githubUsername", decoded.github_username)
 }
 
-export const clearSessionToken = () => {
+export const clearSession = () => {
   cliConfig.delete("sessionToken")
   cliConfig.delete("githubUsername")
 }

@@ -1,9 +1,9 @@
 import type { Command } from "commander"
-import { clearSessionToken } from "lib/cli-config"
+import { clearSession } from "lib/cli-config"
 
 export const registerAuthLogout = (program: Command) => {
   const logoutAction = () => {
-    clearSessionToken()
+    clearSession()
     console.log("You have been logged out!")
   }
 
