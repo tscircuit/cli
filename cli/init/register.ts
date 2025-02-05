@@ -81,12 +81,12 @@ export default () => (
     <trace from=".R1 > .pin1" to=".C1 > .pin1" />
   </board>
 );
-`
+`.trim()
 
       // Content for .npmrc
       const npmrcContent = `
 @tsci:registry=https://npm.tscircuit.com
-`
+`.trim()
 
       // Create index.tsx if it doesn't exist
       if (!fs.existsSync(indexFilePath)) {
