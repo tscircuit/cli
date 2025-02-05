@@ -104,7 +104,7 @@ export default () => {
         ySpacing: 5,
         offsetX: 3 - 122,
         offsetY: -32 / 2 - 7.5,
-      }).map(({ center, index, row, col }) => {
+      }).map(({ center, index }) => {
         const ledName = `LED${index + 1}`
         const prevLedName = index > 0 ? `LED${index}` : null
         const capName = `C_${ledName}`
