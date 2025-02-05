@@ -20,25 +20,27 @@ const detectPackageManager = (): string => {
 // Generate a React-compatible tsconfig.json
 const generateTsConfig = (dir: string) => {
   const tsconfigPath = path.join(dir, "tsconfig.json")
-  const tsconfigContent = `
-{
-  "compilerOptions": {
-    "target": "ESNext",
-    "module": "ESNext",
-    "jsx": "react",
-    "strict": true,
-    "esModuleInterop": true,
-    "skipLibCheck": true,
-    "forceConsistentCasingInFileNames": true,
-    "moduleResolution": "node",
-    "resolveJsonModule": true,
-    "isolatedModules": true,
-    "noEmit": true
-  },
-  "include": ["**/*.ts", "**/*.tsx"],
-  "exclude": ["node_modules"]
-}
-`
+  const tsconfigContent = JSON.stringify(
+    {
+      compilerOptions: {
+        target: "ES6",
+        module: "ESNext",
+        jsx: "react-jsx",
+        outDir: "dist",
+        strict: true,
+        esModuleInterop: true,
+        moduleResolution: "node",
+        skipLibCheck: true,
+        forceConsistentCasingInFileNames: true,
+        resolveJsonModule: true,
+        sourceMap: true,
+        allowSyntheticDefaultImports: true,
+        experimentalDecorators: true,
+      },
+    },
+    null,
+    2,
+  )
   if (!fs.existsSync(tsconfigPath)) {
     fs.writeFileSync(tsconfigPath, tsconfigContent.trimStart())
     console.log(`Created: ${tsconfigPath}`)
@@ -58,6 +60,8 @@ export const registerInit = (program: Command) => {
 
       // Content for index.tsx
       const indexContent = `
+import "@tscircuit/core"
+
 export default () => (
   <board width="10mm" height="10mm">
     <resistor
@@ -109,16 +113,16 @@ export default () => (
         console.log("Installing dependencies...")
         const installCommand =
           packageManager === "yarn"
-            ? "yarn add @types/react"
+            ? "yarn add @types/react @tscircuit/core"
             : packageManager === "pnpm"
-            ? "pnpm add @types/react"
-            : packageManager === "bun"
-            ? "bun add @types/react"
-            : "npm install @types/react"
+              ? "pnpm add @types/react @tscircuit/core"
+              : packageManager === "bun"
+                ? "bun add @types/react @tscircuit/core"
+                : "npm install @types/react @tscircuit/core"
         execSync(installCommand, { stdio: "inherit" })
-        console.log("@types/react installed successfully.")
+        console.log("Dependencies installed successfully.")
       } catch (error) {
-        console.error("Failed to install @types/react:", error)
+        console.error("Failed to install dependencies:", error)
       }
 
       // Generate tsconfig.json
