@@ -1,5 +1,4 @@
 import "@tscircuit/core"
-import React from "react"
 import { useRedLed } from "@tsci/seveibar.red-led"
 import { usePushButton } from "@tsci/seveibar.push-button"
 import { useUsbC } from "@tsci/seveibar.smd-usb-c"

@@ -1,4 +1,3 @@
-import React from "react"
 import { useHS91L02W2C01 } from "@tsci/seveibar.HS91L02W2C01"
 import manualEdits from "./manual-edits.json"
 import { WS2812B_2020 as LedWithIc } from "@tsci/seveibar.WS2812B_2020"
