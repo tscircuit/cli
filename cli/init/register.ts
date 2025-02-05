@@ -108,7 +108,7 @@ export default () => (
       const packageManager = detectPackageManager()
       console.log(`Detected package manager: ${packageManager}`)
 
-      // Install @types/react using the detected package manager
+      // Install deps using the detected package manager
       try {
         console.log("Installing dependencies...")
         const installCommand =
