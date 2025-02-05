@@ -20,6 +20,11 @@ export const setSessionToken = (token: string) => {
   cliConfig.set("githubUsername", decoded.github_username)
 }
 
+export const clearSession = () => {
+  cliConfig.delete("sessionToken")
+  cliConfig.delete("githubUsername")
+}
+
 export const getRegistryApiUrl = (): string => {
   return cliConfig.get("registryApiUrl") ?? "https://registry-api.tscircuit.com"
 }
