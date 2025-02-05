@@ -109,16 +109,17 @@ export default () => (
       console.log(`Detected package manager: ${packageManager}`)
 
       // Install deps using the detected package manager
+      const dependencies = "@types/react @tscircuit/core"
       try {
         console.log("Installing dependencies...")
         const installCommand =
           packageManager === "yarn"
-            ? "yarn add @types/react @tscircuit/core"
+            ? `yarn add -D ${dependencies}`
             : packageManager === "pnpm"
-              ? "pnpm add @types/react @tscircuit/core"
+              ? `pnpm add -D ${dependencies}`
               : packageManager === "bun"
-                ? "bun add @types/react @tscircuit/core"
-                : "npm install @types/react @tscircuit/core"
+                ? `bun add -D ${dependencies}`
+                : `npm install -D ${dependencies}`
         execSync(installCommand, { stdio: "inherit" })
         console.log("Dependencies installed successfully.")
       } catch (error) {

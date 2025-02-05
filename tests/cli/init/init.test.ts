@@ -11,8 +11,8 @@ test("init command installs @types/react and passes type-checking", async () => 
 
   const pkgJsonPath = join(tmpDir, "package.json")
   const pkgJson = JSON.parse(await Bun.file(pkgJsonPath).text())
-  expect(pkgJson.dependencies["@types/react"]).toBeDefined()
-  expect(pkgJson.dependencies["@tscircuit/core"]).toBeDefined()
+  expect(pkgJson.devDependencies["@types/react"]).toBeDefined()
+  expect(pkgJson.devDependencies["@tscircuit/core"]).toBeDefined()
 
   const npmrcPath = join(tmpDir, ".npmrc")
   const npmrcContent = await Bun.file(npmrcPath).text()
