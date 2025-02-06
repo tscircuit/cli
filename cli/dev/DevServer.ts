@@ -9,6 +9,8 @@ import fs from "node:fs"
 import type { FileUpdatedEvent } from "lib/file-server/FileServerEvent"
 import * as chokidar from "chokidar"
 import { FilesystemTypesHandler } from "lib/dependency-analysis/FilesystemTypesHandler"
+import { exec } from "node:child_process"
+import { promisify } from "node:util"
 
 export class DevServer {
   port: number
@@ -66,6 +68,11 @@ export class DevServer {
     this.eventsWatcher.on(
       "FILE_UPDATED",
       this.handleFileUpdatedEventFromServer.bind(this),
+    )
+
+    this.eventsWatcher.on(
+      "REQUEST_TO_SAVE_SNIPPET",
+      this.saveSnippet.bind(this),
     )
 
     this.filesystemWatcher = chokidar.watch(this.projectDir, {
@@ -157,6 +164,30 @@ circuit.add(<MyCircuit />)
         },
       })
     }
+  }
+
+  private async saveSnippet() {
+    const postEvent = async (
+      event: "FAILED_TO_SAVE_SNIPPET" | "SNIPPET_SAVED",
+    ) =>
+      this.fsKy.post("api/events/create", {
+        json: { event_type: event },
+        throwHttpErrors: false,
+      })
+    const execAsync = promisify(exec)
+    await execAsync(
+      `bun ${[path.resolve(process.cwd(), "cli/main.ts"), "push", this.componentFilePath].join(" ")}`,
+      {
+        cwd: path.dirname(this.componentFilePath),
+      },
+    )
+      .then(() => {
+        postEvent("SNIPPET_SAVED")
+      })
+      .catch((e) => {
+        console.error("Failed to save snippet", e.stderr)
+        postEvent("FAILED_TO_SAVE_SNIPPET")
+      })
   }
 
   async stop() {

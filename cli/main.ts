@@ -16,7 +16,7 @@ import { registerAuthPrintToken } from "./auth/print-token/register"
 import { registerAuthSetToken } from "./auth/set-token/register"
 import { registerPush } from "./push/register"
 
-const program = new Command()
+export const program = new Command()
 
 program
   .name("tsci")
