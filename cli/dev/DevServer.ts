@@ -9,8 +9,7 @@ import fs from "node:fs"
 import type { FileUpdatedEvent } from "lib/file-server/FileServerEvent"
 import * as chokidar from "chokidar"
 import { FilesystemTypesHandler } from "lib/dependency-analysis/FilesystemTypesHandler"
-import { exec } from "node:child_process"
-import { promisify } from "node:util"
+import { pushSnippet } from "lib/shared/push-snippet"
 
 export class DevServer {
   port: number
@@ -174,20 +173,21 @@ circuit.add(<MyCircuit />)
         json: { event_type: event },
         throwHttpErrors: false,
       })
-    const execAsync = promisify(exec)
-    await execAsync(
-      `bun ${[path.resolve(process.cwd(), "cli/main.ts"), "push", this.componentFilePath].join(" ")}`,
-      {
-        cwd: path.dirname(this.componentFilePath),
-      },
-    )
-      .then(() => {
-        postEvent("SNIPPET_SAVED")
-      })
-      .catch((e) => {
-        console.error("Failed to save snippet", e.stderr)
+
+    await pushSnippet({
+      filePath: this.componentFilePath,
+      onExit: (e) => {
+        console.error("Failed to save snippet", e)
         postEvent("FAILED_TO_SAVE_SNIPPET")
-      })
+      },
+      onError: (e) => {
+        console.error("Failed to save snippet", e)
+        postEvent("FAILED_TO_SAVE_SNIPPET")
+      },
+      onSuccess: () => {
+        postEvent("SNIPPET_SAVED")
+      },
+    })
   }
 
   async stop() {
