@@ -68,7 +68,6 @@ test("test saveSnippet via REQUEST_TO_SAVE_SNIPPET event with CLI token setup", 
     })
   })
 
-  await Bun.sleep(4000)
   // Wait for the REQUEST_TO_SAVE_SNIPPET event to be detected
   expect(requestToSaveSnippetPromise).resolves.toBeUndefined()
 
