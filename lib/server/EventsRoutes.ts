@@ -12,4 +12,21 @@ export interface EventsRoutes {
       }
     }
   }
+  "api/events/list": {
+    GET: {
+      responseJson: {
+        event_list: Array<{
+          event_id: string
+          event_type:
+            | "FILE_UPDATED"
+            | "FAILED_TO_SAVE_SNIPPET"
+            | "SNIPPET_SAVED"
+            | "REQUEST_TO_SAVE_SNIPPET"
+          file_path: string
+          created_at: string
+          initiator?: string
+        }>
+      }
+    }
+  }
 }
