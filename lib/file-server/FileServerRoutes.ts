@@ -1,4 +1,6 @@
-export interface FileServerRoutes {
+import { EventsRoutes } from "lib/server/EventsRoutes"
+
+export interface FileServerRoutes extends EventsRoutes {
   "api/files/get": {
     GET: {
       searchParams: {

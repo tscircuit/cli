@@ -9,6 +9,7 @@ import fs from "node:fs"
 import type { FileUpdatedEvent } from "lib/file-server/FileServerEvent"
 import * as chokidar from "chokidar"
 import { FilesystemTypesHandler } from "lib/dependency-analysis/FilesystemTypesHandler"
+import { pushSnippet } from "lib/shared/push-snippet"
 
 export class DevServer {
   port: number
@@ -66,6 +67,11 @@ export class DevServer {
     this.eventsWatcher.on(
       "FILE_UPDATED",
       this.handleFileUpdatedEventFromServer.bind(this),
+    )
+
+    this.eventsWatcher.on(
+      "REQUEST_TO_SAVE_SNIPPET",
+      this.saveSnippet.bind(this),
     )
 
     this.filesystemWatcher = chokidar.watch(this.projectDir, {
@@ -157,6 +163,31 @@ circuit.add(<MyCircuit />)
         },
       })
     }
+  }
+
+  private async saveSnippet() {
+    const postEvent = async (
+      event: "FAILED_TO_SAVE_SNIPPET" | "SNIPPET_SAVED",
+    ) =>
+      this.fsKy.post("api/events/create", {
+        json: { event_type: event },
+        throwHttpErrors: false,
+      })
+
+    await pushSnippet({
+      filePath: this.componentFilePath,
+      onExit: (e) => {
+        console.error("Failed to save snippet", e)
+        postEvent("FAILED_TO_SAVE_SNIPPET")
+      },
+      onError: (e) => {
+        console.error("Failed to save snippet", e)
+        postEvent("FAILED_TO_SAVE_SNIPPET")
+      },
+      onSuccess: () => {
+        postEvent("SNIPPET_SAVED")
+      },
+    })
   }
 
   async stop() {
