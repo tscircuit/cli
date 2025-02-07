@@ -1,4 +1,4 @@
-import { test, expect, afterEach, afterAll } from "bun:test"
+import { test, expect, afterAll } from "bun:test"
 import { DevServer } from "cli/dev/DevServer"
 import { getTestFixture } from "tests/fixtures/get-test-fixture"
 import { EventsWatcher } from "lib/server/EventsWatcher"
@@ -6,17 +6,24 @@ import { getTestSnippetsServer } from "./fixtures/get-test-server"
 import { cliConfig } from "lib/cli-config"
 
 test("test saveSnippet via REQUEST_TO_SAVE_SNIPPET event with CLI token setup", async () => {
+  afterAll(() => {
+    eventManager.stop()
+    devServer.stop()
+  })
+
+  // Start snippets server
   await getTestSnippetsServer()
+
   // Set up a temporary directory with a sample snippet file
   const { tempDirPath, devServerPort, devServerUrl } = await getTestFixture({
     vfs: {
       "snippet.tsx": `
-            export const MyCircuit = () => (
-              <board width="10mm" height="10mm">
-                <chip name="U1" footprint="soic8" />
-              </board>
-            )
-          `,
+          export const MyCircuit = () => (
+            <board width="10mm" height="10mm">
+              <chip name="U1" footprint="soic8" />
+            </board>
+          )
+        `,
       "manual-edits.json": "{}",
       "package.json": JSON.stringify({
         version: "0.0.1",
@@ -35,36 +42,40 @@ test("test saveSnippet via REQUEST_TO_SAVE_SNIPPET event with CLI token setup", 
 
   // Start the EventsWatcher to listen for events
   const eventManager = new EventsWatcher(devServerUrl)
-  await eventManager.start().then(() => {
-    // Emit the REQUEST_TO_SAVE_SNIPPET event
-    devServer.fsKy.post("api/events/create", {
-      json: { event_type: "REQUEST_TO_SAVE_SNIPPET" },
-    })
+  await eventManager.start()
+
+  // Emit the REQUEST_TO_SAVE_SNIPPET event
+  devServer.fsKy.post("api/events/create", {
+    json: { event_type: "REQUEST_TO_SAVE_SNIPPET" },
   })
 
-  // Promises to wait for specific events
-  const requestToSaveSnippetPromise = new Promise<void>((resolve) => {
-    eventManager.on("REQUEST_TO_SAVE_SNIPPET", async () => {
-      resolve()
-    })
+  // Promises to wait for specific events using Promise.withResolvers()
+  const {
+    promise: requestToSaveSnippetPromise,
+    resolve: resolveRequestToSaveSnippet,
+  } = Promise.withResolvers<void>()
+  eventManager.on("REQUEST_TO_SAVE_SNIPPET", async () => {
+    resolveRequestToSaveSnippet()
   })
 
   const sessionToken = cliConfig.get("sessionToken")
   cliConfig.delete("sessionToken")
 
-  const snippetSavedPromise = new Promise<void>((resolve) => {
-    eventManager.on("SNIPPET_SAVED", () => {
-      resolve()
-    })
+  const { promise: snippetSavedPromise, resolve: resolveSnippetSaved } =
+    Promise.withResolvers<void>()
+  eventManager.on("SNIPPET_SAVED", () => {
+    resolveSnippetSaved()
   })
 
-  const snippetSaveFailedPromise = new Promise<void>((resolve) => {
-    eventManager.on("FAILED_TO_SAVE_SNIPPET", () => {
-      resolve()
-      cliConfig.set("sessionToken", sessionToken)
-      devServer.fsKy.post("api/events/create", {
-        json: { event_type: "REQUEST_TO_SAVE_SNIPPET" },
-      })
+  const {
+    promise: snippetSaveFailedPromise,
+    resolve: resolveSnippetSaveFailed,
+  } = Promise.withResolvers<void>()
+  eventManager.on("FAILED_TO_SAVE_SNIPPET", () => {
+    resolveSnippetSaveFailed()
+    cliConfig.set("sessionToken", sessionToken)
+    devServer.fsKy.post("api/events/create", {
+      json: { event_type: "REQUEST_TO_SAVE_SNIPPET" },
     })
   })
 
@@ -76,9 +87,4 @@ test("test saveSnippet via REQUEST_TO_SAVE_SNIPPET event with CLI token setup", 
 
   // Wait for the SNIPPET_SAVED event to be detected
   expect(snippetSavedPromise).resolves.toBeUndefined()
-
-  afterAll(() => {
-    eventManager.stop()
-    devServer.stop()
-  })
 }, 20_000)
