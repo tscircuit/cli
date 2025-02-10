@@ -2,6 +2,53 @@ import type { Command } from "commander"
 import { getKy } from "lib/registry-api/get-ky"
 import * as fs from "node:fs"
 import * as path from "node:path"
+import { execSync } from "node:child_process"
+
+// Detect the package manager being used in the project
+const detectPackageManager = (): string => {
+  const userAgent = process.env.npm_config_user_agent || ""
+  if (userAgent.startsWith("yarn")) return "yarn"
+  if (userAgent.startsWith("pnpm")) return "pnpm"
+  if (userAgent.startsWith("bun")) return "bun"
+
+  if (fs.existsSync("yarn.lock")) return "yarn"
+  if (fs.existsSync("pnpm-lock.yaml")) return "pnpm"
+  if (fs.existsSync("bun.lockb")) return "bun"
+
+  return "npm" // Default to npm
+}
+
+// Generate a React-compatible tsconfig.json
+const generateTsConfig = (dir: string) => {
+  const tsconfigPath = path.join(dir, "tsconfig.json")
+  const tsconfigContent = JSON.stringify(
+    {
+      compilerOptions: {
+        target: "ES6",
+        module: "ESNext",
+        jsx: "react-jsx",
+        outDir: "dist",
+        strict: true,
+        esModuleInterop: true,
+        moduleResolution: "node",
+        skipLibCheck: true,
+        forceConsistentCasingInFileNames: true,
+        resolveJsonModule: true,
+        sourceMap: true,
+        allowSyntheticDefaultImports: true,
+        experimentalDecorators: true,
+      },
+    },
+    null,
+    2,
+  )
+  if (!fs.existsSync(tsconfigPath)) {
+    fs.writeFileSync(tsconfigPath, tsconfigContent.trimStart())
+    console.log(`Created: ${tsconfigPath}`)
+  } else {
+    console.log(`Skipped: ${tsconfigPath} already exists`)
+  }
+}
 
 export const registerClone = (program: Command) => {
   program
@@ -89,7 +136,33 @@ export const registerClone = (program: Command) => {
         const npmrcPath = path.join(dirPath, ".npmrc")
         fs.writeFileSync(npmrcPath, "@tsci:registry=https://npm.tscircuit.com")
 
+        // Generate tsconfig.json
+        generateTsConfig(dirPath)
+
+        // Detect package manager and install dependencies
+        const packageManager = detectPackageManager()
+        console.log(`Detected package manager: ${packageManager}`)
+
+        // Install deps using the detected package manager
+        const dependencies = "@types/react @tscircuit/core"
+        try {
+          console.log("Installing dependencies...")
+          const installCommand =
+            packageManager === "yarn"
+              ? `cd ${dirPath} && yarn add -D ${dependencies}`
+              : packageManager === "pnpm"
+                ? `cd ${dirPath} && pnpm add -D ${dependencies}`
+                : packageManager === "bun"
+                  ? `cd ${dirPath} && bun add -D ${dependencies}`
+                  : `cd ${dirPath} && npm install -D ${dependencies}`
+          execSync(installCommand, { stdio: "inherit" })
+          console.log("Dependencies installed successfully.")
+        } catch (error) {
+          console.error("Failed to install dependencies:", error)
+        }
+
         console.log(`Successfully cloned to ./${author}.${snippetName}/`)
+        console.log(`Run "cd ${dirPath} && tsci dev" to start developing.`)
       } catch (error) {
         if (error instanceof Error) {
           console.error("Failed to clone snippet:", error.message)
