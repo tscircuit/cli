@@ -4,6 +4,10 @@ import webWorkerBundleUrl from "@tscircuit/eval/blob-url"
 import { getVirtualFileSystemFromDirPath } from "make-vfs"
 import path from "node:path"
 import fs from "node:fs"
+import {
+  convertCircuitJsonToSchematicSvg,
+  convertCircuitJsonToPcbSvg,
+} from "circuit-to-svg"
 
 const ALLOWED_FORMATS = [
   "json",
@@ -75,13 +79,25 @@ circuit.add(<MyCircuit />)
       await worker.renderUntilSettled()
 
       const circuitJson = await worker.getCircuitJson()
-
       const outputPath = path.join(
         projectDir,
         `${output}${OUTPUT_EXTENSIONS[format as Format]}`,
       )
 
-      fs.writeFileSync(outputPath, JSON.stringify(circuitJson))
+      let outputContent: string
+
+      switch (format) {
+        case "schematic-svg":
+          outputContent = convertCircuitJsonToSchematicSvg(circuitJson)
+          break
+        case "pcb-svg":
+          outputContent = convertCircuitJsonToPcbSvg(circuitJson)
+          break
+        default:
+          outputContent = JSON.stringify(circuitJson)
+      }
+
+      fs.writeFileSync(outputPath, outputContent)
 
       console.log(`Exported to ${outputPath}`)
 

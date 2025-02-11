@@ -35,6 +35,7 @@
     "@tscircuit/file-server": "^0.0.13",
     "@tscircuit/runframe": "^0.0.167",
     "chokidar": "4.0.1",
+    "circuit-to-svg": "^0.0.101",
     "commander": "^12.1.0",
     "configstore": "^7.0.0",
     "cosmiconfig": "^9.0.0",
