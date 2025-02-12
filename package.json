@@ -33,7 +33,12 @@
   "dependencies": {
     "@tscircuit/eval": "^0.0.96",
     "@tscircuit/file-server": "^0.0.13",
+<<<<<<< HEAD
     "@tscircuit/runframe": "^0.0.167",
+=======
+    "@tscircuit/runframe": "^0.0.47",
+    "bun-match-svg": "^0.0.9",
+>>>>>>> cc4c048 (test: add test for exporting svgs)
     "chokidar": "4.0.1",
     "circuit-to-svg": "^0.0.101",
     "commander": "^12.1.0",
