@@ -1,7 +1,7 @@
 import { detectPackageManager } from "./detect-pkg-manager"
-const fs = require("fs")
-const path = require("path")
-const { execSync } = require("child_process")
+import fs from "node:fs"
+import path from "node:path"
+import { execSync } from "node:child_process"
 
 /**
  * Initializes a project in the specified directory, reads its name, and installs dependencies.
