@@ -10,9 +10,36 @@ test("init command installs @types/react and passes type-checking", async () => 
   console.log(stdout)
 
   const pkgJsonPath = join(tmpDir, "package.json")
-  const pkgJson = JSON.parse(await Bun.file(pkgJsonPath).text())
-  expect(pkgJson.devDependencies["@types/react"]).toBeDefined()
-  expect(pkgJson.devDependencies["@tscircuit/core"]).toBeDefined()
+  const pkgJson = await Bun.file(pkgJsonPath).json()
+
+  expect(pkgJson).toMatchInlineSnapshot({
+    name: expect.any(String),
+    devDependencies: {
+      "@tscircuit/core": expect.any(String),
+      "@types/react": expect.any(String),
+    },
+  }, `
+    {
+      "author": "",
+      "description": "A TSCircuit project",
+      "devDependencies": {
+        "@tscircuit/core": Any<String>,
+        "@types/react": Any<String>,
+      },
+      "keywords": [
+        "tscircuit",
+        "electronics",
+      ],
+      "license": "MIT",
+      "main": "index.tsx",
+      "name": Any<String>,
+      "scripts": {
+        "build": "tsci build",
+        "dev": "tsci dev",
+      },
+      "version": "0.1.0",
+    }
+  `)
 
   const npmrcPath = join(tmpDir, ".npmrc")
   const npmrcContent = await Bun.file(npmrcPath).text()

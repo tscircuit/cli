@@ -1,4 +1,5 @@
 import type { Command } from "commander"
+import { execSync } from "node:child_process"
 import * as fs from "node:fs"
 import * as path from "node:path"
 import { setupTsciProject } from "lib/shared/setup-tsci-packages"
