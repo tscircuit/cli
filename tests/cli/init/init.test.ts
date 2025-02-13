@@ -12,13 +12,15 @@ test("init command installs @types/react and passes type-checking", async () => 
   const pkgJsonPath = join(tmpDir, "package.json")
   const pkgJson = await Bun.file(pkgJsonPath).json()
 
-  expect(pkgJson).toMatchInlineSnapshot({
-    name: expect.any(String),
-    devDependencies: {
-      "@tscircuit/core": expect.any(String),
-      "@types/react": expect.any(String),
+  expect(pkgJson).toMatchInlineSnapshot(
+    {
+      name: expect.any(String),
+      devDependencies: {
+        "@tscircuit/core": expect.any(String),
+        "@types/react": expect.any(String),
+      },
     },
-  }, `
+    `
     {
       "author": "",
       "description": "A TSCircuit project",
@@ -39,7 +41,8 @@ test("init command installs @types/react and passes type-checking", async () => 
       },
       "version": "0.1.0",
     }
-  `)
+  `,
+  )
 
   const npmrcPath = join(tmpDir, ".npmrc")
   const npmrcContent = await Bun.file(npmrcPath).text()
