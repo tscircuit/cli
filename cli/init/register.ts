@@ -21,7 +21,10 @@ const generatePackageJson = (dir: string) => {
     keywords: ["tscircuit", "electronics"],
   }
   if (!fs.existsSync(packageJsonPath)) {
-    fs.writeFileSync(packageJsonPath, JSON.stringify(packageJsonContent, null, 2))
+    fs.writeFileSync(
+      packageJsonPath,
+      JSON.stringify(packageJsonContent, null, 2),
+    )
     console.log(`Created: ${packageJsonPath}`)
   } else {
     console.log(`Skipped: ${packageJsonPath} already exists`)
