@@ -5,7 +5,7 @@ import { execSync } from "node:child_process"
 
 export function setupTsciProject(
   directory = process.cwd(),
-  dependencies = ["@types/react", "@tscircuit/core"],
+  dependencies = ["@types/react", "@tscircuit/core", "@tscircuit/runframe"],
 ) {
   const projectPath = path.resolve(directory)
   if (!fs.existsSync(projectPath)) {
