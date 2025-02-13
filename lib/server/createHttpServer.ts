@@ -1,8 +1,6 @@
 import * as http from "node:http"
 import { getNodeHandler } from "winterspec/adapters/node"
 
-import https from "https"
-
 // @ts-ignore
 import winterspecBundle from "@tscircuit/file-server/dist/bundle.js"
 import { getIndex } from "../site/getIndex"
