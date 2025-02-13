@@ -1,5 +1,6 @@
 import * as http from "node:http"
 import { getNodeHandler } from "winterspec/adapters/node"
+import pkg from "../../package.json"
 
 // @ts-ignore
 import winterspecBundle from "@tscircuit/file-server/dist/bundle.js"
@@ -13,8 +14,7 @@ export const createHttpServer = async (port = 3020) => {
 
     if (req.url === "/standalone.min.js") {
       res.writeHead(302, {
-        Location:
-          "https://cdn.jsdelivr.net/npm/@tscircuit/runframe@0.0.167/dist/standalone.min.js",
+        Location: `https://cdn.jsdelivr.net/npm/@tscircuit/runframe@${pkg.dependencies["@tscircuit/runframe"].replace(/^[^0-9]+/, "")}/dist/standalone.min.js`,
         "Content-Type": "application/javascript; charset=utf-8",
       })
       res.end()
