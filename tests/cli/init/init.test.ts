@@ -22,7 +22,6 @@ test("init command installs @types/react and passes type-checking", async () => 
     },
     `
     {
-      "author": "",
       "description": "A TSCircuit project",
       "devDependencies": {
         "@tscircuit/core": Any<String>,
@@ -32,7 +31,6 @@ test("init command installs @types/react and passes type-checking", async () => 
         "tscircuit",
         "electronics",
       ],
-      "license": "MIT",
       "main": "index.tsx",
       "name": Any<String>,
       "scripts": {
