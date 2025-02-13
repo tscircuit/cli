@@ -31,6 +31,7 @@
     "typescript": "^5.0.0"
   },
   "dependencies": {
+    "@tscircuit/eval": "^0.0.96",
     "@tscircuit/file-server": "^0.0.13",
     "@tscircuit/runframe": "^0.0.167",
     "chokidar": "4.0.1",

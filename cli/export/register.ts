@@ -1,6 +1,6 @@
 import type { Command } from "commander"
-import { createCircuitWebWorker } from "@tscircuit/eval-webworker"
-import webWorkerBundleUrl from "@tscircuit/eval-webworker/blob-url"
+import { createCircuitWebWorker } from "@tscircuit/eval"
+import webWorkerBundleUrl from "@tscircuit/eval/blob-url"
 import { getVirtualFileSystemFromDirPath } from "make-vfs"
 import path from "node:path"
 import fs from "node:fs"
