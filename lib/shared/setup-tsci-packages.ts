@@ -3,13 +3,6 @@ import fs from "node:fs"
 import path from "node:path"
 import { execSync } from "node:child_process"
 
-/**
- * Initializes a project in the specified directory, reads its name, and installs dependencies.
- *
- * @param {string} packageManager - Package manager to use (npm, yarn, pnpm, bun).
- * @param {string[]} dependencies - List of dependencies to install.
- * @param {string} directory - Directory where the project should be initialized.
- */
 export function setupTsciProject(
   directory = process.cwd(),
   dependencies = ["@types/react", "@tscircuit/core"],
