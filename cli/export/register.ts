@@ -8,6 +8,8 @@ import {
   convertCircuitJsonToSchematicSvg,
   convertCircuitJsonToPcbSvg,
 } from "circuit-to-svg"
+import { convertCircuitJsonToDsnString } from "dsn-converter"
+import { convertCircuitJsonToReadableNetlist } from "circuit-json-to-readable-netlist"
 
 const ALLOWED_FORMATS = [
   "json",
@@ -92,6 +94,12 @@ circuit.add(<MyCircuit />)
           break
         case "pcb-svg":
           outputContent = convertCircuitJsonToPcbSvg(circuitJson)
+          break
+        case "specctra-dsn":
+          outputContent = convertCircuitJsonToDsnString(circuitJson)
+          break
+        case "readable-netlist":
+          outputContent = convertCircuitJsonToReadableNetlist(circuitJson)
           break
         default:
           outputContent = JSON.stringify(circuitJson)
