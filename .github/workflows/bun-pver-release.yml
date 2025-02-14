@@ -8,7 +8,7 @@ jobs:
   publish:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v44
+      - uses: actions/checkout@v4
       - name: Setup bun
         uses: oven-sh/setup-bun@v2
         with:
