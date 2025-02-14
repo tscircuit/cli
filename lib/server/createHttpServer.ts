@@ -31,7 +31,9 @@ export const createHttpServer = async (port = 3020) => {
         res.end(content)
         return
       } catch (error) {
-        console.error("Error serving standalone.min.js:", error)
+        console.info(
+          "Local standalone file not found, falling back to the production version.",
+        )
       }
 
       res.writeHead(302, {
