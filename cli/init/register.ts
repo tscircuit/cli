@@ -1,10 +1,12 @@
 import type { Command } from "commander"
+import { execSync } from "node:child_process"
 import * as fs from "node:fs"
 import * as path from "node:path"
 import { setupTsciProject } from "lib/shared/setup-tsci-packages"
 import { generateTsConfig } from "lib/shared/generate-ts-config"
 import { writeFileIfNotExists } from "lib/shared/write-file-if-not-exists"
 import { generateGitIgnoreFile } from "lib/shared/generate-gitignore-file"
+import { generatePackageJson } from "lib/shared/generate-package-json"
 
 export const registerInit = (program: Command) => {
   program
@@ -47,18 +49,14 @@ export default () => (
 `,
       )
 
-      // Setup project dependencies
-      try {
-        setupTsciProject(projectDir)
-      } catch (error) {
-        console.error("Failed to install dependencies:", error)
-        process.exit(1)
-      }
-
+      // Generate package.json
+      generatePackageJson(projectDir)
       // Generate tsconfig.json
       generateTsConfig(projectDir)
       // Create .gitignore file
       generateGitIgnoreFile(projectDir)
+      // Setup project dependencies
+      setupTsciProject(projectDir)
 
       console.info(
         `🎉 Initialization complete! Run ${directory ? `"cd ${directory}" & ` : ""}"tsci dev" to start developing.`,

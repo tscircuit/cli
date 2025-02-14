@@ -12,6 +12,10 @@ export const cliConfig: TypedConfigstore<CliConfig> = new Configstore(
   "tscircuit",
 )
 
+export const getSessionToken = (): string | undefined => {
+  return cliConfig.get("sessionToken")
+}
+
 export const setSessionToken = (token: string) => {
   cliConfig.set("sessionToken", token)
   const decoded = jwtDecode<{

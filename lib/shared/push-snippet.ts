@@ -19,7 +19,9 @@ export const pushSnippet = async ({
 }: PushOptions) => {
   const sessionToken = cliConfig.get("sessionToken")
   if (!sessionToken) {
-    onError("You need to log in to save snippet.")
+    onError(
+      "You need to log in to save snippet. Run 'tsci login' to authenticate.",
+    )
     return onExit(1)
   }
 
@@ -81,7 +83,7 @@ export const pushSnippet = async ({
             ?.version,
       )
       .catch((error) => {
-        onError("Failed to retrieve latest package version:" + error)
+        onError(`Failed to retrieve latest package version: ${error}`)
         return onExit(1)
       }))
 
@@ -96,7 +98,7 @@ export const pushSnippet = async ({
         packageJson.version = newVersion ?? `${packageVersion}`
         fs.writeFileSync(packageJsonPath, JSON.stringify(packageJson, null, 2))
       } catch (error) {
-        onError("Failed to update package.json version:" + error)
+        onError(`Failed to update package.json version: ${error}`)
       }
     }
   }
@@ -116,7 +118,7 @@ export const pushSnippet = async ({
         headers: { Authorization: `Bearer ${sessionToken}` },
       })
       .catch((error) => {
-        onError("Error creating package:" + error)
+        onError(`Error creating package: ${error}`)
         return onExit(1)
       })
   }
@@ -158,7 +160,7 @@ export const pushSnippet = async ({
       throwHttpErrors: false,
     })
     .catch((error) => {
-      onError("Error creating release:" + error)
+      onError(`Error creating release: ${error}`)
       return onExit(1)
     })
 
@@ -185,14 +187,14 @@ export const pushSnippet = async ({
         onSuccess(`Uploaded file ${file} to the registry.`)
       })
       .catch((error) => {
-        onError(`Error uploading file ${file}:` + error)
+        onError(`Error uploading file ${file}: ${error}`)
       })
   }
 
   onSuccess(
     [
-      `\n🎉 Successfully pushed package ${packageIdentifier}@${packageVersion} to the registry!${Bun.color("blue", "ansi")}`,
-      `https://tscircuit.com/${packageIdentifier} \x1b[0m`,
+      `Successfully pushed package ${packageIdentifier}@${packageVersion} to the registry!`,
+      `https://tscircuit.com/${packageIdentifier}`,
     ].join(" "),
   )
 }
