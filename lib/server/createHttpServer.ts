@@ -1,4 +1,6 @@
 import * as http from "node:http"
+import * as fs from "node:fs"
+import * as path from "node:path"
 import { getNodeHandler } from "winterspec/adapters/node"
 import pkg from "../../package.json"
 
@@ -12,10 +14,28 @@ export const createHttpServer = async (port = 3020) => {
   const server = http.createServer(async (req, res) => {
     const url = new URL(req.url!, `http://${req.headers.host}`)
 
-    if (req.url === "/standalone.min.js") {
+    if (url.pathname === "/standalone.min.js") {
+      const standaloneFilePath =
+        process.env.RUNFRAME_STANDALONE_FILE_PATH ||
+        path.resolve(
+          process.cwd(),
+          "node_modules",
+          "@tscircuit/runframe/dist/standalone.min.js",
+        )
+
+      try {
+        const content = fs.readFileSync(standaloneFilePath, "utf8")
+        res.writeHead(200, {
+          "Content-Type": "application/javascript; charset=utf-8",
+        })
+        res.end(content)
+        return
+      } catch (error) {
+        console.error("Error serving standalone.min.js:", error)
+      }
+
       res.writeHead(302, {
         Location: `https://cdn.jsdelivr.net/npm/@tscircuit/runframe@${pkg.dependencies["@tscircuit/runframe"].replace(/^[^0-9]+/, "")}/dist/standalone.min.js`,
-        "Content-Type": "application/javascript; charset=utf-8",
       })
       res.end()
       return
