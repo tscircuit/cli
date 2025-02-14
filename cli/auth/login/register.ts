@@ -7,10 +7,11 @@ import type { EndpointResponse } from "lib/registry-api/endpoint-types"
 export const registerAuthLogin = (program: Command) => {
   // Define the login action once to share between both commands
   const loginAction = async () => {
-    
     const sessionToken = getSessionToken()
     if (sessionToken) {
-      console.log("Already logged in! Use 'tsci logout' if you need to switch accounts.")
+      console.log(
+        "Already logged in! Use 'tsci logout' if you need to switch accounts.",
+      )
       return
     }
 
