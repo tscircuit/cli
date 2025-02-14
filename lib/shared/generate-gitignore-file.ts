@@ -31,5 +31,5 @@ yarn-debug.log*
 yarn-error.log*
 `
 
-    writeFileIfNotExists(gitignorePath, gitignoreContent)
+  writeFileIfNotExists(gitignorePath, gitignoreContent)
 }
