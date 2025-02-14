@@ -1,7 +1,7 @@
-import { getCliTestFixture } from "../../fixtures/get-cli-test-fixture"
-import { test, expect } from "bun:test"
-import { join } from "node:path"
+import { expect, test } from "bun:test"
 import { execSync } from "node:child_process"
+import { join } from "node:path"
+import { getCliTestFixture } from "../../fixtures/get-cli-test-fixture"
 
 test("init command installs @types/react and passes type-checking", async () => {
   const { tmpDir, runCommand } = await getCliTestFixture()
@@ -37,7 +37,7 @@ test("init command installs @types/react and passes type-checking", async () => 
         "build": "tsci build",
         "dev": "tsci dev",
       },
-      "version": "0.1.0",
+      "version": "1.0.0",
     }
   `,
   )
