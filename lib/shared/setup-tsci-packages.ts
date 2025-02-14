@@ -51,7 +51,7 @@ export function setupTsciProject(
           ? `pnpm add -D ${dependencies.join(" ")}`
           : packageManager === "bun"
             ? `bun add -D ${dependencies.join(" ")}`
-            : `npx bun install -D ${dependencies.join(" ")}`
+            : `npm install -D ${dependencies.join(" ")}`
 
     execSync(installCommand, { stdio: "inherit" })
     console.log("Dependencies installed successfully.")
