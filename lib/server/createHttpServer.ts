@@ -32,7 +32,7 @@ export const createHttpServer = async (port = 3020) => {
         return
       } catch (error) {
         console.info(
-          "Local standalone file not found, falling back to the production version.",
+          "Local runframe standalone not found, falling back to the production version.",
         )
       }
 
