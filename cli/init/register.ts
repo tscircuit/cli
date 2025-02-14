@@ -48,7 +48,7 @@ export default () => (
 @tsci:registry=https://npm.tscircuit.com
 `,
       )
-      
+
       // Generate package.json
       generatePackageJson(projectDir)
       // Generate tsconfig.json
