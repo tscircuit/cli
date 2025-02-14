@@ -1,5 +1,5 @@
 import type { Command } from "commander"
-import { setSessionToken } from "lib/cli-config"
+import { setSessionToken, getSessionToken } from "lib/cli-config"
 import delay from "delay"
 import { getKy } from "lib/registry-api/get-ky"
 import type { EndpointResponse } from "lib/registry-api/endpoint-types"
@@ -7,6 +7,14 @@ import type { EndpointResponse } from "lib/registry-api/endpoint-types"
 export const registerAuthLogin = (program: Command) => {
   // Define the login action once to share between both commands
   const loginAction = async () => {
+    const sessionToken = getSessionToken()
+    if (sessionToken) {
+      console.log(
+        "Already logged in! Use 'tsci logout' if you need to switch accounts.",
+      )
+      return
+    }
+
     const ky = getKy()
 
     const { login_page } = await ky
