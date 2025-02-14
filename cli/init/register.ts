@@ -4,6 +4,7 @@ import * as path from "node:path"
 import { setupTsciProject } from "lib/shared/setup-tsci-packages"
 import { generateTsConfig } from "lib/shared/generate-ts-config"
 import { writeFileIfNotExists } from "lib/shared/write-file-if-not-exists"
+import { generateGitIgnoreFile } from "lib/shared/generate-gitignore-file"
 
 export const registerInit = (program: Command) => {
   program
@@ -55,12 +56,9 @@ export default () => (
       }
 
       // Generate tsconfig.json
-      try {
-        generateTsConfig(projectDir)
-      } catch (error) {
-        console.error("Failed to generate tsconfig.json:", error)
-        process.exit(1)
-      }
+      generateTsConfig(projectDir)
+      // Create .gitignore file
+      generateGitIgnoreFile(projectDir)
 
       console.info(
         `🎉 Initialization complete! Run ${directory ? `"cd ${directory}" & ` : ""}"tsci dev" to start developing.`,

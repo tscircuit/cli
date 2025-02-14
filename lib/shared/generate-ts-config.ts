@@ -1,5 +1,5 @@
-import path from "path"
-import fs from "fs"
+import path from "node:path"
+import { writeFileIfNotExists } from "./write-file-if-not-exists"
 
 // Generate a React-compatible tsconfig.json
 export const generateTsConfig = (dir: string) => {
@@ -25,10 +25,5 @@ export const generateTsConfig = (dir: string) => {
     null,
     2,
   )
-  if (!fs.existsSync(tsconfigPath)) {
-    fs.writeFileSync(tsconfigPath, tsconfigContent.trimStart())
-    console.log(`Created: ${tsconfigPath}`)
-  } else {
-    console.log(`Skipped: ${tsconfigPath} already exists`)
-  }
+  writeFileIfNotExists(tsconfigPath, tsconfigContent)
 }
