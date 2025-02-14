@@ -34,11 +34,6 @@ export function setupTsciProject(
   const packageJsonPath = path.join(projectPath, "package.json")
   const packageJson = JSON.parse(fs.readFileSync(packageJsonPath, "utf-8"))
 
-  // Remove unwanted fields
-  delete packageJson.keywords
-  delete packageJson.author
-  delete packageJson.main
-
   fs.writeFileSync(packageJsonPath, JSON.stringify(packageJson, null, 2))
   console.log("Updated package.json to remove unnecessary fields.")
 

@@ -1,7 +1,7 @@
-import { getCliTestFixture } from "../../fixtures/get-cli-test-fixture"
-import { test, expect } from "bun:test"
-import { join } from "node:path"
+import { expect, test } from "bun:test"
 import { execSync } from "node:child_process"
+import { join } from "node:path"
+import { getCliTestFixture } from "../../fixtures/get-cli-test-fixture"
 
 test("init command installs @types/react and passes type-checking", async () => {
   const { tmpDir, runCommand } = await getCliTestFixture()
@@ -10,9 +10,37 @@ test("init command installs @types/react and passes type-checking", async () => 
   console.log(stdout)
 
   const pkgJsonPath = join(tmpDir, "package.json")
-  const pkgJson = JSON.parse(await Bun.file(pkgJsonPath).text())
-  expect(pkgJson.devDependencies["@types/react"]).toBeDefined()
-  expect(pkgJson.devDependencies["@tscircuit/core"]).toBeDefined()
+  const pkgJson = await Bun.file(pkgJsonPath).json()
+
+  expect(pkgJson).toMatchInlineSnapshot(
+    {
+      name: expect.any(String),
+      devDependencies: {
+        "@tscircuit/core": expect.any(String),
+        "@types/react": expect.any(String),
+      },
+    },
+    `
+    {
+      "description": "A TSCircuit project",
+      "devDependencies": {
+        "@tscircuit/core": Any<String>,
+        "@types/react": Any<String>,
+      },
+      "keywords": [
+        "tscircuit",
+        "electronics",
+      ],
+      "main": "index.tsx",
+      "name": Any<String>,
+      "scripts": {
+        "build": "tsci build",
+        "dev": "tsci dev",
+      },
+      "version": "1.0.0",
+    }
+  `,
+  )
 
   const npmrcPath = join(tmpDir, ".npmrc")
   const npmrcContent = await Bun.file(npmrcPath).text()
