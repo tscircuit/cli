@@ -93,6 +93,4 @@ test("test saveSnippet via REQUEST_TO_SAVE_SNIPPET event with CLI token setup", 
 
   // Wait for the SNIPPET_SAVED event to be detected
   expect(snippetSavedPromise).resolves.toBeUndefined()
-
-  
 }, 20_000)
