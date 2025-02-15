@@ -19,7 +19,7 @@ test("basic init", async () => {
   "node_modules",
   "package-lock.json",
   "package.json",
-  "tsconfig.json"
+  "tsconfig.json",
 ]
 `)
 })
