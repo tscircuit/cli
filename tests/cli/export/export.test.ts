@@ -80,7 +80,7 @@ test("export specctra-dsn", async () => {
   expect(specctraDSN).toContain('(net "Net-(R1_source_component_0-Pad1)"')
 })
 
-test.skip("export readable-netlist", async () => {
+test("export readable-netlist", async () => {
   const { tmpDir, runCommand } = await getCliTestFixture()
   await setupTestCircuit(tmpDir)
 
