@@ -9,12 +9,17 @@ test("basic init", async () => {
   const { stdout, stderr } = await runCommand("tsci init")
   expect(stderr).toBe("")
 
-  // List directory contents
-  const dirContents = await readdir(tmpDir)
+  const dirContents = (await readdir(tmpDir)).sort()
+
   expect(dirContents).toMatchInlineSnapshot(`
 [
+  ".gitignore",
   ".npmrc",
   "index.tsx",
+  "node_modules",
+  "package-lock.json",
+  "package.json",
+  "tsconfig.json",
 ]
 `)
 })

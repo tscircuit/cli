@@ -146,10 +146,22 @@ circuit.add(<MyCircuit />)
   }
 
   async upsertInitialFiles() {
-    // Scan project directory for all files and upsert them
+    // Define the list of files we care about
+    const relevantFiles = new Set([
+      "entrypoint.tsx",
+      "manual-edits.json",
+      "snippet.tsx",
+      path.basename(this.componentFilePath), // Include the main component file
+    ])
+
+    // Scan project directory for relevant files and upsert them
     const fileNames = fs.readdirSync(this.projectDir)
     for (const fileName of fileNames) {
-      if (fs.statSync(path.join(this.projectDir, fileName)).isDirectory())
+      // Skip directories and non-relevant files
+      if (
+        fs.statSync(path.join(this.projectDir, fileName)).isDirectory() ||
+        !relevantFiles.has(fileName)
+      )
         continue
       const fileContent = fs.readFileSync(
         path.join(this.projectDir, fileName),
