@@ -9,10 +9,22 @@ test("basic init", async () => {
   const { stdout, stderr } = await runCommand("tsci init")
   expect(stderr).toBe("")
 
-  // List directory contents
-  const dirContents = await readdir(tmpDir)
+  const dirContents = (await readdir(tmpDir)).sort((a, b) => {
+    // Define custom sort order based on the expected snapshot
+    const order = [
+      "package-lock.json",
+      "node_modules",
+      ".gitignore",
+      "tsconfig.json",
+      "package.json",
+      ".npmrc",
+      "index.tsx",
+    ]
+    return order.indexOf(a) - order.indexOf(b)
+  })
+
   expect(dirContents).toMatchInlineSnapshot(`
-[ 
+[
   "package-lock.json",
   "node_modules",
   ".gitignore",
