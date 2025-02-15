@@ -9,7 +9,7 @@ test("basic init", async () => {
   const { stdout, stderr } = await runCommand("tsci init")
   expect(stderr).toBe("")
 
-  const dirContents = (await readdir(tmpDir)).sort().join("\n,")
+  const dirContents = (await readdir(tmpDir)).sort()
 
   expect(dirContents).toMatchInlineSnapshot(`
 [
