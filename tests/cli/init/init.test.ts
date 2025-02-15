@@ -51,7 +51,7 @@ test("init command installs @types/react and passes type-checking", async () => 
   expect(tsconfigExists).toBeTrue()
 
   try {
-    const typeCheckResult = execSync("npx tsc --noEmit", {
+    const typeCheckResult = execSync("npx --yes tsc --noEmit", {
       cwd: tmpDir,
       stdio: "pipe",
     })

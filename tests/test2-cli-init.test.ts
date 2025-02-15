@@ -13,6 +13,11 @@ test("basic init", async () => {
   const dirContents = await readdir(tmpDir)
   expect(dirContents).toMatchInlineSnapshot(`
 [
+  "package-lock.json",
+  "node_modules",
+  ".gitignore",
+  "tsconfig.json",
+  "package.json",
   ".npmrc",
   "index.tsx",
 ]

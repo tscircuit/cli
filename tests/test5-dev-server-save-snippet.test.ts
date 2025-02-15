@@ -5,6 +5,11 @@ import { EventsWatcher } from "lib/server/EventsWatcher"
 import { getTestSnippetsServer } from "./fixtures/get-test-server"
 import { cliConfig } from "lib/cli-config"
 
+const dummyJwtToken =
+  "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9." +
+  "eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwiaWF0IjoxNTE2MjM5MDIyfQ." +
+  "SflKxwRJSMeKKF2QT4fwpMeJf36POk6yJV_adQssw5c"
+
 test("test saveSnippet via REQUEST_TO_SAVE_SNIPPET event with CLI token setup", async () => {
   afterAll(() => {
     eventManager.stop()
@@ -58,6 +63,7 @@ test("test saveSnippet via REQUEST_TO_SAVE_SNIPPET event with CLI token setup", 
     resolveRequestToSaveSnippet()
   })
 
+  cliConfig.set("sessionToken", dummyJwtToken)
   const sessionToken = cliConfig.get("sessionToken")
   cliConfig.delete("sessionToken")
 
@@ -87,4 +93,6 @@ test("test saveSnippet via REQUEST_TO_SAVE_SNIPPET event with CLI token setup", 
 
   // Wait for the SNIPPET_SAVED event to be detected
   expect(snippetSavedPromise).resolves.toBeUndefined()
+
+  
 }, 20_000)

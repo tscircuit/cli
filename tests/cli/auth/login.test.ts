@@ -1,5 +1,5 @@
 import { expect, test } from "bun:test"
-import { setSessionToken } from "lib/cli-config"
+import { cliConfig } from "lib/cli-config"
 import { getCliTestFixture } from "../../fixtures/get-cli-test-fixture"
 
 // A dummy valid JWT token (header.payload.signature)
@@ -12,7 +12,7 @@ test("login command: already logged in", async () => {
   const { runCommand } = await getCliTestFixture()
 
   // Simulate an already logged in state by setting a session token.
-  setSessionToken(dummyJwtToken)
+  cliConfig.set("sessionToken", dummyJwtToken)
 
   const { stdout, stderr } = await runCommand("tsci login")
 
@@ -20,4 +20,6 @@ test("login command: already logged in", async () => {
   expect(stdout).toContain(
     "Already logged in! Use 'tsci logout' if you need to switch accounts.",
   )
+
+  cliConfig.delete("sessionToken")
 })
