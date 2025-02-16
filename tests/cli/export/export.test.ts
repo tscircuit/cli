@@ -1,6 +1,6 @@
 import { getCliTestFixture } from "../../fixtures/get-cli-test-fixture"
 import { test, expect } from "bun:test"
-import { readFile } from "node:fs/promises"
+import { writeFile, readFile } from "node:fs/promises"
 import path from "node:path"
 import "bun-match-svg"
 
@@ -25,16 +25,14 @@ export default () => (
   </board>
 )`
 
-async function setupTestCircuit(tmpDir: string) {
-  await Bun.write(path.join(tmpDir, "test-circuit.tsx"), circuitCode)
-}
-
 test("export pcb-svg", async () => {
   const { tmpDir, runCommand } = await getCliTestFixture()
-  await setupTestCircuit(tmpDir)
+  const circuitPath = path.join(tmpDir, "test-circuit.tsx")
+
+  await writeFile(circuitPath, circuitCode)
 
   const { stdout, stderr } = await runCommand(
-    `tsci export ${path.join(tmpDir, "test-circuit.tsx")} -f pcb-svg`,
+    `tsci export ${circuitPath} -f pcb-svg`,
   )
   expect(stderr).toBe("")
 
@@ -47,10 +45,12 @@ test("export pcb-svg", async () => {
 
 test("export schematic-svg", async () => {
   const { tmpDir, runCommand } = await getCliTestFixture()
-  await setupTestCircuit(tmpDir)
+  const circuitPath = path.join(tmpDir, "test-circuit.tsx")
+
+  await writeFile(circuitPath, circuitCode)
 
   const { stdout, stderr } = await runCommand(
-    `tsci export ${path.join(tmpDir, "test-circuit.tsx")} -f schematic-svg`,
+    `tsci export ${circuitPath} -f schematic-svg`,
   )
   expect(stderr).toBe("")
 
@@ -63,10 +63,12 @@ test("export schematic-svg", async () => {
 
 test("export specctra-dsn", async () => {
   const { tmpDir, runCommand } = await getCliTestFixture()
-  await setupTestCircuit(tmpDir)
+  const circuitPath = path.join(tmpDir, "test-circuit.tsx")
+
+  await writeFile(circuitPath, circuitCode)
 
   const { stdout, stderr } = await runCommand(
-    `tsci export ${path.join(tmpDir, "test-circuit.tsx")} -f specctra-dsn`,
+    `tsci export ${circuitPath} -f specctra-dsn`,
   )
   expect(stderr).toBe("")
 
@@ -82,10 +84,12 @@ test("export specctra-dsn", async () => {
 
 test("export readable-netlist", async () => {
   const { tmpDir, runCommand } = await getCliTestFixture()
-  await setupTestCircuit(tmpDir)
+  const circuitPath = path.join(tmpDir, "test-circuit.tsx")
+
+  await writeFile(circuitPath, circuitCode)
 
   const { stdout, stderr } = await runCommand(
-    `tsci export ${path.join(tmpDir, "test-circuit.tsx")} -f readable-netlist`,
+    `tsci export ${circuitPath} -f readable-netlist`,
   )
   expect(stderr).toBe("")
 
