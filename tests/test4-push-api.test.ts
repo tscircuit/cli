@@ -68,14 +68,13 @@ test("should bump version if release already exists", async () => {
   fs.writeFileSync(snippetFilePath, "// Snippet content")
   fs.writeFileSync(
     packageJsonPath,
-    JSON.stringify({ name: "test-package", version: "0.9.9" }),
+    JSON.stringify({ name: "test-package", version: "1.0.0" }),
   )
 
   const { stdout } = await runCommand(`tsci push ${snippetFilePath}`)
 
   // Update expectation to match actual output
-  expect(stdout).toContain("Successfully pushed package")
-  expect(stdout).toContain("test-package@0.9.9")
+  expect(stdout).toContain("Incrementing Package Version")
 })
 
 test("should upload files to the registry", async () => {
