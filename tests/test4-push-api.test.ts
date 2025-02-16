@@ -75,6 +75,7 @@ test("should bump version if release already exists", async () => {
 
   // Update expectation to match actual output
   expect(stdout).toContain("Incrementing Package Version")
+  expect(stdout).toContain("1.0.1")
 })
 
 test("should upload files to the registry", async () => {
