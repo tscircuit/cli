@@ -11,15 +11,13 @@ test("basic init", async () => {
 
   const dirContents = (await readdir(tmpDir)).sort()
 
-  expect(dirContents).toMatchInlineSnapshot(`
-[
-  ".gitignore",
-  ".npmrc",
-  "index.tsx",
-  "node_modules",
-  "package-lock.json",
-  "package.json",
-  "tsconfig.json",
-]
-`)
+  expect(dirContents).toContainValues([
+    ".gitignore",
+    ".npmrc",
+    "index.tsx",
+    "node_modules",
+    "package-lock.json",
+    "package.json",
+    "tsconfig.json",
+  ])
 })

@@ -1,9 +1,9 @@
-import { mkdtemp, rm } from "node:fs/promises"
-import { join, resolve } from "node:path"
-import { tmpdir } from "node:os"
+import { rm } from "node:fs/promises"
+import { resolve } from "node:path"
 import { exec } from "node:child_process"
 import { promisify } from "node:util"
 import { afterEach } from "bun:test"
+import { temporaryDirectory } from "tempy"
 
 const execAsync = promisify(exec)
 
@@ -13,7 +13,7 @@ export interface CliTestFixture {
 }
 
 export async function getCliTestFixture(): Promise<CliTestFixture> {
-  const tmpDir = await mkdtemp(join(tmpdir(), "tsci-test-"))
+  const tmpDir = temporaryDirectory()
 
   const runCommand = async (command: string) => {
     // Convert command like "tsci init" to ["cli/main.ts", "init"]
