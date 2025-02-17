@@ -21,4 +21,4 @@ test("basic init", async () => {
     "package.json",
     "tsconfig.json",
   ])
-},10_000)
+}, 10_000)
