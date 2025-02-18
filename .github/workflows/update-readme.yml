@@ -3,8 +3,6 @@ name: Update README with CLI Usage
 on:
   push:
     branches: [main]
-  pull_request:
-    branches: [main]
 
 jobs:
   update-readme:
@@ -17,7 +15,7 @@ jobs:
 
       # Step 2: Set up Bun
       - name: Setup Bun
-        uses: oven-sh/setup-bun@v1
+        uses: oven-sh/setup-bun@v2
 
       # Step 3: Run the CLI help command and capture the output
       - name: Run CLI help command
