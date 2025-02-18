@@ -1,13 +1,9 @@
 import type { Command } from "commander"
-import * as path from "node:path"
-import * as chokidar from "chokidar"
 import * as fs from "node:fs"
-import { createHttpServer } from "lib/server/createHttpServer"
-import { getLocalFileDependencies } from "lib/dependency-analysis/getLocalFileDependencies"
-import { installNodeModuleTypesForSnippet } from "../../lib/dependency-analysis/installNodeModuleTypesForSnippet"
-import { EventsWatcher } from "../../lib/server/EventsWatcher"
-import { DevServer } from "./DevServer"
 import * as net from "node:net"
+import * as path from "node:path"
+import { installNodeModuleTypesForSnippet } from "../../lib/dependency-analysis/installNodeModuleTypesForSnippet"
+import { DevServer } from "./DevServer"
 
 export const registerDev = (program: Command) => {
   program
@@ -46,7 +42,7 @@ export const registerDev = (program: Command) => {
         const entrypointPath = path.resolve("index.tsx")
         if (fs.existsSync(entrypointPath)) {
           absolutePath = entrypointPath
-          console.log("No file provided. Using 'index.tsx' as the entrypoint.")
+          console.log("Found entrypoint at:", entrypointPath)
         } else {
           console.log(
             "No entrypoint found. Run 'tsci init' to bootstrap a basic project.",
