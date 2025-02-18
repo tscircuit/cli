@@ -32,7 +32,7 @@ bun run dev
 
 ## How it Works
 
-When you run `snippets dev`, we start a local
+When you run `tsci dev`, we start a local
 server that uses the [@tscircuit/file-server](https://github.com/tscircuit/file-server) and [@tscircuit/runframe](https://github.com/tscircuit/runframe) (on the browser)
 
 We use commanderjs to define the CLI commands inside
