@@ -77,10 +77,7 @@ export class DevServer {
     this.filesystemWatcher = chokidar.watch(this.projectDir, {
       persistent: true,
       ignoreInitial: true,
-      ignored: [
-        '**/node_modules/**',
-        '**/.git/**'
-      ]
+      ignored: ["**/node_modules/**", "**/.git/**"],
     })
 
     this.filesystemWatcher.on("change", (filePath) =>
