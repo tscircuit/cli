@@ -3,6 +3,7 @@ export interface EventsRoutes {
     POST: {
       requestJson: {
         event_type: string
+        message?: string
       }
       responseJson: {
         event: {

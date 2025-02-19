@@ -181,21 +181,19 @@ circuit.add(<MyCircuit />)
   private async saveSnippet() {
     const postEvent = async (
       event: "FAILED_TO_SAVE_SNIPPET" | "SNIPPET_SAVED",
+      message?: string,
     ) =>
       this.fsKy.post("api/events/create", {
-        json: { event_type: event },
+        json: { event_type: event, ...(message ? { message } : {}) },
         throwHttpErrors: false,
       })
 
     await pushSnippet({
       filePath: this.componentFilePath,
-      onExit: (e) => {
-        console.error("Failed to save snippet", e)
-        postEvent("FAILED_TO_SAVE_SNIPPET")
-      },
+      onExit: () => {},
       onError: (e) => {
-        console.error("Failed to save snippet", e)
-        postEvent("FAILED_TO_SAVE_SNIPPET")
+        console.error("Failed to save snippet:- ", e)
+        postEvent("FAILED_TO_SAVE_SNIPPET", e)
       },
       onSuccess: () => {
         postEvent("SNIPPET_SAVED")
