@@ -22,6 +22,11 @@ tsci clone author/snippetName
 npm install -g @tscircuit/cli
 ```
 
+# CLI USAGE
+
+<!-- START_HELP_OUTPUT -->
+<!-- END_HELP_OUTPUT -->
+
 ## Development
 
 This command will open the `snippets.tsx` file for editing.
