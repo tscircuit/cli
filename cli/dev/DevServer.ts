@@ -190,7 +190,7 @@ circuit.add(<MyCircuit />)
 
     await pushSnippet({
       filePath: this.componentFilePath,
-      onExit: (e) => {},
+      onExit: () => {},
       onError: (e) => {
         console.error("Failed to save snippet:- ", e)
         postEvent("FAILED_TO_SAVE_SNIPPET", e)
