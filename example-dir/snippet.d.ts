@@ -9,5 +9,3 @@ declare module "@tsci/seveibar.push-button" {
 declare module "@tsci/seveibar.smd-usb-c" {
   export function useUsbC(name: string): any
 }
-
-import "@tscircuit/core"
