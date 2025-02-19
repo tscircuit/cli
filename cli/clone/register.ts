@@ -67,17 +67,7 @@ export const registerClone = (program: Command) => {
             )
             .json()
 
-          let fileText = fileContent.package_file.content_text
-
-          // Ensure all .tsx files contain "import '@tscircuit/core';"
-          if (
-            filePath.endsWith(".tsx") &&
-            !fileText.includes("@tscircuit/core")
-          ) {
-            fileText = `import "@tscircuit/core";\n\n${fileText}`
-          }
-
-          fs.writeFileSync(fullPath, fileText)
+          fs.writeFileSync(fullPath, fileContent.package_file.content_text)
         } catch (error) {
           console.warn(
             `Skipping ${filePath} due to error:`,

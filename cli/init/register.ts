@@ -30,8 +30,6 @@ export const registerInit = (program: Command) => {
       writeFileIfNotExists(
         path.join(projectDir, "index.tsx"),
         `
-import "@tscircuit/core";
-
 export default () => (
   <board width="10mm" height="10mm">
     <resistor resistance="1k" footprint="0402" name="R1" schX={3} pcbX={3} />
