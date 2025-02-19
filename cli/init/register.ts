@@ -1,5 +1,5 @@
 import type { Command } from "commander"
-import { execSync } from "node:child_process"
+import axios from "axios" // Import axios
 import * as fs from "node:fs"
 import * as path from "node:path"
 import { setupTsciProject } from "lib/shared/setup-tsci-packages"
@@ -19,12 +19,13 @@ export const registerInit = (program: Command) => {
       "[directory]",
       "Directory name (optional, defaults to current directory)",
     )
-    .action((directory?: string) => {
-      // Step 1: Check for the latest version
+    .action(async (directory?: string) => {
+      // Step 1: Check for the latest version using axios
       try {
-        const latestVersion = execSync("npm view tsci version", {
-          encoding: "utf-8",
-        }).trim()
+        const response = await axios.get(
+          "https://registry.npmjs.org/@tscircuit/cli",
+        )
+        const latestVersion = response.data["dist-tags"].latest
 
         if (latestVersion !== currentVersion) {
           console.warn(
