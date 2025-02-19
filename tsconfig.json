@@ -29,7 +29,7 @@
     "noUnusedLocals": false,
     "noUnusedParameters": false,
     "noPropertyAccessFromIndexSignature": false,
-    "types": ["@tscircuit/core"]
+    "types": ["@tscircuit/core", "@types/bun"]
   },
   "exclude": ["example-dir"]
 }
