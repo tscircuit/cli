@@ -9,50 +9,19 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      # Step 1: Checkout the repository
       - name: Checkout code
         uses: actions/checkout@v4
 
-      # Step 2: Set up Bun and install deps
       - name: Setup Bun
         uses: oven-sh/setup-bun@v2
-      
+
       - name: Install dependencies
         run: bun install
 
-      # Step 3: Run the CLI help command and capture the output
-      - name: Run CLI help command
-        id: cli-help
-        run: |
-          CLI_HELP_OUTPUT=$(bun cli/main.ts --help)
-          echo "cli_help_output<<EOF" >> $GITHUB_ENV
-          echo "$CLI_HELP_OUTPUT" >> $GITHUB_ENV
-          echo "EOF" >> $GITHUB_ENV
-
-      # Step 4: Update README.md with the CLI help output
       - name: Update README with CLI usage
         run: |
-          # Read the current README.md
-          README_CONTENT=$(cat README.md)
+          bun scripts/generate-readme-help-output.ts
 
-          # Extract the start and end markers
-          START_MARKER="<!-- start -->"
-          END_MARKER="<!-- end -->"
-
-          # Get the CLI help output from the environment variable
-          CLI_HELP_OUTPUT="${{ env.cli_help_output }}"
-
-          # Replace the content between the markers with the CLI help output
-          UPDATED_README=$(awk -v cli_help="$CLI_HELP_OUTPUT" -v start="$START_MARKER" -v end="$END_MARKER" '
-            $0 ~ start { print; print cli_help; in_block=1; next }
-            $0 ~ end { in_block=0 }
-            !in_block
-          ' README.md)
-
-          # Write the updated content back to README.md
-          echo "$UPDATED_README" > README.md
-
-      # Step 5: Commit the changes to README.md
       - name: Commit changes
         run: |
           git config --global user.name "github-actions[bot]"

@@ -24,8 +24,8 @@ npm install -g @tscircuit/cli
 
 # CLI USAGE
 
-<!-- start -->
-<!-- end -->
+<!-- START_HELP_OUTPUT -->
+<!-- END_HELP_OUTPUT -->
 
 ## Development
 
