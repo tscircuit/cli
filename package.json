@@ -2,38 +2,35 @@
   "name": "@tscircuit/cli",
   "main": "dist/main.js",
   "type": "module",
-  "version": "0.1.43",
+  "version": "0.1.43-dev.3",
   "bin": {
     "tsci": "./dist/main.js"
   },
+  "files": [
+    "dist"
+  ],
   "scripts": {
     "start": "bun run dev",
     "dev": "bun --hot ./cli/main.ts dev ./example-dir/snippet1-basic.tsx",
-    "build": "tsup-node cli/main.ts --format esm --sourcemap inline",
+    "build": "bun run build:bun",
+    "build:bun": "bun build ./cli/main.ts --target node  --outfile ./dist/main.js",
+    "build:tsup": "tsup --config ./tsup.config.js",
     "format": "biome format --write .",
     "format:check": "biome format .",
     "cli": "bun ./cli/main.ts"
   },
   "devDependencies": {
+    "@babel/standalone": "^7.26.9",
     "@biomejs/biome": "^1.9.4",
     "@tscircuit/core": "^0.0.249",
+    "@tscircuit/eval": "^0.0.96",
     "@tscircuit/fake-snippets": "^0.0.6",
+    "@tscircuit/file-server": "^0.0.13",
+    "@tscircuit/runframe": "^0.0.198",
     "@types/bun": "^1.1.15",
     "@types/configstore": "^6.0.2",
     "@types/react": "^19.0.8",
     "@types/semver": "^7.5.8",
-    "get-port": "^7.1.0",
-    "tempy": "^3.1.0",
-    "tsup": "^8.3.5",
-    "typed-ky": "^0.0.4"
-  },
-  "peerDependencies": {
-    "typescript": "^5.0.0"
-  },
-  "dependencies": {
-    "@tscircuit/eval": "^0.0.96",
-    "@tscircuit/file-server": "^0.0.13",
-    "@tscircuit/runframe": "^0.0.167",
     "bun-match-svg": "^0.0.9",
     "chokidar": "4.0.1",
     "circuit-json-to-readable-netlist": "^0.0.8",
@@ -43,11 +40,19 @@
     "cosmiconfig": "^9.0.0",
     "delay": "^6.0.0",
     "dsn-converter": "^0.0.63",
+    "get-port": "^7.1.0",
     "jwt-decode": "^4.0.0",
     "ky": "^1.7.4",
     "make-vfs": "^1.0.15",
     "perfect-cli": "^1.0.20",
     "redaxios": "^0.5.1",
-    "semver": "^7.6.3"
-  }
+    "semver": "^7.6.3",
+    "tempy": "^3.1.0",
+    "tsup": "^8.3.5",
+    "typed-ky": "^0.0.4"
+  },
+  "peerDependencies": {
+    "typescript": "^5.0.0"
+  },
+  "dependencies": {}
 }
