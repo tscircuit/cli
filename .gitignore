@@ -177,3 +177,4 @@ dist
 .vscode
 .aider*
 package-lock.json
+*.diff.png

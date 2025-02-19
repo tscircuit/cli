@@ -1,6 +1,5 @@
 import type { Command } from "commander"
-import { createCircuitWebWorker } from "@tscircuit/eval"
-import webWorkerBundleUrl from "@tscircuit/eval/blob-url"
+import { CircuitRunner } from "@tscircuit/eval/eval"
 import { getVirtualFileSystemFromDirPath } from "make-vfs"
 import path from "node:path"
 import fs from "node:fs"
@@ -55,15 +54,13 @@ export const registerExport = (program: Command) => {
         output = path.basename(file).replace(/\.[^.]+$/, "")
       }
 
-      const worker = await createCircuitWebWorker({
-        webWorkerUrl: webWorkerBundleUrl,
-      })
+      const runner = new CircuitRunner()
 
       const projectDir = path.dirname(file)
 
       const relativeComponentPath = path.relative(projectDir, file)
 
-      await worker.executeWithFsMap({
+      await runner.executeWithFsMap({
         entrypoint: "entrypoint.tsx",
         fsMap: {
           ...((await getVirtualFileSystemFromDirPath({
@@ -78,9 +75,9 @@ circuit.add(<MyCircuit />)
         },
       })
 
-      await worker.renderUntilSettled()
+      await runner.renderUntilSettled()
 
-      const circuitJson = await worker.getCircuitJson()
+      const circuitJson = await runner.getCircuitJson()
       const outputPath = path.join(
         projectDir,
         `${output}${OUTPUT_EXTENSIONS[format as Format]}`,

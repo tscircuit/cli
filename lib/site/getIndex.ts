@@ -5,6 +5,9 @@ export const getIndex = async () => {
     <head>
     </head>
     <body>
+      <script>
+        window.TSCIRCUIT_USE_RUNFRAME_FOR_CLI = true;
+      </script>
       <script src="https://cdn.tailwindcss.com"></script>
       <div id="root">loading...</div>
       <script>
