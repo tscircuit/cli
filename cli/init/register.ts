@@ -1,5 +1,5 @@
 import type { Command } from "commander"
-import { execSync } from "node:child_process"
+import axios from "axios" // Import axios
 import * as fs from "node:fs"
 import * as path from "node:path"
 import { setupTsciProject } from "lib/shared/setup-tsci-packages"
@@ -7,6 +7,7 @@ import { generateTsConfig } from "lib/shared/generate-ts-config"
 import { writeFileIfNotExists } from "lib/shared/write-file-if-not-exists"
 import { generateGitIgnoreFile } from "lib/shared/generate-gitignore-file"
 import { generatePackageJson } from "lib/shared/generate-package-json"
+import { version as currentVersion } from "package.json" // Ensure this path is correct
 
 export const registerInit = (program: Command) => {
   program
@@ -18,7 +19,30 @@ export const registerInit = (program: Command) => {
       "[directory]",
       "Directory name (optional, defaults to current directory)",
     )
-    .action((directory?: string) => {
+    .action(async (directory?: string) => {
+      // Step 1: Check for the latest version using axios
+      try {
+        const response = await axios.get(
+          "https://registry.npmjs.org/@tscircuit/cli",
+        )
+        const latestVersion = response.data["dist-tags"].latest
+
+        if (latestVersion !== currentVersion) {
+          console.warn(
+            `⚠️ You are using version ${currentVersion}, but the latest version is ${latestVersion}. Consider updating with "npm install -g tsci@latest".`,
+          )
+        } else {
+          console.info(
+            `✅ You are using the latest version (${currentVersion}).`,
+          )
+        }
+      } catch (error) {
+        console.error(
+          "⚠️ Could not check the latest version. Please check your network connection.",
+        )
+      }
+
+      // Step 2: Initialize the project
       const projectDir = directory
         ? path.resolve(process.cwd(), directory)
         : process.cwd()
@@ -57,7 +81,9 @@ export default () => (
       setupTsciProject(projectDir)
 
       console.info(
-        `🎉 Initialization complete! Run ${directory ? `"cd ${directory}" & ` : ""}"tsci dev" to start developing.`,
+        `🎉 Initialization complete! Run ${
+          directory ? `"cd ${directory}" & ` : ""
+        }"tsci dev" to start developing.`,
       )
       process.exit(0)
     })
