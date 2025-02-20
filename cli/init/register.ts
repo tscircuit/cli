@@ -1,13 +1,13 @@
-import type { Command } from "commander"
-import axios from "axios" // Import axios
 import * as fs from "node:fs"
 import * as path from "node:path"
+import { Command } from "commander"
 import { setupTsciProject } from "lib/shared/setup-tsci-packages"
 import { generateTsConfig } from "lib/shared/generate-ts-config"
 import { writeFileIfNotExists } from "lib/shared/write-file-if-not-exists"
 import { generateGitIgnoreFile } from "lib/shared/generate-gitignore-file"
 import { generatePackageJson } from "lib/shared/generate-package-json"
-import { version as currentVersion } from "package.json" // Ensure this path is correct
+import { version as currentVersion } from "package.json"
+import { detectPackageManager } from "lib/shared/detect-pkg-manager"
 
 export const registerInit = (program: Command) => {
   program
@@ -20,16 +20,17 @@ export const registerInit = (program: Command) => {
       "Directory name (optional, defaults to current directory)",
     )
     .action(async (directory?: string) => {
-      // Step 1: Check for the latest version using axios
+      // Step 1: Check for the latest version using fetch
       try {
-        const response = await axios.get(
+        const response = await fetch(
           "https://registry.npmjs.org/@tscircuit/cli",
         )
-        const latestVersion = response.data["dist-tags"].latest
-
+        const data = await response.json()
+        const latestVersion = data["dist-tags"].latest
+        const packageManager = detectPackageManager()
         if (latestVersion !== currentVersion) {
           console.warn(
-            `⚠️ You are using version ${currentVersion}, but the latest version is ${latestVersion}. Consider updating with "npm install -g tsci@latest".`,
+            `⚠️ You are using version ${currentVersion}, but the latest version is ${latestVersion}. Consider updating with "${packageManager} install -g @tscircuit/cli@latest".`,
           )
         } else {
           console.info(
