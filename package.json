@@ -53,9 +53,5 @@
   },
   "peerDependencies": {
     "typescript": "^5.0.0"
-  },
-  "dependencies": {
-    "axios": "^1.7.9",
-    "bun": "^1.2.2"
   }
 }
