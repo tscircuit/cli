@@ -20,7 +20,7 @@ export const registerInit = (program: Command) => {
       "Directory name (optional, defaults to current directory)",
     )
     .action(async (directory?: string) => {
-      // Step 1: Check for the latest version using fetch
+      // Check for the latest version using fetch
       try {
         const response = await fetch(
           "https://registry.npmjs.org/@tscircuit/cli",
@@ -34,20 +34,20 @@ export const registerInit = (program: Command) => {
             "@tscircuit/cli",
           )
           console.warn(
-            `⚠️ You are using version ${currentVersion}, but the latest version is ${latestVersion}. Consider updating with "${packageManager} install -g @tscircuit/cli@latest".`,
+            `\u26A0 You are using version ${currentVersion}, but the latest version is ${latestVersion}. Consider updating with "${installCommand}".`,
           )
         } else {
           console.info(
-            `✅ You are using the latest version (${currentVersion}).`,
+            `\u2713 You are using the latest version (${currentVersion}).`,
           )
         }
       } catch (error) {
         console.error(
-          "⚠️ Could not check the latest version. Please check your network connection.",
+          "\u26A0 Could not check the latest version. Please check your network connection.",
         )
       }
 
-      // Step 2: Initialize the project
+      //  Initialize the project
       const projectDir = directory
         ? path.resolve(process.cwd(), directory)
         : process.cwd()
@@ -86,13 +86,14 @@ export default () => (
       setupTsciProject(projectDir)
 
       console.info(
-        `🎉 Initialization complete! Run ${
+        `\u2728 Initialization complete! Run ${
           directory ? `"cd ${directory}" & ` : ""
         }"tsci dev" to start developing.`,
       )
       process.exit(0)
     })
 }
+
 const getGlobalInstallCommand = (
   packageManager: string,
   packageName: string,
