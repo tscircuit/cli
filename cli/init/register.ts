@@ -1,12 +1,13 @@
-import type { Command } from "commander"
-import { execSync } from "node:child_process"
 import * as fs from "node:fs"
 import * as path from "node:path"
+import { Command } from "commander"
 import { setupTsciProject } from "lib/shared/setup-tsci-packages"
 import { generateTsConfig } from "lib/shared/generate-ts-config"
 import { writeFileIfNotExists } from "lib/shared/write-file-if-not-exists"
 import { generateGitIgnoreFile } from "lib/shared/generate-gitignore-file"
 import { generatePackageJson } from "lib/shared/generate-package-json"
+import { version as currentVersion } from "package.json"
+import { detectPackageManager } from "lib/shared/detect-pkg-manager"
 
 export const registerInit = (program: Command) => {
   program
@@ -18,7 +19,35 @@ export const registerInit = (program: Command) => {
       "[directory]",
       "Directory name (optional, defaults to current directory)",
     )
-    .action((directory?: string) => {
+    .action(async (directory?: string) => {
+      // Check for the latest version using fetch
+      try {
+        const response = await fetch(
+          "https://registry.npmjs.org/@tscircuit/cli",
+        )
+        const data = await response.json()
+        const latestVersion = data["dist-tags"].latest
+        const packageManager = detectPackageManager()
+        if (latestVersion !== currentVersion) {
+          const installCommand = getGlobalInstallCommand(
+            packageManager,
+            "@tscircuit/cli",
+          )
+          console.warn(
+            `\u26A0 You are using version ${currentVersion}, but the latest version is ${latestVersion}. Consider updating with "${installCommand}".`,
+          )
+        } else {
+          console.info(
+            `\u2713 You are using the latest version (${currentVersion}).`,
+          )
+        }
+      } catch (error) {
+        console.error(
+          "\u26A0 Could not check the latest version. Please check your network connection.",
+        )
+      }
+
+      //  Initialize the project
       const projectDir = directory
         ? path.resolve(process.cwd(), directory)
         : process.cwd()
@@ -57,8 +86,26 @@ export default () => (
       setupTsciProject(projectDir)
 
       console.info(
-        `🎉 Initialization complete! Run ${directory ? `"cd ${directory}" & ` : ""}"tsci dev" to start developing.`,
+        `\u2728 Initialization complete! Run ${
+          directory ? `"cd ${directory}" & ` : ""
+        }"tsci dev" to start developing.`,
       )
       process.exit(0)
     })
+}
+
+const getGlobalInstallCommand = (
+  packageManager: string,
+  packageName: string,
+): string => {
+  switch (packageManager) {
+    case "yarn":
+      return `yarn global add ${packageName}`
+    case "pnpm":
+      return `pnpm add -g ${packageName}`
+    case "bun":
+      return `bun add -g ${packageName}`
+    default:
+      return `npm install -g ${packageName}`
+  }
 }
