@@ -29,6 +29,10 @@ export const registerInit = (program: Command) => {
         const latestVersion = data["dist-tags"].latest
         const packageManager = detectPackageManager()
         if (latestVersion !== currentVersion) {
+          const installCommand = getGlobalInstallCommand(
+            packageManager,
+            "@tscircuit/cli",
+          )
           console.warn(
             `⚠️ You are using version ${currentVersion}, but the latest version is ${latestVersion}. Consider updating with "${packageManager} install -g @tscircuit/cli@latest".`,
           )
@@ -88,4 +92,19 @@ export default () => (
       )
       process.exit(0)
     })
+}
+const getGlobalInstallCommand = (
+  packageManager: string,
+  packageName: string,
+): string => {
+  switch (packageManager) {
+    case "yarn":
+      return `yarn global add ${packageName}`
+    case "pnpm":
+      return `pnpm add -g ${packageName}`
+    case "bun":
+      return `bun add -g ${packageName}`
+    default:
+      return `npm install -g ${packageName}`
+  }
 }
