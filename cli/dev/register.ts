@@ -51,8 +51,6 @@ export const registerDev = (program: Command) => {
         }
       }
 
-      const fileDir = path.dirname(absolutePath)
-
       try {
         console.log("Installing types for imported snippets...")
         await installNodeModuleTypesForSnippet(absolutePath)
