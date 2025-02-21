@@ -22,7 +22,7 @@
   "devDependencies": {
     "@babel/standalone": "^7.26.9",
     "@biomejs/biome": "^1.9.4",
-    "@tscircuit/core": "^0.0.249",
+    "@tscircuit/core": "^0.0.323",
     "@tscircuit/eval": "^0.0.96",
     "@tscircuit/fake-snippets": "^0.0.6",
     "@tscircuit/file-server": "^0.0.13",
