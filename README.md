@@ -22,9 +22,31 @@ tsci clone author/snippetName
 npm install -g @tscircuit/cli
 ```
 
-# CLI USAGE
+## CLI USAGE
 
 <!-- START_HELP_OUTPUT -->
+```
+Usage: tsci [options] [command]
+
+CLI for developing tscircuit snippets
+
+Options:
+  -V, --version            output the version number
+  -h, --help               display help for command
+
+Commands:
+  init [directory]         Initialize a new TSCircuit project in the specified
+                           directory (or current directory if none is provided)
+  dev [options] [file]     Start development server for a snippet
+  clone <snippet>          Clone a snippet from the registry
+  push [file]              Save snippet code to Registry API
+  auth                     Login/logout
+  login                    Login to tscircuit registry
+  logout                   Logout from tscircuit registry
+  config                   Manage tscircuit CLI configuration
+  export [options] <file>  Export tscircuit code to various formats
+  help [command]           display help for command
+```
 <!-- END_HELP_OUTPUT -->
 
 ## Development
