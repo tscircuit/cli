@@ -21,29 +21,21 @@ export const registerInit = (program: Command) => {
     )
     .action(async (directory?: string) => {
       // Check for the latest version using fetch
-      try {
-        const response = await fetch(
-          "https://registry.npmjs.org/@tscircuit/cli",
+      const response = await fetch("https://registry.npmjs.org/@tscircuit/cli")
+      const data = await response.json()
+      const latestVersion = data["dist-tags"].latest
+      const packageManager = detectPackageManager()
+      if (latestVersion !== currentVersion) {
+        const installCommand = getGlobalInstallCommand(
+          packageManager,
+          "@tscircuit/cli",
         )
-        const data = await response.json()
-        const latestVersion = data["dist-tags"].latest
-        const packageManager = detectPackageManager()
-        if (latestVersion !== currentVersion) {
-          const installCommand = getGlobalInstallCommand(
-            packageManager,
-            "@tscircuit/cli",
-          )
-          console.warn(
-            `\u26A0 You are using version ${currentVersion}, but the latest version is ${latestVersion}. Consider updating with "${installCommand}".`,
-          )
-        } else {
-          console.info(
-            `\u2713 You are using the latest version (${currentVersion}).`,
-          )
-        }
-      } catch (error) {
-        console.error(
-          "\u26A0 Could not check the latest version. Please check your network connection.",
+        console.warn(
+          `\u26A0 You are using version ${currentVersion}, but the latest version is ${latestVersion}. Consider updating with "${installCommand}".`,
+        )
+      } else {
+        console.info(
+          `\u2713 You are using the latest version (${currentVersion}).`,
         )
       }
 
