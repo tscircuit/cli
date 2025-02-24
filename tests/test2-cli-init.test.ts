@@ -9,7 +9,7 @@ test("basic init", async () => {
   // Run the `tsci init` command
   const { stdout, stderr } = await runCommand("tsci init project")
   expect(stderr).toBe("")
-  expect(stdout).toMatch(/\u26A0|\u2713/) // Look for either a warning or confirmation of latest version
+  expect(stdout).toMatch(/^$|[\u26A0\u2713]/) // Look for either a warning or empty if the latest version is being used
 
   const dirContents = fs.readdirSync(path.join(tmpDir, "project"))
 
