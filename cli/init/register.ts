@@ -33,10 +33,6 @@ export const registerInit = (program: Command) => {
         console.warn(
           `\u26A0 You are using version ${currentVersion}, but the latest version is ${latestVersion}. Consider updating with "${installCommand}".`,
         )
-      } else {
-        console.info(
-          `\u2713 You are using the latest version (${currentVersion}).`,
-        )
       }
 
       //  Initialize the project
