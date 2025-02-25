@@ -31,7 +31,7 @@ export const registerInit = (program: Command) => {
           "@tscircuit/cli",
         )
         console.warn(
-          `\u26A0 You are using version ${currentVersion}, but the latest version is ${latestVersion}. Consider updating with "${installCommand}".`,
+          `\u26A0 A new version of tsci is available (${currentVersion} → ${latestVersion}) Update? (Y/n)`,
         )
       }
 
