@@ -3,12 +3,6 @@ import { test, expect } from "bun:test"
 import fs from "fs"
 import path from "path"
 
-async function getLatestCliVersion() {
-  const response = await fetch("https://registry.npmjs.org/@tscircuit/cli")
-  const data = await response.json()
-  return data["dist-tags"].latest
-}
-
 test("basic init", async () => {
   const { tmpDir, runCommand } = await getCliTestFixture()
 
