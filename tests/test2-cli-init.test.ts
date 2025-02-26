@@ -11,7 +11,7 @@ test("basic init", async () => {
   expect(stderr).toBe("")
 
   if (stdout.includes("\u26A0")) {
-    expect(stdout).toMatch(/\u26A0/) // Check for warnings
+    expect(stdout).toMatch(/\u26A0/) // Check for warnings due to outdated version
   }
 
   const dirContents = fs.readdirSync(path.join(tmpDir, "project"))
