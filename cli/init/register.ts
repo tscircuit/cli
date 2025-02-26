@@ -1,6 +1,7 @@
 import * as fs from "node:fs"
 import * as path from "node:path"
 import { Command } from "commander"
+import { execSync } from "child_process"
 import { setupTsciProject } from "lib/shared/setup-tsci-packages"
 import { generateTsConfig } from "lib/shared/generate-ts-config"
 import { writeFileIfNotExists } from "lib/shared/write-file-if-not-exists"
@@ -21,18 +22,41 @@ export const registerInit = (program: Command) => {
     )
     .action(async (directory?: string) => {
       // Check for the latest version using fetch
-      const response = await fetch("https://registry.npmjs.org/@tscircuit/cli")
-      const data = await response.json()
-      const latestVersion = data["dist-tags"].latest
-      const packageManager = detectPackageManager()
-      if (latestVersion !== currentVersion) {
-        const installCommand = getGlobalInstallCommand(
-          packageManager,
-          "@tscircuit/cli",
+      try {
+        const response = await fetch(
+          "https://registry.npmjs.org/@tscircuit/cli",
         )
-        console.warn(
-          `\u26A0 A new version of tsci is available (${currentVersion} → ${latestVersion}) Update? (Y/n)`,
-        )
+        if (!response.ok) return
+
+        const data = await response.json()
+        const latestVersion = data["dist-tags"].latest
+
+        if (latestVersion !== currentVersion) {
+          const packageManager = detectPackageManager()
+          const installCommand = `${packageManager} add -g @tscircuit/cli`
+          console.warn(
+            `⚠ A new version of tsci is available (${currentVersion} → ${latestVersion}). Update? (Y/n)`,
+          )
+          process.stdin.setEncoding("utf8")
+          process.stdin.resume()
+          process.stdin.once("data", (input: string) => {
+            const answer = input.trim().toLowerCase()
+            if (answer === "y" || answer === "") {
+              console.log(`Running: ${installCommand}`)
+              try {
+                execSync(installCommand, { stdio: "inherit" })
+                console.log("✅ Update successful!")
+              } catch (err) {
+                console.log(
+                  "❌ Update failed. Please try manually or use root permission",
+                )
+              }
+            }
+            process.stdin.pause()
+          })
+        }
+      } catch (error) {
+        //skipping the error don't show any message for better developer experience
       }
 
       //  Initialize the project
