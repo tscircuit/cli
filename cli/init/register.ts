@@ -21,45 +21,10 @@ export const registerInit = (program: Command) => {
       "Directory name (optional, defaults to current directory)",
     )
     .action(async (directory?: string) => {
-      // Check for the latest version using fetch
-      try {
-        const response = await fetch(
-          "https://registry.npmjs.org/@tscircuit/cli",
-        )
-        if (!response.ok) return
+      // Check for updates in the background
+      checkForUpdates(currentVersion)
 
-        const data = await response.json()
-        const latestVersion = data["dist-tags"].latest
-
-        if (latestVersion !== currentVersion) {
-          const packageManager = detectPackageManager()
-          const installCommand = `${packageManager} add -g @tscircuit/cli`
-          console.warn(
-            `⚠ A new version of tsci is available (${currentVersion} → ${latestVersion}). Update? (Y/n)`,
-          )
-          process.stdin.setEncoding("utf8")
-          process.stdin.resume()
-          process.stdin.once("data", (input: string) => {
-            const answer = input.trim().toLowerCase()
-            if (answer === "y" || answer === "") {
-              console.log(`Running: ${installCommand}`)
-              try {
-                execSync(installCommand, { stdio: "inherit" })
-                console.log("✅ Update successful!")
-              } catch (err) {
-                console.log(
-                  "❌ Update failed. Please try manually or use root permission",
-                )
-              }
-            }
-            process.stdin.pause()
-          })
-        }
-      } catch (error) {
-        //skipping the error don't show any message for better developer experience
-      }
-
-      //  Initialize the project
+      // Initialize the project
       const projectDir = directory
         ? path.resolve(process.cwd(), directory)
         : process.cwd()
@@ -98,12 +63,61 @@ export default () => (
       setupTsciProject(projectDir)
 
       console.info(
-        `\u2728 Initialization complete! Run ${
+        `✨ Initialization complete! Run ${
           directory ? `"cd ${directory}" & ` : ""
         }"tsci dev" to start developing.`,
       )
       process.exit(0)
     })
+}
+
+const checkForUpdates = async (currentVersion: string) => {
+  try {
+    const response = await fetch("https://registry.npmjs.org/@tscircuit/cli")
+    if (!response.ok) return
+
+    const data = await response.json()
+    const latestVersion = data["dist-tags"].latest
+
+    if (latestVersion !== currentVersion) {
+      const packageManager = detectPackageManager()
+      const installCommand = getGlobalInstallCommand(
+        packageManager,
+        "@tscircuit/cli",
+      )
+
+      console.warn(
+        `⚠ A new version of tsci is available (${currentVersion} → ${latestVersion}).`,
+      )
+      console.warn(
+        `Run the following command to update:\n\n  ${installCommand}\n`,
+      )
+
+      process.stdin.setEncoding("utf8")
+      process.stdin.resume()
+      process.stdout.write("Would you like to update? (Y/n): ")
+
+      process.stdin.once("data", (input: string) => {
+        const answer = input.trim().toLowerCase()
+        if (answer === "y" || answer === "") {
+          console.log(`\nRunning: ${installCommand}\n`)
+          try {
+            execSync(installCommand, { stdio: "inherit" })
+            console.log("✅ Update successful!")
+          } catch (err) {
+            console.log(
+              "❌ Update failed. Please try manually or use root permissions.",
+            )
+          }
+        } else {
+          console.log("Skipping update.")
+        }
+        process.stdin.pause()
+      })
+    }
+  } catch (error) {
+    // Skipping error logs for a smoother developer experience
+  }
 }
 
 const getGlobalInstallCommand = (
