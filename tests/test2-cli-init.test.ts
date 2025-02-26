@@ -10,8 +10,11 @@ test("basic init", async () => {
   const { stdout, stderr } = await runCommand("tsci init project")
   expect(stderr).toBe("")
 
-  const dirContents = fs.readdirSync(path.join(tmpDir, "project"))
+  if (stdout.includes("\u26A0")) {
+    expect(stdout).toMatch(/\u26A0/) // Check for warnings due to outdated version
+  }
 
+  const dirContents = fs.readdirSync(path.join(tmpDir, "project"))
   expect(dirContents).toContainValues([
     ".gitignore",
     ".npmrc",

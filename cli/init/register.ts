@@ -1,12 +1,14 @@
-import type { Command } from "commander"
-import { execSync } from "node:child_process"
 import * as fs from "node:fs"
 import * as path from "node:path"
+import { Command } from "commander"
+import { execSync } from "child_process"
 import { setupTsciProject } from "lib/shared/setup-tsci-packages"
 import { generateTsConfig } from "lib/shared/generate-ts-config"
 import { writeFileIfNotExists } from "lib/shared/write-file-if-not-exists"
 import { generateGitIgnoreFile } from "lib/shared/generate-gitignore-file"
 import { generatePackageJson } from "lib/shared/generate-package-json"
+import { version as currentVersion } from "package.json"
+import { detectPackageManager } from "lib/shared/detect-pkg-manager"
 
 export const registerInit = (program: Command) => {
   program
@@ -18,7 +20,11 @@ export const registerInit = (program: Command) => {
       "[directory]",
       "Directory name (optional, defaults to current directory)",
     )
-    .action((directory?: string) => {
+    .action(async (directory?: string) => {
+      // Check for updates in the background
+      checkForUpdates(currentVersion)
+
+      // Initialize the project
       const projectDir = directory
         ? path.resolve(process.cwd(), directory)
         : process.cwd()
@@ -57,8 +63,75 @@ export default () => (
       setupTsciProject(projectDir)
 
       console.info(
-        `🎉 Initialization complete! Run ${directory ? `"cd ${directory}" & ` : ""}"tsci dev" to start developing.`,
+        `✨ Initialization complete! Run ${
+          directory ? `"cd ${directory}" & ` : ""
+        }"tsci dev" to start developing.`,
       )
       process.exit(0)
     })
+}
+
+const checkForUpdates = async (currentVersion: string) => {
+  try {
+    const response = await fetch("https://registry.npmjs.org/@tscircuit/cli")
+    if (!response.ok) return
+
+    const data = await response.json()
+    const latestVersion = data["dist-tags"].latest
+
+    if (latestVersion !== currentVersion) {
+      const packageManager = detectPackageManager()
+      const installCommand = getGlobalInstallCommand(
+        packageManager,
+        "@tscircuit/cli",
+      )
+
+      console.warn(
+        `⚠ A new version of tsci is available (${currentVersion} → ${latestVersion}).`,
+      )
+      console.warn(
+        `Run the following command to update:\n\n  ${installCommand}\n`,
+      )
+
+      process.stdin.setEncoding("utf8")
+      process.stdin.resume()
+      process.stdout.write("Would you like to update? (Y/n): ")
+
+      process.stdin.once("data", (input: string) => {
+        const answer = input.trim().toLowerCase()
+        if (answer === "y" || answer === "") {
+          console.log(`\nRunning: ${installCommand}\n`)
+          try {
+            execSync(installCommand, { stdio: "inherit" })
+            console.log("✅ Update successful!")
+          } catch (err) {
+            console.log(
+              "❌ Update failed. Please try manually or use root permissions.",
+            )
+          }
+        } else {
+          console.log("Skipping update.")
+        }
+        process.stdin.pause()
+      })
+    }
+  } catch (error) {
+    // Skipping error logs for a smoother developer experience
+  }
+}
+
+const getGlobalInstallCommand = (
+  packageManager: string,
+  packageName: string,
+): string => {
+  switch (packageManager) {
+    case "yarn":
+      return `yarn global add ${packageName}`
+    case "pnpm":
+      return `pnpm add -g ${packageName}`
+    case "bun":
+      return `bun add -g ${packageName}`
+    default:
+      return `npm install -g ${packageName}`
+  }
 }
