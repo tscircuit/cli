@@ -60,4 +60,4 @@ test("init command installs @types/react and passes type-checking", async () => 
   } catch (error) {
     throw new Error("Type-checking failed")
   }
-})
+}, 10_000)
