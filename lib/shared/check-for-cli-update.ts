@@ -41,12 +41,18 @@ export const askConfirmation = (question: string): Promise<boolean> => {
     const rl = readline.createInterface({
       input: process.stdin,
       output: process.stdout,
-    })
+    });
+
+    const timeout = setTimeout(() => {
+      rl.close();
+      resolve(false);
+    }, 5000);
 
     rl.question(`${question} (y/n): `, (answer) => {
-      rl.close()
-      const normalized = answer.trim().toLowerCase()
-      resolve(normalized === "yes" || normalized === "y")
-    })
-  })
-}
+      clearTimeout(timeout);
+      rl.close();
+      const normalized = answer.trim().toLowerCase();
+      resolve(normalized === "yes" || normalized === "y");
+    });
+  });
+};
