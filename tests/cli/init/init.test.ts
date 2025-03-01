@@ -6,6 +6,7 @@ import { getCliTestFixture } from "../../fixtures/get-cli-test-fixture"
 test("init command installs @types/react and passes type-checking", async () => {
   const { tmpDir, runCommand } = await getCliTestFixture()
 
+  process.env.TSCI_SKIP_CLI_UPDATE = "true"
   const { stdout } = await runCommand("tsci init")
   console.log(stdout)
 
