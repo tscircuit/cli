@@ -1,4 +1,3 @@
-import { SilkscreenCircleProps } from "./../../node_modules/@tscircuit/props/lib/components/silkscreen-circle"
 import type { Command } from "commander"
 import { execSync } from "node:child_process"
 import * as fs from "node:fs"
