@@ -4,6 +4,7 @@ import fs from "fs"
 import path from "path"
 
 test("basic init", async () => {
+  process.env.TSCI_SKIP_UPDATE_CHECK = "true"
   const { tmpDir, runCommand } = await getCliTestFixture()
 
   // Run the `tsci init` command

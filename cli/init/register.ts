@@ -10,12 +10,11 @@ import { generatePackageJson } from "lib/shared/generate-package-json"
 import { detectPackageManager } from "lib/shared/detect-pkg-manager"
 
 const checkForUpdates = async () => {
+  if ((process.env.TSCI_SKIP_UPDATE_CHECK = "true")) {
+    console.info("Skipping update check")
+    return
+  }
   try {
-    if (process.env.NODE_ENV === "test") {
-      console.info("Skipping update check")
-      return
-    }
-
     const response = await fetch(
       "https://registry.npmjs.org/@tscircuit/cli/latest",
     )
