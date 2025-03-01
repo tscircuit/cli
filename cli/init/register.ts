@@ -7,6 +7,7 @@ import { generateTsConfig } from "lib/shared/generate-ts-config"
 import { writeFileIfNotExists } from "lib/shared/write-file-if-not-exists"
 import { generateGitIgnoreFile } from "lib/shared/generate-gitignore-file"
 import { generatePackageJson } from "lib/shared/generate-package-json"
+import { checkForTsciUpdates } from "lib/shared/check-for-cli-update"
 
 export const registerInit = (program: Command) => {
   program
@@ -18,7 +19,9 @@ export const registerInit = (program: Command) => {
       "[directory]",
       "Directory name (optional, defaults to current directory)",
     )
-    .action((directory?: string) => {
+    .action(async (directory?: string) => {
+      await checkForTsciUpdates()
+
       const projectDir = directory
         ? path.resolve(process.cwd(), directory)
         : process.cwd()
