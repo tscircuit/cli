@@ -6,7 +6,7 @@ import readline from "node:readline"
 import { execSync } from "node:child_process"
 
 export const checkForTsciUpdates = async () => {
-  if (process.env.TSCI_SKIP_UPDATE_CHECK == "true") return
+  if (process.env.TSCI_SKIP_CLI_UPDATE == "true") return
   const { version: latestCliVersion } = await ky
     .get<{ version: string }>(
       "https://registry.npmjs.org/@tscircuit/cli/latest",
