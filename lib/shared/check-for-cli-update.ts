@@ -40,7 +40,7 @@ export const askConfirmation = (question: string): Promise<boolean> => {
   return new Promise((resolve) => {
     const rl = readline.createInterface({
       input: process.stdin,
-      output: process.stdout
+      output: process.stdout,
     })
 
     const timeout = setTimeout(() => {
