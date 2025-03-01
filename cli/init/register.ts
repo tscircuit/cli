@@ -1,3 +1,4 @@
+import { SilkscreenCircleProps } from './../../node_modules/@tscircuit/props/lib/components/silkscreen-circle';
 import type { Command } from "commander"
 import { execSync } from "node:child_process"
 import * as fs from "node:fs"
@@ -11,6 +12,11 @@ import { detectPackageManager } from "lib/shared/detect-pkg-manager"
 
 const checkForUpdates = async () => {
   try {
+    if (process.env.NODE_ENV === "test") {
+      console.info("Skipping update check")
+      return
+    }
+
     const response = await fetch(
       "https://registry.npmjs.org/@tscircuit/cli/latest",
     )
@@ -117,6 +123,7 @@ export default () => (
       console.info(
         `🎉 Initialization complete! Run ${directory ? `"cd ${directory}" & ` : ""}"tsci dev" to start developing.`,
       )
+
       process.exit(0)
     })
 }
