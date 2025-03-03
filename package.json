@@ -17,7 +17,8 @@
     "build:tsup": "tsup --config ./tsup.config.js",
     "format": "biome format --write .",
     "format:check": "biome format .",
-    "cli": "bun ./cli/main.ts"
+    "cli": "bun ./cli/main.ts",
+    "pkg-pr-new-release": "bunx pkg-pr-new publish --comment=off --peerDeps"
   },
   "devDependencies": {
     "@babel/standalone": "^7.26.9",
