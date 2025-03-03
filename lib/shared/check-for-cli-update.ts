@@ -9,7 +9,8 @@ import { version as pkgVersion } from "../../package.json"
 
 export const checkForTsciUpdates = async () => {
   if (process.env.TSCI_SKIP_CLI_UPDATE == "true") return
-  const currentCliVersion = program.version() ?? semver.inc(pkgVersion, "patch")
+  const currentCliVersion =
+    program.version() ?? semver.inc(pkgVersion, "patch") ?? pkgVersion
   const { version: latestCliVersion } = await ky
     .get<{ version: string }>(
       "https://registry.npmjs.org/@tscircuit/cli/latest",
@@ -17,7 +18,7 @@ export const checkForTsciUpdates = async () => {
     )
     .json()
 
-  if (latestCliVersion && semver.gt(latestCliVersion, currentCliVersion!)) {
+  if (latestCliVersion && semver.gt(latestCliVersion, currentCliVersion)) {
     const userWantsToUpdate = await askConfirmation(
       `A new version of tsci is available (${currentCliVersion} → ${latestCliVersion}).\nWould you like to update now?`,
     )
