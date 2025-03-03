@@ -2,9 +2,6 @@
   "lockfileVersion": 1,
   "workspaces": {
     "": {
-      "dependencies": {
-        "pkg-pr-new": "^0.0.40",
-      },
       "devDependencies": {
         "@babel/standalone": "^7.26.9",
         "@biomejs/biome": "^1.9.4",
@@ -31,6 +28,7 @@
         "ky": "^1.7.4",
         "make-vfs": "^1.0.15",
         "perfect-cli": "^1.0.20",
+        "pkg-pr-new": "^0.0.40",
         "redaxios": "^0.5.1",
         "semver": "^7.6.3",
         "tempy": "^3.1.0",
