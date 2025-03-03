@@ -2412,6 +2412,8 @@
 
     "@tscircuit/pcb-viewer/circuit-to-svg/@tscircuit/footprinter/@tscircuit/mm": ["@tscircuit/mm@0.0.7", "", { "dependencies": { "convert-units": "^2.3.4" }, "peerDependencies": { "typescript": "^5.0.0" } }, "sha512-5lZjeOsrkQDnMd4OEuXQYC8k+zuWCbX9Ruq69JhcvLu18FUen3pPjBxmFyF2DGZYxaTrKUpUdZvoTr49TISN2g=="],
 
+    "@tscircuit/runframe/@tscircuit/3d-viewer/@tscircuit/core/circuit-json": ["circuit-json@0.0.151", "", { "dependencies": { "nanoid": "^5.0.7", "zod": "^3.23.6" } }, "sha512-N6+saL1EwK8OfiPhrjS+oSjdyiZrM/avBZh8wyd4GK6tFNa07CtZduiFrX7oS3vQgKTl1uCk7bKbh/TR9+kHUA=="],
+
     "@tscircuit/runframe/@tscircuit/3d-viewer/@tscircuit/core/schematic-symbols": ["schematic-symbols@0.0.121", "", { "peerDependencies": { "typescript": "^5.5.4" } }, "sha512-xqWY43VC10wIVL+Kf8PlHj27Ojr7JdFeFHTRoSvmc6zvHirPQiXlnb3l70BerZQy6S/EOH+Q9yGRADYU0m8T1w=="],
 
     "@tscircuit/runframe/@tscircuit/3d-viewer/jscad-electronics/circuit-json": ["circuit-json@0.0.92", "", { "dependencies": { "nanoid": "^5.0.7", "zod": "^3.23.6" } }, "sha512-cEqFxLadAxS+tm7y5/llS4FtqN3QbzjBNubely7vFo8w05sZnGRCcLzZwKL7rC7He1CqqyFynD4MdeL+F/PjBQ=="],
