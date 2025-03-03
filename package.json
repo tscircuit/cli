@@ -54,5 +54,7 @@
   "peerDependencies": {
     "typescript": "^5.0.0"
   },
-  "dependencies": {}
+  "dependencies": {
+    "pkg-pr-new": "^0.0.40"
+  }
 }
