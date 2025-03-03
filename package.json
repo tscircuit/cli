@@ -1,7 +1,24 @@
 {
   "name": "@tscircuit/cli",
-  "version": "0.1.52",
   "main": "dist/main.js",
+  "type": "module",
+  "version": "0.1.52",
+  "bin": {
+    "tsci": "./dist/main.js"
+  },
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "start": "bun run dev",
+    "dev": "bun --hot ./cli/main.ts dev ./example-dir/snippet1-basic.tsx",
+    "build": "bun run build:bun",
+    "build:bun": "bun build ./cli/main.ts --target node  --outfile ./dist/main.js",
+    "build:tsup": "tsup --config ./tsup.config.js",
+    "format": "biome format --write .",
+    "format:check": "biome format .",
+    "cli": "bun ./cli/main.ts"
+  },
   "devDependencies": {
     "@babel/standalone": "^7.26.9",
     "@biomejs/biome": "^1.9.4",
@@ -38,21 +55,5 @@
   "peerDependencies": {
     "typescript": "^5.0.0"
   },
-  "bin": {
-    "tsci": "./dist/main.js"
-  },
-  "files": [
-    "dist"
-  ],
-  "scripts": {
-    "start": "bun run dev",
-    "dev": "bun --hot ./cli/main.ts dev ./example-dir/snippet1-basic.tsx",
-    "build": "bun run build:bun",
-    "build:bun": "bun build ./cli/main.ts --target node  --outfile ./dist/main.js",
-    "build:tsup": "tsup --config ./tsup.config.js",
-    "format": "biome format --write .",
-    "format:check": "biome format .",
-    "cli": "bun ./cli/main.ts"
-  },
-  "type": "module"
+  "dependencies": {}
 }
