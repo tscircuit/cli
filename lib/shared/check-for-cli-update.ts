@@ -1,12 +1,15 @@
 import ky from "ky"
-import { version as currentCliVersion } from "../../package.json"
 import { detectPackageManager } from "lib/shared/detect-pkg-manager"
 import { getGlobalDepsInstallCommand } from "lib/shared/get-dep-install-command"
 import readline from "node:readline"
 import { execSync } from "node:child_process"
+import { program } from "cli/main"
+import semver from "semver"
+import { version as pkgVersion } from "../../package.json"
 
 export const checkForTsciUpdates = async () => {
   if (process.env.TSCI_SKIP_CLI_UPDATE == "true") return
+  const currentCliVersion = program.version() ?? semver.inc(pkgVersion, "patch")
   const { version: latestCliVersion } = await ky
     .get<{ version: string }>(
       "https://registry.npmjs.org/@tscircuit/cli/latest",
@@ -14,7 +17,7 @@ export const checkForTsciUpdates = async () => {
     )
     .json()
 
-  if (latestCliVersion && latestCliVersion !== currentCliVersion) {
+  if (latestCliVersion && semver.gt(latestCliVersion, currentCliVersion!)) {
     const userWantsToUpdate = await askConfirmation(
       `A new version of tsci is available (${currentCliVersion} → ${latestCliVersion}).\nWould you like to update now?`,
     )
