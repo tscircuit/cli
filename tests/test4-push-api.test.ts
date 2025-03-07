@@ -1,10 +1,8 @@
 import { test, expect, beforeEach, afterEach } from "bun:test"
-import { getTestSnippetsServer } from "./fixtures/get-test-server"
 import { getCliTestFixture } from "./fixtures/get-cli-test-fixture"
 import * as fs from "node:fs"
 import * as path from "node:path"
 
-const { ky } = await getTestSnippetsServer()
 const { tmpDir, runCommand } = await getCliTestFixture()
 
 beforeEach(() => {
