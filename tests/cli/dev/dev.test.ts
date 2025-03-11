@@ -1,13 +1,14 @@
-import { test, expect, afterEach } from "bun:test"
+import { expect, test } from "bun:test"
 import { DevServer } from "cli/dev/DevServer"
-import { getTestFixture } from "tests/fixtures/get-test-fixture"
+import getPort from "get-port"
 import fs from "node:fs"
 import path from "node:path"
+import { getCliTestFixture } from "../../fixtures/get-cli-test-fixture"
 
 async function waitForFile(
   filePath: string,
-  timeout: number = 5000,
-  interval: number = 500,
+  timeout = 5000,
+  interval = 500,
 ): Promise<boolean> {
   const endTime = Date.now() + timeout
   while (Date.now() < endTime) {
@@ -20,26 +21,32 @@ async function waitForFile(
 }
 
 test("types are installed and refreshed when files change", async () => {
-  const { tempDirPath, devServerPort } = await getTestFixture({
-    vfs: {
-      "snippet.tsx": `
-        import { useRedLed } from "@tsci/seveibar.red-led"
-        export const MyCircuit = () => <></>
-      `,
-      "package.json": "{}",
-    },
-  })
+  const fixture = await getCliTestFixture()
+
+  // Get a unique port for the DevServer
+  const devServerPort = await getPort()
+
+  // Create test files using Bun.write
+  await Bun.write(
+    path.join(fixture.tmpDir, "snippet.tsx"),
+    `
+    import { useRedLed } from "@tsci/seveibar.red-led"
+    export const MyCircuit = () => <></>
+    `,
+  )
+
+  await Bun.write(path.join(fixture.tmpDir, "package.json"), "{}")
 
   const devServer = new DevServer({
     port: devServerPort,
-    componentFilePath: `${tempDirPath}/snippet.tsx`,
+    componentFilePath: path.join(fixture.tmpDir, "snippet.tsx"),
   })
 
   await devServer.start()
 
   // Wait for the initial type file to be installed
   const typePath = path.join(
-    tempDirPath,
+    fixture.tmpDir,
     "node_modules/@tsci/seveibar.red-led/index.d.ts",
   )
   const typeFileExists = await waitForFile(typePath)
@@ -50,11 +57,11 @@ test("types are installed and refreshed when files change", async () => {
   import { useUsbC } from "@tsci/seveibar.smd-usb-c"
   export const MyCircuit = () => <></>
   `
-  fs.writeFileSync(`${tempDirPath}/snippet.tsx`, updatedContent)
+  fs.writeFileSync(path.join(fixture.tmpDir, "snippet.tsx"), updatedContent)
 
   // Wait for the new type file to be installed after update
   const typePath2 = path.join(
-    tempDirPath,
+    fixture.tmpDir,
     "node_modules/@tsci/seveibar.smd-usb-c/index.d.ts",
   )
   const typeFileExists2 = await waitForFile(typePath2)

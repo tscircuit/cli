@@ -1,5 +1,6 @@
 import { getCliTestFixture } from "../../fixtures/get-cli-test-fixture"
 import { test, expect } from "bun:test"
+import { cliConfig } from "lib/cli-config"
 
 const demoJwtToken =
   "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwiaWF0IjoxNTE2MjM5MDIyfQ.SflKxwRJSMeKKF2QT4fwpMeJf36POk6yJV_adQssw5c"
@@ -7,6 +8,7 @@ const demoJwtToken =
 test("print and set token explicitly", async () => {
   const { runCommand } = await getCliTestFixture()
 
+  cliConfig.clear()
   // Test printing token without authentication
   const { stdout: invalidTokenPrintStdout, stderr: invalidTokenPrintStderr } =
     await runCommand("tsci auth print-token")

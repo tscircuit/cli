@@ -1,32 +1,44 @@
-import { test, expect, afterEach } from "bun:test"
+import { afterEach, expect, test } from "bun:test"
 import { DevServer } from "cli/dev/DevServer"
-import { getTestFixture } from "tests/fixtures/get-test-fixture"
+import getPort from "get-port"
 import * as http from "node:http"
+import { join } from "node:path"
+import { getCliTestFixture } from "./fixtures/get-cli-test-fixture"
 
 test("test3 dev server port handling", async () => {
-  const { tempDirPath } = await getTestFixture({
-    vfs: {
-      "snippet.tsx": `
-      export const MyCircuit = () => (
-        <board width="10mm" height="10mm">
-          <chip name="U1" footprint="soic8" />
-        </board>
-      )
-      `,
-    },
-  })
+  const { tmpDir } = await getCliTestFixture()
 
-  const server = http.createServer(() => {}).listen(3020)
+  // Create test circuit file
+  await Bun.write(
+    join(tmpDir, "snippet.tsx"),
+    `
+    export const MyCircuit = () => (
+      <board width="10mm" height="10mm">
+        <chip name="U1" footprint="soic8" />
+      </board>
+    )
+    `,
+  )
 
+  // Get unique ports for both servers
+  const httpPort = await getPort()
+  const devServerPort = await getPort()
+
+  // Create a test HTTP server
+  const server = http.createServer(() => {}).listen(httpPort)
+
+  // Create and start the DevServer
   const devServer = new DevServer({
-    port: 3021,
-    componentFilePath: `${tempDirPath}/snippet.tsx`,
+    port: devServerPort,
+    componentFilePath: join(tmpDir, "snippet.tsx"),
   })
   await devServer.start()
 
+  // Wait for servers to be ready
   await new Promise((resolve) => setTimeout(resolve, 1000))
 
-  const res = await fetch(`http://localhost:3021`)
+  // Test the DevServer
+  const res = await fetch(`http://localhost:${devServerPort}`)
   expect(res.status).toBe(200)
 
   afterEach(async () => {
