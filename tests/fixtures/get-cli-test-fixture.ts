@@ -19,7 +19,7 @@ export interface CliTestFixture {
 
 export async function getCliTestFixture(): Promise<CliTestFixture> {
   // Setup temporary directory
-  const tmpDir = await temporaryDirectory()
+  const tmpDir = temporaryDirectory()
 
   // Setup registry server
   const port = await getPort()
