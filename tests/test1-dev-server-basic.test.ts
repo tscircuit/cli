@@ -6,9 +6,9 @@ import { getCliTestFixture } from "./fixtures/get-cli-test-fixture"
 
 test("test1 basic dev server filesystem watching", async () => {
   const fixture = await getCliTestFixture()
-  
+
   // Create test files using Bun.write instead of vfs
-  await Bun.write(
+  Bun.write(
     join(fixture.tmpDir, "snippet.tsx"),
     `
     export const MyCircuit = () => (
@@ -16,17 +16,14 @@ test("test1 basic dev server filesystem watching", async () => {
         <chip name="U1" footprint="soic8" />
       </board>
     )
-    `
+    `,
   )
-  
-  await Bun.write(
-    join(fixture.tmpDir, "manual-edits.json"),
-    "{}"
-  )
-  
+
+  Bun.write(join(fixture.tmpDir, "manual-edits.json"), "{}")
+
   // Get a unique port for the DevServer to avoid conflicts
   const devServerPort = await getPort()
-  
+
   // Create and start the DevServer
   const devServer = new DevServer({
     port: devServerPort,
@@ -46,6 +43,6 @@ test("test1 basic dev server filesystem watching", async () => {
   ])
 
   afterEach(async () => {
-    await devServer.stop()
+    devServer.stop()
   })
 })

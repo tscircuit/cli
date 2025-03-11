@@ -9,12 +9,12 @@ import { getCliTestFixture } from "./fixtures/get-cli-test-fixture"
 test("test saveSnippet via REQUEST_TO_SAVE_SNIPPET event with CLI token setup", async () => {
   // Get the CLI test fixture with fake API server
   const fixture = await getCliTestFixture()
-  
+
   // Get a separate port for the DevServer
   const devServerPort = await getPort()
 
   // Create test files in the temporary directory
-  await Bun.write(
+  Bun.write(
     join(fixture.tmpDir, "snippet.tsx"),
     `
     export const MyCircuit = () => (
@@ -22,18 +22,18 @@ test("test saveSnippet via REQUEST_TO_SAVE_SNIPPET event with CLI token setup", 
         <chip name="U1" footprint="soic8" />
       </board>
     )
-    `
+    `,
   )
 
-  await Bun.write(join(fixture.tmpDir, "manual-edits.json"), "{}")
+  Bun.write(join(fixture.tmpDir, "manual-edits.json"), "{}")
 
-  await Bun.write(
+  Bun.write(
     join(fixture.tmpDir, "package.json"),
     JSON.stringify({
       version: "0.0.1",
       name: "snippet",
       author: "test-author",
-    })
+    }),
   )
 
   // Create and start the DevServer instance using a different port
@@ -45,7 +45,7 @@ test("test saveSnippet via REQUEST_TO_SAVE_SNIPPET event with CLI token setup", 
 
   // Create DevServer URL for the EventsWatcher
   const devServerUrl = `http://localhost:${devServerPort}`
-  
+
   // Start the EventsWatcher using DevServer URL
   const eventManager = new EventsWatcher(devServerUrl)
   await eventManager.start()
@@ -93,7 +93,7 @@ test("test saveSnippet via REQUEST_TO_SAVE_SNIPPET event with CLI token setup", 
   })
 
   // Wait for events and verify the flow
-  await expect(requestToSaveSnippetPromise).resolves.toBeUndefined()
-  await expect(snippetSaveFailedPromise).resolves.toBeUndefined()
-  await expect(snippetSavedPromise).resolves.toBeUndefined()
+  expect(requestToSaveSnippetPromise).resolves.toBeUndefined()
+  expect(snippetSaveFailedPromise).resolves.toBeUndefined()
+  expect(snippetSavedPromise).resolves.toBeUndefined()
 }, 20_000)

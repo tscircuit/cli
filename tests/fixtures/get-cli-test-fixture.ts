@@ -11,17 +11,17 @@ import getPort from "get-port"
 export interface CliTestFixture {
   tmpDir: string
   runCommand: (command: string) => Promise<{ stdout: string; stderr: string }>
-  server: any
-  db: DbClient
-  apiUrl: string
-  port: number
+  registryServer: any
+  registryDb: DbClient
+  registryApiUrl: string
+  registryPort: number
 }
 
 export async function getCliTestFixture(): Promise<CliTestFixture> {
   // Setup temporary directory
   const tmpDir = await temporaryDirectory()
 
-  // Setup test server
+  // Setup registry server
   const port = await getPort()
   const testInstanceId = Math.random().toString(36).substring(2, 15)
   const testDbName = `testdb${testInstanceId}`
@@ -32,10 +32,10 @@ export async function getCliTestFixture(): Promise<CliTestFixture> {
   })
 
   const apiUrl = `http://localhost:${port}/api`
-  
+
   // Seed the database
   seedDB(db)
-  
+
   // Configure CLI to use test server
   cliConfig.set("sessionToken", db.accounts[0].account_id)
   cliConfig.set("registryApiUrl", apiUrl)
@@ -72,19 +72,14 @@ export async function getCliTestFixture(): Promise<CliTestFixture> {
     cliConfig.clear()
   }
 
-  afterEach(async () => {
-    // Reset database between tests if needed
-    // This is optional - you might want to keep state between tests
-  })
-  
   afterAll(cleanup)
 
   return {
     tmpDir,
     runCommand,
-    server,
-    db,
-    apiUrl,
-    port,
+    registryServer: server,
+    registryDb: db,
+    registryApiUrl: apiUrl,
+    registryPort: port,
   }
 }

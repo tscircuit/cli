@@ -7,7 +7,7 @@ import { getCliTestFixture } from "./fixtures/get-cli-test-fixture"
 
 test("test3 dev server port handling", async () => {
   const { tmpDir } = await getCliTestFixture()
-  
+
   // Create test circuit file
   await Bun.write(
     join(tmpDir, "snippet.tsx"),
@@ -17,7 +17,7 @@ test("test3 dev server port handling", async () => {
         <chip name="U1" footprint="soic8" />
       </board>
     )
-    `
+    `,
   )
 
   // Get unique ports for both servers
