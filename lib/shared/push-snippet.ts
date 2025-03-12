@@ -124,7 +124,8 @@ export const pushSnippet = async ({
           is_private: isPrivate ?? false,
         },
         headers: { Authorization: `Bearer ${sessionToken}` },
-      }).then((response) => {
+      })
+      .then((response) => {
         onSuccess(`Package ${response.json()} created`)
       })
       .catch((error) => {

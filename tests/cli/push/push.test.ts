@@ -144,7 +144,7 @@ test("push command with --private flag creates private package", async () => {
         <resistor name="R1" resistance="10k" footprint="0402" />
       </board>
     )
-    `
+    `,
   )
 
   // Run push command with --private flag
@@ -160,7 +160,9 @@ test("push command with --private flag creates private package", async () => {
     const packageIdentifier = match[1]
 
     // Check the registry database to verify the package was created as private
-    const packageInfo = registryDb.packages.find(p => p.name === packageIdentifier)
+    const packageInfo = registryDb.packages.find(
+      (p) => p.name === packageIdentifier,
+    )
     expect(packageInfo).toBeDefined()
     expect(packageInfo?.is_private).toBe(true)
   }
