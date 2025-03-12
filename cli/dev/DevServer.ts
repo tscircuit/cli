@@ -1,15 +1,15 @@
 import ky from "ky"
-import type { FileServerRoutes } from "lib/file-server/FileServerRoutes"
-import { createHttpServer } from "lib/server/createHttpServer"
-import { EventsWatcher } from "lib/server/EventsWatcher"
+import type { FileServerRoutes } from "../../lib/file-server/FileServerRoutes"
+import { createHttpServer } from "../../lib/server/createHttpServer"
+import { EventsWatcher } from "../../lib/server/EventsWatcher"
 import type http from "node:http"
 import type { TypedKyInstance } from "typed-ky"
 import path from "node:path"
 import fs from "node:fs"
-import type { FileUpdatedEvent } from "lib/file-server/FileServerEvent"
+import type { FileUpdatedEvent } from "../../lib/file-server/FileServerEvent"
 import * as chokidar from "chokidar"
-import { FilesystemTypesHandler } from "lib/dependency-analysis/FilesystemTypesHandler"
-import { pushSnippet } from "lib/shared/push-snippet"
+import { FilesystemTypesHandler } from "../../lib/dependency-analysis/FilesystemTypesHandler"
+import { pushSnippet } from "../../lib/shared/push-snippet"
 
 export class DevServer {
   port: number

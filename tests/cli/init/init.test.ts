@@ -7,7 +7,6 @@ test("init command installs @types/react and passes type-checking", async () => 
   const { tmpDir, runCommand } = await getCliTestFixture()
 
   const { stdout } = await runCommand("tsci init")
-  console.log(stdout)
 
   const pkgJsonPath = join(tmpDir, "package.json")
   const pkgJson = await Bun.file(pkgJsonPath).json()

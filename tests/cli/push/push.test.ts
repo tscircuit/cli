@@ -128,3 +128,40 @@ test.skip("push command fails on invalid typescript", async () => {
   // Push should fail due to TypeScript error
   await expect(runCommand("tsci push")).rejects.toThrow()
 })
+
+test("push command with --private flag creates private package", async () => {
+  const { tmpDir, runCommand, registryDb } = await getCliTestFixture()
+
+  // First run init to set up the project properly
+  await runCommand("tsci init")
+
+  // Modify the generated index.tsx with a simple circuit
+  await Bun.write(
+    join(tmpDir, "index.tsx"),
+    `
+    export const Circuit = () => (
+      <board width="10mm" height="10mm">
+        <resistor name="R1" resistance="10k" footprint="0402" />
+      </board>
+    )
+    `
+  )
+
+  // Run push command with --private flag
+  const { stdout: pushStdout } = await runCommand("tsci push --private")
+
+  // Verify the push was successful
+  expect(pushStdout).toContain("Successfully pushed package")
+
+  const match = pushStdout.match(/Successfully pushed package ([^@]+)@/)
+  expect(match).not.toBeNull()
+
+  if (match) {
+    const packageIdentifier = match[1]
+
+    // Check the registry database to verify the package was created as private
+    const packageInfo = registryDb.packages.find(p => p.name === packageIdentifier)
+    expect(packageInfo).toBeDefined()
+    expect(packageInfo?.is_private).toBe(true)
+  }
+})

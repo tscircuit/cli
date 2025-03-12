@@ -12,6 +12,7 @@
         "@tscircuit/runframe": "^0.0.228",
         "@types/bun": "^1.2.2",
         "@types/configstore": "^6.0.2",
+        "@types/debug": "^4.1.12",
         "@types/react": "^19.0.8",
         "@types/semver": "^7.5.8",
         "bun-match-svg": "^0.0.9",
@@ -21,6 +22,7 @@
         "commander": "^12.1.0",
         "configstore": "^7.0.0",
         "cosmiconfig": "^9.0.0",
+        "debug": "^4.4.0",
         "delay": "^6.0.0",
         "dsn-converter": "^0.0.63",
         "get-port": "^7.1.0",
@@ -545,6 +547,8 @@
     "@types/d3-time": ["@types/d3-time@3.0.4", "", {}, "sha512-yuzZug1nkAAaBlBBikKZTgzCeA+k1uy4ZFwWANOfKw5z5LRhV0gNA7gNkKm7HoK+HRN0wX3EkxGk0fpbWhmB7g=="],
 
     "@types/d3-timer": ["@types/d3-timer@3.0.2", "", {}, "sha512-Ps3T8E8dZDam6fUyNiMkekK3XUsaUEik+idO9/YjPtfj2qruF8tFBXS7XhtE4iIXBLxhmLjP3SXpLhVf21I9Lw=="],
+
+    "@types/debug": ["@types/debug@4.1.12", "", { "dependencies": { "@types/ms": "*" } }, "sha512-vIChWdVG3LG1SMxEvI/AK+FWJthlrqlTu7fbrlywTkkaONwk/UAGaULXRlf8vkzFBLVm0zkMdCquhL5aOjhXPQ=="],
 
     "@types/draco3d": ["@types/draco3d@1.4.10", "", {}, "sha512-AX22jp8Y7wwaBgAixaSvkoG4M/+PlAcm3Qs4OW8yT9DM4xUpWKeFhLueTAyZF39pviAdcDdeJoACapiAceqNcw=="],
 
