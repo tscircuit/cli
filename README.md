@@ -39,7 +39,7 @@ Commands:
                            directory (or current directory if none is provided)
   dev [options] [file]     Start development server for a snippet
   clone <snippet>          Clone a snippet from the registry
-  push [file]              Save snippet code to Registry API
+  push [options] [file]    Save snippet code to Registry API
   auth                     Login/logout
   login                    Login to tscircuit registry
   logout                   Logout from tscircuit registry
