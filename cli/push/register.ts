@@ -1,5 +1,5 @@
 import type { Command } from "commander"
-import { pushSnippet } from "../../lib/shared/push-snippet"
+import { pushSnippet } from "lib/shared/push-snippet"
 
 export const registerPush = (program: Command) => {
   program

@@ -1,4 +1,4 @@
-import type { EventsRoutes } from "../server/EventsRoutes"
+import type { EventsRoutes } from "lib/server/EventsRoutes"
 
 export interface FileServerRoutes extends EventsRoutes {
   "api/files/get": {

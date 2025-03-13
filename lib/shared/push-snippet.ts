@@ -1,5 +1,5 @@
-import { cliConfig } from "../cli-config"
-import { getKy } from "../registry-api/get-ky"
+import { cliConfig } from "lib/cli-config"
+import { getKy } from "lib/registry-api/get-ky"
 import * as fs from "node:fs"
 import * as path from "node:path"
 import semver from "semver"
