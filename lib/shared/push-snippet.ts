@@ -3,16 +3,21 @@ import { getKy } from "lib/registry-api/get-ky"
 import * as fs from "node:fs"
 import * as path from "node:path"
 import semver from "semver"
+import Debug from "debug"
 
 type PushOptions = {
   filePath?: string
+  isPrivate?: boolean
   onExit?: (code: number) => void
   onError?: (message: string) => void
   onSuccess?: (message: string) => void
 }
 
+const debug = Debug("tsci:push-snippet")
+
 export const pushSnippet = async ({
   filePath,
+  isPrivate,
   onExit = (code) => process.exit(code),
   onError = (message) => console.error(message),
   onSuccess = (message) => console.log(message),
@@ -114,8 +119,14 @@ export const pushSnippet = async ({
   if (!doesPackageExist) {
     await ky
       .post("packages/create", {
-        json: { name: packageIdentifier },
+        json: {
+          name: packageIdentifier,
+          is_private: isPrivate ?? false,
+        },
         headers: { Authorization: `Bearer ${sessionToken}` },
+      })
+      .then((response) => {
+        onSuccess(`Package ${response.json()} created`)
       })
       .catch((error) => {
         onError(`Error creating package: ${error}`)
