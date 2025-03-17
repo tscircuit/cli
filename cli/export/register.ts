@@ -1,14 +1,13 @@
-import type { Command } from "commander"
-import { CircuitRunner } from "@tscircuit/eval/eval"
-import { getVirtualFileSystemFromDirPath } from "make-vfs"
-import path from "node:path"
-import fs from "node:fs"
-import {
-  convertCircuitJsonToSchematicSvg,
-  convertCircuitJsonToPcbSvg,
-} from "circuit-to-svg"
-import { convertCircuitJsonToDsnString } from "dsn-converter"
 import { convertCircuitJsonToReadableNetlist } from "circuit-json-to-readable-netlist"
+import {
+  convertCircuitJsonToPcbSvg,
+  convertCircuitJsonToSchematicSvg,
+} from "circuit-to-svg"
+import type { Command } from "commander"
+import { convertCircuitJsonToDsnString } from "dsn-converter"
+import { generateCircuitJson } from "lib/shared/generate-circuit-json"
+import fs from "node:fs"
+import path from "node:path"
 
 const ALLOWED_FORMATS = [
   "json",
@@ -54,30 +53,23 @@ export const registerExport = (program: Command) => {
         output = path.basename(file).replace(/\.[^.]+$/, "")
       }
 
-      const runner = new CircuitRunner()
-
       const projectDir = path.dirname(file)
 
-      const relativeComponentPath = path.relative(projectDir, file)
-
-      await runner.executeWithFsMap({
-        entrypoint: "entrypoint.tsx",
-        fsMap: {
-          ...((await getVirtualFileSystemFromDirPath({
-            dirPath: projectDir,
-            contentFormat: "string",
-          })) as Record<string, string>),
-          "entrypoint.tsx": `
-import MyCircuit from "./${relativeComponentPath}"
-
-circuit.add(<MyCircuit />)
-        `,
-        },
+      // Generate the circuit JSON using the utility function
+      const { circuitJson } = await generateCircuitJson({
+        filePath: file,
+        saveToFile: format === "circuit-json",
       })
 
-      await runner.renderUntilSettled()
+      // If the format is JSON, we're already done
+      if (format === "circuit-json") {
+        console.log(
+          `Exported to ${path.join(projectDir, `${output}.circuit.json`)}`,
+        )
+        process.exit(0)
+      }
 
-      const circuitJson = await runner.getCircuitJson()
+      // Otherwise, convert the circuit JSON to the requested format
       const outputPath = path.join(
         projectDir,
         `${output}${OUTPUT_EXTENSIONS[format as Format]}`,
