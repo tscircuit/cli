@@ -27,6 +27,7 @@
         "dsn-converter": "^0.0.63",
         "get-port": "^7.1.0",
         "jwt-decode": "^4.0.0",
+        "kleur": "^4.1.5",
         "ky": "^1.7.4",
         "make-vfs": "^1.0.15",
         "perfect-cli": "^1.0.20",

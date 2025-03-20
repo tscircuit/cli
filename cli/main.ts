@@ -9,8 +9,7 @@ import { registerConfig } from "./config/register"
 import { registerConfigPrint } from "./config/print/register"
 import { registerClone } from "./clone/register"
 import { perfectCli } from "perfect-cli"
-import pkg from "../package.json"
-import semver from "semver"
+import { getVersion } from "./../lib/getVersion"
 import { registerExport } from "./export/register"
 import { registerAuthPrintToken } from "./auth/print-token/register"
 import { registerAuthSetToken } from "./auth/set-token/register"
@@ -21,9 +20,7 @@ export const program = new Command()
 program
   .name("tsci")
   .description("CLI for developing tscircuit snippets")
-  // HACK: at build time the version is old, we need to
-  // fix this at some point...
-  .version(semver.inc(pkg.version, "patch") ?? pkg.version)
+  .version(getVersion())
 
 registerInit(program)
 
