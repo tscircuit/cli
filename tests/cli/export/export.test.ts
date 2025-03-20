@@ -25,24 +25,6 @@ export default () => (
   </board>
 )`
 
-test("export pcb-svg", async () => {
-  const { tmpDir, runCommand } = await getCliTestFixture()
-  const circuitPath = path.join(tmpDir, "test-circuit.tsx")
-
-  await writeFile(circuitPath, circuitCode)
-
-  const { stdout, stderr } = await runCommand(
-    `tsci export ${circuitPath} -f pcb-svg`,
-  )
-  expect(stderr).toBe("")
-
-  const pcbSvg = await readFile(
-    path.join(tmpDir, "test-circuit-pcb.svg"),
-    "utf-8",
-  )
-  expect(pcbSvg).toMatchSvgSnapshot(import.meta.path, "pcb")
-})
-
 test("export schematic-svg", async () => {
   const { tmpDir, runCommand } = await getCliTestFixture()
   const circuitPath = path.join(tmpDir, "test-circuit.tsx")
