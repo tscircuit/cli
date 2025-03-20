@@ -22,14 +22,4 @@ jobs:
         run: bun install
 
       - name: Check for non-dev dependencies
-        run: |
-          # Get the count of dependencies (not devDependencies or peerDependencies)
-          DEP_COUNT=$(grep -A 100 '"dependencies"' package.json | grep -B 100 -m 1 '"devDependencies\|"peerDependencies\|"bin\|"files\|"scripts' | grep -v '"dependencies"\|"devDependencies\|"peerDependencies\|"bin\|"files\|"scripts' | grep -c '"')
-          
-          if [ "$DEP_COUNT" -gt 0 ]; then
-            echo "Error: Regular dependencies found in package.json. Only devDependencies are allowed."
-            echo "Please move all dependencies to devDependencies since this project is fully bundled."
-            exit 1
-          else
-            echo "✅ No regular dependencies found. Only devDependencies are used as required."
-          fi
+        run: bun scripts/check-for-dependencies.ts
