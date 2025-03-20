@@ -10,6 +10,7 @@ import type { FileUpdatedEvent } from "../../lib/file-server/FileServerEvent"
 import * as chokidar from "chokidar"
 import { FilesystemTypesHandler } from "lib/dependency-analysis/FilesystemTypesHandler"
 import { pushSnippet } from "lib/shared/push-snippet"
+import { globbySync } from "globby"
 
 export class DevServer {
   port: number
@@ -147,23 +148,13 @@ circuit.add(<MyCircuit />)
   }
 
   async upsertInitialFiles() {
-    // Define the list of files we care about
-    const relevantFiles = new Set([
-      "entrypoint.tsx",
-      "manual-edits.json",
-      "snippet.tsx",
-      path.basename(this.componentFilePath), // Include the main component file
-    ])
-
     // Scan project directory for relevant files and upsert them
-    const fileNames = fs.readdirSync(this.projectDir)
+    const fileNames = globbySync("**", {
+      cwd: this.projectDir,
+      ignore: ["**/node_modules/**", "**/.git/**"],
+    })
+
     for (const fileName of fileNames) {
-      // Skip directories and non-relevant files
-      if (
-        fs.statSync(path.join(this.projectDir, fileName)).isDirectory() ||
-        !relevantFiles.has(fileName)
-      )
-        continue
       const fileContent = fs.readFileSync(
         path.join(this.projectDir, fileName),
         "utf-8",
