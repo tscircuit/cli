@@ -11,7 +11,6 @@ export class FilesystemTypesHandler {
   }
 
   async handleInitialTypeDependencies(filePath: string) {
-    console.log("Checking initial type dependencies...")
     try {
       if (!this.areTypesInstalled(filePath)) {
         console.log("Installing missing initial types...")

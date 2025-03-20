@@ -4,6 +4,8 @@ import * as net from "node:net"
 import * as path from "node:path"
 import { installNodeModuleTypesForSnippet } from "../../lib/dependency-analysis/installNodeModuleTypesForSnippet"
 import { DevServer } from "./DevServer"
+import kleur from "kleur"
+import { getVersion } from "lib/getVersion"
 
 export const registerDev = (program: Command) => {
   program
@@ -13,6 +15,7 @@ export const registerDev = (program: Command) => {
     .option("-p, --port <number>", "Port to run server on", "3020")
     .action(async (file: string, options: { port: string }) => {
       let port = parseInt(options.port)
+      const startTime = Date.now()
 
       const isPortAvailable = (port: number): Promise<boolean> => {
         return new Promise((resolve) => {
@@ -26,7 +29,9 @@ export const registerDev = (program: Command) => {
       }
 
       while (!(await isPortAvailable(port))) {
-        console.log(`Port ${port} is in use, trying port ${port + 1}...`)
+        console.log(
+          kleur.gray(`Port ${port} is in use, trying port ${port + 1}...`),
+        )
         port += 1
       }
 
@@ -52,9 +57,11 @@ export const registerDev = (program: Command) => {
       }
 
       try {
-        console.log("Installing types for imported snippets...")
+        process.stdout.write(
+          kleur.gray("Installing types for imported snippets..."),
+        )
         await installNodeModuleTypesForSnippet(absolutePath)
-        console.log("Types installed successfully")
+        console.log(kleur.green(" done"))
       } catch (error) {
         console.warn("Failed to install types:", error)
       }
@@ -66,5 +73,19 @@ export const registerDev = (program: Command) => {
 
       await server.start()
       await server.addEntrypoint()
+
+      const timeToStart = Date.now() - startTime
+
+      console.log(
+        `\n\n  ${kleur.green(`@tscircuit/cli@${getVersion()}`)} ${kleur.gray("ready in")} ${kleur.white(`${Math.round(timeToStart)}ms`)}`,
+      )
+      console.log(
+        `\n  ${kleur.bold("➜ Local:")}   ${kleur.underline(kleur.cyan(`http://localhost:${port}`))}\n\n`,
+      )
+      console.log(
+        kleur.gray(
+          `Watching ${kleur.underline(server.projectDir.split("/").slice(-2).join("/")!)} for changes...`,
+        ),
+      )
     })
 }
