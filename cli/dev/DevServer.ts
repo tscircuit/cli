@@ -184,7 +184,7 @@ circuit.add(<MyCircuit />)
 
     await pushSnippet({
       filePath: this.componentFilePath,
-      onExit: () => { },
+      onExit: () => {},
       onError: (e) => {
         console.error("Failed to save snippet:- ", e)
         postEvent("FAILED_TO_SAVE_SNIPPET", e)
@@ -203,7 +203,7 @@ circuit.add(<MyCircuit />)
     const postEvent = async (
       event: "FAILED_TO_EXPORT" | "EXPORT_CREATED",
       content: {},
-    ) =>{
+    ) => {
       this.fsKy.post("api/events/create", {
         json: { event_type: event, ...content },
         throwHttpErrors: false,
@@ -212,13 +212,15 @@ circuit.add(<MyCircuit />)
     await exportSnippet({
       filePath: this.componentFilePath,
       format: ev.exportType,
-      onExit: () => { },
+      onExit: () => {},
       onError: (e) => {
         console.error("Failed to export:- ", e)
         postEvent("FAILED_TO_EXPORT", { message: e })
       },
       onSuccess: (exportFilePath) => {
-        postEvent("EXPORT_CREATED", { exportFilePath: exportFilePath.split(process.cwd())[1].substring(1) })
+        postEvent("EXPORT_CREATED", {
+          exportFilePath: exportFilePath.split(process.cwd())[1].substring(1),
+        })
       },
     })
   }
