@@ -185,7 +185,7 @@ circuit.add(<MyCircuit />)
 
     await pushSnippet({
       filePath: this.componentFilePath,
-      onExit: () => { },
+      onExit: () => {},
       onError: (e) => {
         console.error("Failed to save snippet:- ", e)
         postEvent("FAILED_TO_SAVE_SNIPPET", e)
@@ -217,7 +217,6 @@ circuit.add(<MyCircuit />)
     } catch (error) {
       console.error("Error reading manual-edits.json:", error)
     }
-
 
     const updatedEdits = applyPcbEditEventsToManualEditsFile({
       circuitJson,
