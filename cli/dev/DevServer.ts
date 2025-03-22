@@ -11,6 +11,7 @@ import * as chokidar from "chokidar"
 import { FilesystemTypesHandler } from "lib/dependency-analysis/FilesystemTypesHandler"
 import { pushSnippet } from "lib/shared/push-snippet"
 import { globbySync } from "globby"
+import { ExportFormat, exportSnippet } from "lib/shared/export-snippet"
 
 export class DevServer {
   port: number
@@ -74,6 +75,8 @@ export class DevServer {
       "REQUEST_TO_SAVE_SNIPPET",
       this.saveSnippet.bind(this),
     )
+
+    this.eventsWatcher.on("REQUEST_EXPORT", this.handleExport.bind(this))
 
     this.filesystemWatcher = chokidar.watch(this.projectDir, {
       persistent: true,
@@ -188,6 +191,43 @@ circuit.add(<MyCircuit />)
       },
       onSuccess: () => {
         postEvent("SNIPPET_SAVED")
+      },
+    })
+  }
+  private async handleExport(
+    ev: Pick<FileUpdatedEvent, "event_id" | "event_type"> & {
+      exportType: ExportFormat
+    },
+  ) {
+    const postEvent = async (
+      event: "FAILED_TO_EXPORT" | "EXPORT_CREATED",
+      content: Record<string, any>,
+    ) => {
+      this.fsKy.post("api/events/create", {
+        json: { event_type: event, ...content },
+        throwHttpErrors: false,
+      })
+    }
+
+    await exportSnippet({
+      filePath: this.componentFilePath,
+      format: ev.exportType,
+      browserDownload: true,
+      onExit: () => {},
+      onError: (e) => {
+        console.error("Failed to export: ", e)
+        postEvent("FAILED_TO_EXPORT", { message: e })
+      },
+      onSuccess: (response: {
+        fileName: string
+        mimeType: string
+        binaryData: Buffer
+      }) => {
+        postEvent("EXPORT_CREATED", {
+          fileName: response.fileName,
+          mimeType: response.mimeType,
+          binaryData: response.binaryData.toString("base64"),
+        })
       },
     })
   }

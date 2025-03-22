@@ -23,6 +23,8 @@ export interface EventsRoutes {
             | "FAILED_TO_SAVE_SNIPPET"
             | "SNIPPET_SAVED"
             | "REQUEST_TO_SAVE_SNIPPET"
+            | "REQUEST_EXPORT"
+            | "EXPORT_CREATED"
           file_path: string
           created_at: string
           initiator?: string
