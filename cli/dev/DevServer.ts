@@ -11,6 +11,8 @@ import * as chokidar from "chokidar"
 import { FilesystemTypesHandler } from "lib/dependency-analysis/FilesystemTypesHandler"
 import { pushSnippet } from "lib/shared/push-snippet"
 import { globbySync } from "globby"
+import { applyPcbEditEventsToManualEditsFile } from "@tscircuit/core"
+import { generateCircuitJson } from "lib/shared/generate-circuit-json"
 
 export class DevServer {
   port: number
@@ -75,6 +77,11 @@ export class DevServer {
       this.saveSnippet.bind(this),
     )
 
+    this.eventsWatcher.on(
+      "USER_CREATED_MANUAL_EDIT",
+      this.handleManualEditEvent.bind(this),
+    )
+
     this.filesystemWatcher = chokidar.watch(this.projectDir, {
       persistent: true,
       ignoreInitial: true,
@@ -129,9 +136,6 @@ circuit.add(<MyCircuit />)
 
   async handleFileChangedOnFilesystem(absoluteFilePath: string) {
     const relativeFilePath = path.relative(this.projectDir, absoluteFilePath)
-    // We've temporarily disabled upserting manual edits from filesystem changes
-    // because it can be edited by the browser
-    if (relativeFilePath.includes("manual-edits.json")) return
 
     await this.typesHandler?.handleFileTypeDependencies(absoluteFilePath)
 
@@ -181,7 +185,7 @@ circuit.add(<MyCircuit />)
 
     await pushSnippet({
       filePath: this.componentFilePath,
-      onExit: () => {},
+      onExit: () => { },
       onError: (e) => {
         console.error("Failed to save snippet:- ", e)
         postEvent("FAILED_TO_SAVE_SNIPPET", e)
@@ -195,5 +199,42 @@ circuit.add(<MyCircuit />)
   async stop() {
     this.httpServer?.close()
     this.eventsWatcher?.stop()
+  }
+
+  private async handleManualEditEvent(ev: any) {
+    const { circuitJson } = await generateCircuitJson({
+      filePath: this.componentFilePath,
+      saveToFile: false,
+    })
+    const manualEditsPath = path.join(this.projectDir, "manual-edits.json")
+    let manualEdits = {}
+
+    try {
+      if (fs.existsSync(manualEditsPath)) {
+        const content = fs.readFileSync(manualEditsPath, "utf-8")
+        manualEdits = JSON.parse(content)
+      }
+    } catch (error) {
+      console.error("Error reading manual-edits.json:", error)
+    }
+
+
+    const updatedEdits = applyPcbEditEventsToManualEditsFile({
+      circuitJson,
+      editEvents: [ev],
+      manualEditsFile: manualEdits ?? {},
+    })
+
+    console.log("Updated edits:", updatedEdits)
+
+    fs.writeFileSync(manualEditsPath, JSON.stringify(updatedEdits, null, 2))
+
+    await this.fsKy.post("api/files/upsert", {
+      json: {
+        file_path: "manual-edits.json",
+        text_content: JSON.stringify(updatedEdits, null, 2),
+        initiator: "filesystem_change",
+      },
+    })
   }
 }
