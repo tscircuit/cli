@@ -1,3 +1,6 @@
+import fs from "node:fs"
+import path from "node:path"
+import { promisify } from "node:util"
 import { convertCircuitJsonToReadableNetlist } from "circuit-json-to-readable-netlist"
 import {
   convertCircuitJsonToPcbSvg,
@@ -5,8 +8,8 @@ import {
 } from "circuit-to-svg"
 import { convertCircuitJsonToDsnString } from "dsn-converter"
 import { generateCircuitJson } from "lib/shared/generate-circuit-json"
-import fs from "node:fs"
-import path from "node:path"
+
+const writeFileAsync = promisify(fs.writeFile)
 
 const ALLOWED_FORMATS = [
   "json",
@@ -21,7 +24,7 @@ const ALLOWED_FORMATS = [
 
 export type ExportFormat = (typeof ALLOWED_FORMATS)[number]
 
-const OUTPUT_EXTENSIONS = {
+const OUTPUT_EXTENSIONS: Record<ExportFormat, string> = {
   json: ".circuit.json",
   "circuit-json": ".circuit.json",
   "schematic-svg": "-schematic.svg",
@@ -34,69 +37,113 @@ const OUTPUT_EXTENSIONS = {
 
 type ExportOptions = {
   filePath: string
-  format?: ExportFormat
+  format: ExportFormat
   outputPath?: string
+  browserDownload?: boolean
   onExit?: (code: number) => void
   onError?: (message: string) => void
-  onSuccess?: (message: string) => void
-}
+} & (
+  | {
+      browserDownload: true
+      onSuccess: (data: {
+        fileName: string
+        mimeType: string
+        binaryData: Buffer
+      }) => void
+    }
+  | {
+      browserDownload?: false
+      onSuccess: (data: string) => void
+    }
+)
+
 export const exportSnippet = async ({
   filePath,
-  format = "circuit-json",
+  format,
+  browserDownload = false,
   outputPath,
   onExit = (code) => process.exit(code),
   onError = (message) => console.error(message),
-  onSuccess = (message) => console.log(message),
+  onSuccess = (result: unknown) => console.log(result),
 }: ExportOptions) => {
   if (!ALLOWED_FORMATS.includes(format)) {
-    onError(
-      `Invalid format: ${format}\nSupported formats: ${ALLOWED_FORMATS.join(",")}`,
-    )
+    onError(`Invalid format: ${format}`)
     return onExit(1)
   }
 
   const projectDir = path.dirname(filePath)
-  const output = outputPath ?? path.basename(filePath).replace(/\.[^.]+$/, "")
+  const outputBaseName = path.basename(filePath).replace(/\.[^.]+$/, "")
+  const outputFileName = `${outputBaseName}${OUTPUT_EXTENSIONS[format]}`
+  const outputDestination = path.join(projectDir, outputPath ?? outputFileName)
 
-  // Generate the circuit JSON using the utility function
-  const { circuitJson } = await generateCircuitJson({
+  const circuitData = await generateCircuitJson({
     filePath,
     saveToFile: format === "circuit-json",
+  }).catch((err) => {
+    onError(`Error generating circuit JSON: ${err}`)
+    return null
   })
 
-  // If the format is JSON, we're already done
-  if (format === "circuit-json") {
-    const finalPath = path.join(projectDir, `${output}.circuit.json`)
-    onSuccess(finalPath)
-    return onExit(0)
-  }
+  if (!circuitData) return onExit(1)
 
-  // Otherwise, convert the circuit JSON to the requested format
-  outputPath = path.join(
-    projectDir,
-    `${output}${OUTPUT_EXTENSIONS[format as ExportFormat]}`,
-  )
-
-  let outputContent: string
+  let outputContent: string | Buffer
 
   switch (format) {
     case "schematic-svg":
-      outputContent = convertCircuitJsonToSchematicSvg(circuitJson)
+      outputContent = convertCircuitJsonToSchematicSvg(circuitData.circuitJson)
       break
     case "pcb-svg":
-      outputContent = convertCircuitJsonToPcbSvg(circuitJson)
+      outputContent = convertCircuitJsonToPcbSvg(circuitData.circuitJson)
       break
     case "specctra-dsn":
-      outputContent = convertCircuitJsonToDsnString(circuitJson)
+      outputContent = convertCircuitJsonToDsnString(circuitData.circuitJson)
       break
     case "readable-netlist":
-      outputContent = convertCircuitJsonToReadableNetlist(circuitJson)
+      outputContent = convertCircuitJsonToReadableNetlist(
+        circuitData.circuitJson,
+      )
       break
     default:
-      outputContent = JSON.stringify(circuitJson)
+      outputContent = JSON.stringify(circuitData.circuitJson, null, 2)
   }
 
-  fs.writeFileSync(outputPath, outputContent)
-  onSuccess(outputPath)
-  return onExit(0)
+  if (browserDownload) {
+    const mimeType = getMimeType(format)
+    const binaryData = Buffer.isBuffer(outputContent)
+      ? outputContent
+      : Buffer.from(outputContent, "utf-8")
+
+    return (
+      onSuccess as (data: {
+        fileName: string
+        mimeType: string
+        binaryData: Buffer
+      }) => void
+    )({
+      fileName: outputFileName,
+      mimeType,
+      binaryData,
+    })
+  }
+
+  await writeFileAsync(outputDestination, outputContent).catch((err) => {
+    onError(`Error writing file: ${err}`)
+    return onExit(1)
+  })
+  ;(onSuccess as (data: string) => void)(outputDestination)
+}
+
+// Helper function to get MIME type
+const getMimeType = (format: ExportFormat): string => {
+  const mimeTypes: Record<ExportFormat, string> = {
+    json: "application/json",
+    "circuit-json": "application/json",
+    "schematic-svg": "image/svg+xml",
+    "pcb-svg": "image/svg+xml",
+    gerbers: "application/zip",
+    "readable-netlist": "text/plain",
+    gltf: "model/gltf-binary",
+    "specctra-dsn": "text/plain",
+  }
+  return mimeTypes[format] || "application/octet-stream"
 }

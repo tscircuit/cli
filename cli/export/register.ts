@@ -11,7 +11,7 @@ export const registerExport = (program: Command) => {
     .action(async (file, options) => {
       await exportSnippet({
         filePath: file,
-        format: options.format,
+        format: options.format ?? "json",
         outputPath: options.output,
         onExit: (code) => process.exit(code),
         onError: (message) => console.error(message),

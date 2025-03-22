@@ -194,7 +194,6 @@ circuit.add(<MyCircuit />)
       },
     })
   }
-
   private async handleExport(
     ev: Pick<FileUpdatedEvent, "event_id" | "event_type"> & {
       exportType: ExportFormat
@@ -202,24 +201,32 @@ circuit.add(<MyCircuit />)
   ) {
     const postEvent = async (
       event: "FAILED_TO_EXPORT" | "EXPORT_CREATED",
-      content: {},
+      content: Record<string, any>,
     ) => {
       this.fsKy.post("api/events/create", {
         json: { event_type: event, ...content },
         throwHttpErrors: false,
       })
     }
+
     await exportSnippet({
       filePath: this.componentFilePath,
       format: ev.exportType,
+      browserDownload: true,
       onExit: () => {},
       onError: (e) => {
-        console.error("Failed to export:- ", e)
+        console.error("Failed to export: ", e)
         postEvent("FAILED_TO_EXPORT", { message: e })
       },
-      onSuccess: (exportFilePath) => {
+      onSuccess: (response: {
+        fileName: string
+        mimeType: string
+        binaryData: Buffer
+      }) => {
         postEvent("EXPORT_CREATED", {
-          exportFilePath: exportFilePath.split(process.cwd())[1].substring(1),
+          fileName: response.fileName,
+          mimeType: response.mimeType,
+          binaryData: response.binaryData.toString("base64"),
         })
       },
     })
