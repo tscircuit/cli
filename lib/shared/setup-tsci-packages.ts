@@ -26,8 +26,14 @@ export function setupTsciProject(
             ? "bun init -y"
             : "npm init -y"
 
-    execSync(initCommand, { stdio: "inherit" })
-    console.log("Project initialized successfully.")
+    try {
+      execSync(initCommand, { stdio: "inherit" })
+      console.log("Project initialized successfully.")
+    } catch (error) {
+      console.warn("Failed to automatically inititialize project.")
+      console.warn("Please inititialize using the command:")
+      console.warn(`  ${initCommand}`)
+    }
   }
 
   // Read and modify package.json
@@ -48,9 +54,14 @@ export function setupTsciProject(
             ? `bun add -D ${dependencies.join(" ")}`
             : `npm install -D ${dependencies.join(" ")}`
 
-    execSync(installCommand, { stdio: "inherit" })
-    console.log("Dependencies installed successfully.")
+    try {
+      execSync(installCommand, { stdio: "inherit" })
+      console.log("Dependencies installed successfully.")
+    } catch (error) {
+      console.warn("Failed to automatically install the required dependencies.")
+      console.warn("Please install them manually using the command:")
+      console.warn(`  ${installCommand}`)
+    }
   }
-
   return packageJson.name || "unknown"
 }
