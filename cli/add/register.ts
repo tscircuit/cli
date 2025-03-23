@@ -27,7 +27,7 @@ export const registerAdd = (program: Command) => {
         const match = componentPath.match(/^([^/.]+)[/.](.+)$/)
         if (!match) {
           console.error(
-            "Invalid component path. Use format: author/component-name, author.component-name, @tscircuit/package-name, or @tsci/author.component-name"
+            "Invalid component path. Use format: author/component-name, author.component-name, @tscircuit/package-name, or @tsci/author.component-name",
           )
           process.exit(1)
         }
@@ -47,7 +47,7 @@ export const registerAdd = (program: Command) => {
       if (!npmrcContent.includes("@tsci:registry=https://npm.tscircuit.com")) {
         fs.writeFileSync(
           npmrcPath,
-          `${npmrcContent}\n@tsci:registry=https://npm.tscircuit.com\n`
+          `${npmrcContent}\n@tsci:registry=https://npm.tscircuit.com\n`,
         )
         console.log("Updated .npmrc with tscircuit registry")
       }
@@ -58,10 +58,10 @@ export const registerAdd = (program: Command) => {
         packageManager === "yarn"
           ? `yarn add ${packageName}`
           : packageManager === "pnpm"
-          ? `pnpm add ${packageName}`
-          : packageManager === "bun"
-          ? `bun add ${packageName}`
-          : `npm install ${packageName}`
+            ? `pnpm add ${packageName}`
+            : packageManager === "bun"
+              ? `bun add ${packageName}`
+              : `npm install ${packageName}`
 
       try {
         execSync(installCommand, { stdio: "inherit" })
@@ -69,7 +69,7 @@ export const registerAdd = (program: Command) => {
       } catch (error) {
         console.error(
           `Failed to add ${packageName}:`,
-          error instanceof Error ? error.message : error
+          error instanceof Error ? error.message : error,
         )
         process.exit(1)
       }
