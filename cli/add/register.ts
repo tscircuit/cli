@@ -10,7 +10,10 @@ export const registerAdd = (program: Command) => {
     .command("add")
     .description("Add a component from tscircuit.com")
     .argument("<component>", "Component to add (e.g. author/component-name)")
-    .option("--test-mode", "Run in test mode (skip actual package installation)")
+    .option(
+      "--test-mode",
+      "Run in test mode (skip actual package installation)",
+    )
     .action(async (componentPath: string, options: { testMode?: boolean }) => {
       await checkForTsciUpdates()
 
