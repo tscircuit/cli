@@ -15,9 +15,7 @@ test("add command installs package and updates .npmrc", async () => {
   )
 
   // Run add command
-  const { stdout } = await runCommand(
-    "tsci add @tsci/example-package --test-mode",
-  )
+  const { stdout } = await runCommand("tsci add @tsci/example-package")
   expect(stdout).toContain("Adding @tsci/example-package")
 
   // Verify package.json was updated
@@ -44,9 +42,7 @@ test("add command handles author/component format", async () => {
   )
 
   // Test author/component format
-  const { stdout } = await runCommand(
-    "tsci add author/component-name --test-mode",
-  )
+  const { stdout } = await runCommand("tsci add author/component-name")
   expect(stdout).toContain("Adding @tsci/author.component-name")
 
   // Verify package.json was updated
@@ -69,7 +65,7 @@ test("add command handles author.component format", async () => {
   )
 
   // Test author.component format
-  const { stdout } = await runCommand("tsci add another.component --test-mode")
+  const { stdout } = await runCommand("tsci add another.component")
   expect(stdout).toContain("Adding @tsci/another.component")
 
   // Verify package.json was updated
@@ -92,7 +88,7 @@ test("add command handles @tscircuit scoped package", async () => {
   )
 
   // Test direct @tscircuit scoped package
-  const { stdout } = await runCommand("tsci add @tscircuit/example --test-mode")
+  const { stdout } = await runCommand("tsci add @tscircuit/example")
   expect(stdout).toContain("Adding @tscircuit/example")
 
   // Verify package.json was updated
@@ -115,9 +111,7 @@ test("add command handles @tsci scoped package", async () => {
   )
 
   // Test direct @tsci scoped package
-  const { stdout } = await runCommand(
-    "tsci add @tsci/direct-package --test-mode",
-  )
+  const { stdout } = await runCommand("tsci add @tsci/direct-package")
   expect(stdout).toContain("Adding @tsci/direct-package")
 
   // Verify package.json was updated
@@ -147,7 +141,7 @@ test("add command doesn't duplicate registry in .npmrc", async () => {
   )
 
   // Run add command
-  await runCommand("tsci add author/component-name --test-mode")
+  await runCommand("tsci add author/component-name")
 
   // Verify .npmrc wasn't duplicated
   const npmrc = await Bun.file(npmrcPath).text()

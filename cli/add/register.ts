@@ -10,11 +10,7 @@ export const registerAdd = (program: Command) => {
     .command("add")
     .description("Add a component from tscircuit.com")
     .argument("<component>", "Component to add (e.g. author/component-name)")
-    .option(
-      "--test-mode",
-      "Run in test mode (skip actual package installation)",
-    )
-    .action(async (componentPath: string, options: { testMode?: boolean }) => {
+    .action(async (componentPath: string) => {
       await checkForTsciUpdates()
 
       let packageName: string
@@ -56,8 +52,8 @@ export const registerAdd = (program: Command) => {
         console.log("Updated .npmrc with tscircuit registry")
       }
 
-      // In test mode, simulate package installation by updating package.json directly
-      if (options.testMode) {
+      const isTestMode = process.env.TSCI_TEST_MODE === "true"
+      if (isTestMode) {
         const pkgJsonPath = path.join(process.cwd(), "package.json")
         const pkgJson = JSON.parse(fs.readFileSync(pkgJsonPath, "utf-8"))
         pkgJson.dependencies = pkgJson.dependencies || {}
