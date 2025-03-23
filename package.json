@@ -8,7 +8,7 @@
     "@tscircuit/core": "^0.0.353",
     "@tscircuit/eval": "^0.0.131",
     "@tscircuit/fake-snippets": "^0.0.12",
-    "@tscircuit/file-server": "^0.0.13",
+    "@tscircuit/file-server": "^0.0.14",
     "@tscircuit/runframe": "^0.0.271",
     "@types/bun": "^1.2.2",
     "@types/configstore": "^6.0.2",

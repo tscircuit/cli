@@ -38,30 +38,21 @@ const OUTPUT_EXTENSIONS: Record<ExportFormat, string> = {
 type ExportOptions = {
   filePath: string
   format: ExportFormat
+  writeFile?: boolean
   outputPath?: string
-  browserDownload?: boolean
   onExit?: (code: number) => void
   onError?: (message: string) => void
-} & (
-  | {
-      browserDownload: true
-      onSuccess: (data: {
-        fileName: string
-        mimeType: string
-        binaryData: Buffer
-      }) => void
-    }
-  | {
-      browserDownload?: false
-      onSuccess: (data: string) => void
-    }
-)
+  onSuccess: (data: {
+    outputDestination: string
+    outputContent: string
+  }) => void
+}
 
 export const exportSnippet = async ({
   filePath,
   format,
-  browserDownload = false,
   outputPath,
+  writeFile = true,
   onExit = (code) => process.exit(code),
   onError = (message) => console.error(message),
   onSuccess = (result: unknown) => console.log(result),
@@ -106,44 +97,15 @@ export const exportSnippet = async ({
     default:
       outputContent = JSON.stringify(circuitData.circuitJson, null, 2)
   }
-
-  if (browserDownload) {
-    const mimeType = getMimeType(format)
-    const binaryData = Buffer.isBuffer(outputContent)
-      ? outputContent
-      : Buffer.from(outputContent, "utf-8")
-
-    return (
-      onSuccess as (data: {
-        fileName: string
-        mimeType: string
-        binaryData: Buffer
-      }) => void
-    )({
-      fileName: outputFileName,
-      mimeType,
-      binaryData,
+  if (writeFile) {
+    await writeFileAsync(outputDestination, outputContent).catch((err) => {
+      onError(`Error writing file: ${err}`)
+      return onExit(1)
     })
   }
 
-  await writeFileAsync(outputDestination, outputContent).catch((err) => {
-    onError(`Error writing file: ${err}`)
-    return onExit(1)
+  onSuccess({
+    outputDestination,
+    outputContent,
   })
-  ;(onSuccess as (data: string) => void)(outputDestination)
-}
-
-// Helper function to get MIME type
-const getMimeType = (format: ExportFormat): string => {
-  const mimeTypes: Record<ExportFormat, string> = {
-    json: "application/json",
-    "circuit-json": "application/json",
-    "schematic-svg": "image/svg+xml",
-    "pcb-svg": "image/svg+xml",
-    gerbers: "application/zip",
-    "readable-netlist": "text/plain",
-    gltf: "model/gltf-binary",
-    "specctra-dsn": "text/plain",
-  }
-  return mimeTypes[format] || "application/octet-stream"
 }

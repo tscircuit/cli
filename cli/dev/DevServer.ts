@@ -212,21 +212,21 @@ circuit.add(<MyCircuit />)
     await exportSnippet({
       filePath: this.componentFilePath,
       format: ev.exportType,
-      browserDownload: true,
+      writeFile: false,
       onExit: () => {},
       onError: (e) => {
         console.error("Failed to export: ", e)
         postEvent("FAILED_TO_EXPORT", { message: e })
       },
-      onSuccess: (response: {
-        fileName: string
-        mimeType: string
-        binaryData: Buffer
-      }) => {
+      onSuccess: async ({ outputContent, outputDestination }) => {
+        this.fsKy.post("api/files/upsert", {
+          json: {
+            file_path: `exports/${path.basename(outputDestination)}`,
+            text_content: `${outputContent}`,
+          },
+        })
         postEvent("EXPORT_CREATED", {
-          fileName: response.fileName,
-          mimeType: response.mimeType,
-          binaryData: response.binaryData.toString("base64"),
+          outputFilePath: `exports/${path.basename(outputDestination)}`,
         })
       },
     })
