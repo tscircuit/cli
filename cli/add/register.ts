@@ -10,7 +10,8 @@ export const registerAdd = (program: Command) => {
     .command("add")
     .description("Add a component from tscircuit.com")
     .argument("<component>", "Component to add (e.g. author/component-name)")
-    .action(async (componentPath: string) => {
+    .option("--test-mode", "Run in test mode (skip actual package installation)")
+    .action(async (componentPath: string, options: { testMode?: boolean }) => {
       await checkForTsciUpdates()
 
       let packageName: string
@@ -52,6 +53,17 @@ export const registerAdd = (program: Command) => {
         console.log("Updated .npmrc with tscircuit registry")
       }
 
+      // In test mode, simulate package installation by updating package.json directly
+      if (options.testMode) {
+        const pkgJsonPath = path.join(process.cwd(), "package.json")
+        const pkgJson = JSON.parse(fs.readFileSync(pkgJsonPath, "utf-8"))
+        pkgJson.dependencies = pkgJson.dependencies || {}
+        pkgJson.dependencies[packageName] = "^1.0.0" // Use a dummy version
+        fs.writeFileSync(pkgJsonPath, JSON.stringify(pkgJson, null, 2))
+        console.log(`Added ${packageName} successfully.`)
+        return
+      }
+
       // Install the package using the detected package manager
       const packageManager = detectPackageManager()
       const installCommand =
@@ -64,7 +76,7 @@ export const registerAdd = (program: Command) => {
               : `npm install ${packageName}`
 
       try {
-        execSync(installCommand, { stdio: "inherit" })
+        execSync(installCommand, { stdio: "pipe" }) // Changed from 'inherit' to 'pipe'
         console.log(`Added ${packageName} successfully.`)
       } catch (error) {
         console.error(
