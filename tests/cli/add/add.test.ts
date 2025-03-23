@@ -95,13 +95,18 @@ test("add command doesn't duplicate registry in .npmrc", async () => {
 
   // Create .npmrc with existing registry
   const npmrcPath = join(tmpDir, ".npmrc")
-  await Bun.write(npmrcPath, "existing=config\n@tsci:registry=https://npm.tscircuit.com\n")
+  await Bun.write(
+    npmrcPath,
+    "existing=config\n@tsci:registry=https://npm.tscircuit.com\n",
+  )
 
   // Run add command
   await runCommand("tsci add author/component-name")
 
   // Verify .npmrc wasn't duplicated
   const npmrc = await Bun.file(npmrcPath).text()
-  const registryCount = (npmrc.match(/@tsci:registry=https:\/\/npm.tscircuit.com/g) || []).length
+  const registryCount = (
+    npmrc.match(/@tsci:registry=https:\/\/npm.tscircuit.com/g) || []
+  ).length
   expect(registryCount).toBe(1)
 })
