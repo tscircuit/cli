@@ -8,19 +8,9 @@ export interface JLCComponent {
   price: number
 }
 
-export interface TscircuitComponent {
-  id: string
-  name: string
-  description?: string
-  source: "tscircuit"
-  partNumber: string
-  code: string
-  owner: string
-}
-
 export interface ImportComponentEvent {
   event_id: string
   event_type: "IMPORT_COMPONENT"
   created_at: string
-  component: JLCComponent | TscircuitComponent
+  component: JLCComponent
 }
