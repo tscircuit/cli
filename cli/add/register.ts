@@ -39,16 +39,17 @@ export const registerAdd = (program: Command) => {
 
       // Check if package exists in registry
       const ky = getKy()
-      try {
-        await ky
-          .get("packages/get", {
-            searchParams: { name: componentPath },
-          })
-          .json()
-      } catch (error) {
-        process.stderr.write(`Package ${componentPath} not found in registry\n`)
-        process.exit(1)
-      }
+      await ky
+        .get("packages/get", {
+          searchParams: { name: componentPath },
+        })
+        .json()
+        .catch(() => {
+          process.stderr.write(
+            `Package ${componentPath} not found in registry\n`,
+          )
+          process.exit(1)
+        })
 
       // Read and update package.json
       const packageJsonPath = path.join(workingDir, "package.json")
