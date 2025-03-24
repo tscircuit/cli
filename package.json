@@ -25,6 +25,7 @@
     "debug": "^4.4.0",
     "delay": "^6.0.0",
     "dsn-converter": "^0.0.63",
+    "easyeda": "^0.0.126",
     "get-port": "^7.1.0",
     "globby": "^14.1.0",
     "jwt-decode": "^4.0.0",
