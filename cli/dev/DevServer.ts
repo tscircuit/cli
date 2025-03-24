@@ -12,6 +12,8 @@ import { FilesystemTypesHandler } from "lib/dependency-analysis/FilesystemTypesH
 import { pushSnippet } from "lib/shared/push-snippet"
 import { globbySync } from "globby"
 import { ExportFormat, exportSnippet } from "lib/shared/export-snippet"
+import { ImportComponentEvent } from "lib/import-utils/types"
+import importjlcpcbComponent from "lib/import-utils/import-jlcpcb-component"
 
 export class DevServer {
   port: number
@@ -77,6 +79,10 @@ export class DevServer {
     )
 
     this.eventsWatcher.on("REQUEST_EXPORT", this.handleExport.bind(this))
+    this.eventsWatcher.on(
+      "IMPORT_COMPONENT",
+      this.requestedToImportComponent.bind(this),
+    )
 
     this.filesystemWatcher = chokidar.watch(this.projectDir, {
       persistent: true,
@@ -169,6 +175,26 @@ circuit.add(<MyCircuit />)
           initiator: "filesystem_change",
         },
       })
+    }
+  }
+
+  private async requestedToImportComponent(ev: ImportComponentEvent) {
+    if (ev.component.source === "jlcpcb") {
+      console.log(
+        `Importing ${ev.component.partNumber} component from JLCPCB...`,
+      )
+      await importjlcpcbComponent(ev.component)
+        .then((outputFilePath) => {
+          console.log(
+            `Component ${ev.component.partNumber} imported successfully at ${outputFilePath.replace(process.cwd(), "")}.`,
+          )
+        })
+        .catch((e) => {
+          console.error(
+            `Failed to import ${ev.component.partNumber} component:- `,
+            e,
+          )
+        })
     }
   }
 
