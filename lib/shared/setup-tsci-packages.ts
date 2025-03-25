@@ -46,12 +46,12 @@ export function setupTsciProject(
   if (dependencies.length > 0) {
     console.log("Installing dependencies...")
     const installCommand =
-      packageManager === "yarn"
-        ? `yarn add -D ${dependencies.join(" ")}`
-        : packageManager === "pnpm"
-          ? `pnpm add -D ${dependencies.join(" ")}`
-          : packageManager === "bun"
-            ? `bun add -D ${dependencies.join(" ")}`
+      packageManager === "bun"
+        ? `bun add -D ${dependencies.join(" ")}`
+        : packageManager === "yarn"
+          ? `yarn add -D ${dependencies.join(" ")}`
+          : packageManager === "pnpm"
+            ? `pnpm add -D ${dependencies.join(" ")}`
             : `npm install -D ${dependencies.join(" ")}`
 
     try {

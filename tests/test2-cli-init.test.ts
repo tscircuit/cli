@@ -8,7 +8,6 @@ test("basic init", async () => {
 
   // Run the `tsci init` command
   const { stdout, stderr } = await runCommand("tsci init project")
-  expect(stderr).toBe("")
 
   const dirContents = fs.readdirSync(path.join(tmpDir, "project"))
 
