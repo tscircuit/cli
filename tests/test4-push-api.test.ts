@@ -3,32 +3,20 @@ import { getCliTestFixture } from "./fixtures/get-cli-test-fixture"
 import * as fs from "node:fs"
 import * as path from "node:path"
 
-const { tmpDir, runCommand } = await getCliTestFixture()
-
-beforeEach(() => {
-  fs.rmSync(tmpDir, { recursive: true, force: true })
-  fs.mkdirSync(tmpDir, { recursive: true })
-  fs.writeFileSync(
-    path.join(tmpDir, "package.json"),
-    JSON.stringify({
-      name: "test-package",
-      version: "1.0.0",
-    }),
-  )
-})
-afterEach(() => {
-  fs.rmSync(tmpDir, { recursive: true, force: true })
-})
-
 test("should fail if no entrypoint file is found", async () => {
-  await runCommand("tsci push").catch((e) => {
-    expect(e.message).toInclude(
+  const { runCommand } = await getCliTestFixture()
+  try {
+    await runCommand("tsci push")
+  } catch (e) {
+    expect(e.message).toContain(
       "No entrypoint found. Run 'tsci init' to bootstrap a basic project.",
     )
-  })
+  }
 })
 
 test("should use default entrypoint if no file is provided", async () => {
+  const { tmpDir, runCommand } = await getCliTestFixture()
+
   const defaultEntrypoint = path.resolve(tmpDir, "index.tsx")
   fs.writeFileSync(defaultEntrypoint, "// Default entrypoint!")
   const { stdout } = await runCommand(`tsci push`)
@@ -38,6 +26,8 @@ test("should use default entrypoint if no file is provided", async () => {
 })
 
 test("should fail if package.json is missing or invalid", async () => {
+  const { tmpDir, runCommand } = await getCliTestFixture()
+
   const snippetFilePath = path.resolve(tmpDir, "snippet.tsx")
   fs.writeFileSync(snippetFilePath, "// Snippet content")
 
@@ -51,15 +41,23 @@ test("should fail if package.json is missing or invalid", async () => {
 })
 
 test("should create package if it does not exist", async () => {
+  const { tmpDir, runCommand } = await getCliTestFixture()
+
   const snippetFilePath = path.resolve(tmpDir, "snippet.tsx")
 
   fs.writeFileSync(snippetFilePath, "// Snippet content")
+  fs.writeFileSync(
+    path.resolve(tmpDir, "package.json"),
+    JSON.stringify({ name: "test-package", version: "1.0.0" }),
+  )
 
   const { stdout } = await runCommand(`tsci push ${snippetFilePath}`)
   expect(stdout).toContain("Successfully pushed package")
 })
 
 test("should bump version if release already exists", async () => {
+  const { tmpDir, runCommand } = await getCliTestFixture()
+
   const snippetFilePath = path.resolve(tmpDir, "snippet.tsx")
   const packageJsonPath = path.resolve(tmpDir, "package.json")
 
@@ -71,15 +69,24 @@ test("should bump version if release already exists", async () => {
 
   const { stdout } = await runCommand(`tsci push ${snippetFilePath}`)
 
+  expect(stdout).toContain("Successfully pushed package")
+
+  const { stdout: stdout2 } = await runCommand(`tsci push ${snippetFilePath}`)
+
   // Update expectation to match actual output
-  expect(stdout).toContain("Incrementing Package Version")
-  expect(stdout).toContain("1.0.1")
+  expect(stdout2).toContain("Incrementing Package Version")
+  expect(stdout2).toContain("1.0.1")
 })
 
 test("should upload files to the registry", async () => {
+  const { tmpDir, runCommand } = await getCliTestFixture()
   const snippetFilePath = path.resolve(tmpDir, "snippet.tsx")
 
   fs.writeFileSync(snippetFilePath, "// Snippet content")
+  fs.writeFileSync(
+    path.resolve(tmpDir, "package.json"),
+    JSON.stringify({ name: "test-package", version: "1.0.0" }),
+  )
 
   const { stdout } = await runCommand(`tsci push ${snippetFilePath}`)
   expect(stdout).toContain("Uploaded file snippet.tsx to the registry.")

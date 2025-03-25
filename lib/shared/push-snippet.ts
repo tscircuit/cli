@@ -4,6 +4,7 @@ import * as fs from "node:fs"
 import * as path from "node:path"
 import semver from "semver"
 import Debug from "debug"
+import kleur from "kleur"
 
 type PushOptions = {
   filePath?: string
@@ -40,7 +41,9 @@ export const pushSnippet = async ({
       onSuccess("No file provided. Using 'index.tsx' as the entrypoint.")
     } else {
       onError(
-        "No entrypoint found. Run 'tsci init' to bootstrap a basic project.",
+        kleur.red(
+          "No entrypoint found. Run 'tsci init' to bootstrap a basic project.",
+        ),
       )
       return onExit(1)
     }
@@ -184,11 +187,11 @@ export const pushSnippet = async ({
     .post("package_releases/create", {
       json: {
         package_name_with_version: `${packageIdentifier}@${packageVersion}`,
-      }
+      },
     })
     .catch((error) => {
       onError(`Error creating release: ${error}`)
-      throw new Error(error.response.status)
+      throw new Error(error.response)
     })
 
   onSuccess("\n")
@@ -216,7 +219,7 @@ export const pushSnippet = async ({
       })
       .catch((error) => {
         onError(`Error uploading file ${file}: ${error}`)
-        throw new Error(error.response.status)
+        throw new Error(error.response)
       })
   }
 
