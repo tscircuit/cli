@@ -6,6 +6,16 @@ import Debug from "debug"
 
 const debug = Debug("tsci:generate-circuit-json")
 
+const ALLOWED_FILE_EXTENSIONS = [
+  ".tsx",
+  ".ts",
+  ".jsx",
+  ".js",
+  ".json",
+  ".txt",
+  ".md",
+]
+
 type GenerateCircuitJsonOptions = {
   filePath: string
   outputDir?: string
@@ -50,18 +60,21 @@ export async function generateCircuitJson({
   const fsMap = {
     ...((await getVirtualFileSystemFromDirPath({
       dirPath: projectDir,
+      fileMatchFn: (filePath) => {
+        if (filePath.includes("node_modules/")) return false
+        if (filePath.includes("dist/")) return false
+        if (filePath.includes("build/")) return false
+        if (filePath.match(/^\.[^\/]/)) return false
+        if (!ALLOWED_FILE_EXTENSIONS.includes(path.extname(filePath)))
+          return false
+        return true
+      },
       contentFormat: "string",
     })) as Record<string, string>),
-    "entrypoint.tsx": `
-import MyCircuit from "./${relativeComponentPath}"
-
-circuit.add(<MyCircuit />)
-    `,
   }
 
   // Execute the circuit runner with the virtual file system
   await runner.executeWithFsMap({
-    entrypoint: "entrypoint.tsx",
     fsMap,
   })
 

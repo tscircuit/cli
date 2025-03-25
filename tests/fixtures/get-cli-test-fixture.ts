@@ -36,6 +36,9 @@ export async function getCliTestFixture(): Promise<CliTestFixture> {
   // Seed the database
   seedDB(db)
 
+  // example seed data: the package "testuser/my-test-board"
+  // see all the seed data in the fake-snippets-api repo
+
   // Configure CLI to use test server
   cliConfig.set("sessionToken", db.accounts[0].account_id)
   cliConfig.set("registryApiUrl", apiUrl)
