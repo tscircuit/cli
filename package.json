@@ -6,7 +6,7 @@
     "@babel/standalone": "^7.26.9",
     "@biomejs/biome": "^1.9.4",
     "@tscircuit/core": "^0.0.353",
-    "@tscircuit/eval": "^0.0.131",
+    "@tscircuit/eval": "^0.0.139",
     "@tscircuit/fake-snippets": "^0.0.12",
     "@tscircuit/file-server": "^0.0.14",
     "@tscircuit/runframe": "^0.0.278",

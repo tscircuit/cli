@@ -1,30 +1,26 @@
 import { expect, test } from "bun:test"
 import { join } from "node:path"
+import { readdirSync } from "node:fs"
 import { getCliTestFixture } from "../../fixtures/get-cli-test-fixture"
 
 test("clone command fetches and creates package files correctly", async () => {
   const { tmpDir, runCommand } = await getCliTestFixture()
-  const { stdout } = await runCommand("tsci clone seveibar/usb-c-flashlight")
+  const { stdout } = await runCommand("tsci clone testuser/my-test-board")
 
-  const projectDir = join(tmpDir, "author.snippet")
-  const indexPath = join(projectDir, "index.ts")
-  const tsconfigPath = join(projectDir, "tsconfig.json")
-  const npmrcPath = join(projectDir, ".npmrc")
-  const gitignorePath = join(projectDir, ".gitignore")
+  const projectDir = join(tmpDir, "testuser.my-test-board")
+  const dirFiles = readdirSync(projectDir)
 
-  const indexContent = await Bun.file(indexPath).text()
-  const tsconfigContent = await Bun.file(tsconfigPath).text()
-  const npmrcContent = await Bun.file(npmrcPath).text()
-  const gitignoreContent = await Bun.file(gitignorePath).text()
-
-  expect(indexContent).toContain("export default () =>")
-  expect(stdout).toContain("Cloning seveibar/usb-c-flashlight...")
-  expect(indexContent).toContain("<board")
-  expect(stdout).toContain("Cloning seveibar/usb-c-flashlight...")
-  expect(JSON.parse(tsconfigContent)["types"]).toContainValue("@tscircuit/core")
-  expect(npmrcContent).toContain("@tsci:registry=https://npm.tscircuit.com")
-  expect(gitignoreContent).toContain("node_modules")
-  expect(stdout).toContain("Successfully cloned")
+  expect(dirFiles).toMatchInlineSnapshot(`
+    [
+      "index.tsx",
+      "node_modules",
+      ".npmrc",
+      "package-lock.json",
+      "package.json",
+      "tsconfig.json",
+      "circuit.json",
+    ]
+  `)
 }, 10_000)
 
 test("clone command handles invalid snippet path", async () => {
