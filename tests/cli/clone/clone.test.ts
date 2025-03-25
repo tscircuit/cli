@@ -11,13 +11,13 @@ test("clone command fetches and creates package files correctly", async () => {
   const dirFiles = readdirSync(projectDir)
 
   expect(dirFiles).toContainValues([
-      "index.tsx",
-      "node_modules",
-      ".npmrc",
-      "package-lock.json",
-      "package.json",
-      "tsconfig.json",
-      "circuit.json",
+     "index.tsx",
+     "node_modules",
+     ".npmrc",
+     "package-lock.json",
+     "package.json",
+     "tsconfig.json",
+     "circuit.json",
   ])
 }, 10_000)
 
