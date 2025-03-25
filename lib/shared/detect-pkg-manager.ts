@@ -9,8 +9,9 @@ export const detectPackageManager = (): string => {
 
   if (fs.existsSync("yarn.lock")) return "yarn"
   if (fs.existsSync("pnpm-lock.yaml")) return "pnpm"
+  if (fs.existsSync("package-lock.json")) return "npm"
   if (fs.existsSync("bun.lockb")) return "bun"
   if (fs.existsSync("bun.lock")) return "bun"
 
-  return "npm" // Default to npm
+  return "bun" // Default to npm
 }
