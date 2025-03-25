@@ -191,7 +191,7 @@ export const pushSnippet = async ({
     })
     .catch((error) => {
       onError(`Error creating release: ${error}`)
-      throw new Error(error.response)
+      return onExit(1)
     })
 
   onSuccess("\n")
@@ -219,7 +219,7 @@ export const pushSnippet = async ({
       })
       .catch((error) => {
         onError(`Error uploading file ${file}: ${error}`)
-        throw new Error(error.response)
+        return onExit(1)
       })
   }
 
