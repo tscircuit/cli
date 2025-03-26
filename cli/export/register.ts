@@ -15,8 +15,8 @@ export const registerExport = (program: Command) => {
         outputPath: options.output,
         onExit: (code) => process.exit(code),
         onError: (message) => console.error(message),
-        onSuccess: (exportLocation) =>
-          console.log("Exported to " + exportLocation + "!"),
+        onSuccess: ({ outputDestination }) =>
+          console.log("Exported to " + outputDestination + "!"),
       })
     })
 }

@@ -16,7 +16,7 @@ test("basic init", async () => {
     ".npmrc",
     "index.tsx",
     "node_modules",
-    "package-lock.json",
+    "bun.lock",
     "package.json",
     "tsconfig.json",
   ])
