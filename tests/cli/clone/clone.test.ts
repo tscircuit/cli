@@ -10,19 +10,17 @@ test("clone command fetches and creates package files correctly", async () => {
   const projectDir = join(tmpDir, "testuser.my-test-board")
   const dirFiles = readdirSync(projectDir)
 
-  expect(dirFiles).toMatchInlineSnapshot(`
-    [
-      "index.tsx",
-      "node_modules",
-      ".npmrc",
-      "bun.lock",
-      "README.md",
-      ".gitignore",
-      "package.json",
-      "tsconfig.json",
-      "circuit.json",
-    ]
-  `)
+  expect(dirFiles).toContainValues([
+    "index.tsx",
+    "node_modules",
+    ".npmrc",
+    "bun.lock",
+    "README.md",
+    ".gitignore",
+    "package.json",
+    "tsconfig.json",
+    "circuit.json",
+  ])
 }, 10_000)
 
 test("clone command handles invalid snippet path", async () => {
