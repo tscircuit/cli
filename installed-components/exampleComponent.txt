@@ -1,0 +1,1 @@
+Component exampleComponent installed successfully.
