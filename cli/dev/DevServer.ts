@@ -60,10 +60,22 @@ export class DevServer {
   }
 
   async start() {
-    const circuitName = path.basename(
-      this.componentFilePath,
-      path.extname(this.componentFilePath),
-    )
+    const componentDir = path.dirname(this.componentFilePath)
+    const packageJsonPath = path.resolve(componentDir, "package.json")
+
+    let circuitName = "TSCircuit"
+
+    if (fs.existsSync(packageJsonPath)) {
+      try {
+        const packageJson = JSON.parse(
+          fs.readFileSync(packageJsonPath, "utf-8"),
+        )
+        circuitName = packageJson.name || circuitName
+      } catch (error) {
+        console.error("Failed to read package.json:", error)
+      }
+    }
+
     const { server } = await createHttpServer(this.port, circuitName)
     this.httpServer = server
 

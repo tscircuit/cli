@@ -1,6 +1,6 @@
 import pkg from "../../package.json"
 
-export const getIndex = async (circuitName: string = "TSCircuit") => {
+export const getIndex = async (circuitName: string) => {
   return `<html>
     <head>
       <title>${circuitName}</title>
@@ -8,9 +8,6 @@ export const getIndex = async (circuitName: string = "TSCircuit") => {
     <body>
       <script>
         window.TSCIRCUIT_USE_RUNFRAME_FOR_CLI = true;
-        if (!window.location.pathname.includes("${circuitName}")) {
-          window.history.replaceState({}, "", "/${circuitName}");
-        }
       </script>
       <script src="https://cdn.tailwindcss.com"></script>
       <div id="root">loading...</div>
