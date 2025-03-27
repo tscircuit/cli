@@ -13,7 +13,10 @@ import winterspecBundle from "@tscircuit/file-server/dist/bundle.js"
 import { getIndex } from "../site/getIndex"
 import kleur from "kleur"
 
-export const createHttpServer = async (port = 3020, componentFilePath?: string) => {
+export const createHttpServer = async (
+  port = 3020,
+  componentFilePath?: string,
+) => {
   const fileServerHandler = getNodeHandler(winterspecBundle as any, {})
 
   const server = http.createServer(async (req, res) => {

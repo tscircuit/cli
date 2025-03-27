@@ -2,7 +2,7 @@ import pkg from "../../package.json"
 import * as path from "node:path"
 
 export const getIndex = async (componentFilePath?: string) => {
-  const title = componentFilePath 
+  const title = componentFilePath
     ? path.basename(componentFilePath, path.extname(componentFilePath))
     : "TSCircuit"
 
