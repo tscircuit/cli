@@ -19,7 +19,6 @@ export class DevServer {
    * The path to a component that exports a <board /> or <group /> component
    */
   componentFilePath: string
-
   projectDir: string
 
   /**
