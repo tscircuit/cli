@@ -10,7 +10,12 @@ export const resolveCircuitName = (
 
   try {
     const fileContent = fs.readFileSync(componentFilePath, "utf-8")
-    const match = fileContent.match(/export\s+default\s+(\w+)/)
+    let match = fileContent.match(/export\s+default\s+(\w+)/)
+    if (match && match[1]) {
+      return match[1]
+    }
+
+    match = fileContent.match(/export\s+(?:const|function|class)\s+(\w+)/)
     if (match && match[1]) {
       return match[1]
     }
