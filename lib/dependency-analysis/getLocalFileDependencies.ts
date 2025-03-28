@@ -60,7 +60,7 @@ function getLocalFileDependencies(pathToTsxFile: string): string[] {
       ".sass",
       ".less",
     ]
-    let resolvedPath = path.resolve(baseDir, importPath)
+    const resolvedPath = path.resolve(baseDir, importPath)
 
     // Check if path exists as-is
     if (fs.existsSync(resolvedPath)) {

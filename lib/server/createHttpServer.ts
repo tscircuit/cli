@@ -57,6 +57,13 @@ export const createHttpServer = async (port = 3020) => {
       return
     }
 
+    if (url.pathname === "/health") {
+      // Add the /health endpoint
+      res.writeHead(200, { "Content-Type": "application/json" })
+      res.end(JSON.stringify({ status: "ok" }))
+      return
+    }
+
     if (url.pathname.startsWith("/api/")) {
       req.url = req.url!.replace("/api/", "/")
       fileServerHandler(req, res)

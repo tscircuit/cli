@@ -13,6 +13,7 @@
     "@types/bun": "^1.2.2",
     "@types/configstore": "^6.0.2",
     "@types/debug": "^4.1.12",
+    "@types/jest": "^29.5.14",
     "@types/react": "^19.0.8",
     "@types/semver": "^7.5.8",
     "bun-match-svg": "^0.0.9",
@@ -27,6 +28,7 @@
     "dsn-converter": "^0.0.63",
     "get-port": "^7.1.0",
     "globby": "^14.1.0",
+    "jest": "^29.7.0",
     "jwt-decode": "^4.0.0",
     "kleur": "^4.1.5",
     "ky": "^1.7.4",
@@ -35,8 +37,10 @@
     "redaxios": "^0.5.1",
     "semver": "^7.6.3",
     "tempy": "^3.1.0",
+    "ts-jest": "^29.3.0",
     "tsup": "^8.3.5",
-    "typed-ky": "^0.0.4"
+    "typed-ky": "^0.0.4",
+    "typescript": "^5.8.2"
   },
   "peerDependencies": {
     "typescript": "^5.0.0"
@@ -58,5 +62,11 @@
     "cli": "bun ./cli/main.ts",
     "pkg-pr-new-release": "bunx pkg-pr-new publish --comment=off --peerDeps"
   },
-  "type": "module"
+  "type": "module",
+  "dependencies": {
+    "@eslint/js": "^9.23.0",
+    "eslint": "^9.23.0",
+    "globals": "^16.0.0",
+    "typescript-eslint": "^8.28.0"
+  }
 }

@@ -17,6 +17,7 @@ import { registerPush } from "./push/register"
 import { registerInstall } from "./install/register"
 
 export const program = new Command()
+export { DevServer } from "./dev/DevServer"
 
 program
   .name("tsci")
