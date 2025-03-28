@@ -56,7 +56,7 @@ export const askConfirmation = (question: string): Promise<boolean> => {
       clearTimeout(timeout)
       rl.close()
       const normalized = answer.trim().toLowerCase()
-      resolve(normalized === "yes" || normalized === "y")
+      resolve(normalized === "yes" || normalized === "y" || normalized === "")
     })
   })
 }
