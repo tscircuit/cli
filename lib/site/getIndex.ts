@@ -1,8 +1,9 @@
 import pkg from "../../package.json"
 
-export const getIndex = async () => {
+export const getIndex = async ({ circuitName }: { circuitName?: string }) => {
   return `<html>
     <head>
+      <title>${circuitName}</title>
     </head>
     <body>
       <script>
