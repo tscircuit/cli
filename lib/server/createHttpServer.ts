@@ -51,7 +51,7 @@ export const createHttpServer = async (port = 3020, circuitName?: string) => {
     }
 
     if (url.pathname === "/") {
-      const html = await getIndex(circuitName)
+      const html = await getIndex({ circuitName })
       res.writeHead(200, { "Content-Type": "text/html" })
       res.end(html)
       return

@@ -12,6 +12,7 @@ import { FilesystemTypesHandler } from "lib/dependency-analysis/FilesystemTypesH
 import { pushSnippet } from "lib/shared/push-snippet"
 import { globbySync } from "globby"
 import { ExportFormat, exportSnippet } from "lib/shared/export-snippet"
+import { resolveCircuitName } from "lib/utils/resolveCircuitName"
 
 export class DevServer {
   port: number
@@ -59,21 +60,7 @@ export class DevServer {
   }
 
   async start() {
-    const componentDir = path.dirname(this.componentFilePath)
-    const packageJsonPath = path.resolve(componentDir, "package.json")
-
-    let circuitName = "TSCircuit"
-
-    if (fs.existsSync(packageJsonPath)) {
-      try {
-        const packageJson = JSON.parse(
-          fs.readFileSync(packageJsonPath, "utf-8"),
-        )
-        circuitName = packageJson.name || circuitName
-      } catch (error) {
-        console.error("Failed to read package.json:", error)
-      }
-    }
+    const circuitName = resolveCircuitName(this.componentFilePath)
 
     const { server } = await createHttpServer(this.port, circuitName)
     this.httpServer = server
