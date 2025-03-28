@@ -5,6 +5,7 @@ import * as path from "node:path"
 import semver from "semver"
 import Debug from "debug"
 import kleur from "kleur"
+import { askConfirmation } from "./check-for-cli-update"
 
 type PushOptions = {
   filePath?: string
@@ -73,7 +74,7 @@ export const pushSnippet = async ({
   ).replace(/^@/, "")
   const packageAuthor =
     packageJson.author?.split(" ")[0] ?? cliConfig.get("githubUsername")
-  const packageIdentifier = `${packageAuthor}/${packageName}`
+  const packageIdentifier = "imrishabh18/temp-3"
 
   let packageVersion =
     packageJson.version ??
@@ -129,11 +130,15 @@ export const pushSnippet = async ({
     })
 
   if (!doesPackageExist) {
+    const isPackage = await askConfirmation("Is this a Package? (y/n): ")
+    const snippetType = isPackage ? "package" : "board"
     await ky
       .post("packages/create", {
         json: {
           name: packageIdentifier,
           is_private: isPrivate ?? false,
+          is_snippet: true, // Needs to be deprecated, but default true for now
+          snippet_type: snippetType
         },
         headers: { Authorization: `Bearer ${sessionToken}` },
       })
