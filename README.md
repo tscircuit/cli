@@ -43,12 +43,12 @@ Commands:
   dev [options] [file]     Start development server for a snippet
   clone <snippet>          Clone a snippet from the registry
   push [options] [file]    Save snippet code to Registry API
-  add <component>          Add a component from tscircuit.com
   auth                     Login/logout
   login                    Login to tscircuit registry
   logout                   Logout from tscircuit registry
   config                   Manage tscircuit CLI configuration
   export [options] <file>  Export tscircuit code to various formats
+  add <component>          Add a component from tscircuit.com
   help [command]           display help for command
 ```
 <!-- END_HELP_OUTPUT -->
