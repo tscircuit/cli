@@ -12,6 +12,9 @@ tsci dev ./path/to/file.tsx
 
 # Clone a snippet from the registry
 tsci clone author/snippetName
+
+# Add a component from tscircuit.com
+tsci add author/component-name
 ```
 
 > Note: The snippets CLI uses the same configuration files as the [@tscircuit/cli](https://github.com/tscircuit/cli), so you may need to also install `npm install -g @tscircuit/cli` and run `tsci login` to authenticate!
@@ -39,6 +42,7 @@ Commands:
                            directory (or current directory if none is provided)
   dev [options] [file]     Start development server for a snippet
   clone <snippet>          Clone a snippet from the registry
+  add <component>          Add a component from tscircuit.com
   push [options] [file]    Save snippet code to Registry API
   auth                     Login/logout
   login                    Login to tscircuit registry
