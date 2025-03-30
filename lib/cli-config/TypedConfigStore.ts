@@ -6,11 +6,6 @@ export interface TypedConfigstore<T extends Record<string, any>> {
   path: string
 
   /**
-   * Get all items as an object or replace the current config with an object.
-   */
-  all: any
-
-  /**
    * Get the item count
    */
   size: number

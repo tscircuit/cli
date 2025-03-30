@@ -1,4 +1,4 @@
-import Configstore from "configstore"
+import Conf from "conf"
 import type { TypedConfigstore } from "./TypedConfigStore"
 import { jwtDecode } from "jwt-decode"
 
@@ -8,9 +8,10 @@ export interface CliConfig {
   registryApiUrl?: string
 }
 
-export const cliConfig: TypedConfigstore<CliConfig> = new Configstore(
-  "tscircuit",
-)
+export const cliConfig: TypedConfigstore<CliConfig> = new Conf({
+  projectName: "tscircuit",
+  cwd: process.env.TSCIRCUIT_CONFIG_DIR || undefined,
+})
 
 export const getSessionToken = (): string | undefined => {
   return cliConfig.get("sessionToken")

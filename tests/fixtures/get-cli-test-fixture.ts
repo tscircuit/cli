@@ -60,6 +60,7 @@ export async function getCliTestFixture(): Promise<CliTestFixture> {
       TSCI_TEST_MODE: "true",
       FORCE_COLOR: "0",
       NODE_ENV: "test",
+      TSCIRCUIT_CONFIG_DIR: `${tmpDir}/.config`,
     }
 
     const task = Bun.spawn(["bun", ...args], {
