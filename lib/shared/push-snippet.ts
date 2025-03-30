@@ -6,7 +6,7 @@ import semver from "semver"
 import Debug from "debug"
 import kleur from "kleur"
 import { getEntrypoint } from "./get-entrypoint"
-import prompts from "prompts"
+import prompts from "lib/utils/prompts"
 import { getUnscopedPackageName } from "lib/utils/get-unscoped-package-name"
 import { getPackageAuthor } from "lib/utils/get-package-author"
 
@@ -172,6 +172,7 @@ export const pushSnippet = async ({
         name: "visibility",
         type: "select",
         message: "Package Visibility:",
+        initial: "public",
         choices: [
           { title: "Public", value: "public" },
           { title: "Private", value: "private" },

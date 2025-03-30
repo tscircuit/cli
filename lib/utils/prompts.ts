@@ -13,6 +13,9 @@ export const prompts = (...args: Parameters<typeof ogPrompts>) => {
       if (prompt.type === "confirm") {
         result[(prompt as any).name] = prompt.initial ?? true
         return
+      } else if (prompt.initial) {
+        result[(prompt as any).name] = prompt.initial
+        return
       }
       throw new Error(
         `Can't answer prompt without being interactive: ${JSON.stringify(prompt, null, "  ")}`,
@@ -23,3 +26,5 @@ export const prompts = (...args: Parameters<typeof ogPrompts>) => {
 
   return ogPrompts(...args)
 }
+
+export default prompts
