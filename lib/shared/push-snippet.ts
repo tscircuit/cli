@@ -69,29 +69,25 @@ export const pushSnippet = async ({
     packageJson.author?.split(" ")[0] ?? cliConfig.get("githubUsername")
   const packageIdentifier = `${packageAuthor}/${packageName}`
 
+  const previousPackageReleases = await ky
+    .post<{
+      error?: { error_code: string }
+      package_releases?: { version: string; is_latest: boolean }[]
+    }>("package_releases/list", {
+      json: { package_name: packageIdentifier },
+    })
+    .json()
+    .then((response) => response.package_releases)
+
   let packageVersion =
     packageJson.version ??
-    (await ky
-      .post<{
-        error?: { error_code: string }
-        package_releases?: { version: string; is_latest: boolean }[]
-      }>("package_releases/list", {
-        json: { package_name: packageIdentifier },
-      })
-      .json()
-      .then(
-        (response) =>
-          response.package_releases?.[response.package_releases.length - 1]
-            ?.version,
-      )
-      .catch((error) => {
-        onError(`Failed to retrieve latest package version: ${error}`)
-        return onExit(1)
-      }))
+    previousPackageReleases?.[previousPackageReleases.length - 1]?.version
 
   if (!packageVersion) {
-    onError("Failed to retrieve package version.")
-    return onExit(1)
+    console.log(
+      "No package version found in package.json or previous releases, setting to 0.0.1",
+    )
+    packageVersion = "0.0.1"
   }
 
   const updatePackageJsonVersion = (newVersion?: string) => {
