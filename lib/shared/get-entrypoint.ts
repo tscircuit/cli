@@ -12,7 +12,7 @@ type EntrypointOptions = {
 
 /**
  * Detect the main entrypoint for a tscircuit project
- * 
+ *
  * Logic:
  * 1. Use provided filePath if specified
  * 2. Check tscircuit.config.json for mainEntrypoint
@@ -29,17 +29,22 @@ export const getEntrypoint = async ({
   if (filePath) {
     return path.resolve(projectDir, filePath)
   }
-  
+
   // 2. Check tscircuit.config.json for mainEntrypoint
   const projectConfig = loadProjectConfig(projectDir)
   if (projectConfig?.mainEntrypoint) {
-    const configEntrypoint = path.resolve(projectDir, projectConfig.mainEntrypoint)
+    const configEntrypoint = path.resolve(
+      projectDir,
+      projectConfig.mainEntrypoint,
+    )
     if (fs.existsSync(configEntrypoint)) {
-      onSuccess(`Using entrypoint from tscircuit.config.json: '${path.relative(projectDir, configEntrypoint)}'`)
+      onSuccess(
+        `Using entrypoint from tscircuit.config.json: '${path.relative(projectDir, configEntrypoint)}'`,
+      )
       return configEntrypoint
     }
   }
-  
+
   // 3. Check common locations
   const possibleEntrypoints = [
     path.resolve(projectDir, "index.tsx"),
@@ -47,34 +52,34 @@ export const getEntrypoint = async ({
     path.resolve(projectDir, "lib/index.tsx"),
     path.resolve(projectDir, "lib/index.ts"),
     path.resolve(projectDir, "src/index.tsx"),
-    path.resolve(projectDir, "src/index.ts")
+    path.resolve(projectDir, "src/index.ts"),
   ]
-    
+
   let detectedEntrypoint: string | null = null
-  
+
   for (const entrypoint of possibleEntrypoints) {
     if (fs.existsSync(entrypoint)) {
       detectedEntrypoint = entrypoint
       const relativePath = path.relative(projectDir, entrypoint)
       onSuccess(`Detected entrypoint: '${relativePath}'`)
-      
+
       // 4. Update config with detected entrypoint
       const newConfig = projectConfig || {}
       newConfig.mainEntrypoint = relativePath
       saveProjectConfig(newConfig, projectDir)
       onSuccess(`Updated tscircuit.config.json with detected entrypoint`)
-      
+
       break
     }
   }
-  
+
   if (!detectedEntrypoint) {
     onError(
       kleur.red(
         "No entrypoint found. Run 'tsci init' to bootstrap a basic project or specify a file with 'tsci push <file>'",
-      )
+      ),
     )
   }
-  
+
   return detectedEntrypoint
 }

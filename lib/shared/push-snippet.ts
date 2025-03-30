@@ -36,9 +36,9 @@ export const pushSnippet = async ({
   const snippetFilePath = await getEntrypoint({
     filePath,
     onSuccess,
-    onError
+    onError,
   })
-  
+
   if (!snippetFilePath) {
     return onExit(1)
   }
