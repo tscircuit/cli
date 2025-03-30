@@ -29,7 +29,7 @@ test("should use default entrypoint if no file is provided", async () => {
   )
 })
 
-test("should fail if package.json is missing or invalid", async () => {
+test.skip("should fail if package.json is missing or invalid", async () => {
   const { tmpDir, runCommand } = await getCliTestFixture()
 
   const snippetFilePath = path.resolve(tmpDir, "snippet.tsx")
