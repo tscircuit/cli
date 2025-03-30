@@ -161,7 +161,7 @@ export const pushSnippet = async ({
     })
 
   if (!doesPackageExist) {
-    const { createPackage, visibility } = await prompts([
+    const { createPackage, visibility, snippetType } = await prompts([
       {
         type: "confirm",
         name: "createPackage",
@@ -178,6 +178,16 @@ export const pushSnippet = async ({
           { title: "Private", value: "private" },
         ],
       },
+      {
+        name: "snippetType",
+        type: "select",
+        message: "Snippet Type:",
+        initial: "package",
+        choices: [
+          { title: "Reusable Package", value: "package" },
+          { title: "Board", value: "board" },
+        ],
+      },
     ])
     if (!createPackage || !visibility) {
       onError(`aborted`)
@@ -189,6 +199,8 @@ export const pushSnippet = async ({
         json: {
           name: scopedPackageName,
           is_private: visibility === "private",
+          is_snippet: true,
+          snippet_type: snippetType,
         },
         headers: { Authorization: `Bearer ${sessionToken}` },
       })
