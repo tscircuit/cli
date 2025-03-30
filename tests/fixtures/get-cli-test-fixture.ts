@@ -55,7 +55,12 @@ export async function getCliTestFixture(): Promise<CliTestFixture> {
     args[0] = resolve(process.cwd(), "cli/main.ts")
 
     // Set test mode environment variable
-    const env = { ...process.env, TSCI_TEST_MODE: "true" }
+    const env = {
+      ...process.env,
+      TSCI_TEST_MODE: "true",
+      FORCE_COLOR: "0",
+      NODE_ENV: "test",
+    }
 
     const task = Bun.spawn(["bun", ...args], {
       cwd: tmpDir,
