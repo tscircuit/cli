@@ -25,7 +25,7 @@ test("should use default entrypoint if no file is provided", async () => {
   fs.writeFileSync(defaultEntrypoint, "// Default entrypoint!")
   const { stdout } = await runCommand(`tsci push`)
   expect(stdout).toContain(
-    "No file provided. Using 'index.tsx' as the entrypoint.",
+    "Detected entrypoint: 'index.tsx'\nUpdated tscircuit.config.json with detected entrypoint",
   )
 })
 

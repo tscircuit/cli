@@ -5,6 +5,7 @@ import * as path from "node:path"
 import semver from "semver"
 import Debug from "debug"
 import kleur from "kleur"
+import { getEntrypoint } from "./get-entrypoint"
 
 type PushOptions = {
   filePath?: string
@@ -31,22 +32,15 @@ export const pushSnippet = async ({
     return onExit(1)
   }
 
-  let snippetFilePath: string | null = null
-  if (filePath) {
-    snippetFilePath = path.resolve(filePath)
-  } else {
-    const defaultEntrypoint = path.resolve("index.tsx")
-    if (fs.existsSync(defaultEntrypoint)) {
-      snippetFilePath = defaultEntrypoint
-      onSuccess("No file provided. Using 'index.tsx' as the entrypoint.")
-    } else {
-      onError(
-        kleur.red(
-          "No entrypoint found. Run 'tsci init' to bootstrap a basic project.",
-        ),
-      )
-      return onExit(1)
-    }
+  // Detect the entrypoint file
+  const snippetFilePath = await getEntrypoint({
+    filePath,
+    onSuccess,
+    onError,
+  })
+
+  if (!snippetFilePath) {
+    return onExit(1)
   }
 
   const packageJsonPath = path.resolve(
