@@ -6,6 +6,9 @@ import semver from "semver"
 import Debug from "debug"
 import kleur from "kleur"
 import { getEntrypoint } from "./get-entrypoint"
+import prompts from "prompts"
+import { getUnscopedPackageName } from "lib/utils/get-unscoped-package-name"
+import { getPackageAuthor } from "lib/utils/get-package-author"
 
 type PushOptions = {
   filePath?: string
@@ -43,9 +46,18 @@ export const pushSnippet = async ({
     return onExit(1)
   }
 
-  const packageJsonPath = path.resolve(
-    path.join(path.dirname(snippetFilePath), "package.json"),
-  )
+  const packageJsonPath = [
+    path.resolve(path.join(path.dirname(snippetFilePath), "package.json")),
+    path.resolve(path.join(process.cwd(), "package.json")),
+  ].find((path) => fs.existsSync(path))
+
+  if (!packageJsonPath) {
+    onError(
+      "No package.json found, try running 'tsci init' to bootstrap the project",
+    )
+    return onExit(1)
+  }
+
   let packageJson: { name?: string; author?: string; version?: string } = {}
   if (fs.existsSync(packageJsonPath)) {
     try {
@@ -62,19 +74,49 @@ export const pushSnippet = async ({
   }
 
   const ky = getKy()
-  const packageName = (
-    packageJson.name ?? path.parse(snippetFilePath).name
-  ).replace(/^@/, "")
-  const packageAuthor =
-    packageJson.author?.split(" ")[0] ?? cliConfig.get("githubUsername")
-  const packageIdentifier = `${packageAuthor}/${packageName}`
+  const currentUsername = cliConfig.get("githubUsername")
+  let unscopedPackageName = getUnscopedPackageName(packageJson.name ?? "")
+  const packageJsonAuthor = getPackageAuthor(packageJson.name ?? "")
+
+  const packageJsonHasName = Boolean(packageJson.name)
+  if (!packageJsonHasName) {
+    console.log(kleur.gray("No package name found in package.json"))
+    ;({ unscopedPackageName } = await prompts({
+      type: "text",
+      name: "unscopedPackageName",
+      message: `Enter the unscoped package name:`,
+      instructions: `Your package will be published as "@tsci/${currentUsername}.<unscoped package name>"`,
+    }))
+
+    if (!unscopedPackageName) {
+      onError("Package name is required")
+      return onExit(1)
+    }
+
+    if (unscopedPackageName.includes("/")) {
+      onError("Package name cannot contain a '/'")
+      return onExit(1)
+    }
+
+    // Write the package name to the package.json file
+    packageJson.name = `@tsci/${currentUsername}.${unscopedPackageName}`
+    fs.writeFileSync(packageJsonPath, JSON.stringify(packageJson, null, 2))
+  }
+
+  if (currentUsername !== packageJsonAuthor) {
+    console.warn("Package author does not match the logged in GitHub username")
+    // TODO check for org access for user
+  }
+
+  const scopedPackageName = `${currentUsername}/${unscopedPackageName}`
+  const tsciPackageName = `@tsci/${currentUsername}.${unscopedPackageName}`
 
   const previousPackageReleases = await ky
     .post<{
       error?: { error_code: string }
       package_releases?: { version: string; is_latest: boolean }[]
     }>("package_releases/list", {
-      json: { package_name: packageIdentifier },
+      json: { package_name: scopedPackageName },
     })
     .json()
     .then((response) => response.package_releases)
@@ -103,7 +145,7 @@ export const pushSnippet = async ({
 
   const doesPackageExist = await ky
     .post<{ error?: { error_code: string } }>("packages/get", {
-      json: { name: packageIdentifier },
+      json: { name: scopedPackageName },
       headers: { Authorization: `Bearer ${sessionToken}` },
     })
     .json()
@@ -119,17 +161,40 @@ export const pushSnippet = async ({
     })
 
   if (!doesPackageExist) {
+    const { createPackage, visibility } = await prompts([
+      {
+        type: "confirm",
+        name: "createPackage",
+        initial: true,
+        message: `Package "${tsciPackageName}" does not exist. Create it?`,
+      },
+      {
+        name: "visibility",
+        type: "select",
+        message: "Package Visibility:",
+        choices: [
+          { title: "Public", value: "public" },
+          { title: "Private", value: "private" },
+        ],
+      },
+    ])
+    if (!createPackage || !visibility) {
+      onError(`aborted`)
+      return onExit(1)
+    }
+
     await ky
       .post("packages/create", {
         json: {
-          name: packageIdentifier,
-          is_private: isPrivate ?? false,
+          name: scopedPackageName,
+          is_private: visibility === "private",
         },
         headers: { Authorization: `Bearer ${sessionToken}` },
       })
+      .json()
       .then((response) => {
         debug("createPackage", response)
-        onSuccess(`Package ${response.json()} created`)
+        onSuccess(`Package created`)
       })
       .catch((error) => {
         onError(`Error creating package: ${error}`)
@@ -143,7 +208,7 @@ export const pushSnippet = async ({
       package_release?: { version: string }
     }>("package_releases/get", {
       json: {
-        package_name_with_version: `${packageIdentifier}@${packageVersion}`,
+        package_name_with_version: `${scopedPackageName}@${packageVersion}`,
       },
     })
     .json()
@@ -176,7 +241,7 @@ export const pushSnippet = async ({
   await ky
     .post("package_releases/create", {
       json: {
-        package_name_with_version: `${packageIdentifier}@${packageVersion}`,
+        package_name_with_version: `${scopedPackageName}@${packageVersion}`,
       },
     })
     .catch((error) => {
@@ -199,7 +264,7 @@ export const pushSnippet = async ({
         json: {
           file_path: file,
           content_text: fileContent,
-          package_name_with_version: `${packageIdentifier}@${packageVersion}`,
+          package_name_with_version: `${scopedPackageName}@${packageVersion}`,
         },
       })
       .json()
@@ -215,8 +280,8 @@ export const pushSnippet = async ({
 
   onSuccess(
     [
-      `Successfully pushed package ${packageIdentifier}@${packageVersion} to the registry!`,
-      `https://tscircuit.com/${packageIdentifier}`,
+      `Successfully pushed package "${tsciPackageName}@${packageVersion}" !`,
+      `https://tscircuit.com/${scopedPackageName}`,
     ].join(" "),
   )
 }

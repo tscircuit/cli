@@ -13,6 +13,7 @@
     "@types/bun": "^1.2.2",
     "@types/configstore": "^6.0.2",
     "@types/debug": "^4.1.12",
+    "@types/prompts": "^2.4.9",
     "@types/react": "^19.0.8",
     "@types/semver": "^7.5.8",
     "bun-match-svg": "^0.0.9",
@@ -32,6 +33,7 @@
     "ky": "^1.7.4",
     "make-vfs": "^1.0.15",
     "perfect-cli": "^1.0.20",
+    "prompts": "^2.4.2",
     "redaxios": "^0.5.1",
     "semver": "^7.6.3",
     "tempy": "^3.1.0",
@@ -50,6 +52,7 @@
   "scripts": {
     "start": "bun run dev",
     "dev": "bun --hot ./cli/main.ts dev ./example-dir/snippet1-basic.tsx",
+    "setup": "bun run build && npm install -g .",
     "build": "bun run build:bun",
     "build:bun": "bun build ./cli/main.ts --target node  --outfile ./dist/main.js",
     "build:tsup": "tsup --config ./tsup.config.js",
