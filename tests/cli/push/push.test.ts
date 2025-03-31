@@ -1,6 +1,6 @@
 import { getCliTestFixture } from "../../fixtures/get-cli-test-fixture"
 import { test, expect } from "bun:test"
-import { join } from "node:path"
+import path, { dirname, join } from "node:path"
 
 test.skip("push command bundles and uploads to registry", async () => {
   const { tmpDir, runCommand } = await getCliTestFixture()
@@ -129,11 +129,15 @@ test.skip("push command fails on invalid typescript", async () => {
   await expect(runCommand("tsci push")).rejects.toThrow()
 })
 
-test("push command with --private flag creates private package", async () => {
-  const { tmpDir, runCommand, registryDb } = await getCliTestFixture()
+test.only("push command with --private flag creates private package", async () => {
+  const { tmpDir, runCommand, registryDb } = await getCliTestFixture({
+    loggedIn: true,
+  })
 
   // First run init to set up the project properly
   await runCommand("tsci init")
+
+  const packageUnscopedName = path.basename(tmpDir)
 
   // Modify the generated index.tsx with a simple circuit
   await Bun.write(
@@ -153,17 +157,10 @@ test("push command with --private flag creates private package", async () => {
   // Verify the push was successful
   expect(pushStdout).toContain("Successfully pushed package")
 
-  const match = pushStdout.match(/Successfully pushed package ([^@]+)@/)
-  expect(match).not.toBeNull()
-
-  if (match) {
-    const packageIdentifier = match[1]
-
-    // Check the registry database to verify the package was created as private
-    const packageInfo = registryDb.packages.find(
-      (p) => p.name === packageIdentifier,
-    )
-    expect(packageInfo).toBeDefined()
-    expect(packageInfo?.is_private).toBe(true)
-  }
+  // Check the registry database to verify the package was created as private
+  const packageInfo = registryDb.packages.find(
+    (p) => p.name === `test-user/${packageUnscopedName}`,
+  )
+  expect(packageInfo).toBeDefined()
+  expect(packageInfo?.is_private).toBe(true)
 })
