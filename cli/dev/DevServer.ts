@@ -12,6 +12,7 @@ import { FilesystemTypesHandler } from "lib/dependency-analysis/FilesystemTypesH
 import { pushSnippet } from "lib/shared/push-snippet"
 import { globbySync } from "globby"
 import { ExportFormat, exportSnippet } from "lib/shared/export-snippet"
+import { getPackageFilePaths } from "./get-package-file-paths"
 
 export class DevServer {
   port: number
@@ -149,20 +150,13 @@ circuit.add(<MyCircuit />)
   }
 
   async upsertInitialFiles() {
-    // Scan project directory for relevant files and upsert them
-    const fileNames = globbySync("**", {
-      cwd: this.projectDir,
-      ignore: ["**/node_modules/**", "**/.git/**"],
-    })
+    const filePaths = getPackageFilePaths(this.projectDir)
 
-    for (const fileName of fileNames) {
-      const fileContent = fs.readFileSync(
-        path.join(this.projectDir, fileName),
-        "utf-8",
-      )
+    for (const filePath of filePaths) {
+      const fileContent = fs.readFileSync(filePath, "utf-8")
       await this.fsKy.post("api/files/upsert", {
         json: {
-          file_path: fileName,
+          file_path: path.relative(this.projectDir, filePath),
           text_content: fileContent,
           initiator: "filesystem_change",
         },

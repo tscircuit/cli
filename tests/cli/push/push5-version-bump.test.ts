@@ -1,5 +1,5 @@
 import { test, expect } from "bun:test"
-import { getCliTestFixture } from "./fixtures/get-cli-test-fixture"
+import { getCliTestFixture } from "../../fixtures/get-cli-test-fixture"
 import * as fs from "node:fs"
 import * as path from "node:path"
 
@@ -31,9 +31,10 @@ test("should bump version if release already exists", async () => {
     "Package created
 
 
-    Uploaded file package.json to the registry.
-    Uploaded file snippet.tsx to the registry.
-    Successfully pushed package "@tsci/test-user.test-package@1.0.0"! https://tscircuit.com/test-user/test-package
+    ⬆︎ package.json
+    ⬆︎ snippet.tsx
+    "@tsci/test-user.test-package@1.0.0" published!
+    https://tscircuit.com/test-user/test-package
     "
     ,
     }
@@ -53,9 +54,10 @@ test("should bump version if release already exists", async () => {
     "Incrementing Package Version 1.0.0 -> 1.0.1
 
 
-    Uploaded file package.json to the registry.
-    Uploaded file snippet.tsx to the registry.
-    Successfully pushed package "@tsci/test-user.test-package@1.0.1"! https://tscircuit.com/test-user/test-package
+    ⬆︎ package.json
+    ⬆︎ snippet.tsx
+    "@tsci/test-user.test-package@1.0.1" published!
+    https://tscircuit.com/test-user/test-package
     "
     ,
     }

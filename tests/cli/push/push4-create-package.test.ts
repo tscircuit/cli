@@ -1,5 +1,5 @@
 import { test, expect } from "bun:test"
-import { getCliTestFixture } from "./fixtures/get-cli-test-fixture"
+import { getCliTestFixture } from "../../fixtures/get-cli-test-fixture"
 import * as fs from "node:fs"
 import * as path from "node:path"
 
@@ -17,5 +17,5 @@ test("should create package if it does not exist", async () => {
   )
 
   const { stdout } = await runCommand(`tsci push ${snippetFilePath}`)
-  expect(stdout).toContain("Successfully pushed package")
+  expect(stdout).toContain("published!")
 })
