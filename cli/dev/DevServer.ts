@@ -156,7 +156,7 @@ circuit.add(<MyCircuit />)
       const fileContent = fs.readFileSync(filePath, "utf-8")
       await this.fsKy.post("api/files/upsert", {
         json: {
-          file_path: path.relative(this.projectDir, fileName),
+          file_path: path.relative(this.projectDir, filePath),
           text_content: fileContent,
           initiator: "filesystem_change",
         },
