@@ -12,6 +12,7 @@ import { FilesystemTypesHandler } from "lib/dependency-analysis/FilesystemTypesH
 import { pushSnippet } from "lib/shared/push-snippet"
 import { globbySync } from "globby"
 import { ExportFormat, exportSnippet } from "lib/shared/export-snippet"
+import { resolveCircuitName } from "lib/utils/resolveCircuitName"
 
 export class DevServer {
   port: number
@@ -19,7 +20,6 @@ export class DevServer {
    * The path to a component that exports a <board /> or <group /> component
    */
   componentFilePath: string
-
   projectDir: string
 
   /**
@@ -60,7 +60,9 @@ export class DevServer {
   }
 
   async start() {
-    const { server } = await createHttpServer(this.port)
+    const circuitName = resolveCircuitName(this.componentFilePath)
+
+    const { server } = await createHttpServer(this.port, circuitName)
     this.httpServer = server
 
     this.eventsWatcher = new EventsWatcher(`http://localhost:${this.port}`)
