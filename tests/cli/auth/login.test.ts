@@ -9,7 +9,9 @@ const dummyJwtToken =
   "SflKxwRJSMeKKF2QT4fwpMeJf36POk6yJV_adQssw5c"
 
 test("login command: already logged in", async () => {
-  const { runCommand } = await getCliTestFixture()
+  const { runCommand } = await getCliTestFixture({
+    loggedIn: true,
+  })
 
   // Simulate an already logged in state by setting a session token.
   cliConfig.set("sessionToken", dummyJwtToken)

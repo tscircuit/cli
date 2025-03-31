@@ -1,9 +1,14 @@
 import { getCliTestFixture } from "../../fixtures/get-cli-test-fixture"
 import { test, expect } from "bun:test"
 import { cliConfig } from "lib/cli-config"
+import { sign } from "jsonwebtoken"
 
-const demoJwtToken =
-  "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwiaWF0IjoxNTE2MjM5MDIyfQ.SflKxwRJSMeKKF2QT4fwpMeJf36POk6yJV_adQssw5c"
+const demoJwtToken = sign(
+  {
+    github_username: "test_user",
+  },
+  "TEST_SECRET",
+)
 
 test("print and set token explicitly", async () => {
   const { runCommand } = await getCliTestFixture()
@@ -26,8 +31,15 @@ test("print and set token explicitly", async () => {
   // Test setting a valid token
   const { stdout: validTokenSetStdout, stderr: validTokenSetStderr } =
     await runCommand(`tsci auth set-token ${demoJwtToken}`)
-  expect(validTokenSetStdout).toContain("Token manually updated.")
-  expect(validTokenSetStderr).toBeFalsy()
+  expect({ validTokenSetStdout, validTokenSetStderr }).toMatchInlineSnapshot(`
+    {
+      "validTokenSetStderr": "",
+      "validTokenSetStdout": 
+    "Token manually updated.
+    "
+    ,
+    }
+  `)
 
   // Test printing the valid token
   const { stdout: validTokenPrintStdout, stderr: validTokenPrintStderr } =

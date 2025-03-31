@@ -7,6 +7,6 @@ export const registerConfigPrint = (program: Command) => {
     .command("print")
     .description("Print the current config")
     .action(() => {
-      console.log(JSON.stringify(cliConfig.all, null, 2))
+      console.log(JSON.stringify(cliConfig.store, null, 2))
     })
 }
