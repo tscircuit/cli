@@ -6,9 +6,11 @@ import semver from "semver"
 import Debug from "debug"
 import kleur from "kleur"
 import { getEntrypoint } from "./get-entrypoint"
-import prompts from "lib/utils/prompts"
+// import prompts from "lib/utils/prompts"
+import prompts from "prompts"
 import { getUnscopedPackageName } from "lib/utils/get-unscoped-package-name"
 import { getPackageAuthor } from "lib/utils/get-package-author"
+import { getPackageFilePaths } from "cli/dev/get-package-file-paths"
 
 type PushOptions = {
   filePath?: string
@@ -172,19 +174,17 @@ export const pushSnippet = async ({
         name: "visibility",
         type: "select",
         message: "Package Visibility:",
-        initial: isPrivate ? "private" : "public",
         choices: [
-          { title: "Public", value: "public" },
-          { title: "Private", value: "private" },
+          { title: "Public", value: "public", selected: !isPrivate },
+          { title: "Private", value: "private", selected: isPrivate },
         ],
       },
       {
         name: "snippetType",
         type: "select",
         message: "Snippet Type:",
-        initial: "package",
         choices: [
-          { title: "Reusable Package", value: "package" },
+          { title: "Reusable Package", value: "package", selected: true },
           { title: "Board", value: "board" },
         ],
       },
@@ -264,29 +264,27 @@ export const pushSnippet = async ({
 
   onSuccess("\n")
 
-  const directoryFiles = fs.readdirSync(path.dirname(snippetFilePath))
-  for (const file of directoryFiles) {
-    const fileExtension = path.extname(file).replace(".", "")
-    if (!["json", "tsx", "ts"].includes(fileExtension)) continue
-    const fileContent =
-      fs
-        .readFileSync(path.join(path.dirname(snippetFilePath), file))
-        .toString() ?? ""
+  const filePaths = getPackageFilePaths(path.dirname(snippetFilePath))
+  for (const fullFilePath of filePaths) {
+    const relativeFilePath = path.relative(
+      path.dirname(snippetFilePath),
+      fullFilePath,
+    )
+    const fileContent = fs.readFileSync(fullFilePath, "utf-8")
     await ky
       .post("package_files/create", {
         json: {
-          file_path: file,
+          file_path: relativeFilePath,
           content_text: fileContent,
           package_name_with_version: `${scopedPackageName}@${packageVersion}`,
         },
       })
       .json()
       .then((response) => {
-        debug("createPackageFile", response)
-        onSuccess(`Uploaded file ${file} to the registry.`)
+        console.log(kleur.gray(`⬆︎ ${relativeFilePath}`))
       })
       .catch((error) => {
-        onError(`Error uploading file ${file}: ${error}`)
+        onError(`Error uploading file ${fullFilePath}: ${error}`)
         return onExit(1)
       })
   }
@@ -297,6 +295,6 @@ export const pushSnippet = async ({
         `Successfully pushed package "${tsciPackageName}@${packageVersion}"!`,
       ),
       `https://tscircuit.com/${scopedPackageName}`,
-    ].join(" "),
+    ].join("\n"),
   )
 }
