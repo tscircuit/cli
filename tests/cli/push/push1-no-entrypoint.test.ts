@@ -1,5 +1,5 @@
 import { test, expect } from "bun:test"
-import { getCliTestFixture } from "./fixtures/get-cli-test-fixture"
+import { getCliTestFixture } from "../../fixtures/get-cli-test-fixture"
 
 test("should fail if no entrypoint file is found", async () => {
   const { runCommand } = await getCliTestFixture()

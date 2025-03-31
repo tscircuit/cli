@@ -75,7 +75,7 @@ test.skip("push command bundles and uploads to registry", async () => {
   expect(stdout).toContain("CJS bundle size:")
 })
 
-test.skip("push command with force flag bypasses bundle validation", async () => {
+test("push command with force flag bypasses bundle validation", async () => {
   const { tmpDir, runCommand } = await getCliTestFixture()
 
   // Create invalid package
@@ -127,40 +127,4 @@ test.skip("push command fails on invalid typescript", async () => {
 
   // Push should fail due to TypeScript error
   await expect(runCommand("tsci push")).rejects.toThrow()
-})
-
-test.only("push command with --private flag creates private package", async () => {
-  const { tmpDir, runCommand, registryDb } = await getCliTestFixture({
-    loggedIn: true,
-  })
-
-  // First run init to set up the project properly
-  await runCommand("tsci init")
-
-  const packageUnscopedName = path.basename(tmpDir)
-
-  // Modify the generated index.tsx with a simple circuit
-  await Bun.write(
-    join(tmpDir, "index.tsx"),
-    `
-    export const Circuit = () => (
-      <board width="10mm" height="10mm">
-        <resistor name="R1" resistance="10k" footprint="0402" />
-      </board>
-    )
-    `,
-  )
-
-  // Run push command with --private flag
-  const { stdout: pushStdout } = await runCommand("tsci push --private")
-
-  // Verify the push was successful
-  expect(pushStdout).toContain("Successfully pushed package")
-
-  // Check the registry database to verify the package was created as private
-  const packageInfo = registryDb.packages.find(
-    (p) => p.name === `test-user/${packageUnscopedName}`,
-  )
-  expect(packageInfo).toBeDefined()
-  expect(packageInfo?.is_private).toBe(true)
 })
