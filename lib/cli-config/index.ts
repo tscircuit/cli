@@ -1,5 +1,4 @@
 import Conf from "conf"
-import type { TypedConfigstore } from "./TypedConfigStore"
 import { jwtDecode } from "jwt-decode"
 
 export interface CliConfig {
