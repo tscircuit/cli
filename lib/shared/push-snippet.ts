@@ -291,9 +291,7 @@ export const pushSnippet = async ({
 
   onSuccess(
     [
-      kleur.green(
-        `Successfully pushed package "${tsciPackageName}@${packageVersion}"!`,
-      ),
+      kleur.green(`"${tsciPackageName}@${packageVersion}" published!`),
       `https://tscircuit.com/${scopedPackageName}`,
     ].join("\n"),
   )
