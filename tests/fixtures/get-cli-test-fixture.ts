@@ -5,8 +5,10 @@ import { temporaryDirectory } from "tempy"
 import { startServer } from "@tscircuit/fake-snippets/bun-tests/fake-snippets-api/fixtures/start-server"
 import type { DbClient } from "@tscircuit/fake-snippets/fake-snippets-api/lib/db/db-client"
 import { seed as seedDB } from "@tscircuit/fake-snippets/fake-snippets-api/lib/db/seed"
-import { cliConfig } from "lib/cli-config"
+import { getCliConfig } from "lib/cli-config"
 import getPort from "get-port"
+import * as jwt from "jsonwebtoken"
+import * as path from "node:path"
 
 export interface CliTestFixture {
   tmpDir: string
@@ -17,7 +19,11 @@ export interface CliTestFixture {
   registryPort: number
 }
 
-export async function getCliTestFixture(): Promise<CliTestFixture> {
+export async function getCliTestFixture(
+  opts: {
+    loggedIn?: boolean
+  } = {},
+): Promise<CliTestFixture> {
   // Setup temporary directory
   const tmpDir = temporaryDirectory()
 
@@ -25,6 +31,7 @@ export async function getCliTestFixture(): Promise<CliTestFixture> {
   const port = await getPort()
   const testInstanceId = Math.random().toString(36).substring(2, 15)
   const testDbName = `testdb${testInstanceId}`
+  const testConfigDir = path.join(tmpDir, ".config")
 
   const { server, db } = await startServer({
     port,
@@ -36,13 +43,25 @@ export async function getCliTestFixture(): Promise<CliTestFixture> {
   // Seed the database
   seedDB(db)
 
+  const cliConfig = getCliConfig({ configDir: testConfigDir })
+
   // example seed data: the package "testuser/my-test-board"
   // see all the seed data in the fake-snippets-api repo
 
   // Configure CLI to use test server
-  cliConfig.set("sessionToken", db.accounts[0].account_id)
   cliConfig.set("registryApiUrl", apiUrl)
-  cliConfig.set("githubUsername", "test-user")
+
+  if (opts.loggedIn) {
+    const token = jwt.sign(
+      {
+        account_id: db.accounts[0].account_id,
+        github_username: "test-user",
+      },
+      "secret",
+    )
+    cliConfig.set("githubUsername", "test-user")
+    cliConfig.set("sessionToken", token)
+  }
 
   // Create command runner
   const runCommand = async (command: string) => {
@@ -60,7 +79,7 @@ export async function getCliTestFixture(): Promise<CliTestFixture> {
       TSCI_TEST_MODE: "true",
       FORCE_COLOR: "0",
       NODE_ENV: "test",
-      TSCIRCUIT_CONFIG_DIR: `${tmpDir}/.config`,
+      TSCIRCUIT_CONFIG_DIR: testConfigDir,
     }
 
     const task = Bun.spawn(["bun", ...args], {

@@ -172,7 +172,7 @@ export const pushSnippet = async ({
         name: "visibility",
         type: "select",
         message: "Package Visibility:",
-        initial: "public",
+        initial: isPrivate ? "private" : "public",
         choices: [
           { title: "Public", value: "public" },
           { title: "Private", value: "private" },
@@ -293,7 +293,9 @@ export const pushSnippet = async ({
 
   onSuccess(
     [
-      `Successfully pushed package "${tsciPackageName}@${packageVersion}" !`,
+      kleur.green(
+        `Successfully pushed package "${tsciPackageName}@${packageVersion}"!`,
+      ),
       `https://tscircuit.com/${scopedPackageName}`,
     ].join(" "),
   )

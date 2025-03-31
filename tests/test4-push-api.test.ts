@@ -19,14 +19,26 @@ test("should fail if no entrypoint file is found", async () => {
 })
 
 test("should use default entrypoint if no file is provided", async () => {
-  const { tmpDir, runCommand } = await getCliTestFixture()
+  const { tmpDir, runCommand } = await getCliTestFixture({
+    loggedIn: true,
+  })
 
   const defaultEntrypoint = path.resolve(tmpDir, "index.tsx")
   fs.writeFileSync(defaultEntrypoint, "// Default entrypoint!")
-  const { stdout } = await runCommand(`tsci push`)
-  expect(stdout).toContain(
-    "Detected entrypoint: 'index.tsx'\nUpdated tscircuit.config.json with detected entrypoint",
-  )
+  const { stdout, stderr } = await runCommand(`tsci push`)
+  expect({ stdout, stderr }).toMatchInlineSnapshot(`
+    {
+      "stderr": 
+    "No package.json found, try running 'tsci init' to bootstrap the project
+    "
+    ,
+      "stdout": 
+    "Detected entrypoint: 'index.tsx'
+    Updated tscircuit.config.json with detected entrypoint
+    "
+    ,
+    }
+  `)
 })
 
 test.skip("should fail if package.json is missing or invalid", async () => {
@@ -45,7 +57,9 @@ test.skip("should fail if package.json is missing or invalid", async () => {
 })
 
 test("should create package if it does not exist", async () => {
-  const { tmpDir, runCommand } = await getCliTestFixture()
+  const { tmpDir, runCommand } = await getCliTestFixture({
+    loggedIn: true,
+  })
 
   const snippetFilePath = path.resolve(tmpDir, "snippet.tsx")
 
@@ -60,7 +74,9 @@ test("should create package if it does not exist", async () => {
 })
 
 test("should bump version if release already exists", async () => {
-  const { tmpDir, runCommand } = await getCliTestFixture()
+  const { tmpDir, runCommand } = await getCliTestFixture({
+    loggedIn: true,
+  })
 
   const snippetFilePath = path.resolve(tmpDir, "snippet.tsx")
   const packageJsonPath = path.resolve(tmpDir, "package.json")
@@ -71,19 +87,55 @@ test("should bump version if release already exists", async () => {
     JSON.stringify({ name: "test-package", version: "1.0.0" }),
   )
 
-  const { stdout } = await runCommand(`tsci push ${snippetFilePath}`)
+  const { stdout: stdout1, stderr: stderr1 } = await runCommand(
+    `tsci push ${snippetFilePath}`,
+  )
 
-  expect(stdout).toContain("Successfully pushed package")
+  expect({ stdout: stdout1, stderr: stderr1 }).toMatchInlineSnapshot(`
+    {
+      "stderr": 
+    "Package author does not match the logged in GitHub username
+    "
+    ,
+      "stdout": 
+    "Package created
 
-  const { stdout: stdout2 } = await runCommand(`tsci push ${snippetFilePath}`)
 
-  // Update expectation to match actual output
-  expect(stdout2).toContain("Incrementing Package Version")
-  expect(stdout2).toContain("1.0.1")
+    Uploaded file package.json to the registry.
+    Uploaded file snippet.tsx to the registry.
+    Successfully pushed package "@tsci/test-user.test-package@1.0.0"! https://tscircuit.com/test-user/test-package
+    "
+    ,
+    }
+  `)
+
+  const { stdout: stdout2, stderr: stderr2 } = await runCommand(
+    `tsci push ${snippetFilePath}`,
+  )
+
+  expect({ stdout: stdout2, stderr: stderr2 }).toMatchInlineSnapshot(`
+    {
+      "stderr": 
+    "Package author does not match the logged in GitHub username
+    "
+    ,
+      "stdout": 
+    "Incrementing Package Version 1.0.0 -> 1.0.1
+
+
+    Uploaded file package.json to the registry.
+    Uploaded file snippet.tsx to the registry.
+    Successfully pushed package "@tsci/test-user.test-package@1.0.1"! https://tscircuit.com/test-user/test-package
+    "
+    ,
+    }
+  `)
 })
 
 test("should upload files to the registry", async () => {
-  const { tmpDir, runCommand } = await getCliTestFixture()
+  const { tmpDir, runCommand } = await getCliTestFixture({
+    loggedIn: true,
+  })
   const snippetFilePath = path.resolve(tmpDir, "snippet.tsx")
 
   fs.writeFileSync(snippetFilePath, "// Snippet content")
@@ -105,7 +157,7 @@ test("should upload files to the registry", async () => {
 
     Uploaded file package.json to the registry.
     Uploaded file snippet.tsx to the registry.
-    Successfully pushed package "@tsci/test-user.test-package@1.0.0" ! https://tscircuit.com/test-user/test-package
+    Successfully pushed package "@tsci/test-user.test-package@1.0.0"! https://tscircuit.com/test-user/test-package
     "
     ,
     }
