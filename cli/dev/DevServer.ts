@@ -61,7 +61,7 @@ export class DevServer {
   }
 
   async start() {
-    const { server } = await createHttpServer(this.port)
+    const { server } = await createHttpServer(this.port, this.componentFilePath)
     this.httpServer = server
 
     this.eventsWatcher = new EventsWatcher(`http://localhost:${this.port}`)
