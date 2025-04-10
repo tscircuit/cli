@@ -72,7 +72,6 @@ export const registerDev = (program: Command) => {
       })
 
       await server.start()
-      await server.addEntrypoint()
 
       const timeToStart = Date.now() - startTime
 
