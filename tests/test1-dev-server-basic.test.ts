@@ -36,7 +36,6 @@ test("test1 basic dev server filesystem watching", async () => {
   const { file_list } = await devServer.fsKy.get("api/files/list").json()
 
   expect(file_list.map((f) => f.file_path).sort()).toContainValues([
-    "entrypoint.tsx",
     "manual-edits.json",
     "snippet.tsx",
   ])

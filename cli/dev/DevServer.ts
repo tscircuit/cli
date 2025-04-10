@@ -90,7 +90,7 @@ export class DevServer {
       this.handleFileChangedOnFilesystem(filePath),
     )
 
-    this.upsertInitialFiles()
+    await this.upsertInitialFiles()
 
     this.typesHandler?.handleInitialTypeDependencies(this.componentFilePath)
   }
