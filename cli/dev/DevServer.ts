@@ -95,23 +95,6 @@ export class DevServer {
     this.typesHandler?.handleInitialTypeDependencies(this.componentFilePath)
   }
 
-  async addEntrypoint() {
-    const relativeComponentFilePath = path.relative(
-      this.projectDir,
-      this.componentFilePath,
-    )
-    await this.fsKy.post("api/files/upsert", {
-      json: {
-        file_path: "entrypoint.tsx",
-        text_content: `
-import MyCircuit from "./${relativeComponentFilePath}"
-
-circuit.add(<MyCircuit />)
-`,
-      },
-    })
-  }
-
   async handleFileUpdatedEventFromServer(ev: FileUpdatedEvent) {
     if (ev.initiator === "filesystem_change") return
 

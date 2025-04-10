@@ -31,7 +31,6 @@ test("test1 basic dev server filesystem watching", async () => {
   })
 
   await devServer.start()
-  await devServer.addEntrypoint()
 
   // Test the file list
   const { file_list } = await devServer.fsKy.get("api/files/list").json()
