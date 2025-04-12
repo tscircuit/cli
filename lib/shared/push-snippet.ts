@@ -263,7 +263,7 @@ export const pushSnippet = async ({
 
   onSuccess("\n")
 
-  const filePaths = getPackageFilePaths(path.dirname(snippetFilePath))
+  const filePaths = getPackageFilePaths(path.dirname(packageJsonPath))
   for (const fullFilePath of filePaths) {
     const relativeFilePath = path.relative(
       path.dirname(snippetFilePath),
