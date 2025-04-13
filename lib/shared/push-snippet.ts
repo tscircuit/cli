@@ -1,5 +1,5 @@
 import { cliConfig } from "lib/cli-config"
-import { getKy } from "lib/registry-api/get-ky"
+import { getRegistryApiKy } from "lib/registry-api/get-ky"
 import * as fs from "node:fs"
 import * as path from "node:path"
 import semver from "semver"
@@ -74,7 +74,7 @@ export const pushSnippet = async ({
     return onExit(1)
   }
 
-  const ky = getKy()
+  const ky = getRegistryApiKy({ sessionToken })
   const currentUsername = cliConfig.get("githubUsername")
   let unscopedPackageName = getUnscopedPackageName(packageJson.name ?? "")
   const packageJsonAuthor = getPackageAuthor(packageJson.name ?? "")
@@ -147,7 +147,6 @@ export const pushSnippet = async ({
   const doesPackageExist = await ky
     .post<{ error?: { error_code: string } }>("packages/get", {
       json: { name: scopedPackageName },
-      headers: { Authorization: `Bearer ${sessionToken}` },
     })
     .json()
     .then((response) => {

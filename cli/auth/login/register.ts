@@ -1,7 +1,7 @@
 import type { Command } from "commander"
 import { setSessionToken, getSessionToken } from "lib/cli-config"
 import delay from "delay"
-import { getKy } from "lib/registry-api/get-ky"
+import { getRegistryApiKy } from "lib/registry-api/get-ky"
 import type { EndpointResponse } from "lib/registry-api/endpoint-types"
 
 export const registerAuthLogin = (program: Command) => {
@@ -15,7 +15,7 @@ export const registerAuthLogin = (program: Command) => {
       return
     }
 
-    const ky = getKy()
+    const ky = getRegistryApiKy()
 
     const { login_page } = await ky
       .post<EndpointResponse["sessions/login_page/create"]>(
