@@ -8,7 +8,7 @@ export const getGlobalDepsInstallCommand = (
     case "pnpm":
       return `pnpm add -g ${deps}`
     case "bun":
-      return `bun add -g ${deps}`
+      return `bun install -g ${deps}`
     default:
       return `npm install -g ${deps}`
   }
