@@ -11,8 +11,6 @@ export const registerAdd = (program: Command) => {
     .description("Add a component from tscircuit.com")
     .argument("<component>", "Component to add (e.g. author/component-name)")
     .action(async (componentPath: string) => {
-      await checkForTsciUpdates()
-
       let packageName: string
 
       // Handle different input formats
