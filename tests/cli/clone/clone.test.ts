@@ -42,7 +42,7 @@ test("clone command rejects invalid URL formats", async () => {
 
   const testCases = [
     "https://google.com/user/board",
-    "https://tscircuit.com/", 
+    "https://tscircuit.com/",
     "https://tscircuit.com/user",
     "https://tscircuit.com/user/",
     "http://tscircuit.com/user/board",
@@ -59,19 +59,17 @@ test("clone command accepts all valid formats", async () => {
 
   const testCases = [
     "testuser/my-test-board",
-    "testuser.my-test-board", 
+    "testuser.my-test-board",
     "@tsci/testuser.my-test-board",
-    "https://tscircuit.com/testuser/my-test-board"
+    "https://tscircuit.com/testuser/my-test-board",
   ]
 
   for (const format of testCases) {
     const { stdout } = await runCommand(`tsci clone ${format}`)
     const projectDir = join(tmpDir, "testuser.my-test-board")
     const dirFiles = readdirSync(projectDir)
-    
-    expect(dirFiles).toContainValues([
-      "package.json"
-    ])
+
+    expect(dirFiles).toContainValues(["package.json"])
     expect(stdout).toContain("Successfully cloned")
   }
 }, 20_000)
