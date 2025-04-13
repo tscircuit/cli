@@ -9,16 +9,26 @@ export const registerClone = (program: Command) => {
   program
     .command("clone")
     .description("Clone a snippet from the registry")
-    .argument("<snippet>", "Snippet to clone (e.g. author/snippetName)")
+    .argument("<snippet>", "Snippet to clone (e.g. author/snippetName or https://tscircuit.com/author/snippetName)")
     .action(async (snippetPath: string) => {
-      const match = snippetPath.match(/^(?:@tsci\/)?([^/.]+)[/.](.+)$/)
-      if (!match) {
+      // First try to match URL format (strict tscircuit.com only)
+      const urlMatch = snippetPath.match(/^https:\/\/tscircuit\.com\/([^\/]+)\/([^\/]+)\/?$/i)
+      // Then try the original format
+      const originalMatch = !urlMatch && snippetPath.match(/^(?:@tsci\/)?([^/.]+)[/.]([^/.]+)$/)
+      
+      if (!urlMatch && !originalMatch) {
         console.error(
-          "Invalid snippet path. Use format: author/snippetName, author.snippetName, or @tsci/author.snippetName",
+          `Invalid snippet path "${snippetPath}". Accepted formats:
+  - author/snippetName
+  - author.snippetName 
+  - @tsci/author.snippetName
+  - https://tscircuit.com/author/snippetName`
         )
         process.exit(1)
       }
 
+      const match = urlMatch || originalMatch
+      if (!match) throw new Error("No valid match found") // Should never happen due to earlier check
       const [, author, snippetName] = match
       console.log(`Cloning ${author}/${snippetName}...`)
 
