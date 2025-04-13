@@ -8,6 +8,8 @@ import { writeFileIfNotExists } from "lib/shared/write-file-if-not-exists"
 import { generateGitIgnoreFile } from "lib/shared/generate-gitignore-file"
 import { generatePackageJson } from "lib/shared/generate-package-json"
 import { checkForTsciUpdates } from "lib/shared/check-for-cli-update"
+import prompts from "lib/utils/prompts"
+import * as os from "node:os"
 
 export const registerInit = (program: Command) => {
   program
@@ -25,6 +27,24 @@ export const registerInit = (program: Command) => {
       const projectDir = directory
         ? path.resolve(process.cwd(), directory)
         : process.cwd()
+
+      // Check if project is being initialized in home directory
+      const homeDir = os.homedir()
+      if (projectDir === homeDir) {
+        console.warn(
+          "⚠️  Warning: You are initializing a project in your home directory. This is not recommended as it may cause conflicts with other files. Consider creating a dedicated project directory instead.",
+        )
+        const { continueAnyway } = await prompts({
+          type: "confirm",
+          name: "continueAnyway",
+          initial: false,
+          message: "Do you want to continue anyway?",
+        })
+        if (!continueAnyway) {
+          console.log("Initialization cancelled.")
+          process.exit(0)
+        }
+      }
 
       // Ensure the directory exists
       fs.mkdirSync(projectDir, { recursive: true })
