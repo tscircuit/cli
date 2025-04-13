@@ -20,9 +20,16 @@ export const prettyResponseErrorHook: AfterResponseHook = async (
   }
 }
 
-export const getKy = () => {
+export const getRegistryApiKy = ({
+  sessionToken,
+}: {
+  sessionToken?: string
+} = {}) => {
   return ky.create({
     prefixUrl: getRegistryApiUrl(),
+    headers: {
+      ...(sessionToken ? { Authorization: `Bearer ${sessionToken}` } : {}),
+    },
     hooks: {
       afterResponse: [prettyResponseErrorHook],
     },

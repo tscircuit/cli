@@ -1,5 +1,5 @@
 import type { Command } from "commander"
-import { getKy } from "lib/registry-api/get-ky"
+import { getRegistryApiKy } from "lib/registry-api/get-ky"
 import * as fs from "node:fs"
 import * as path from "node:path"
 import { setupTsciProject } from "lib/shared/setup-tsci-packages"
@@ -22,7 +22,7 @@ export const registerClone = (program: Command) => {
       const [, author, snippetName] = match
       console.log(`Cloning ${author}/${snippetName}...`)
 
-      const ky = getKy()
+      const ky = getRegistryApiKy()
       let packageFileList
       try {
         packageFileList = await ky
