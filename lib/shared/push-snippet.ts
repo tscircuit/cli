@@ -51,6 +51,9 @@ export const pushSnippet = async ({
     path.resolve(path.join(path.dirname(snippetFilePath), "package.json")),
     path.resolve(path.join(process.cwd(), "package.json")),
   ].find((path) => fs.existsSync(path))
+  const projectDir = packageJsonPath
+    ? path.dirname(packageJsonPath)
+    : path.dirname(snippetFilePath)
 
   if (!packageJsonPath) {
     onError(
@@ -64,7 +67,7 @@ export const pushSnippet = async ({
     try {
       packageJson = JSON.parse(fs.readFileSync(packageJsonPath).toString())
     } catch {
-      onError("Invalid package.json provided")
+      onError("Invalid package.json")
       return onExit(1)
     }
   }
@@ -262,12 +265,9 @@ export const pushSnippet = async ({
 
   onSuccess("\n")
 
-  const filePaths = getPackageFilePaths(path.dirname(packageJsonPath))
+  const filePaths = getPackageFilePaths(projectDir)
   for (const fullFilePath of filePaths) {
-    const relativeFilePath = path.relative(
-      path.dirname(snippetFilePath),
-      fullFilePath,
-    )
+    const relativeFilePath = path.relative(projectDir, fullFilePath)
     const fileContent = fs.readFileSync(fullFilePath, "utf-8")
     await ky
       .post("package_files/create", {
