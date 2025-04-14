@@ -40,7 +40,6 @@
     "redaxios": "^0.5.1",
     "semver": "^7.6.3",
     "tempy": "^3.1.0",
-    "tsup": "^8.3.5",
     "typed-ky": "^0.0.4"
   },
   "peerDependencies": {
@@ -58,7 +57,6 @@
     "setup": "bun run build && npm install -g .",
     "build": "bun run build:bun",
     "build:bun": "bun build ./cli/main.ts --target node  --outfile ./dist/main.js",
-    "build:tsup": "tsup --config ./tsup.config.js",
     "format": "biome format --write .",
     "format:check": "biome format .",
     "cli": "bun ./cli/main.ts",
