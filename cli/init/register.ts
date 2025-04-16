@@ -29,7 +29,7 @@ export const registerInit = (program: Command) => {
           "Do you want to initialize a new project in the current directory?",
         )
         if (!continueInCurrentDirectory) {
-          process.exit(0)
+          return
         }
       }
 
