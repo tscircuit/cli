@@ -98,13 +98,13 @@ export const registerClone = (program: Command) => {
 
       console.log(`Successfully cloned to ${dirPath}/`)
       // Get the relative directory name from the full path
-      const relativeDirName = path.relative(dirPath, process.cwd());
+      const relativeDirName = path.relative(dirPath, process.cwd())
 
       console.log(`
         \x1b[35mTo start developing, run:\x1b[0m
     
         \x1b[28mcd ${relativeDirName}\x1b[0m
         \x1b[36mtsci dev\x1b[0m
-        `);
+        `)
     })
 }
