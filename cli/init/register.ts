@@ -1,5 +1,4 @@
 import type { Command } from "commander"
-import { execSync } from "node:child_process"
 import * as fs from "node:fs"
 import * as path from "node:path"
 import { setupTsciProject } from "lib/shared/setup-tsci-packages"
@@ -7,7 +6,10 @@ import { generateTsConfig } from "lib/shared/generate-ts-config"
 import { writeFileIfNotExists } from "lib/shared/write-file-if-not-exists"
 import { generateGitIgnoreFile } from "lib/shared/generate-gitignore-file"
 import { generatePackageJson } from "lib/shared/generate-package-json"
-import { checkForTsciUpdates } from "lib/shared/check-for-cli-update"
+import {
+  askConfirmation,
+  checkForTsciUpdates,
+} from "lib/shared/check-for-cli-update"
 
 export const registerInit = (program: Command) => {
   program
@@ -21,6 +23,15 @@ export const registerInit = (program: Command) => {
     )
     .action(async (directory?: string) => {
       await checkForTsciUpdates()
+
+      if (!directory) {
+        const continueInCurrentDirectory = await askConfirmation(
+          "Do you want to initialize a new project in the current directory?",
+        )
+        if (!continueInCurrentDirectory) {
+          process.exit(0)
+        }
+      }
 
       const projectDir = directory
         ? path.resolve(process.cwd(), directory)
