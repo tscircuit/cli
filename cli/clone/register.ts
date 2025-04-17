@@ -4,6 +4,7 @@ import * as fs from "node:fs"
 import * as path from "node:path"
 import { setupTsciProject } from "lib/shared/setup-tsci-packages"
 import { generateTsConfig } from "lib/shared/generate-ts-config"
+import kleur from "kleur"
 
 export const registerClone = (program: Command) => {
   program
@@ -21,6 +22,7 @@ export const registerClone = (program: Command) => {
       // Then try the original format
       const originalMatch =
         !urlMatch && snippetPath.match(/^(?:@tsci\/)?([^/.]+)[/.]([^/.]+)$/)
+      const originalCwd = process.cwd()
 
       if (!urlMatch && !originalMatch) {
         console.error(
@@ -96,9 +98,12 @@ export const registerClone = (program: Command) => {
       generateTsConfig(dirPath)
       setupTsciProject(dirPath)
 
-      console.log(`Successfully cloned to ${dirPath}/`)
-      console.log(
-        `Run "cd ${path.dirname(dirPath)} && tsci dev" to start developing.`,
-      )
+      const relativeDirPath = path.relative(originalCwd, dirPath)
+
+      console.log(kleur.green("\nSuccessfully cloned to:"))
+      console.log(`  ${dirPath}/\n`)
+      console.log(kleur.bold("Start developing:"))
+      console.log(kleur.cyan(`  cd ${relativeDirPath}`))
+      console.log(kleur.cyan("  tsci dev\n"))
     })
 }
