@@ -21,6 +21,14 @@ tsci add author/component-name
 
 ## Installation
 
+### Using Bun
+
+```bash
+bun install -g @tscircuit/cli
+```
+
+### Using npm
+
 ```bash
 npm install -g @tscircuit/cli
 ```
