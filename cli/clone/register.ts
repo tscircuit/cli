@@ -97,14 +97,18 @@ export const registerClone = (program: Command) => {
       setupTsciProject(dirPath)
 
       console.log(`Successfully cloned to ${dirPath}/`)
-      // Get the relative directory name from the full path
-      const relativeDirName = path.relative(dirPath, process.cwd())
+
+      // Calculate relative path from current directory to snippet directory
+      const snippetDir = path.join(`${author}.${snippetName}`)
+      const relativeDirName = path
+        .relative(process.cwd(), snippetDir)
+        .replace(/\\/g, "/")
 
       console.log(`
-        \x1b[35mTo start developing, run:\x1b[0m
-    
-        \x1b[28mcd ${relativeDirName}\x1b[0m
-        \x1b[36mtsci dev\x1b[0m
-        `)
+          \x1b[35mTo start developing, run:\x1b[0m
+
+          \x1b[34mcd ${relativeDirName}\x1b[0m
+          \x1b[36mtsci dev\x1b[0m
+          `)
     })
 }
