@@ -21,6 +21,7 @@ export const registerClone = (program: Command) => {
       // Then try the original format
       const originalMatch =
         !urlMatch && snippetPath.match(/^(?:@tsci\/)?([^/.]+)[/.]([^/.]+)$/)
+      const originalCwd = process.cwd()
 
       if (!urlMatch && !originalMatch) {
         console.error(
@@ -96,9 +97,12 @@ export const registerClone = (program: Command) => {
       generateTsConfig(dirPath)
       setupTsciProject(dirPath)
 
-      console.log(`Successfully cloned to ${dirPath}/`)
-      console.log(
-        `Run "cd ${path.dirname(dirPath)} && tsci dev" to start developing.`,
-      )
+      const relativeDirPath = path.relative(originalCwd, dirPath)
+
+      console.log("\n\x1b[32mSuccessfully cloned to:\x1b[0m")
+      console.log(`  ${dirPath}/`)
+      console.log("\n\x1b[1mNext steps:\x1b[0m")
+      console.log(`  \x1b[36mcd ${relativeDirPath}\x1b[0m`)
+      console.log("  \x1b[36mtsci dev\x1b[0m\n")
     })
 }
