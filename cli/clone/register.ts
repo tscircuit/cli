@@ -4,6 +4,7 @@ import * as fs from "node:fs"
 import * as path from "node:path"
 import { setupTsciProject } from "lib/shared/setup-tsci-packages"
 import { generateTsConfig } from "lib/shared/generate-ts-config"
+import kleur from "kleur"
 
 export const registerClone = (program: Command) => {
   program
@@ -99,10 +100,10 @@ export const registerClone = (program: Command) => {
 
       const relativeDirPath = path.relative(originalCwd, dirPath)
 
-      console.log("\n\x1b[32mSuccessfully cloned to:\x1b[0m")
-      console.log(`  ${dirPath}/`)
-      console.log("\n\x1b[1mNext steps:\x1b[0m")
-      console.log(`  \x1b[36mcd ${relativeDirPath}\x1b[0m`)
-      console.log("  \x1b[36mtsci dev\x1b[0m\n")
+      console.log(kleur.green("\nSuccessfully cloned to:"))
+      console.log(`  ${dirPath}/\n`)
+      console.log(kleur.bold("Start developing:"))
+      console.log(kleur.cyan(`  cd ${relativeDirPath}`))
+      console.log(kleur.cyan("  tsci dev\n"))
     })
 }
