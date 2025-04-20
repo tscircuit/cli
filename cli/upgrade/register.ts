@@ -1,6 +1,5 @@
 import type { Command } from "commander"
 import chalk from "chalk"
-import ora from "ora"
 import { checkForTsciUpdates } from "lib/shared/check-for-cli-update"
 
 export function registerUpgradeCommand(program: Command) {
@@ -13,7 +12,6 @@ export function registerUpgradeCommand(program: Command) {
         console.log(
           chalk.green("You are already using the latest version of tsci."),
         )
-        return
       }
     })
 }
