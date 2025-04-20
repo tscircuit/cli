@@ -8,7 +8,7 @@ import semver from "semver"
 import { version as pkgVersion } from "../../package.json"
 
 export const checkForTsciUpdates = async () => {
-  if (process.env.TSCI_SKIP_CLI_UPDATE == "true") return
+  if (process.env.TSCI_SKIP_CLI_UPDATE === "true") return
   const currentCliVersion =
     program.version() ?? semver.inc(pkgVersion, "patch") ?? pkgVersion
   const { version: latestCliVersion } = await ky
@@ -37,6 +37,8 @@ export const checkForTsciUpdates = async () => {
         console.warn(`  ${installCommand}`)
       }
     }
+  } else {
+    return false
   }
 }
 
