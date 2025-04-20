@@ -183,7 +183,7 @@ export const pushSnippet = async ({
       {
         name: "snippetType",
         type: "select",
-        message: "Snippet Type:",
+        message: "Package Type:",
         choices: [
           { title: "Reusable Package", value: "package", selected: true },
           { title: "Board", value: "board" },
