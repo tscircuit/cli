@@ -15,6 +15,7 @@ import { registerAuthPrintToken } from "./auth/print-token/register"
 import { registerAuthSetToken } from "./auth/set-token/register"
 import { registerPush } from "./push/register"
 import { registerAdd } from "./add/register"
+import { registerUpgradeCommand } from "./upgrade/register"
 
 export const program = new Command()
 
@@ -40,6 +41,8 @@ registerConfigPrint(program)
 
 registerExport(program)
 registerAdd(program)
+
+registerUpgradeCommand(program)
 
 if (process.argv.length === 2) {
   perfectCli(program, process.argv)
