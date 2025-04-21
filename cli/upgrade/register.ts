@@ -1,5 +1,5 @@
 import type { Command } from "commander"
-import chalk from "chalk"
+import kleur from "kleur"
 import { checkForTsciUpdates } from "lib/shared/check-for-cli-update"
 
 export function registerUpgradeCommand(program: Command) {
@@ -10,7 +10,7 @@ export function registerUpgradeCommand(program: Command) {
       const isUpdated = await checkForTsciUpdates()
       if (!isUpdated) {
         console.log(
-          chalk.green("You are already using the latest version of tsci."),
+          kleur.green("You are already using the latest version of tsci."),
         )
       }
     })
