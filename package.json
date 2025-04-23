@@ -43,7 +43,7 @@
     "typed-ky": "^0.0.4"
   },
   "peerDependencies": {
-    "typescript": "^5.0.0"
+    "typescript": "^5.8.3"
   },
   "bin": {
     "tsci": "./dist/main.js"
