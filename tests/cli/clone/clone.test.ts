@@ -1,6 +1,6 @@
 import { expect, test } from "bun:test"
 import { join } from "node:path"
-import { readdirSync } from "node:fs"
+import { readdirSync, existsSync } from "node:fs"
 import { getCliTestFixture } from "../../fixtures/get-cli-test-fixture"
 
 test("clone command fetches and creates package files correctly", async () => {
@@ -73,3 +73,18 @@ test("clone command accepts all valid formats", async () => {
     expect(stdout).toContain("Successfully cloned")
   }
 }, 20_000)
+
+test("clone command with --include-author flag creates correct directory", async () => {
+  const { tmpDir, runCommand } = await getCliTestFixture()
+  const { stdout } = await runCommand(
+    "tsci clone --include-author testuser/my-test-board",
+  )
+
+  const projectDir = join(tmpDir, "testuser.my-test-board")
+  const dirExists = existsSync(projectDir)
+  const dirFiles = readdirSync(projectDir)
+
+  expect(dirExists).toBe(true)
+  expect(stdout).toContain("Successfully cloned")
+  expect(dirFiles).toContainValues(["package.json"]) // Basic check
+}, 10_000)
