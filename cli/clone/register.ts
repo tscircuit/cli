@@ -58,7 +58,7 @@ export const registerClone = (program: Command) => {
         process.exit(1)
       }
 
-      const dirPath = path.resolve(`${author}.${snippetName}`)
+      const dirPath = path.resolve(`${snippetName}`)
       fs.mkdirSync(dirPath, { recursive: true })
 
       for (const fileInfo of packageFileList.package_files) {

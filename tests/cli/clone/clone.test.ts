@@ -7,7 +7,7 @@ test("clone command fetches and creates package files correctly", async () => {
   const { tmpDir, runCommand } = await getCliTestFixture()
   const { stdout } = await runCommand("tsci clone testuser/my-test-board")
 
-  const projectDir = join(tmpDir, "testuser.my-test-board")
+  const projectDir = join(tmpDir, "my-test-board")
   const dirFiles = readdirSync(projectDir)
 
   expect(dirFiles).toContainValues([
@@ -66,7 +66,7 @@ test("clone command accepts all valid formats", async () => {
 
   for (const format of testCases) {
     const { stdout } = await runCommand(`tsci clone ${format}`)
-    const projectDir = join(tmpDir, "testuser.my-test-board")
+    const projectDir = join(tmpDir, "my-test-board")
     const dirFiles = readdirSync(projectDir)
 
     expect(dirFiles).toContainValues(["package.json"])
