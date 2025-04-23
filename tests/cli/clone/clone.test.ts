@@ -88,3 +88,16 @@ test("clone command with --include-author flag creates correct directory", async
   expect(stdout).toContain("Successfully cloned")
   expect(dirFiles).toContainValues(["package.json"]) // Basic check
 }, 10_000)
+
+test("clone command with -a flag creates correct directory", async () => {
+  const { tmpDir, runCommand } = await getCliTestFixture()
+  const { stdout } = await runCommand("tsci clone -a testuser/my-test-board")
+
+  const projectDir = join(tmpDir, "testuser.my-test-board")
+  const dirExists = existsSync(projectDir)
+  const dirFiles = readdirSync(projectDir)
+
+  expect(dirExists).toBe(true)
+  expect(stdout).toContain("Successfully cloned")
+  expect(dirFiles).toContainValues(["package.json"]) // Basic check
+}, 10_000)

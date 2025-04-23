@@ -14,10 +14,7 @@ export const registerClone = (program: Command) => {
       "<snippet>",
       "Snippet to clone (e.g. author/snippetName or https://tscircuit.com/author/snippetName)",
     )
-    .option(
-      "-ia, --include-author",
-      "Include author name in the directory path",
-    )
+    .option("-a, --include-author", "Include author name in the directory path")
     .action(
       async (snippetPath: string, options: { includeAuthor?: boolean }) => {
         // First try to match URL format (strict tscircuit.com only)
