@@ -34,7 +34,7 @@ test("clone command handles API errors gracefully", async () => {
   const { runCommand } = await getCliTestFixture()
 
   const { stderr } = await runCommand("tsci clone author/non-exisent-snippet")
-  expect(stderr).toContain("Failed to fetch package files")
+  expect(stderr).toContain("not found")
 })
 
 test("clone command rejects invalid URL formats", async () => {

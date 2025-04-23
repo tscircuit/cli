@@ -5,6 +5,7 @@ import * as path from "node:path"
 import { setupTsciProject } from "lib/shared/setup-tsci-packages"
 import { generateTsConfig } from "lib/shared/generate-ts-config"
 import kleur from "kleur"
+import { cliConfig } from "lib/cli-config"
 
 export const registerClone = (program: Command) => {
   program
@@ -55,14 +56,27 @@ export const registerClone = (program: Command) => {
             )
             .json()
         } catch (error) {
+          if (
+            typeof error === "object" &&
+            error !== null &&
+            "response" in error &&
+            typeof (error as any).response === "object" &&
+            (error as any).response?.status === 404
+          ) {
+            console.error(
+              `Snippet "${author}/${snippetName}" not found. Please check the name and try again.`,
+            )
+            process.exit(1)
+          }
           console.error(
             "Failed to fetch package files:",
             error instanceof Error ? error.message : error,
           )
           process.exit(1)
         }
-
-        const dirPath = options.includeAuthor
+        const userSettingToIncludeAuthor =
+          options.includeAuthor || cliConfig.get("alwaysCloneWithAuthorName")
+        const dirPath = userSettingToIncludeAuthor
           ? path.resolve(`${author}.${snippetName}`)
           : path.resolve(snippetName)
         fs.mkdirSync(dirPath, { recursive: true })
