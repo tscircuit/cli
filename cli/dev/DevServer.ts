@@ -13,8 +13,7 @@ import { pushSnippet } from "lib/shared/push-snippet"
 import { globbySync } from "globby"
 import { ExportFormat, exportSnippet } from "lib/shared/export-snippet"
 import { getPackageFilePaths } from "./get-package-file-paths"
-import { detectPackageManager } from "lib/shared/detect-pkg-manager"
-import { execSync } from "node:child_process"
+import { installComponentPackage } from "lib/shared/install-component-package" // Updated import path
 
 export class DevServer {
   port: number
@@ -192,16 +191,17 @@ export class DevServer {
     }
 
     try {
-      console.log(`Installing package ${full_package_name}…`)
-      const cmd = `tsci add ${full_package_name}`
+      console.log(`Installing package ${full_package_name} via DevServer...`)
+      await installComponentPackage(full_package_name, this.projectDir)
 
-      // Synchronously run the install
-      execSync(cmd, { stdio: "pipe" })
+      console.log(
+        `Package ${full_package_name} installed successfully via DevServer.`,
+      )
 
-      console.log(`Package ${full_package_name} installed successfully.`)
       await postEvent("PACKAGE_INSTALLED")
     } catch (err) {
       console.error(`Failed to install ${full_package_name}:`, err)
+
       await postEvent(
         "PACKAGE_INSTALL_FAILED",
         err instanceof Error ? err.message : String(err),
