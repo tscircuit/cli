@@ -13,7 +13,7 @@ import { pushSnippet } from "lib/shared/push-snippet"
 import { globbySync } from "globby"
 import { ExportFormat, exportSnippet } from "lib/shared/export-snippet"
 import { getPackageFilePaths } from "./get-package-file-paths"
-import { installComponentPackage } from "lib/shared/install-component-package" // Updated import path
+import { addPackage } from "lib/shared/add-package" // Updated import path
 
 export class DevServer {
   port: number
@@ -192,7 +192,7 @@ export class DevServer {
 
     try {
       console.log(`Installing package ${full_package_name} via DevServer...`)
-      await installComponentPackage(full_package_name, this.projectDir)
+      await addPackage(full_package_name, this.projectDir)
 
       console.log(
         `Package ${full_package_name} installed successfully via DevServer.`,

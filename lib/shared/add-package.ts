@@ -11,7 +11,7 @@ import { detectPackageManager } from "./detect-pkg-manager"
  * @param componentPath - The component identifier (e.g., author/name, @tsci/author.name)
  * @param projectDir - The root directory of the project (defaults to process.cwd())
  */
-export async function installComponentPackage(
+export async function addPackage(
   componentPath: string,
   projectDir: string = process.cwd(),
 ) {
