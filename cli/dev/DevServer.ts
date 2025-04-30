@@ -175,6 +175,10 @@ export class DevServer {
       },
     })
   }
+  async stop() {
+    this.httpServer?.close()
+    this.eventsWatcher?.stop()
+  }
 
   private async handleInstallPackage(full_package_name: string) {
     const postEvent = async (
