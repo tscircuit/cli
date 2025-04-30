@@ -5,6 +5,7 @@ export interface CliConfig {
   sessionToken?: string
   githubUsername?: string
   registryApiUrl?: string
+  alwaysCloneWithAuthorName?: boolean
 }
 
 export const getCliConfig = (

@@ -16,6 +16,7 @@ import { registerAuthSetToken } from "./auth/set-token/register"
 import { registerPush } from "./push/register"
 import { registerAdd } from "./add/register"
 import { registerUpgradeCommand } from "./upgrade/register"
+import { registerConfigSet } from "./config/set/register"
 
 export const program = new Command()
 
@@ -38,6 +39,7 @@ registerAuthSetToken(program)
 
 registerConfig(program)
 registerConfigPrint(program)
+registerConfigSet(program)
 
 registerExport(program)
 registerAdd(program)
