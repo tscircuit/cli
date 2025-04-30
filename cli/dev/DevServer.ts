@@ -13,7 +13,7 @@ import { pushSnippet } from "lib/shared/push-snippet"
 import { globbySync } from "globby"
 import { ExportFormat, exportSnippet } from "lib/shared/export-snippet"
 import { getPackageFilePaths } from "./get-package-file-paths"
-import { addPackage } from "lib/shared/add-package" // Updated import path
+import { addPackage } from "lib/shared/add-package"
 
 export class DevServer {
   port: number
