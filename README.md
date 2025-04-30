@@ -49,7 +49,7 @@ Commands:
   logout                     Logout from tscircuit registry
   config                     Manage tscircuit CLI configuration
   export [options] <file>    Export tscircuit code to various formats
-  add <component>            Add a tscircuit component package to your project
+  add <component>            Add a component from tscircuit.com
   upgrade                    Upgrade CLI to the latest version
   help [command]             display help for command
 ```
