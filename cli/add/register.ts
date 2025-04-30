@@ -1,5 +1,4 @@
 import { Command } from "commander"
-// Removed unused imports: fs, path, execSync, detectPackageManager, checkForTsciUpdates
 import { addPackage } from "lib/shared/add-package"
 
 export const registerAdd = (program: Command) => {
