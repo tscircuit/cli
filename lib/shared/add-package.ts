@@ -65,7 +65,7 @@ export async function addPackage(
   }
 
   // Install the package using the detected package manager
-  const packageManager = detectPackageManager(projectDir) // Pass projectDir
+  const packageManager = detectPackageManager()
   let installCommand: string
 
   if (packageManager === "yarn") {
