@@ -140,6 +140,16 @@ export class DevServer {
   async upsertInitialFiles() {
     const filePaths = getPackageFilePaths(this.projectDir)
 
+    if (this.componentFilePath && filePaths.includes(this.componentFilePath)) {
+      this.fsKy.post("api/events/create", {
+        json: {
+          event_type: "SET_COMPONENT_FILE",
+          message: this.componentFilePath,
+        },
+        throwHttpErrors: false,
+      })
+    }
+
     for (const filePath of filePaths) {
       const fileContent = fs.readFileSync(filePath, "utf-8")
       await this.fsKy.post("api/files/upsert", {
