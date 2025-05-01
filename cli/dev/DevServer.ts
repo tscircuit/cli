@@ -13,6 +13,7 @@ import { pushSnippet } from "lib/shared/push-snippet"
 import { globbySync } from "globby"
 import { ExportFormat, exportSnippet } from "lib/shared/export-snippet"
 import { getPackageFilePaths } from "./get-package-file-paths"
+import { addPackage } from "lib/shared/add-package"
 
 export class DevServer {
   port: number
@@ -75,6 +76,10 @@ export class DevServer {
     this.eventsWatcher.on(
       "REQUEST_TO_SAVE_SNIPPET",
       this.saveSnippet.bind(this),
+    )
+
+    this.eventsWatcher.on("INSTALL_PACKAGE", (event) =>
+      this.handleInstallPackage(event.full_package_name),
     )
 
     this.filesystemWatcher = chokidar.watch(this.projectDir, {
@@ -169,9 +174,38 @@ export class DevServer {
       },
     })
   }
-
   async stop() {
     this.httpServer?.close()
     this.eventsWatcher?.stop()
+  }
+
+  private async handleInstallPackage(full_package_name: string) {
+    const postEvent = async (
+      event: "PACKAGE_INSTALLED" | "PACKAGE_INSTALL_FAILED",
+      message?: string,
+    ) => {
+      await this.fsKy.post("api/events/create", {
+        json: { event_type: event, ...(message ? { message } : {}) },
+        throwHttpErrors: false,
+      })
+    }
+
+    try {
+      console.log(`Installing package ${full_package_name} via DevServer...`)
+      await addPackage(full_package_name, this.projectDir)
+
+      console.log(
+        `Package ${full_package_name} installed successfully via DevServer.`,
+      )
+
+      await postEvent("PACKAGE_INSTALLED")
+    } catch (err) {
+      console.error(`Failed to install ${full_package_name}:`, err)
+
+      await postEvent(
+        "PACKAGE_INSTALL_FAILED",
+        err instanceof Error ? err.message : String(err),
+      )
+    }
   }
 }
