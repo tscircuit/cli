@@ -144,7 +144,7 @@ export class DevServer {
       this.fsKy.post("api/events/create", {
         json: {
           event_type: "SET_COMPONENT_FILE",
-          message: this.componentFilePath,
+          message: path.relative(this.projectDir, this.componentFilePath),
         },
         throwHttpErrors: false,
       })
