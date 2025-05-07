@@ -47,7 +47,7 @@ export const registerSearch = (program: Command) => {
       const { selectedPackage } = await prompts({
         type: "select",
         name: "selectedPackage",
-        message: "Select a package to install:",
+        message: "Select a package to add:",
         choices,
         initial: 0,
       })
