@@ -17,6 +17,7 @@ import { registerPush } from "./push/register"
 import { registerAdd } from "./add/register"
 import { registerUpgradeCommand } from "./upgrade/register"
 import { registerConfigSet } from "./config/set/register"
+import { registerSearch } from "./search/register"
 
 export const program = new Command()
 
@@ -45,6 +46,8 @@ registerExport(program)
 registerAdd(program)
 
 registerUpgradeCommand(program)
+
+registerSearch(program)
 
 if (process.argv.length === 2) {
   perfectCli(program, process.argv)
