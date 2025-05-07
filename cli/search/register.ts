@@ -1,6 +1,8 @@
 import type { Command } from "commander"
 import { getRegistryApiKy } from "lib/registry-api/get-ky"
 import kleur from "kleur"
+import prompts from "prompts"
+import { addPackage } from "lib/shared/add-package"
 
 export const registerSearch = (program: Command) => {
   program
@@ -12,6 +14,7 @@ export const registerSearch = (program: Command) => {
       let results: {
         packages: Array<{ name: string; version: string; description?: string }>
       } = { packages: [] }
+
       try {
         results = await ky
           .post("packages/search", {
@@ -25,18 +28,54 @@ export const registerSearch = (program: Command) => {
         )
         process.exit(1)
       }
+
       if (!results.packages.length) {
         console.log(kleur.yellow("No packages found matching your query."))
         return
       }
+
       console.log(
         kleur.bold().underline(`Found ${results.packages.length} package(s):`),
       )
-      for (const pkg of results.packages) {
-        console.log(
-          kleur.green(pkg.name) +
-            (pkg.description ? ` - ${pkg.description}` : ""),
-        )
+
+      const choices = results.packages.map((pkg) => ({
+        title: pkg.name,
+        description: pkg.description || "",
+        value: pkg.name,
+      }))
+
+      const { selectedPackage } = await prompts({
+        type: "select",
+        name: "selectedPackage",
+        message: "Select a package to add:",
+        choices,
+        initial: 0,
+      })
+
+      if (!selectedPackage) {
+        console.log(kleur.yellow("No package selected."))
+        return
+      }
+
+      const { confirm } = await prompts({
+        type: "confirm",
+        name: "confirm",
+        message: `Do you want to add ${kleur.green(selectedPackage)}?`,
+        initial: true,
+      })
+
+      if (confirm) {
+        try {
+          console.log(kleur.blue(`Installing ${selectedPackage}...`))
+          await addPackage(selectedPackage)
+          console.log(kleur.green(`Successfully installed ${selectedPackage}`))
+        } catch (error) {
+          console.error(
+            kleur.red(`Failed to install ${selectedPackage}:`),
+            error,
+          )
+          process.exit(1)
+        }
       }
     })
 }
