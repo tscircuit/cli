@@ -6,11 +6,13 @@ import { execSync } from "node:child_process"
 import { program } from "cli/main"
 import semver from "semver"
 import { version as pkgVersion } from "../../package.json"
+import kleur from "kleur"
+
+export const currentCliVersion = () =>
+  program?.version() ?? semver.inc(pkgVersion, "patch") ?? pkgVersion
 
 export const checkForTsciUpdates = async () => {
   if (process.env.TSCI_SKIP_CLI_UPDATE === "true") return
-  const currentCliVersion =
-    program.version() ?? semver.inc(pkgVersion, "patch") ?? pkgVersion
   const { version: latestCliVersion } = await ky
     .get<{ version: string }>(
       "https://registry.npmjs.org/@tscircuit/cli/latest",
@@ -18,9 +20,9 @@ export const checkForTsciUpdates = async () => {
     )
     .json()
 
-  if (latestCliVersion && semver.gt(latestCliVersion, currentCliVersion)) {
+  if (latestCliVersion && semver.gt(latestCliVersion, currentCliVersion())) {
     const userWantsToUpdate = await askConfirmation(
-      `A new version of tsci is available (${currentCliVersion} → ${latestCliVersion}).\nWould you like to update now?`,
+      `A new version of tsci is available (${currentCliVersion()} → ${latestCliVersion}).\nWould you like to update now?`,
     )
     if (userWantsToUpdate) {
       const packageManager = detectPackageManager()
@@ -31,7 +33,7 @@ export const checkForTsciUpdates = async () => {
       try {
         console.log(`Updating tsci using: ${installCommand}`)
         execSync(installCommand, { stdio: "inherit" })
-        console.log("tsci has been updated successfully!")
+        console.log(kleur.green("tsci has been updated successfully!"))
       } catch {
         console.warn("Update failed. You can try updating manually by running:")
         console.warn(`  ${installCommand}`)
@@ -40,6 +42,7 @@ export const checkForTsciUpdates = async () => {
   } else {
     return false
   }
+  return true
 }
 
 export const askConfirmation = (question: string): Promise<boolean> => {
