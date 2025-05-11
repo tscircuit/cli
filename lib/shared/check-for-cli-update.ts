@@ -1,5 +1,5 @@
 import ky from "ky"
-import { detectPackageManager } from "lib/shared/detect-pkg-manager"
+import { getPackageManager } from "./get-package-manager"
 import { getGlobalDepsInstallCommand } from "lib/shared/get-dep-install-command"
 import readline from "node:readline"
 import { execSync } from "node:child_process"
@@ -25,9 +25,9 @@ export const checkForTsciUpdates = async () => {
       `A new version of tsci is available (${currentCliVersion()} → ${latestCliVersion}).\nWould you like to update now?`,
     )
     if (userWantsToUpdate) {
-      const packageManager = detectPackageManager()
+      const packageManager = getPackageManager()
       const installCommand = getGlobalDepsInstallCommand(
-        packageManager,
+        packageManager.name,
         "@tscircuit/cli@latest",
       )
       try {

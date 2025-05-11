@@ -1,9 +1,9 @@
-import { detectPackageManager } from "./detect-pkg-manager"
 import fs from "node:fs"
 import path from "node:path"
 import { execSync } from "node:child_process"
+import { getPackageManager } from "./get-package-manager"
 
-export function setupTsciProject(
+export async function setupTsciProject(
   directory = process.cwd(),
   dependencies = ["@types/react", "@tscircuit/core"],
 ) {
@@ -11,28 +11,18 @@ export function setupTsciProject(
   if (!fs.existsSync(projectPath)) {
     fs.mkdirSync(projectPath, { recursive: true })
   }
-  const packageManager = detectPackageManager()
+  const packageManager = getPackageManager()
 
   console.log(`Initializing project in ${projectPath}...`)
   process.chdir(projectPath)
 
   if (!fs.existsSync("package.json")) {
-    const initCommand =
-      packageManager === "yarn"
-        ? "yarn init -y"
-        : packageManager === "pnpm"
-          ? "pnpm init"
-          : packageManager === "bun"
-            ? "bun init -y"
-            : "npm init -y"
-
     try {
-      execSync(initCommand, { stdio: "inherit" })
+      packageManager.init({ cwd: projectPath })
       console.log("Project initialized successfully.")
     } catch (error) {
-      console.warn("Failed to automatically inititialize project.")
-      console.warn("Please inititialize using the command:")
-      console.warn(`  ${initCommand}`)
+      console.warn("Failed to automatically initialize project.")
+      console.warn("Please initialize using your package manager.")
     }
   }
 
@@ -45,22 +35,16 @@ export function setupTsciProject(
 
   if (dependencies.length > 0) {
     console.log("Installing dependencies...")
-    const installCommand =
-      packageManager === "bun"
-        ? `bun add -D ${dependencies.join(" ")}`
-        : packageManager === "yarn"
-          ? `yarn add -D ${dependencies.join(" ")}`
-          : packageManager === "pnpm"
-            ? `pnpm add -D ${dependencies.join(" ")}`
-            : `npm install -D ${dependencies.join(" ")}`
-
     try {
-      execSync(installCommand, { stdio: "inherit" })
+      packageManager.installDeps({
+        deps: dependencies,
+        cwd: projectPath,
+        dev: true,
+      })
       console.log("Dependencies installed successfully.")
     } catch (error) {
       console.warn("Failed to automatically install the required dependencies.")
-      console.warn("Please install them manually using the command:")
-      console.warn(`  ${installCommand}`)
+      console.warn("Please install them manually using your package manager.")
     }
   }
   return packageJson.name || "unknown"

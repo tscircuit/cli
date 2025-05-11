@@ -1,9 +1,7 @@
-import * as fs from "node:fs"
-import * as path from "node:path"
-import { execSync } from "node:child_process"
-import { detectPackageManager } from "./detect-pkg-manager"
+import { getPackageManager } from "./get-package-manager"
 import { normalizePackageNameToNpm } from "./add-package"
-
+import path from "node:path"
+import fs from "node:fs"
 /**
  * Removes a tscircuit component package.
  * Handles different package name formats and uses the appropriate package manager.
@@ -34,26 +32,22 @@ export async function removePackage(
     return
   }
 
-  // Uninstall the package using the detected package manager
-  const packageManager = detectPackageManager()
-  let uninstallCommand: string
-
-  if (packageManager === "yarn") {
-    uninstallCommand = `yarn remove ${packageName}`
-  } else if (packageManager === "pnpm") {
-    uninstallCommand = `pnpm remove ${packageName}`
-  } else if (packageManager === "bun") {
-    uninstallCommand = `bun remove ${packageName}`
-  } else {
-    // Default to npm
-    uninstallCommand = `npm uninstall ${packageName}`
-  }
-
+  const packageManager = getPackageManager()
   try {
-    execSync(uninstallCommand, { stdio: "pipe", cwd: projectDir })
+    packageManager.uninstall({ name: packageName, cwd: projectDir })
     console.log(`Removed ${packageName} successfully.`)
   } catch (error) {
     const errorMessage = error instanceof Error ? error.message : String(error)
+    // If the error is about the package not being found, print a friendly message
+    if (
+      errorMessage.includes("is not in dependencies") ||
+      errorMessage.includes("not present in package.json") ||
+      errorMessage.includes("No such package") ||
+      errorMessage.includes("not found in dependencies")
+    ) {
+      console.log(`${packageName} is not a dependency.`)
+      return
+    }
     console.error(`Failed to remove ${packageName}:`, errorMessage)
     throw new Error(`Failed to remove ${packageName}: ${errorMessage}`)
   }
