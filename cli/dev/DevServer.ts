@@ -94,6 +94,15 @@ export class DevServer {
     this.filesystemWatcher.on("add", (filePath) =>
       this.handleFileChangedOnFilesystem(filePath),
     )
+    this.filesystemWatcher.on("unlink", (filePath) =>
+      this.handleFileRemovedFromFilesystem(filePath),
+    )
+    this.filesystemWatcher.on("unlinkDir", (filePath) =>
+      this.handleFileRemovedFromFilesystem(filePath),
+    )
+    this.filesystemWatcher.on("rename", (oldPath, newPath) =>
+      this.handleFileRename(oldPath, newPath),
+    )
 
     await this.upsertInitialFiles()
 
@@ -135,6 +144,56 @@ export class DevServer {
         },
       })
       .json()
+  }
+
+  async handleFileRemovedFromFilesystem(absoluteFilePath: string) {
+    const relativeFilePath = path.relative(this.projectDir, absoluteFilePath)
+    try {
+      await this.fsKy.post("api/files/delete", {
+        json: {
+          file_path: relativeFilePath,
+          initiator: "filesystem_change",
+        },
+      })
+      console.log(`${relativeFilePath} deleted. Removed from file server.`)
+    } catch (err: unknown) {
+      console.error(
+        `Failed to remove file from file server: ${relativeFilePath}`,
+        err,
+      )
+    }
+  }
+
+  async handleFileRename(oldPath: string, newPath: string) {
+    const oldRelativePath = path.relative(this.projectDir, oldPath)
+    const newRelativePath = path.relative(this.projectDir, newPath)
+
+    try {
+      // First delete the old file from the file server
+      await this.fsKy.post("api/files/delete", {
+        json: {
+          file_path: oldRelativePath,
+          initiator: "filesystem_change",
+        },
+      })
+
+      // Then upsert the new file
+      const fileContent = fs.readFileSync(newPath, "utf-8")
+      await this.fsKy.post("api/files/upsert", {
+        json: {
+          file_path: newRelativePath,
+          text_content: fileContent,
+          initiator: "filesystem_change",
+        },
+      })
+
+      console.log(`File renamed from ${oldRelativePath} to ${newRelativePath}`)
+    } catch (err) {
+      console.error(
+        `Failed to handle file rename from ${oldRelativePath} to ${newRelativePath}:`,
+        err,
+      )
+    }
   }
 
   async upsertInitialFiles() {
