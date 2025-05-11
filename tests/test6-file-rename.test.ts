@@ -13,8 +13,6 @@ test("test6 file renaming should be properly detected", async () => {
   const notreferencedPath = join(fixture.tmpDir, "notreferenced.tsx")
   const indexPath = join(fixture.tmpDir, "index.tsx")
   const something2Path = join(fixture.tmpDir, "something2.tsx")
-
-  console.log("Writing notreferenced.tsx...")
   await Bun.write(
     notreferencedPath,
     `
@@ -24,7 +22,6 @@ test("test6 file renaming should be properly detected", async () => {
     `,
   )
 
-  console.log("Writing index.tsx...")
   await Bun.write(
     indexPath,
     `
@@ -42,14 +39,12 @@ test("test6 file renaming should be properly detected", async () => {
   const devServerPort = await getPort()
 
   // Create and start the DevServer
-  console.log("Starting DevServer...")
   const devServer = new DevServer({
     port: devServerPort,
     componentFilePath: indexPath,
   })
 
   await devServer.start()
-  console.log("DevServer started.")
 
   // Verify initial file list
   const initialFileList = await devServer.fsKy.get("api/files/list").json()
@@ -100,7 +95,6 @@ test("test6 file renaming should be properly detected", async () => {
 
   // Verify that index.tsx still exists
   const indexPathExists = fs.existsSync(indexPath)
-  console.log("index.tsx exists:", indexPathExists)
   expect(indexPathExists).toBe(true)
 
   afterEach(async () => {
