@@ -21,10 +21,7 @@ import { registerSearch } from "./search/register"
 
 export const program = new Command()
 
-program
-  .name("tsci")
-  .description("CLI for developing tscircuit snippets")
-  .version(getVersion())
+program.name("tsci").description("CLI for developing tscircuit snippets")
 
 registerInit(program)
 
@@ -48,6 +45,14 @@ registerAdd(program)
 registerUpgradeCommand(program)
 
 registerSearch(program)
+
+// Add a custom version command
+program
+  .command("version")
+  .description("Print CLI version")
+  .action(() => {
+    console.log(getVersion())
+  })
 
 if (process.argv.length === 2) {
   perfectCli(program, process.argv)
