@@ -7,6 +7,7 @@ import { program } from "cli/main"
 import semver from "semver"
 import { version as pkgVersion } from "../../package.json"
 import kleur from "kleur"
+import prompt from "prompts"
 
 export const currentCliVersion = () =>
   program?.version() ?? semver.inc(pkgVersion, "patch") ?? pkgVersion
@@ -21,9 +22,12 @@ export const checkForTsciUpdates = async () => {
     .json()
 
   if (latestCliVersion && semver.gt(latestCliVersion, currentCliVersion())) {
-    const userWantsToUpdate = await askConfirmation(
-      `A new version of tsci is available (${currentCliVersion()} → ${latestCliVersion}).\nWould you like to update now?`,
-    )
+    const { userWantsToUpdate } = await prompt({
+      type: "confirm",
+      name: "userWantsToUpdate",
+      message: `A new version of tsci is available (${currentCliVersion()} → ${latestCliVersion}).\nWould you like to update now?`,
+    })
+
     if (userWantsToUpdate) {
       const packageManager = detectPackageManager()
       const installCommand = getGlobalDepsInstallCommand(
@@ -43,25 +47,4 @@ export const checkForTsciUpdates = async () => {
     return false
   }
   return true
-}
-
-export const askConfirmation = (question: string): Promise<boolean> => {
-  return new Promise((resolve) => {
-    const rl = readline.createInterface({
-      input: process.stdin,
-      output: process.stdout,
-    })
-
-    const timeout = setTimeout(() => {
-      rl.close()
-      resolve(false)
-    }, 5000)
-
-    rl.question(`${question} (y/n): `, (answer) => {
-      clearTimeout(timeout)
-      rl.close()
-      const normalized = answer.trim().toLowerCase()
-      resolve(normalized === "yes" || normalized === "y")
-    })
-  })
 }
