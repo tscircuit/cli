@@ -59,7 +59,7 @@ test("test6 file renaming should be properly detected", async () => {
   )
   expect(
     initialFileList.file_list.map((f) => f.file_path).sort(),
-  ).toContainValues(["/index.tsx", "/notreferenced.tsx"])
+  ).toContainValues(["index.tsx", "notreferenced.tsx"])
 
   // Rename the file
   console.log("Renaming notreferenced.tsx to something2.tsx...")
@@ -80,8 +80,8 @@ test("test6 file renaming should be properly detected", async () => {
     console.log("Updated file list:", fileList)
 
     if (
-      !fileList.includes("/notreferenced.tsx") &&
-      fileList.includes("/something2.tsx")
+      !fileList.includes("notreferenced.tsx") &&
+      fileList.includes("something2.tsx")
     ) {
       break
     }
@@ -95,8 +95,8 @@ test("test6 file renaming should be properly detected", async () => {
   }
 
   // Verify the file list is correct
-  expect(fileList).not.toContain("/notreferenced.tsx")
-  expect(fileList).toContain("/something2.tsx")
+  expect(fileList).not.toContain("notreferenced.tsx")
+  expect(fileList).toContain("something2.tsx")
 
   // Verify that index.tsx still exists
   const indexPathExists = fs.existsSync(indexPath)

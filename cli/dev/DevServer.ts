@@ -16,7 +16,7 @@ import { getPackageFilePaths } from "./get-package-file-paths"
 import { addPackage } from "lib/shared/add-package"
 import Debug from "debug"
 
-const debug = Debug("devserver:fs")
+const debug = Debug("tscircuit:devserver")
 
 export class DevServer {
   port: number
