@@ -16,4 +16,4 @@ test("remove command deletes author.component format from package.json", async (
     await Bun.file(join(tmpDir, "package.json")).text(),
   )
   expect(pkgJson.dependencies["@tsci/another.component"]).toBeUndefined()
-}) 
+})

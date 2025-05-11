@@ -6,4 +6,4 @@ export async function addDependency(tmpDir: string, dep: string) {
   pkgJson.dependencies = pkgJson.dependencies || {}
   pkgJson.dependencies[dep] = "^1.0.0"
   await Bun.write(pkgJsonPath, JSON.stringify(pkgJson, null, 2))
-} 
+}

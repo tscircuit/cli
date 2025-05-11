@@ -10,4 +10,4 @@ test("remove command handles non-existent package gracefully", async () => {
   )
   const { stdout } = await runCommand("tsci remove @tsci/not-present")
   expect(stdout).toContain("@tsci/not-present is not a dependency.")
-}) 
+})
