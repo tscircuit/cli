@@ -2,6 +2,7 @@ import * as fs from "node:fs"
 import * as path from "node:path"
 import { execSync } from "node:child_process"
 import { detectPackageManager } from "./detect-pkg-manager"
+import { normalizePackageNameToNpm } from "./add-package"
 
 /**
  * Removes a tscircuit component package.
@@ -14,23 +15,7 @@ export async function removePackage(
   componentPath: string,
   projectDir: string = process.cwd(),
 ) {
-  let packageName: string
-
-  // Handle different input formats (same as addPackage)
-  if (componentPath.startsWith("@tscircuit/")) {
-    packageName = componentPath
-  } else if (componentPath.startsWith("@tsci/")) {
-    packageName = componentPath
-  } else {
-    const match = componentPath.match(/^([^/.]+)[/.](.+)$/)
-    if (!match) {
-      throw new Error(
-        "Invalid component path. Use format: author/component-name, author.component-name, @tscircuit/package-name, or @tsci/author.component-name",
-      )
-    }
-    const [, author, componentName] = match
-    packageName = `@tsci/${author}.${componentName}`
-  }
+  const packageName = normalizePackageNameToNpm(componentPath)
 
   console.log(`Removing ${packageName}...`)
 

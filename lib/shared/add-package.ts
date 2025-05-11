@@ -4,6 +4,28 @@ import { execSync } from "node:child_process"
 import { detectPackageManager } from "./detect-pkg-manager"
 
 /**
+ * Normalizes a tscircuit component path to an npm package name.
+ * @param componentPath - The component identifier (e.g., author/name, @tsci/author.name)
+ * @returns The normalized npm package name.
+ */
+export function normalizePackageNameToNpm(componentPath: string): string {
+  if (componentPath.startsWith("@tscircuit/")) {
+    return componentPath
+  } else if (componentPath.startsWith("@tsci/")) {
+    return componentPath
+  } else {
+    const match = componentPath.match(/^([^/.]+)[/.](.+)$/)
+    if (!match) {
+      throw new Error(
+        "Invalid component path. Use format: author/component-name, author.component-name, @tscircuit/package-name, or @tsci/author.component-name",
+      )
+    }
+    const [, author, componentName] = match
+    return `@tsci/${author}.${componentName}`
+  }
+}
+
+/**
  * Installs a tscircuit component package.
  * Handles different package name formats, ensures .npmrc is configured,
  * and uses the appropriate package manager.
@@ -15,27 +37,7 @@ export async function addPackage(
   componentPath: string,
   projectDir: string = process.cwd(),
 ) {
-  let packageName: string
-
-  // Handle different input formats
-  if (componentPath.startsWith("@tscircuit/")) {
-    // Direct npm package with @tscircuit scope
-    packageName = componentPath
-  } else if (componentPath.startsWith("@tsci/")) {
-    // Direct tscircuit registry package
-    packageName = componentPath
-  } else {
-    // Parse author/component format
-    const match = componentPath.match(/^([^/.]+)[/.](.+)$/)
-    if (!match) {
-      throw new Error(
-        "Invalid component path. Use format: author/component-name, author.component-name, @tscircuit/package-name, or @tsci/author.component-name",
-      )
-    }
-
-    const [, author, componentName] = match
-    packageName = `@tsci/${author}.${componentName}`
-  }
+  const packageName = normalizePackageNameToNpm(componentPath)
 
   console.log(`Adding ${packageName}...`)
 
