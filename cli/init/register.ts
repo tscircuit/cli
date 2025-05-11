@@ -7,7 +7,7 @@ import { writeFileIfNotExists } from "lib/shared/write-file-if-not-exists"
 import { generateGitIgnoreFile } from "lib/shared/generate-gitignore-file"
 import { generatePackageJson } from "lib/shared/generate-package-json"
 import { checkForTsciUpdates } from "lib/shared/check-for-cli-update"
-import prompt from "prompts"
+import { prompts } from "lib/utils/prompts"
 
 export const registerInit = (program: Command) => {
   program
@@ -23,7 +23,7 @@ export const registerInit = (program: Command) => {
       await checkForTsciUpdates()
 
       if (!directory) {
-        const { continueInCurrentDirectory } = await prompt({
+        const { continueInCurrentDirectory } = await prompts({
           type: "confirm",
           name: "continueInCurrentDirectory",
           message:

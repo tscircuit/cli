@@ -1,13 +1,12 @@
 import ky from "ky"
 import { detectPackageManager } from "lib/shared/detect-pkg-manager"
 import { getGlobalDepsInstallCommand } from "lib/shared/get-dep-install-command"
-import readline from "node:readline"
 import { execSync } from "node:child_process"
 import { program } from "cli/main"
 import semver from "semver"
 import { version as pkgVersion } from "../../package.json"
 import kleur from "kleur"
-import prompt from "prompts"
+import { prompts } from "lib/utils/prompts"
 
 export const currentCliVersion = () =>
   program?.version() ?? semver.inc(pkgVersion, "patch") ?? pkgVersion
@@ -22,7 +21,7 @@ export const checkForTsciUpdates = async () => {
     .json()
 
   if (latestCliVersion && semver.gt(latestCliVersion, currentCliVersion())) {
-    const { userWantsToUpdate } = await prompt({
+    const { userWantsToUpdate } = await prompts({
       type: "confirm",
       name: "userWantsToUpdate",
       message: `A new version of tsci is available (${currentCliVersion()} → ${latestCliVersion}).\nWould you like to update now?`,
