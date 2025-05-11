@@ -46,6 +46,12 @@ registerUpgradeCommand(program)
 
 registerSearch(program)
 
+// Manually handle --version, -v, and -V flags
+if (process.argv.includes('--version') || process.argv.includes('-v') || process.argv.includes('-V')) {
+  console.log(getVersion())
+  process.exit(0)
+}
+
 // Add a custom version command
 program
   .command("version")
