@@ -14,6 +14,9 @@ import { globbySync } from "globby"
 import { ExportFormat, exportSnippet } from "lib/shared/export-snippet"
 import { getPackageFilePaths } from "./get-package-file-paths"
 import { addPackage } from "lib/shared/add-package"
+import Debug from "debug"
+
+const debug = Debug("devserver:fs")
 
 export class DevServer {
   port: number
@@ -187,7 +190,7 @@ export class DevServer {
         },
       })
 
-      console.log(`File renamed from ${oldRelativePath} to ${newRelativePath}`)
+      debug(`File renamed from ${oldRelativePath} to ${newRelativePath}`)
     } catch (err) {
       console.error(
         `Failed to handle file rename from ${oldRelativePath} to ${newRelativePath}:`,
