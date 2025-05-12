@@ -45,7 +45,10 @@ export async function setupTsciProject(
       console.log("Dependencies installed successfully.")
     } catch (error) {
       console.warn("Failed to automatically install the required dependencies.")
-      const installCommand = packageManager.getInstallDepsCommand(dependencies, true)
+      const installCommand = packageManager.getInstallDepsCommand(
+        dependencies,
+        true,
+      )
       console.warn("Please install them manually using the command:")
       console.warn(`  ${installCommand}`)
     }

@@ -96,9 +96,12 @@ export function getPackageManager(): PackageManager {
 
   function getInstallDepsCommand(deps: string[], dev?: boolean) {
     const depList = deps.join(" ")
-    if (pm === "bun") return dev ? `bun add -d ${depList}` : `bun add ${depList}`
-    if (pm === "yarn") return dev ? `yarn add -D ${depList}` : `yarn add ${depList}`
-    if (pm === "pnpm") return dev ? `pnpm add -D ${depList}` : `pnpm add ${depList}`
+    if (pm === "bun")
+      return dev ? `bun add -d ${depList}` : `bun add ${depList}`
+    if (pm === "yarn")
+      return dev ? `yarn add -D ${depList}` : `yarn add ${depList}`
+    if (pm === "pnpm")
+      return dev ? `pnpm add -D ${depList}` : `pnpm add ${depList}`
     return dev ? `npm install -D ${depList}` : `npm install ${depList}`
   }
 }
