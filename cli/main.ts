@@ -22,10 +22,7 @@ import { registerRemove } from "./remove/register"
 
 export const program = new Command()
 
-program
-  .name("tsci")
-  .description("CLI for developing tscircuit snippets")
-  .version(getVersion())
+program.name("tsci").description("CLI for developing tscircuit snippets")
 
 registerInit(program)
 
@@ -50,6 +47,24 @@ registerRemove(program)
 registerUpgradeCommand(program)
 
 registerSearch(program)
+
+// Manually handle --version, -v, and -V flags
+if (
+  process.argv.includes("--version") ||
+  process.argv.includes("-v") ||
+  process.argv.includes("-V")
+) {
+  console.log(getVersion())
+  process.exit(0)
+}
+
+// Add a custom version command
+program
+  .command("version")
+  .description("Print CLI version")
+  .action(() => {
+    console.log(getVersion())
+  })
 
 if (process.argv.length === 2) {
   perfectCli(program, process.argv)
