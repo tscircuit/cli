@@ -5,6 +5,29 @@ import * as http from "node:http"
 import { join } from "node:path"
 import { getCliTestFixture } from "./fixtures/get-cli-test-fixture"
 
+// Polls until the DevServer responds (any status) at the given URL.
+async function waitForServerReady(url: string, timeout = 5000) {
+  const start = Date.now()
+  while (Date.now() - start < timeout) {
+    try {
+      await fetch(url)
+      return // got a response → server is listening
+    } catch {
+      // connection refused → keep retrying
+    }
+    await new Promise((r) => setTimeout(r, 200))
+  }
+  throw new Error(`Server at ${url} didn't start within ${timeout}ms`)
+}
+
+let server: http.Server
+let devServer: DevServer
+
+afterEach(async () => {
+  server?.close()
+  await devServer?.stop()
+})
+
 test("test3 dev server port handling", async () => {
   const { tmpDir } = await getCliTestFixture()
 
@@ -24,25 +47,22 @@ test("test3 dev server port handling", async () => {
   const httpPort = await getPort()
   const devServerPort = await getPort()
 
-  // Create a test HTTP server
-  const server = http.createServer(() => {}).listen(httpPort)
+  // dummy HTTP server (just to occupy httpPort)
+  server = http.createServer(() => {}).listen(httpPort)
 
-  // Create and start the DevServer
-  const devServer = new DevServer({
+  // start DevServer
+  devServer = new DevServer({
     port: devServerPort,
     componentFilePath: join(tmpDir, "snippet.tsx"),
   })
   await devServer.start()
 
-  // Wait for servers to be ready
-  await new Promise((resolve) => setTimeout(resolve, 3000))
+  // wait for ANY response at the root
+  const rootUrl = `http://localhost:${devServerPort}/`
+  console.log(`⏳ Waiting for DevServer at ${rootUrl}`)
+  await waitForServerReady(rootUrl)
 
-  // Test the DevServer
-  const res = await fetch(`http://localhost:${devServerPort}`)
+  // finally, assert GET / returns 200
+  const res = await fetch(rootUrl)
   expect(res.status).toBe(200)
-
-  afterEach(async () => {
-    server.close()
-    await devServer.stop()
-  })
 })
