@@ -18,6 +18,7 @@ import { registerAdd } from "./add/register"
 import { registerUpgradeCommand } from "./upgrade/register"
 import { registerConfigSet } from "./config/set/register"
 import { registerSearch } from "./search/register"
+import { registerRemove } from "./remove/register"
 
 export const program = new Command()
 
@@ -44,6 +45,7 @@ registerConfigSet(program)
 
 registerExport(program)
 registerAdd(program)
+registerRemove(program)
 
 registerUpgradeCommand(program)
 

@@ -1,7 +1,29 @@
 import * as fs from "node:fs"
 import * as path from "node:path"
 import { execSync } from "node:child_process"
-import { detectPackageManager } from "./detect-pkg-manager"
+import { getPackageManager } from "./get-package-manager"
+
+/**
+ * Normalizes a tscircuit component path to an npm package name.
+ * @param componentPath - The component identifier (e.g., author/name, @tsci/author.name)
+ * @returns The normalized npm package name.
+ */
+export function normalizePackageNameToNpm(componentPath: string): string {
+  if (componentPath.startsWith("@tscircuit/")) {
+    return componentPath
+  } else if (componentPath.startsWith("@tsci/")) {
+    return componentPath
+  } else {
+    const match = componentPath.match(/^([^/.]+)[/.](.+)$/)
+    if (!match) {
+      throw new Error(
+        "Invalid component path. Use format: author/component-name, author.component-name, @tscircuit/package-name, or @tsci/author.component-name",
+      )
+    }
+    const [, author, componentName] = match
+    return `@tsci/${author}.${componentName}`
+  }
+}
 
 /**
  * Installs a tscircuit component package.
@@ -15,27 +37,7 @@ export async function addPackage(
   componentPath: string,
   projectDir: string = process.cwd(),
 ) {
-  let packageName: string
-
-  // Handle different input formats
-  if (componentPath.startsWith("@tscircuit/")) {
-    // Direct npm package with @tscircuit scope
-    packageName = componentPath
-  } else if (componentPath.startsWith("@tsci/")) {
-    // Direct tscircuit registry package
-    packageName = componentPath
-  } else {
-    // Parse author/component format
-    const match = componentPath.match(/^([^/.]+)[/.](.+)$/)
-    if (!match) {
-      throw new Error(
-        "Invalid component path. Use format: author/component-name, author.component-name, @tscircuit/package-name, or @tsci/author.component-name",
-      )
-    }
-
-    const [, author, componentName] = match
-    packageName = `@tsci/${author}.${componentName}`
-  }
+  const packageName = normalizePackageNameToNpm(componentPath)
 
   console.log(`Adding ${packageName}...`)
 
@@ -65,28 +67,9 @@ export async function addPackage(
   }
 
   // Install the package using the detected package manager
-  const packageManager = detectPackageManager()
-  let installCommand: string
-
-  if (packageManager === "yarn") {
-    installCommand = `yarn add ${packageName}`
-  } else if (packageManager === "pnpm") {
-    installCommand = `pnpm add ${packageName}`
-  } else if (packageManager === "bun") {
-    // Explicitly set registry for @tsci packages with bun
-    if (packageName.startsWith("@tsci/")) {
-      installCommand = `bun add ${packageName} --registry https://npm.tscircuit.com`
-    } else {
-      installCommand = `bun add ${packageName}`
-    }
-  } else {
-    // Default to npm
-    installCommand = `npm install ${packageName}`
-  }
-
+  const packageManager = getPackageManager()
   try {
-    // Run the command in the specified project directory
-    execSync(installCommand, { stdio: "pipe", cwd: projectDir })
+    packageManager.install({ name: packageName, cwd: projectDir })
     console.log(`Added ${packageName} successfully.`)
   } catch (error) {
     const errorMessage = error instanceof Error ? error.message : String(error)
