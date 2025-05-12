@@ -1,6 +1,5 @@
 import fs from "node:fs"
 import path from "node:path"
-import { execSync } from "node:child_process"
 import { getPackageManager } from "./get-package-manager"
 
 export async function setupTsciProject(
@@ -22,7 +21,9 @@ export async function setupTsciProject(
       console.log("Project initialized successfully.")
     } catch (error) {
       console.warn("Failed to automatically initialize project.")
-      console.warn("Please initialize using your package manager.")
+      const initCommand = packageManager.getInitCommand()
+      console.warn("Please inititialize using the command:")
+      console.warn(`  ${initCommand}`)
     }
   }
 
@@ -44,7 +45,9 @@ export async function setupTsciProject(
       console.log("Dependencies installed successfully.")
     } catch (error) {
       console.warn("Failed to automatically install the required dependencies.")
-      console.warn("Please install them manually using your package manager.")
+      const installCommand = packageManager.getInstallDepsCommand(dependencies, true)
+      console.warn("Please install them manually using the command:")
+      console.warn(`  ${installCommand}`)
     }
   }
   return packageJson.name || "unknown"

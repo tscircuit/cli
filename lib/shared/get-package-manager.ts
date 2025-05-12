@@ -37,6 +37,8 @@ export interface PackageManager {
     cwd: string
     dev?: boolean
   }) => void
+  getInitCommand: () => string
+  getInstallDepsCommand: (deps: string[], dev?: boolean) => string
 }
 
 export function getPackageManager(): PackageManager {
@@ -74,33 +76,29 @@ export function getPackageManager(): PackageManager {
       execSync(installCommand, { stdio: "pipe", cwd })
     },
     init: ({ cwd }) => {
-      let initCommand: string
-      if (pm === "yarn") {
-        initCommand = "yarn init -y"
-      } else if (pm === "pnpm") {
-        initCommand = "pnpm init"
-      } else if (pm === "bun") {
-        initCommand = "bun init -y"
-      } else {
-        initCommand = "npm init -y"
-      }
+      const initCommand = getInitCommand()
       execSync(initCommand, { stdio: "inherit", cwd })
     },
     installDeps: ({ deps, cwd, dev }) => {
-      let installCommand: string
-      const depList = deps.join(" ")
-      if (pm === "bun") {
-        installCommand = dev ? `bun add -d ${depList}` : `bun add ${depList}`
-      } else if (pm === "yarn") {
-        installCommand = dev ? `yarn add -D ${depList}` : `yarn add ${depList}`
-      } else if (pm === "pnpm") {
-        installCommand = dev ? `pnpm add -D ${depList}` : `pnpm add ${depList}`
-      } else {
-        installCommand = dev
-          ? `npm install -D ${depList}`
-          : `npm install ${depList}`
-      }
+      const installCommand = getInstallDepsCommand(deps, dev)
       execSync(installCommand, { stdio: "inherit", cwd })
     },
+    getInitCommand,
+    getInstallDepsCommand,
+  }
+
+  function getInitCommand() {
+    if (pm === "yarn") return "yarn init -y"
+    if (pm === "pnpm") return "pnpm init"
+    if (pm === "bun") return "bun init -y"
+    return "npm init -y"
+  }
+
+  function getInstallDepsCommand(deps: string[], dev?: boolean) {
+    const depList = deps.join(" ")
+    if (pm === "bun") return dev ? `bun add -d ${depList}` : `bun add ${depList}`
+    if (pm === "yarn") return dev ? `yarn add -D ${depList}` : `yarn add ${depList}`
+    if (pm === "pnpm") return dev ? `pnpm add -D ${depList}` : `pnpm add ${depList}`
+    return dev ? `npm install -D ${depList}` : `npm install ${depList}`
   }
 }

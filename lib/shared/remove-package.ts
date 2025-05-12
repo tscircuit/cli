@@ -17,21 +17,6 @@ export async function removePackage(
 
   console.log(`Removing ${packageName}...`)
 
-  const isTestMode = process.env.TSCI_TEST_MODE === "true"
-  if (isTestMode) {
-    const pkgJsonPath = path.join(projectDir, "package.json")
-    const pkgJson = JSON.parse(fs.readFileSync(pkgJsonPath, "utf-8"))
-    pkgJson.dependencies = pkgJson.dependencies || {}
-    if (pkgJson.dependencies[packageName]) {
-      delete pkgJson.dependencies[packageName]
-      fs.writeFileSync(pkgJsonPath, JSON.stringify(pkgJson, null, 2))
-      console.log(`Removed ${packageName} successfully.`)
-    } else {
-      console.log(`${packageName} is not a dependency.`)
-    }
-    return
-  }
-
   const packageManager = getPackageManager()
   try {
     packageManager.uninstall({ name: packageName, cwd: projectDir })
@@ -49,6 +34,7 @@ export async function removePackage(
       return
     }
     console.error(`Failed to remove ${packageName}:`, errorMessage)
+    // Re-throw the error so the caller can handle it
     throw new Error(`Failed to remove ${packageName}: ${errorMessage}`)
   }
 }

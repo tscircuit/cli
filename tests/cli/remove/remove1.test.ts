@@ -15,5 +15,5 @@ test("remove command deletes @tsci scoped package from package.json", async () =
   const pkgJson = JSON.parse(
     await Bun.file(join(tmpDir, "package.json")).text(),
   )
-  expect(pkgJson.dependencies["@tsci/example-package"]).toBeUndefined()
+  expect(pkgJson.dependencies?.["@tsci/example-package"]).toBeUndefined()
 })
