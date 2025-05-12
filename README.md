@@ -34,7 +34,6 @@ Usage: tsci [options] [command]
 CLI for developing tscircuit snippets
 
 Options:
-  -V, --version              output the version number
   -h, --help                 display help for command
 
 Commands:
@@ -54,6 +53,7 @@ Commands:
                              project
   upgrade                    Upgrade CLI to the latest version
   search <query>             Search for snippets in the tscircuit registry
+  version                    Print CLI version
   help [command]             display help for command
 ```
 <!-- END_HELP_OUTPUT -->
