@@ -35,7 +35,7 @@ test("test3 dev server port handling", async () => {
   await devServer.start()
 
   // Wait for servers to be ready
-  await new Promise((resolve) => setTimeout(resolve, 1000))
+  await new Promise((resolve) => setTimeout(resolve, 3000))
 
   // Test the DevServer
   const res = await fetch(`http://localhost:${devServerPort}`)
