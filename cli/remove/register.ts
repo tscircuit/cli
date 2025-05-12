@@ -6,11 +6,9 @@ export const registerRemove = (program: Command) => {
     .command("remove")
     .description("Remove a tscircuit component package from your project")
     .argument("<component>", "Component to remove (e.g. author/component-name)")
-    .action(async (componentPath: string) => {
-      try {
-        await removePackage(componentPath)
-      } catch (error) {
+    .action((componentPath: string) => {
+      return removePackage(componentPath).catch(() => {
         process.exit(1)
-      }
+      })
     })
 }
