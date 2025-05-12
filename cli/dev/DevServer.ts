@@ -163,12 +163,7 @@ export class DevServer {
     const oldRelativePath = path.relative(this.projectDir, oldPath)
     const newRelativePath = path.relative(this.projectDir, newPath)
     // First delete the old file from the file server
-    await this.fsKy.post("api/files/delete", {
-      json: {
-        file_path: oldRelativePath,
-        initiator: "filesystem_change",
-      },
-    })
+    await this.handleFileRemovedFromFilesystem(oldPath)
 
     // Then upsert the new file
     const fileContent = fs.readFileSync(newPath, "utf-8")
