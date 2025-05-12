@@ -151,12 +151,26 @@ export class DevServer {
 
   async handleFileRemovedFromFilesystem(absoluteFilePath: string) {
     const relativeFilePath = path.relative(this.projectDir, absoluteFilePath)
-    await this.fsKy.post("api/files/delete", {
-      json: {
-        file_path: relativeFilePath,
-        initiator: "filesystem_change",
-      },
-    })
+    debug(`Deleting file ${relativeFilePath} from server`)
+
+    const response = await this.fsKy
+      .post("api/files/delete", {
+        json: {
+          file_path: relativeFilePath,
+          initiator: "filesystem_change",
+        },
+        throwHttpErrors: false, // Don't throw on HTTP errors (like 404)
+      })
+      .json()
+
+    if (response && response.error) {
+      console.error(
+        `Failed to delete file ${relativeFilePath}: ${response.error}`,
+      )
+      return
+    }
+
+    debug(`Successfully deleted file ${relativeFilePath} from server`)
   }
 
   async handleFileRename(oldPath: string, newPath: string) {
