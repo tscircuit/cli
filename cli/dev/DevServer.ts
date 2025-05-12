@@ -14,6 +14,9 @@ import { globbySync } from "globby"
 import { ExportFormat, exportSnippet } from "lib/shared/export-snippet"
 import { getPackageFilePaths } from "./get-package-file-paths"
 import { addPackage } from "lib/shared/add-package"
+import Debug from "debug"
+
+const debug = Debug("tscircuit:devserver")
 
 export class DevServer {
   port: number
@@ -94,6 +97,15 @@ export class DevServer {
     this.filesystemWatcher.on("add", (filePath) =>
       this.handleFileChangedOnFilesystem(filePath),
     )
+    this.filesystemWatcher.on("unlink", (filePath) =>
+      this.handleFileRemovedFromFilesystem(filePath),
+    )
+    this.filesystemWatcher.on("unlinkDir", (filePath) =>
+      this.handleFileRemovedFromFilesystem(filePath),
+    )
+    this.filesystemWatcher.on("rename", (oldPath, newPath) =>
+      this.handleFileRename(oldPath, newPath),
+    )
 
     await this.upsertInitialFiles()
 
@@ -137,6 +149,77 @@ export class DevServer {
       .json()
   }
 
+  async handleFileRemovedFromFilesystem(absoluteFilePath: string) {
+    const relativeFilePath = path.relative(this.projectDir, absoluteFilePath)
+
+    // Check if the path is empty or just whitespace
+    if (!relativeFilePath || relativeFilePath.trim() === "") {
+      debug("Skipping delete for empty file path")
+      return
+    }
+
+    debug(`Deleting file ${relativeFilePath} from server`)
+
+    // Use a wrapper function to handle potential connection errors
+    const deleteFile = async () => {
+      return await this.fsKy
+        .post("api/files/delete", {
+          json: {
+            file_path: relativeFilePath,
+            initiator: "filesystem_change",
+          },
+          throwHttpErrors: false,
+          timeout: 5000, // Add timeout to prevent hanging
+          retry: {
+            limit: 3,
+            methods: ["POST"],
+            statusCodes: [408, 413, 429, 500, 502, 503, 504],
+          },
+        })
+        .json()
+    }
+
+    // Use Promise.resolve to handle network errors without try/catch
+    const response = await Promise.resolve(deleteFile()).catch((error) => {
+      console.error(
+        `Network error deleting ${relativeFilePath}: ${error instanceof Error ? error.message : String(error)}`,
+      )
+      return { error: "Connection error" }
+    })
+
+    if (response && response.error) {
+      // Don't treat "file not found" as a fatal error, just log it as debug
+      if (response.error.includes("File not found")) {
+        debug(`File not found: ${relativeFilePath}`)
+      } else {
+        console.error(
+          `Failed to delete file ${relativeFilePath}: ${response.error}`,
+        )
+      }
+      return
+    }
+
+    debug(`Successfully deleted file ${relativeFilePath} from server`)
+  }
+  async handleFileRename(oldPath: string, newPath: string) {
+    const oldRelativePath = path.relative(this.projectDir, oldPath)
+    const newRelativePath = path.relative(this.projectDir, newPath)
+    // First delete the old file from the file server
+    await this.handleFileRemovedFromFilesystem(oldPath)
+
+    // Then upsert the new file
+    const fileContent = fs.readFileSync(newPath, "utf-8")
+    await this.fsKy.post("api/files/upsert", {
+      json: {
+        file_path: newRelativePath,
+        text_content: fileContent,
+        initiator: "filesystem_change",
+      },
+    })
+
+    debug(`File renamed from ${oldRelativePath} to ${newRelativePath}`)
+  }
+
   async upsertInitialFiles() {
     const filePaths = getPackageFilePaths(this.projectDir)
 
@@ -177,6 +260,7 @@ export class DevServer {
   async stop() {
     this.httpServer?.close()
     this.eventsWatcher?.stop()
+    await this.filesystemWatcher?.close()
   }
 
   private async handleInstallPackage(full_package_name: string) {

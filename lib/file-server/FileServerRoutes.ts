@@ -37,4 +37,30 @@ export interface FileServerRoutes extends EventsRoutes {
       }
     }
   }
+  "api/files/delete": {
+    POST: {
+      requestJson: {
+        file_path: string
+        initiator?: string
+      }
+      responseJson: null | { error: string }
+    }
+  }
+  "api/files/rename": {
+    POST: {
+      requestJson: {
+        old_file_path: string
+        new_file_path: string
+        initiator?: string
+      }
+      responseJson: {
+        file: {
+          file_id: string
+          file_path: string
+          text_content: string
+          created_at: string
+        } | null
+      }
+    }
+  }
 }
