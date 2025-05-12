@@ -151,28 +151,56 @@ export class DevServer {
 
   async handleFileRemovedFromFilesystem(absoluteFilePath: string) {
     const relativeFilePath = path.relative(this.projectDir, absoluteFilePath)
+
+    // Check if the path is empty or just whitespace
+    if (!relativeFilePath || relativeFilePath.trim() === "") {
+      debug("Skipping delete for empty file path")
+      return
+    }
+
     debug(`Deleting file ${relativeFilePath} from server`)
 
-    const response = await this.fsKy
-      .post("api/files/delete", {
-        json: {
-          file_path: relativeFilePath,
-          initiator: "filesystem_change",
-        },
-        throwHttpErrors: false, // Don't throw on HTTP errors (like 404)
-      })
-      .json()
+    // Use a wrapper function to handle potential connection errors
+    const deleteFile = async () => {
+      return await this.fsKy
+        .post("api/files/delete", {
+          json: {
+            file_path: relativeFilePath,
+            initiator: "filesystem_change",
+          },
+          throwHttpErrors: false,
+          timeout: 5000, // Add timeout to prevent hanging
+          retry: {
+            limit: 3,
+            methods: ["POST"],
+            statusCodes: [408, 413, 429, 500, 502, 503, 504],
+          },
+        })
+        .json()
+    }
+
+    // Use Promise.resolve to handle network errors without try/catch
+    const response = await Promise.resolve(deleteFile()).catch((error) => {
+      console.error(
+        `Network error deleting ${relativeFilePath}: ${error instanceof Error ? error.message : String(error)}`,
+      )
+      return { error: "Connection error" }
+    })
 
     if (response && response.error) {
-      console.error(
-        `Failed to delete file ${relativeFilePath}: ${response.error}`,
-      )
+      // Don't treat "file not found" as a fatal error, just log it as debug
+      if (response.error.includes("File not found")) {
+        debug(`File not found: ${relativeFilePath}`)
+      } else {
+        console.error(
+          `Failed to delete file ${relativeFilePath}: ${response.error}`,
+        )
+      }
       return
     }
 
     debug(`Successfully deleted file ${relativeFilePath} from server`)
   }
-
   async handleFileRename(oldPath: string, newPath: string) {
     const oldRelativePath = path.relative(this.projectDir, oldPath)
     const newRelativePath = path.relative(this.projectDir, newPath)
