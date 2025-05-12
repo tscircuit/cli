@@ -50,6 +50,8 @@ Commands:
   config                     Manage tscircuit CLI configuration
   export [options] <file>    Export tscircuit code to various formats
   add <component>            Add a tscircuit component package to your project
+  remove <component>         Remove a tscircuit component package from your
+                             project
   upgrade                    Upgrade CLI to the latest version
   search <query>             Search for snippets in the tscircuit registry
   help [command]             display help for command
