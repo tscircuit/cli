@@ -6,10 +6,8 @@ import { generateTsConfig } from "lib/shared/generate-ts-config"
 import { writeFileIfNotExists } from "lib/shared/write-file-if-not-exists"
 import { generateGitIgnoreFile } from "lib/shared/generate-gitignore-file"
 import { generatePackageJson } from "lib/shared/generate-package-json"
-import {
-  askConfirmation,
-  checkForTsciUpdates,
-} from "lib/shared/check-for-cli-update"
+import { checkForTsciUpdates } from "lib/shared/check-for-cli-update"
+import { prompts } from "lib/utils/prompts"
 
 export const registerInit = (program: Command) => {
   program
@@ -25,9 +23,12 @@ export const registerInit = (program: Command) => {
       await checkForTsciUpdates()
 
       if (!directory) {
-        const continueInCurrentDirectory = await askConfirmation(
-          "Do you want to initialize a new project in the current directory?",
-        )
+        const { continueInCurrentDirectory } = await prompts({
+          type: "confirm",
+          name: "continueInCurrentDirectory",
+          message:
+            "Do you want to initialize a new project in the current directory?",
+        })
         if (!continueInCurrentDirectory) {
           return
         }
