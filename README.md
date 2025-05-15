@@ -10,14 +10,14 @@ A CLI for developing, managing and publishing tscircuit code (the "npm for tscir
 # browser preview
 tsci dev ./path/to/file.tsx
 
-# Clone a snippet from the registry
-tsci clone author/snippetName
+# Clone a package from the registry
+tsci clone author/packageName
 
 # Add a component from tscircuit.com
 tsci add author/component-name
 ```
 
-> Note: The snippets CLI uses the same configuration files as the [@tscircuit/cli](https://github.com/tscircuit/cli), so you may need to also install `npm install -g @tscircuit/cli` and run `tsci login` to authenticate!
+> Note: The packages CLI uses the same configuration files as the [@tscircuit/cli](https://github.com/tscircuit/cli), so you may need to also install `npm install -g @tscircuit/cli` and run `tsci login` to authenticate!
 
 ## Installation
 
@@ -31,7 +31,7 @@ npm install -g @tscircuit/cli
 ```
 Usage: tsci [options] [command]
 
-CLI for developing tscircuit snippets
+CLI for developing tscircuit packages
 
 Options:
   -h, --help                 display help for command
@@ -40,9 +40,9 @@ Commands:
   init [directory]           Initialize a new TSCircuit project in the
                              specified directory (or current directory if none
                              is provided)
-  dev [options] [file]       Start development server for a snippet
-  clone [options] <snippet>  Clone a snippet from the registry
-  push [options] [file]      Save snippet code to Registry API
+  dev [options] [file]       Start development server for a package
+  clone [options] <package>  Clone a package from the registry
+  push [options] [file]      Save package code to Registry API
   auth                       Login/logout
   login                      Login to tscircuit registry
   logout                     Logout from tscircuit registry
@@ -52,7 +52,7 @@ Commands:
   remove <component>         Remove a tscircuit component package from your
                              project
   upgrade                    Upgrade CLI to the latest version
-  search <query>             Search for snippets in the tscircuit registry
+  search <query>             Search for packages in the tscircuit registry
   version                    Print CLI version
   help [command]             display help for command
 ```
@@ -60,7 +60,7 @@ Commands:
 
 ## Development
 
-This command will open the `snippets.tsx` file for editing.
+This command will open the `index.tsx` file for editing.
 
 ```bash
 bun run dev
