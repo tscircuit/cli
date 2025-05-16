@@ -10,10 +10,10 @@ import { cliConfig } from "lib/cli-config"
 export const registerClone = (program: Command) => {
   program
     .command("clone")
-    .description("Clone a snippet from the registry")
+    .description("Clone a package from the registry")
     .argument(
-      "<snippet>",
-      "Snippet to clone (e.g. author/snippetName or https://tscircuit.com/author/snippetName)",
+      "<package>",
+      "Package to clone (e.g. author/packageName or https://tscircuit.com/author/packageName)",
     )
     .option("-a, --include-author", "Include author name in the directory path")
     .action(
@@ -29,7 +29,7 @@ export const registerClone = (program: Command) => {
 
         if (!urlMatch && !originalMatch) {
           console.error(
-            `Invalid snippet path "${snippetPath}". Accepted formats:\n - author/snippetName\n - author.snippetName \n - @tsci/author.snippetName\n - https://tscircuit.com/author/snippetName`,
+            `Invalid package path "${snippetPath}". Accepted formats:\n - author/snippetName\n - author.snippetName \n - @tsci/author.snippetName\n - https://tscircuit.com/author/snippetName`,
           )
           process.exit(1)
         }

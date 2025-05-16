@@ -10,8 +10,8 @@ import { getVersion } from "lib/getVersion"
 export const registerDev = (program: Command) => {
   program
     .command("dev")
-    .description("Start development server for a snippet")
-    .argument("[file]", "Path to the snippet file")
+    .description("Start development server for a package")
+    .argument("[file]", "Path to the package file")
     .option("-p, --port <number>", "Port to run server on", "3020")
     .action(async (file: string, options: { port: string }) => {
       let port = parseInt(options.port)
@@ -58,7 +58,7 @@ export const registerDev = (program: Command) => {
 
       try {
         process.stdout.write(
-          kleur.gray("Installing types for imported snippets..."),
+          kleur.gray("Installing types for imported packages..."),
         )
         await installNodeModuleTypesForSnippet(absolutePath)
         console.log(kleur.green(" done"))

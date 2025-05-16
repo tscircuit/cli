@@ -23,11 +23,11 @@ test("clone command fetches and creates package files correctly", async () => {
   ])
 }, 10_000)
 
-test("clone command handles invalid snippet path", async () => {
+test("clone command handles invalid package path", async () => {
   const { runCommand } = await getCliTestFixture()
 
   const { stderr } = await runCommand("tsci clone invalid-path")
-  expect(stderr).toContain("Invalid snippet path")
+  expect(stderr).toContain("Invalid package path")
 })
 
 test("clone command handles API errors gracefully", async () => {
@@ -50,7 +50,7 @@ test("clone command rejects invalid URL formats", async () => {
 
   for (const url of testCases) {
     const { stderr } = await runCommand(`tsci clone ${url}`)
-    expect(stderr).toContain("Invalid snippet path")
+    expect(stderr).toContain("Invalid package path")
   }
 })
 

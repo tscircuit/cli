@@ -31,7 +31,7 @@ export const pushSnippet = async ({
   const sessionToken = cliConfig.get("sessionToken")
   if (!sessionToken) {
     onError(
-      "You need to log in to save snippet. Run 'tsci login' to authenticate.",
+      "You need to log in to save package. Run 'tsci login' to authenticate.",
     )
     return onExit(1)
   }
