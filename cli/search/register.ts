@@ -7,8 +7,8 @@ import { addPackage } from "lib/shared/add-package"
 export const registerSearch = (program: Command) => {
   program
     .command("search")
-    .description("Search for snippets in the tscircuit registry")
-    .argument("<query>", "Search query (e.g. keyword, author, or snippet name)")
+    .description("Search for packages in the tscircuit registry")
+    .argument("<query>", "Search query (e.g. keyword, author, or package name)")
     .action(async (query: string) => {
       const ky = getRegistryApiKy()
       let results: {

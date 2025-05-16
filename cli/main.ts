@@ -22,7 +22,7 @@ import { registerRemove } from "./remove/register"
 
 export const program = new Command()
 
-program.name("tsci").description("CLI for developing tscircuit snippets")
+program.name("tsci").description("CLI for developing tscircuit packages")
 
 registerInit(program)
 

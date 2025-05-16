@@ -5,7 +5,7 @@ export const registerExport = (program: Command) => {
   program
     .command("export")
     .description("Export tscircuit code to various formats")
-    .argument("<file>", "Path to the snippet file")
+    .argument("<file>", "Path to the package file")
     .option("-f, --format <format>", "Output format")
     .option("-o, --output <path>", "Output file path")
     .action(async (file, options) => {
