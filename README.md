@@ -31,7 +31,7 @@ npm install -g @tscircuit/cli
 ```
 Usage: tsci [options] [command]
 
-CLI for developing tscircuit snippets
+CLI for developing tscircuit packages
 
 Options:
   -h, --help                 display help for command
@@ -40,8 +40,8 @@ Commands:
   init [directory]           Initialize a new TSCircuit project in the
                              specified directory (or current directory if none
                              is provided)
-  dev [options] [file]       Start development server for a snippet
-  clone [options] <snippet>  Clone a snippet from the registry
+  dev [options] [file]       Start development server for a package
+  clone [options] <package>  Clone a package from the registry
   push [options] [file]      Save snippet code to Registry API
   auth                       Login/logout
   login                      Login to tscircuit registry
@@ -52,7 +52,7 @@ Commands:
   remove <component>         Remove a tscircuit component package from your
                              project
   upgrade                    Upgrade CLI to the latest version
-  search <query>             Search for snippets in the tscircuit registry
+  search <query>             Search for packages in the tscircuit registry
   version                    Print CLI version
   help [command]             display help for command
 ```
