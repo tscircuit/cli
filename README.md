@@ -2,6 +2,8 @@
 
 A CLI for developing, managing and publishing tscircuit code (the "npm for tscircuit")
 
+https://github.com/user-attachments/assets/0228e09d-48fc-4bf5-814b-762b60fc35c7
+
 ## Usage
 
 ```bash
