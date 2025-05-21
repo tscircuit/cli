@@ -23,7 +23,7 @@ export const getLatestVersion = async () => {
 
 export const checkForTsciUpdates = async () => {
   if (process.env.TSCI_SKIP_CLI_UPDATE === "true") return false
-  
+
   const latestCliVersion = await getLatestVersion()
   if (!latestCliVersion) return false
 
