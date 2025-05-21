@@ -1,6 +1,5 @@
 import * as http from "node:http"
 import * as fs from "node:fs"
-import * as path from "node:path"
 import { getNodeHandler } from "winterspec/adapters/node"
 import pkg from "../../package.json"
 // @ts-ignore

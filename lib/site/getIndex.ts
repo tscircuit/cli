@@ -1,5 +1,3 @@
-import pkg from "../../package.json"
-
 export const getIndex = async () => {
   return `<html>
     <head>

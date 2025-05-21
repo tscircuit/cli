@@ -1,4 +1,4 @@
-import { Command } from "commander"
+import type { Command } from "commander"
 import { addPackage } from "lib/shared/add-package"
 
 export const registerAdd = (program: Command) => {
