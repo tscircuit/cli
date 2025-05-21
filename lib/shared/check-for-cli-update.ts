@@ -41,7 +41,7 @@ export const checkForTsciUpdates = async () => {
   return false
 }
 
-export const forceUpdateTsci = async () => {
+export const updateTsciIfNewVersionIsAvailable = async () => {
   const latestCliVersion = await getLatestVersion()
   if (!latestCliVersion) return false
 

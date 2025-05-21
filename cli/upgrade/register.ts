@@ -2,7 +2,7 @@ import type { Command } from "commander"
 import kleur from "kleur"
 import {
   currentCliVersion,
-  forceUpdateTsci,
+  updateTsciIfNewVersionIsAvailable,
 } from "lib/shared/check-for-cli-update"
 
 export function registerUpgradeCommand(program: Command) {
@@ -10,7 +10,7 @@ export function registerUpgradeCommand(program: Command) {
     .command("upgrade")
     .description("Upgrade CLI to the latest version")
     .action(async () => {
-      const isUpdated = await forceUpdateTsci()
+      const isUpdated = await updateTsciIfNewVersionIsAvailable()
       if (!isUpdated) {
         console.log(
           kleur.green(
