@@ -119,14 +119,14 @@ export class DevServer {
         searchParams: { file_path: ev.file_path },
       })
       .json()
-    
+
     // Create directory structure if it doesn't exist
     const fullPath = path.join(this.projectDir, ev.file_path)
     const dirPath = path.dirname(fullPath)
     if (!fs.existsSync(dirPath)) {
       fs.mkdirSync(dirPath, { recursive: true })
     }
-    
+
     fs.writeFileSync(fullPath, file.text_content)
   }
 
