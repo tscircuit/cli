@@ -10,8 +10,6 @@ import type { FileUpdatedEvent } from "../../lib/file-server/FileServerEvent"
 import * as chokidar from "chokidar"
 import { FilesystemTypesHandler } from "lib/dependency-analysis/FilesystemTypesHandler"
 import { pushSnippet } from "lib/shared/push-snippet"
-import { globbySync } from "globby"
-import { ExportFormat, exportSnippet } from "lib/shared/export-snippet"
 import { getPackageFilePaths } from "./get-package-file-paths"
 import { addPackage } from "lib/shared/add-package"
 import Debug from "debug"
@@ -115,18 +113,21 @@ export class DevServer {
   async handleFileUpdatedEventFromServer(ev: FileUpdatedEvent) {
     if (ev.initiator === "filesystem_change") return
 
-    if (ev.file_path === "manual-edits.json") {
-      console.log("Manual edits updated, updating on filesystem...")
-      const { file } = await this.fsKy
-        .get("api/files/get", {
-          searchParams: { file_path: ev.file_path },
-        })
-        .json()
-      fs.writeFileSync(
-        path.join(this.projectDir, "manual-edits.json"),
-        file.text_content,
-      )
+    console.log(`Importing: ${ev.file_path}`)
+    const { file } = await this.fsKy
+      .get("api/files/get", {
+        searchParams: { file_path: ev.file_path },
+      })
+      .json()
+    
+    // Create directory structure if it doesn't exist
+    const fullPath = path.join(this.projectDir, ev.file_path)
+    const dirPath = path.dirname(fullPath)
+    if (!fs.existsSync(dirPath)) {
+      fs.mkdirSync(dirPath, { recursive: true })
     }
+    
+    fs.writeFileSync(fullPath, file.text_content)
   }
 
   async handleFileChangedOnFilesystem(absoluteFilePath: string) {
@@ -187,7 +188,7 @@ export class DevServer {
       return { error: "Connection error" }
     })
 
-    if (response && response.error) {
+    if (response?.error) {
       // Don't treat "file not found" as a fatal error, just log it as debug
       if (response.error.includes("File not found")) {
         debug(`File not found: ${relativeFilePath}`)
