@@ -13,6 +13,7 @@ import { pushSnippet } from "lib/shared/push-snippet"
 import { getPackageFilePaths } from "./get-package-file-paths"
 import { addPackage } from "lib/shared/add-package"
 import Debug from "debug"
+import kleur from "kleur"
 
 const debug = Debug("tscircuit:devserver")
 
@@ -113,7 +114,6 @@ export class DevServer {
   async handleFileUpdatedEventFromServer(ev: FileUpdatedEvent) {
     if (ev.initiator === "filesystem_change") return
 
-    console.log(`Importing: ${ev.file_path}`)
     const { file } = await this.fsKy
       .get("api/files/get", {
         searchParams: { file_path: ev.file_path },
@@ -138,7 +138,7 @@ export class DevServer {
 
     await this.typesHandler?.handleFileTypeDependencies(absoluteFilePath)
 
-    console.log(`${relativeFilePath} saved. Applying changes...`)
+    console.log(kleur.green(`Saving: ${relativeFilePath}`))
     await this.fsKy
       .post("api/files/upsert", {
         json: {
