@@ -2,15 +2,11 @@ import { Request as EdgeRuntimeRequest } from "@edge-runtime/primitives"
 import type { Middleware } from "winterspec"
 import { createDatabase } from "@tscircuit/fake-snippets"
 import fakeRegistryBundle from "@tscircuit/fake-snippets/bundle"
-import { createWinterSpecBundleFromDir } from "winterspec/adapters/node"
 
 export const startServer = async ({
   port,
   testDbName,
 }: { port?: number; testDbName: string }) => {
-  const winterspecBundle = await createWinterSpecBundleFromDir(
-    fakeRegistryBundle.toString(),
-  )
   const db = createDatabase()
 
   const middleware: Middleware[] = [
@@ -28,7 +24,7 @@ export const startServer = async ({
         method: bunReq.method,
         body: bunReq.body,
       })
-      return winterspecBundle.makeRequest(req as any, {
+      return fakeRegistryBundle.makeRequest(req as any, {
         middleware,
       })
     },
