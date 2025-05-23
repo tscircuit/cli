@@ -7,7 +7,7 @@
     "@biomejs/biome": "^1.9.4",
     "@tscircuit/core": "^0.0.416",
     "@tscircuit/eval": "^0.0.216",
-    "@tscircuit/fake-snippets": "^0.0.68",
+    "@tscircuit/fake-snippets": "^0.0.23",
     "@tscircuit/file-server": "^0.0.24",
     "@tscircuit/runframe": "^0.0.491",
     "@types/bun": "^1.2.2",
