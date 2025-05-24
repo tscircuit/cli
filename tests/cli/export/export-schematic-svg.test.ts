@@ -34,7 +34,10 @@ test("export schematic-svg", async () => {
   const { stdout, stderr } = await runCommand(
     `tsci export ${circuitPath} -f schematic-svg`,
   )
-  expect(stderr).toBe("")
+  // TODO: Remove this when the autorouter is not emitting this warning
+  expect(stderr).toBe(
+    "LocalStorage is not available. LocalStorageCache will not function.\n",
+  )
 
   const schematicSvg = await readFile(
     path.join(tmpDir, "test-circuit-schematic.svg"),

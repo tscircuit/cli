@@ -19,7 +19,8 @@ test("should upload files to the registry", async () => {
   expect({ stdout, stderr }).toMatchInlineSnapshot(`
     {
       "stderr": 
-    "Package author does not match the logged in GitHub username
+    "LocalStorage is not available. LocalStorageCache will not function.
+    Package author does not match the logged in GitHub username
     "
     ,
       "stdout": 
