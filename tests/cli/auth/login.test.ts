@@ -18,7 +18,10 @@ test("login command: already logged in", async () => {
 
   const { stdout, stderr } = await runCommand("tsci login")
 
-  expect(stderr).toBe("")
+  // TODO: Remove this when the autorouter is not emitting this warning
+  expect(stderr).toBe(
+    "LocalStorage is not available. LocalStorageCache will not function.\n",
+  )
   expect(stdout).toContain(
     "Already logged in! Use 'tsci logout' if you need to switch accounts.",
   )

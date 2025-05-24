@@ -24,7 +24,8 @@ test("should bump version if release already exists", async () => {
   expect({ stdout: stdout1, stderr: stderr1 }).toMatchInlineSnapshot(`
     {
       "stderr": 
-    "Package author does not match the logged in GitHub username
+    "LocalStorage is not available. LocalStorageCache will not function.
+    Package author does not match the logged in GitHub username
     "
     ,
       "stdout": 
@@ -47,7 +48,8 @@ test("should bump version if release already exists", async () => {
   expect({ stdout: stdout2, stderr: stderr2 }).toMatchInlineSnapshot(`
     {
       "stderr": 
-    "Package author does not match the logged in GitHub username
+    "LocalStorage is not available. LocalStorageCache will not function.
+    Package author does not match the logged in GitHub username
     "
     ,
       "stdout": 
