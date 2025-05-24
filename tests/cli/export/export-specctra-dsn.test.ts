@@ -33,7 +33,10 @@ test("export specctra-dsn", async () => {
   const { stdout, stderr } = await runCommand(
     `tsci export ${circuitPath} -f specctra-dsn`,
   )
-  expect(stderr).toBe("")
+  // TODO: Remove this when the autorouter is not emitting this warning
+  expect(stderr).toBe(
+    "LocalStorage is not available. LocalStorageCache will not function.\n",
+  )
 
   const specctraDSN = await readFile(
     path.join(tmpDir, "test-circuit.dsn"),
