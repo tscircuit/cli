@@ -31,7 +31,7 @@ export const pushSnippet = async ({
   const sessionToken = cliConfig.get("sessionToken")
   if (!sessionToken) {
     onError(
-      "You need to log in to save package. Run 'tsci login' to authenticate."
+      "You need to log in to save package. Run 'tsci login' to authenticate.",
     )
     return onExit(1)
   }
@@ -57,7 +57,7 @@ export const pushSnippet = async ({
 
   if (!packageJsonPath) {
     onError(
-      "No package.json found, try running 'tsci init' to bootstrap the project"
+      "No package.json found, try running 'tsci init' to bootstrap the project",
     )
     return onExit(1)
   }
@@ -84,8 +84,8 @@ export const pushSnippet = async ({
 
   const packageJsonHasName = Boolean(packageJson.name)
   if (!packageJsonHasName) {
-    console.log(kleur.gray("No package name found in package.json"));
-    ({ unscopedPackageName } = await prompts({
+    console.log(kleur.gray("No package name found in package.json"))
+    ;({ unscopedPackageName } = await prompts({
       type: "text",
       name: "unscopedPackageName",
       message: `Enter the unscoped package name:`,
@@ -131,7 +131,7 @@ export const pushSnippet = async ({
 
   if (!packageVersion) {
     console.log(
-      "No package version found in package.json or previous releases, setting to 0.0.1"
+      "No package version found in package.json or previous releases, setting to 0.0.1",
     )
     packageVersion = "0.0.1"
   }
@@ -246,7 +246,7 @@ export const pushSnippet = async ({
   if (doesReleaseExist) {
     const bumpedVersion = semver.inc(packageVersion, "patch")!
     onSuccess(
-      `Incrementing Package Version ${packageVersion} -> ${bumpedVersion}`
+      `Incrementing Package Version ${packageVersion} -> ${bumpedVersion}`,
     )
     packageVersion = bumpedVersion
     updatePackageJsonVersion(packageVersion)
@@ -296,6 +296,6 @@ export const pushSnippet = async ({
     [
       kleur.green(`"${tsciPackageName}@${packageVersion}" published!`),
       `https://tscircuit.com/${scopedPackageName}`,
-    ].join("\n")
+    ].join("\n"),
   )
 }
