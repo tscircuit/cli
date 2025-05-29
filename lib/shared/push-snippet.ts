@@ -267,8 +267,8 @@ export const pushSnippet = async ({
 
   const filePaths = getPackageFilePaths(projectDir)
   for (const fullFilePath of filePaths) {
-    const relativeFilePath = path.relative(projectDir, fullFilePath)
-    const fileContent = fs.readFileSync(fullFilePath, "utf-8")
+    const relativeFilePath = path.relative(projectDir, fullFilePath);
+    const fileContent = fs.readFileSync(fullFilePath, "utf-8");
     await ky
       .post("package_files/create", {
         json: {
@@ -279,18 +279,22 @@ export const pushSnippet = async ({
       })
       .json()
       .then((response) => {
-        console.log(kleur.gray(`⬆︎ ${relativeFilePath}`))
+        console.log(kleur.gray(`⬆︎ ${relativeFilePath}`));
       })
       .catch((error) => {
-        onError(`Error uploading file ${fullFilePath}: ${error}`)
-        return onExit(1)
-      })
+        onError(`Error uploading file ${fullFilePath}: ${error}`);
+        uploadFailed = true;
+      });
+  }
+
+  if (uploadFailed) {
+    return onExit(1);
   }
 
   onSuccess(
     [
       kleur.green(`"${tsciPackageName}@${packageVersion}" published!`),
       `https://tscircuit.com/${scopedPackageName}`,
-    ].join("\n"),
-  )
-}
+    ].join("\n")
+  );
+};
