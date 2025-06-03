@@ -8,7 +8,7 @@ export const prettyResponseErrorHook: AfterResponseHook = async (
 ) => {
   if (!response.ok) {
     try {
-      const errorData = await response.json()
+      const errorData = (await response.json()) as any
 
       let requestBody = ""
       try {
