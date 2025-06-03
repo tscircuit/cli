@@ -9,10 +9,20 @@ export const prettyResponseErrorHook: AfterResponseHook = async (
   if (!response.ok) {
     try {
       const errorData = await response.json()
+      let requestBody = ""
+      try {
+        requestBody = await _request.clone().text()
+      } catch {
+        // ignore
+      }
       throw new Error(
         `FAIL [${response.status}]: ${_request.method} ${
           new URL(_request.url).pathname
-        } \n\n ${JSON.stringify(errorData, null, 2)}`,
+        }` +
+          (requestBody
+            ? `\n\nRequest Body:\n${requestBody}`
+            : "") +
+          `\n\n${JSON.stringify(errorData, null, 2)}`,
       )
     } catch (e) {
       //ignore, allow the error to be thrown
