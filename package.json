@@ -12,6 +12,7 @@
     "@types/configstore": "^6.0.2",
     "@types/debug": "^4.1.12",
     "@types/jsonwebtoken": "^9.0.9",
+    "@types/micromatch": "^4.0.9",
     "@types/prompts": "^2.4.9",
     "@types/react": "^19.0.8",
     "@types/semver": "^7.5.8",
