@@ -287,17 +287,12 @@ export const pushSnippet = async ({
       })
   }
 
-  await ky
-    .post("package_releases/update", {
-      json: {
-        package_name_with_version: `${scopedPackageName}@${packageVersion}`,
-        ready_to_build: true,
-      },
-    })
-    .catch((error) => {
-      onError(`Error setting ready_to_build: ${error}`)
-      return onExit(1)
-    })
+  await ky.post("package_releases/update", {
+    json: {
+      package_name_with_version: `${scopedPackageName}@${packageVersion}`,
+      ready_to_build: true,
+    },
+  })
 
   onSuccess(
     [
