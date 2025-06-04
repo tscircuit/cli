@@ -1,16 +1,17 @@
 import * as path from "node:path"
 import { globbySync } from "globby"
-import { DEFAULT_IGNORED_DIRECTORIES } from "lib/shared/should-ignore-path"
+import {
+  DEFAULT_IGNORED_PATTERNS,
+  normalizeIgnorePattern,
+} from "lib/shared/should-ignore-path"
 
 export const getPackageFilePaths = (
   projectDir: string,
   ignored: string[] = [],
 ) => {
   const ignorePatterns = [
-    ...DEFAULT_IGNORED_DIRECTORIES.map((d) => `**/${d}/**`),
-    ".env",
-    "**/.*",
-    ...ignored.map((d) => `**/${d}/**`),
+    ...DEFAULT_IGNORED_PATTERNS,
+    ...ignored.map(normalizeIgnorePattern),
   ]
   const fileNames = globbySync("**", {
     cwd: projectDir,
