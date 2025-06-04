@@ -14,6 +14,8 @@ import { getPackageFilePaths } from "./get-package-file-paths"
 import { addPackage } from "lib/shared/add-package"
 import Debug from "debug"
 import kleur from "kleur"
+import { loadProjectConfig } from "lib/project-config"
+import { shouldIgnorePath } from "lib/shared/should-ignore-path"
 
 const debug = Debug("tscircuit:devserver")
 
@@ -25,6 +27,8 @@ export class DevServer {
   componentFilePath: string
 
   projectDir: string
+  /** Paths or directory names to ignore when syncing files */
+  ignoredFiles: string[]
 
   /**
    * The HTTP server that hosts the file server and event bus. You can use
@@ -57,6 +61,8 @@ export class DevServer {
     this.port = port
     this.componentFilePath = componentFilePath
     this.projectDir = path.dirname(componentFilePath)
+    const projectConfig = loadProjectConfig(this.projectDir)
+    this.ignoredFiles = projectConfig?.ignoredFiles ?? []
     this.fsKy = ky.create({
       prefixUrl: `http://localhost:${port}`,
     }) as any
@@ -87,7 +93,8 @@ export class DevServer {
     this.filesystemWatcher = chokidar.watch(this.projectDir, {
       persistent: true,
       ignoreInitial: true,
-      ignored: ["**/node_modules/**", "**/.git/**"],
+      ignored: (p) =>
+        shouldIgnorePath(path.relative(this.projectDir, p), this.ignoredFiles),
     })
 
     this.filesystemWatcher.on("change", (filePath) =>
@@ -135,6 +142,8 @@ export class DevServer {
     // We've temporarily disabled upserting manual edits from filesystem changes
     // because it can be edited by the browser
     if (relativeFilePath.includes("manual-edits.json")) return
+    // Skip files inside the .git directory
+    if (shouldIgnorePath(relativeFilePath, this.ignoredFiles)) return
 
     await this.typesHandler?.handleFileTypeDependencies(absoluteFilePath)
 
@@ -152,6 +161,8 @@ export class DevServer {
 
   async handleFileRemovedFromFilesystem(absoluteFilePath: string) {
     const relativeFilePath = path.relative(this.projectDir, absoluteFilePath)
+
+    if (shouldIgnorePath(relativeFilePath, this.ignoredFiles)) return
 
     // Check if the path is empty or just whitespace
     if (!relativeFilePath || relativeFilePath.trim() === "") {
@@ -205,6 +216,12 @@ export class DevServer {
   async handleFileRename(oldPath: string, newPath: string) {
     const oldRelativePath = path.relative(this.projectDir, oldPath)
     const newRelativePath = path.relative(this.projectDir, newPath)
+
+    if (
+      shouldIgnorePath(oldRelativePath, this.ignoredFiles) ||
+      shouldIgnorePath(newRelativePath, this.ignoredFiles)
+    )
+      return
     // First delete the old file from the file server
     await this.handleFileRemovedFromFilesystem(oldPath)
 
@@ -222,7 +239,7 @@ export class DevServer {
   }
 
   async upsertInitialFiles() {
-    const filePaths = getPackageFilePaths(this.projectDir)
+    const filePaths = getPackageFilePaths(this.projectDir, this.ignoredFiles)
 
     for (const filePath of filePaths) {
       const fileContent = fs.readFileSync(filePath, "utf-8")
