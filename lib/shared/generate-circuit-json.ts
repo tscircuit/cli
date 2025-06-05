@@ -76,6 +76,7 @@ export async function generateCircuitJson({
   // Execute the circuit runner with the virtual file system
   await runner.executeWithFsMap({
     fsMap,
+    mainComponentPath: relativeComponentPath,
   })
 
   // Wait for the circuit to be fully rendered

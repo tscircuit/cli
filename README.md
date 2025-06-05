@@ -50,6 +50,7 @@ Commands:
   logout                     Logout from tscircuit registry
   config                     Manage tscircuit CLI configuration
   export [options] <file>    Export tscircuit code to various formats
+  build [file]               Run tscircuit eval and output circuit json
   add <component>            Add a tscircuit component package to your project
   remove <component>         Remove a tscircuit component package from your
                              project
