@@ -20,6 +20,7 @@ import { registerConfigSet } from "./config/set/register"
 import { registerSearch } from "./search/register"
 import { registerRemove } from "./remove/register"
 import { registerBuild } from "./build/register"
+import { registerSnapshot } from "./snapshot/register"
 
 export const program = new Command()
 
@@ -45,6 +46,7 @@ registerExport(program)
 registerBuild(program)
 registerAdd(program)
 registerRemove(program)
+registerSnapshot(program)
 
 registerUpgradeCommand(program)
 
