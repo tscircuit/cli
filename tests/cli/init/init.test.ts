@@ -36,6 +36,7 @@ test("init command installs @types/react and passes type-checking", async () => 
   "scripts": {
     "build": "tsci build",
     "dev": "tsci dev",
+    "start": "tsci dev",
   },
   "version": "1.0.0",
 }

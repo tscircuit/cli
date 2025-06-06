@@ -6,6 +6,8 @@ import { generateTsConfig } from "lib/shared/generate-ts-config"
 import { writeFileIfNotExists } from "lib/shared/write-file-if-not-exists"
 import { generateGitIgnoreFile } from "lib/shared/generate-gitignore-file"
 import { generatePackageJson } from "lib/shared/generate-package-json"
+import { cliConfig, getSessionToken } from "lib/cli-config"
+import { jwtDecode } from "jwt-decode"
 import { checkForTsciUpdates } from "lib/shared/check-for-cli-update"
 import { prompts } from "lib/utils/prompts"
 
@@ -38,6 +40,29 @@ export const registerInit = (program: Command) => {
         ? path.resolve(process.cwd(), directory)
         : process.cwd()
 
+      const defaultPackageName = path.basename(projectDir)
+      const { packageName } = await prompts({
+        type: "text",
+        name: "packageName",
+        message: "Package name",
+        initial: defaultPackageName,
+      })
+
+      let authorName = cliConfig.get("githubUsername")
+      if (!authorName) {
+        const token = getSessionToken()
+        if (token) {
+          try {
+            const decoded = jwtDecode<{
+              github_username?: string
+            }>(token)
+            if (decoded.github_username) {
+              authorName = decoded.github_username
+            }
+          } catch {}
+        }
+      }
+
       // Ensure the directory exists
       fs.mkdirSync(projectDir, { recursive: true })
 
@@ -63,7 +88,7 @@ export default () => (
       )
 
       // Generate package.json
-      generatePackageJson(projectDir)
+      generatePackageJson(projectDir, { packageName, authorName })
       // Generate tsconfig.json
       generateTsConfig(projectDir)
       // Create .gitignore file

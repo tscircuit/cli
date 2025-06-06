@@ -32,8 +32,8 @@ test("should bump version if release already exists", async () => {
     "Package created
 
 
-    ⬆︎ package.json
     ⬆︎ snippet.tsx
+    ⬆︎ package.json
     "@tsci/test-user.test-package@1.0.0" published!
     https://tscircuit.com/test-user/test-package
     "
@@ -56,8 +56,8 @@ test("should bump version if release already exists", async () => {
     "Incrementing Package Version 1.0.0 -> 1.0.1
 
 
-    ⬆︎ package.json
     ⬆︎ snippet.tsx
+    ⬆︎ package.json
     "@tsci/test-user.test-package@1.0.1" published!
     https://tscircuit.com/test-user/test-package
     "

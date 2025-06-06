@@ -6,6 +6,8 @@ import { sign } from "jsonwebtoken"
 const demoJwtToken = sign(
   {
     github_username: "test_user",
+    account_id: "account-1",
+    session_id: "session-1",
   },
   "TEST_SECRET",
 )

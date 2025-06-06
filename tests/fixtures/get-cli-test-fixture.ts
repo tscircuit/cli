@@ -56,6 +56,7 @@ export async function getCliTestFixture(
       {
         account_id: db.accounts[0].account_id,
         github_username: "test-user",
+        session_id: "session-123",
       },
       "secret",
     )
