@@ -13,12 +13,13 @@ export const generatePackageJson = (
   const packageJsonContent = {
     name,
     version: "1.0.0",
-    description: "A TSCircuit project",
     main: "index.tsx",
-    keywords: ["tscircuit", "electronics"],
+    keywords: ["tscircuit"],
     scripts: {
       dev: "tsci dev",
       build: "tsci build",
+      snapshot: "tsci snapshot",
+      "snapshot:update": "tsci snapshot --update",
       start: "tsci dev",
     },
   }

@@ -14,8 +14,7 @@ test("should use default entrypoint if no file is provided", async () => {
   expect({ stdout, stderr }).toMatchInlineSnapshot(`
     {
       "stderr": 
-    "LocalStorage is not available. LocalStorageCache will not function.
-    No package.json found, try running 'tsci init' to bootstrap the project
+    "No package.json found, try running 'tsci init' to bootstrap the project
     "
     ,
       "stdout": 

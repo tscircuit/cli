@@ -24,16 +24,15 @@ test("should bump version if release already exists", async () => {
   expect({ stdout: stdout1, stderr: stderr1 }).toMatchInlineSnapshot(`
     {
       "stderr": 
-    "LocalStorage is not available. LocalStorageCache will not function.
-    Package author does not match the logged in GitHub username
+    "Package author "test-package" does not match the logged in GitHub username "test-user"
     "
     ,
       "stdout": 
     "Package created
 
 
-    ⬆︎ snippet.tsx
     ⬆︎ package.json
+    ⬆︎ snippet.tsx
     "@tsci/test-user.test-package@1.0.0" published!
     https://tscircuit.com/test-user/test-package
     "
@@ -48,16 +47,15 @@ test("should bump version if release already exists", async () => {
   expect({ stdout: stdout2, stderr: stderr2 }).toMatchInlineSnapshot(`
     {
       "stderr": 
-    "LocalStorage is not available. LocalStorageCache will not function.
-    Package author does not match the logged in GitHub username
+    "Package author "test-package" does not match the logged in GitHub username "test-user"
     "
     ,
       "stdout": 
     "Incrementing Package Version 1.0.0 -> 1.0.1
 
 
-    ⬆︎ snippet.tsx
     ⬆︎ package.json
+    ⬆︎ snippet.tsx
     "@tsci/test-user.test-package@1.0.1" published!
     https://tscircuit.com/test-user/test-package
     "

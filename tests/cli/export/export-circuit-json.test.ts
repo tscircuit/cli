@@ -34,9 +34,7 @@ test("export circuit-json", async () => {
     `tsci export ${circuitPath} -f circuit-json`,
   )
   // TODO: Remove this when the autorouter is not emitting this warning
-  expect(stderr).toBe(
-    "LocalStorage is not available. LocalStorageCache will not function.\n",
-  )
+  expect(stderr).toBe("")
 
   const circuitJson = await readFile(
     path.join(tmpDir, "test-circuit.circuit.json"),

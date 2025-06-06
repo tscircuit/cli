@@ -23,9 +23,7 @@ test("print and set token explicitly", async () => {
     "You need to log in to access this.",
   )
   // TODO: Remove this when the autorouter is not emitting this warning
-  expect(invalidTokenPrintStderr).toBe(
-    "LocalStorage is not available. LocalStorageCache will not function.\n",
-  )
+  expect(invalidTokenPrintStderr).toBe("")
 
   // Test setting an invalid token
   const { stdout: invalidTokenSetStdout, stderr: invalidTokenSetStderr } =
@@ -37,10 +35,7 @@ test("print and set token explicitly", async () => {
     await runCommand(`tsci auth set-token ${demoJwtToken}`)
   expect({ validTokenSetStdout, validTokenSetStderr }).toMatchInlineSnapshot(`
     {
-      "validTokenSetStderr": 
-    "LocalStorage is not available. LocalStorageCache will not function.
-    "
-    ,
+      "validTokenSetStderr": "",
       "validTokenSetStdout": 
     "Token manually updated.
     "
