@@ -4,30 +4,31 @@ import ky, { type AfterResponseHook, type KyResponse } from "ky"
 class PrettyHttpError extends Error {
   constructor(
     message: string,
+    public request: Request,
     public response: KyResponse<unknown>,
   ) {
     super(message)
   }
 
   get status() {
-    return this.response.response.status
+    return this.response.status
   }
 
   get url() {
-    return this.response.response.url
+    return this.response.url
   }
 
   get method() {
-    return this.response.request.method
+    return this.request.method
   }
 
   get pathname() {
-    return new URL(this.response.request.url).pathname
+    return new URL(this.response.url).pathname
   }
 }
 
 export const prettyResponseErrorHook: AfterResponseHook = async (
-  _request,
+  request,
   _options,
   response,
 ) => {
@@ -36,7 +37,7 @@ export const prettyResponseErrorHook: AfterResponseHook = async (
 
     let requestBody = ""
     try {
-      requestBody = await _request.clone().text()
+      requestBody = await request.clone().text()
     } catch {
       // ignore errors cloning request body
     }
@@ -47,9 +48,10 @@ export const prettyResponseErrorHook: AfterResponseHook = async (
       : ""
 
     throw new PrettyHttpError(
-      `FAIL [${response.status}]: ${_request.method} ${
-        new URL(_request.url).pathname
+      `FAIL [${response.status}]: ${request.method} ${
+        new URL(request.url).pathname
       }${errorString}${requestBody ? `\n\nRequest Body:\n${requestBody}` : ""}\n\n${JSON.stringify(errorData, null, 2)}`,
+      request,
       response,
     )
   }

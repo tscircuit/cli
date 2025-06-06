@@ -35,9 +35,8 @@ test("init command installs @types/react and passes type-checking", async () => 
     })
   } catch (error) {
     console.log(` ${tmpDir}/${projectDir}`)
-    await new Promise((resolve) => setTimeout(resolve, 1000000))
     throw new Error(
-      `Type-checking failed for init'd project. ${tmpDir}/${projectDir} ${error.toString()}`,
+      `Type-checking failed for init'd project. ${tmpDir}/${projectDir} ${(error as any).toString()}`,
     )
   }
-}, 10_0000000)
+}, 10_000)
