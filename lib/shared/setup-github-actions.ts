@@ -6,7 +6,7 @@ export const setupGithubActions = (projectDir: string = process.cwd()) => {
   const workflowsDir = path.join(projectDir, ".github", "workflows")
   fs.mkdirSync(workflowsDir, { recursive: true })
 
-  const buildWorkflow = `name: TSCircuit Build
+  const buildWorkflow = `name: tscircuit Build
 
 on:
   push:
@@ -23,7 +23,7 @@ jobs:
       - run: bunx tsci build
 `
 
-  const snapshotWorkflow = `name: TSCircuit Snapshot
+  const snapshotWorkflow = `name: tscircuit Snapshot
 
 on:
   push:
