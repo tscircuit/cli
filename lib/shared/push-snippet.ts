@@ -287,6 +287,13 @@ export const pushSnippet = async ({
       })
   }
 
+  await ky.post("package_releases/update", {
+    json: {
+      package_name_with_version: `${scopedPackageName}@${packageVersion}`,
+      ready_to_build: true,
+    },
+  })
+
   onSuccess(
     [
       kleur.green(`"${tsciPackageName}@${packageVersion}" published!`),
