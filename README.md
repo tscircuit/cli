@@ -50,7 +50,7 @@ Commands:
   logout                     Logout from tscircuit registry
   config                     Manage tscircuit CLI configuration
   export [options] <file>    Export tscircuit code to various formats
-  build [file]               Run tscircuit eval and output circuit json
+  build [options] [file]     Run tscircuit eval and output circuit json
   add <component>            Add a tscircuit component package to your project
   remove <component>         Remove a tscircuit component package from your
                              project
@@ -61,6 +61,11 @@ Commands:
   help [command]             display help for command
 ```
 <!-- END_HELP_OUTPUT -->
+
+The `build` command also accepts the following options:
+
+- `--ignore-errors` - continue build even if circuit JSON contains errors
+- `--ignore-warnings` - suppress warning output
 
 ## Development
 
