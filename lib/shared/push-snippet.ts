@@ -108,7 +108,9 @@ export const pushSnippet = async ({
   }
 
   if (currentUsername !== packageJsonAuthor) {
-    console.warn("Package author does not match the logged in GitHub username")
+    console.warn(
+      `Package author "${packageJsonAuthor}" does not match the logged in GitHub username "${currentUsername}"`,
+    )
     // TODO check for org access for user
   }
 

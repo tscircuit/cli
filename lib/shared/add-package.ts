@@ -55,17 +55,6 @@ export async function addPackage(
     console.log("Updated .npmrc with tscircuit registry")
   }
 
-  const isTestMode = process.env.TSCI_TEST_MODE === "true"
-  if (isTestMode) {
-    const pkgJsonPath = path.join(projectDir, "package.json")
-    const pkgJson = JSON.parse(fs.readFileSync(pkgJsonPath, "utf-8"))
-    pkgJson.dependencies = pkgJson.dependencies || {}
-    pkgJson.dependencies[packageName] = "^1.0.0" // Use a dummy version
-    fs.writeFileSync(pkgJsonPath, JSON.stringify(pkgJson, null, 2))
-    console.log(`Added ${packageName} successfully.`)
-    return
-  }
-
   // Install the package using the detected package manager
   const packageManager = getPackageManager()
   try {

@@ -1,4 +1,5 @@
 import fs from "fs"
+import kleur from "kleur"
 import { execSync } from "node:child_process"
 
 function detectPackageManager(): "npm" | "yarn" | "pnpm" | "bun" {
@@ -7,11 +8,11 @@ function detectPackageManager(): "npm" | "yarn" | "pnpm" | "bun" {
   if (userAgent.startsWith("pnpm")) return "pnpm"
   if (userAgent.startsWith("bun")) return "bun"
 
+  if (fs.existsSync("bun.lockb")) return "bun"
+  if (fs.existsSync("bun.lock")) return "bun"
   if (fs.existsSync("yarn.lock")) return "yarn"
   if (fs.existsSync("pnpm-lock.yaml")) return "pnpm"
   if (fs.existsSync("package-lock.json")) return "npm"
-  if (fs.existsSync("bun.lockb")) return "bun"
-  if (fs.existsSync("bun.lock")) return "bun"
 
   // Check if bun is available in the shell
   try {
@@ -73,7 +74,8 @@ export function getPackageManager(): PackageManager {
       } else {
         installCommand = `npm install ${name}`
       }
-      execSync(installCommand, { stdio: "pipe", cwd })
+      console.log(kleur.gray(`> ${installCommand}`))
+      execSync(installCommand, { stdio: "inherit", cwd })
     },
     init: ({ cwd }) => {
       const initCommand = getInitCommand()

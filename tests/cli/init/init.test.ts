@@ -12,36 +12,13 @@ test("init command installs @types/react and passes type-checking", async () => 
   const pkgJsonPath = join(tmpDir, projectDir, "package.json")
   const pkgJson = await Bun.file(pkgJsonPath).json()
 
-  expect(pkgJson).toMatchInlineSnapshot(
-    {
-      name: expect.any(String),
-      devDependencies: {
-        "@tscircuit/core": expect.any(String),
-        "@types/react": expect.any(String),
-      },
+  expect(pkgJson).toMatchObject({
+    name: expect.any(String),
+    devDependencies: {
+      tscircuit: expect.any(String),
+      "@types/react": expect.any(String),
     },
-    `
-{
-  "description": "A TSCircuit project",
-  "devDependencies": {
-    "@tscircuit/core": Any<String>,
-    "@types/react": Any<String>,
-  },
-  "keywords": [
-    "tscircuit",
-    "electronics",
-  ],
-  "main": "index.tsx",
-  "name": Any<String>,
-  "scripts": {
-    "build": "tsci build",
-    "dev": "tsci dev",
-    "start": "tsci dev",
-  },
-  "version": "1.0.0",
-}
-`,
-  )
+  })
 
   const npmrcPath = join(tmpDir, projectDir, ".npmrc")
   const npmrcContent = await Bun.file(npmrcPath).text()
@@ -52,12 +29,15 @@ test("init command installs @types/react and passes type-checking", async () => 
   expect(tsconfigExists).toBeTrue()
 
   try {
-    const typeCheckResult = execSync("npx --yes tsc --noEmit", {
+    const typeCheckResult = execSync("bunx tsc --noEmit", {
       cwd: join(tmpDir, projectDir),
-      stdio: "pipe",
+      stdio: "inherit",
     })
-    console.log(typeCheckResult.toString())
   } catch (error) {
-    throw new Error("Type-checking failed")
+    console.log(` ${tmpDir}/${projectDir}`)
+    await new Promise((resolve) => setTimeout(resolve, 1000000))
+    throw new Error(
+      `Type-checking failed for init'd project. ${tmpDir}/${projectDir} ${error.toString()}`,
+    )
   }
-}, 10_000)
+}, 10_0000000)

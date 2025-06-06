@@ -83,6 +83,9 @@ export async function getCliTestFixture(
       TSCIRCUIT_CONFIG_DIR: testConfigDir,
     }
 
+    let stdout = ""
+    let stderr = ""
+
     const task = Bun.spawn(["bun", ...args], {
       cwd: tmpDir,
       stdout: "pipe",
@@ -90,8 +93,41 @@ export async function getCliTestFixture(
       env,
     })
 
-    const stdout = await new Response(task.stdout).text()
-    const stderr = await new Response(task.stderr).text()
+    // Stream stdout to console and capture
+    const stdoutReader = task.stdout.getReader()
+    const stderrReader = task.stderr.getReader()
+
+    const readStream = async (
+      reader: ReadableStreamDefaultReader<Uint8Array>,
+      writeFn: (chunk: string) => void,
+      collectFn: (chunk: string) => void,
+    ) => {
+      while (true) {
+        const { value, done } = await reader.read()
+        if (done) break
+        const chunk = new TextDecoder().decode(value)
+        writeFn(chunk)
+        collectFn(chunk)
+      }
+    }
+
+    await Promise.all([
+      readStream(
+        stdoutReader,
+        (chunk) => process.stdout.write(chunk),
+        (chunk) => {
+          stdout += chunk
+        },
+      ),
+      readStream(
+        stderrReader,
+        (chunk) => process.stderr.write(chunk),
+        (chunk) => {
+          stderr += chunk
+        },
+      ),
+      task.exited,
+    ])
 
     return { stdout, stderr }
   }
