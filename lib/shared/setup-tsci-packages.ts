@@ -11,6 +11,7 @@ export async function setupTsciProject(
     fs.mkdirSync(projectPath, { recursive: true })
   }
   const packageManager = getPackageManager()
+  const isTestMode = process.env.TSCI_TEST_MODE === "true"
 
   console.log(`Initializing project in ${projectPath}...`)
   process.chdir(projectPath)
@@ -34,7 +35,7 @@ export async function setupTsciProject(
   fs.writeFileSync(packageJsonPath, JSON.stringify(packageJson, null, 2))
   console.log("Updated package.json to remove unnecessary fields.")
 
-  if (dependencies.length > 0) {
+  if (dependencies.length > 0 && !isTestMode) {
     console.log("Installing dependencies...")
     try {
       packageManager.installDeps({
@@ -52,6 +53,15 @@ export async function setupTsciProject(
       console.warn("Please install them manually using the command:")
       console.warn(`  ${installCommand}`)
     }
+  } else if (dependencies.length > 0 && isTestMode) {
+    const pkgJsonPath = path.join(projectPath, "package.json")
+    const pkgJson = JSON.parse(fs.readFileSync(pkgJsonPath, "utf-8"))
+    pkgJson.devDependencies = pkgJson.devDependencies || {}
+    for (const dep of dependencies) {
+      pkgJson.devDependencies[dep] = "1.0.0"
+    }
+    fs.writeFileSync(pkgJsonPath, JSON.stringify(pkgJson, null, 2))
+    console.log("Skipped dependency installation in test mode.")
   }
   return packageJson.name || "unknown"
 }

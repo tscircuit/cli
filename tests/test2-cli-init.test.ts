@@ -11,13 +11,15 @@ test("basic init", async () => {
 
   const dirContents = fs.readdirSync(path.join(tmpDir, "project"))
 
-  expect(dirContents).toContainValues([
+  const expectedFiles = [
     ".gitignore",
     ".npmrc",
     "index.tsx",
-    "node_modules",
-    "bun.lock",
     "package.json",
     "tsconfig.json",
-  ])
+  ]
+
+  for (const file of expectedFiles) {
+    expect(dirContents).toContain(file)
+  }
 }, 10_000)

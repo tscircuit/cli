@@ -4,6 +4,8 @@ import { jwtDecode } from "jwt-decode"
 export interface CliConfig {
   sessionToken?: string
   githubUsername?: string
+  accountId?: string
+  sessionId?: string
   registryApiUrl?: string
   alwaysCloneWithAuthorName?: boolean
 }
@@ -27,13 +29,19 @@ export const setSessionToken = (token: string) => {
   cliConfig.set("sessionToken", token)
   const decoded = jwtDecode<{
     github_username: string
+    account_id?: string
+    session_id?: string
   }>(token)
   cliConfig.set("githubUsername", decoded.github_username)
+  if (decoded.account_id) cliConfig.set("accountId", decoded.account_id)
+  if (decoded.session_id) cliConfig.set("sessionId", decoded.session_id)
 }
 
 export const clearSession = () => {
   cliConfig.delete("sessionToken")
   cliConfig.delete("githubUsername")
+  cliConfig.delete("accountId")
+  cliConfig.delete("sessionId")
 }
 
 export const getRegistryApiUrl = (): string => {
