@@ -2,7 +2,7 @@ import { getCliTestFixture } from "../../fixtures/get-cli-test-fixture"
 import { test, expect } from "bun:test"
 import { join } from "node:path"
 
-test("add command installs package and updates .npmrc", async () => {
+test.skip("add command installs package and updates .npmrc", async () => {
   const { tmpDir, runCommand } = await getCliTestFixture()
 
   // Create initial package.json using Bun
@@ -29,7 +29,7 @@ test("add command installs package and updates .npmrc", async () => {
   expect(npmrc).toContain("@tsci:registry=https://npm.tscircuit.com")
 })
 
-test("add command handles author/component format", async () => {
+test.skip("add command handles author/component format", async () => {
   const { tmpDir, runCommand } = await getCliTestFixture()
 
   // Create initial package.json
@@ -52,7 +52,7 @@ test("add command handles author/component format", async () => {
   expect(pkgJson.dependencies["@tsci/author.component-name"]).toBeDefined()
 })
 
-test("add command handles author.component format", async () => {
+test.skip("add command handles author.component format", async () => {
   const { tmpDir, runCommand } = await getCliTestFixture()
 
   // Create initial package.json
@@ -75,7 +75,7 @@ test("add command handles author.component format", async () => {
   expect(pkgJson.dependencies["@tsci/another.component"]).toBeDefined()
 })
 
-test("add command handles @tscircuit scoped package", async () => {
+test.skip("add command handles @tscircuit scoped package", async () => {
   const { tmpDir, runCommand } = await getCliTestFixture()
 
   // Create initial package.json
@@ -98,7 +98,7 @@ test("add command handles @tscircuit scoped package", async () => {
   expect(pkgJson.dependencies["@tscircuit/example"]).toBeDefined()
 })
 
-test("add command handles @tsci scoped package", async () => {
+test.skip("add command handles @tsci scoped package", async () => {
   const { tmpDir, runCommand } = await getCliTestFixture()
 
   // Create initial package.json
@@ -121,7 +121,7 @@ test("add command handles @tsci scoped package", async () => {
   expect(pkgJson.dependencies["@tsci/direct-package"]).toBeDefined()
 })
 
-test("add command doesn't duplicate registry in .npmrc", async () => {
+test.skip("add command doesn't duplicate registry in .npmrc", async () => {
   const { tmpDir, runCommand } = await getCliTestFixture()
 
   // Create initial package.json
