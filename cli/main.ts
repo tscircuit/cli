@@ -15,6 +15,7 @@ import { registerAuthPrintToken } from "./auth/print-token/register"
 import { registerAuthSetToken } from "./auth/set-token/register"
 import { registerPush } from "./push/register"
 import { registerAdd } from "./add/register"
+import { registerPull } from "./pull/register"
 import { registerUpgradeCommand } from "./upgrade/register"
 import { registerConfigSet } from "./config/set/register"
 import { registerSearch } from "./search/register"
@@ -32,6 +33,7 @@ registerInit(program)
 registerDev(program)
 registerClone(program)
 registerPush(program)
+registerPull(program)
 
 registerAuth(program)
 registerAuthLogin(program)
