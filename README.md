@@ -55,6 +55,7 @@ Commands:
   remove <component>         Remove a tscircuit component package from your
                              project
   snapshot [options]         Generate schematic and PCB snapshots
+  setup                      Setup utilities like GitHub Actions
   upgrade                    Upgrade CLI to the latest version
   search <query>             Search for packages in the tscircuit registry
   version                    Print CLI version
