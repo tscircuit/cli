@@ -21,6 +21,7 @@ import { registerSearch } from "./search/register"
 import { registerRemove } from "./remove/register"
 import { registerBuild } from "./build/register"
 import { registerSnapshot } from "./snapshot/register"
+import { registerSetup } from "./setup/register"
 
 export const program = new Command()
 
@@ -47,6 +48,7 @@ registerBuild(program)
 registerAdd(program)
 registerRemove(program)
 registerSnapshot(program)
+registerSetup(program)
 
 registerUpgradeCommand(program)
 
