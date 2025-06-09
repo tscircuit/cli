@@ -39,8 +39,10 @@ test("snapshot command creates SVG snapshots", async () => {
 
   expect(pcbContent.trim().length).toBeGreaterThan(0)
   expect(pcbContent).toContain("<svg")
+  expect(pcbContent).toContain("U1")
   expect(schContent.trim().length).toBeGreaterThan(0)
   expect(schContent).toContain("<svg")
+  expect(schContent).toContain("U1")
 
   const { stdout: testStdout } = await runCommand("tsci snapshot")
   expect(testStdout).toContain("All snapshots match")
