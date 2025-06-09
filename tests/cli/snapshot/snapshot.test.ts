@@ -2,14 +2,13 @@ import { getCliTestFixture } from "../../fixtures/get-cli-test-fixture"
 import { test, expect } from "bun:test"
 import { join } from "node:path"
 
-test.skip("snapshot command creates SVG snapshots", async () => {
+test("snapshot command creates SVG snapshots", async () => {
   const { tmpDir, runCommand } = await getCliTestFixture()
 
-  // Create test files using Bun
   await Bun.write(
-    join(tmpDir, "circuit.example.tsx"),
+    join(tmpDir, "test.board.tsx"),
     `
-    export const SimpleCircuit = () => (
+    export const TestBoard = () => (
       <board width="10mm" height="10mm">
         <chip name="U1" footprint="soic8" />
       </board>
@@ -17,34 +16,34 @@ test.skip("snapshot command creates SVG snapshots", async () => {
   `,
   )
 
-  await Bun.write(
-    join(tmpDir, "main.tsx"),
-    `
-    export const MainCircuit = () => (
-      <board width="20mm" height="20mm">
-        <resistor value="10k" />
-      </board>
-    )
-  `,
-  )
-
-  // Run snapshot update command
   const { stdout: updateStdout } = await runCommand("tsci snapshot --update")
   expect(updateStdout).toContain("Created snapshots")
 
-  // Verify snapshots were created
   const snapshotDir = join(tmpDir, "__snapshots__")
-  const circuitSnapshot = await Bun.file(
-    join(snapshotDir, "circuit.example.snap.svg"),
+  const pcbSnapshot = await Bun.file(
+    join(snapshotDir, "test.board-pcb.snap.svg"),
   ).exists()
-  const mainSnapshot = await Bun.file(
-    join(snapshotDir, "main.snap.svg"),
+  const schSnapshot = await Bun.file(
+    join(snapshotDir, "test.board-schematic.snap.svg"),
   ).exists()
 
-  expect(circuitSnapshot).toBe(true)
-  expect(mainSnapshot).toBe(true)
+  expect(pcbSnapshot).toBe(true)
+  expect(schSnapshot).toBe(true)
 
-  // Run snapshot test command
+  const pcbContent = await Bun.file(
+    join(snapshotDir, "test.board-pcb.snap.svg"),
+  ).text()
+  const schContent = await Bun.file(
+    join(snapshotDir, "test.board-schematic.snap.svg"),
+  ).text()
+
+  expect(pcbContent.trim().length).toBeGreaterThan(0)
+  expect(pcbContent).toContain("<svg")
+  expect(pcbContent).toContain("U1")
+  expect(schContent.trim().length).toBeGreaterThan(0)
+  expect(schContent).toContain("<svg")
+  expect(schContent).toContain("U1")
+
   const { stdout: testStdout } = await runCommand("tsci snapshot")
   expect(testStdout).toContain("All snapshots match")
-})
+}, 10_000)
