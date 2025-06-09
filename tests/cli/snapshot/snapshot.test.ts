@@ -30,6 +30,18 @@ test("snapshot command creates SVG snapshots", async () => {
   expect(pcbSnapshot).toBe(true)
   expect(schSnapshot).toBe(true)
 
+  const pcbContent = await Bun.file(
+    join(snapshotDir, "test.board-pcb.snap.svg"),
+  ).text()
+  const schContent = await Bun.file(
+    join(snapshotDir, "test.board-schematic.snap.svg"),
+  ).text()
+
+  expect(pcbContent.trim().length).toBeGreaterThan(0)
+  expect(pcbContent).toContain("<svg")
+  expect(schContent.trim().length).toBeGreaterThan(0)
+  expect(schContent).toContain("<svg")
+
   const { stdout: testStdout } = await runCommand("tsci snapshot")
   expect(testStdout).toContain("All snapshots match")
 }, 10_000)
