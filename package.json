@@ -39,7 +39,7 @@
     "redaxios": "^0.5.1",
     "semver": "^7.6.3",
     "tempy": "^3.1.0",
-    "tscircuit": "^0.0.485",
+    "tscircuit": "^0.0.491",
     "@tscircuit/circuit-json-util": "^0.0.47",
     "typed-ky": "^0.0.4"
   },
