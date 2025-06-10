@@ -302,4 +302,6 @@ export const pushSnippet = async ({
       `https://tscircuit.com/${scopedPackageName}`,
     ].join("\n"),
   )
+
+  return onExit(0)
 }

@@ -17,6 +17,7 @@ export const getPackageFilePaths = (
     cwd: projectDir,
     ignore: ignorePatterns,
   })
+  fileNames.sort()
 
   return fileNames.map((fileName) => path.join(projectDir, fileName))
 }

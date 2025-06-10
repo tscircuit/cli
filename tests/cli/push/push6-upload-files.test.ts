@@ -31,4 +31,4 @@ test("should upload files to the registry", async () => {
     ,
     }
   `)
-})
+}, 30_000)

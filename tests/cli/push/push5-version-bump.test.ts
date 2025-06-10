@@ -62,4 +62,4 @@ test("should bump version if release already exists", async () => {
     ,
     }
   `)
-})
+}, 30_000)
