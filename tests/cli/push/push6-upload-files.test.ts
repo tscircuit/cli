@@ -23,8 +23,8 @@ test("should upload files to the registry", async () => {
     "Package created
 
 
-    ⬆︎ snippet.tsx
     ⬆︎ package.json
+    ⬆︎ snippet.tsx
     "@tsci/test-user.test-package@1.0.0" published!
     https://tscircuit.com/test-user/test-package
     "
