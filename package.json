@@ -8,6 +8,7 @@
     "@tscircuit/fake-snippets": "^0.0.75",
     "@tscircuit/file-server": "^0.0.24",
     "@tscircuit/runframe": "^0.0.566",
+    "@tscircuit/math-utils": "^0.0.18",
     "@types/bun": "^1.2.2",
     "@types/configstore": "^6.0.2",
     "@types/debug": "^4.1.12",
@@ -63,8 +64,5 @@
     "cli": "bun ./cli/main.ts",
     "pkg-pr-new-release": "bunx pkg-pr-new publish --comment=off --peerDeps"
   },
-  "type": "module",
-  "dependencies": {
-    "@tscircuit/math-utils": "^0.0.18"
-  }
+  "type": "module"
 }
