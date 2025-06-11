@@ -4,7 +4,7 @@ import { snapshotProject } from "lib/shared/snapshot-project"
 export const registerSnapshot = (program: Command) => {
   program
     .command("snapshot")
-    .description("Generate schematic and PCB snapshots")
+    .description("Generate schematic, PCB and 3D snapshots")
     .option("-u, --update", "Update snapshots on disk")
     .action(async (options: { update?: boolean }) => {
       await snapshotProject({

@@ -5,6 +5,7 @@ import {
   convertCircuitJsonToPcbSvg,
   convertCircuitJsonToSchematicSvg,
 } from "circuit-to-svg"
+import { convertCircuitJsonToSimple3dSvg } from "circuit-json-to-simple-3d"
 import { generateCircuitJson } from "lib/shared/generate-circuit-json"
 import { getEntrypoint } from "lib/shared/get-entrypoint"
 import {
@@ -50,12 +51,14 @@ export const snapshotProject = async ({
     const { circuitJson } = await generateCircuitJson({ filePath: file })
     const pcbSvg = convertCircuitJsonToPcbSvg(circuitJson)
     const schSvg = convertCircuitJsonToSchematicSvg(circuitJson)
+    const svg3d = await convertCircuitJsonToSimple3dSvg(circuitJson)
     const snapDir = path.join(path.dirname(file), "__snapshots__")
     fs.mkdirSync(snapDir, { recursive: true })
     const base = path.basename(file).replace(/\.tsx$/, "")
     for (const [type, svg] of [
       ["pcb", pcbSvg],
       ["schematic", schSvg],
+      ["3d", svg3d],
     ] as const) {
       const snapPath = path.join(snapDir, `${base}-${type}.snap.svg`)
       if (update || !fs.existsSync(snapPath)) {

@@ -54,7 +54,7 @@ Commands:
   add <component>            Add a tscircuit component package to your project
   remove <component>         Remove a tscircuit component package from your
                              project
-  snapshot [options]         Generate schematic and PCB snapshots
+  snapshot [options]         Generate schematic, PCB and 3D snapshots
   setup                      Setup utilities like GitHub Actions
   upgrade                    Upgrade CLI to the latest version
   search <query>             Search for packages in the tscircuit registry
