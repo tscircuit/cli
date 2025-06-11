@@ -1,6 +1,7 @@
 import { getCliTestFixture } from "../../fixtures/get-cli-test-fixture"
 import { test, expect } from "bun:test"
 import { join } from "node:path"
+import "bun-match-svg"
 
 test("snapshot command creates SVG snapshots", async () => {
   const { tmpDir, runCommand } = await getCliTestFixture()
@@ -16,7 +17,9 @@ test("snapshot command creates SVG snapshots", async () => {
   `,
   )
 
-  const { stdout: updateStdout } = await runCommand("tsci snapshot --update")
+  const { stdout: updateStdout } = await runCommand(
+    "tsci snapshot --update --3d",
+  )
   expect(updateStdout).toContain("Created snapshots")
 
   const snapshotDir = join(tmpDir, "__snapshots__")
@@ -26,9 +29,13 @@ test("snapshot command creates SVG snapshots", async () => {
   const schSnapshot = await Bun.file(
     join(snapshotDir, "test.board-schematic.snap.svg"),
   ).exists()
+  const threeDSnapshot = await Bun.file(
+    join(snapshotDir, "test.board-3d.snap.svg"),
+  ).exists()
 
   expect(pcbSnapshot).toBe(true)
   expect(schSnapshot).toBe(true)
+  expect(threeDSnapshot).toBe(true)
 
   const pcbContent = await Bun.file(
     join(snapshotDir, "test.board-pcb.snap.svg"),
@@ -36,14 +43,14 @@ test("snapshot command creates SVG snapshots", async () => {
   const schContent = await Bun.file(
     join(snapshotDir, "test.board-schematic.snap.svg"),
   ).text()
+  const threeDContent = await Bun.file(
+    join(snapshotDir, "test.board-3d.snap.svg"),
+  ).text()
 
-  expect(pcbContent.trim().length).toBeGreaterThan(0)
-  expect(pcbContent).toContain("<svg")
-  expect(pcbContent).toContain("U1")
-  expect(schContent.trim().length).toBeGreaterThan(0)
-  expect(schContent).toContain("<svg")
-  expect(schContent).toContain("U1")
+  expect(pcbContent).toMatchSvgSnapshot(import.meta.path, "pcb")
+  expect(schContent).toMatchSvgSnapshot(import.meta.path, "schematic")
+  expect(threeDContent).toMatchSvgSnapshot(import.meta.path, "3d")
 
-  const { stdout: testStdout } = await runCommand("tsci snapshot")
+  const { stdout: testStdout } = await runCommand("tsci snapshot --3d")
   expect(testStdout).toContain("All snapshots match")
 }, 10_000)
