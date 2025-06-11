@@ -16,6 +16,8 @@ import {
 type SnapshotOptions = {
   update?: boolean
   ignored?: string[]
+  /** Enable generation of 3d preview snapshots */
+  threeD?: boolean
   onExit?: (code: number) => void
   onError?: (message: string) => void
   onSuccess?: (message: string) => void
@@ -24,6 +26,7 @@ type SnapshotOptions = {
 export const snapshotProject = async ({
   update = false,
   ignored = [],
+  threeD = false,
   onExit = (code) => process.exit(code),
   onError = (msg) => console.error(msg),
   onSuccess = (msg) => console.log(msg),
@@ -51,15 +54,21 @@ export const snapshotProject = async ({
     const { circuitJson } = await generateCircuitJson({ filePath: file })
     const pcbSvg = convertCircuitJsonToPcbSvg(circuitJson)
     const schSvg = convertCircuitJsonToSchematicSvg(circuitJson)
-    const svg3d = await convertCircuitJsonToSimple3dSvg(circuitJson)
+    const svg3d = threeD
+      ? await convertCircuitJsonToSimple3dSvg(circuitJson)
+      : null
     const snapDir = path.join(path.dirname(file), "__snapshots__")
     fs.mkdirSync(snapDir, { recursive: true })
     const base = path.basename(file).replace(/\.tsx$/, "")
-    for (const [type, svg] of [
+    const snapshotPairs: Array<["pcb" | "schematic" | "3d", string]> = [
       ["pcb", pcbSvg],
       ["schematic", schSvg],
-      ["3d", svg3d],
-    ] as const) {
+    ]
+    if (threeD && svg3d) {
+      snapshotPairs.push(["3d", svg3d])
+    }
+
+    for (const [type, svg] of snapshotPairs) {
       const snapPath = path.join(snapDir, `${base}-${type}.snap.svg`)
       if (update || !fs.existsSync(snapPath)) {
         fs.writeFileSync(snapPath, svg)

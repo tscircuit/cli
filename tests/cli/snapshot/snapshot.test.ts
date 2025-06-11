@@ -17,7 +17,9 @@ test("snapshot command creates SVG snapshots", async () => {
   `,
   )
 
-  const { stdout: updateStdout } = await runCommand("tsci snapshot --update")
+  const { stdout: updateStdout } = await runCommand(
+    "tsci snapshot --update --3d",
+  )
   expect(updateStdout).toContain("Created snapshots")
 
   const snapshotDir = join(tmpDir, "__snapshots__")
@@ -49,6 +51,6 @@ test("snapshot command creates SVG snapshots", async () => {
   expect(schContent).toMatchSvgSnapshot(import.meta.path, "schematic")
   expect(threeDContent).toMatchSvgSnapshot(import.meta.path, "3d")
 
-  const { stdout: testStdout } = await runCommand("tsci snapshot")
+  const { stdout: testStdout } = await runCommand("tsci snapshot --3d")
   expect(testStdout).toContain("All snapshots match")
 }, 10_000)
