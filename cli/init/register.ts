@@ -32,7 +32,17 @@ export const registerInit = (program: Command) => {
             "Do you want to initialize a new project in the current directory?",
         })
         if (!continueInCurrentDirectory) {
-          return
+          const { desiredDirectory } = await prompts({
+            type: "text",
+            name: "desiredDirectory",
+            message: "Enter the desired directory name",
+          })
+          if (desiredDirectory) {
+            directory = desiredDirectory
+          } else {
+            console.log("Project initialization cancelled.")
+            return process.exit(0)
+          }
         }
       }
 
