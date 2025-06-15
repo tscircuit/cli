@@ -73,7 +73,10 @@ program
   })
 
 if (process.argv.length === 2) {
-  perfectCli(program, process.argv)
+  // perfectCli uses commander@12 internally which is not strictly
+  // compatible with commander@14's TypeScript types. Cast to any to
+  // avoid a type mismatch.
+  perfectCli(program as any, process.argv)
 } else {
   program.parse()
 }
