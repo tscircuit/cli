@@ -39,9 +39,9 @@ Options:
   -h, --help                 display help for command
 
 Commands:
-  init [directory]           Initialize a new TSCircuit project in the
-                             specified directory (or current directory if none
-                             is provided)
+  init [directory]           Initialize a new TSCircuit project in the specified
+                             directory (or current directory if none is
+                             provided)
   dev [options] [file]       Start development server for a package
   clone [options] <package>  Clone a package from the registry
   push [options] [file]      Save snippet code to Registry API
