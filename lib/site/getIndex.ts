@@ -1,10 +1,16 @@
+import { getSessionToken } from "lib/cli-config"
+
 export const getIndex = async () => {
+  const sessionToken = getSessionToken()
+  const tokenScript = sessionToken
+    ? `\n        window.TSCIRCUIT_REGISTRY_TOKEN = ${JSON.stringify(sessionToken)};`
+    : ""
   return `<html>
     <head>
     </head>
     <body>
       <script>
-        window.TSCIRCUIT_USE_RUNFRAME_FOR_CLI = true;
+        window.TSCIRCUIT_USE_RUNFRAME_FOR_CLI = true;${tokenScript}
       </script>
       <script src="https://cdn.tailwindcss.com"></script>
       <div id="root">loading...</div>
