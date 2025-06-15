@@ -3,7 +3,19 @@ import path from "node:path"
 import { writeFileIfNotExists } from "./write-file-if-not-exists"
 
 export const setupGithubActions = (projectDir: string = process.cwd()) => {
-  const workflowsDir = path.join(projectDir, ".github", "workflows")
+  const findGitRoot = (startDir: string): string | null => {
+    let dir = path.resolve(startDir)
+    while (dir !== path.parse(dir).root) {
+      if (fs.existsSync(path.join(dir, ".git"))) {
+        return dir
+      }
+      dir = path.dirname(dir)
+    }
+    return null
+  }
+
+  const gitRoot = findGitRoot(projectDir) ?? projectDir
+  const workflowsDir = path.join(gitRoot, ".github", "workflows")
   fs.mkdirSync(workflowsDir, { recursive: true })
 
   const buildWorkflow = `name: tscircuit Build
