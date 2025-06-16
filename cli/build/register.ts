@@ -1,10 +1,8 @@
 import type { Command } from "commander"
 import path from "node:path"
 import fs from "node:fs"
-import { generateCircuitJson } from "lib/shared/generate-circuit-json"
-import { getEntrypoint } from "lib/shared/get-entrypoint"
-import kleur from "kleur"
-import { analyzeCircuitJson } from "lib/shared/circuit-json-diagnostics"
+import { buildFile } from "./build-file"
+import { getBuildEntrypoints } from "./get-build-entrypoints"
 
 export const registerBuild = (program: Command) => {
   program
@@ -18,47 +16,41 @@ export const registerBuild = (program: Command) => {
         file?: string,
         options?: { ignoreErrors?: boolean; ignoreWarnings?: boolean },
       ) => {
-        const entrypoint = await getEntrypoint({ filePath: file })
-        if (!entrypoint) return process.exit(1)
+        const { projectDir, mainEntrypoint, circuitFiles } =
+          await getBuildEntrypoints({ fileOrDir: file })
 
-        const projectDir = path.dirname(entrypoint)
         const distDir = path.join(projectDir, "dist")
-        const outputPath = path.join(distDir, "circuit.json")
-
         fs.mkdirSync(distDir, { recursive: true })
 
-        try {
-          const result = await generateCircuitJson({ filePath: entrypoint })
-          fs.writeFileSync(
+        let hasErrors = false
+
+        if (mainEntrypoint) {
+          const outputPath = path.join(distDir, "circuit.json")
+          const ok = await buildFile(
+            mainEntrypoint,
             outputPath,
-            JSON.stringify(result.circuitJson, null, 2),
+            projectDir,
+            options,
           )
-          console.log(
-            `Circuit JSON written to ${path.relative(projectDir, outputPath)}`,
-          )
+          if (!ok) hasErrors = true
+        }
 
-          const { errors, warnings } = analyzeCircuitJson(result.circuitJson)
+        for (const filePath of circuitFiles) {
+          const relative = path.relative(projectDir, filePath)
+          const isCircuit = filePath.endsWith(".circuit.tsx")
+          const outputPath = isCircuit
+            ? path.join(
+                distDir,
+                relative.replace(/\.circuit\.tsx$/, ""),
+                "circuit.json",
+              )
+            : path.join(distDir, "circuit.json")
+          const ok = await buildFile(filePath, outputPath, projectDir, options)
+          if (!ok) hasErrors = true
+        }
 
-          if (!options?.ignoreWarnings) {
-            for (const warn of warnings) {
-              const msg = warn.message || JSON.stringify(warn)
-              console.log(kleur.yellow(msg))
-            }
-          }
-
-          if (!options?.ignoreErrors) {
-            for (const err of errors) {
-              const msg = err.message || JSON.stringify(err)
-              console.error(kleur.red(msg))
-            }
-          }
-
-          if (errors.length > 0 && !options?.ignoreErrors) {
-            return process.exit(1)
-          }
-        } catch (err) {
-          console.error(`Build failed: ${err}`)
-          return process.exit(1)
+        if (hasErrors && !options?.ignoreErrors) {
+          process.exit(1)
         }
       },
     )
