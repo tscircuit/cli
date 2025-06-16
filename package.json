@@ -7,8 +7,9 @@
     "@biomejs/biome": "^1.9.4",
     "@tscircuit/fake-snippets": "^0.0.87",
     "@tscircuit/file-server": "^0.0.24",
-    "@tscircuit/runframe": "^0.0.591",
     "@tscircuit/math-utils": "^0.0.18",
+    "@tscircuit/runframe": "^0.0.591",
+    "@tscircuit/simple-3d-svg": "^0.0.10",
     "@types/bun": "^1.2.2",
     "@types/configstore": "^6.0.2",
     "@types/debug": "^4.1.12",
@@ -20,6 +21,7 @@
     "bun-match-svg": "^0.0.11",
     "chokidar": "4.0.1",
     "circuit-json-to-readable-netlist": "^0.0.9",
+    "circuit-json-to-simple-3d": "^0.0.3",
     "circuit-to-svg": "^0.0.152",
     "commander": "^14.0.0",
     "conf": "^13.1.0",
@@ -40,11 +42,8 @@
     "redaxios": "^0.5.1",
     "semver": "^7.6.3",
     "tempy": "^3.1.0",
-    "tscircuit": "^0.0.494",
-    "@tscircuit/circuit-json-util": "^0.0.47",
-    "typed-ky": "^0.0.4",
-    "circuit-json-to-simple-3d": "^0.0.3",
-    "@tscircuit/simple-3d-svg": "^0.0.10"
+    "tscircuit": "^0.0.497",
+    "typed-ky": "^0.0.4"
   },
   "peerDependencies": {
     "typescript": "^5.0.0"
