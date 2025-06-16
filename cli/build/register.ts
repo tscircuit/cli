@@ -5,6 +5,8 @@ import { generateCircuitJson } from "lib/shared/generate-circuit-json"
 import { getEntrypoint } from "lib/shared/get-entrypoint"
 import kleur from "kleur"
 import { analyzeCircuitJson } from "lib/shared/circuit-json-diagnostics"
+import { globbySync } from "globby"
+import { DEFAULT_IGNORED_PATTERNS } from "lib/shared/should-ignore-path"
 
 export const registerBuild = (program: Command) => {
   program
@@ -19,46 +21,76 @@ export const registerBuild = (program: Command) => {
         options?: { ignoreErrors?: boolean; ignoreWarnings?: boolean },
       ) => {
         const entrypoint = await getEntrypoint({ filePath: file })
-        if (!entrypoint) return process.exit(1)
 
-        const projectDir = path.dirname(entrypoint)
+        let projectDir = process.cwd()
+        if (entrypoint) projectDir = path.dirname(entrypoint)
+
         const distDir = path.join(projectDir, "dist")
-        const outputPath = path.join(distDir, "circuit.json")
-
         fs.mkdirSync(distDir, { recursive: true })
 
-        try {
-          const result = await generateCircuitJson({ filePath: entrypoint })
-          fs.writeFileSync(
-            outputPath,
-            JSON.stringify(result.circuitJson, null, 2),
-          )
-          console.log(
-            `Circuit JSON written to ${path.relative(projectDir, outputPath)}`,
-          )
+        let hasErrors = false
 
-          const { errors, warnings } = analyzeCircuitJson(result.circuitJson)
+        const buildFile = async (input: string, output: string) => {
+          try {
+            const result = await generateCircuitJson({ filePath: input })
+            fs.mkdirSync(path.dirname(output), { recursive: true })
+            fs.writeFileSync(
+              output,
+              JSON.stringify(result.circuitJson, null, 2),
+            )
+            console.log(
+              `Circuit JSON written to ${path.relative(projectDir, output)}`,
+            )
 
-          if (!options?.ignoreWarnings) {
-            for (const warn of warnings) {
-              const msg = warn.message || JSON.stringify(warn)
-              console.log(kleur.yellow(msg))
+            const { errors, warnings } = analyzeCircuitJson(result.circuitJson)
+
+            if (!options?.ignoreWarnings) {
+              for (const warn of warnings) {
+                const msg = warn.message || JSON.stringify(warn)
+                console.log(kleur.yellow(msg))
+              }
             }
-          }
 
-          if (!options?.ignoreErrors) {
-            for (const err of errors) {
-              const msg = err.message || JSON.stringify(err)
-              console.error(kleur.red(msg))
+            if (!options?.ignoreErrors) {
+              for (const err of errors) {
+                const msg = err.message || JSON.stringify(err)
+                console.error(kleur.red(msg))
+              }
             }
-          }
 
-          if (errors.length > 0 && !options?.ignoreErrors) {
-            return process.exit(1)
+            if (errors.length > 0) {
+              hasErrors = true
+            }
+          } catch (err) {
+            console.error(`Build failed: ${err}`)
+            process.exit(1)
           }
-        } catch (err) {
-          console.error(`Build failed: ${err}`)
-          return process.exit(1)
+        }
+
+        if (entrypoint) {
+          const outputPath = path.join(distDir, "circuit.json")
+          await buildFile(entrypoint, outputPath)
+        }
+
+        const ignorePatterns = [...DEFAULT_IGNORED_PATTERNS]
+
+        const circuitFiles = globbySync("**/*.circuit.tsx", {
+          cwd: projectDir,
+          ignore: ignorePatterns,
+        })
+
+        for (const filePath of circuitFiles) {
+          const abs = path.join(projectDir, filePath)
+          const outputPath = path.join(
+            distDir,
+            filePath.replace(/\.circuit\.tsx$/, ""),
+            "circuit.json",
+          )
+          await buildFile(abs, outputPath)
+        }
+
+        if (hasErrors && !options?.ignoreErrors) {
+          process.exit(1)
         }
       },
     )

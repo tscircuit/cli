@@ -13,7 +13,9 @@ export default () => (
 test("build command writes dist/circuit.json", async () => {
   const { tmpDir, runCommand } = await getCliTestFixture()
   const circuitPath = path.join(tmpDir, "test-circuit.tsx")
+  const extraCircuitPath = path.join(tmpDir, "extra.circuit.tsx")
   await writeFile(circuitPath, circuitCode)
+  await writeFile(extraCircuitPath, circuitCode)
   await writeFile(path.join(tmpDir, "package.json"), "{}")
 
   const { stdout } = await runCommand(`tsci build ${circuitPath}`)
@@ -25,4 +27,14 @@ test("build command writes dist/circuit.json", async () => {
   const json = JSON.parse(data)
   const component = json.find((c: any) => c.type === "source_component")
   expect(component.name).toBe("R1")
+
+  const extraData = await readFile(
+    path.join(tmpDir, "dist", "extra", "circuit.json"),
+    "utf-8",
+  )
+  const extraJson = JSON.parse(extraData)
+  const extraComponent = extraJson.find(
+    (c: any) => c.type === "source_component",
+  )
+  expect(extraComponent.name).toBe("R1")
 })
