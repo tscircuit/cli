@@ -36,17 +36,27 @@ export const snapshotProject = async ({
     ...DEFAULT_IGNORED_PATTERNS,
     ...ignored.map(normalizeIgnorePattern),
   ]
-  const boardFiles = globbySync("**/*.board.tsx", { cwd: projectDir, ignore })
+  const boardFiles = globbySync(["**/*.board.tsx", "**/*.circuit.tsx"], {
+    cwd: projectDir,
+    ignore,
+  })
   let files = boardFiles.map((f) => path.join(projectDir, f))
 
+  const entry = await getEntrypoint({
+    projectDir,
+    onError: onError,
+    onSuccess: () => {},
+  })
+
+  if (entry) {
+    const resolved = path.resolve(projectDir, entry)
+    if (!files.includes(resolved)) {
+      files.unshift(resolved)
+    }
+  }
+
   if (files.length === 0) {
-    const entry = await getEntrypoint({
-      projectDir,
-      onError: onError,
-      onSuccess: () => {},
-    })
-    if (!entry) return onExit(1)
-    files = [entry]
+    return onExit(1)
   }
 
   const mismatches: string[] = []
