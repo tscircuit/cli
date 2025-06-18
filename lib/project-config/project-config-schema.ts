@@ -1,7 +1,7 @@
 import { z } from "zod"
 
 export const projectConfigSchema = z.object({
-  mainEntrypoint: z.string().optional(),
+  mainComponentPath: z.string().optional(),
   ignoredFiles: z.array(z.string()).optional(),
 })
 
