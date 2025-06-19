@@ -9,7 +9,7 @@
     "@tscircuit/file-server": "^0.0.24",
     "@tscircuit/runframe": "^0.0.582",
     "@tscircuit/math-utils": "^0.0.18",
-    "@types/bun": "^1.2.2",
+    "@types/bun": "^1.2.16",
     "@types/configstore": "^6.0.2",
     "@types/debug": "^4.1.12",
     "@types/jsonwebtoken": "^9.0.9",
