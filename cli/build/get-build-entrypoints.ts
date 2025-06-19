@@ -12,7 +12,7 @@ export async function getBuildEntrypoints({
   rootDir?: string
 }): Promise<{
   projectDir: string
-  mainEntrypoint?: string
+  mainComponentPath?: string
   circuitFiles: string[]
 }> {
   const resolvedRoot = path.resolve(rootDir)
@@ -22,7 +22,7 @@ export async function getBuildEntrypoints({
     if (fs.existsSync(resolved) && fs.statSync(resolved).isDirectory()) {
       const projectDir = resolved
       const circuitFiles: string[] = []
-      const mainEntrypoint = await getEntrypoint({
+      const mainComponentPath = await getEntrypoint({
         projectDir,
         onError: () => {},
       })
@@ -35,7 +35,7 @@ export async function getBuildEntrypoints({
       }
       return {
         projectDir,
-        mainEntrypoint: mainEntrypoint || undefined,
+        mainComponentPath: mainComponentPath || undefined,
         circuitFiles,
       }
     }
@@ -44,7 +44,10 @@ export async function getBuildEntrypoints({
 
   const projectDir = resolvedRoot
   const circuitFiles: string[] = []
-  const mainEntrypoint = await getEntrypoint({ projectDir, onError: () => {} })
+  const mainComponentPath = await getEntrypoint({
+    projectDir,
+    onError: () => {},
+  })
   const files = globbySync("**/*.circuit.tsx", {
     cwd: projectDir,
     ignore: DEFAULT_IGNORED_PATTERNS,
@@ -54,7 +57,7 @@ export async function getBuildEntrypoints({
   }
   return {
     projectDir,
-    mainEntrypoint: mainEntrypoint || undefined,
+    mainComponentPath: mainComponentPath || undefined,
     circuitFiles,
   }
 }
