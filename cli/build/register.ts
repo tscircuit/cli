@@ -16,7 +16,7 @@ export const registerBuild = (program: Command) => {
         file?: string,
         options?: { ignoreErrors?: boolean; ignoreWarnings?: boolean },
       ) => {
-        const { projectDir, mainComponentPath, circuitFiles } =
+        const { projectDir, mainEntrypoint, circuitFiles } =
           await getBuildEntrypoints({ fileOrDir: file })
 
         const distDir = path.join(projectDir, "dist")
@@ -24,10 +24,10 @@ export const registerBuild = (program: Command) => {
 
         let hasErrors = false
 
-        if (mainComponentPath) {
+        if (mainEntrypoint) {
           const outputPath = path.join(distDir, "circuit.json")
           const ok = await buildFile(
-            mainComponentPath,
+            mainEntrypoint,
             outputPath,
             projectDir,
             options,
