@@ -19,6 +19,10 @@ type SnapshotOptions = {
   ignored?: string[]
   /** Enable generation of 3d preview snapshots */
   threeD?: boolean
+  /** Only generate PCB snapshots */
+  pcbOnly?: boolean
+  /** Only generate schematic snapshots */
+  schematicOnly?: boolean
   onExit?: (code: number) => void
   onError?: (message: string) => void
   onSuccess?: (message: string) => void
@@ -28,6 +32,8 @@ export const snapshotProject = async ({
   update = false,
   ignored = [],
   threeD = false,
+  pcbOnly = false,
+  schematicOnly = false,
   onExit = (code) => process.exit(code),
   onError = (msg) => console.error(msg),
   onSuccess = (msg) => console.log(msg),
@@ -71,10 +77,12 @@ export const snapshotProject = async ({
     const snapDir = path.join(path.dirname(file), "__snapshots__")
     fs.mkdirSync(snapDir, { recursive: true })
     const base = path.basename(file).replace(/\.tsx$/, "")
-    const snapshotPairs: Array<["pcb" | "schematic" | "3d", string]> = [
-      ["pcb", pcbSvg],
-      ["schematic", schSvg],
-    ]
+    const snapshotPairs: Array<["pcb" | "schematic" | "3d", string]> = []
+    const includePcb = pcbOnly || !schematicOnly
+    const includeSchematic = schematicOnly || !pcbOnly
+
+    if (includePcb) snapshotPairs.push(["pcb", pcbSvg])
+    if (includeSchematic) snapshotPairs.push(["schematic", schSvg])
     if (threeD && svg3d) {
       snapshotPairs.push(["3d", svg3d])
     }

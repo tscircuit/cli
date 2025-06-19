@@ -9,13 +9,24 @@ export const registerSnapshot = (program: Command) => {
     )
     .option("-u, --update", "Update snapshots on disk")
     .option("--3d", "Generate 3d preview snapshots")
-    .action(async (options: { update?: boolean; "3d"?: boolean }) => {
-      await snapshotProject({
-        update: options.update ?? false,
-        threeD: options["3d"] ?? false,
-        onExit: (code) => process.exit(code),
-        onError: (msg) => console.error(msg),
-        onSuccess: (msg) => console.log(msg),
-      })
-    })
+    .option("--pcb-only", "Generate only PCB snapshots")
+    .option("--schematic-only", "Generate only schematic snapshots")
+    .action(
+      async (options: {
+        update?: boolean
+        "3d"?: boolean
+        pcbOnly?: boolean
+        schematicOnly?: boolean
+      }) => {
+        await snapshotProject({
+          update: options.update ?? false,
+          threeD: options["3d"] ?? false,
+          pcbOnly: options.pcbOnly ?? false,
+          schematicOnly: options.schematicOnly ?? false,
+          onExit: (code) => process.exit(code),
+          onError: (msg) => console.error(msg),
+          onSuccess: (msg) => console.log(msg),
+        })
+      },
+    )
 }

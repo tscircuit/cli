@@ -120,3 +120,59 @@ test("snapshot command snapshots circuit files", async () => {
   expect(extraPcb).toBe(true)
   expect(extraSch).toBe(true)
 })
+
+test("snapshot command --pcb-only", async () => {
+  const { tmpDir, runCommand } = await getCliTestFixture()
+
+  await Bun.write(
+    join(tmpDir, "only.board.tsx"),
+    `
+    export const OnlyBoard = () => (
+      <board width="10mm" height="10mm">
+        <chip name="U1" footprint="soic8" />
+      </board>
+    )
+  `,
+  )
+
+  await runCommand("tsci snapshot --update --pcb-only")
+
+  const snapDir = join(tmpDir, "__snapshots__")
+  const pcbExists = await Bun.file(
+    join(snapDir, "only.board-pcb.snap.svg"),
+  ).exists()
+  const schExists = await Bun.file(
+    join(snapDir, "only.board-schematic.snap.svg"),
+  ).exists()
+
+  expect(pcbExists).toBe(true)
+  expect(schExists).toBe(false)
+})
+
+test("snapshot command --schematic-only", async () => {
+  const { tmpDir, runCommand } = await getCliTestFixture()
+
+  await Bun.write(
+    join(tmpDir, "schem.board.tsx"),
+    `
+    export const SchemBoard = () => (
+      <board width="10mm" height="10mm">
+        <chip name="U1" footprint="soic8" />
+      </board>
+    )
+  `,
+  )
+
+  await runCommand("tsci snapshot --update --schematic-only")
+
+  const snapDir = join(tmpDir, "__snapshots__")
+  const pcbExists = await Bun.file(
+    join(snapDir, "schem.board-pcb.snap.svg"),
+  ).exists()
+  const schExists = await Bun.file(
+    join(snapDir, "schem.board-schematic.snap.svg"),
+  ).exists()
+
+  expect(pcbExists).toBe(false)
+  expect(schExists).toBe(true)
+})
