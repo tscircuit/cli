@@ -1,6 +1,7 @@
 import { CircuitRunner } from "@tscircuit/eval/eval"
 import { getVirtualFileSystemFromDirPath } from "make-vfs"
-import path from "node:path"
+import path from "node:path/posix"
+import { relative } from "node:path"
 import fs from "node:fs"
 import Debug from "debug"
 
@@ -42,7 +43,7 @@ export async function generateCircuitJson({
   const resolvedOutputDir = outputDir || projectDir
 
   // Get the relative path to the component from the project directory
-  const relativeComponentPath = path.relative(projectDir, filePath)
+  const relativeComponentPath = relative(projectDir, filePath)
 
   // Create a default output filename if not provided
   const baseFileName =
