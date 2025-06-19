@@ -1,6 +1,7 @@
 import fs from "node:fs"
 import path from "node:path"
 import { globbySync } from "globby"
+import kleur from "kleur"
 import {
   convertCircuitJsonToPcbSvg,
   convertCircuitJsonToSchematicSvg,
@@ -82,6 +83,7 @@ export const snapshotProject = async ({
       const snapPath = path.join(snapDir, `${base}-${type}.snap.svg`)
       if (update || !fs.existsSync(snapPath)) {
         fs.writeFileSync(snapPath, svg)
+        console.log("✅", kleur.gray(path.relative(projectDir, snapPath)))
       } else {
         const existing = fs.readFileSync(snapPath, "utf-8")
         if (existing !== svg) mismatches.push(snapPath)
