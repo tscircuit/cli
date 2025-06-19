@@ -1,6 +1,6 @@
 import { CircuitRunner } from "@tscircuit/eval/eval"
 import { getVirtualFileSystemFromDirPath } from "make-vfs"
-import path from "node:path"
+import path from "node:path/posix"
 import fs from "node:fs"
 import Debug from "debug"
 
