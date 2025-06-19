@@ -15,7 +15,7 @@ type EntrypointOptions = {
  *
  * Logic:
  * 1. Use provided filePath if specified
- * 2. Check tscircuit.config.json for mainComponentPath
+ * 2. Check tscircuit.config.json for mainEntrypoint
  * 3. Check common locations (index.tsx, index.ts, lib/index.tsx, etc.)
  * 4. Update config with detected entrypoint
  */
@@ -30,12 +30,12 @@ export const getEntrypoint = async ({
     return path.resolve(projectDir, filePath)
   }
 
-  // 2. Check tscircuit.config.json for mainComponentPath
+  // 2. Check tscircuit.config.json for mainEntrypoint
   const projectConfig = loadProjectConfig(projectDir)
-  if (projectConfig?.mainComponentPath) {
+  if (projectConfig?.mainEntrypoint) {
     const configEntrypoint = path.resolve(
       projectDir,
-      projectConfig.mainComponentPath,
+      projectConfig.mainEntrypoint,
     )
     if (fs.existsSync(configEntrypoint)) {
       onSuccess(
@@ -65,7 +65,7 @@ export const getEntrypoint = async ({
 
       // 4. Update config with detected entrypoint
       const newConfig = projectConfig || {}
-      newConfig.mainComponentPath = relativePath
+      newConfig.mainEntrypoint = relativePath
       saveProjectConfig(newConfig, projectDir)
       onSuccess(`Updated tscircuit.config.json with detected entrypoint`)
 
