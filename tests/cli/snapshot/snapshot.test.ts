@@ -21,6 +21,15 @@ test("snapshot command creates SVG snapshots", async () => {
     "tsci snapshot --update --3d",
   )
   expect(updateStdout).toContain("Created snapshots")
+  expect(updateStdout).toContain(
+    `✅ ${join("__snapshots__", "test.board-pcb.snap.svg")}`,
+  )
+  expect(updateStdout).toContain(
+    `✅ ${join("__snapshots__", "test.board-schematic.snap.svg")}`,
+  )
+  expect(updateStdout).toContain(
+    `✅ ${join("__snapshots__", "test.board-3d.snap.svg")}`,
+  )
 
   const snapshotDir = join(tmpDir, "__snapshots__")
   const pcbSnapshot = await Bun.file(
@@ -82,6 +91,16 @@ test("snapshot command snapshots circuit files", async () => {
 
   const { stdout } = await runCommand("tsci snapshot --update")
   expect(stdout).toContain("Created snapshots")
+  expect(stdout).toContain(`✅ ${join("__snapshots__", "index-pcb.snap.svg")}`)
+  expect(stdout).toContain(
+    `✅ ${join("__snapshots__", "index-schematic.snap.svg")}`,
+  )
+  expect(stdout).toContain(
+    `✅ ${join("__snapshots__", "extra.circuit-pcb.snap.svg")}`,
+  )
+  expect(stdout).toContain(
+    `✅ ${join("__snapshots__", "extra.circuit-schematic.snap.svg")}`,
+  )
 
   const snapDir = join(tmpDir, "__snapshots__")
 
