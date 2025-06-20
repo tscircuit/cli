@@ -19,7 +19,6 @@ test("should use default entrypoint if no file is provided", async () => {
     ,
       "stdout": 
     "Detected entrypoint: 'index.tsx'
-    Updated tscircuit.config.json with detected entrypoint
     "
     ,
     }
