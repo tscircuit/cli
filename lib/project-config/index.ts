@@ -2,8 +2,10 @@ import * as fs from "node:fs"
 import * as path from "node:path"
 import {
   projectConfigSchema,
-  TscircuitProjectConfig,
+  type TscircuitProjectConfig,
 } from "./project-config-schema"
+
+export type { TscircuitProjectConfig }
 
 export const defineConfig = (config: TscircuitProjectConfig) => {
   return config

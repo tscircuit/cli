@@ -8,6 +8,7 @@ import { generateGitIgnoreFile } from "lib/shared/generate-gitignore-file"
 import { generatePackageJson } from "lib/shared/generate-package-json"
 import { cliConfig, getSessionToken } from "lib/cli-config"
 import { jwtDecode } from "jwt-decode"
+import { loadProjectConfig, saveProjectConfig } from "lib/project-config"
 import { checkForTsciUpdates } from "lib/shared/check-for-cli-update"
 import { prompts } from "lib/utils/prompts"
 
@@ -89,6 +90,14 @@ export default () => (
 )
 `,
       )
+
+      const projectConfig = loadProjectConfig(projectDir) ?? {}
+      projectConfig.mainEntrypoint = "index.tsx"
+      if (saveProjectConfig(projectConfig, projectDir)) {
+        console.log(
+          "Updated tscircuit.config.json with mainEntrypoint: 'index.tsx'",
+        )
+      }
 
       writeFileIfNotExists(
         path.join(projectDir, ".npmrc"),

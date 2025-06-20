@@ -53,7 +53,6 @@ export const snapshotProject = async ({
     projectDir,
     onError: onError,
     onSuccess: () => {},
-    updateConfig: false,
   })
 
   if (entry) {
