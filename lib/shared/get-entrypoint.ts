@@ -63,12 +63,6 @@ export const getEntrypoint = async ({
       const relativePath = path.relative(projectDir, entrypoint)
       onSuccess(`Detected entrypoint: '${relativePath}'`)
 
-      // 4. Update config with detected entrypoint
-      const newConfig = projectConfig || {}
-      newConfig.mainEntrypoint = relativePath
-      saveProjectConfig(newConfig, projectDir)
-      onSuccess(`Updated tscircuit.config.json with detected entrypoint`)
-
       break
     }
   }
