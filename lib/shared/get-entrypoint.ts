@@ -8,6 +8,7 @@ type EntrypointOptions = {
   projectDir?: string
   onSuccess?: (message: string) => void
   onError?: (message: string) => void
+  updateConfig?: boolean
 }
 
 /**
@@ -24,6 +25,7 @@ export const getEntrypoint = async ({
   projectDir = process.cwd(),
   onSuccess = (message) => console.log(message),
   onError = (message) => console.error(message),
+  updateConfig = true,
 }: EntrypointOptions): Promise<string | null> => {
   // 1. Use provided filePath if specified
   if (filePath) {
@@ -64,10 +66,12 @@ export const getEntrypoint = async ({
       onSuccess(`Detected entrypoint: '${relativePath}'`)
 
       // 4. Update config with detected entrypoint
-      const newConfig = projectConfig || {}
-      newConfig.mainEntrypoint = relativePath
-      saveProjectConfig(newConfig, projectDir)
-      onSuccess(`Updated tscircuit.config.json with detected entrypoint`)
+      if (updateConfig) {
+        const newConfig = projectConfig || {}
+        newConfig.mainEntrypoint = relativePath
+        saveProjectConfig(newConfig, projectDir)
+        onSuccess(`Updated tscircuit.config.json with detected entrypoint`)
+      }
 
       break
     }
