@@ -10,7 +10,7 @@
     "@tscircuit/file-server": "^0.0.24",
     "@tscircuit/math-utils": "^0.0.18",
     "@tscircuit/props": "^0.0.237",
-    "@tscircuit/runframe": "^0.0.609",
+    "@tscircuit/runframe": "^0.0.614",
     "@tscircuit/schematic-match-adapt": "^0.0.22",
     "@tscircuit/simple-3d-svg": "^0.0.10",
     "@types/bun": "^1.2.2",
