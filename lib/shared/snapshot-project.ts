@@ -23,6 +23,8 @@ type SnapshotOptions = {
   pcbOnly?: boolean
   /** Only generate schematic snapshots */
   schematicOnly?: boolean
+  /** Snapshot only the specified files */
+  filePaths?: string[]
   onExit?: (code: number) => void
   onError?: (message: string) => void
   onSuccess?: (message: string) => void
@@ -34,6 +36,7 @@ export const snapshotProject = async ({
   threeD = false,
   pcbOnly = false,
   schematicOnly = false,
+  filePaths = [],
   onExit = (code) => process.exit(code),
   onError = (msg) => console.error(msg),
   onSuccess = (msg) => console.log(msg),
@@ -43,22 +46,28 @@ export const snapshotProject = async ({
     ...DEFAULT_IGNORED_PATTERNS,
     ...ignored.map(normalizeIgnorePattern),
   ]
-  const boardFiles = globbySync(["**/*.board.tsx", "**/*.circuit.tsx"], {
-    cwd: projectDir,
-    ignore,
-  })
-  let files = boardFiles.map((f) => path.join(projectDir, f))
+  let files: string[] = []
 
-  const entry = await getEntrypoint({
-    projectDir,
-    onError: onError,
-    onSuccess: () => {},
-  })
+  if (filePaths.length > 0) {
+    files = filePaths.map((f) => path.resolve(projectDir, f))
+  } else {
+    const boardFiles = globbySync(["**/*.board.tsx", "**/*.circuit.tsx"], {
+      cwd: projectDir,
+      ignore,
+    })
+    files = boardFiles.map((f) => path.join(projectDir, f))
 
-  if (entry) {
-    const resolved = path.resolve(projectDir, entry)
-    if (!files.includes(resolved)) {
-      files.unshift(resolved)
+    const entry = await getEntrypoint({
+      projectDir,
+      onError: onError,
+      onSuccess: () => {},
+    })
+
+    if (entry) {
+      const resolved = path.resolve(projectDir, entry)
+      if (!files.includes(resolved)) {
+        files.unshift(resolved)
+      }
     }
   }
 

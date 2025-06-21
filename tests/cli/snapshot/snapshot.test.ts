@@ -1,6 +1,7 @@
 import { getCliTestFixture } from "../../fixtures/get-cli-test-fixture"
 import { test, expect } from "bun:test"
 import { join } from "node:path"
+import fs from "node:fs"
 import "bun-match-svg"
 
 test("snapshot command creates SVG snapshots", async () => {
@@ -175,4 +176,41 @@ test("snapshot command --schematic-only", async () => {
 
   expect(pcbExists).toBe(false)
   expect(schExists).toBe(true)
+})
+
+test("snapshot command with file path", async () => {
+  const { tmpDir, runCommand } = await getCliTestFixture()
+
+  const subdir = join(tmpDir, "sub")
+  fs.mkdirSync(subdir)
+
+  await Bun.write(
+    join(subdir, "single.circuit.tsx"),
+    `
+    export const Single = () => (
+      <board width="10mm" height="10mm">
+        <chip name="U1" footprint="soic8" />
+      </board>
+    )
+  `,
+  )
+
+  const { stdout } = await runCommand(
+    "tsci snapshot sub/single.circuit.tsx --update",
+  )
+  expect(stdout).toContain("Created snapshots")
+
+  const snapDir = join(subdir, "__snapshots__")
+  const pcbExists = await Bun.file(
+    join(snapDir, "single.circuit-pcb.snap.svg"),
+  ).exists()
+  const schExists = await Bun.file(
+    join(snapDir, "single.circuit-schematic.snap.svg"),
+  ).exists()
+
+  expect(pcbExists).toBe(true)
+  expect(schExists).toBe(true)
+
+  const rootSnapExists = await Bun.file(join(tmpDir, "__snapshots__")).exists()
+  expect(rootSnapExists).toBe(false)
 })
