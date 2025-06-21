@@ -45,7 +45,7 @@
     "redaxios": "^0.5.1",
     "semver": "^7.6.3",
     "tempy": "^3.1.0",
-    "tscircuit": "^0.0.500",
+    "tscircuit": "^0.0.502",
     "typed-ky": "^0.0.4"
   },
   "peerDependencies": {

@@ -69,7 +69,7 @@ test("snapshot command snapshots circuit files", async () => {
   const { tmpDir, runCommand } = await getCliTestFixture()
 
   await Bun.write(
-    join(tmpDir, "index.tsx"),
+    join(tmpDir, "index.circuit.tsx"),
     `
     export const IndexBoard = () => (
       <board width="10mm" height="10mm">
@@ -92,9 +92,11 @@ test("snapshot command snapshots circuit files", async () => {
 
   const { stdout } = await runCommand("tsci snapshot --update")
   expect(stdout).toContain("Created snapshots")
-  expect(stdout).toContain(`✅ ${join("__snapshots__", "index-pcb.snap.svg")}`)
   expect(stdout).toContain(
-    `✅ ${join("__snapshots__", "index-schematic.snap.svg")}`,
+    `✅ ${join("__snapshots__", "index.circuit-pcb.snap.svg")}`,
+  )
+  expect(stdout).toContain(
+    `✅ ${join("__snapshots__", "index.circuit-schematic.snap.svg")}`,
   )
   expect(stdout).toContain(
     `✅ ${join("__snapshots__", "extra.circuit-pcb.snap.svg")}`,
@@ -105,9 +107,11 @@ test("snapshot command snapshots circuit files", async () => {
 
   const snapDir = join(tmpDir, "__snapshots__")
 
-  const indexPcb = await Bun.file(join(snapDir, "index-pcb.snap.svg")).exists()
+  const indexPcb = await Bun.file(
+    join(snapDir, "index.circuit-pcb.snap.svg"),
+  ).exists()
   const indexSch = await Bun.file(
-    join(snapDir, "index-schematic.snap.svg"),
+    join(snapDir, "index.circuit-schematic.snap.svg"),
   ).exists()
   const extraPcb = await Bun.file(
     join(snapDir, "extra.circuit-pcb.snap.svg"),
