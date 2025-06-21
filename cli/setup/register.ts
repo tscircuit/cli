@@ -16,7 +16,7 @@ export const registerSetup = (program: Command) => {
             title: "GitHub Action",
             value: "github-action",
             description:
-              "Automatically build, check and commit snapshots to the main branch",
+              "Automatically build and check snapshots on push/pull-request",
             selected: true,
           },
         ],

@@ -114,7 +114,9 @@ export const snapshotProject = async ({
   }
 
   if (mismatches.length > 0) {
-    onError(`Snapshot mismatch:\n${mismatches.join("\n")}`)
+    onError(
+      `Snapshot mismatch:\n${mismatches.join("\n")}\n\nRun with --update to fix.`,
+    )
     return onExit(1)
   }
 

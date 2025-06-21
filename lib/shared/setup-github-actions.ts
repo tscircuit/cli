@@ -40,6 +40,7 @@ jobs:
 on:
   push:
     branches: [main]
+  pull_request:
 
 jobs:
   snapshot:
@@ -48,14 +49,7 @@ jobs:
       - uses: actions/checkout@v4
       - uses: oven-sh/setup-bun@v2
       - run: bun install
-      - run: bunx tsci snapshot --update
-      - name: Commit snapshots
-        run: |
-          git config --global user.name "github-actions[bot]"
-          git config --global user.email "github-actions[bot]@users.noreply.github.com"
-          git add .
-          git commit -m "Update snapshots" || echo "No changes to commit"
-          git push
+      - run: bunx tsci snapshot
 `
 
   writeFileIfNotExists(
