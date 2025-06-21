@@ -59,7 +59,7 @@ export const snapshotProject = async ({
   }
 
   if (files.length === 0) {
-    onSuccess(
+    console.log(
       "No entrypoint found. Run 'tsci init' to bootstrap a basic project or specify a file with 'tsci snapshot <file>'",
     )
     return onExit(0)
