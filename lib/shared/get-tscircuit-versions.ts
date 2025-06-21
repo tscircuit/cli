@@ -1,6 +1,9 @@
-import tscircuitPkg from "tscircuit/package.json" assert { type: "json" }
-import corePkg from "@tscircuit/core/package.json" assert { type: "json" }
-import evalPkg from "@tscircuit/eval/package.json" assert { type: "json" }
+import { createRequire } from "module"
+
+const require = createRequire(import.meta.url)
+const tscircuitPkg = require("tscircuit/package.json") as { version: string }
+const corePkg = require("@tscircuit/core/package.json") as { version: string }
+const evalPkg = require("@tscircuit/eval/package.json") as { version: string }
 
 export const getTscircuitVersions = () => {
   return {
