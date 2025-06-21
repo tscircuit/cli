@@ -4,6 +4,7 @@ import { snapshotProject } from "lib/shared/snapshot-project"
 export const registerSnapshot = (program: Command) => {
   program
     .command("snapshot")
+    .argument("[file]", "Path to the board or circuit file")
     .description(
       "Generate schematic and PCB snapshots (add --3d for 3d preview)",
     )
@@ -12,17 +13,21 @@ export const registerSnapshot = (program: Command) => {
     .option("--pcb-only", "Generate only PCB snapshots")
     .option("--schematic-only", "Generate only schematic snapshots")
     .action(
-      async (options: {
-        update?: boolean
-        "3d"?: boolean
-        pcbOnly?: boolean
-        schematicOnly?: boolean
-      }) => {
+      async (
+        file: string | undefined,
+        options: {
+          update?: boolean
+          "3d"?: boolean
+          pcbOnly?: boolean
+          schematicOnly?: boolean
+        },
+      ) => {
         await snapshotProject({
           update: options.update ?? false,
           threeD: options["3d"] ?? false,
           pcbOnly: options.pcbOnly ?? false,
           schematicOnly: options.schematicOnly ?? false,
+          filePaths: file ? [file] : [],
           onExit: (code) => process.exit(code),
           onError: (msg) => console.error(msg),
           onSuccess: (msg) => console.log(msg),
