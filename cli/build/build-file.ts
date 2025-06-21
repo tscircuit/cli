@@ -3,6 +3,7 @@ import fs from "node:fs"
 import kleur from "kleur"
 import { generateCircuitJson } from "lib/shared/generate-circuit-json"
 import { analyzeCircuitJson } from "lib/shared/circuit-json-diagnostics"
+import { getTscircuitVersionsMessage } from "lib/shared/get-tscircuit-versions"
 
 export const buildFile = async (
   input: string,
@@ -34,7 +35,7 @@ export const buildFile = async (
 
     return errors.length === 0
   } catch (err) {
-    console.error(`Build failed: ${err}`)
+    console.error(`Build failed: ${err}\n${getTscircuitVersionsMessage()}`)
     return false
   }
 }

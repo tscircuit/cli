@@ -218,3 +218,24 @@ test("snapshot command with file path", async () => {
   const rootSnapExists = await Bun.file(join(tmpDir, "__snapshots__")).exists()
   expect(rootSnapExists).toBe(false)
 })
+
+test("snapshot mismatch outputs versions", async () => {
+  const { tmpDir, runCommand } = await getCliTestFixture()
+
+  await Bun.write(
+    join(tmpDir, "snap.board.tsx"),
+    `export const SnapBoard = () => (<board width="10mm" height="10mm"><chip name="U1" footprint="soic8" /></board>)`,
+  )
+
+  await runCommand("tsci snapshot snap.board.tsx --update")
+
+  await Bun.write(
+    join(tmpDir, "snap.board.tsx"),
+    `export const SnapBoard = () => (<board width="10mm" height="10mm"><chip name="U2" footprint="soic8" /></board>)`,
+  )
+
+  const { stderr } = await runCommand("tsci snapshot snap.board.tsx")
+  expect(stderr).toContain("tscircuit")
+  expect(stderr).toContain("@tscircuit/core")
+  expect(stderr).toContain("@tscircuit/eval")
+})

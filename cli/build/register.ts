@@ -3,6 +3,7 @@ import path from "node:path"
 import fs from "node:fs"
 import { buildFile } from "./build-file"
 import { getBuildEntrypoints } from "./get-build-entrypoints"
+import { getTscircuitVersionsMessage } from "lib/shared/get-tscircuit-versions"
 
 export const registerBuild = (program: Command) => {
   program
@@ -50,6 +51,7 @@ export const registerBuild = (program: Command) => {
         }
 
         if (hasErrors && !options?.ignoreErrors) {
+          console.error(getTscircuitVersionsMessage())
           process.exit(1)
         }
       },

@@ -65,3 +65,18 @@ test("build without file builds circuit files", async () => {
   )
   expect(extraComponent.name).toBe("R1")
 })
+
+test("build failure outputs versions", async () => {
+  const { tmpDir, runCommand } = await getCliTestFixture()
+  const circuitPath = path.join(tmpDir, "bad.circuit.tsx")
+  await writeFile(
+    circuitPath,
+    `export default () => { throw new Error('fail'); return <board /> }`,
+  )
+  await writeFile(path.join(tmpDir, "package.json"), "{}")
+
+  const { stderr } = await runCommand(`tsci build ${circuitPath}`)
+  expect(stderr).toContain("tscircuit")
+  expect(stderr).toContain("@tscircuit/core")
+  expect(stderr).toContain("@tscircuit/eval")
+})

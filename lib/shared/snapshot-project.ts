@@ -8,6 +8,7 @@ import {
 } from "circuit-to-svg"
 import { convertCircuitJsonToSimple3dSvg } from "circuit-json-to-simple-3d"
 import { generateCircuitJson } from "lib/shared/generate-circuit-json"
+import { getTscircuitVersionsMessage } from "lib/shared/get-tscircuit-versions"
 import { getEntrypoint } from "lib/shared/get-entrypoint"
 import {
   DEFAULT_IGNORED_PATTERNS,
@@ -105,7 +106,7 @@ export const snapshotProject = async ({
 
   if (mismatches.length > 0) {
     onError(
-      `Snapshot mismatch:\n${mismatches.join("\n")}\n\nRun with --update to fix.`,
+      `Snapshot mismatch:\n${mismatches.join("\n")}\n\nRun with --update to fix.\n${getTscircuitVersionsMessage()}`,
     )
     return onExit(1)
   }
