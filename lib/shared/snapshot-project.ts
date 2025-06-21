@@ -56,23 +56,13 @@ export const snapshotProject = async ({
       ignore,
     })
     files = boardFiles.map((f) => path.join(projectDir, f))
-
-    const entry = await getEntrypoint({
-      projectDir,
-      onError: onError,
-      onSuccess: () => {},
-    })
-
-    if (entry) {
-      const resolved = path.resolve(projectDir, entry)
-      if (!files.includes(resolved)) {
-        files.unshift(resolved)
-      }
-    }
   }
 
   if (files.length === 0) {
-    return onExit(1)
+    onSuccess(
+      "No entrypoint found. Run 'tsci init' to bootstrap a basic project or specify a file with 'tsci snapshot <file>'",
+    )
+    return onExit(0)
   }
 
   const mismatches: string[] = []
