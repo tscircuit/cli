@@ -3,15 +3,23 @@ import fs from "node:fs"
 import kleur from "kleur"
 import { generateCircuitJson } from "lib/shared/generate-circuit-json"
 import { analyzeCircuitJson } from "lib/shared/circuit-json-diagnostics"
+import type { PlatformConfig } from "@tscircuit/props"
 
 export const buildFile = async (
   input: string,
   output: string,
   projectDir: string,
-  options?: { ignoreErrors?: boolean; ignoreWarnings?: boolean },
+  options?: {
+    ignoreErrors?: boolean
+    ignoreWarnings?: boolean
+    platformConfig?: PlatformConfig
+  },
 ): Promise<boolean> => {
   try {
-    const result = await generateCircuitJson({ filePath: input })
+    const result = await generateCircuitJson({
+      filePath: input,
+      platformConfig: options?.platformConfig,
+    })
     fs.mkdirSync(path.dirname(output), { recursive: true })
     fs.writeFileSync(output, JSON.stringify(result.circuitJson, null, 2))
     console.log(`Circuit JSON written to ${path.relative(projectDir, output)}`)
