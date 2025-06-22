@@ -3,6 +3,7 @@ import path from "node:path"
 import fs from "node:fs"
 import { buildFile } from "./build-file"
 import { getBuildEntrypoints } from "./get-build-entrypoints"
+import type { PlatformConfig } from "@tscircuit/props"
 
 export const registerBuild = (program: Command) => {
   program
@@ -11,13 +12,22 @@ export const registerBuild = (program: Command) => {
     .argument("[file]", "Path to the entry file")
     .option("--ignore-errors", "Do not exit with code 1 on errors")
     .option("--ignore-warnings", "Do not log warnings")
+    .option("--disable-pcb", "Disable PCB outputs")
     .action(
       async (
         file?: string,
-        options?: { ignoreErrors?: boolean; ignoreWarnings?: boolean },
+        options?: {
+          ignoreErrors?: boolean
+          ignoreWarnings?: boolean
+          disablePcb?: boolean
+        },
       ) => {
         const { projectDir, mainEntrypoint, circuitFiles } =
           await getBuildEntrypoints({ fileOrDir: file })
+
+        const platformConfig: PlatformConfig = {
+          pcbDisabled: options?.disablePcb,
+        }
 
         const distDir = path.join(projectDir, "dist")
         fs.mkdirSync(distDir, { recursive: true })
@@ -26,12 +36,10 @@ export const registerBuild = (program: Command) => {
 
         if (mainEntrypoint) {
           const outputPath = path.join(distDir, "circuit.json")
-          const ok = await buildFile(
-            mainEntrypoint,
-            outputPath,
-            projectDir,
-            options,
-          )
+          const ok = await buildFile(mainEntrypoint, outputPath, projectDir, {
+            ...options,
+            platformConfig,
+          })
           if (!ok) hasErrors = true
         }
 

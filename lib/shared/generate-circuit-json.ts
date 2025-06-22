@@ -4,6 +4,7 @@ import path from "node:path/posix"
 import { relative } from "node:path"
 import fs from "node:fs"
 import Debug from "debug"
+import type { PlatformConfig } from "@tscircuit/props"
 
 const debug = Debug("tsci:generate-circuit-json")
 
@@ -22,6 +23,7 @@ type GenerateCircuitJsonOptions = {
   outputDir?: string
   outputFileName?: string
   saveToFile?: boolean
+  platformConfig?: PlatformConfig
 }
 
 /**
@@ -35,10 +37,13 @@ export async function generateCircuitJson({
   outputDir,
   outputFileName,
   saveToFile = false,
+  platformConfig,
 }: GenerateCircuitJsonOptions) {
   debug(`Generating circuit JSON for ${filePath}`)
 
-  const runner = new CircuitRunner()
+  const runner = new CircuitRunner({
+    platform: platformConfig,
+  })
   const projectDir = path.dirname(filePath)
   const resolvedOutputDir = outputDir || projectDir
 
