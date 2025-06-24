@@ -10,7 +10,7 @@
     "@tscircuit/fake-snippets": "^0.0.87",
     "@tscircuit/file-server": "^0.0.24",
     "@tscircuit/math-utils": "^0.0.18",
-    "@tscircuit/props": "^0.0.237",
+    "@tscircuit/props": "^0.0.242",
     "@tscircuit/runframe": "^0.0.614",
     "@tscircuit/schematic-match-adapt": "^0.0.22",
     "@tscircuit/simple-3d-svg": "^0.0.10",
@@ -51,7 +51,8 @@
   },
   "peerDependencies": {
     "typescript": "^5.0.0",
-    "tscircuit": "*"
+    "tscircuit": "*",
+    "@tscircuit/props": "*"
   },
   "bin": {
     "tsci": "./dist/main.js"
