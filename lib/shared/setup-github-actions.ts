@@ -30,6 +30,9 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+      - uses: actions/setup-node@v3
+        with:
+          node-version: 22
       - uses: oven-sh/setup-bun@v2
       - run: bun install
       - run: bunx tsci build
@@ -47,6 +50,9 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+      - uses: actions/setup-node@v3
+        with:
+          node-version: 22
       - uses: oven-sh/setup-bun@v2
       - run: bun install
       - run: bunx tsci snapshot
