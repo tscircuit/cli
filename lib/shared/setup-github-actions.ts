@@ -32,7 +32,7 @@ jobs:
       - uses: actions/checkout@v4
       - uses: oven-sh/setup-bun@v2
       - run: bun install
-      - run: bunx tsci build --ignore-errors
+      - run: bunx tsci build
 `
 
   const snapshotWorkflow = `name: tscircuit Snapshot
