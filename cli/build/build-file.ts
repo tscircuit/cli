@@ -40,7 +40,16 @@ export const buildFile = async (
       }
     }
 
-    return errors.length === 0
+    if (errors.length > 0 && !options?.ignoreErrors) {
+      console.error(
+        kleur.red(
+          `Build failed with ${errors.length} error(s). Use --ignore-errors to continue.`,
+        ),
+      )
+      return false
+    } else {
+      return true
+    }
   } catch (err) {
     console.error(`Build failed: ${err}`)
     return false
