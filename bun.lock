@@ -6,7 +6,6 @@
         "@babel/standalone": "^7.26.9",
         "@biomejs/biome": "^1.9.4",
         "@tscircuit/circuit-json-util": "^0.0.47",
-        "@tscircuit/eval": "^0.0.240",
         "@tscircuit/fake-snippets": "^0.0.87",
         "@tscircuit/file-server": "^0.0.24",
         "@tscircuit/math-utils": "^0.0.18",
@@ -51,7 +50,7 @@
       },
       "peerDependencies": {
         "@tscircuit/props": "*",
-        "tscircuit": "^0.0.510",
+        "tscircuit": "*",
         "typescript": "^5.0.0",
       },
     },

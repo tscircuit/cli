@@ -1,4 +1,8 @@
-import { CircuitRunner } from "@tscircuit/eval/eval"
+// Import CircuitRunner from the tscircuit package which re-exports
+// the eval functionality. This avoids bundling a specific version of
+// @tscircuit/core with the CLI and ensures we use the user's installed
+// version via the tscircuit peer dependency.
+import { CircuitRunner } from "tscircuit"
 import { getVirtualFileSystemFromDirPath } from "make-vfs"
 import path from "node:path/posix"
 import { relative } from "node:path"
