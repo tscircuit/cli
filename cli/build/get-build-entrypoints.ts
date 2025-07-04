@@ -12,6 +12,7 @@ export async function getBuildEntrypoints({
   rootDir?: string
 }): Promise<{
   projectDir: string
+  mainEntrypoint?: string
   circuitFiles: string[]
 }> {
   const resolvedRoot = path.resolve(rootDir)
@@ -20,37 +21,40 @@ export async function getBuildEntrypoints({
     const resolved = path.resolve(resolvedRoot, fileOrDir)
     if (fs.existsSync(resolved) && fs.statSync(resolved).isDirectory()) {
       const projectDir = resolved
-      const files = globbySync(["**/*.circuit.tsx", "**/*.board.tsx"], {
+      const circuitFiles: string[] = []
+      const mainEntrypoint = await getEntrypoint({
+        projectDir,
+        onError: () => {},
+      })
+      const files = globbySync("**/*.circuit.tsx", {
         cwd: projectDir,
         ignore: DEFAULT_IGNORED_PATTERNS,
       })
+      for (const f of files) {
+        circuitFiles.push(path.join(projectDir, f))
+      }
       return {
         projectDir,
-        circuitFiles: files.map((f) => path.join(projectDir, f)),
+        mainEntrypoint: mainEntrypoint || undefined,
+        circuitFiles,
       }
     }
     return { projectDir: path.dirname(resolved), circuitFiles: [resolved] }
   }
 
   const projectDir = resolvedRoot
-  const files = globbySync(["**/*.circuit.tsx", "**/*.board.tsx"], {
+  const circuitFiles: string[] = []
+  const mainEntrypoint = await getEntrypoint({ projectDir, onError: () => {} })
+  const files = globbySync("**/*.circuit.tsx", {
     cwd: projectDir,
     ignore: DEFAULT_IGNORED_PATTERNS,
   })
-  const circuitFiles = files.map((f) => path.join(projectDir, f))
-
-  if (circuitFiles.length === 0) {
-    const mainEntrypoint = await getEntrypoint({
-      projectDir,
-      onError: () => {},
-    })
-    if (mainEntrypoint) {
-      circuitFiles.push(mainEntrypoint)
-    }
+  for (const f of files) {
+    circuitFiles.push(path.join(projectDir, f))
   }
-
   return {
     projectDir,
+    mainEntrypoint: mainEntrypoint || undefined,
     circuitFiles,
   }
 }
