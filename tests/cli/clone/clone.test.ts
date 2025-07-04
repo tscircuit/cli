@@ -37,26 +37,22 @@ test("clone command handles API errors gracefully", async () => {
   expect(stderr).toContain("not found")
 })
 
-test(
-  "clone command rejects invalid URL formats",
-  async () => {
-    const { runCommand } = await getCliTestFixture()
+test("clone command rejects invalid URL formats", async () => {
+  const { runCommand } = await getCliTestFixture()
 
-    const testCases = [
-      "https://google.com/user/board",
-      "https://tscircuit.com/",
-      "https://tscircuit.com/user",
-      "https://tscircuit.com/user/",
-      "http://tscircuit.com/user/board",
-    ]
+  const testCases = [
+    "https://google.com/user/board",
+    "https://tscircuit.com/",
+    "https://tscircuit.com/user",
+    "https://tscircuit.com/user/",
+    "http://tscircuit.com/user/board",
+  ]
 
-    for (const url of testCases) {
-      const { stderr } = await runCommand(`tsci clone ${url}`)
-      expect(stderr).toContain("Invalid package path")
-    }
-  },
-  { timeout: 10_000 },
-)
+  for (const url of testCases) {
+    const { stderr } = await runCommand(`tsci clone ${url}`)
+    expect(stderr).toContain("Invalid package path")
+  }
+})
 
 test("clone command accepts all valid formats", async () => {
   const { tmpDir, runCommand } = await getCliTestFixture()
