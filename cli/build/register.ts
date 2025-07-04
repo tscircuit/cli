@@ -22,8 +22,9 @@ export const registerBuild = (program: Command) => {
           disablePcb?: boolean
         },
       ) => {
-        const { projectDir, mainEntrypoint, circuitFiles } =
-          await getBuildEntrypoints({ fileOrDir: file })
+        const { projectDir, circuitFiles } = await getBuildEntrypoints({
+          fileOrDir: file,
+        })
 
         const platformConfig: PlatformConfig = {
           pcbDisabled: options?.disablePcb,
@@ -34,25 +35,28 @@ export const registerBuild = (program: Command) => {
 
         let hasErrors = false
 
-        if (mainEntrypoint) {
-          const outputPath = path.join(distDir, "circuit.json")
-          const ok = await buildFile(mainEntrypoint, outputPath, projectDir, {
-            ...options,
-            platformConfig,
-          })
-          if (!ok) hasErrors = true
-        }
-
         for (const filePath of circuitFiles) {
           const relative = path.relative(projectDir, filePath)
           const isCircuit = filePath.endsWith(".circuit.tsx")
-          const outputPath = isCircuit
-            ? path.join(
-                distDir,
-                relative.replace(/\.circuit\.tsx$/, ""),
-                "circuit.json",
-              )
-            : path.join(distDir, "circuit.json")
+          const isBoard = filePath.endsWith(".board.tsx")
+
+          let outputPath: string
+          if (isCircuit) {
+            outputPath = path.join(
+              distDir,
+              relative.replace(/\.circuit\.tsx$/, ""),
+              "circuit.json",
+            )
+          } else if (isBoard) {
+            outputPath = path.join(
+              distDir,
+              relative.replace(/\.board\.tsx$/, ""),
+              "circuit.json",
+            )
+          } else {
+            outputPath = path.join(distDir, "circuit.json")
+          }
+
           const ok = await buildFile(filePath, outputPath, projectDir, options)
           if (!ok) hasErrors = true
         }

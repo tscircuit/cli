@@ -35,25 +35,24 @@ test("build with file only outputs that file", async () => {
   ).rejects.toBeTruthy()
 })
 
-// When no file is provided search for *.circuit.tsx files
+// When no file is provided search for *.circuit.tsx and *.board.tsx files
 
-test("build without file builds circuit files", async () => {
+test("build without file builds circuit and board files", async () => {
   const { tmpDir, runCommand } = await getCliTestFixture()
   const mainPath = path.join(tmpDir, "index.tsx")
   const circuitPath = path.join(tmpDir, "extra.circuit.tsx")
+  const boardPath = path.join(tmpDir, "my.board.tsx")
   await writeFile(mainPath, circuitCode)
   await writeFile(circuitPath, circuitCode)
+  await writeFile(boardPath, circuitCode)
   await writeFile(path.join(tmpDir, "package.json"), "{}")
 
   await runCommand(`tsci build`)
 
-  const mainData = await readFile(
-    path.join(tmpDir, "dist", "circuit.json"),
-    "utf-8",
-  )
-  const mainJson = JSON.parse(mainData)
-  const mainComponent = mainJson.find((c: any) => c.type === "source_component")
-  expect(mainComponent.name).toBe("R1")
+  // index.tsx should not be built as it's not a circuit or board file
+  await expect(
+    stat(path.join(tmpDir, "dist", "circuit.json")),
+  ).rejects.toBeTruthy()
 
   const extraData = await readFile(
     path.join(tmpDir, "dist", "extra", "circuit.json"),
@@ -64,4 +63,14 @@ test("build without file builds circuit files", async () => {
     (c: any) => c.type === "source_component",
   )
   expect(extraComponent.name).toBe("R1")
+
+  const boardData = await readFile(
+    path.join(tmpDir, "dist", "my", "circuit.json"),
+    "utf-8",
+  )
+  const boardJson = JSON.parse(boardData)
+  const boardComponent = boardJson.find(
+    (c: any) => c.type === "source_component",
+  )
+  expect(boardComponent.name).toBe("R1")
 })
