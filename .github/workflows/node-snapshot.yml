@@ -1,0 +1,28 @@
+name: Node Snapshot Test
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+jobs:
+  node-snapshot:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      - name: Setup bun
+        uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: latest
+      - name: Install dependencies
+        run: bun install
+      - name: Build and install tsci
+        run: |
+          bun run build
+          npm install -g .
+      - name: Run Node snapshot smoke test
+        run: node scripts/node-snapshot-test.js
