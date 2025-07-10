@@ -22,10 +22,11 @@ export const registerInit = (program: Command) => {
       "[directory]",
       "Directory name (optional, defaults to current directory)",
     )
-    .action(async (directory?: string) => {
+    .option("-y, --yes", "Use defaults and skip prompts")
+    .action(async (directory?: string, options: { yes?: boolean }) => {
       await checkForTsciUpdates()
 
-      if (!directory) {
+      if (!directory && !options.yes) {
         const { continueInCurrentDirectory } = await prompts({
           type: "confirm",
           name: "continueInCurrentDirectory",
@@ -52,12 +53,14 @@ export const registerInit = (program: Command) => {
         : process.cwd()
 
       const defaultPackageName = path.basename(projectDir)
-      const { packageName } = await prompts({
-        type: "text",
-        name: "packageName",
-        message: "Package name",
-        initial: defaultPackageName,
-      })
+      const { packageName } = options.yes
+        ? { packageName: defaultPackageName }
+        : await prompts({
+            type: "text",
+            name: "packageName",
+            message: "Package name",
+            initial: defaultPackageName,
+          })
 
       let authorName = cliConfig.get("githubUsername")
       if (!authorName) {
