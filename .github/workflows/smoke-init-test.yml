@@ -14,6 +14,11 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
       - name: Setup bun
         uses: oven-sh/setup-bun@v2
         with:
@@ -42,11 +47,14 @@ jobs:
         run: |
           cd "$TEMP_DIR"
           tsci init -y
+          bun add -D react@19.0 react-dom@19.0 react-reconciler@0.31
+
+      - run: node --version
 
       - name: Test tsci build in temporary directory
         run: |
           cd "$TEMP_DIR"
-          export DEBUG="tsci:generate-circuit-json"
+          export DEBUG="*"
           tsci build index.tsx
 
       - name: Verify build output

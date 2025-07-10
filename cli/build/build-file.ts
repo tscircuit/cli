@@ -50,8 +50,8 @@ export const buildFile = async (
     } else {
       return true
     }
-  } catch (err) {
-    console.error(`Build failed: ${err}`)
+  } catch (err: any) {
+    console.error(`Build failed: ${err}\n\n${err.stack}`)
     return false
   }
 }
