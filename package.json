@@ -45,7 +45,7 @@
     "redaxios": "^0.5.1",
     "semver": "^7.6.3",
     "tempy": "^3.1.0",
-    "tscircuit": "^0.0.531",
+    "tscircuit": "^0.0.532",
     "typed-ky": "^0.0.4",
     "zod": "3"
   },
