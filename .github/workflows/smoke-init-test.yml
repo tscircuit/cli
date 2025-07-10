@@ -43,6 +43,8 @@ jobs:
           cd "$TEMP_DIR"
           tsci init -y
 
+      - run: node --version
+
       - name: Test tsci build in temporary directory
         run: |
           cd "$TEMP_DIR"
