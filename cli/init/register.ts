@@ -23,10 +23,10 @@ export const registerInit = (program: Command) => {
       "Directory name (optional, defaults to current directory)",
     )
     .option("-y, --yes", "Use defaults and skip prompts")
-    .action(async (directory?: string, options: { yes?: boolean }) => {
+    .action(async (directory?: string, options?: { yes?: boolean }) => {
       await checkForTsciUpdates()
 
-      if (!directory && !options.yes) {
+      if (!directory && !options?.yes) {
         const { continueInCurrentDirectory } = await prompts({
           type: "confirm",
           name: "continueInCurrentDirectory",
@@ -53,7 +53,7 @@ export const registerInit = (program: Command) => {
         : process.cwd()
 
       const defaultPackageName = path.basename(projectDir)
-      const { packageName } = options.yes
+      const { packageName } = options?.yes
         ? { packageName: defaultPackageName }
         : await prompts({
             type: "text",
