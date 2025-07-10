@@ -51,7 +51,7 @@
       },
       "peerDependencies": {
         "@tscircuit/props": "*",
-        "tscircuit": "^0.0.532",
+        "tscircuit": "*",
         "typescript": "^5.0.0",
         "zod": "3",
       },
