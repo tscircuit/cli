@@ -9,6 +9,7 @@ import { relative } from "node:path"
 import fs from "node:fs"
 import Debug from "debug"
 import type { PlatformConfig } from "@tscircuit/props"
+import { abbreviateStringifyObject } from "lib/utils/abbreviate-stringify-object"
 
 const debug = Debug("tsci:generate-circuit-json")
 
@@ -82,6 +83,8 @@ export async function generateCircuitJson({
       contentFormat: "string",
     })) as Record<string, string>),
   }
+
+  debug(`fsMap: ${abbreviateStringifyObject(fsMap)}`)
 
   // Execute the circuit runner with the virtual file system
   await runner.executeWithFsMap({
