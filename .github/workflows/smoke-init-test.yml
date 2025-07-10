@@ -47,6 +47,10 @@ jobs:
         run: |
           cd "$TEMP_DIR"
           export DEBUG="tsci:generate-circuit-json"
+          npm ls react-reconciler
+          npm ls react
+          npm ls react-dom
+          npm ls @tscircuit/core
           tsci build index.tsx
 
       - name: Verify build output
