@@ -48,6 +48,7 @@ jobs:
           cd "$TEMP_DIR"
           export DEBUG="*"
           npm ls react-reconciler
+          npm ls @babel/standalone
           tsci build index.tsx
 
       - name: Verify build output
