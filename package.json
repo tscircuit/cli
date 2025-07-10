@@ -46,7 +46,8 @@
     "semver": "^7.6.3",
     "tempy": "^3.1.0",
     "tscircuit": "^0.0.529",
-    "typed-ky": "^0.0.4"
+    "typed-ky": "^0.0.4",
+    "zod": "3"
   },
   "peerDependencies": {
     "typescript": "^5.0.0",
