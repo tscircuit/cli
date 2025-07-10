@@ -46,6 +46,7 @@ jobs:
       - name: Test tsci build in temporary directory
         run: |
           cd "$TEMP_DIR"
+          export DEBUG="tsci:generate-circuit-json"
           tsci build index.tsx
 
       - name: Verify build output
