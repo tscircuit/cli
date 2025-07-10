@@ -53,6 +53,7 @@
         "@tscircuit/props": "*",
         "tscircuit": "*",
         "typescript": "^5.0.0",
+        "zod": "3",
       },
     },
   },
