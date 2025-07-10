@@ -5,7 +5,7 @@
   "devDependencies": {
     "@babel/standalone": "^7.26.9",
     "@biomejs/biome": "^1.9.4",
-    "@tscircuit/circuit-json-util": "^0.0.50",
+    "@tscircuit/circuit-json-util": "^0.0.51",
     "@tscircuit/fake-snippets": "^0.0.87",
     "@tscircuit/file-server": "^0.0.24",
     "@tscircuit/math-utils": "^0.0.18",
@@ -45,7 +45,7 @@
     "redaxios": "^0.5.1",
     "semver": "^7.6.3",
     "tempy": "^3.1.0",
-    "tscircuit": "^0.0.510",
+    "tscircuit": "^0.0.529",
     "typed-ky": "^0.0.4"
   },
   "peerDependencies": {
