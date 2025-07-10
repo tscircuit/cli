@@ -42,6 +42,7 @@ jobs:
         run: |
           cd "$TEMP_DIR"
           tsci init -y
+          bun add -D react@19.0
 
       - run: node --version
 
