@@ -89,8 +89,6 @@ export async function generateCircuitJson({
   // Execute the circuit runner with the virtual file system
   const MainComponent = await import(filePath)
 
-  console.log({ MainComponent })
-
   runner.add(<MainComponent.default />)
 
   // Wait for the circuit to be fully rendered
