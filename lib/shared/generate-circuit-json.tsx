@@ -1,7 +1,3 @@
-// Import CircuitRunner from the tscircuit package which re-exports
-// the eval functionality. This avoids bundling a specific version of
-// @tscircuit/core with the CLI and ensures we use the user's installed
-// version via the tscircuit peer dependency.
 import { RootCircuit } from "tscircuit"
 import { getVirtualFileSystemFromDirPath } from "make-vfs"
 import path from "node:path/posix"
@@ -88,8 +84,6 @@ export async function generateCircuitJson({
 
   // Execute the circuit runner with the virtual file system
   const MainComponent = await import(filePath)
-
-  console.log({ MainComponent })
 
   runner.add(<MainComponent.default />)
 
