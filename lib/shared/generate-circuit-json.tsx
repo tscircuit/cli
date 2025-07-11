@@ -5,7 +5,6 @@
 import { RootCircuit } from "tscircuit"
 import { getVirtualFileSystemFromDirPath } from "make-vfs"
 import path from "node:path/posix"
-import { join } from "node:path/posix"
 import { relative } from "node:path"
 import fs from "node:fs"
 import Debug from "debug"
@@ -54,7 +53,7 @@ export async function generateCircuitJson({
   const resolvedOutputDir = outputDir || projectDir
 
   // Get the relative path to the component from the project directory
-  const relativeComponentPath = path.join(projectDir, filePath)
+  const relativeComponentPath = relative(projectDir, filePath)
 
   // Create a default output filename if not provided
   const baseFileName =
@@ -88,7 +87,7 @@ export async function generateCircuitJson({
   debug(`fsMap: ${abbreviateStringifyObject(fsMap)}`)
 
   // Execute the circuit runner with the virtual file system
-  const MainComponent = await import(join(projectDir, relativeComponentPath))
+  const MainComponent = await import(filePath)
 
   console.log({ MainComponent })
 
