@@ -2,9 +2,10 @@
 // the eval functionality. This avoids bundling a specific version of
 // @tscircuit/core with the CLI and ensures we use the user's installed
 // version via the tscircuit peer dependency.
-import { CircuitRunner } from "tscircuit"
+import { RootCircuit } from "tscircuit"
 import { getVirtualFileSystemFromDirPath } from "make-vfs"
 import path from "node:path/posix"
+import { join } from "node:path/posix"
 import { relative } from "node:path"
 import fs from "node:fs"
 import Debug from "debug"
@@ -46,14 +47,14 @@ export async function generateCircuitJson({
 }: GenerateCircuitJsonOptions) {
   debug(`Generating circuit JSON for ${filePath}`)
 
-  const runner = new CircuitRunner({
+  const runner = new RootCircuit({
     platform: platformConfig,
   })
   const projectDir = path.dirname(filePath)
   const resolvedOutputDir = outputDir || projectDir
 
   // Get the relative path to the component from the project directory
-  const relativeComponentPath = relative(projectDir, filePath)
+  const relativeComponentPath = path.join(projectDir, filePath)
 
   // Create a default output filename if not provided
   const baseFileName =
@@ -87,10 +88,11 @@ export async function generateCircuitJson({
   debug(`fsMap: ${abbreviateStringifyObject(fsMap)}`)
 
   // Execute the circuit runner with the virtual file system
-  await runner.executeWithFsMap({
-    fsMap,
-    mainComponentPath: relativeComponentPath,
-  })
+  const MainComponent = await import(join(projectDir, relativeComponentPath))
+
+  console.log({ MainComponent })
+
+  runner.add(<MainComponent.default />)
 
   // Wait for the circuit to be fully rendered
   await runner.renderUntilSettled()
