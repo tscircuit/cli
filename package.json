@@ -55,7 +55,8 @@
     "tsci": "./cli/entrypoint.js"
   },
   "files": [
-    "dist"
+    "dist",
+    "cli/entrypoint.js"
   ],
   "peerDependencies": {
     "tscircuit": "*"

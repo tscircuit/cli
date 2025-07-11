@@ -15,7 +15,7 @@ function commandExists(cmd) {
 const runner = commandExists("bun") ? "bun" : "tsx"
 
 const __dirname = dirname(fileURLToPath(import.meta.url))
-const mainPath = join(__dirname, "main.ts")
+const mainPath = join(__dirname, "../dist/main.js")
 
 const { status } = spawnSync(runner, [mainPath, ...process.argv.slice(2)], {
   stdio: "inherit",
