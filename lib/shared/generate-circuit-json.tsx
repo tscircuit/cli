@@ -85,7 +85,25 @@ export async function generateCircuitJson({
   // Execute the circuit runner with the virtual file system
   const MainComponent = await import(filePath)
 
-  runner.add(<MainComponent.default />)
+  // Handle both default export and named exports
+  const Component =
+    MainComponent.default ||
+    (Object.keys(MainComponent).find((k) => k[0] === k[0].toUpperCase()) !==
+    undefined
+      ? MainComponent[
+          Object.keys(MainComponent).find(
+            (k) => k[0] === k[0].toUpperCase(),
+          ) as keyof typeof MainComponent
+        ]
+      : undefined)
+
+  if (!Component) {
+    throw new Error(
+      `No component found in "${filePath}". Make sure you export a component.`,
+    )
+  }
+
+  runner.add(<Component />)
 
   // Wait for the circuit to be fully rendered
   await runner.renderUntilSettled()
