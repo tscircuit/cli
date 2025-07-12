@@ -10,7 +10,7 @@
     "@tscircuit/fake-snippets": "^0.0.87",
     "@tscircuit/file-server": "^0.0.24",
     "@tscircuit/math-utils": "^0.0.18",
-    "@tscircuit/props": "^0.0.244",
+    "@tscircuit/props": "^0.0.257",
     "@tscircuit/runframe": "https://pkg.pr.new/tscircuit/runframe/@tscircuit/runframe@c6b957d",
     "@tscircuit/schematic-match-adapt": "^0.0.22",
     "@tscircuit/simple-3d-svg": "^0.0.22",
