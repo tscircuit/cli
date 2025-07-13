@@ -2,6 +2,7 @@ import fs from "node:fs"
 import path from "node:path"
 import { globbySync } from "globby"
 import kleur from "kleur"
+import looksSame from "looks-same"
 import {
   convertCircuitJsonToPcbSvg,
   convertCircuitJsonToSchematicSvg,
@@ -16,6 +17,7 @@ import {
 
 type SnapshotOptions = {
   update?: boolean
+  forceUpdate?: boolean
   ignored?: string[]
   /** Enable generation of 3d preview snapshots */
   threeD?: boolean
@@ -32,6 +34,7 @@ type SnapshotOptions = {
 
 export const snapshotProject = async ({
   update = false,
+  forceUpdate = false,
   ignored = [],
   threeD = false,
   pcbOnly = false,
@@ -88,12 +91,31 @@ export const snapshotProject = async ({
 
     for (const [type, svg] of snapshotPairs) {
       const snapPath = path.join(snapDir, `${base}-${type}.snap.svg`)
-      if (update || !fs.existsSync(snapPath)) {
+      const fileExists = fs.existsSync(snapPath)
+
+      if (!fileExists) {
         fs.writeFileSync(snapPath, svg)
         console.log("✅", kleur.gray(path.relative(projectDir, snapPath)))
+        continue
+      }
+
+      const existing = fs.readFileSync(snapPath, "utf-8")
+      const result: any = await looksSame(
+        Buffer.from(svg),
+        Buffer.from(existing),
+        {
+          strict: false,
+          tolerance: 2,
+        },
+      )
+
+      if (update) {
+        if (!result.equal || forceUpdate) {
+          fs.writeFileSync(snapPath, svg)
+          console.log("✅", kleur.gray(path.relative(projectDir, snapPath)))
+        }
       } else {
-        const existing = fs.readFileSync(snapPath, "utf-8")
-        if (existing !== svg) mismatches.push(snapPath)
+        if (!result.equal) mismatches.push(snapPath)
       }
     }
   }

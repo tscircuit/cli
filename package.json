@@ -24,7 +24,6 @@
     "@types/semver": "^7.5.8",
     "bun-match-svg": "^0.0.12",
     "chokidar": "4.0.1",
-    "tsx": "^4.7.1",
     "circuit-json-to-readable-netlist": "^0.0.9",
     "circuit-json-to-simple-3d": "^0.0.3",
     "circuit-to-svg": "^0.0.164",
@@ -41,6 +40,7 @@
     "jwt-decode": "^4.0.0",
     "kleur": "^4.1.5",
     "ky": "^1.7.4",
+    "looks-same": "^9.0.1",
     "make-vfs": "^1.0.15",
     "perfect-cli": "^1.0.20",
     "prompts": "^2.4.2",
@@ -48,6 +48,7 @@
     "semver": "^7.6.3",
     "tempy": "^3.1.0",
     "tscircuit": "^0.0.535",
+    "tsx": "^4.7.1",
     "typed-ky": "^0.0.4",
     "zod": "3"
   },
