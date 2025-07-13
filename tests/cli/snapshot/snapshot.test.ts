@@ -218,3 +218,34 @@ test("snapshot command with file path", async () => {
   const rootSnapExists = await Bun.file(join(tmpDir, "__snapshots__")).exists()
   expect(rootSnapExists).toBe(false)
 })
+
+test("snapshot command skips updates when snapshots match visually", async () => {
+  const { tmpDir, runCommand } = await getCliTestFixture()
+
+  await Bun.write(
+    join(tmpDir, "visual.board.tsx"),
+    `
+    export const Visual = () => (
+      <board width="10mm" height="10mm">
+        <chip name="U1" footprint="soic8" />
+      </board>
+    )
+  `,
+  )
+
+  await runCommand("tsci snapshot --update")
+
+  const snapDir = join(tmpDir, "__snapshots__")
+  const pcbPath = join(snapDir, "visual.board-pcb.snap.svg")
+
+  fs.appendFileSync(pcbPath, "\n<!-- comment -->\n")
+  const contentsBefore = fs.readFileSync(pcbPath, "utf-8")
+
+  const { stdout: matchStdout } = await runCommand("tsci snapshot")
+  expect(matchStdout).toContain("All snapshots match")
+
+  await runCommand("tsci snapshot --update")
+  const contentsAfter = fs.readFileSync(pcbPath, "utf-8")
+
+  expect(contentsAfter).toBe(contentsBefore)
+})
