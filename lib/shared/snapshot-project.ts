@@ -14,8 +14,16 @@ import {
   normalizeIgnorePattern,
 } from "lib/shared/should-ignore-path"
 
+let looksSamePromise: Promise<any> | null = null
+const getLooksSame = async (): Promise<any> => {
+  if (!looksSamePromise)
+    looksSamePromise = import("looks-same").then((m) => m.default || m)
+  return looksSamePromise
+}
+
 type SnapshotOptions = {
   update?: boolean
+  forceUpdate?: boolean
   ignored?: string[]
   /** Enable generation of 3d preview snapshots */
   threeD?: boolean
@@ -32,6 +40,7 @@ type SnapshotOptions = {
 
 export const snapshotProject = async ({
   update = false,
+  forceUpdate = false,
   ignored = [],
   threeD = false,
   pcbOnly = false,
@@ -88,12 +97,32 @@ export const snapshotProject = async ({
 
     for (const [type, svg] of snapshotPairs) {
       const snapPath = path.join(snapDir, `${base}-${type}.snap.svg`)
-      if (update || !fs.existsSync(snapPath)) {
+      const fileExists = fs.existsSync(snapPath)
+
+      if (!fileExists) {
         fs.writeFileSync(snapPath, svg)
         console.log("✅", kleur.gray(path.relative(projectDir, snapPath)))
+        continue
+      }
+
+      const existing = fs.readFileSync(snapPath, "utf-8")
+      const looksSame = await getLooksSame()
+      const result: any = await looksSame(
+        Buffer.from(svg),
+        Buffer.from(existing),
+        {
+          strict: false,
+          tolerance: 2,
+        },
+      )
+
+      if (update) {
+        if (!result.equal || forceUpdate) {
+          fs.writeFileSync(snapPath, svg)
+          console.log("✅", kleur.gray(path.relative(projectDir, snapPath)))
+        }
       } else {
-        const existing = fs.readFileSync(snapPath, "utf-8")
-        if (existing !== svg) mismatches.push(snapPath)
+        if (!result.equal) mismatches.push(snapPath)
       }
     }
   }
