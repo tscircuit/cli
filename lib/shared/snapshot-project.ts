@@ -118,7 +118,14 @@ export const snapshotProject = async ({
           console.log("✅", kleur.gray(path.relative(projectDir, snapPath)))
         }
       } else if (!result.equal) {
-        mismatches.push(snapPath)
+        const diffPath = snapPath.replace(".snap.svg", ".diff.png")
+        await looksSame.createDiff({
+          reference: Buffer.from(existing),
+          current: Buffer.from(svg),
+          diff: diffPath,
+          highlightColor: "#ff00ff",
+        })
+        mismatches.push(`${snapPath} (diff: ${diffPath})`)
       }
     }
   }
