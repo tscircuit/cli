@@ -2,7 +2,6 @@ import fs from "node:fs"
 import path from "node:path"
 import { globbySync } from "globby"
 import kleur from "kleur"
-import looksSame from "looks-same"
 import {
   convertCircuitJsonToPcbSvg,
   convertCircuitJsonToSchematicSvg,
@@ -14,6 +13,13 @@ import {
   DEFAULT_IGNORED_PATTERNS,
   normalizeIgnorePattern,
 } from "lib/shared/should-ignore-path"
+
+let looksSamePromise: Promise<any> | null = null
+const getLooksSame = async (): Promise<any> => {
+  if (!looksSamePromise)
+    looksSamePromise = import("looks-same").then((m) => m.default || m)
+  return looksSamePromise
+}
 
 type SnapshotOptions = {
   update?: boolean
@@ -100,6 +106,7 @@ export const snapshotProject = async ({
       }
 
       const existing = fs.readFileSync(snapPath, "utf-8")
+      const looksSame = await getLooksSame()
       const result: any = await looksSame(
         Buffer.from(svg),
         Buffer.from(existing),
