@@ -218,3 +218,115 @@ test("snapshot command with file path", async () => {
   const rootSnapExists = await Bun.file(join(tmpDir, "__snapshots__")).exists()
   expect(rootSnapExists).toBe(false)
 })
+
+test("snapshot command skips updates when snapshots match visually", async () => {
+  const { tmpDir, runCommand } = await getCliTestFixture()
+
+  await Bun.write(
+    join(tmpDir, "visual.board.tsx"),
+    `
+    export const Visual = () => (
+      <board width="10mm" height="10mm">
+        <chip name="U1" footprint="soic8" />
+      </board>
+    )
+  `,
+  )
+
+  await runCommand("tsci snapshot --update")
+
+  const snapDir = join(tmpDir, "__snapshots__")
+  const pcbPath = join(snapDir, "visual.board-pcb.snap.svg")
+
+  fs.appendFileSync(pcbPath, "\n<!-- comment -->\n")
+  const contentsBefore = fs.readFileSync(pcbPath, "utf-8")
+
+  const { stdout: matchStdout } = await runCommand("tsci snapshot")
+  expect(matchStdout).toContain("All snapshots match")
+
+  await runCommand("tsci snapshot --update")
+  const contentsAfter = fs.readFileSync(pcbPath, "utf-8")
+
+  expect(contentsAfter).toBe(contentsBefore)
+})
+
+test("visual comparison works for pcb and schematic snapshots", async () => {
+  const { tmpDir, runCommand } = await getCliTestFixture()
+
+  await Bun.write(
+    join(tmpDir, "both.board.tsx"),
+    `
+    export const Both = () => (
+      <board width="10mm" height="10mm">
+        <chip name="U1" footprint="soic8" />
+      </board>
+    )
+  `,
+  )
+
+  await runCommand("tsci snapshot --update")
+
+  const snapDir = join(tmpDir, "__snapshots__")
+  const pcbPath = join(snapDir, "both.board-pcb.snap.svg")
+  const schPath = join(snapDir, "both.board-schematic.snap.svg")
+
+  fs.appendFileSync(pcbPath, "\n<!-- comment -->\n")
+  fs.appendFileSync(schPath, "\n<!-- comment -->\n")
+
+  const pcbBefore = fs.readFileSync(pcbPath, "utf-8")
+  const schBefore = fs.readFileSync(schPath, "utf-8")
+
+  const { stdout } = await runCommand("tsci snapshot")
+  expect(stdout).toContain("All snapshots match")
+
+  await runCommand("tsci snapshot --update")
+
+  const pcbAfter = fs.readFileSync(pcbPath, "utf-8")
+  const schAfter = fs.readFileSync(schPath, "utf-8")
+
+  expect(pcbAfter).toBe(pcbBefore)
+  expect(schAfter).toBe(schBefore)
+})
+
+test("snapshot command creates diff images when visuals change", async () => {
+  const { tmpDir, runCommand } = await getCliTestFixture()
+
+  await Bun.write(
+    join(tmpDir, "mismatch.board.tsx"),
+    `
+    export const Mismatch = () => (
+      <board width="10mm" height="10mm">
+        <chip name="U1" footprint="soic8" />
+      </board>
+    )
+  `,
+  )
+
+  await runCommand("tsci snapshot --update")
+
+  await Bun.write(
+    join(tmpDir, "mismatch.board.tsx"),
+    `
+    export const Mismatch = () => (
+      <board width="10mm" height="10mm">
+        <chip name="U1" footprint="soic8" />
+        <chip name="U2" footprint="soic8" schX={-3} pcbX={-3} />
+      </board>
+    )
+  `,
+  )
+
+  const { stderr } = await runCommand("tsci snapshot")
+  expect(stderr).toContain("Snapshot mismatch")
+
+  const snapDir = join(tmpDir, "__snapshots__")
+  const pcbDiff = await Bun.file(
+    join(snapDir, "mismatch.board-pcb.diff.png"),
+  ).exists()
+  const schDiff = await Bun.file(
+    join(snapDir, "mismatch.board-schematic.diff.png"),
+  ).exists()
+
+  expect(pcbDiff).toBe(true)
+  expect(schDiff).toBe(true)
+})

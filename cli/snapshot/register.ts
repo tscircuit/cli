@@ -9,6 +9,7 @@ export const registerSnapshot = (program: Command) => {
       "Generate schematic and PCB snapshots (add --3d for 3d preview)",
     )
     .option("-u, --update", "Update snapshots on disk")
+    .option("--force-update", "Force update snapshots even if they match")
     .option("--3d", "Generate 3d preview snapshots")
     .option("--pcb-only", "Generate only PCB snapshots")
     .option("--schematic-only", "Generate only schematic snapshots")
@@ -20,6 +21,7 @@ export const registerSnapshot = (program: Command) => {
           "3d"?: boolean
           pcbOnly?: boolean
           schematicOnly?: boolean
+          forceUpdate?: boolean
         },
       ) => {
         await snapshotProject({
@@ -27,6 +29,7 @@ export const registerSnapshot = (program: Command) => {
           threeD: options["3d"] ?? false,
           pcbOnly: options.pcbOnly ?? false,
           schematicOnly: options.schematicOnly ?? false,
+          forceUpdate: options.forceUpdate ?? false,
           filePaths: file ? [file] : [],
           onExit: (code) => process.exit(code),
           onError: (msg) => console.error(msg),

@@ -2,6 +2,23 @@ import fs from "node:fs"
 import path from "node:path"
 import { globbySync } from "globby"
 import kleur from "kleur"
+
+let _looksSame: any | null = null
+let triedLooksSame = false
+const loadLooksSame = async () => {
+  if (!triedLooksSame) {
+    triedLooksSame = true
+    try {
+      _looksSame = await import("looks-same")
+    } catch {
+      console.warn(
+        "looks-same not found. Install it with 'bun add -d looks-same' to enable image comparisons.",
+      )
+      _looksSame = null
+    }
+  }
+  return _looksSame
+}
 import {
   convertCircuitJsonToPcbSvg,
   convertCircuitJsonToSchematicSvg,
@@ -25,6 +42,8 @@ type SnapshotOptions = {
   schematicOnly?: boolean
   /** Snapshot only the specified files */
   filePaths?: string[]
+  /** Force updating snapshots even if they match */
+  forceUpdate?: boolean
   onExit?: (code: number) => void
   onError?: (message: string) => void
   onSuccess?: (message: string) => void
@@ -37,6 +56,7 @@ export const snapshotProject = async ({
   pcbOnly = false,
   schematicOnly = false,
   filePaths = [],
+  forceUpdate = false,
   onExit = (code) => process.exit(code),
   onError = (msg) => console.error(msg),
   onSuccess = (msg) => console.log(msg),
@@ -88,12 +108,45 @@ export const snapshotProject = async ({
 
     for (const [type, svg] of snapshotPairs) {
       const snapPath = path.join(snapDir, `${base}-${type}.snap.svg`)
-      if (update || !fs.existsSync(snapPath)) {
+      const fileExists = fs.existsSync(snapPath)
+
+      if (!fileExists) {
         fs.writeFileSync(snapPath, svg)
         console.log("✅", kleur.gray(path.relative(projectDir, snapPath)))
-      } else {
-        const existing = fs.readFileSync(snapPath, "utf-8")
-        if (existing !== svg) mismatches.push(snapPath)
+        continue
+      }
+
+      const existing = fs.readFileSync(snapPath, "utf-8")
+      const looksSame = await loadLooksSame()
+      const equal = looksSame
+        ? (
+            await looksSame.default(Buffer.from(svg), Buffer.from(existing), {
+              strict: false,
+              tolerance: 2,
+            })
+          ).equal
+        : existing === svg
+
+      if (update) {
+        if (!forceUpdate && equal) {
+          console.log("✅", kleur.gray(path.relative(projectDir, snapPath)))
+        } else {
+          fs.writeFileSync(snapPath, svg)
+          console.log("✅", kleur.gray(path.relative(projectDir, snapPath)))
+        }
+      } else if (!equal) {
+        if (looksSame) {
+          const diffPath = snapPath.replace(".snap.svg", ".diff.png")
+          await looksSame.createDiff({
+            reference: Buffer.from(existing),
+            current: Buffer.from(svg),
+            diff: diffPath,
+            highlightColor: "#ff00ff",
+          })
+          mismatches.push(`${snapPath} (diff: ${diffPath})`)
+        } else {
+          mismatches.push(snapPath)
+        }
       }
     }
   }
