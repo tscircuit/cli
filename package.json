@@ -22,7 +22,7 @@
     "@types/prompts": "^2.4.9",
     "@types/react": "^19.0.8",
     "@types/semver": "^7.5.8",
-    "bun-match-svg": "^0.0.11",
+    "bun-match-svg": "^0.0.12",
     "chokidar": "4.0.1",
     "tsx": "^4.7.1",
     "circuit-json-to-readable-netlist": "^0.0.9",
