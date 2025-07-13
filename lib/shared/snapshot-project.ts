@@ -2,7 +2,20 @@ import fs from "node:fs"
 import path from "node:path"
 import { globbySync } from "globby"
 import kleur from "kleur"
-import looksSame from "looks-same"
+
+let _looksSame: any | null = null
+const loadLooksSame = async () => {
+  if (!_looksSame) {
+    try {
+      _looksSame = await import("looks-same")
+    } catch (err) {
+      throw new Error(
+        "Failed to load looks-same. Ensure optional dependencies like sharp are installed",
+      )
+    }
+  }
+  return _looksSame
+}
 import {
   convertCircuitJsonToPcbSvg,
   convertCircuitJsonToSchematicSvg,
@@ -101,7 +114,8 @@ export const snapshotProject = async ({
       }
 
       const existing = fs.readFileSync(snapPath, "utf-8")
-      const result: any = await looksSame(
+      const looksSame = await loadLooksSame()
+      const result: any = await looksSame.default(
         Buffer.from(svg),
         Buffer.from(existing),
         {
@@ -119,7 +133,8 @@ export const snapshotProject = async ({
         }
       } else if (!result.equal) {
         const diffPath = snapPath.replace(".snap.svg", ".diff.png")
-        await looksSame.createDiff({
+        const ls = await loadLooksSame()
+        await ls.createDiff({
           reference: Buffer.from(existing),
           current: Buffer.from(svg),
           diff: diffPath,
