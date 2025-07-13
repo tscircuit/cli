@@ -4,14 +4,17 @@ import { globbySync } from "globby"
 import kleur from "kleur"
 
 let _looksSame: any | null = null
+let triedLooksSame = false
 const loadLooksSame = async () => {
-  if (!_looksSame) {
+  if (!triedLooksSame) {
+    triedLooksSame = true
     try {
       _looksSame = await import("looks-same")
-    } catch (err) {
-      throw new Error(
-        "Failed to load looks-same. Ensure optional dependencies like sharp are installed",
+    } catch {
+      console.warn(
+        "looks-same not found. Install it with 'bun add -d looks-same' to enable image comparisons.",
       )
+      _looksSame = null
     }
   }
   return _looksSame
@@ -115,32 +118,33 @@ export const snapshotProject = async ({
 
       const existing = fs.readFileSync(snapPath, "utf-8")
       const looksSame = await loadLooksSame()
-      const result: any = await looksSame.default(
-        Buffer.from(svg),
-        Buffer.from(existing),
-        {
-          strict: false,
-          tolerance: 2,
-        },
-      )
+      const equal = looksSame
+        ? (await looksSame.default(Buffer.from(svg), Buffer.from(existing), {
+            strict: false,
+            tolerance: 2,
+          })).equal
+        : existing === svg
 
       if (update) {
-        if (!forceUpdate && result.equal) {
+        if (!forceUpdate && equal) {
           console.log("✅", kleur.gray(path.relative(projectDir, snapPath)))
         } else {
           fs.writeFileSync(snapPath, svg)
           console.log("✅", kleur.gray(path.relative(projectDir, snapPath)))
         }
-      } else if (!result.equal) {
-        const diffPath = snapPath.replace(".snap.svg", ".diff.png")
-        const ls = await loadLooksSame()
-        await ls.createDiff({
-          reference: Buffer.from(existing),
-          current: Buffer.from(svg),
-          diff: diffPath,
-          highlightColor: "#ff00ff",
-        })
-        mismatches.push(`${snapPath} (diff: ${diffPath})`)
+      } else if (!equal) {
+        if (looksSame) {
+          const diffPath = snapPath.replace(".snap.svg", ".diff.png")
+          await looksSame.createDiff({
+            reference: Buffer.from(existing),
+            current: Buffer.from(svg),
+            diff: diffPath,
+            highlightColor: "#ff00ff",
+          })
+          mismatches.push(`${snapPath} (diff: ${diffPath})`)
+        } else {
+          mismatches.push(snapPath)
+        }
       }
     }
   }
