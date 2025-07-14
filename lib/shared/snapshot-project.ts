@@ -118,6 +118,9 @@ export const snapshotProject = async ({
 
       const existing = fs.readFileSync(snapPath, "utf-8")
       const looksSame = await loadLooksSame()
+      const normalizeSvg = (s: string) =>
+        s.replace(/\s*data-software-used-string="[^"]*"/g, "")
+
       const equal = looksSame
         ? (
             await looksSame.default(Buffer.from(svg), Buffer.from(existing), {
@@ -125,7 +128,7 @@ export const snapshotProject = async ({
               tolerance: 2,
             })
           ).equal
-        : existing === svg
+        : normalizeSvg(existing) === normalizeSvg(svg)
 
       if (update) {
         if (!forceUpdate && equal) {
