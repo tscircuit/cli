@@ -8,6 +8,7 @@
     "@tscircuit/fake-snippets": "^0.0.87",
     "@tscircuit/file-server": "^0.0.24",
     "@tscircuit/math-utils": "^0.0.18",
+    "@tscircuit/runframe": "^0.0.693",
     "@tscircuit/schematic-match-adapt": "^0.0.22",
     "@tscircuit/simple-3d-svg": "^0.0.22",
     "@types/bun": "^1.2.2",
@@ -20,7 +21,6 @@
     "@types/semver": "^7.5.8",
     "bun-match-svg": "^0.0.12",
     "chokidar": "4.0.1",
-    "tsx": "^4.7.1",
     "circuit-json-to-readable-netlist": "^0.0.9",
     "circuit-json-to-simple-3d": "^0.0.3",
     "commander": "^14.0.0",
@@ -44,6 +44,7 @@
     "semver": "^7.6.3",
     "tempy": "^3.1.0",
     "tscircuit": "^0.0.540",
+    "tsx": "^4.7.1",
     "typed-ky": "^0.0.4",
     "zod": "3"
   },
