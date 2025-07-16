@@ -25,7 +25,6 @@ import {
 } from "circuit-to-svg"
 import { convertCircuitJsonToSimple3dSvg } from "circuit-json-to-simple-3d"
 import { generateCircuitJson } from "lib/shared/generate-circuit-json"
-import { getEntrypoint } from "lib/shared/get-entrypoint"
 import {
   DEFAULT_IGNORED_PATTERNS,
   normalizeIgnorePattern,
