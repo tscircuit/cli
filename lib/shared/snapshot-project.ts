@@ -68,79 +68,65 @@ export const snapshotProject = async ({
     ...DEFAULT_IGNORED_PATTERNS,
     ...ignored.map(normalizeIgnorePattern),
   ]
-  let files: string[] = []
 
-  if (filePaths.length > 0) {
-    files = filePaths.map((f) => path.resolve(projectDir, f))
-  } else {
-    const boardFiles = globbySync(["**/*.board.tsx", "**/*.circuit.tsx"], {
-      cwd: projectDir,
-      ignore,
-    })
-    files = boardFiles.map((f) => path.join(projectDir, f))
-  }
+  const boardFiles =
+    filePaths.length > 0
+      ? filePaths.map((f) => path.resolve(projectDir, f))
+      : globbySync(["**/*.board.tsx", "**/*.circuit.tsx"], {
+          cwd: projectDir,
+          ignore,
+        }).map((f) => path.join(projectDir, f))
 
-  if (files.length === 0) {
+  if (boardFiles.length === 0) {
     console.log(
-      "No entrypoint found. Run 'tsci init' to bootstrap a basic project or specify a file with 'tsci snapshot <file>'",
+      "No entrypoint found. Run 'tsci init' to bootstrap a project or specify a file with 'tsci snapshot <file>'",
     )
     return onExit(0)
   }
 
   const mismatches: string[] = []
   let didUpdate = false
-  for (const file of files) {
+
+  for (const file of boardFiles) {
     const { circuitJson } = await generateCircuitJson({ filePath: file })
     const pcbSvg = convertCircuitJsonToPcbSvg(circuitJson)
     const schSvg = convertCircuitJsonToSchematicSvg(circuitJson)
     const svg3d = threeD
       ? await convertCircuitJsonToSimple3dSvg(circuitJson)
       : null
+
     const snapDir = path.join(path.dirname(file), "__snapshots__")
     fs.mkdirSync(snapDir, { recursive: true })
-    const base = path.basename(file).replace(/\.tsx$/, "")
-    const snapshotPairs: Array<["pcb" | "schematic" | "3d", string]> = []
-    const includePcb = pcbOnly || !schematicOnly
-    const includeSchematic = schematicOnly || !pcbOnly
 
-    if (includePcb) snapshotPairs.push(["pcb", pcbSvg])
-    if (includeSchematic) snapshotPairs.push(["schematic", schSvg])
-    if (threeD && svg3d) {
-      snapshotPairs.push(["3d", svg3d])
+    const base = path.basename(file).replace(/\.tsx$/, "")
+    const pairs: Array<["pcb" | "schematic" | "3d", string]> = []
+    if (pcbOnly || !schematicOnly) pairs.push(["pcb", pcbSvg])
+    if (schematicOnly || !pcbOnly) pairs.push(["schematic", schSvg])
+    if (threeD && svg3d) pairs.push(["3d", svg3d])
+
+    const looksSame = await loadLooksSame()
+    if (!looksSame) {
+      console.error(
+        "looks-same is required. Install it with 'bun add -d looks-same'",
+      )
+      return onExit(1)
     }
 
-    for (const [type, svgNew] of snapshotPairs) {
+    for (const [type, newSvg] of pairs) {
       const snapPath = path.join(snapDir, `${base}-${type}.snap.svg`)
-      const fileExists = fs.existsSync(snapPath)
-
-      if (!fileExists) {
-        fs.writeFileSync(snapPath, svgNew)
+      const existing = fs.existsSync(snapPath)
+      if (!existing) {
+        fs.writeFileSync(snapPath, newSvg, "utf8")
         console.log("✅", kleur.gray(path.relative(projectDir, snapPath)))
         didUpdate = true
         continue
       }
 
-      const existingSvg = fs.readFileSync(snapPath, "utf-8")
-      const looksSame = await loadLooksSame()
-      if (!looksSame) {
-        console.log(
-          "looks-same is required. Install it with 'bun add -d looks-same'",
-        )
-        return onExit(1)
-      }
+      const oldSvg = fs.readFileSync(snapPath, "utf8")
+      const bufNew = Buffer.from(newSvg, "utf8")
+      const bufOld = Buffer.from(oldSvg, "utf8")
 
-      // render SVGs to PNG buffers to ignore metadata
-
-      // ✅ Write both SVGs to temp files
-      const tempName = (label: string) =>
-        path.join(os.tmpdir(), `tsci-${label}-${crypto.randomUUID()}.svg`)
-
-      const fileA = tempName("actual")
-      const fileB = tempName("expected")
-      fs.writeFileSync(fileA, svgNew)
-      fs.writeFileSync(fileB, existingSvg)
-
-      const { equal } = await looksSame.default(fileA, fileB, {
+      const { equal } = await looksSame.default(bufNew, bufOld, {
         strict: false,
         tolerance: 2,
       })
@@ -149,33 +135,36 @@ export const snapshotProject = async ({
         if (!forceUpdate && equal) {
           console.log("✅", kleur.gray(path.relative(projectDir, snapPath)))
         } else {
-          fs.writeFileSync(snapPath, svgNew)
+          fs.writeFileSync(snapPath, newSvg, "utf8")
           console.log("✅", kleur.gray(path.relative(projectDir, snapPath)))
           didUpdate = true
         }
       } else if (!equal) {
         const diffPath = snapPath.replace(".snap.svg", ".diff.png")
-        mismatches.push(`${snapPath} (diff: ${diffPath})`)
-        await looksSame.createDiff({
-          reference: fileB,
-          current: fileA,
-          diff: diffPath,
+        const diffBuffer: Buffer = await looksSame.createDiff({
+          reference: bufOld,
+          current: bufNew,
           highlightColor: "#ff00ff",
-        })
+          tolerance: 2,
+          extension: "png",
+        }) // returns a Buffer because no diff path given :contentReference[oaicite:4]{index=4}
+
+        fs.writeFileSync(diffPath, diffBuffer)
+        mismatches.push(`${snapPath} (diff: ${diffPath})`)
+      } else {
+        console.log("✅", kleur.gray(path.relative(projectDir, snapPath)))
       }
     }
   }
 
   if (update) {
-    if (didUpdate) {
-      onSuccess("Created snapshots")
-    } else {
-      onSuccess("All snapshots already up to date")
-    }
+    didUpdate
+      ? onSuccess("Created snapshots")
+      : onSuccess("All snapshots already up to date")
     return onExit(0)
   }
 
-  if (mismatches.length > 0) {
+  if (mismatches.length) {
     onError(
       `Snapshot mismatch:\n${mismatches.join("\n")}\n\nRun with --update to fix.`,
     )
