@@ -2,7 +2,6 @@ import fs from "node:fs"
 import path from "node:path"
 import { globbySync } from "globby"
 import kleur from "kleur"
-import sharp from "sharp"
 
 let _looksSame: any | null = null
 let triedLooksSame = false
@@ -62,6 +61,7 @@ export const snapshotProject = async ({
   onError = (msg) => console.error(msg),
   onSuccess = (msg) => console.log(msg),
 }: SnapshotOptions = {}) => {
+  const sharp = await import("sharp")
   const projectDir = process.cwd()
   const ignore = [
     ...DEFAULT_IGNORED_PATTERNS,
@@ -130,7 +130,7 @@ export const snapshotProject = async ({
 
       // render SVGs to PNG buffers to ignore metadata
       const renderSvgToPng = async (svgString: string) =>
-        await sharp(Buffer.from(svgString)).png().toBuffer()
+        await sharp.default(Buffer.from(svgString)).png().toBuffer()
 
       const pngNew = await renderSvgToPng(svg)
       const pngExisting = await renderSvgToPng(existing)
