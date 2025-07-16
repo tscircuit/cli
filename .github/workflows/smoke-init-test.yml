@@ -37,6 +37,9 @@ jobs:
         run: |
           PACKAGE_FILE=$(ls *.tgz)
           npm install -g "$PACKAGE_FILE"
+      
+      - name: Rebuild native modules
+        run: npm rebuild sharp
 
       - name: Test tsci init in temporary directory
         run: |
