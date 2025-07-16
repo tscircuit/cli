@@ -2,6 +2,8 @@ import fs from "node:fs"
 import path from "node:path"
 import { globbySync } from "globby"
 import kleur from "kleur"
+import os from "node:os"
+import crypto from "node:crypto"
 
 let _looksSame: any | null = null
 let triedLooksSame = false
@@ -61,7 +63,6 @@ export const snapshotProject = async ({
   onError = (msg) => console.error(msg),
   onSuccess = (msg) => console.log(msg),
 }: SnapshotOptions = {}) => {
-  const sharp = await import("sharp")
   const projectDir = process.cwd()
   const ignore = [
     ...DEFAULT_IGNORED_PATTERNS,
@@ -108,18 +109,18 @@ export const snapshotProject = async ({
       snapshotPairs.push(["3d", svg3d])
     }
 
-    for (const [type, svg] of snapshotPairs) {
+    for (const [type, svgNew] of snapshotPairs) {
       const snapPath = path.join(snapDir, `${base}-${type}.snap.svg`)
       const fileExists = fs.existsSync(snapPath)
 
       if (!fileExists) {
-        fs.writeFileSync(snapPath, svg)
+        fs.writeFileSync(snapPath, svgNew)
         console.log("✅", kleur.gray(path.relative(projectDir, snapPath)))
         didUpdate = true
         continue
       }
 
-      const existing = fs.readFileSync(snapPath, "utf-8")
+      const existingSvg = fs.readFileSync(snapPath, "utf-8")
       const looksSame = await loadLooksSame()
       if (!looksSame) {
         console.log(
@@ -129,13 +130,17 @@ export const snapshotProject = async ({
       }
 
       // render SVGs to PNG buffers to ignore metadata
-      const renderSvgToPng = async (svgString: string) =>
-        await sharp.default(Buffer.from(svgString)).png().toBuffer()
 
-      const pngNew = await renderSvgToPng(svg)
-      const pngExisting = await renderSvgToPng(existing)
+      // ✅ Write both SVGs to temp files
+      const tempName = (label: string) =>
+        path.join(os.tmpdir(), `tsci-${label}-${crypto.randomUUID()}.svg`)
 
-      const { equal } = await looksSame.default(pngNew, pngExisting, {
+      const fileA = tempName("actual")
+      const fileB = tempName("expected")
+      fs.writeFileSync(fileA, svgNew)
+      fs.writeFileSync(fileB, existingSvg)
+
+      const { equal } = await looksSame.default(fileA, fileB, {
         strict: false,
         tolerance: 2,
       })
@@ -144,19 +149,19 @@ export const snapshotProject = async ({
         if (!forceUpdate && equal) {
           console.log("✅", kleur.gray(path.relative(projectDir, snapPath)))
         } else {
-          fs.writeFileSync(snapPath, svg)
+          fs.writeFileSync(snapPath, svgNew)
           console.log("✅", kleur.gray(path.relative(projectDir, snapPath)))
           didUpdate = true
         }
       } else if (!equal) {
         const diffPath = snapPath.replace(".snap.svg", ".diff.png")
+        mismatches.push(`${snapPath} (diff: ${diffPath})`)
         await looksSame.createDiff({
-          reference: pngExisting,
-          current: pngNew,
+          reference: fileB,
+          current: fileA,
           diff: diffPath,
           highlightColor: "#ff00ff",
         })
-        mismatches.push(`${snapPath} (diff: ${diffPath})`)
       }
     }
   }
