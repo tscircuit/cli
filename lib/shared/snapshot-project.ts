@@ -2,6 +2,7 @@ import fs from "node:fs"
 import path from "node:path"
 import { globbySync } from "globby"
 import kleur from "kleur"
+import sharp from "sharp"
 
 let _looksSame: any | null = null
 let triedLooksSame = false
@@ -86,6 +87,7 @@ export const snapshotProject = async ({
   }
 
   const mismatches: string[] = []
+  let didUpdate = false
   for (const file of files) {
     const { circuitJson } = await generateCircuitJson({ filePath: file })
     const pcbSvg = convertCircuitJsonToPcbSvg(circuitJson)
@@ -113,19 +115,30 @@ export const snapshotProject = async ({
       if (!fileExists) {
         fs.writeFileSync(snapPath, svg)
         console.log("✅", kleur.gray(path.relative(projectDir, snapPath)))
+        didUpdate = true
         continue
       }
 
       const existing = fs.readFileSync(snapPath, "utf-8")
       const looksSame = await loadLooksSame()
-      const equal = looksSame
-        ? (
-            await looksSame.default(Buffer.from(svg), Buffer.from(existing), {
-              strict: false,
-              tolerance: 2,
-            })
-          ).equal
-        : existing === svg
+      if (!looksSame) {
+        console.log(
+          "looks-same is required. Install it with 'bun add -d looks-same'",
+        )
+        return onExit(1)
+      }
+
+      // render SVGs to PNG buffers to ignore metadata
+      const renderSvgToPng = async (svgString: string) =>
+        await sharp(Buffer.from(svgString)).png().toBuffer()
+
+      const pngNew = await renderSvgToPng(svg)
+      const pngExisting = await renderSvgToPng(existing)
+
+      const { equal } = await looksSame.default(pngNew, pngExisting, {
+        strict: false,
+        tolerance: 2,
+      })
 
       if (update) {
         if (!forceUpdate && equal) {
@@ -133,26 +146,27 @@ export const snapshotProject = async ({
         } else {
           fs.writeFileSync(snapPath, svg)
           console.log("✅", kleur.gray(path.relative(projectDir, snapPath)))
+          didUpdate = true
         }
       } else if (!equal) {
-        if (looksSame) {
-          const diffPath = snapPath.replace(".snap.svg", ".diff.png")
-          await looksSame.createDiff({
-            reference: Buffer.from(existing),
-            current: Buffer.from(svg),
-            diff: diffPath,
-            highlightColor: "#ff00ff",
-          })
-          mismatches.push(`${snapPath} (diff: ${diffPath})`)
-        } else {
-          mismatches.push(snapPath)
-        }
+        const diffPath = snapPath.replace(".snap.svg", ".diff.png")
+        await looksSame.createDiff({
+          reference: pngExisting,
+          current: pngNew,
+          diff: diffPath,
+          highlightColor: "#ff00ff",
+        })
+        mismatches.push(`${snapPath} (diff: ${diffPath})`)
       }
     }
   }
 
   if (update) {
-    onSuccess("Created snapshots")
+    if (didUpdate) {
+      onSuccess("Created snapshots")
+    } else {
+      onSuccess("All snapshots already up to date")
+    }
     return onExit(0)
   }
 
