@@ -2,8 +2,6 @@ import fs from "node:fs"
 import path from "node:path"
 import { globbySync } from "globby"
 import kleur from "kleur"
-import os from "node:os"
-import crypto from "node:crypto"
 
 let _looksSame: any | null = null
 let triedLooksSame = false
