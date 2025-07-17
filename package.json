@@ -48,6 +48,9 @@
     "typed-ky": "^0.0.4",
     "zod": "3"
   },
+  "peerDependencies": {
+    "tscircuit": "*"
+  },
   "bin": {
     "tsci": "./cli/entrypoint.js"
   },
@@ -55,15 +58,12 @@
     "dist",
     "cli/entrypoint.js"
   ],
-  "peerDependencies": {
-    "tscircuit": "*"
-  },
   "scripts": {
     "start": "bun run dev",
     "dev": "bun --hot ./cli/main.ts dev ./example-dir/snippet1-basic.tsx",
     "setup": "bun run build && npm install -g .",
     "build": "bun run build:bun",
-    "build:bun": "bun build ./cli/main.ts --target node --outfile ./dist/main.js",
+    "build:bun": "bun build ./cli/main.ts --target node --outfile ./dist/main.js --external looks-same",
     "smoketest": "docker build -f Dockerfile.smoketest .",
     "format": "biome format --write .",
     "format:check": "biome format .",
