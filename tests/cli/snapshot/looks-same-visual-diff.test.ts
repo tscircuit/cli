@@ -1,10 +1,7 @@
 import { getCliTestFixture } from "../../fixtures/get-cli-test-fixture"
 import { test, expect } from "bun:test"
-import { join, dirname } from "node:path"
+import { join } from "node:path"
 import fs from "node:fs"
-import { fileURLToPath } from "node:url"
-
-const __dirname = dirname(fileURLToPath(import.meta.url))
 
 test("CLI detects visual change when another chip is added", async () => {
   const { tmpDir, runCommand } = await getCliTestFixture()

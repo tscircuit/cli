@@ -2,19 +2,18 @@ import fs from "node:fs"
 import path from "node:path"
 import { globbySync } from "globby"
 import kleur from "kleur"
-import * as looksSameStatic from "looks-same"
 
 let _looksSame: any | null = null
 let triedLooksSame = false
-
 const loadLooksSame = async () => {
   if (!triedLooksSame) {
     triedLooksSame = true
     try {
-      _looksSame = looksSameStatic
-    } catch (err) {
+      const resolvedPath = import.meta.resolve("looks-same")
+      _looksSame = await import(resolvedPath)
+    } catch {
       console.warn(
-        "looks-same not found. Install it with 'bun add -d looks-same' to enable image comparisons.",
+        "looks-same not found. Install it with 'bun add -d looks-same'.",
       )
       _looksSame = null
     }
