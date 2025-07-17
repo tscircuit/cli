@@ -70,8 +70,5 @@
     "cli": "bun ./cli/main.ts",
     "pkg-pr-new-release": "bunx pkg-pr-new publish --comment=off --peerDeps"
   },
-  "type": "module",
-  "dependencies": {
-    "sharp": "^0.34.3"
-  }
+  "type": "module"
 }

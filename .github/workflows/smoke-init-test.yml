@@ -33,10 +33,11 @@ jobs:
           TEMP_DIR=$(mktemp -d)
           echo "TEMP_DIR=$TEMP_DIR" >> $GITHUB_ENV
 
-      - name: Install tscircuit globally from packed file
+      - name: Install tscircuit globally from packed file (and fix sharp)
         run: |
           PACKAGE_FILE=$(ls *.tgz)
           npm install -g "$PACKAGE_FILE"
+          npm install -g sharp --platform=linux --arch=x64
 
       - name: Test tsci init in temporary directory
         run: |
