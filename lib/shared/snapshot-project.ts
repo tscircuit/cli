@@ -2,24 +2,7 @@ import fs from "node:fs"
 import path from "node:path"
 import { globbySync } from "globby"
 import kleur from "kleur"
-
-let _looksSame: any | null = null
-let triedLooksSame = false
-const loadLooksSame = async () => {
-  if (!triedLooksSame) {
-    triedLooksSame = true
-    try {
-      const resolvedPath = import.meta.resolve("looks-same")
-      _looksSame = await import(resolvedPath)
-    } catch {
-      console.warn(
-        "looks-same not found. Install it with 'bun add -d looks-same'.",
-      )
-      _looksSame = null
-    }
-  }
-  return _looksSame
-}
+import looksSame from "looks-same"
 
 import {
   convertCircuitJsonToPcbSvg,
@@ -103,7 +86,6 @@ export const snapshotProject = async ({
     if (schematicOnly || !pcbOnly) pairs.push(["schematic", schSvg])
     if (threeD && svg3d) pairs.push(["3d", svg3d])
 
-    const looksSame = await loadLooksSame()
     if (!looksSame) {
       console.error(
         "looks-same is required. Install it with 'bun add -d looks-same'",
@@ -125,7 +107,7 @@ export const snapshotProject = async ({
       const bufNew = Buffer.from(newSvg, "utf8")
       const bufOld = Buffer.from(oldSvg, "utf8")
 
-      const { equal } = await looksSame.default(bufNew, bufOld, {
+      const { equal } = await looksSame(bufNew, bufOld, {
         strict: false,
         tolerance: 2,
       })
@@ -145,7 +127,6 @@ export const snapshotProject = async ({
           current: bufNew,
           highlightColor: "#ff00ff",
           tolerance: 2,
-          extension: "png",
         }) // returns a Buffer because no diff path given :contentReference[oaicite:4]{index=4}
 
         fs.writeFileSync(diffPath, diffBuffer)
