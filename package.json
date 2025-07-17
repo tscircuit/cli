@@ -36,7 +36,6 @@
     "jwt-decode": "^4.0.0",
     "kleur": "^4.1.5",
     "ky": "^1.7.4",
-    "looks-same": "^9.0.1",
     "make-vfs": "^1.0.15",
     "perfect-cli": "^1.0.20",
     "prompts": "^2.4.2",
@@ -70,5 +69,8 @@
     "cli": "bun ./cli/main.ts",
     "pkg-pr-new-release": "bunx pkg-pr-new publish --comment=off --peerDeps"
   },
-  "type": "module"
+  "type": "module",
+  "dependencies": {
+    "looks-same": "^9.0.1"
+  }
 }
