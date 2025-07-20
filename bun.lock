@@ -49,7 +49,7 @@
         "zod": "3",
       },
       "peerDependencies": {
-        "tscircuit": "*",
+        "tscircuit": "^0.0.546",
       },
     },
   },
