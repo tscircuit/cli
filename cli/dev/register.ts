@@ -6,6 +6,9 @@ import { installNodeModuleTypesForSnippet } from "../../lib/dependency-analysis/
 import { DevServer } from "./DevServer"
 import kleur from "kleur"
 import { getVersion } from "lib/getVersion"
+import { getEntrypoint } from "lib/shared/get-entrypoint"
+import { getPackageFilePaths } from "./get-package-file-paths"
+import prompts from "lib/utils/prompts"
 
 export const registerDev = (program: Command) => {
   program
@@ -37,23 +40,71 @@ export const registerDev = (program: Command) => {
 
       let absolutePath: string
 
-      if (file) {
-        absolutePath = path.resolve(file)
-        if (!absolutePath.endsWith(".tsx")) {
-          console.error("Error: Only .tsx files are supported")
-          return
-        }
+      const entrypointPath = await getEntrypoint({
+        filePath: file,
+        onSuccess: () => {},
+        onError: () => {
+          console.log(kleur.red("No entrypoint found"))
+        },
+      })
+      if (entrypointPath && fs.existsSync(entrypointPath)) {
+        absolutePath = entrypointPath
+        console.log(
+          "\n" +
+            kleur.green("Found entrypoint at: ") +
+            kleur.cyan(path.relative(process.cwd(), entrypointPath)) +
+            "\n",
+        )
       } else {
-        const entrypointPath = path.resolve("index.tsx")
-        if (fs.existsSync(entrypointPath)) {
-          absolutePath = entrypointPath
-          console.log("Found entrypoint at:", entrypointPath)
-        } else {
+        console.log(kleur.yellow("Showing available files in directory:"))
+
+        const projectDir = process.cwd()
+        const filePaths = getPackageFilePaths(projectDir)
+
+        if (filePaths.length === 0) {
           console.log(
-            "No entrypoint found. Run 'tsci init' to bootstrap a basic project.",
+            kleur.red(
+              "No files found in directory. Run 'tsci init' to bootstrap a basic project.",
+            ),
           )
           return
         }
+
+        const choices = filePaths
+          .filter(
+            (x) =>
+              (x.endsWith(".jsx") ||
+                x.endsWith(".tsx") ||
+                x.endsWith(".js") ||
+                x.endsWith(".ts")) &&
+              !x.endsWith(".d.ts"),
+          )
+          .map((filePath) => ({
+            title: path.relative(projectDir, filePath),
+            description: `File: ${path.basename(filePath)}`,
+            value: filePath,
+          }))
+
+        const { selectedFile } = await prompts({
+          type: "select",
+          name: "selectedFile",
+          message: "Select a file to use as entrypoint:",
+          choices,
+          initial: 0,
+        })
+
+        if (!selectedFile) {
+          console.log(kleur.yellow("No file selected."))
+          return
+        }
+
+        absolutePath = selectedFile
+        console.log(
+          "\n" +
+            kleur.green("Using selected file: ") +
+            kleur.cyan(path.relative(process.cwd(), absolutePath)) +
+            "\n",
+        )
       }
 
       try {
