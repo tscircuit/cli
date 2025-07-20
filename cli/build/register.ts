@@ -25,10 +25,6 @@ export const registerBuild = (program: Command) => {
         const { projectDir, mainEntrypoint, circuitFiles } =
           await getBuildEntrypoints({ fileOrDir: file })
 
-        const platformConfig: PlatformConfig = {
-          pcbDisabled: options?.disablePcb,
-        }
-
         const distDir = path.join(projectDir, "dist")
         fs.mkdirSync(distDir, { recursive: true })
 
