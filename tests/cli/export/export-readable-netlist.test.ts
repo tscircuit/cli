@@ -33,6 +33,12 @@ test("export readable-netlist", async () => {
   const { stdout, stderr } = await runCommand(
     `tsci export ${circuitPath} -f readable-netlist`,
   )
+
+  const { stdout: stdout1, stderr: stderr1 } = await runCommand(
+    `bun pm view circuit-json-to-readable-netlist`,
+  )
+  console.log(stdout1, stderr1, 666999, 777888)
+
   // TODO: Remove this when the autorouter is not emitting this warning
   expect(stderr).toBe("")
 
