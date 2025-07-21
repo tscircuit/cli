@@ -1,6 +1,6 @@
 import { getSessionToken } from "lib/cli-config"
 
-export const getIndex = async () => {
+export const getIndex = async (mainComponentPath?: string) => {
   const sessionToken = getSessionToken()
   const tokenScript = sessionToken
     ? `\n        window.TSCIRCUIT_REGISTRY_TOKEN = ${JSON.stringify(sessionToken)};`
@@ -10,6 +10,7 @@ export const getIndex = async () => {
     </head>
     <body>
       <script>
+       ${mainComponentPath ? `window.TSCIRCUIT_MAIN_COMPONENT_PATH = "${mainComponentPath}";` : ""}
         window.TSCIRCUIT_USE_RUNFRAME_FOR_CLI = true;${tokenScript}
       </script>
       <script src="https://cdn.tailwindcss.com"></script>

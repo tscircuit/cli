@@ -3,7 +3,6 @@ import path from "node:path"
 import fs from "node:fs"
 import { buildFile } from "./build-file"
 import { getBuildEntrypoints } from "./get-build-entrypoints"
-import type { PlatformConfig } from "@tscircuit/props"
 
 export const registerBuild = (program: Command) => {
   program
