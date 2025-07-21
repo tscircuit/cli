@@ -35,7 +35,7 @@ test("export readable-netlist", async () => {
   )
 
   const { stdout: stdout1, stderr: stderr1 } = await runCommand(
-    `bun pm view circuit-json-to-readable-netlist`,
+    `tsci help; bun pm view circuit-json-to-readable-netlist; bun pm ls`,
   )
   console.log(stdout1, stderr1, 666999, 777888)
 
