@@ -11,10 +11,13 @@ import runFrameStandaloneBundleContent from "@tscircuit/runframe/standalone" wit
 import winterspecBundle from "@tscircuit/file-server/dist/bundle.js"
 import { getIndex } from "../site/getIndex"
 
-export const createHttpServer = async (
+export const createHttpServer = async ({
   port = 3020,
-  mainComponentPath?: string,
-) => {
+  defaultMainComponentPath,
+}: {
+  port?: number
+  defaultMainComponentPath?: string
+}) => {
   const fileServerHandler = getNodeHandler(winterspecBundle as any, {})
 
   const server = http.createServer(async (req, res) => {
@@ -52,7 +55,7 @@ export const createHttpServer = async (
     }
 
     if (url.pathname === "/") {
-      const html = await getIndex(mainComponentPath)
+      const html = await getIndex(defaultMainComponentPath)
       res.writeHead(200, { "Content-Type": "text/html" })
       res.end(html)
       return
