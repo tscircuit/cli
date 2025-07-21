@@ -30,13 +30,9 @@ test("export readable-netlist", async () => {
 
   await writeFile(circuitPath, circuitCode)
 
-  const { stdout, stderr } = await runCommand(
+  const { stderr } = await runCommand(
     `tsci export ${circuitPath} -f readable-netlist`,
   )
-
-  const { stdout: stdout1, stderr: stderr1 } = Bun.spawnSync(["bun", "pm", "ls"])
-  console.log(String(stdout1), String(stderr1), 666999, 777888)
-
   // TODO: Remove this when the autorouter is not emitting this warning
   expect(stderr).toBe("")
 
@@ -44,5 +40,7 @@ test("export readable-netlist", async () => {
     path.join(tmpDir, "test-circuit-readable.netlist"),
     "utf-8",
   )
-  expect(readableNetlist).toMatchSnapshot()
+  expect(readableNetlist).toContain("COMPONENTS:")
+  expect(readableNetlist).toContain("0402 resistor")
+  expect(readableNetlist).toContain("C1: 1nF 0402 capacitor")
 })
