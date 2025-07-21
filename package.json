@@ -8,7 +8,8 @@
     "@tscircuit/fake-snippets": "^0.0.87",
     "@tscircuit/file-server": "^0.0.24",
     "@tscircuit/math-utils": "^0.0.18",
-    "@tscircuit/runframe": "^0.0.693",
+    "@tscircuit/props": "^0.0.262",
+    "@tscircuit/runframe": "^0.0.709",
     "@tscircuit/schematic-match-adapt": "^0.0.22",
     "@tscircuit/simple-3d-svg": "^0.0.22",
     "@types/bun": "^1.2.2",
@@ -60,7 +61,7 @@
   ],
   "scripts": {
     "start": "bun run dev",
-    "dev": "bun --hot ./cli/main.ts dev ./example-dir/snippet1-basic.tsx",
+    "dev": "bun --hot ./cli/main.ts dev ./example-dir/index.circuit.tsx",
     "setup": "bun run build && npm install -g .",
     "build": "bun run build:bun",
     "build:bun": "bun build ./cli/main.ts --target node --outfile ./dist/main.js --external looks-same",

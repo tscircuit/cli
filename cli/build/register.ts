@@ -3,7 +3,6 @@ import path from "node:path"
 import fs from "node:fs"
 import { buildFile } from "./build-file"
 import { getBuildEntrypoints } from "./get-build-entrypoints"
-import type { PlatformConfig } from "@tscircuit/props"
 
 export const registerBuild = (program: Command) => {
   program
@@ -24,10 +23,6 @@ export const registerBuild = (program: Command) => {
       ) => {
         const { projectDir, mainEntrypoint, circuitFiles } =
           await getBuildEntrypoints({ fileOrDir: file })
-
-        const platformConfig: PlatformConfig = {
-          pcbDisabled: options?.disablePcb,
-        }
 
         const distDir = path.join(projectDir, "dist")
         fs.mkdirSync(distDir, { recursive: true })
