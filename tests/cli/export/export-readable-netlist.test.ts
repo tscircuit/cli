@@ -34,7 +34,7 @@ test("export readable-netlist", async () => {
     `tsci export ${circuitPath} -f readable-netlist`,
   )
 
-  const { stdout: stdout1, stderr: stderr1 } = Bun.spawnSync(["bun", "pm", "view", "circuit-json-to-readable-netlist"])
+  const { stdout: stdout1, stderr: stderr1 } = Bun.spawnSync(["bun", "pm", "ls"])
   console.log(String(stdout1), String(stderr1), 666999, 777888)
 
   // TODO: Remove this when the autorouter is not emitting this warning
