@@ -8,6 +8,7 @@
     "@tscircuit/fake-snippets": "^0.0.87",
     "@tscircuit/file-server": "^0.0.24",
     "@tscircuit/math-utils": "^0.0.18",
+    "@tscircuit/props": "^0.0.262",
     "@tscircuit/runframe": "^0.0.709",
     "@tscircuit/schematic-match-adapt": "^0.0.22",
     "@tscircuit/simple-3d-svg": "^0.0.22",
@@ -70,8 +71,5 @@
     "cli": "bun ./cli/main.ts",
     "pkg-pr-new-release": "bunx pkg-pr-new publish --comment=off --peerDeps"
   },
-  "type": "module",
-  "dependencies": {
-    "@tscircuit/props": "^0.0.262"
-  }
+  "type": "module"
 }
