@@ -51,6 +51,7 @@
         "zod": "3",
       },
       "peerDependencies": {
+        "@tscircuit/footprinter": "*",
         "tscircuit": "*",
       },
     },
@@ -470,7 +471,7 @@
 
     "@tscircuit/file-server": ["@tscircuit/file-server@0.0.24", "", { "dependencies": { "winterspec": "^0.0.86", "zod": "^3.23.8", "zustand": "^4.5.5", "zustand-hoist": "^2.0.1" }, "peerDependencies": { "typescript": "^5.0.0" }, "bin": { "file-server": "dist/cli.js" } }, "sha512-brJF94eQsgh2sA29LRn9USIhKlbwWrq8APCk24MyTszfXj1WzcvdL5memMEkAp3s+qWYoRJLRYjlJ9EN6t3kdw=="],
 
-    "@tscircuit/footprinter": ["@tscircuit/footprinter@0.0.176", "", { "dependencies": { "@tscircuit/mm": "^0.0.8", "zod": "^3.23.8" }, "peerDependencies": { "circuit-json": "*" } }, "sha512-1qWStjLYIXs7klpeCddUysCQHoNDmdAH4yJ7htVR9R74sAGTgHJtq2zRX2QJDe+q951jDu0TrX6NkBVLLQAvGA=="],
+    "@tscircuit/footprinter": ["@tscircuit/footprinter@0.0.204", "", { "dependencies": { "@tscircuit/mm": "^0.0.8", "zod": "^3.23.8" }, "peerDependencies": { "circuit-json": "*" } }, "sha512-bKx6vFZDi3TG/NjCR1eRYcSumrz+b59eGaPA6vuZ2L76blsY3F0ytQj+/GcXe+UlvNT3SgPmaO+HJvuj/wGluw=="],
 
     "@tscircuit/infgrid-ijump-astar": ["@tscircuit/infgrid-ijump-astar@0.0.33", "", {}, "sha512-tmX4Esp+HqyIGCUD43steVUH8pKRuyBNs21r4NlApGGLu+K1XSrK9FinhVJyMiEsuwJdajLnMTzmVt8vSYSafA=="],
 
@@ -1754,6 +1755,8 @@
 
     "@ts-morph/common/minimatch": ["minimatch@9.0.5", "", { "dependencies": { "brace-expansion": "^2.0.1" } }, "sha512-G6T0ZX48xgozx7587koeX9Ys2NYy6Gmv//P89sEte9V9whIapMNF4idKxnW2QtCcLiTWlb/wfCabAtAFWhhBow=="],
 
+    "@tscircuit/fake-snippets/@tscircuit/footprinter": ["@tscircuit/footprinter@0.0.176", "", { "dependencies": { "@tscircuit/mm": "^0.0.8", "zod": "^3.23.8" }, "peerDependencies": { "circuit-json": "*" } }, "sha512-1qWStjLYIXs7klpeCddUysCQHoNDmdAH4yJ7htVR9R74sAGTgHJtq2zRX2QJDe+q951jDu0TrX6NkBVLLQAvGA=="],
+
     "@tscircuit/fake-snippets/@tscircuit/math-utils": ["@tscircuit/math-utils@0.0.10", "", { "peerDependencies": { "typescript": "^5.0.0" } }, "sha512-v8d5AcdTL1Bn856PfKBPt90AvB3Mk92kKhS5pPss6KpdVU9vHaUldZGfzWchQhyPcgvWwiWk2to1NKJGNmxgTg=="],
 
     "@tscircuit/fake-snippets/@tscircuit/props": ["@tscircuit/props@0.0.194", "", { "peerDependencies": { "@tscircuit/layout": "*", "circuit-json": "*", "react": "*", "zod": "*" } }, "sha512-dJCKx97nyQXipW/T7zMv8TCxpu2Qn0x0aiJqUikwQz9w4eFiw6wT9rDvIr19URY2u9IWz0KccK8N//QcdE9Xeg=="],
@@ -1865,8 +1868,6 @@
     "tar/chownr": ["chownr@3.0.0", "", {}, "sha512-+IxzY9BZOQd/XuYPRmrvEVjF/nqj5kgT4kEq7VofrDoM1MxoRjEWkrCC3EtLi59TVawxTAn+orJwFQcrqEN1+g=="],
 
     "tar/yallist": ["yallist@5.0.0", "", {}, "sha512-YgvUTfwqyc7UXVMrB+SImsVYSmTS8X/tSrtdNZMImM+n7+QTriRXyXim0mBrTXNeqzVF0KWGgHPeiyViFFrNDw=="],
-
-    "tscircuit/@tscircuit/footprinter": ["@tscircuit/footprinter@0.0.204", "", { "dependencies": { "@tscircuit/mm": "^0.0.8", "zod": "^3.23.8" }, "peerDependencies": { "circuit-json": "*" } }, "sha512-bKx6vFZDi3TG/NjCR1eRYcSumrz+b59eGaPA6vuZ2L76blsY3F0ytQj+/GcXe+UlvNT3SgPmaO+HJvuj/wGluw=="],
 
     "tscircuit/@tscircuit/props": ["@tscircuit/props@0.0.261", "", { "peerDependencies": { "circuit-json": "*", "react": "*", "zod": "*" } }, "sha512-Y5EpxyOuli+zeC24zIMfx79M7Ub907o9OEHSeW1Rvs5EgfGQJlEV9vYC/f7BEDrAb8YbeKN580bhFApFLHkoDQ=="],
 
