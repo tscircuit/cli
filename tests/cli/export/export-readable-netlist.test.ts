@@ -45,9 +45,19 @@ test("export readable-netlist", async () => {
      - R1: 1kΩ 0402 resistor
      - C1: 1nF 0402 capacitor
 
-    NET: R1_pos
+    NET: C1_pos
       - R1 pin1
-      - C1 pin1
+      - C1 pin1 (+)
+
+
+    COMPONENT_PINS:
+    R1 (1kΩ 0402)
+    - pin1(anode, pos, left): NETS(C1_pos)
+    - pin2(cathode, neg, right): NOT_CONNECTED
+
+    C1 (1nF 0402)
+    - pin1(pos): NETS(C1_pos)
+    - pin2(neg): NOT_CONNECTED
     "
   `)
 })
