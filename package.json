@@ -50,7 +50,8 @@
     "zod": "3"
   },
   "peerDependencies": {
-    "tscircuit": "*"
+    "tscircuit": "*",
+    "@tscircuit/footprinter": "*"
   },
   "bin": {
     "tsci": "./cli/entrypoint.js"
