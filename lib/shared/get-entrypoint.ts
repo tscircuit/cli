@@ -27,7 +27,15 @@ export const getEntrypoint = async ({
 }: EntrypointOptions): Promise<string | null> => {
   // 1. Use provided filePath if specified
   if (filePath) {
-    return path.resolve(projectDir, filePath)
+    const absolutePath = path.resolve(projectDir, filePath)
+    if (fs.existsSync(absolutePath)) {
+      onSuccess(
+        `Using provided file: '${path.relative(projectDir, absolutePath)}'`,
+      )
+      return absolutePath
+    }
+    onError(kleur.red(`File not found: '${filePath}'`))
+    return null
   }
 
   // 2. Check tscircuit.config.json for mainEntrypoint
@@ -49,10 +57,19 @@ export const getEntrypoint = async ({
   const possibleEntrypoints = [
     path.resolve(projectDir, "index.tsx"),
     path.resolve(projectDir, "index.ts"),
+    path.resolve(projectDir, "index.circuit.tsx"),
+    path.resolve(projectDir, "main.tsx"),
+    path.resolve(projectDir, "main.circuit.tsx"),
     path.resolve(projectDir, "lib/index.tsx"),
     path.resolve(projectDir, "lib/index.ts"),
+    path.resolve(projectDir, "lib/index.circuit.tsx"),
+    path.resolve(projectDir, "lib/main.tsx"),
+    path.resolve(projectDir, "lib/main.circuit.tsx"),
     path.resolve(projectDir, "src/index.tsx"),
     path.resolve(projectDir, "src/index.ts"),
+    path.resolve(projectDir, "src/index.circuit.tsx"),
+    path.resolve(projectDir, "src/main.tsx"),
+    path.resolve(projectDir, "src/main.circuit.tsx"),
   ]
 
   let detectedEntrypoint: string | null = null

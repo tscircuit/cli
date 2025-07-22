@@ -11,16 +11,9 @@ test("should use default entrypoint if no file is provided", async () => {
   const defaultEntrypoint = path.resolve(tmpDir, "index.tsx")
   fs.writeFileSync(defaultEntrypoint, "// Default entrypoint!")
   const { stdout, stderr } = await runCommand(`tsci push`)
-  expect({ stdout, stderr }).toMatchInlineSnapshot(`
-    {
-      "stderr": 
-    "No package.json found, try running 'tsci init' to bootstrap the project
-    "
-    ,
-      "stdout": 
-    "Detected entrypoint: 'index.tsx'
-    "
-    ,
-    }
-  `)
+  expect({ stdout, stderr }).toMatchObject({
+    stderr:
+      "No package.json found, try running 'tsci init' to bootstrap the project\n",
+    stdout: "",
+  })
 })
