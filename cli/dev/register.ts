@@ -6,6 +6,7 @@ import { installNodeModuleTypesForSnippet } from "../../lib/dependency-analysis/
 import { DevServer } from "./DevServer"
 import kleur from "kleur"
 import { getVersion } from "lib/getVersion"
+import { getEntrypoint } from "lib/shared/get-entrypoint"
 
 export const registerDev = (program: Command) => {
   program
@@ -44,8 +45,10 @@ export const registerDev = (program: Command) => {
           return
         }
       } else {
-        const entrypointPath = path.resolve("index.tsx")
-        if (fs.existsSync(entrypointPath)) {
+        const entrypointPath = await getEntrypoint({
+          onError: () => {},
+        })
+        if (entrypointPath && fs.existsSync(entrypointPath)) {
           absolutePath = entrypointPath
           console.log("Found entrypoint at:", entrypointPath)
         } else {
