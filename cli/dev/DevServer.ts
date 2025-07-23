@@ -54,13 +54,15 @@ export class DevServer {
   constructor({
     port,
     componentFilePath,
+    projectDir,
   }: {
     port: number
     componentFilePath: string
+    projectDir?: string
   }) {
     this.port = port
     this.componentFilePath = componentFilePath
-    this.projectDir = path.dirname(componentFilePath)
+    this.projectDir = projectDir ?? path.dirname(componentFilePath)
     const projectConfig = loadProjectConfig(this.projectDir)
     this.ignoredFiles = projectConfig?.ignoredFiles ?? []
     this.fsKy = ky.create({

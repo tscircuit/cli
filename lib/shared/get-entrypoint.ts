@@ -31,20 +31,20 @@ const findEntrypointsRecursively = (
   dir: string,
   projectDir: string,
   maxDepth: number = MAX_SEARCH_DEPTH,
-  fileNames: readonly string[] = ALLOWED_ENTRYPOINT_NAMES
+  fileNames: readonly string[] = ALLOWED_ENTRYPOINT_NAMES,
 ): string[] => {
   if (maxDepth <= 0 || !isValidDirectory(dir, projectDir)) {
     return []
   }
-  
+
   const results: string[] = []
-  
+
   try {
     const entries = fs.readdirSync(dir, { withFileTypes: true })
-    
+
     for (const entry of entries) {
       if (results.length >= MAX_RESULTS) break
-      
+
       if (entry.isFile() && fileNames.includes(entry.name)) {
         const filePath = path.resolve(dir, entry.name)
         if (isValidDirectory(filePath, projectDir)) {
@@ -52,24 +52,34 @@ const findEntrypointsRecursively = (
         }
       }
     }
-    
+
     for (const entry of entries) {
       if (results.length >= MAX_RESULTS) break
-      
-      if (entry.isDirectory() && !entry.name.startsWith(".") && entry.name !== "node_modules") {
+
+      if (
+        entry.isDirectory() &&
+        !entry.name.startsWith(".") &&
+        entry.name !== "node_modules"
+      ) {
         const subdirPath = path.resolve(dir, entry.name)
         if (isValidDirectory(subdirPath, projectDir)) {
-          results.push(...findEntrypointsRecursively(subdirPath, projectDir, maxDepth - 1, fileNames))
+          results.push(
+            ...findEntrypointsRecursively(
+              subdirPath,
+              projectDir,
+              maxDepth - 1,
+              fileNames,
+            ),
+          )
         }
       }
     }
   } catch {
     return []
   }
-  
+
   return results
 }
-
 
 const validateProjectDir = (projectDir: string): string => {
   const resolvedDir = path.resolve(projectDir)
@@ -79,17 +89,20 @@ const validateProjectDir = (projectDir: string): string => {
   return resolvedDir
 }
 
-const validateFilePath = (filePath: string, projectDir: string): string | null => {
+const validateFilePath = (
+  filePath: string,
+  projectDir: string,
+): string | null => {
   const absolutePath = path.resolve(projectDir, filePath)
-  
+
   if (!absolutePath.startsWith(path.resolve(projectDir))) {
     return null
   }
-  
+
   if (absolutePath.includes("..")) {
     return null
   }
-  
+
   return fs.existsSync(absolutePath) ? absolutePath : null
 }
 
@@ -101,7 +114,7 @@ export const getEntrypoint = async ({
 }: EntrypointOptions): Promise<string | null> => {
   try {
     const validatedProjectDir = validateProjectDir(projectDir)
-    
+
     if (filePath) {
       const validatedPath = validateFilePath(filePath, validatedProjectDir)
       if (validatedPath) {
@@ -114,18 +127,29 @@ export const getEntrypoint = async ({
     }
 
     const projectConfig = loadProjectConfig(validatedProjectDir)
-    if (projectConfig?.mainEntrypoint && typeof projectConfig.mainEntrypoint === "string") {
-      const validatedConfigPath = validateFilePath(projectConfig.mainEntrypoint, validatedProjectDir)
+    if (
+      projectConfig?.mainEntrypoint &&
+      typeof projectConfig.mainEntrypoint === "string"
+    ) {
+      const validatedConfigPath = validateFilePath(
+        projectConfig.mainEntrypoint,
+        validatedProjectDir,
+      )
       if (validatedConfigPath) {
-        const relativePath = path.relative(validatedProjectDir, validatedConfigPath)
-        onSuccess(`Using entrypoint from tscircuit.config.json: '${relativePath}'`)
+        const relativePath = path.relative(
+          validatedProjectDir,
+          validatedConfigPath,
+        )
+        onSuccess(
+          `Using entrypoint from tscircuit.config.json: '${relativePath}'`,
+        )
         return validatedConfigPath
       }
     }
 
     const commonLocations = [
       "index.tsx",
-      "index.ts", 
+      "index.ts",
       "index.circuit.tsx",
       "main.tsx",
       "main.circuit.tsx",
@@ -139,13 +163,19 @@ export const getEntrypoint = async ({
       "src/index.circuit.tsx",
       "src/main.tsx",
       "src/main.circuit.tsx",
-    ].map(location => path.resolve(validatedProjectDir, location))
-    
-    const recursiveEntrypoints = findEntrypointsRecursively(validatedProjectDir, validatedProjectDir)
+    ].map((location) => path.resolve(validatedProjectDir, location))
+
+    const recursiveEntrypoints = findEntrypointsRecursively(
+      validatedProjectDir,
+      validatedProjectDir,
+    )
     const possibleEntrypoints = [...commonLocations, ...recursiveEntrypoints]
 
     for (const entrypoint of possibleEntrypoints) {
-      if (fs.existsSync(entrypoint) && isValidDirectory(entrypoint, validatedProjectDir)) {
+      if (
+        fs.existsSync(entrypoint) &&
+        isValidDirectory(entrypoint, validatedProjectDir)
+      ) {
         const relativePath = path.relative(validatedProjectDir, entrypoint)
         onSuccess(`Detected entrypoint: '${relativePath}'`)
         return entrypoint
@@ -154,12 +184,16 @@ export const getEntrypoint = async ({
 
     onError(
       kleur.red(
-        "No entrypoint found. Run 'tsci init' to bootstrap a basic project or specify a file with 'tsci push <file>'"
-      )
+        "No entrypoint found. Run 'tsci init' to bootstrap a basic project or specify a file with 'tsci push <file>'",
+      ),
     )
     return null
   } catch (error) {
-    onError(kleur.red(`Error detecting entrypoint: ${error instanceof Error ? error.message : 'Unknown error'}`)) 
+    onError(
+      kleur.red(
+        `Error detecting entrypoint: ${error instanceof Error ? error.message : "Unknown error"}`,
+      ),
+    )
     return null
   }
 }
