@@ -8,6 +8,7 @@ const result = await Bun.build({
     "@tscircuit/*",
     "looks-same",
     "tscircuit",
+    "typescript",
     "circuit-to-svg",
     "@types/*",
   ],
