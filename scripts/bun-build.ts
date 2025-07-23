@@ -12,6 +12,7 @@ const result = await Bun.build({
   outdir: "./dist",
   external: [
     ...tscircuitPackageJsonDeps.filter((dep) => !ALLOW_BUNDLING.includes(dep)),
+    "zod",
     "looks-same",
     "tscircuit",
     "typescript",
