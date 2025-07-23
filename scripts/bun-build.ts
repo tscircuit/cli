@@ -4,7 +4,13 @@ const result = await Bun.build({
   entrypoints: ["./cli/main.ts"],
   target: "node",
   outdir: "./dist",
-  external: ["@tscircuit/*", "looks-same", "tscircuit", "circuit-to-svg"],
+  external: [
+    "@tscircuit/*",
+    "looks-same",
+    "tscircuit",
+    "circuit-to-svg",
+    "@types/*",
+  ],
 })
 
 const { outputs, success } = result
