@@ -60,7 +60,7 @@
     }
   },
   "bin": {
-    "tsci": "./cli/entrypoint.js"
+    "tscircuit-cli": "./cli/entrypoint.js"
   },
   "files": [
     "dist",
