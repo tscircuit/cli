@@ -44,13 +44,18 @@
     "redaxios": "^0.5.1",
     "semver": "^7.6.3",
     "tempy": "^3.1.0",
-    "tscircuit": "^0.0.553",
+    "tscircuit": "^0.0.555",
     "tsx": "^4.7.1",
     "typed-ky": "^0.0.4",
     "zod": "3"
   },
   "peerDependencies": {
     "tscircuit": "*"
+  },
+  "peerDependenciesMeta": {
+    "tscircuit": {
+      "optional": true
+    }
   },
   "bin": {
     "tsci": "./cli/entrypoint.js"
