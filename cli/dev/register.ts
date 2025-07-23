@@ -72,6 +72,7 @@ export const registerDev = (program: Command) => {
       const server = new DevServer({
         port,
         componentFilePath: absolutePath,
+        projectDir: process.cwd(),
       })
 
       await server.start()
