@@ -1,11 +1,17 @@
 import { extname, basename } from "node:path"
+// @ts-ignore
+import tscircuitPackageJson from "tscircuit/package.json"
+
+const tscircuitPackageJsonDeps = Object.keys(tscircuitPackageJson.dependencies)
+
+const ALLOW_BUNDLING = ["@tscircuit/runframe"]
 
 const result = await Bun.build({
   entrypoints: ["./cli/main.ts"],
   target: "node",
   outdir: "./dist",
   external: [
-    "@tscircuit/*",
+    ...tscircuitPackageJsonDeps.filter((dep) => !ALLOW_BUNDLING.includes(dep)),
     "looks-same",
     "tscircuit",
     "typescript",
