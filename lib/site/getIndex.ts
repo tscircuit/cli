@@ -10,7 +10,7 @@ export const getIndex = async (mainComponentPath?: string) => {
     </head>
     <body>
       <script>
-       ${mainComponentPath ? `window.TSCIRCUIT_MAIN_COMPONENT_PATH = "${mainComponentPath}";` : ""}
+       ${mainComponentPath ? `window.TSCIRCUIT_DEFAULT_MAIN_COMPONENT_PATH = "${mainComponentPath}";` : ""}
         window.TSCIRCUIT_USE_RUNFRAME_FOR_CLI = true;${tokenScript}
       </script>
       <script src="https://cdn.tailwindcss.com"></script>
