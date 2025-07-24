@@ -60,7 +60,7 @@
     }
   },
   "bin": {
-    "tsci": "./cli/entrypoint.js"
+    "tscircuit-cli": "./cli/entrypoint.js"
   },
   "files": [
     "dist",
@@ -71,7 +71,7 @@
     "dev": "bun --hot ./cli/main.ts dev ./example-dir/index.circuit.tsx",
     "setup": "bun run build && npm install -g .",
     "build": "bun run build:bun",
-    "build:bun": "bun build ./cli/main.ts --target node --outfile ./dist/main.js --external looks-same",
+    "build:bun": "bun run scripts/bun-build.ts",
     "smoketest": "docker build -f Dockerfile.smoketest .",
     "format": "biome format --write .",
     "format:check": "biome format .",
