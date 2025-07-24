@@ -1,4 +1,3 @@
-import { RootCircuit } from "tscircuit"
 import { getVirtualFileSystemFromDirPath } from "make-vfs"
 import path from "node:path/posix"
 import { relative } from "node:path"
@@ -6,7 +5,7 @@ import fs from "node:fs"
 import Debug from "debug"
 import type { PlatformConfig } from "@tscircuit/props"
 import { abbreviateStringifyObject } from "lib/utils/abbreviate-stringify-object"
-import React from "react"
+import { importFromUserLand } from "./importFromUserLand"
 
 const debug = Debug("tsci:generate-circuit-json")
 
@@ -43,7 +42,9 @@ export async function generateCircuitJson({
 }: GenerateCircuitJsonOptions) {
   debug(`Generating circuit JSON for ${filePath}`)
 
-  const runner = new RootCircuit({
+  const userLandTscircuit = await importFromUserLand("tscircuit")
+
+  const runner = new userLandTscircuit.RootCircuit({
     platform: platformConfig,
   })
   const projectDir = path.dirname(filePath)
@@ -86,8 +87,6 @@ export async function generateCircuitJson({
   // Execute the circuit runner with the virtual file system
   const MainComponent = await import(filePath)
 
-  debug("MainComponent", MainComponent.toString())
-
   // Handle both default export and named exports
   const Component =
     MainComponent.default ||
@@ -105,11 +104,6 @@ export async function generateCircuitJson({
       `No component found in "${filePath}". Make sure you export a component.`,
     )
   }
-
-  const ReactComponent = () => <div />
-
-  debug("Component", Component.toString())
-  debug("Some react component", ReactComponent.toString())
 
   runner.add(<Component />)
 
