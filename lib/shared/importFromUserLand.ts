@@ -10,7 +10,13 @@ export async function importFromUserLand(moduleName: string) {
     return await import(resolvedPath)
   } catch (error) {
     // Fallback: try resolving with Bun.resolve
-    const modulePath = await Bun.resolve(moduleName, process.cwd())
-    return await import(modulePath)
+    try {
+      const modulePath = await Bun.resolve(moduleName, process.cwd())
+      return await import(modulePath)
+    } catch (error) {
+      // If we can't resolve the module, resolve via dynamic import
+      const module = await import(moduleName)
+      return module
+    }
   }
 }
