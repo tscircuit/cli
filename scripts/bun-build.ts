@@ -18,6 +18,9 @@ const result = await Bun.build({
     "typescript",
     "circuit-to-svg",
     "@types/*",
+    "react",
+    "react-dom",
+    "react-reconciler",
   ],
 })
 

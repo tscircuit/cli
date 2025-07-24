@@ -1,4 +1,3 @@
-import { RootCircuit } from "tscircuit"
 import { getVirtualFileSystemFromDirPath } from "make-vfs"
 import path from "node:path/posix"
 import { relative } from "node:path"
@@ -6,6 +5,7 @@ import fs from "node:fs"
 import Debug from "debug"
 import type { PlatformConfig } from "@tscircuit/props"
 import { abbreviateStringifyObject } from "lib/utils/abbreviate-stringify-object"
+import { importFromUserLand } from "./importFromUserLand"
 
 const debug = Debug("tsci:generate-circuit-json")
 
@@ -42,7 +42,9 @@ export async function generateCircuitJson({
 }: GenerateCircuitJsonOptions) {
   debug(`Generating circuit JSON for ${filePath}`)
 
-  const runner = new RootCircuit({
+  const userLandTscircuit = await importFromUserLand("tscircuit")
+
+  const runner = new userLandTscircuit.RootCircuit({
     platform: platformConfig,
   })
   const projectDir = path.dirname(filePath)

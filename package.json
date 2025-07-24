@@ -33,6 +33,7 @@
     "dsn-converter": "^0.0.63",
     "get-port": "^7.1.0",
     "globby": "^14.1.0",
+    "jscad-fiber": "^0.0.82",
     "jsonwebtoken": "^9.0.2",
     "jwt-decode": "^4.0.0",
     "kleur": "^4.1.5",
@@ -43,7 +44,7 @@
     "redaxios": "^0.5.1",
     "semver": "^7.6.3",
     "tempy": "^3.1.0",
-    "tscircuit": "^0.0.555",
+    "tscircuit": "^0.0.559-libonly",
     "tsx": "^4.7.1",
     "typed-ky": "^0.0.4",
     "zod": "3"
@@ -56,7 +57,7 @@
   },
   "peerDependenciesMeta": {
     "tscircuit": {
-      "optional": true
+      "optional": false
     }
   },
   "bin": {
@@ -72,7 +73,7 @@
     "setup": "bun run build && npm install -g .",
     "build": "bun run build:bun",
     "build:bun": "bun run scripts/bun-build.ts",
-    "smoketest": "docker build -f Dockerfile.smoketest .",
+    "smoketest": "docker build --progress=plain -f Dockerfile.smoketest .",
     "format": "biome format --write .",
     "format:check": "biome format .",
     "cli": "bun ./cli/main.ts",

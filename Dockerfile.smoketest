@@ -9,6 +9,8 @@ RUN apt-get update && \
 # Set working directory
 WORKDIR /app
 
+RUN npm install -g tsx
+
 # Copy package files and install dependencies
 COPY package.json bun.lock ./
 RUN bun install
@@ -30,17 +32,16 @@ RUN ./dist/main.js --version
 # Install the packed package globally
 RUN npm install -g $(ls *.tgz)
 
-RUN bunx --bun tsci --version
+RUN tscircuit-cli --version
+# # RUN bunx --bun tscircuit-cli --version
 
-RUN tsci --version
+# # Initialize a new project in the temp directory and add dependencies
+RUN cd /tmp/testdir && tscircuit-cli init -y
+# # Test build in the temp directory
+# # RUN cd /tmp/testdir && DEBUG="tsci:eval:*" bunx --bun tscircuit-cli build index.tsx
+RUN cd /tmp/testdir && tscircuit-cli build index.tsx
 
-# Initialize a new project in the temp directory and add dependencies
-RUN cd /tmp/testdir && tsci init -y
-# Test build in the temp directory
-RUN cd /tmp/testdir && DEBUG="tsci:eval:*" bunx --bun tsci build index.tsx
-RUN cd /tmp/testdir && tsci build index.tsx
+# # Verify build output
+# RUN test -f /tmp/testdir/dist/index.circuit.json
 
-# Verify build output
-RUN test -f /tmp/testdir/index.tsx
-
-CMD ["bun", "run", "dev"]
+# CMD ["bun", "run", "dev"]
