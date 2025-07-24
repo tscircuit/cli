@@ -108,8 +108,11 @@ export const registerImport = (program: Command) => {
         }
       } else {
         try {
+          console.log(
+            kleur.yellow(`Importing "C${choice.part}" from JLCPCB...`),
+          )
           const { filePath } = await importComponentFromJlcpcb(
-            String(choice.part),
+            `C${String(choice.part)}`,
           )
           console.log(kleur.green(`Imported ${filePath}`))
         } catch (error) {
