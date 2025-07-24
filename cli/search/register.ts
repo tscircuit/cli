@@ -1,8 +1,6 @@
 import type { Command } from "commander"
 import { getRegistryApiKy } from "lib/registry-api/get-ky"
 import kleur from "kleur"
-import prompts from "prompts"
-import { addPackage } from "lib/shared/add-package"
 
 export const registerSearch = (program: Command) => {
   program
@@ -12,8 +10,21 @@ export const registerSearch = (program: Command) => {
     .action(async (query: string) => {
       const ky = getRegistryApiKy()
       let results: {
-        packages: Array<{ name: string; version: string; description?: string }>
+        packages: Array<{
+          name: string
+          version: string
+          description?: string
+          star_count?: number
+        }>
       } = { packages: [] }
+
+      let jlcResults: Array<{
+        lcsc: number
+        mfr: string
+        package: string
+        description: string
+        price: number
+      }> = []
 
       try {
         results = await ky
@@ -21,6 +32,12 @@ export const registerSearch = (program: Command) => {
             json: { query },
           })
           .json()
+
+        const jlcSearchUrl =
+          "https://jlcsearch.tscircuit.com/api/search?limit=10&q=" +
+          encodeURIComponent(query)
+        jlcResults = (await fetch(jlcSearchUrl).then((r) => r.json()))
+          .components
       } catch (error) {
         console.error(
           kleur.red("Failed to search registry:"),
@@ -29,53 +46,46 @@ export const registerSearch = (program: Command) => {
         process.exit(1)
       }
 
-      if (!results.packages.length) {
-        console.log(kleur.yellow("No packages found matching your query."))
+      if (!results.packages.length && !jlcResults.length) {
+        console.log(kleur.yellow("No results found matching your query."))
         return
       }
 
-      console.log(
-        kleur.bold().underline(`Found ${results.packages.length} package(s):`),
-      )
+      if (results.packages.length) {
+        console.log(
+          kleur
+            .bold()
+            .underline(
+              `Found ${results.packages.length} package(s) in the tscircuit registry:`,
+            ),
+        )
 
-      const choices = results.packages.map((pkg) => ({
-        title: pkg.name,
-        description: pkg.description || "",
-        value: pkg.name,
-      }))
-
-      const { selectedPackage } = await prompts({
-        type: "select",
-        name: "selectedPackage",
-        message: "Select a package to add:",
-        choices,
-        initial: 0,
-      })
-
-      if (!selectedPackage) {
-        console.log(kleur.yellow("No package selected."))
-        return
-      }
-
-      const { confirm } = await prompts({
-        type: "confirm",
-        name: "confirm",
-        message: `Do you want to add ${kleur.green(selectedPackage)}?`,
-        initial: true,
-      })
-
-      if (confirm) {
-        try {
-          console.log(kleur.blue(`Installing ${selectedPackage}...`))
-          await addPackage(selectedPackage)
-          console.log(kleur.green(`Successfully installed ${selectedPackage}`))
-        } catch (error) {
-          console.error(
-            kleur.red(`Failed to install ${selectedPackage}:`),
-            error,
+        results.packages.forEach((pkg, idx) => {
+          const star = pkg.star_count ?? 0
+          console.log(
+            `${idx + 1}. ${pkg.name} (v${pkg.version}) - Stars: ${star}${
+              pkg.description ? ` - ${pkg.description}` : ""
+            }`,
           )
-          process.exit(1)
-        }
+        })
       }
+
+      if (jlcResults.length) {
+        console.log()
+        console.log(
+          kleur
+            .bold()
+            .underline(
+              `Found ${jlcResults.length} component(s) in JLC search:`,
+            ),
+        )
+
+        jlcResults.forEach((comp, idx) => {
+          console.log(
+            `${idx + 1}. ${comp.mfr} (C${comp.lcsc}) - ${comp.description}`,
+          )
+        })
+      }
+      console.log("\n")
     })
 }
