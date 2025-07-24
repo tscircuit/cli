@@ -18,6 +18,7 @@ import { registerAdd } from "./add/register"
 import { registerUpgradeCommand } from "./upgrade/register"
 import { registerConfigSet } from "./config/set/register"
 import { registerSearch } from "./search/register"
+import { registerImport } from "./import/register"
 import { registerRemove } from "./remove/register"
 import { registerBuild } from "./build/register"
 import { registerSnapshot } from "./snapshot/register"
@@ -53,6 +54,7 @@ registerSetup(program)
 registerUpgradeCommand(program)
 
 registerSearch(program)
+registerImport(program)
 
 // Manually handle --version, -v, and -V flags
 if (
