@@ -1,9 +1,6 @@
 import type { Command } from "commander"
 import { getRegistryApiKy } from "lib/registry-api/get-ky"
 import kleur from "kleur"
-import { prompts } from "lib/utils/prompts"
-import { shouldBeInteractive } from "lib/utils/should-be-interactive"
-import { addPackage } from "lib/shared/add-package"
 
 export const registerSearch = (program: Command) => {
   program
@@ -89,46 +86,6 @@ export const registerSearch = (program: Command) => {
           )
         })
       }
-
-      if (shouldBeInteractive() && results.packages.length) {
-        const choices = results.packages.map((pkg, idx) => ({
-          title: `${pkg.name} (v${pkg.version})`,
-          description: pkg.description || "",
-          value: pkg.name,
-          ...(idx === 0 ? { selected: true } : {}),
-        }))
-
-        const { selectedPackage } = await prompts({
-          type: "select",
-          name: "selectedPackage",
-          message: "Select a package to add:",
-          choices,
-        })
-
-        if (selectedPackage) {
-          const { confirm } = await prompts({
-            type: "confirm",
-            name: "confirm",
-            message: `Do you want to add ${kleur.green(selectedPackage)}?`,
-            initial: true,
-          })
-
-          if (confirm) {
-            try {
-              console.log(kleur.blue(`Installing ${selectedPackage}...`))
-              await addPackage(selectedPackage)
-              console.log(
-                kleur.green(`Successfully installed ${selectedPackage}`),
-              )
-            } catch (error) {
-              console.error(
-                kleur.red(`Failed to install ${selectedPackage}:`),
-                error,
-              )
-              process.exit(1)
-            }
-          }
-        }
-      }
+      console.log("\n")
     })
 }
