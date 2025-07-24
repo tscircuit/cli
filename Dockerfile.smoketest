@@ -39,7 +39,7 @@ RUN tscircuit-cli --version
 RUN cd /tmp/testdir && tscircuit-cli init -y
 # # Test build in the temp directory
 # # RUN cd /tmp/testdir && DEBUG="tsci:eval:*" bunx --bun tscircuit-cli build index.tsx
-# RUN cd /tmp/testdir && tscircuit-cli build index.tsx
+RUN cd /tmp/testdir && tscircuit-cli build index.tsx
 
 # # Verify build output
 # RUN test -f /tmp/testdir/dist/index.circuit.json
