@@ -85,6 +85,8 @@ export async function generateCircuitJson({
   // Execute the circuit runner with the virtual file system
   const MainComponent = await import(filePath)
 
+  debug("MainComponent", MainComponent.toString())
+
   // Handle both default export and named exports
   const Component =
     MainComponent.default ||
@@ -102,6 +104,8 @@ export async function generateCircuitJson({
       `No component found in "${filePath}". Make sure you export a component.`,
     )
   }
+
+  debug("Component", Component.toString())
 
   runner.add(<Component />)
 
