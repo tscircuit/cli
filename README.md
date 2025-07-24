@@ -59,6 +59,8 @@ Commands:
   setup                       Setup utilities like GitHub Actions
   upgrade                     Upgrade CLI to the latest version
   search <query>              Search for packages in the tscircuit registry
+  import <query>              Search JLCPCB or the tscircuit registry and import
+                              a component
   version                     Print CLI version
   help [command]              display help for command
 ```
