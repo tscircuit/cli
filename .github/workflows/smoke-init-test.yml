@@ -36,7 +36,6 @@ jobs:
       - name: Install tscircuit globally from packed file
         run: |
           PACKAGE_FILE=$(ls *.tgz)
-          npm install -g tscircuit
           npm install -g "$PACKAGE_FILE"
 
       - name: Test tsci init in temporary directory
