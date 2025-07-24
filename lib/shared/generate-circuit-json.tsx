@@ -6,6 +6,7 @@ import fs from "node:fs"
 import Debug from "debug"
 import type { PlatformConfig } from "@tscircuit/props"
 import { abbreviateStringifyObject } from "lib/utils/abbreviate-stringify-object"
+import React from "react"
 
 const debug = Debug("tsci:generate-circuit-json")
 
@@ -105,7 +106,10 @@ export async function generateCircuitJson({
     )
   }
 
+  const ReactComponent = () => <div />
+
   debug("Component", Component.toString())
+  debug("Some react component", ReactComponent.toString())
 
   runner.add(<Component />)
 
