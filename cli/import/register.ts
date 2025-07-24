@@ -77,7 +77,7 @@ export const registerImport = (program: Command) => {
 
       jlcResults.forEach((comp, idx) => {
         choices.push({
-          title: `${comp.mfr} (C${comp.lcsc}) - ${comp.description}`,
+          title: `[jlcpcb] ${comp.mfr} (C${comp.lcsc}) - ${comp.description}`,
           value: { type: "jlcpcb", part: comp.lcsc },
           selected: !choices.length && idx === 0,
         })
