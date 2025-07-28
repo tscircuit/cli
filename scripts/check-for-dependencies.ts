@@ -3,7 +3,7 @@
 import { readFileSync } from "node:fs"
 import { exit } from "node:process"
 
-const ALLOWED_DEPENDENCIES = ["looks-same"] // Add more allowed runtime deps here
+const ALLOWED_DEPENDENCIES = ["looks-same", "sharp"] // Add more allowed runtime deps here
 
 console.log("Checking for non-dev dependencies...")
 

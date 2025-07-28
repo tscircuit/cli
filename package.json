@@ -47,11 +47,11 @@
     "tscircuit": "^0.0.559-libonly",
     "tsx": "^4.7.1",
     "typed-ky": "^0.0.4",
-    "zod": "3",
-    "sharp": "^0.34.3"
+    "zod": "3"
   },
   "dependencies": {
-    "looks-same": "^9.0.1"
+    "looks-same": "^9.0.1",
+    "sharp": "^0.34.3"
   },
   "peerDependencies": {
     "tscircuit": "*"
