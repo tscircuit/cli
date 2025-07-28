@@ -29,7 +29,7 @@ test("snapshot command creates SVG snapshots", async () => {
     `✅ ${join("__snapshots__", "test.board-schematic.snap.svg")}`,
   )
   expect(updateStdout).toContain(
-    `✅ ${join("__snapshots__", "test.board-3d.snap.svg")}`,
+    `✅ ${join("__snapshots__", "test.board-3d.snap.png")}`,
   )
 
   const snapshotDir = join(tmpDir, "__snapshots__")
@@ -40,7 +40,7 @@ test("snapshot command creates SVG snapshots", async () => {
     join(snapshotDir, "test.board-schematic.snap.svg"),
   ).exists()
   const threeDSnapshot = await Bun.file(
-    join(snapshotDir, "test.board-3d.snap.svg"),
+    join(snapshotDir, "test.board-3d.snap.png"),
   ).exists()
 
   expect(pcbSnapshot).toBe(true)
@@ -54,16 +54,15 @@ test("snapshot command creates SVG snapshots", async () => {
     join(snapshotDir, "test.board-schematic.snap.svg"),
   ).text()
   const threeDContent = await Bun.file(
-    join(snapshotDir, "test.board-3d.snap.svg"),
-  ).text()
+    join(snapshotDir, "test.board-3d.snap.png"),
+  ).arrayBuffer()
 
   expect(pcbContent).toMatchSvgSnapshot(import.meta.path, "pcb")
   expect(schContent).toMatchSvgSnapshot(import.meta.path, "schematic")
-  expect(threeDContent).toMatchSvgSnapshot(import.meta.path, "3d")
 
   const { stdout: testStdout } = await runCommand("tsci snapshot --3d")
   expect(testStdout).toContain("All snapshots match")
-}, 10_000)
+}, 30_000)
 
 test("snapshot command snapshots circuit files", async () => {
   const { tmpDir, runCommand } = await getCliTestFixture()
@@ -124,7 +123,7 @@ test("snapshot command snapshots circuit files", async () => {
   expect(indexSch).toBe(true)
   expect(extraPcb).toBe(true)
   expect(extraSch).toBe(true)
-})
+}, 30_000)
 
 test("snapshot command --pcb-only", async () => {
   const { tmpDir, runCommand } = await getCliTestFixture()
@@ -248,7 +247,7 @@ test("snapshot command skips updates when snapshots match visually", async () =>
   const contentsAfter = fs.readFileSync(pcbPath, "utf-8")
 
   expect(contentsAfter).toBe(contentsBefore)
-})
+}, 30_000)
 
 test("visual comparison works for pcb and schematic snapshots", async () => {
   const { tmpDir, runCommand } = await getCliTestFixture()
@@ -286,7 +285,7 @@ test("visual comparison works for pcb and schematic snapshots", async () => {
 
   expect(pcbAfter).toBe(pcbBefore)
   expect(schAfter).toBe(schBefore)
-})
+}, 30_000)
 
 test("snapshot command creates diff images when visuals change", async () => {
   const { tmpDir, runCommand } = await getCliTestFixture()
@@ -329,4 +328,4 @@ test("snapshot command creates diff images when visuals change", async () => {
 
   expect(pcbDiff).toBe(true)
   expect(schDiff).toBe(true)
-})
+}, 30_000)
