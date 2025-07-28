@@ -3,6 +3,7 @@ import path from "node:path"
 import { globbySync } from "globby"
 import kleur from "kleur"
 import looksSame from "looks-same"
+import sharp from "sharp"
 
 import {
   convertCircuitJsonToPcbSvg,
@@ -14,6 +15,7 @@ import {
   DEFAULT_IGNORED_PATTERNS,
   normalizeIgnorePattern,
 } from "lib/shared/should-ignore-path"
+import { compareAndCreateDiff } from "./compare-images"
 
 type SnapshotOptions = {
   update?: boolean
@@ -94,42 +96,48 @@ export const snapshotProject = async ({
     }
 
     for (const [type, newSvg] of pairs) {
-      const snapPath = path.join(snapDir, `${base}-${type}.snap.svg`)
+      const is3d = type === "3d"
+      const snapPath = path.join(
+        snapDir,
+        `${base}-${type}.snap.${is3d ? "png" : "svg"}`,
+      )
       const existing = fs.existsSync(snapPath)
+
+      const newContentBuffer = is3d
+        ? await sharp(Buffer.from(newSvg)).png().toBuffer()
+        : Buffer.from(newSvg, "utf8")
+
+      const newContentForFile = is3d ? newContentBuffer : newSvg
+
       if (!existing) {
-        fs.writeFileSync(snapPath, newSvg, "utf8")
+        fs.writeFileSync(snapPath, newContentForFile)
         console.log("✅", kleur.gray(path.relative(projectDir, snapPath)))
         didUpdate = true
         continue
       }
 
-      const oldSvg = fs.readFileSync(snapPath, "utf8")
-      const bufNew = Buffer.from(newSvg, "utf8")
-      const bufOld = Buffer.from(oldSvg, "utf8")
+      const oldContentBuffer = fs.readFileSync(snapPath)
 
-      const { equal } = await looksSame(bufNew, bufOld, {
-        strict: false,
-        tolerance: 2,
-      })
+      const diffPath = snapPath.replace(
+        is3d ? ".snap.png" : ".snap.svg",
+        ".diff.png",
+      )
+
+      const { equal } = await compareAndCreateDiff(
+        oldContentBuffer,
+        newContentBuffer,
+        diffPath,
+      )
 
       if (update) {
         if (!forceUpdate && equal) {
           console.log("✅", kleur.gray(path.relative(projectDir, snapPath)))
         } else {
-          fs.writeFileSync(snapPath, newSvg, "utf8")
+          fs.writeFileSync(snapPath, newContentForFile)
           console.log("✅", kleur.gray(path.relative(projectDir, snapPath)))
           didUpdate = true
         }
       } else if (!equal) {
-        const diffPath = snapPath.replace(".snap.svg", ".diff.png")
-        const diffBuffer: Buffer = await looksSame.createDiff({
-          reference: bufOld,
-          current: bufNew,
-          highlightColor: "#ff00ff",
-          tolerance: 2,
-        }) // returns a Buffer because no diff path given :contentReference[oaicite:4]{index=4}
-
-        fs.writeFileSync(diffPath, diffBuffer)
         mismatches.push(`${snapPath} (diff: ${diffPath})`)
       } else {
         console.log("✅", kleur.gray(path.relative(projectDir, snapPath)))
