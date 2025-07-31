@@ -1,4 +1,5 @@
 import looksSame from "looks-same"
+import fs from "node:fs/promises"
 
 export const compareAndCreateDiff = async (
   buffer1: Buffer,
@@ -11,13 +12,17 @@ export const compareAndCreateDiff = async (
   })
 
   if (!equal) {
-    await looksSame.createDiff({
-      reference: buffer1,
-      current: buffer2,
-      diff: diffPath,
-      highlightColor: "#ff00ff",
-      tolerance: 2,
-    })
+    if (diffPath.endsWith(".png")) {
+      await looksSame.createDiff({
+        reference: buffer1,
+        current: buffer2,
+        diff: diffPath,
+        highlightColor: "#ff00ff",
+        tolerance: 2,
+      })
+    } else {
+      await fs.writeFile(diffPath, buffer2)
+    }
   }
 
   return { equal }
