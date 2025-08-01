@@ -120,7 +120,7 @@ export const snapshotProject = async ({
 
       const diffPath = snapPath.replace(
         is3d ? ".snap.png" : ".snap.svg",
-        ".diff.png",
+        is3d ? ".diff.png" : ".diff.svg",
       )
 
       const { equal } = await compareAndCreateDiff(

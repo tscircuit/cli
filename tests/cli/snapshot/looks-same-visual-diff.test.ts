@@ -39,9 +39,9 @@ test("CLI detects visual change when another chip is added", async () => {
   // Run snapshot again, expect visual diff detected
   const { stdout, stderr } = await runCommand("tsci snapshot")
   expect(stdout).not.toContain("All snapshots match")
-  expect(stderr).toContain(".diff.png")
+  expect(stderr).toContain(".diff.svg")
 
-  const diffPath = join(tmpDir, "__snapshots__", "meta.board-pcb.diff.png")
+  const diffPath = join(tmpDir, "__snapshots__", "meta.board-pcb.diff.svg")
   const diffExists = fs.existsSync(diffPath)
   expect(diffExists).toBe(true)
 })

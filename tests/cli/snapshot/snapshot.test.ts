@@ -287,7 +287,7 @@ test("visual comparison works for pcb and schematic snapshots", async () => {
   expect(schAfter).toBe(schBefore)
 }, 30_000)
 
-test("snapshot command creates diff images when visuals change", async () => {
+test("snapshot command creates diff files when visuals change", async () => {
   const { tmpDir, runCommand } = await getCliTestFixture()
 
   await Bun.write(
@@ -320,10 +320,10 @@ test("snapshot command creates diff images when visuals change", async () => {
 
   const snapDir = join(tmpDir, "__snapshots__")
   const pcbDiff = await Bun.file(
-    join(snapDir, "mismatch.board-pcb.diff.png"),
+    join(snapDir, "mismatch.board-pcb.diff.svg"),
   ).exists()
   const schDiff = await Bun.file(
-    join(snapDir, "mismatch.board-schematic.diff.png"),
+    join(snapDir, "mismatch.board-schematic.diff.svg"),
   ).exists()
 
   expect(pcbDiff).toBe(true)
