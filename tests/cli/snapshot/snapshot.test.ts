@@ -218,6 +218,52 @@ test("snapshot command with file path", async () => {
   expect(rootSnapExists).toBe(false)
 })
 
+test("snapshot command with directory path", async () => {
+  const { tmpDir, runCommand } = await getCliTestFixture()
+
+  const subdir = join(tmpDir, "dir")
+  fs.mkdirSync(subdir)
+
+  await Bun.write(
+    join(subdir, "one.board.tsx"),
+    `
+    export const One = () => (
+      <board width="10mm" height="10mm">
+        <chip name="U1" footprint="soic8" />
+      </board>
+    )
+  `,
+  )
+
+  await Bun.write(
+    join(subdir, "two.circuit.tsx"),
+    `
+    export const Two = () => (
+      <board width="10mm" height="10mm">
+        <chip name="U1" footprint="soic8" />
+      </board>
+    )
+  `,
+  )
+
+  const { stdout } = await runCommand("tsci snapshot dir --update")
+  expect(stdout).toContain("Created snapshots")
+
+  const snapDir = join(subdir, "__snapshots__")
+  const onePcb = await Bun.file(
+    join(snapDir, "one.board-pcb.snap.svg"),
+  ).exists()
+  const twoPcb = await Bun.file(
+    join(snapDir, "two.circuit-pcb.snap.svg"),
+  ).exists()
+
+  expect(onePcb).toBe(true)
+  expect(twoPcb).toBe(true)
+
+  const rootExists = await Bun.file(join(tmpDir, "__snapshots__")).exists()
+  expect(rootExists).toBe(false)
+})
+
 test("snapshot command skips updates when snapshots match visually", async () => {
   const { tmpDir, runCommand } = await getCliTestFixture()
 
