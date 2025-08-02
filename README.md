@@ -6,20 +6,27 @@ https://github.com/user-attachments/assets/0228e09d-48fc-4bf5-814b-762b60fc35c7
 
 ## Usage
 
+The CLI installed from `@tscircuit/cli` exposes the `tscircuit-cli` command. The
+shorter `tsci` alias is provided by the `tscircuit` package.
+
 ```bash
 # Start a local server that watches for changes in
 # this file or it's dependencies and updates the
 # browser preview
-tsci dev ./path/to/file.tsx
+tscircuit-cli dev ./path/to/file.tsx
 
 # Clone a package from the registry
-tsci clone author/packageName
+tscircuit-cli clone author/packageName
 
 # Add a component from tscircuit.com
-tsci add author/component-name
+tscircuit-cli add author/component-name
 ```
 
-> Note: The packages CLI uses the same configuration files as the [@tscircuit/cli](https://github.com/tscircuit/cli), so you may need to also install `npm install -g @tscircuit/cli` and run `tsci login` to authenticate!
+> Note: The packages CLI uses the same configuration files as the
+> [@tscircuit/cli](https://github.com/tscircuit/cli), so you may need to also
+> install `npm install -g @tscircuit/cli` and run `tscircuit-cli login` to
+> authenticate! If you have the `tscircuit` package installed globally you can
+> instead use `tsci`.
 
 ## Installation
 
@@ -31,7 +38,7 @@ npm install -g @tscircuit/cli
 
 <!-- START_HELP_OUTPUT -->
 ```
-Usage: tsci [options] [command]
+Usage: tscircuit-cli [options] [command]
 
 CLI for developing tscircuit packages
 
@@ -81,7 +88,7 @@ bun run dev
 
 ## How it Works
 
-When you run `tsci dev`, we start a local
+When you run `tscircuit-cli dev` (or `tsci dev` if the `tscircuit` package is installed), we start a local
 server that uses the [@tscircuit/file-server](https://github.com/tscircuit/file-server) and [@tscircuit/runframe](https://github.com/tscircuit/runframe) (on the browser)
 
 We use commanderjs to define the CLI commands inside
