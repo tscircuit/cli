@@ -53,9 +53,19 @@ export const snapshotProject = async ({
     ...ignored.map(normalizeIgnorePattern),
   ]
 
+  const resolvedPaths = filePaths.map((f) => path.resolve(projectDir, f))
+
   const boardFiles =
-    filePaths.length > 0
-      ? filePaths.map((f) => path.resolve(projectDir, f))
+    resolvedPaths.length > 0
+      ? resolvedPaths.flatMap((p) => {
+          if (fs.existsSync(p) && fs.statSync(p).isDirectory()) {
+            return globbySync(["**/*.board.tsx", "**/*.circuit.tsx"], {
+              cwd: p,
+              ignore,
+            }).map((f) => path.join(p, f))
+          }
+          return [p]
+        })
       : globbySync(["**/*.board.tsx", "**/*.circuit.tsx"], {
           cwd: projectDir,
           ignore,
