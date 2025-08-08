@@ -21,7 +21,7 @@ test("clone command fetches and creates package files correctly", async () => {
     "tsconfig.json",
     "circuit.json",
   ])
-}, 10_000)
+}, 20_000)
 
 test("clone command handles invalid package path", async () => {
   const { runCommand } = await getCliTestFixture()

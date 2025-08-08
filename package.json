@@ -49,7 +49,11 @@
     "zod": "3"
   },
   "dependencies": {
-    "looks-same": "^9.0.1",
+    "pixelmatch": "^7.1.0",
+    "pngjs": "^7.0.0",
+    "sharp": "^0.34.3"
+  },
+  "overrides": {
     "sharp": "^0.34.3"
   },
   "peerDependencies": {
