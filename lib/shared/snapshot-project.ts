@@ -2,7 +2,6 @@ import fs from "node:fs"
 import path from "node:path"
 import { globbySync } from "globby"
 import kleur from "kleur"
-import looksSame from "looks-same"
 import sharp from "sharp"
 
 import {
@@ -97,13 +96,6 @@ export const snapshotProject = async ({
     if (pcbOnly || !schematicOnly) pairs.push(["pcb", pcbSvg])
     if (schematicOnly || !pcbOnly) pairs.push(["schematic", schSvg])
     if (threeD && svg3d) pairs.push(["3d", svg3d])
-
-    if (!looksSame) {
-      console.error(
-        "looks-same is required. Install it with 'bun add -d looks-same'",
-      )
-      return onExit(1)
-    }
 
     for (const [type, newSvg] of pairs) {
       const is3d = type === "3d"
