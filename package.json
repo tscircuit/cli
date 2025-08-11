@@ -27,7 +27,6 @@
     "conf": "^13.1.0",
     "configstore": "^7.0.0",
     "cosmiconfig": "^9.0.0",
-    "debug": "^4.4.0",
     "delay": "^6.0.0",
     "dsn-converter": "^0.0.63",
     "get-port": "^7.1.0",
@@ -56,6 +55,7 @@
     }
   },
   "dependencies": {
+    "debug": "^4.4.0",
     "looks-same": "^9.0.1",
     "sharp": "^0.34.3",
     "zod": "3"
