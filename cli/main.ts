@@ -78,7 +78,14 @@ if (process.argv.length === 2) {
   // perfectCli uses commander@12 internally which is not strictly
   // compatible with commander@14's TypeScript types. Cast to any to
   // avoid a type mismatch.
-  perfectCli(program as any, process.argv)
+  perfectCli(program as any, process.argv).catch((err) => {
+    // Handle cancelled interactive sessions gracefully
+    if (err instanceof Error && err.name === "TypeError") {
+      console.error("\nAborted.")
+      process.exit(130)
+    }
+    throw err
+  })
 } else {
   program.parse()
 }
