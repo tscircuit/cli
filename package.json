@@ -27,7 +27,6 @@
     "conf": "^13.1.0",
     "configstore": "^7.0.0",
     "cosmiconfig": "^9.0.0",
-    "debug": "^4.4.0",
     "delay": "^6.0.0",
     "dsn-converter": "^0.0.63",
     "get-port": "^7.1.0",
@@ -43,22 +42,23 @@
     "redaxios": "^0.5.1",
     "semver": "^7.6.3",
     "tempy": "^3.1.0",
-    "tscircuit": "^0.0.574-libonly",
+    "tscircuit": "^0.0.590-libonly",
     "tsx": "^4.7.1",
-    "typed-ky": "^0.0.4",
-    "zod": "3"
-  },
-  "dependencies": {
-    "looks-same": "^9.0.1",
-    "sharp": "^0.34.3"
+    "typed-ky": "^0.0.4"
   },
   "peerDependencies": {
     "tscircuit": "*"
   },
   "peerDependenciesMeta": {
     "tscircuit": {
-      "optional": false
+      "optional": true
     }
+  },
+  "dependencies": {
+    "debug": "^4.4.0",
+    "looks-same": "^9.0.1",
+    "sharp": "^0.34.3",
+    "zod": "3"
   },
   "bin": {
     "tscircuit-cli": "./cli/entrypoint.js"
