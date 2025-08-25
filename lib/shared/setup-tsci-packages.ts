@@ -31,6 +31,15 @@ export async function setupTsciProject(
   const packageJsonPath = path.join(projectPath, "package.json")
   const packageJson = JSON.parse(fs.readFileSync(packageJsonPath, "utf-8"))
 
+  // Ensure required scripts exist
+  packageJson.scripts = {
+    ...(packageJson.scripts || {}),
+    dev: "tsci dev",
+    start: "tsci dev",
+  }
+
+  fs.writeFileSync(packageJsonPath, JSON.stringify(packageJson, null, 2))
+
   if (devDependencies.length > 0) {
     console.log("Installing dependencies...")
     try {

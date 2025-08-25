@@ -1,6 +1,6 @@
 import { expect, test } from "bun:test"
 import { join } from "node:path"
-import { readdirSync, existsSync } from "node:fs"
+import { readdirSync, existsSync, readFileSync } from "node:fs"
 import { getCliTestFixture } from "../../fixtures/get-cli-test-fixture"
 
 test("clone command fetches and creates package files correctly", async () => {
@@ -21,6 +21,12 @@ test("clone command fetches and creates package files correctly", async () => {
     "tsconfig.json",
     "circuit.json",
   ])
+
+  const packageJson = JSON.parse(
+    readFileSync(join(projectDir, "package.json"), "utf-8"),
+  )
+  expect(packageJson.scripts.dev).toBe("tsci dev")
+  expect(packageJson.scripts.start).toBe("tsci dev")
 }, 10_000)
 
 test("clone command handles invalid package path", async () => {
@@ -52,7 +58,7 @@ test("clone command rejects invalid URL formats", async () => {
     const { stderr } = await runCommand(`tsci clone ${url}`)
     expect(stderr).toContain("Invalid package path")
   }
-})
+}, 20_000)
 
 test("clone command accepts all valid formats", async () => {
   const { tmpDir, runCommand } = await getCliTestFixture()
