@@ -17,6 +17,7 @@ const ALLOWED_FILE_EXTENSIONS = [
   ".json",
   ".txt",
   ".md",
+  ".obj",
 ]
 
 type GenerateCircuitJsonOptions = {
