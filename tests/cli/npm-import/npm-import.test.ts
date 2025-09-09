@@ -73,8 +73,6 @@ export default () => {
 `
   await Bun.write(circuitPath, circuitContent)
 
-  // `tsci build` logs to stderr and exits with 1. runCommand in the test
-  // fixture doesn't check the exit code, but we can assert stderr.
   const { stdout, stderr } = await runCommand("tsci build index.tsx")
   expect(stdout).not.toContain("Circuit JSON written to")
   expect(stderr).toContain("isOdd(3) is true, throwing for test")
