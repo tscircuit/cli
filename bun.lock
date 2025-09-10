@@ -9,7 +9,7 @@
         "@tscircuit/circuit-json-util": "0.0.67",
         "@tscircuit/fake-snippets": "^0.0.87",
         "@tscircuit/file-server": "^0.0.24",
-        "@tscircuit/math-utils": "^0.0.18",
+        "@tscircuit/math-utils": "0.0.21",
         "@tscircuit/props": "^0.0.315",
         "@tscircuit/runframe": "^0.0.885",
         "@tscircuit/schematic-match-adapt": "^0.0.22",
@@ -483,7 +483,7 @@
 
     "@tscircuit/matchpack": ["@tscircuit/matchpack@0.0.16", "", { "peerDependencies": { "typescript": "^5" } }, "sha512-F9QX7uQdml88XGKwe7kDkYnwHfG0kykr2cHD+JsnATKlgi32vYwFGuRaOR4tyRrkDGdmzt5T7YYb4Mhi9uncGA=="],
 
-    "@tscircuit/math-utils": ["@tscircuit/math-utils@0.0.18", "", { "peerDependencies": { "typescript": "^5.0.0" } }, "sha512-P45v7V/BiVZZjXTUzjWSUsy0M8GpI5o6d+JWhPWE5+JwI/sYZARuLT4e1xzV7LaavEX4GQ0NKG9hKN48xTZJsw=="],
+    "@tscircuit/math-utils": ["@tscircuit/math-utils@0.0.21", "", { "peerDependencies": { "typescript": "^5.0.0" } }, "sha512-M1viGlMkOQsYiGfNBEbvsJXxB7DDrMqzA475DzK0QaD/jGueyEk5JgIQsd91SRG0JDtZUH1SvysPjNMJbUOy3Q=="],
 
     "@tscircuit/miniflex": ["@tscircuit/miniflex@0.0.4", "", { "peerDependencies": { "typescript": "^5" } }, "sha512-+Bf/FVAFQfe/foHJXlFPbCjIpi7krjwlrvKgqdQX/J5PnS8xgZW4whe31xqRyN83oWE4zeBV3l2WG2cx3bOvGg=="],
 
@@ -1870,8 +1870,6 @@
     "tar/yallist": ["yallist@5.0.0", "", {}, "sha512-YgvUTfwqyc7UXVMrB+SImsVYSmTS8X/tSrtdNZMImM+n7+QTriRXyXim0mBrTXNeqzVF0KWGgHPeiyViFFrNDw=="],
 
     "tscircuit/@tscircuit/footprinter": ["@tscircuit/footprinter@0.0.236", "", { "dependencies": { "@tscircuit/mm": "^0.0.8", "zod": "^3.23.8" }, "peerDependencies": { "circuit-json": "*" } }, "sha512-SE03ZCNp9FxzSa3LdbQOMBHjT16Q86ZwN6iLu+RPsAbFrdE1RwtM7dv5lOb6lkh78mL3e7yyuyay+QrERiLcYQ=="],
-
-    "tscircuit/@tscircuit/math-utils": ["@tscircuit/math-utils@0.0.21", "", { "peerDependencies": { "typescript": "^5.0.0" } }, "sha512-M1viGlMkOQsYiGfNBEbvsJXxB7DDrMqzA475DzK0QaD/jGueyEk5JgIQsd91SRG0JDtZUH1SvysPjNMJbUOy3Q=="],
 
     "tscircuit/@tscircuit/props": ["@tscircuit/props@0.0.313", "", { "peerDependencies": { "circuit-json": "*", "react": "*", "zod": "*" } }, "sha512-xD8u3y1S5m5oTRPaM9DKmaGilDdVNisykDnONh35rGOKYb+dJvQFM3hwnvhIEv4vjQU2AMynakiJMfWS5ZMAXQ=="],
 
