@@ -79,7 +79,7 @@ export class DevServer {
       port: this.port,
       defaultMainComponentPath: this.componentFilePath
         ? path.relative(this.projectDir, this.componentFilePath)
-        : null,
+        : undefined,
     })
     this.httpServer = server
 
