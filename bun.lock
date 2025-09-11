@@ -3,11 +3,6 @@
   "workspaces": {
     "": {
       "name": "@tscircuit/cli",
-      "dependencies": {
-        "circuit-json-to-tscircuit": "^0.0.9",
-        "kicad-component-converter": "^0.1.14",
-        "kicad-converter": "^0.0.17",
-      },
       "devDependencies": {
         "@babel/standalone": "^7.26.9",
         "@biomejs/biome": "^1.9.4",
@@ -30,6 +25,7 @@
         "bun-match-svg": "^0.0.12",
         "chokidar": "4.0.1",
         "circuit-json-to-readable-netlist": "^0.0.13",
+        "circuit-json-to-tscircuit": "^0.0.9",
         "commander": "^14.0.0",
         "conf": "^13.1.0",
         "configstore": "^7.0.0",
@@ -42,6 +38,8 @@
         "globby": "^14.1.0",
         "jsonwebtoken": "^9.0.2",
         "jwt-decode": "^4.0.0",
+        "kicad-component-converter": "^0.1.14",
+        "kicad-converter": "^0.0.17",
         "kleur": "^4.1.5",
         "ky": "^1.7.4",
         "looks-same": "^9.0.1",
@@ -1775,7 +1773,6 @@
 
     "@tscircuit/fake-snippets/kicad-converter": ["kicad-converter@0.0.16", "", { "dependencies": { "@tscircuit/soup-util": "^0.0.30", "circuit-json-to-connectivity-map": "^0.0.16" }, "peerDependencies": { "typescript": "^5.0.0" } }, "sha512-3beH+cL75SLhuvpeYp7inQtpWq9yZp85v2SuvgN2XhDD492nEc/N5Jf1z5eAgUuL/8VpjCj/zZtk7FpSCb3+Wg=="],
 
-
     "@tscircuit/schematic-autolayout/@tscircuit/soup-util": ["@tscircuit/soup-util@0.0.38", "", { "dependencies": { "parsel-js": "^1.1.2" }, "peerDependencies": { "circuit-json": "*", "transformation-matrix": "*", "zod": "*" } }, "sha512-GdcuFxk+qnJZv+eI7ZoJ1MJEseFgRyaztMtQ/OXA2SUnxyPEH0UTy9vkhKTm+8GTePryEgdXcc65TgUyrr44ww=="],
 
     "@types/debug/@types/ms": ["@types/ms@2.1.0", "", {}, "sha512-GsCCIZDE/p3i96vtEqx+7dBUGXrc7zeSK3wwPHIaRThS+9OhWIXRqzs4d6k1SVU8g91DrNRWxWUGhp5KXQb2VA=="],
@@ -1915,7 +1912,6 @@
     "@tscircuit/fake-snippets/kicad-converter/@tscircuit/soup-util": ["@tscircuit/soup-util@0.0.30", "", { "dependencies": { "parsel-js": "^1.1.2" }, "peerDependencies": { "@tscircuit/soup": "*", "transformation-matrix": "*", "zod": "*" } }, "sha512-ahb/slqXg06Cp8OkjqhhpADnzJNOVhBbXb/ea8Uow2vBvAgLNSFw/Js7Qd5e9Mxch/zjs8LeCk4oZom36RfWhw=="],
 
     "@tscircuit/fake-snippets/kicad-converter/circuit-json-to-connectivity-map": ["circuit-json-to-connectivity-map@0.0.16", "", { "dependencies": { "@tscircuit/math-utils": "^0.0.4" }, "peerDependencies": { "typescript": "^5.0.0" } }, "sha512-3eZuFjyqcCT46FxFXiiyUplH8wvGoZjmhmpD+VSZER0aI+rPKKawqvkBpaEZZOIIqg3rYEfO98kVH/syvyI8yQ=="],
-
 
     "@vercel/routing-utils/ajv/json-schema-traverse": ["json-schema-traverse@0.4.1", "", {}, "sha512-xbbCH5dCYU5T8LcEhhuh7HJ88HXuW3qsI3Y0zOZFKfZEHcpWiHU/Jxzk629Brsab/mMiHQti9wMP+845RPe3Vg=="],
 
