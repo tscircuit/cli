@@ -3,9 +3,6 @@
   "workspaces": {
     "": {
       "name": "@tscircuit/cli",
-      "dependencies": {
-        "easyeda": "^0.0.227",
-      },
       "devDependencies": {
         "@babel/standalone": "^7.26.9",
         "@biomejs/biome": "^1.9.4",
@@ -35,6 +32,7 @@
         "debug": "^4.4.0",
         "delay": "^6.0.0",
         "dsn-converter": "^0.0.63",
+        "easyeda": "^0.0.227",
         "get-port": "^7.1.0",
         "globby": "^14.1.0",
         "jsonwebtoken": "^9.0.2",
@@ -49,13 +47,13 @@
         "semver": "^7.6.3",
         "sharp": "0.32.6",
         "tempy": "^3.1.0",
-        "tscircuit": "^0.0.633",
+        "tscircuit": "^0.0.633-libonly",
         "tsx": "^4.7.1",
         "typed-ky": "^0.0.4",
         "zod": "3",
       },
       "peerDependencies": {
-        "tscircuit": "^0.0.633",
+        "tscircuit": "*",
       },
     },
   },
