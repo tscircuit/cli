@@ -23,6 +23,7 @@ import { registerRemove } from "./remove/register"
 import { registerBuild } from "./build/register"
 import { registerSnapshot } from "./snapshot/register"
 import { registerSetup } from "./setup/register"
+import { registerConvert } from "./convert/register"
 
 export const program = new Command()
 
@@ -55,6 +56,7 @@ registerUpgradeCommand(program)
 
 registerSearch(program)
 registerImport(program)
+registerConvert(program)
 
 // Manually handle --version, -v, and -V flags
 if (
