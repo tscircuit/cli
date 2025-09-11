@@ -6,5 +6,5 @@ test("search command returns kicad footprint results", async () => {
   const { stdout, stderr } = await runCommand("tsci search R_0805")
   expect(stderr).toBe("")
   expect(stdout).toContain("KiCad")
-  expect(stdout).toMatch(/R_0805/)
+  expect(stdout).toMatch(/kicad:.*R_0805/)
 })

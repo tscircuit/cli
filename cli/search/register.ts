@@ -79,7 +79,9 @@ export const registerSearch = (program: Command) => {
 
         kicadResults.forEach((path, idx) => {
           console.log(
-            `${(idx + 1).toString().padStart(2, " ")}. ${path.replace(".kicad_mod", "").replace(".pretty", "")}`,
+            `${(idx + 1).toString().padStart(2, " ")}. kicad:${path
+              .replace(".kicad_mod", "")
+              .replace(".pretty", "")}`,
           )
         })
       }
