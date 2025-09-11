@@ -23,7 +23,7 @@ export class DevServer {
   port: number
   /**
    * The path to a component that exports a <board /> or <group /> component
-   * Can be null when running in sandbox mode without a specific file
+   * Can be null when running without a specific file
    */
   componentFilePath: string | null
 
@@ -253,7 +253,7 @@ export class DevServer {
   async upsertInitialFiles() {
     const filePaths = getPackageFilePaths(this.projectDir, this.ignoredFiles)
 
-    // In true sandbox mode, don't create any entrypoint files
+    // When no entrypoint is specified, don't create any entrypoint files
     // Let runframe handle the empty state
 
     for (const filePath of filePaths) {

@@ -54,7 +54,7 @@ export const registerDev = (program: Command) => {
         } else {
           console.log(
             kleur.yellow(
-              "No entrypoint found. Starting development server in sandbox mode.",
+              "No entrypoint found. Starting development server.",
             ),
           )
           console.log(
@@ -62,7 +62,7 @@ export const registerDev = (program: Command) => {
               "Tip: You can run 'tsci init' to set up a complete project structure or specify a file with 'tsci dev <file>'.",
             ),
           )
-          // No file - pure sandbox mode
+          // No file - no entrypoint specified
           absolutePath = null
         }
       }
