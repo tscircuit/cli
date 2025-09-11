@@ -45,9 +45,10 @@
     "semver": "^7.6.3",
     "sharp": "0.32.6",
     "tempy": "^3.1.0",
-    "tscircuit": "^0.0.633",
+    "tscircuit": "^0.0.633-libonly",
     "tsx": "^4.7.1",
     "typed-ky": "^0.0.4",
+    "easyeda": "^0.0.227",
     "zod": "3"
   },
   "peerDependencies": {
@@ -77,8 +78,5 @@
     "cli": "bun ./cli/main.ts",
     "pkg-pr-new-release": "bunx pkg-pr-new publish --comment=off --peerDeps"
   },
-  "type": "module",
-  "dependencies": {
-    "easyeda": "^0.0.227"
-  }
+  "type": "module"
 }
