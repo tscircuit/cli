@@ -1,6 +1,6 @@
 {
   "name": "@tscircuit/cli",
-  "version": "0.1.203",
+  "version": "0.1.205",
   "main": "dist/main.js",
   "devDependencies": {
     "@babel/standalone": "^7.26.9",
@@ -10,7 +10,7 @@
     "@tscircuit/file-server": "^0.0.24",
     "@tscircuit/math-utils": "0.0.21",
     "@tscircuit/props": "^0.0.315",
-    "@tscircuit/runframe": "^0.0.885",
+    "@tscircuit/runframe": "^0.0.912",
     "@tscircuit/schematic-match-adapt": "^0.0.22",
     "@tscircuit/simple-3d-svg": "^0.0.38",
     "@types/bun": "^1.2.2",
@@ -48,6 +48,9 @@
     "tscircuit": "^0.0.633-libonly",
     "tsx": "^4.7.1",
     "typed-ky": "^0.0.4",
+    "circuit-json-to-tscircuit": "^0.0.9",
+    "kicad-component-converter": "^0.1.14",
+    "easyeda": "^0.0.227",
     "zod": "3"
   },
   "peerDependencies": {

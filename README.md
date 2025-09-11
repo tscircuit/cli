@@ -61,6 +61,8 @@ Commands:
   search <query>              Search for packages in the tscircuit registry
   import <query>              Search JLCPCB or the tscircuit registry and import
                               a component
+  convert [options] <file>    Convert a .kicad_mod footprint to a tscircuit
+                              component
   version                     Print CLI version
   help [command]              display help for command
 ```
