@@ -52,10 +52,35 @@ export const registerDev = (program: Command) => {
           absolutePath = entrypointPath
           console.log("Found entrypoint at:", entrypointPath)
         } else {
+          // Create a default index.tsx file if no entrypoint is found
+          const defaultEntrypoint = path.join(process.cwd(), "index.tsx")
+          const defaultContent = `
+export default () => (
+  <board>
+    <resistor resistance="1k" footprint="0402" name="R1" schX={3} pcbX={3} />
+    <capacitor capacitance="1000pF" footprint="0402" name="C1" schX={-3} pcbX={-3} />
+    <trace from=".R1 > .pin1" to=".C1 > .pin1" />
+  </board>
+)
+`
           console.log(
-            "No entrypoint found. Run 'tsci init' to bootstrap a basic project.",
+            kleur.yellow(
+              "No entrypoint found. Creating a default index.tsx file to get you started.",
+            ),
           )
-          return
+          console.log(
+            kleur.gray(
+              "Tip: You can run 'tsci init' to set up a complete project structure.",
+            ),
+          )
+          
+          fs.writeFileSync(defaultEntrypoint, defaultContent)
+          absolutePath = defaultEntrypoint
+          console.log(
+            kleur.green("✓"),
+            "Created default entrypoint at:",
+            defaultEntrypoint,
+          )
         }
       }
 
