@@ -23,8 +23,9 @@ export class DevServer {
   port: number
   /**
    * The path to a component that exports a <board /> or <group /> component
+   * Can be null when running in sandbox mode without a specific file
    */
-  componentFilePath: string
+  componentFilePath: string | null
 
   projectDir: string
   /** Paths or directory names to ignore when syncing files */
@@ -57,12 +58,14 @@ export class DevServer {
     projectDir,
   }: {
     port: number
-    componentFilePath: string
+    componentFilePath?: string | null
     projectDir?: string
   }) {
     this.port = port
-    this.componentFilePath = componentFilePath
-    this.projectDir = projectDir ?? path.dirname(componentFilePath)
+    this.componentFilePath = componentFilePath || null
+    this.projectDir =
+      projectDir ??
+      (componentFilePath ? path.dirname(componentFilePath) : process.cwd())
     const projectConfig = loadProjectConfig(this.projectDir)
     this.ignoredFiles = projectConfig?.ignoredFiles ?? []
     this.fsKy = ky.create({
@@ -74,10 +77,9 @@ export class DevServer {
   async start() {
     const { server } = await createHttpServer({
       port: this.port,
-      defaultMainComponentPath: path.relative(
-        this.projectDir,
-        this.componentFilePath,
-      ),
+      defaultMainComponentPath: this.componentFilePath
+        ? path.relative(this.projectDir, this.componentFilePath)
+        : null,
     })
     this.httpServer = server
 
@@ -123,7 +125,9 @@ export class DevServer {
 
     await this.upsertInitialFiles()
 
-    this.typesHandler?.handleInitialTypeDependencies(this.componentFilePath)
+    if (this.componentFilePath) {
+      this.typesHandler?.handleInitialTypeDependencies(this.componentFilePath)
+    }
   }
 
   async handleFileUpdatedEventFromServer(ev: FileUpdatedEvent) {
@@ -249,6 +253,9 @@ export class DevServer {
   async upsertInitialFiles() {
     const filePaths = getPackageFilePaths(this.projectDir, this.ignoredFiles)
 
+    // In true sandbox mode, don't create any entrypoint files
+    // Let runframe handle the empty state
+
     for (const filePath of filePaths) {
       const fileContent = fs.readFileSync(filePath, "utf-8")
       await this.fsKy.post("api/files/upsert", {
@@ -271,17 +278,19 @@ export class DevServer {
         throwHttpErrors: false,
       })
 
-    await pushSnippet({
-      filePath: this.componentFilePath,
-      onExit: () => {},
-      onError: (e) => {
-        console.error("Failed to save snippet:- ", e)
-        postEvent("FAILED_TO_SAVE_SNIPPET", e)
-      },
-      onSuccess: () => {
-        postEvent("SNIPPET_SAVED")
-      },
-    })
+    if (this.componentFilePath) {
+      await pushSnippet({
+        filePath: this.componentFilePath,
+        onExit: () => {},
+        onError: (e) => {
+          console.error("Failed to save snippet:- ", e)
+          postEvent("FAILED_TO_SAVE_SNIPPET", e)
+        },
+        onSuccess: () => {
+          postEvent("SNIPPET_SAVED")
+        },
+      })
+    }
   }
   async stop() {
     this.httpServer?.close()

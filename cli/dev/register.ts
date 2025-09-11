@@ -36,7 +36,7 @@ export const registerDev = (program: Command) => {
         port += 1
       }
 
-      let absolutePath: string
+      let absolutePath: string | null
 
       if (file) {
         absolutePath = path.resolve(file)
@@ -52,46 +52,31 @@ export const registerDev = (program: Command) => {
           absolutePath = entrypointPath
           console.log("Found entrypoint at:", entrypointPath)
         } else {
-          // Create a default index.tsx file if no entrypoint is found
-          const defaultEntrypoint = path.join(process.cwd(), "index.tsx")
-          const defaultContent = `
-export default () => (
-  <board>
-    <resistor resistance="1k" footprint="0402" name="R1" schX={3} pcbX={3} />
-    <capacitor capacitance="1000pF" footprint="0402" name="C1" schX={-3} pcbX={-3} />
-    <trace from=".R1 > .pin1" to=".C1 > .pin1" />
-  </board>
-)
-`
           console.log(
             kleur.yellow(
-              "No entrypoint found. Creating a default index.tsx file to get you started.",
+              "No entrypoint found. Starting development server in sandbox mode.",
             ),
           )
           console.log(
             kleur.gray(
-              "Tip: You can run 'tsci init' to set up a complete project structure.",
+              "Tip: You can run 'tsci init' to set up a complete project structure or specify a file with 'tsci dev <file>'.",
             ),
           )
-
-          fs.writeFileSync(defaultEntrypoint, defaultContent)
-          absolutePath = defaultEntrypoint
-          console.log(
-            kleur.green("✓"),
-            "Created default entrypoint at:",
-            defaultEntrypoint,
-          )
+          // No file - pure sandbox mode
+          absolutePath = null
         }
       }
 
-      try {
-        process.stdout.write(
-          kleur.gray("Installing types for imported packages..."),
-        )
-        await installNodeModuleTypesForSnippet(absolutePath)
-        console.log(kleur.green(" done"))
-      } catch (error) {
-        console.warn("Failed to install types:", error)
+      if (absolutePath && fs.existsSync(absolutePath)) {
+        try {
+          process.stdout.write(
+            kleur.gray("Installing types for imported packages..."),
+          )
+          await installNodeModuleTypesForSnippet(absolutePath)
+          console.log(kleur.green(" done"))
+        } catch (error) {
+          console.warn("Failed to install types:", error)
+        }
       }
 
       const server = new DevServer({
