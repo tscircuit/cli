@@ -53,9 +53,7 @@ export const registerDev = (program: Command) => {
           console.log("Found entrypoint at:", entrypointPath)
         } else {
           console.log(
-            kleur.yellow(
-              "No entrypoint found. Starting development server.",
-            ),
+            kleur.yellow("No entrypoint found. Starting development server."),
           )
           console.log(
             kleur.gray(
