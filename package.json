@@ -48,8 +48,12 @@
     "tscircuit": "^0.0.633-libonly",
     "tsx": "^4.7.1",
     "typed-ky": "^0.0.4",
-    "easyeda": "^0.0.227",
-    "zod": "3"
+    "zod": "3",
+    "circuit-json-to-tscircuit": "^0.0.9",
+    "kicad-component-converter": "^0.1.14",
+    "kicad-converter": "^0.0.17",
+    "easyeda": "^0.0.227"
+
   },
   "peerDependencies": {
     "tscircuit": "*"
