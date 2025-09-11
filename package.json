@@ -1,6 +1,6 @@
 {
   "name": "@tscircuit/cli",
-  "version": "0.1.203",
+  "version": "0.1.204",
   "main": "dist/main.js",
   "devDependencies": {
     "@babel/standalone": "^7.26.9",
@@ -10,7 +10,7 @@
     "@tscircuit/file-server": "^0.0.24",
     "@tscircuit/math-utils": "0.0.21",
     "@tscircuit/props": "^0.0.315",
-    "@tscircuit/runframe": "^0.0.885",
+    "@tscircuit/runframe": "^0.0.912",
     "@tscircuit/schematic-match-adapt": "^0.0.22",
     "@tscircuit/simple-3d-svg": "^0.0.38",
     "@types/bun": "^1.2.2",
@@ -22,7 +22,7 @@
     "@types/react": "^19.0.8",
     "@types/semver": "^7.5.8",
     "bun-match-svg": "^0.0.12",
-    "chokidar": "4.0.1",
+    "chokidar": "4.0.https://github.com/tscircuit/cli/pull/328/conflict?name=package.json&ancestor_oid=5e84026ecacbe21993750016ef4fe1b63fecfd3e&base_oid=3a37d08ce9d9405897df68c913cf9c289db02390&head_oid=455fa47c91307bcb1691c76336f46d95575cc5591",
     "circuit-json-to-readable-netlist": "^0.0.13",
     "commander": "^14.0.0",
     "conf": "^13.1.0",
@@ -52,6 +52,8 @@
     "circuit-json-to-tscircuit": "^0.0.9",
     "kicad-component-converter": "^0.1.14",
     "kicad-converter": "^0.0.17"
+    "easyeda": "^0.0.227",
+
   },
   "peerDependencies": {
     "tscircuit": "*"
