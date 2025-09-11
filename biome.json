@@ -8,7 +8,7 @@
     "indentStyle": "space"
   },
   "files": {
-    "ignore": ["cosmos-export", "dist", "package.json"]
+    "ignore": ["cosmos-export", "dist", "package.json", "tsconfig.json"]
   },
   "javascript": {
     "formatter": {
@@ -29,9 +29,10 @@
         "noExplicitAny": "off"
       },
       "complexity": {
-        "noForEach": "info"
+        "noForEach": "off"
       },
       "style": {
+        "noUnusedTemplateLiteral": "off",
         "noUselessElse": "off",
         "noNonNullAssertion": "off",
         "useNumberNamespace": "off",

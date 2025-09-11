@@ -1,0 +1,56 @@
+name: tscircuit Smoke Init Test
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  smoke-init-test:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup bun
+        uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: latest
+
+      - name: Install dependencies
+        run: bun install
+
+      - name: Build package
+        run: bun run build
+
+      - name: Pack package
+        run: bun pm pack
+
+      - name: Create temporary directory
+        run: |
+          TEMP_DIR=$(mktemp -d)
+          echo "TEMP_DIR=$TEMP_DIR" >> $GITHUB_ENV
+
+      - name: Install tscircuit globally from packed file
+        run: |
+          PACKAGE_FILE=$(ls *.tgz)
+          npm install -g "$PACKAGE_FILE"
+
+      - name: Test tsci init in temporary directory
+        run: |
+          cd "$TEMP_DIR"
+          tscircuit-cli init -y
+
+      - name: Test tsci build in temporary directory
+        run: |
+          cd "$TEMP_DIR"
+          export DEBUG="tsci:generate-circuit-json"
+          tscircuit-cli build index.tsx
+
+      - name: Verify build output
+        run: |
+          cd "$TEMP_DIR"
+          ls -la
+          test -f index.tsx || (echo "index.tsx not found" && exit 1)

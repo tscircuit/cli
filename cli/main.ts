@@ -7,94 +7,81 @@ import { createServer } from "../lib/server/createServer"
 import { getLocalFileDependencies } from "../lib/dependency-analysis/getLocalFileDependencies"
 // Add GLB export support
 import { convertCircuitJsonToGltf } from "circuit-json-to-gltf"
+import { registerInit } from "./init/register"
+import { registerDev } from "./dev/register"
+import { registerAuthLogin } from "./auth/login/register"
+import { registerAuthLogout } from "./auth/logout/register"
+import { registerAuth } from "./auth/register"
+import { registerConfig } from "./config/register"
+import { registerConfigPrint } from "./config/print/register"
+import { registerClone } from "./clone/register"
+import { perfectCli } from "perfect-cli"
+import { getVersion } from "./../lib/getVersion"
+import { registerExport } from "./export/register"
+import { registerAuthPrintToken } from "./auth/print-token/register"
+import { registerAuthSetToken } from "./auth/set-token/register"
+import { registerPush } from "./push/register"
+import { registerAdd } from "./add/register"
+import { registerUpgradeCommand } from "./upgrade/register"
+import { registerConfigSet } from "./config/set/register"
+import { registerSearch } from "./search/register"
+import { registerImport } from "./import/register"
+import { registerRemove } from "./remove/register"
+import { registerBuild } from "./build/register"
+import { registerSnapshot } from "./snapshot/register"
+import { registerSetup } from "./setup/register"
+import { registerConvert } from "./convert/register"
 
-const program = new Command()
+export const program = new Command()
 
+program.name("tsci").description("CLI for developing tscircuit packages")
+
+registerInit(program)
+
+registerDev(program)
+registerClone(program)
+registerPush(program)
+
+registerAuth(program)
+registerAuthLogin(program)
+registerAuthLogout(program)
+registerAuthPrintToken(program)
+registerAuthSetToken(program)
+
+registerConfig(program)
+registerConfigPrint(program)
+registerConfigSet(program)
+
+registerExport(program)
+registerBuild(program)
+registerAdd(program)
+registerRemove(program)
+registerSnapshot(program)
+registerSetup(program)
+
+registerUpgradeCommand(program)
+
+registerSearch(program)
+registerImport(program)
+registerConvert(program)
+
+// Manually handle --version, -v, and -V flags
+if (
+  process.argv.includes("--version") ||
+  process.argv.includes("-v") ||
+  process.argv.includes("-V")
+) {
+  console.log(getVersion())
+  process.exit(0)
+}
+
+// Add a custom version command
 program
-  .name("snippets")
-  .description("CLI for developing tscircuit snippets")
-  .version("1.0.0")
-
-program
-  .command("dev")
-  .description("Start development server for a snippet")
-  .argument("<file>", "Path to the snippet file")
-  .option("-p, --port <number>", "Port to run server on", "3000")
-  .action(async (file: string, options: { port: string }) => {
-    const absolutePath = path.resolve(file)
-    const fileDir = path.dirname(absolutePath)
-    const port = parseInt(options.port)
-
-    // Start the server
-    await createServer(port)
-
-    await fetch(
-      `http://localhost:${port}/api/files/upsert`,
-      {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          file_path: "entrypoint.tsx",
-          text_content: `
-import MyCircuit from "./snippet.tsx"
-
-circuit.add(<MyCircuit />)
-`,
-        }),
-      },
-    )
-
-    // Function to update file content
-    const updateFile = async (filePath: string) => {
-      try {
-        const content = await fs.promises.readFile(filePath, "utf-8")
-        const response = await fetch(
-          `http://localhost:${port}/api/files/upsert`,
-          {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({
-              file_path: path.relative(fileDir, filePath),
-              text_content: content,
-            }),
-          },
-        )
-        if (!response.ok) {
-          console.error(`Failed to update ${filePath}`)
-        }
-      } catch (error) {
-        console.error(`Error updating ${filePath}:`, error)
-      }
-    }
-
-    // Get initial dependencies
-    let dependencies = new Set([absolutePath])
-    try {
-      const deps = getLocalFileDependencies(absolutePath)
-      deps.forEach((dep) => dependencies.add(dep))
-    } catch (error) {
-      console.warn("Failed to analyze dependencies:", error)
-    }
-
-    // Watch the main file and its dependencies
-    const watcher = chokidar.watch(Array.from(dependencies), {
-      persistent: true,
-      ignoreInitial: false,
-    })
-
-    watcher.on("change", async (filePath) => {
-      console.log(`File ${filePath} changed`)
-      await updateFile(filePath)
-    })
-
-    watcher.on("add", async (filePath) => {
-      console.log(`File ${filePath} added`)
-      await updateFile(filePath)
-    })
-
-    console.log(`Watching ${file} and its dependencies...`)
+  .command("version")
+  .description("Print CLI version")
+  .action(() => {
+    console.log(getVersion())
   })
-
 
 program
   .command("export")
@@ -136,3 +123,18 @@ program
   });
 
 program.parse()
+if (process.argv.length === 2) {
+  // perfectCli uses commander@12 internally which is not strictly
+  // compatible with commander@14's TypeScript types. Cast to any to
+  // avoid a type mismatch.
+  perfectCli(program as any, process.argv).catch((err) => {
+    // Handle cancelled interactive sessions gracefully
+    if (err instanceof Error && err.name === "TypeError") {
+      console.error("\nAborted.")
+      process.exit(130)
+    }
+    throw err
+  })
+} else {
+  program.parse()
+}
