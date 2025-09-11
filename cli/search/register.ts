@@ -1,11 +1,14 @@
 import type { Command } from "commander"
 import { getRegistryApiKy } from "lib/registry-api/get-ky"
+import Fuse from "fuse.js"
 import kleur from "kleur"
 
 export const registerSearch = (program: Command) => {
   program
     .command("search")
-    .description("Search for packages in the tscircuit registry")
+    .description(
+      "Search for footprints, CAD models or packages in the tscircuit ecosystem",
+    )
     .argument("<query>", "Search query (e.g. keyword, author, or package name)")
     .action(async (query: string) => {
       const ky = getRegistryApiKy()
@@ -23,8 +26,11 @@ export const registerSearch = (program: Command) => {
         mfr: string
         package: string
         description: string
+        stock: number
         price: number
       }> = []
+
+      let kicadResults: string[] = []
 
       try {
         results = await ky
@@ -38,6 +44,15 @@ export const registerSearch = (program: Command) => {
           encodeURIComponent(query)
         jlcResults = (await fetch(jlcSearchUrl).then((r) => r.json()))
           .components
+
+        const kicadFiles: string[] = await fetch(
+          "https://kicad-mod-cache.tscircuit.com/kicad_files.json",
+        ).then((r) => r.json())
+        const fuse = new Fuse(kicadFiles)
+        kicadResults = fuse
+          .search(query)
+          .slice(0, 10)
+          .map((r) => r.item)
       } catch (error) {
         console.error(
           kleur.red("Failed to search registry:"),
@@ -46,9 +61,27 @@ export const registerSearch = (program: Command) => {
         process.exit(1)
       }
 
-      if (!results.packages.length && !jlcResults.length) {
+      if (
+        !results.packages.length &&
+        !jlcResults.length &&
+        !kicadResults.length
+      ) {
         console.log(kleur.yellow("No results found matching your query."))
         return
+      }
+
+      if (kicadResults.length) {
+        console.log(
+          kleur
+            .bold()
+            .underline(`Found ${kicadResults.length} footprint(s) from KiCad:`),
+        )
+
+        kicadResults.forEach((path, idx) => {
+          console.log(
+            `${(idx + 1).toString().padStart(2, " ")}. ${path.replace(".kicad_mod", "").replace(".pretty", "")}`,
+          )
+        })
       }
 
       if (results.packages.length) {
@@ -82,7 +115,7 @@ export const registerSearch = (program: Command) => {
 
         jlcResults.forEach((comp, idx) => {
           console.log(
-            `${idx + 1}. ${comp.mfr} (C${comp.lcsc}) - ${comp.description}`,
+            `${idx + 1}. ${comp.mfr} (C${comp.lcsc}) - ${comp.description} (stock: ${comp.stock.toLocaleString("en-US")})`,
           )
         })
       }

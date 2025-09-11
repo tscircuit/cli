@@ -58,7 +58,7 @@ Commands:
                               3d preview)
   setup                       Setup utilities like GitHub Actions
   upgrade                     Upgrade CLI to the latest version
-  search <query>              Search for packages in the tscircuit registry
+  search <query>              Search for footprints, CAD models or packages
   import <query>              Search JLCPCB or the tscircuit registry and import
                               a component
   convert [options] <file>    Convert a .kicad_mod footprint to a tscircuit
