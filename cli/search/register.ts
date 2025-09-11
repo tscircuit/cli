@@ -26,6 +26,7 @@ export const registerSearch = (program: Command) => {
         mfr: string
         package: string
         description: string
+        stock: number
         price: number
       }> = []
 
@@ -73,13 +74,13 @@ export const registerSearch = (program: Command) => {
         console.log(
           kleur
             .bold()
-            .underline(
-              `Found ${kicadResults.length} footprint(s) in KiCad mod cache:`,
-            ),
+            .underline(`Found ${kicadResults.length} footprint(s) from KiCad:`),
         )
 
         kicadResults.forEach((path, idx) => {
-          console.log(`${idx + 1}. ${path}`)
+          console.log(
+            `${(idx + 1).toString().padStart(2, " ")}. ${path.replace(".kicad_mod", "").replace(".pretty", "")}`,
+          )
         })
       }
 
@@ -114,7 +115,7 @@ export const registerSearch = (program: Command) => {
 
         jlcResults.forEach((comp, idx) => {
           console.log(
-            `${idx + 1}. ${comp.mfr} (C${comp.lcsc}) - ${comp.description}`,
+            `${idx + 1}. ${comp.mfr} (C${comp.lcsc}) - ${comp.description} (stock: ${comp.stock.toLocaleString("en-US")})`,
           )
         })
       }
