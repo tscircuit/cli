@@ -77,5 +77,10 @@
     "cli": "bun ./cli/main.ts",
     "pkg-pr-new-release": "bunx pkg-pr-new publish --comment=off --peerDeps"
   },
-  "type": "module"
+  "type": "module",
+  "dependencies": {
+    "circuit-json-to-tscircuit": "^0.0.9",
+    "kicad-component-converter": "^0.1.14",
+    "kicad-converter": "^0.0.17"
+  }
 }
