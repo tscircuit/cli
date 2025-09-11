@@ -36,7 +36,10 @@ export const registerConvert = (program: Command) => {
         const circuitJson = await parseKicadModToCircuitJson(kicadModContent)
 
         // Convert circuit JSON to tscircuit code
-        const tscircuitCode = convertCircuitJsonToTscircuit(circuitJson)
+        const componentName = path.basename(absolutePath, ".kicad_mod")
+        const tscircuitCode = convertCircuitJsonToTscircuit(circuitJson, {
+          componentName,
+        })
 
         // Determine output path
         const outputPath =
