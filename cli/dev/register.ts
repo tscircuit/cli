@@ -73,7 +73,7 @@ export default () => (
               "Tip: You can run 'tsci init' to set up a complete project structure.",
             ),
           )
-          
+
           fs.writeFileSync(defaultEntrypoint, defaultContent)
           absolutePath = defaultEntrypoint
           console.log(
