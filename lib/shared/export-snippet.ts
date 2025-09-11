@@ -6,6 +6,7 @@ import {
   convertCircuitJsonToPcbSvg,
   convertCircuitJsonToSchematicSvg,
 } from "circuit-to-svg"
+import { convertCircuitJsonToGltf } from "circuit-json-to-gltf"
 import { convertCircuitJsonToDsnString } from "dsn-converter"
 import { generateCircuitJson } from "lib/shared/generate-circuit-json"
 
@@ -19,6 +20,7 @@ const ALLOWED_FORMATS = [
   "gerbers",
   "readable-netlist",
   "gltf",
+  "glb",
   "specctra-dsn",
 ] as const
 
@@ -32,6 +34,7 @@ const OUTPUT_EXTENSIONS: Record<ExportFormat, string> = {
   gerbers: "-gerbers.zip",
   "readable-netlist": "-readable.netlist",
   gltf: ".gltf",
+  glb: ".glb",
   "specctra-dsn": ".dsn",
 }
 
@@ -44,7 +47,7 @@ type ExportOptions = {
   onError?: (message: string) => void
   onSuccess: (data: {
     outputDestination: string
-    outputContent: string
+    outputContent: string | Buffer
   }) => void
 }
 
@@ -92,6 +95,22 @@ export const exportSnippet = async ({
     case "readable-netlist":
       outputContent = convertCircuitJsonToReadableNetlist(
         circuitData.circuitJson,
+      )
+      break
+    case "gltf":
+      outputContent = JSON.stringify(
+        await convertCircuitJsonToGltf(circuitData.circuitJson, {
+          format: "gltf",
+        }),
+        null,
+        2,
+      )
+      break
+    case "glb":
+      outputContent = Buffer.from(
+        await convertCircuitJsonToGltf(circuitData.circuitJson, {
+          format: "glb",
+        }),
       )
       break
     default:
