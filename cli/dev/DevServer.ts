@@ -278,19 +278,25 @@ export class DevServer {
         throwHttpErrors: false,
       })
 
-    if (this.componentFilePath) {
-      await pushSnippet({
-        filePath: this.componentFilePath,
-        onExit: () => {},
-        onError: (e) => {
-          console.error("Failed to save snippet:- ", e)
-          postEvent("FAILED_TO_SAVE_SNIPPET", e)
-        },
-        onSuccess: () => {
-          postEvent("SNIPPET_SAVED")
-        },
-      })
+    if (!this.componentFilePath) {
+      const errorMessage =
+        "Cannot save snippet: No component file path specified"
+      console.error(errorMessage)
+      await postEvent("FAILED_TO_SAVE_SNIPPET", errorMessage)
+      throw new Error(errorMessage)
     }
+
+    await pushSnippet({
+      filePath: this.componentFilePath,
+      onExit: () => {},
+      onError: (e) => {
+        console.error("Failed to save snippet:- ", e)
+        postEvent("FAILED_TO_SAVE_SNIPPET", e)
+      },
+      onSuccess: () => {
+        postEvent("SNIPPET_SAVED")
+      },
+    })
   }
   async stop() {
     this.httpServer?.close()
