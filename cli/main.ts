@@ -1,5 +1,12 @@
 #!/usr/bin/env node
 import { Command } from "commander"
+import * as path from "path"
+import * as chokidar from "chokidar"
+import * as fs from "fs"
+import { createServer } from "../lib/server/createServer"
+import { getLocalFileDependencies } from "../lib/dependency-analysis/getLocalFileDependencies"
+// Add GLB export support
+import { convertCircuitJsonToGltf } from "circuit-json-to-gltf"
 import { registerInit } from "./init/register"
 import { registerDev } from "./dev/register"
 import { registerAuthLogin } from "./auth/login/register"
@@ -76,6 +83,46 @@ program
     console.log(getVersion())
   })
 
+program
+  .command("export")
+  .description("Export snippet to a file")
+  .argument("<file>", "Path to the snippet file")
+  .option("-f, --format <format>", "Export format (json|glb)", "json")
+  .option("-o, --output <output>", "Output file path")
+  .action(async (file: string, options: { format: string, output?: string }) => {
+    const absolutePath = path.resolve(file);
+    const format = options.format;
+    const outputPath = options.output || (format === "glb" ? "snippet.glb" : "snippet.json");
+
+    // Load the snippet data (assumes default export)
+    let snippetData;
+    try {
+      snippetData = (await import(absolutePath)).default;
+    } catch (err) {
+      console.error("Failed to load snippet:", err);
+      process.exit(1);
+    }
+
+    if (format === "glb") {
+      const glbBuffer = await convertCircuitJsonToGltf(snippetData, { format: "glb" });
+      if (glbBuffer instanceof ArrayBuffer) {
+        await fs.promises.writeFile(outputPath, Buffer.from(new Uint8Array(glbBuffer)));
+      } else if (Buffer.isBuffer(glbBuffer)) {
+        await fs.promises.writeFile(outputPath, glbBuffer);
+      } else if (glbBuffer instanceof Uint8Array) {
+        await fs.promises.writeFile(outputPath, Buffer.from(glbBuffer));
+      } else {
+        throw new Error("Unsupported GLB buffer type returned by convertCircuitJsonToGltf");
+      }
+      console.log(`Exported GLB to ${outputPath}`);
+    } else {
+      const gltf = await convertCircuitJsonToGltf(snippetData, { format: "gltf" });
+      await fs.promises.writeFile(outputPath, JSON.stringify(gltf, null, 2));
+      console.log(`Exported JSON to ${outputPath}`);
+    }
+  });
+
+program.parse()
 if (process.argv.length === 2) {
   // perfectCli uses commander@12 internally which is not strictly
   // compatible with commander@14's TypeScript types. Cast to any to
