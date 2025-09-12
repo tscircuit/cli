@@ -108,9 +108,9 @@ export const exportSnippet = async ({
       break
     case "glb":
       outputContent = Buffer.from(
-        await convertCircuitJsonToGltf(circuitData.circuitJson, {
+        (await convertCircuitJsonToGltf(circuitData.circuitJson, {
           format: "glb",
-        }),
+        })) as ArrayBuffer,
       )
       break
     default:
