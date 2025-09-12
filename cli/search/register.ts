@@ -10,8 +10,10 @@ export const registerSearch = (program: Command) => {
       "Search for footprints, CAD models or packages in the tscircuit ecosystem",
     )
     .argument("<query>", "Search query (e.g. keyword, author, or package name)")
-    .action(async (query: string) => {
-      const ky = getRegistryApiKy()
+    .option("--kicad", "Only search KiCad footprints")
+    .action(async (query: string, opts: { kicad?: boolean }) => {
+      const onlyKicad = opts.kicad
+
       let results: {
         packages: Array<{
           name: string
@@ -33,17 +35,20 @@ export const registerSearch = (program: Command) => {
       let kicadResults: string[] = []
 
       try {
-        results = await ky
-          .post("packages/search", {
-            json: { query },
-          })
-          .json()
+        if (!onlyKicad) {
+          const ky = getRegistryApiKy()
+          results = await ky
+            .post("packages/search", {
+              json: { query },
+            })
+            .json()
 
-        const jlcSearchUrl =
-          "https://jlcsearch.tscircuit.com/api/search?limit=10&q=" +
-          encodeURIComponent(query)
-        jlcResults = (await fetch(jlcSearchUrl).then((r) => r.json()))
-          .components
+          const jlcSearchUrl =
+            "https://jlcsearch.tscircuit.com/api/search?limit=10&q=" +
+            encodeURIComponent(query)
+          jlcResults = (await fetch(jlcSearchUrl).then((r) => r.json()))
+            .components
+        }
 
         const kicadFiles: string[] = await fetch(
           "https://kicad-mod-cache.tscircuit.com/kicad_files.json",
@@ -62,9 +67,8 @@ export const registerSearch = (program: Command) => {
       }
 
       if (
-        !results.packages.length &&
-        !jlcResults.length &&
-        !kicadResults.length
+        !kicadResults.length &&
+        ((!results.packages.length && !jlcResults.length) || onlyKicad)
       ) {
         console.log(kleur.yellow("No results found matching your query."))
         return
@@ -84,7 +88,7 @@ export const registerSearch = (program: Command) => {
         })
       }
 
-      if (results.packages.length) {
+      if (!onlyKicad && results.packages.length) {
         console.log(
           kleur
             .bold()
@@ -103,7 +107,7 @@ export const registerSearch = (program: Command) => {
         })
       }
 
-      if (jlcResults.length) {
+      if (!onlyKicad && jlcResults.length) {
         console.log()
         console.log(
           kleur
