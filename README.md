@@ -58,7 +58,7 @@ Commands:
                               3d preview)
   setup                       Setup utilities like GitHub Actions
   upgrade                     Upgrade CLI to the latest version
-  search <query>              Search for footprints, CAD models or packages in
+  search [options] <query>    Search for footprints, CAD models or packages in
                               the tscircuit ecosystem
   import <query>              Search JLCPCB or the tscircuit registry and import
                               a component
