@@ -46,8 +46,8 @@ export const registerSearch = (program: Command) => {
           const jlcSearchUrl =
             "https://jlcsearch.tscircuit.com/api/search?limit=10&q=" +
             encodeURIComponent(query)
-          jlcResults = (await fetch(jlcSearchUrl).then((r) => r.json()))
-            .components
+          const jlcResponse = await fetch(jlcSearchUrl).then((r) => r.json())
+          jlcResults = jlcResponse?.components ?? []
         }
 
         const kicadFiles: string[] = await fetch(
