@@ -46,7 +46,7 @@ export const registerImport = (program: Command) => {
           "https://jlcsearch.tscircuit.com/api/search?limit=10&q=" +
           encodeURIComponent(query)
         const resp = await fetch(searchUrl).then((r) => r.json())
-        jlcResults = resp.components
+        jlcResults = (resp as any)?.components ?? []
       } catch (error) {
         console.error(
           kleur.red("Failed to search JLCPCB:"),
