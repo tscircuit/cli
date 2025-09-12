@@ -7,6 +7,8 @@ import {
   convertCircuitJsonToSchematicSvg,
 } from "circuit-to-svg"
 import { convertCircuitJsonToDsnString } from "dsn-converter"
+import { convertCircuitJsonToGltf } from "circuit-json-to-gltf"
+import { ConvertToGLB } from "gltf-import-export"
 import { generateCircuitJson } from "lib/shared/generate-circuit-json"
 
 const writeFileAsync = promisify(fs.writeFile)
@@ -19,6 +21,7 @@ const ALLOWED_FORMATS = [
   "gerbers",
   "readable-netlist",
   "gltf",
+  "glb",
   "specctra-dsn",
 ] as const
 
@@ -32,6 +35,7 @@ const OUTPUT_EXTENSIONS: Record<ExportFormat, string> = {
   gerbers: "-gerbers.zip",
   "readable-netlist": "-readable.netlist",
   gltf: ".gltf",
+  glb: ".glb",
   "specctra-dsn": ".dsn",
 }
 
@@ -44,7 +48,7 @@ type ExportOptions = {
   onError?: (message: string) => void
   onSuccess: (data: {
     outputDestination: string
-    outputContent: string
+    outputContent: string | Buffer
   }) => void
 }
 
@@ -93,6 +97,41 @@ export const exportSnippet = async ({
       outputContent = convertCircuitJsonToReadableNetlist(
         circuitData.circuitJson,
       )
+      break
+    case "gltf":
+      outputContent = JSON.stringify(
+        await convertCircuitJsonToGltf(circuitData.circuitJson, { format: "gltf" }),
+        null,
+        2,
+      )
+      break
+    case "glb":
+      // Generate GLTF first, then convert to GLB using the working method
+      const gltfData = await convertCircuitJsonToGltf(circuitData.circuitJson, { format: "gltf" })
+      
+      // Create temporary GLTF file for conversion
+      const tempGltfPath = path.join(path.dirname(outputDestination), `temp_${Date.now()}.gltf`)
+      const tempGlbPath = path.join(path.dirname(outputDestination), `temp_${Date.now()}.glb`)
+      
+      try {
+        // Write temporary GLTF file
+        await writeFileAsync(tempGltfPath, JSON.stringify(gltfData, null, 2))
+        
+        // Convert GLTF to GLB using the working library
+        ConvertToGLB(gltfData, tempGltfPath, tempGlbPath)
+        
+        // Read the GLB result
+        outputContent = await fs.promises.readFile(tempGlbPath)
+        
+        // Clean up temporary files
+        await fs.promises.unlink(tempGltfPath).catch(() => {})
+        await fs.promises.unlink(tempGlbPath).catch(() => {})
+      } catch (error) {
+        // Clean up temporary files on error
+        await fs.promises.unlink(tempGltfPath).catch(() => {})
+        await fs.promises.unlink(tempGlbPath).catch(() => {})
+        throw error
+      }
       break
     default:
       outputContent = JSON.stringify(circuitData.circuitJson, null, 2)
