@@ -100,29 +100,39 @@ export const exportSnippet = async ({
       break
     case "gltf":
       outputContent = JSON.stringify(
-        await convertCircuitJsonToGltf(circuitData.circuitJson, { format: "gltf" }),
+        await convertCircuitJsonToGltf(circuitData.circuitJson, {
+          format: "gltf",
+        }),
         null,
         2,
       )
       break
     case "glb":
       // Generate GLTF first, then convert to GLB using the working method
-      const gltfData = await convertCircuitJsonToGltf(circuitData.circuitJson, { format: "gltf" })
-      
+      const gltfData = await convertCircuitJsonToGltf(circuitData.circuitJson, {
+        format: "gltf",
+      })
+
       // Create temporary GLTF file for conversion
-      const tempGltfPath = path.join(path.dirname(outputDestination), `temp_${Date.now()}.gltf`)
-      const tempGlbPath = path.join(path.dirname(outputDestination), `temp_${Date.now()}.glb`)
-      
+      const tempGltfPath = path.join(
+        path.dirname(outputDestination),
+        `temp_${Date.now()}.gltf`,
+      )
+      const tempGlbPath = path.join(
+        path.dirname(outputDestination),
+        `temp_${Date.now()}.glb`,
+      )
+
       try {
         // Write temporary GLTF file
         await writeFileAsync(tempGltfPath, JSON.stringify(gltfData, null, 2))
-        
+
         // Convert GLTF to GLB using the working library
         ConvertToGLB(gltfData, tempGltfPath, tempGlbPath)
-        
+
         // Read the GLB result
         outputContent = await fs.promises.readFile(tempGlbPath)
-        
+
         // Clean up temporary files
         await fs.promises.unlink(tempGltfPath).catch(() => {})
         await fs.promises.unlink(tempGlbPath).catch(() => {})

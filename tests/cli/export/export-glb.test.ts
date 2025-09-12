@@ -33,15 +33,13 @@ test("export glb", async () => {
   const { stdout, stderr } = await runCommand(
     `tsci export ${circuitPath} -f glb`,
   )
-  
+
   // Check that the GLB file was created and has content
-  const glbBuffer = await readFile(
-    path.join(tmpDir, "test-circuit.glb"),
-  )
-  
+  const glbBuffer = await readFile(path.join(tmpDir, "test-circuit.glb"))
+
   // GLB files should be binary and have some content
   expect(glbBuffer.length).toBeGreaterThan(0)
-  
+
   // GLB files start with "glTF" magic number
   const magicNumber = glbBuffer.subarray(0, 4).toString()
   expect(magicNumber).toBe("glTF")
@@ -62,7 +60,7 @@ test("export gltf", async () => {
     path.join(tmpDir, "test-circuit.gltf"),
     "utf-8",
   )
-  
+
   const gltfJson = JSON.parse(gltfContent)
   expect(gltfJson).toHaveProperty("asset")
   expect(gltfJson).toHaveProperty("scenes")
