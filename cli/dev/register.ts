@@ -36,7 +36,7 @@ export const registerDev = (program: Command) => {
         port += 1
       }
 
-      let absolutePath: string
+      let absolutePath: string | null
 
       if (file) {
         absolutePath = path.resolve(file)
@@ -53,20 +53,28 @@ export const registerDev = (program: Command) => {
           console.log("Found entrypoint at:", entrypointPath)
         } else {
           console.log(
-            "No entrypoint found. Run 'tsci init' to bootstrap a basic project.",
+            kleur.yellow("No entrypoint found. Starting development server."),
           )
-          return
+          console.log(
+            kleur.gray(
+              "Tip: You can run 'tsci init' to set up a complete project structure or specify a file with 'tsci dev <file>'.",
+            ),
+          )
+          // No file - no entrypoint specified
+          absolutePath = null
         }
       }
 
-      try {
-        process.stdout.write(
-          kleur.gray("Installing types for imported packages..."),
-        )
-        await installNodeModuleTypesForSnippet(absolutePath)
-        console.log(kleur.green(" done"))
-      } catch (error) {
-        console.warn("Failed to install types:", error)
+      if (absolutePath && fs.existsSync(absolutePath)) {
+        try {
+          process.stdout.write(
+            kleur.gray("Installing types for imported packages..."),
+          )
+          await installNodeModuleTypesForSnippet(absolutePath)
+          console.log(kleur.green(" done"))
+        } catch (error) {
+          console.warn("Failed to install types:", error)
+        }
       }
 
       const server = new DevServer({
