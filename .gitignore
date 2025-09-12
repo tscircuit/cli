@@ -178,3 +178,6 @@ dist
 .aider*
 package-lock.json
 *.diff.png
+
+.yalc
+.yalc.lock
