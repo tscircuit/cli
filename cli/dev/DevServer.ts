@@ -19,6 +19,37 @@ import { shouldIgnorePath } from "lib/shared/should-ignore-path"
 
 const debug = Debug("tscircuit:devserver")
 
+const processGltfFile = (absoluteFilePath: string): string => {
+  const gltfContent = fs.readFileSync(absoluteFilePath, "utf-8")
+  try {
+    const gltf = JSON.parse(gltfContent)
+
+    if (gltf.buffers && Array.isArray(gltf.buffers)) {
+      for (const buffer of gltf.buffers) {
+        if (buffer.uri && !buffer.uri.startsWith("data:")) {
+          const binPath = path.resolve(
+            path.dirname(absoluteFilePath),
+            buffer.uri,
+          )
+          if (fs.existsSync(binPath)) {
+            const binContent = fs.readFileSync(binPath)
+            buffer.uri = `data:application/octet-stream;base64,${binContent.toString(
+              "base64",
+            )}`
+          }
+        }
+      }
+    }
+    return JSON.stringify(gltf)
+  } catch (e) {
+    console.error(
+      kleur.red(`Error processing GLTF file ${absoluteFilePath}: ${e}`),
+    )
+    // Fallback to sending raw content
+    return gltfContent
+  }
+}
+
 export class DevServer {
   port: number
   /**
@@ -69,6 +100,14 @@ export class DevServer {
       prefixUrl: `http://localhost:${port}`,
     }) as any
     this.typesHandler = new FilesystemTypesHandler(this.projectDir)
+  }
+
+  private _getProcessedFileContent(absoluteFilePath: string): string {
+    let fileContent = fs.readFileSync(absoluteFilePath, "utf-8")
+    if (path.extname(absoluteFilePath) === ".gltf") {
+      fileContent = processGltfFile(absoluteFilePath)
+    }
+    return fileContent
   }
 
   async start() {
@@ -156,11 +195,14 @@ export class DevServer {
     await this.typesHandler?.handleFileTypeDependencies(absoluteFilePath)
 
     console.log(kleur.green(`Saving: ${relativeFilePath}`))
+
+    const fileContent = this._getProcessedFileContent(absoluteFilePath)
+
     await this.fsKy
       .post("api/files/upsert", {
         json: {
           file_path: relativeFilePath,
-          text_content: fs.readFileSync(absoluteFilePath, "utf-8"),
+          text_content: fileContent,
           initiator: "filesystem_change",
         },
       })
@@ -234,7 +276,7 @@ export class DevServer {
     await this.handleFileRemovedFromFilesystem(oldPath)
 
     // Then upsert the new file
-    const fileContent = fs.readFileSync(newPath, "utf-8")
+    const fileContent = this._getProcessedFileContent(newPath)
     await this.fsKy.post("api/files/upsert", {
       json: {
         file_path: newRelativePath,
@@ -250,7 +292,7 @@ export class DevServer {
     const filePaths = getPackageFilePaths(this.projectDir, this.ignoredFiles)
 
     for (const filePath of filePaths) {
-      const fileContent = fs.readFileSync(filePath, "utf-8")
+      const fileContent = this._getProcessedFileContent(filePath)
       await this.fsKy.post("api/files/upsert", {
         json: {
           file_path: path.relative(this.projectDir, filePath),
