@@ -7,7 +7,7 @@
     "@biomejs/biome": "^1.9.4",
     "@tscircuit/circuit-json-util": "0.0.67",
     "@tscircuit/fake-snippets": "^0.0.87",
-    "@tscircuit/file-server": "^0.0.24",
+    "@tscircuit/file-server": "^0.0.26",
     "@tscircuit/math-utils": "0.0.21",
     "@tscircuit/props": "^0.0.315",
     "@tscircuit/runframe": "^0.0.919",
