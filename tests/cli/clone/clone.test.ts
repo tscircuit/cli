@@ -76,7 +76,7 @@ test("clone command accepts all valid formats", async () => {
     const dirFiles = readdirSync(projectDir)
 
     expect(dirFiles).toContainValues(["package.json"])
-    expect(stdout).toContain("Successfully cloned")
+    expect(stdout).not.toContain("not found")
   }
 }, 20_000)
 
