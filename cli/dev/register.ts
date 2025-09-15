@@ -55,7 +55,7 @@ export const registerDev = (program: Command) => {
 
       if (file) {
         absolutePath = path.resolve(file)
-        if (!absolutePath.endsWith(".tsx")) {
+        if (!absolutePath.endsWith(".tsx") && !absolutePath.endsWith(".ts")) {
           console.error("Error: Only .tsx files are supported")
           return
         }
@@ -72,13 +72,13 @@ export const registerDev = (program: Command) => {
 
           if (availableFiles.length === 0) {
             console.log(
-              "No .tsx files found in the project. Run 'tsci init' to bootstrap a basic project.",
+              "No .tsx or .ts files found in the project. Run 'tsci init' to bootstrap a basic project.",
             )
             return
           }
 
           console.log(
-            "No entrypoint found, but found the following .tsx files:",
+            "No entrypoint found, but found the following .tsx or .ts files:",
           )
 
           const choices = availableFiles.map((filePath, index) => {
