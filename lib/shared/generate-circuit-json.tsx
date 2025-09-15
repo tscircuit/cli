@@ -86,7 +86,8 @@ export async function generateCircuitJson({
   debug(`fsMap: ${abbreviateStringifyObject(fsMap)}`)
 
   // Execute the circuit runner with the virtual file system
-  const MainComponent = await import(filePath)
+  const resolvedFilePath = path.resolve(process.cwd(), filePath)
+  const MainComponent = await import(resolvedFilePath)
 
   // Handle both default export and named exports
   const Component =
