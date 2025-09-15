@@ -76,33 +76,7 @@ export const registerDev = (program: Command) => {
             )
             return
           }
-
-          console.log(
-            "No entrypoint found, but found the following .tsx or .ts files:",
-          )
-
-          const choices = availableFiles.map((filePath, index) => {
-            const relativePath = path.relative(process.cwd(), filePath)
-            return {
-              title: relativePath,
-              value: filePath,
-              selected: index === 0,
-            }
-          })
-
-          const { selectedFile } = await prompts({
-            type: "select",
-            name: "selectedFile",
-            message: "Select a file to start the dev server with:",
-            choices,
-          })
-
-          if (!selectedFile) {
-            console.log("No file selected. Exiting.")
-            return
-          }
-
-          absolutePath = selectedFile
+          absolutePath = availableFiles[0]
           console.log(
             "Selected file:",
             path.relative(process.cwd(), absolutePath),
