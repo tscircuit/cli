@@ -9,7 +9,6 @@ import { getVersion } from "lib/getVersion"
 import { getEntrypoint } from "lib/shared/get-entrypoint"
 import { globbySync } from "globby"
 import { DEFAULT_IGNORED_PATTERNS } from "lib/shared/should-ignore-path"
-import { prompts } from "lib/utils/prompts"
 
 const findSelectableTsxFiles = (projectDir: string): string[] => {
   const files = globbySync(["**/*.tsx", "**/*.ts"], {
