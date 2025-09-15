@@ -79,6 +79,37 @@ export const registerClone = (program: Command) => {
         const dirPath = userSettingToIncludeAuthor
           ? path.resolve(`${author}.${snippetName}`)
           : path.resolve(snippetName)
+
+        // Check if directory already exists
+        if (fs.existsSync(dirPath)) {
+          const prompts = await import("prompts")
+          const response = await prompts.default({
+            type: "select",
+            name: "action",
+            message: `Directory "${path.basename(dirPath)}" already exists. What would you like to do?`,
+            choices: [
+              { title: "Merge files into existing directory", value: "merge" },
+              {
+                title: "Delete existing directory and clone fresh",
+                value: "delete",
+              },
+              { title: "Cancel", value: "cancel" },
+            ],
+          })
+
+          if (!response.action || response.action === "cancel") {
+            console.log("Clone cancelled.")
+            process.exit(0)
+          }
+
+          if (response.action === "delete") {
+            fs.rmSync(dirPath, { recursive: true, force: true })
+            console.log(`Deleted existing directory: ${dirPath}`)
+          } else if (response.action === "merge") {
+            console.log(`Merging files into existing directory: ${dirPath}`)
+          }
+        }
+
         fs.mkdirSync(dirPath, { recursive: true })
 
         for (const fileInfo of packageFileList.package_files) {
