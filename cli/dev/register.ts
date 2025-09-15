@@ -7,6 +7,21 @@ import { DevServer } from "./DevServer"
 import kleur from "kleur"
 import { getVersion } from "lib/getVersion"
 import { getEntrypoint } from "lib/shared/get-entrypoint"
+import { globbySync } from "globby"
+import { DEFAULT_IGNORED_PATTERNS } from "lib/shared/should-ignore-path"
+import { prompts } from "lib/utils/prompts"
+
+const findSelectableTsxFiles = (projectDir: string): string[] => {
+  const files = globbySync(["**/*.tsx", "**/*.ts"], {
+    cwd: projectDir,
+    ignore: DEFAULT_IGNORED_PATTERNS,
+  })
+
+  return files
+    .map((file) => path.resolve(projectDir, file))
+    .filter((file) => fs.existsSync(file))
+    .sort()
+}
 
 export const registerDev = (program: Command) => {
   program
@@ -52,10 +67,46 @@ export const registerDev = (program: Command) => {
           absolutePath = entrypointPath
           console.log("Found entrypoint at:", entrypointPath)
         } else {
+          // Find all .tsx files in the project
+          const availableFiles = findSelectableTsxFiles(process.cwd())
+
+          if (availableFiles.length === 0) {
+            console.log(
+              "No .tsx files found in the project. Run 'tsci init' to bootstrap a basic project.",
+            )
+            return
+          }
+
           console.log(
-            "No entrypoint found. Run 'tsci init' to bootstrap a basic project.",
+            "No entrypoint found, but found the following .tsx files:",
           )
-          return
+
+          const choices = availableFiles.map((filePath, index) => {
+            const relativePath = path.relative(process.cwd(), filePath)
+            return {
+              title: relativePath,
+              value: filePath,
+              selected: index === 0,
+            }
+          })
+
+          const { selectedFile } = await prompts({
+            type: "select",
+            name: "selectedFile",
+            message: "Select a file to start the dev server with:",
+            choices,
+          })
+
+          if (!selectedFile) {
+            console.log("No file selected. Exiting.")
+            return
+          }
+
+          absolutePath = selectedFile
+          console.log(
+            "Selected file:",
+            path.relative(process.cwd(), absolutePath),
+          )
         }
       }
 
