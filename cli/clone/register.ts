@@ -17,27 +17,27 @@ export const registerClone = (program: Command) => {
     )
     .option("-a, --include-author", "Include author name in the directory path")
     .action(
-      async (snippetPath: string, options: { includeAuthor?: boolean }) => {
+      async (packagePath: string, options: { includeAuthor?: boolean }) => {
         // First try to match URL format (strict tscircuit.com only)
-        const urlMatch = snippetPath.match(
+        const urlMatch = packagePath.match(
           /^https:\/\/tscircuit\.com\/([^\/]+)\/([^\/]+)\/?$/i,
         )
         // Then try the original format
         const originalMatch =
-          !urlMatch && snippetPath.match(/^(?:@tsci\/)?([^/.]+)[/.]([^/.]+)$/)
+          !urlMatch && packagePath.match(/^(?:@tsci\/)?([^/.]+)[/.]([^/.]+)$/)
         const originalCwd = process.cwd()
 
         if (!urlMatch && !originalMatch) {
           console.error(
-            `Invalid package path "${snippetPath}". Accepted formats:\n - author/snippetName\n - author.snippetName \n - @tsci/author.snippetName\n - https://tscircuit.com/author/snippetName`,
+            `Invalid package path "${packagePath}". Accepted formats:\n - author/packageName\n - author.packageName \n - @tsci/author.packageName\n - https://tscircuit.com/author/packageName`,
           )
           process.exit(1)
         }
 
         const match = urlMatch || originalMatch
         if (!match) throw new Error("No valid match found") // Should never happen due to earlier check
-        const [, author, snippetName] = match
-        console.log(`Cloning ${author}/${snippetName}...`)
+        const [, author, packageName] = match
+        console.log(`Cloning ${author}/${packageName}...`)
 
         const ky = getRegistryApiKy()
         let packageFileList: { package_files: Array<{ file_path: string }> } = {
@@ -49,7 +49,7 @@ export const registerClone = (program: Command) => {
               "package_files/list",
               {
                 json: {
-                  package_name: `${author}/${snippetName}`,
+                  package_name: `${author}/${packageName}`,
                   use_latest_version: true,
                 },
               },
@@ -64,7 +64,7 @@ export const registerClone = (program: Command) => {
             (error as any).response?.status === 404
           ) {
             console.error(
-              `Snippet "${author}/${snippetName}" not found. Please check the name and try again.`,
+              `Package "${author}/${packageName}" not found. Please check the name and try again.`,
             )
             process.exit(1)
           }
@@ -77,8 +77,8 @@ export const registerClone = (program: Command) => {
         const userSettingToIncludeAuthor =
           options.includeAuthor || cliConfig.get("alwaysCloneWithAuthorName")
         const dirPath = userSettingToIncludeAuthor
-          ? path.resolve(`${author}.${snippetName}`)
-          : path.resolve(snippetName)
+          ? path.resolve(`${author}.${packageName}`)
+          : path.resolve(packageName)
 
         // Check if directory already exists
         if (fs.existsSync(dirPath)) {
@@ -125,7 +125,7 @@ export const registerClone = (program: Command) => {
                 "package_files/get",
                 {
                   json: {
-                    package_name: `${author}/${snippetName}`,
+                    package_name: `${author}/${packageName}`,
                     file_path: fileInfo.file_path,
                   },
                 },
