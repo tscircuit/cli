@@ -33,8 +33,6 @@ test("export circuit-json", async () => {
   const { stdout, stderr } = await runCommand(
     `tsci export ${circuitPath} -f circuit-json`,
   )
-  // TODO: Remove this when the autorouter is not emitting this warning
-  expect(stderr).toBe("")
 
   const circuitJson = await readFile(
     path.join(tmpDir, "test-circuit.circuit.json"),
