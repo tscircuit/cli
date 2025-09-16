@@ -56,8 +56,8 @@ test("export readable-netlist", async () => {
     - pin2(cathode, neg, right): NOT_CONNECTED
 
     C1 (1000pF 0402)
-    - pin1(anode, pos): NETS(C1_pos)
-    - pin2(cathode, neg): NOT_CONNECTED
+    - pin1(pos, anode): NETS(C1_pos)
+    - pin2(neg, cathode): NOT_CONNECTED
     "
   `)
 })
