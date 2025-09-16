@@ -1,6 +1,6 @@
 import { getCliTestFixture } from "../../fixtures/get-cli-test-fixture"
 import { test, expect } from "bun:test"
-import { writeFile } from "node:fs/promises"
+import { writeFile, readFile } from "node:fs/promises"
 import path from "node:path"
 
 const circuitCode = `export default () => (
@@ -66,6 +66,7 @@ test(
   async () => {
     const { tmpDir, runCommand } = await getCliTestFixture()
     const circuitPath = path.join(tmpDir, "test-circuit.tsx")
+    const expectedCsvPath = path.join(tmpDir, "test-circuit.csv")
 
     await writeFile(circuitPath, circuitCode)
 
@@ -77,14 +78,11 @@ test(
       // This is a temporary state until the autorouter issue is resolved
       expect(stderr).toContain("AutorouterError")
     } else {
-      expect(stdout).toContain(`"header"`)
-      expect(stdout).toContain(`"numVariables"`)
-      expect(stdout).toContain(`"variableNames"`)
-      expect(stdout).toContain(`"V(N1)"`)
-      expect(stdout).toContain(`"V(N2)"`)
-      expect(stdout).toContain(`"V(N3)"`)
-      expect(stdout).toContain(`"numPoints"`)
-      expect(stdout).toContain(`"data"`)
+      expect(stdout).toContain(
+        `Simulation results written to ${expectedCsvPath}`,
+      )
+      const csvContent = await readFile(expectedCsvPath, "utf-8")
+      expect(csvContent).toContain("time,V(N1),V(N2),V(N3)")
     }
   },
   { timeout: 30000 },
