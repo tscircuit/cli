@@ -10,7 +10,7 @@
     "@tscircuit/file-server": "^0.0.30",
     "@tscircuit/math-utils": "0.0.21",
     "@tscircuit/props": "^0.0.315",
-    "@tscircuit/runframe": "^0.0.941",
+    "@tscircuit/runframe": "^0.0.945",
     "@tscircuit/schematic-match-adapt": "^0.0.22",
     "@tscircuit/simple-3d-svg": "^0.0.38",
     "@types/bun": "^1.2.2",
@@ -50,7 +50,7 @@
     "semver": "^7.6.3",
     "sharp": "0.32.6",
     "tempy": "^3.1.0",
-    "tscircuit": "^0.0.633-libonly",
+    "tscircuit": "^0.0.650-libonly",
     "tsx": "^4.7.1",
     "typed-ky": "^0.0.4",
     "zod": "3"
