@@ -24,6 +24,7 @@ import { registerBuild } from "./build/register"
 import { registerSnapshot } from "./snapshot/register"
 import { registerSetup } from "./setup/register"
 import { registerConvert } from "./convert/register"
+import { registerSimulate } from "./simulate/register"
 
 export const program = new Command()
 
@@ -57,6 +58,7 @@ registerUpgradeCommand(program)
 registerSearch(program)
 registerImport(program)
 registerConvert(program)
+registerSimulate(program)
 
 // Manually handle --version, -v, and -V flags
 if (
