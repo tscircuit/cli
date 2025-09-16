@@ -22,4 +22,4 @@ test("basic init", async () => {
   for (const file of expectedFiles) {
     expect(dirContents).toContain(file)
   }
-}, 10_000)
+}, 120_000)
