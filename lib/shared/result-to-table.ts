@@ -23,7 +23,7 @@ function formatRows(rows: string[][]): string {
     .join("\n")
 }
 
-export const resultToNgspiceTable = (result: ResultType): string => {
+export const resultToTable = (result: ResultType): string => {
   const uniqueHeaders: string[] = []
   const uniqueData: (RealDataType | ComplexDataType)[] = []
   const seenHeaders = new Set<string>()

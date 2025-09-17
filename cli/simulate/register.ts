@@ -1,7 +1,7 @@
 import type { Command } from "commander"
 import { generateCircuitJson } from "lib/shared/generate-circuit-json"
 import { runSimulation } from "lib/eecircuit-engine/run-simulation"
-import { resultToNgspiceTable } from "lib/shared/result-to-ngspice-table"
+import { resultToTable } from "lib/shared/result-to-table"
 import { getSpiceWithPaddedSim } from "lib/shared/get-spice-with-sim"
 
 export const registerSimulate = (program: Command) => {
@@ -34,7 +34,7 @@ export const registerSimulate = (program: Command) => {
         console.log(info)
       }
 
-      const tableContent = resultToNgspiceTable(result)
+      const tableContent = resultToTable(result)
 
       console.log(tableContent)
     })
