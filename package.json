@@ -53,7 +53,8 @@
     "tscircuit": "^0.0.650-libonly",
     "tsx": "^4.7.1",
     "typed-ky": "^0.0.4",
-    "zod": "3"
+    "zod": "3",
+    "circuit-json-to-spice": "^0.0.10"
   },
   "peerDependencies": {
     "tscircuit": "*"
