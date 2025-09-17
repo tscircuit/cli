@@ -1,6 +1,6 @@
 import { getCliTestFixture } from "../../fixtures/get-cli-test-fixture"
 import { test, expect } from "bun:test"
-import { writeFile } from "node:fs/promises"
+import { writeFile, readFile } from "node:fs/promises"
 import path from "node:path"
 
 const circuitCode = `export default () => (
@@ -72,19 +72,34 @@ test(
     const { stdout, stderr } = await runCommand(
       `tsci export ${circuitPath} -f spice`,
     )
-    expect(stdout).toContain("* Circuit JSON to SPICE Netlist")
-    expect(stdout).toContain("Vsimulation_voltage_source_0")
-    expect(stdout).toContain("LL1")
-    expect(stdout).toContain("DD1")
-    expect(stdout).toContain("CC1")
-    expect(stdout).toContain("RR1")
-    expect(stdout).toContain("SM1")
-    expect(stdout).toContain(".END")
 
-    const spiceFileExists = await Bun.file(
-      path.join(tmpDir, "test-circuit.spice.cir"),
-    ).exists()
-    expect(spiceFileExists).toBe(false)
+    const expectedSpicePath = path.join(tmpDir, "test-circuit.spice.cir")
+    const expectedCsvPath = path.join(tmpDir, "test-circuit.csv")
+
+    expect(stdout).toContain(
+      `Exported to ${expectedSpicePath} and ${expectedCsvPath} (simulation results)!`,
+    )
+
+    const spiceContent = await readFile(expectedSpicePath, "utf-8")
+    expect(spiceContent).toContain("* Circuit JSON to SPICE Netlist")
+    expect(spiceContent).toContain(".tran")
+    expect(spiceContent).toContain("Vsimulation_voltage_source_0")
+    expect(spiceContent).toContain("LL1")
+    expect(spiceContent).toContain("DD1")
+    expect(spiceContent).toContain("CC1")
+    expect(spiceContent).toContain("RR1")
+    expect(spiceContent).toContain("SM1")
+    expect(spiceContent).toContain(".END")
+
+    const csvContent = await readFile(expectedCsvPath, "utf-8")
+
+    expect(csvContent).toContain("time,")
+    expect(csvContent).toContain("v(n")
+    const csvLines = csvContent.trim().split("\n")
+    expect(csvLines.length).toBeGreaterThan(10)
+    const headerColumns = csvLines[0].split(",")
+    const firstDataLine = csvLines[1]
+    expect(firstDataLine.split(",").length).toBe(headerColumns.length)
   },
-  { timeout: 20000 },
+  { timeout: 30000 },
 )

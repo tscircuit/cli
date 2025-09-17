@@ -66,7 +66,6 @@ test(
   async () => {
     const { tmpDir, runCommand } = await getCliTestFixture()
     const circuitPath = path.join(tmpDir, "test-circuit.tsx")
-    const expectedCsvPath = path.join(tmpDir, "test-circuit.csv")
 
     await writeFile(circuitPath, circuitCode)
 
@@ -74,19 +73,31 @@ test(
       `tsci simulate analog ${circuitPath}`,
     )
 
-    if (stderr.includes("AutorouterError")) {
-      // This is a temporary state until the autorouter issue is resolved
-      expect(stderr).toContain("AutorouterError")
-    } else {
-      expect(stdout).toContain(
-        `Simulation results written to ${expectedCsvPath}`,
-      )
-      const csvContent = await readFile(expectedCsvPath, "utf-8")
-      const headers = csvContent.split("\n")[0]
-      expect(headers).toContain("time")
-      expect(headers).toContain("V(N") // check for some voltage probe
-      expect(headers).toContain("I(V") // check for some current probe
-    }
+    // Check for tabular headers
+    expect(stdout).toContain("Index  time")
+    expect(stdout).toContain("v(n") // check for some voltage probe
+    expect(stdout).toContain("i(v") // check for some current probe
+
+    // Check for tabular data, ignoring ngspice info output
+    const lines = stdout.trim().split("\n")
+    const headerLine = lines.find((line) => line.trim().startsWith("Index"))
+    expect(headerLine).toBeDefined()
+
+    const headerColumns = headerLine!.trim().split(/\s{2,}/)
+    const dataLines = lines.filter((line) => /^\s*\d+\s+/.test(line))
+    expect(dataLines.length).toBeGreaterThan(10)
+
+    const firstDataLine = dataLines[0]
+    expect(firstDataLine.trim().split(/\s{2,}/).length).toBe(
+      headerColumns.length,
+    )
+
+    // Check for exponential notation in data
+    expect(firstDataLine).toMatch(/\d\.\d{6}e[+-]\d+/)
+
+    // Check that there are no duplicate headers
+    const uniqueHeaders = new Set(headerColumns)
+    expect(uniqueHeaders.size).toBe(headerColumns.length)
   },
   { timeout: 30000 },
 )

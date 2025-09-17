@@ -1,9 +1,7 @@
 import type { Command } from "commander"
 import { generateCircuitJson } from "lib/shared/generate-circuit-json"
 import { runSimulation } from "lib/eecircuit-engine/run-simulation"
-import path from "node:path"
-import { promises as fs } from "node:fs"
-import { resultToCsv } from "lib/shared/result-to-csv"
+import { resultToNgspiceTable } from "lib/shared/result-to-ngspice-table"
 import { getSpiceWithPaddedSim } from "lib/shared/get-spice-with-sim"
 
 export const registerSimulate = (program: Command) => {
@@ -26,15 +24,18 @@ export const registerSimulate = (program: Command) => {
       }
       const spiceString = getSpiceWithPaddedSim(circuitJson)
 
-      const result = await runSimulation(spiceString)
+      const { result, info, errors } = await runSimulation(spiceString)
 
-      const outputCsvPath = path.join(
-        path.dirname(file),
-        `${path.basename(file, path.extname(file))}.csv`,
-      )
-      const csvContent = resultToCsv(result)
+      if (errors?.length > 0) {
+        console.error(errors.join("\n"))
+      }
 
-      await fs.writeFile(outputCsvPath, csvContent)
-      console.log(`Simulation results written to ${outputCsvPath}`)
+      if (info) {
+        console.log(info)
+      }
+
+      const tableContent = resultToNgspiceTable(result)
+
+      console.log(tableContent)
     })
 }

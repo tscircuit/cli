@@ -1,4 +1,10 @@
 import type * as EecircuitEngine from "lib/types/eecircuit-engine"
+
+export interface SimulationOutput {
+  result: EecircuitEngine.ResultType
+  info: string
+  errors: string[]
+}
 import { promises as fs, existsSync } from "node:fs"
 import path from "node:path"
 import os from "node:os"
@@ -32,10 +38,31 @@ const initializeSimulation = async () => {
   if (sim && sim.isInitialized()) return
   const Simulation = await fetchSimulation()
   sim = new Simulation()
-  await sim.start()
+  sim.start() // This is async, but we won't wait for it to complete
+
+  const startTime = Date.now()
+  const timeout = 15000 // 15 seconds
+
+  while (!sim.isInitialized()) {
+    if (Date.now() - startTime > timeout) {
+      console.error("Error: Simulation engine initialization timed out.")
+      const initInfo = sim.getInitInfo()
+      if (initInfo) {
+        console.error("Initialization Info:", initInfo)
+      }
+      const errors = sim.getError()
+      if (errors && errors.length > 0) {
+        console.error("Errors:", errors.join("\n"))
+      }
+      throw new Error("Simulation engine initialization timed out.")
+    }
+    await new Promise((resolve) => setTimeout(resolve, 200)) // Poll every 200ms
+  }
 }
 
-export const runSimulation = async (spiceString: string) => {
+export const runSimulation = async (
+  spiceString: string,
+): Promise<SimulationOutput> => {
   await initializeSimulation()
   if (!sim) throw new Error("Simulation not initialized")
 
@@ -59,5 +86,9 @@ export const runSimulation = async (spiceString: string) => {
 
   sim.setNetList(engineSpiceString)
   const result = await sim.runSim()
-  return result
+  return {
+    result,
+    info: sim.getInfo(),
+    errors: sim.getError(),
+  }
 }
