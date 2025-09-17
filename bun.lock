@@ -46,7 +46,7 @@
         "ky": "^1.7.4",
         "looks-same": "^9.0.1",
         "make-vfs": "^1.0.15",
-        "perfect-cli": "^1.0.20",
+        "perfect-cli": "^1.0.21",
         "prompts": "^2.4.2",
         "redaxios": "^0.5.1",
         "semver": "^7.6.3",
@@ -1411,7 +1411,7 @@
 
     "path-type": ["path-type@6.0.0", "", {}, "sha512-Vj7sf++t5pBD637NSfkxpHSMfWaeig5+DKWLhcqIYx6mWQz5hdJTGDVMQiJcw1ZYkhs7AazKDGpRVji1LJCZUQ=="],
 
-    "perfect-cli": ["perfect-cli@1.0.20", "", { "dependencies": { "commander": "^12.0.0", "minimist": "^1.2.8", "prompts": "^2.4.2" } }, "sha512-/dxQ2Itz45Id0A1csqTCQ/kfWpPGmC2pPBz/L2hYSmpc0AaB6LhuyXrsCBycwH+YFz6+0mYN3IhdT96JMYgYbg=="],
+    "perfect-cli": ["perfect-cli@1.0.21", "", { "dependencies": { "commander": "^12.0.0", "minimist": "^1.2.8", "prompts": "^2.4.2" } }, "sha512-OFtzlURQqXXkBe6STMxqShWuUnL8CMaf9h/1GxW1okbfSTA/xFewDviJUOQbml8STEH63IZ9l2UEx8l2Hp2f6w=="],
 
     "performance-now": ["performance-now@2.1.0", "", {}, "sha512-7EAHlyLHI56VEIdK57uwHdHKIaAGbnXPiw0yWbarQZOKaKpvUIgW0jWRVLiatnM+XXlSwsanIBH/hzGMJulMow=="],
 
