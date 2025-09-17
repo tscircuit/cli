@@ -25,7 +25,7 @@ import { registerSnapshot } from "./snapshot/register"
 import { registerSetup } from "./setup/register"
 import { registerConvert } from "./convert/register"
 
-export const program = new Command()
+export const program = new Command().allowExcessArguments(true)
 
 program.name("tsci").description("CLI for developing tscircuit packages")
 
