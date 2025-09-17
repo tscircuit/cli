@@ -19,6 +19,13 @@ import { shouldIgnorePath } from "lib/shared/should-ignore-path"
 
 const debug = Debug("tscircuit:devserver")
 
+const BINARY_FILE_EXTENSIONS = new Set([".glb", ".png", ".jpeg", ".jpg"])
+
+type FileUploadPayload = Pick<
+  FileServerRoutes["api/files/upsert"]["POST"]["requestJson"],
+  "text_content" | "binary_content_b64"
+>
+
 export class DevServer {
   port: number
   /**
@@ -142,7 +149,12 @@ export class DevServer {
       fs.mkdirSync(dirPath, { recursive: true })
     }
 
-    fs.writeFileSync(fullPath, file.text_content)
+    if (file.binary_content_b64) {
+      const decodedContent = Buffer.from(file.binary_content_b64, "base64")
+      fs.writeFileSync(fullPath, decodedContent)
+    } else {
+      fs.writeFileSync(fullPath, file.text_content ?? "", "utf-8")
+    }
   }
 
   async handleFileChangedOnFilesystem(absoluteFilePath: string) {
@@ -155,13 +167,18 @@ export class DevServer {
 
     await this.typesHandler?.handleFileTypeDependencies(absoluteFilePath)
 
+    const filePayload = this.createFileUploadPayload(
+      absoluteFilePath,
+      relativeFilePath,
+    )
+
     console.log(kleur.green(`Saving: ${relativeFilePath}`))
     await this.fsKy
       .post("api/files/upsert", {
         json: {
           file_path: relativeFilePath,
-          text_content: fs.readFileSync(absoluteFilePath, "utf-8"),
           initiator: "filesystem_change",
+          ...filePayload,
         },
       })
       .json()
@@ -234,12 +251,12 @@ export class DevServer {
     await this.handleFileRemovedFromFilesystem(oldPath)
 
     // Then upsert the new file
-    const fileContent = fs.readFileSync(newPath, "utf-8")
+    const filePayload = this.createFileUploadPayload(newPath, newRelativePath)
     await this.fsKy.post("api/files/upsert", {
       json: {
         file_path: newRelativePath,
-        text_content: fileContent,
         initiator: "filesystem_change",
+        ...filePayload,
       },
     })
 
@@ -250,12 +267,16 @@ export class DevServer {
     const filePaths = getPackageFilePaths(this.projectDir, this.ignoredFiles)
 
     for (const filePath of filePaths) {
-      const fileContent = fs.readFileSync(filePath, "utf-8")
+      const relativeFilePath = path.relative(this.projectDir, filePath)
+      const filePayload = this.createFileUploadPayload(
+        filePath,
+        relativeFilePath,
+      )
       await this.fsKy.post("api/files/upsert", {
         json: {
-          file_path: path.relative(this.projectDir, filePath),
-          text_content: fileContent,
+          file_path: relativeFilePath,
           initiator: "filesystem_change",
+          ...filePayload,
         },
       })
     }
@@ -287,6 +308,20 @@ export class DevServer {
     this.httpServer?.close()
     this.eventsWatcher?.stop()
     await this.filesystemWatcher?.close()
+  }
+
+  private createFileUploadPayload(
+    absoluteFilePath: string,
+    relativeFilePath: string,
+  ): FileUploadPayload {
+    const ext = path.extname(relativeFilePath).toLowerCase()
+
+    if (BINARY_FILE_EXTENSIONS.has(ext)) {
+      const fileBuffer = fs.readFileSync(absoluteFilePath)
+      return { binary_content_b64: fileBuffer.toString("base64") }
+    }
+
+    return { text_content: fs.readFileSync(absoluteFilePath, "utf-8") }
   }
 
   private async handleInstallPackage(full_package_name: string) {

@@ -10,7 +10,8 @@ export interface FileServerRoutes extends EventsRoutes {
         file: {
           file_id: string
           file_path: string
-          text_content: string
+          text_content?: string
+          binary_content_b64?: string
         }
       }
     }
@@ -19,7 +20,8 @@ export interface FileServerRoutes extends EventsRoutes {
     POST: {
       requestJson: {
         file_path: string
-        text_content: string
+        text_content?: string
+        binary_content_b64?: string
         initiator?: "filesystem_change"
       }
       responseJson: {
@@ -57,7 +59,8 @@ export interface FileServerRoutes extends EventsRoutes {
         file: {
           file_id: string
           file_path: string
-          text_content: string
+          text_content?: string
+          binary_content_b64?: string
           created_at: string
         } | null
       }

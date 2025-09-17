@@ -9,11 +9,30 @@ changes.
 
 ```
 POST /files/upsert
-REQUEST: { file_id?, text_content, file_path }
-RESPONSE: { file: { file_id, file_path, text_content } }
+REQUEST: {
+  file_id?,
+  file_path,
+  text_content?,
+  binary_content_b64?
+}
+RESPONSE: {
+  file: {
+    file_id,
+    file_path,
+    text_content?,
+    binary_content_b64?
+  }
+}
 
 GET /files/get?file_id?&file_path?
-RESPONSE: { file: { file_id, file_path, text_content } }
+RESPONSE: {
+  file: {
+    file_id,
+    file_path,
+    text_content?,
+    binary_content_b64?
+  }
+}
 
 GET /files/list
 RESPONSE { file_list: Array<{ file_id, file_path } }
