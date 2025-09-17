@@ -38,42 +38,6 @@ export const registerClone = (program: Command) => {
         if (!match) throw new Error("No valid match found") // Should never happen due to earlier check
         const [, author, packageName] = match
         console.log(`Cloning ${author}/${packageName}...`)
-
-        const ky = getRegistryApiKy()
-        let packageFileList: { package_files: Array<{ file_path: string }> } = {
-          package_files: [],
-        }
-        try {
-          packageFileList = await ky
-            .post<{ package_files: Array<{ file_path: string }> }>(
-              "package_files/list",
-              {
-                json: {
-                  package_name: `${author}/${packageName}`,
-                  use_latest_version: true,
-                },
-              },
-            )
-            .json()
-        } catch (error) {
-          if (
-            typeof error === "object" &&
-            error !== null &&
-            "response" in error &&
-            typeof (error as any).response === "object" &&
-            (error as any).response?.status === 404
-          ) {
-            console.error(
-              `Package "${author}/${packageName}" not found. Please check the name and try again.`,
-            )
-            process.exit(1)
-          }
-          console.error(
-            "Failed to fetch package files:",
-            error instanceof Error ? error.message : error,
-          )
-          process.exit(1)
-        }
         const userSettingToIncludeAuthor =
           options.includeAuthor || cliConfig.get("alwaysCloneWithAuthorName")
         const dirPath = userSettingToIncludeAuthor
@@ -108,6 +72,41 @@ export const registerClone = (program: Command) => {
           } else if (response.action === "merge") {
             console.log(`Merging files into existing directory: ${dirPath}`)
           }
+        }
+        const ky = getRegistryApiKy()
+        let packageFileList: { package_files: Array<{ file_path: string }> } = {
+          package_files: [],
+        }
+        try {
+          packageFileList = await ky
+            .post<{ package_files: Array<{ file_path: string }> }>(
+              "package_files/list",
+              {
+                json: {
+                  package_name: `${author}/${packageName}`,
+                  use_latest_version: true,
+                },
+              },
+            )
+            .json()
+        } catch (error) {
+          if (
+            typeof error === "object" &&
+            error !== null &&
+            "response" in error &&
+            typeof (error as any).response === "object" &&
+            (error as any).response?.status === 404
+          ) {
+            console.error(
+              `Package "${author}/${packageName}" not found. Please check the name and try again.`,
+            )
+            process.exit(1)
+          }
+          console.error(
+            "Failed to fetch package files:",
+            error instanceof Error ? error.message : error,
+          )
+          process.exit(1)
         }
 
         fs.mkdirSync(dirPath, { recursive: true })
