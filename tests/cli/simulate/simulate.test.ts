@@ -82,7 +82,10 @@ test(
         `Simulation results written to ${expectedCsvPath}`,
       )
       const csvContent = await readFile(expectedCsvPath, "utf-8")
-      expect(csvContent).toContain("time,V(N1),V(N2),V(N3)")
+      const headers = csvContent.split("\n")[0]
+      expect(headers).toContain("time")
+      expect(headers).toContain("V(N") // check for some voltage probe
+      expect(headers).toContain("I(V") // check for some current probe
     }
   },
   { timeout: 30000 },

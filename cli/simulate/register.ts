@@ -1,10 +1,10 @@
 import type { Command } from "commander"
 import { generateCircuitJson } from "lib/shared/generate-circuit-json"
-import { circuitJsonToSpice } from "circuit-json-to-spice"
 import { runSimulation } from "lib/eecircuit-engine/run-simulation"
 import path from "node:path"
 import { promises as fs } from "node:fs"
 import { resultToCsv } from "lib/shared/result-to-csv"
+import { getSpiceWithPaddedSim } from "lib/shared/get-spice-with-sim"
 
 export const registerSimulate = (program: Command) => {
   const simulateCommand = program
@@ -24,13 +24,7 @@ export const registerSimulate = (program: Command) => {
         console.log("error: Failed to generate circuit JSON")
         return
       }
-      const spiceNetlist = circuitJsonToSpice(circuitJson as any)
-      let spiceString = spiceNetlist.toSpiceString()
-
-      spiceString = spiceString.replace(
-        /\.END/i,
-        ".tran 1us 1ms\n.probe V(N1) V(N2) V(N3)\n.END",
-      )
+      const spiceString = getSpiceWithPaddedSim(circuitJson)
 
       const result = await runSimulation(spiceString)
 
