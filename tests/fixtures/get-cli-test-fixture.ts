@@ -62,6 +62,8 @@ export async function getCliTestFixture(
     )
     cliConfig.set("githubUsername", "test-user")
     cliConfig.set("sessionToken", token)
+    cliConfig.set("accountId", db.accounts[0].account_id)
+    cliConfig.set("sessionId", "session-123")
   }
 
   // Create command runner
