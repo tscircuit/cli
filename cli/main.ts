@@ -13,6 +13,7 @@ import { getVersion } from "./../lib/getVersion"
 import { registerExport } from "./export/register"
 import { registerAuthPrintToken } from "./auth/print-token/register"
 import { registerAuthSetToken } from "./auth/set-token/register"
+import { registerAuthWhoami } from "./auth/whoami/register"
 import { registerPush } from "./push/register"
 import { registerAdd } from "./add/register"
 import { registerUpgradeCommand } from "./upgrade/register"
@@ -41,6 +42,7 @@ registerAuthLogin(program)
 registerAuthLogout(program)
 registerAuthPrintToken(program)
 registerAuthSetToken(program)
+registerAuthWhoami(program)
 
 registerConfig(program)
 registerConfigPrint(program)

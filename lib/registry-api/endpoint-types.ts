@@ -17,4 +17,22 @@ export interface EndpointResponse {
       token: string
     }
   }
+  "accounts/get": {
+    account: {
+      account_id: string
+      github_username: string
+      shippingInfo?: {
+        firstName: string
+        lastName: string
+        companyName?: string
+        address: string
+        apartment?: string
+        city: string
+        state: string
+        zipCode: string
+        country: string
+        phone: string
+      }
+    }
+  }
 }
