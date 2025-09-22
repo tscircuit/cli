@@ -11,6 +11,7 @@ import {
 } from "circuit-to-svg"
 import { convertCircuitJsonToSimple3dSvg } from "circuit-json-to-simple-3d"
 import { generateCircuitJson } from "lib/shared/generate-circuit-json"
+import type { PlatformConfig } from "@tscircuit/props"
 import {
   DEFAULT_IGNORED_PATTERNS,
   normalizeIgnorePattern,
@@ -30,6 +31,8 @@ type SnapshotOptions = {
   filePaths?: string[]
   /** Force updating snapshots even if they match */
   forceUpdate?: boolean
+  /** Optional platform configuration overrides */
+  platformConfig?: PlatformConfig
   onExit?: (code: number) => void
   onError?: (message: string) => void
   onSuccess?: (message: string) => void
@@ -46,6 +49,7 @@ export const snapshotProject = async ({
   onExit = (code) => process.exit(code),
   onError = (msg) => console.error(msg),
   onSuccess = (msg) => console.log(msg),
+  platformConfig,
 }: SnapshotOptions = {}) => {
   const projectDir = process.cwd()
   const ignore = [
@@ -82,7 +86,10 @@ export const snapshotProject = async ({
   let didUpdate = false
 
   for (const file of boardFiles) {
-    const { circuitJson } = await generateCircuitJson({ filePath: file })
+    const { circuitJson } = await generateCircuitJson({
+      filePath: file,
+      platformConfig,
+    })
     const pcbSvg = convertCircuitJsonToPcbSvg(circuitJson)
     const schSvg = convertCircuitJsonToSchematicSvg(circuitJson)
     const svg3d = threeD
