@@ -16,6 +16,7 @@ export const registerSnapshot = (program: Command) => {
     .option("--3d", "Generate 3d preview snapshots")
     .option("--pcb-only", "Generate only PCB snapshots")
     .option("--schematic-only", "Generate only schematic snapshots")
+    .option("--disable-parts-engine", "Disable the parts engine")
     .action(
       async (
         target: string | undefined,
@@ -25,6 +26,7 @@ export const registerSnapshot = (program: Command) => {
           pcbOnly?: boolean
           schematicOnly?: boolean
           forceUpdate?: boolean
+          disablePartsEngine?: boolean
         },
       ) => {
         await snapshotProject({
@@ -34,6 +36,9 @@ export const registerSnapshot = (program: Command) => {
           schematicOnly: options.schematicOnly ?? false,
           forceUpdate: options.forceUpdate ?? false,
           filePaths: target ? [target] : [],
+          platformConfig: options.disablePartsEngine
+            ? { partsEngineDisabled: true }
+            : undefined,
           onExit: (code) => process.exit(code),
           onError: (msg) => console.error(msg),
           onSuccess: (msg) => console.log(msg),

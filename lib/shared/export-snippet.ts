@@ -9,6 +9,7 @@ import {
 import { convertCircuitJsonToGltf } from "circuit-json-to-gltf"
 import { convertCircuitJsonToDsnString } from "dsn-converter"
 import { generateCircuitJson } from "lib/shared/generate-circuit-json"
+import type { PlatformConfig } from "@tscircuit/props"
 
 const writeFileAsync = promisify(fs.writeFile)
 
@@ -43,6 +44,7 @@ type ExportOptions = {
   format: ExportFormat
   writeFile?: boolean
   outputPath?: string
+  platformConfig?: PlatformConfig
   onExit?: (code: number) => void
   onError?: (message: string) => void
   onSuccess: (data: {
@@ -55,6 +57,7 @@ export const exportSnippet = async ({
   filePath,
   format,
   outputPath,
+  platformConfig,
   writeFile = true,
   onExit = (code) => process.exit(code),
   onError = (message) => console.error(message),
@@ -73,6 +76,7 @@ export const exportSnippet = async ({
   const circuitData = await generateCircuitJson({
     filePath,
     saveToFile: format === "circuit-json",
+    platformConfig,
   }).catch((err) => {
     onError(`Error generating circuit JSON: ${err}`)
     return null
