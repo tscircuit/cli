@@ -77,3 +77,20 @@ test("build without file builds circuit and board files", async () => {
   )
   expect(boardComponent.name).toBe("R1")
 })
+
+test("build without circuit files falls back to main entrypoint", async () => {
+  const { tmpDir, runCommand } = await getCliTestFixture()
+  const mainPath = path.join(tmpDir, "index.tsx")
+  await writeFile(mainPath, circuitCode)
+  await writeFile(path.join(tmpDir, "package.json"), "{}")
+
+  await runCommand(`tsci build`)
+
+  const data = await readFile(
+    path.join(tmpDir, "dist", "index", "circuit.json"),
+    "utf-8",
+  )
+  const json = JSON.parse(data)
+  const component = json.find((c: any) => c.type === "source_component")
+  expect(component.name).toBe("R1")
+})
