@@ -8,6 +8,8 @@ import {
   type StaticBuildFileReference,
 } from "lib/site/getStaticIndexHtmlFile"
 import type { PlatformConfig } from "@tscircuit/props"
+import type { BuildFileResult } from "./build-preview-images"
+import { buildPreviewImages } from "./build-preview-images"
 
 // @ts-ignore
 import runFrameStandaloneBundleContent from "@tscircuit/runframe/standalone" with {
@@ -24,6 +26,7 @@ export const registerBuild = (program: Command) => {
     .option("--disable-pcb", "Disable PCB outputs")
     .option("--disable-parts-engine", "Disable the parts engine")
     .option("--site", "Generate a static site in the dist directory")
+    .option("--preview-images", "Generate preview images in the dist directory")
     .action(
       async (
         file?: string,
@@ -33,11 +36,13 @@ export const registerBuild = (program: Command) => {
           disablePcb?: boolean
           disablePartsEngine?: boolean
           site?: boolean
+          previewImages?: boolean
         },
       ) => {
-        const { projectDir, circuitFiles } = await getBuildEntrypoints({
-          fileOrDir: file,
-        })
+        const { projectDir, circuitFiles, mainEntrypoint } =
+          await getBuildEntrypoints({
+            fileOrDir: file,
+          })
 
         const platformConfig: PlatformConfig | undefined = (() => {
           if (!options?.disablePcb && !options?.disablePartsEngine) return
@@ -61,6 +66,8 @@ export const registerBuild = (program: Command) => {
         let hasErrors = false
         const staticFileReferences: StaticBuildFileReference[] = []
 
+        const builtFiles: BuildFileResult[] = []
+
         for (const filePath of circuitFiles) {
           const relative = path.relative(projectDir, filePath)
           const outputDirName = relative.replace(
@@ -72,6 +79,11 @@ export const registerBuild = (program: Command) => {
             ignoreErrors: options?.ignoreErrors,
             ignoreWarnings: options?.ignoreWarnings,
             platformConfig,
+          })
+          builtFiles.push({
+            sourcePath: filePath,
+            outputPath,
+            ok,
           })
           if (!ok) {
             hasErrors = true
@@ -90,6 +102,14 @@ export const registerBuild = (program: Command) => {
 
         if (hasErrors && !options?.ignoreErrors) {
           process.exit(1)
+        }
+
+        if (options?.previewImages) {
+          await buildPreviewImages({
+            builtFiles,
+            distDir,
+            mainEntrypoint,
+          })
         }
 
         if (options?.site) {
