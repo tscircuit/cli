@@ -8,12 +8,8 @@ import {
   type StaticBuildFileReference,
 } from "lib/site/getStaticIndexHtmlFile"
 import type { PlatformConfig } from "@tscircuit/props"
-import {
-  convertCircuitJsonToPcbSvg,
-  convertCircuitJsonToSchematicSvg,
-} from "circuit-to-svg"
-import { convertCircuitJsonToSimple3dSvg } from "circuit-json-to-simple-3d"
-import sharp from "sharp"
+import type { BuildFileResult } from "./build-preview-images"
+import { buildPreviewImages } from "./build-preview-images"
 
 // @ts-ignore
 import runFrameStandaloneBundleContent from "@tscircuit/runframe/standalone" with {
@@ -70,11 +66,7 @@ export const registerBuild = (program: Command) => {
         let hasErrors = false
         const staticFileReferences: StaticBuildFileReference[] = []
 
-        const builtFiles: Array<{
-          sourcePath: string
-          outputPath: string
-          ok: boolean
-        }> = []
+        const builtFiles: BuildFileResult[] = []
 
         for (const filePath of circuitFiles) {
           const relative = path.relative(projectDir, filePath)
@@ -113,55 +105,11 @@ export const registerBuild = (program: Command) => {
         }
 
         if (options?.previewImages) {
-          const successfulBuilds = builtFiles.filter((file) => file.ok)
-          const normalizedMainEntrypoint = mainEntrypoint
-            ? path.resolve(mainEntrypoint)
-            : undefined
-          const previewBuild = (() => {
-            if (normalizedMainEntrypoint) {
-              const match = successfulBuilds.find(
-                (built) =>
-                  path.resolve(built.sourcePath) === normalizedMainEntrypoint,
-              )
-              if (match) return match
-            }
-            return successfulBuilds[0]
-          })()
-
-          if (!previewBuild) {
-            console.warn(
-              "No successful build output available for preview image generation.",
-            )
-          } else {
-            try {
-              const circuitJsonRaw = fs.readFileSync(
-                previewBuild.outputPath,
-                "utf-8",
-              )
-              const circuitJson = JSON.parse(circuitJsonRaw)
-
-              const pcbSvg = convertCircuitJsonToPcbSvg(circuitJson)
-              const schematicSvg = convertCircuitJsonToSchematicSvg(circuitJson)
-              const simple3dSvg =
-                await convertCircuitJsonToSimple3dSvg(circuitJson)
-
-              fs.writeFileSync(path.join(distDir, "pcb.svg"), pcbSvg, "utf-8")
-              fs.writeFileSync(
-                path.join(distDir, "schematic.svg"),
-                schematicSvg,
-                "utf-8",
-              )
-
-              if (simple3dSvg) {
-                const pngBuffer = await sharp(Buffer.from(simple3dSvg))
-                  .png()
-                  .toBuffer()
-                fs.writeFileSync(path.join(distDir, "3d.png"), pngBuffer)
-              }
-            } catch (error) {
-              console.error("Failed to generate preview images:", error)
-            }
-          }
+          await buildPreviewImages({
+            builtFiles,
+            distDir,
+            mainEntrypoint,
+          })
         }
 
         if (options?.site) {
