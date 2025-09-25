@@ -8,6 +8,12 @@ import {
   type StaticBuildFileReference,
 } from "lib/site/getStaticIndexHtmlFile"
 import type { PlatformConfig } from "@tscircuit/props"
+import {
+  convertCircuitJsonToPcbSvg,
+  convertCircuitJsonToSchematicSvg,
+} from "circuit-to-svg"
+import { convertCircuitJsonToSimple3dSvg } from "circuit-json-to-simple-3d"
+import sharp from "sharp"
 
 // @ts-ignore
 import runFrameStandaloneBundleContent from "@tscircuit/runframe/standalone" with {
@@ -24,6 +30,7 @@ export const registerBuild = (program: Command) => {
     .option("--disable-pcb", "Disable PCB outputs")
     .option("--disable-parts-engine", "Disable the parts engine")
     .option("--site", "Generate a static site in the dist directory")
+    .option("--preview-images", "Generate preview images in the dist directory")
     .action(
       async (
         file?: string,
@@ -33,11 +40,13 @@ export const registerBuild = (program: Command) => {
           disablePcb?: boolean
           disablePartsEngine?: boolean
           site?: boolean
+          previewImages?: boolean
         },
       ) => {
-        const { projectDir, circuitFiles } = await getBuildEntrypoints({
-          fileOrDir: file,
-        })
+        const { projectDir, circuitFiles, mainEntrypoint } =
+          await getBuildEntrypoints({
+            fileOrDir: file,
+          })
 
         const platformConfig: PlatformConfig | undefined = (() => {
           if (!options?.disablePcb && !options?.disablePartsEngine) return
@@ -61,6 +70,12 @@ export const registerBuild = (program: Command) => {
         let hasErrors = false
         const staticFileReferences: StaticBuildFileReference[] = []
 
+        const builtFiles: Array<{
+          sourcePath: string
+          outputPath: string
+          ok: boolean
+        }> = []
+
         for (const filePath of circuitFiles) {
           const relative = path.relative(projectDir, filePath)
           const outputDirName = relative.replace(
@@ -72,6 +87,11 @@ export const registerBuild = (program: Command) => {
             ignoreErrors: options?.ignoreErrors,
             ignoreWarnings: options?.ignoreWarnings,
             platformConfig,
+          })
+          builtFiles.push({
+            sourcePath: filePath,
+            outputPath,
+            ok,
           })
           if (!ok) {
             hasErrors = true
@@ -90,6 +110,58 @@ export const registerBuild = (program: Command) => {
 
         if (hasErrors && !options?.ignoreErrors) {
           process.exit(1)
+        }
+
+        if (options?.previewImages) {
+          const successfulBuilds = builtFiles.filter((file) => file.ok)
+          const normalizedMainEntrypoint = mainEntrypoint
+            ? path.resolve(mainEntrypoint)
+            : undefined
+          const previewBuild = (() => {
+            if (normalizedMainEntrypoint) {
+              const match = successfulBuilds.find(
+                (built) =>
+                  path.resolve(built.sourcePath) === normalizedMainEntrypoint,
+              )
+              if (match) return match
+            }
+            return successfulBuilds[0]
+          })()
+
+          if (!previewBuild) {
+            console.warn(
+              "No successful build output available for preview image generation.",
+            )
+          } else {
+            try {
+              const circuitJsonRaw = fs.readFileSync(
+                previewBuild.outputPath,
+                "utf-8",
+              )
+              const circuitJson = JSON.parse(circuitJsonRaw)
+
+              const pcbSvg = convertCircuitJsonToPcbSvg(circuitJson)
+              const schematicSvg = convertCircuitJsonToSchematicSvg(circuitJson)
+              const simple3dSvg =
+                await convertCircuitJsonToSimple3dSvg(circuitJson)
+
+              fs.writeFileSync(path.join(distDir, "pcb.svg"), pcbSvg, "utf-8")
+              fs.writeFileSync(
+                path.join(distDir, "schematic.svg"),
+                schematicSvg,
+                "utf-8",
+              )
+
+              if (simple3dSvg) {
+                const pngBuffer = await sharp(Buffer.from(simple3dSvg))
+                  .png()
+                  .toBuffer()
+                fs.writeFileSync(path.join(distDir, "3d.png"), pngBuffer)
+              }
+            } catch (error) {
+              console.error("Failed to generate preview images:", error)
+            }
+          }
         }
 
         if (options?.site) {
