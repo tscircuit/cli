@@ -7,7 +7,7 @@ on:
   workflow_dispatch:
 
 env:
-  UPSTREAM_REPO: "tscircuit" # for example: "eval"
+  UPSTREAM_REPOS: "tscircuit" # for example: "eval"
   PACKAGE_NAMES: "@tscircuit/cli" # comma-separated list, e.g. "@tscircuit/core,@tscircuit/props"
 
 jobs:
@@ -26,7 +26,7 @@ jobs:
       - run: npm install -g pver
       - run: bun install --frozen-lockfile
       - run: bun run build
-      - run: pver release
+      - run: pver release --no-push-main
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
           GITHUB_TOKEN: ${{ secrets.TSCIRCUIT_BOT_GITHUB_TOKEN }}
@@ -47,16 +47,22 @@ jobs:
       - name: Enable auto-merge
         if: steps.create-pr.outputs.pull-request-number != ''
         run: |
-          gh pr merge ${{ steps.create-pr.outputs.pull-request-number }} --rebase --delete-branch
+          gh pr merge ${{ steps.create-pr.outputs.pull-request-number }} --auto --squash --delete-branch
         env:
           GH_TOKEN: ${{ secrets.TSCIRCUIT_BOT_GITHUB_TOKEN }}
 
-      - name: Trigger upstream repo update
-        if: env.UPSTREAM_REPO && env.PACKAGE_NAMES
+      - name: Trigger upstream repo updates
+        if: env.UPSTREAM_REPOS && env.PACKAGE_NAMES
         run: |
-          curl -X POST \
-            -H "Accept: application/vnd.github.v3+json" \
-            -H "Authorization: token ${{ secrets.TSCIRCUIT_BOT_GITHUB_TOKEN }}" \
-            -H "Content-Type: application/json" \
-            "https://api.github.com/repos/tscircuit/${{ env.UPSTREAM_REPO }}/actions/workflows/update-package.yml/dispatches" \
-            -d "{\"ref\":\"main\",\"inputs\":{\"package_names\":\"${{ env.PACKAGE_NAMES }}\"}}"
+          IFS=',' read -ra REPOS <<< "${{ env.UPSTREAM_REPOS }}"
+          for repo in "${REPOS[@]}"; do
+            if [[ -n "$repo" ]]; then
+              echo "Triggering update for repo: $repo"
+              curl -X POST \
+                -H "Accept: application/vnd.github.v3+json" \
+                -H "Authorization: token ${{ secrets.TSCIRCUIT_BOT_GITHUB_TOKEN }}" \
+                -H "Content-Type: application/json" \
+                "https://api.github.com/repos/tscircuit/$repo/actions/workflows/update-package.yml/dispatches" \
+                -d "{\"ref\":\"main\",\"inputs\":{\"package_names\":\"${{ env.PACKAGE_NAMES }}\"}}"
+            fi
+          done
