@@ -1,4 +1,4 @@
-import { afterEach, expect, test } from "bun:test"
+import { expect, test } from "bun:test"
 import { DevServer } from "cli/dev/DevServer"
 import getPort from "get-port"
 import * as http from "node:http"
@@ -23,7 +23,7 @@ async function waitForServerReady(url: string, timeout = 5000) {
 let server: http.Server
 let devServer: DevServer
 
-afterEach(async () => {
+globalThis.deferredCleanupFns.push(async () => {
   server?.close()
   await devServer?.stop()
 })

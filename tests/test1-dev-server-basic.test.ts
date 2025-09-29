@@ -1,4 +1,4 @@
-import { afterEach, expect, test } from "bun:test"
+import { expect, test } from "bun:test"
 import { DevServer } from "cli/dev/DevServer"
 import getPort from "get-port"
 import { join } from "node:path"
@@ -40,7 +40,7 @@ test("test1 basic dev server filesystem watching", async () => {
     "snippet.tsx",
   ])
 
-  afterEach(async () => {
-    devServer.stop()
+  globalThis.deferredCleanupFns.push(async () => {
+    await devServer.stop()
   })
 })

@@ -1,6 +1,5 @@
 import { rm } from "node:fs/promises"
 import { resolve } from "node:path"
-import { afterEach, afterAll } from "bun:test"
 import { temporaryDirectory } from "tempy"
 import { startServer } from "./start-server"
 import type { DbClient } from "@tscircuit/fake-snippets"
@@ -143,7 +142,7 @@ export async function getCliTestFixture(
     cliConfig.clear()
   }
 
-  afterAll(cleanup)
+  globalThis.deferredCleanupFns.push(cleanup)
 
   return {
     tmpDir,

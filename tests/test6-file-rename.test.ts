@@ -1,4 +1,4 @@
-import { afterEach, expect, test } from "bun:test"
+import { expect, test } from "bun:test"
 import { DevServer } from "cli/dev/DevServer"
 import getPort from "get-port"
 import { join } from "node:path"
@@ -97,7 +97,7 @@ test("test6 file renaming should be properly detected", async () => {
   const indexPathExists = fs.existsSync(indexPath)
   expect(indexPathExists).toBe(true)
 
-  afterEach(async () => {
+  globalThis.deferredCleanupFns.push(async () => {
     devServer.stop()
   })
 })
