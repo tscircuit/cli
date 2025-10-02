@@ -66,11 +66,7 @@ export function getPackageManager(): PackageManager {
       } else if (pm === "pnpm") {
         installCommand = `pnpm add ${name}`
       } else if (pm === "bun") {
-        if (name.startsWith("@tsci/")) {
-          installCommand = `bun add ${name} --registry https://npm.tscircuit.com`
-        } else {
-          installCommand = `bun add ${name}`
-        }
+        installCommand = `bun add ${name}`
       } else {
         installCommand = `npm install ${name}`
       }
