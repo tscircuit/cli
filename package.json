@@ -12,7 +12,6 @@
     "@tscircuit/props": "^0.0.341",
     "@tscircuit/runframe": "^0.0.1036",
     "@tscircuit/schematic-match-adapt": "^0.0.22",
-    "@tscircuit/simple-3d-svg": "^0.0.38",
     "@types/bun": "^1.2.2",
     "@types/configstore": "^6.0.2",
     "@types/debug": "^4.1.12",
