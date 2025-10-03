@@ -58,11 +58,13 @@ export const buildPreviewImages = async ({
     })
     console.log("Rendering GLB to PNG buffer...")
     if (!(glbBuffer instanceof ArrayBuffer)) {
-      throw new Error("Expected ArrayBuffer from convertCircuitJsonToGltf with glb format")
+      throw new Error(
+        "Expected ArrayBuffer from convertCircuitJsonToGltf with glb format",
+      )
     }
-    const pngBuffer = await renderGLTFToPNGBufferFromGLBBuffer(glbBuffer,{
-      camPos:[10,10,10],
-      lookAt:[0,0,0],
+    const pngBuffer = await renderGLTFToPNGBufferFromGLBBuffer(glbBuffer, {
+      camPos: [10, 10, 10],
+      lookAt: [0, 0, 0],
     })
 
     fs.writeFileSync(path.join(distDir, "pcb.svg"), pcbSvg, "utf-8")
