@@ -4,8 +4,8 @@ import {
   convertCircuitJsonToPcbSvg,
   convertCircuitJsonToSchematicSvg,
 } from "circuit-to-svg"
-import { convertCircuitJsonToSimple3dSvg } from "circuit-json-to-simple-3d"
-import sharp from "sharp"
+import { renderGLTFToPNGBufferFromGLBBuffer } from "poppygl"
+import { convertCircuitJsonToGltf } from "circuit-json-to-gltf"
 
 export interface BuildFileResult {
   sourcePath: string
@@ -48,17 +48,31 @@ export const buildPreviewImages = async ({
     const circuitJsonRaw = fs.readFileSync(previewBuild.outputPath, "utf-8")
     const circuitJson = JSON.parse(circuitJsonRaw)
 
+    console.log("Generating PCB SVG...")
     const pcbSvg = convertCircuitJsonToPcbSvg(circuitJson)
+    console.log("Generating schematic SVG...")
     const schematicSvg = convertCircuitJsonToSchematicSvg(circuitJson)
-    const simple3dSvg = await convertCircuitJsonToSimple3dSvg(circuitJson)
+    console.log("Converting circuit to GLB...")
+    const glbBuffer = await convertCircuitJsonToGltf(circuitJson, {
+      format: "glb",
+    })
+    console.log("Rendering GLB to PNG buffer...")
+    if (!(glbBuffer instanceof ArrayBuffer)) {
+      throw new Error(
+        "Expected ArrayBuffer from convertCircuitJsonToGltf with glb format",
+      )
+    }
+    const pngBuffer = await renderGLTFToPNGBufferFromGLBBuffer(glbBuffer, {
+      camPos: [10, 10, 10],
+      lookAt: [0, 0, 0],
+    })
 
     fs.writeFileSync(path.join(distDir, "pcb.svg"), pcbSvg, "utf-8")
+    console.log("Written pcb.svg")
     fs.writeFileSync(path.join(distDir, "schematic.svg"), schematicSvg, "utf-8")
-
-    if (simple3dSvg) {
-      const pngBuffer = await sharp(Buffer.from(simple3dSvg)).png().toBuffer()
-      fs.writeFileSync(path.join(distDir, "3d.png"), pngBuffer)
-    }
+    console.log("Written schematic.svg")
+    fs.writeFileSync(path.join(distDir, "3d.png"), Buffer.from(pngBuffer))
+    console.log("Written 3d.png")
   } catch (error) {
     console.error("Failed to generate preview images:", error)
   }

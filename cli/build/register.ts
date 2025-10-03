@@ -63,6 +63,8 @@ export const registerBuild = (program: Command) => {
         const distDir = path.join(projectDir, "dist")
         fs.mkdirSync(distDir, { recursive: true })
 
+        console.log(`Building ${circuitFiles.length} file(s)...`)
+
         let hasErrors = false
         const staticFileReferences: StaticBuildFileReference[] = []
 
@@ -70,6 +72,7 @@ export const registerBuild = (program: Command) => {
 
         for (const filePath of circuitFiles) {
           const relative = path.relative(projectDir, filePath)
+          console.log(`Building ${relative}...`)
           const outputDirName = relative.replace(
             /(\.board|\.circuit)?\.tsx$/,
             "",
@@ -104,7 +107,10 @@ export const registerBuild = (program: Command) => {
           process.exit(1)
         }
 
+        console.log("Build complete!")
+
         if (options?.previewImages) {
+          console.log("Generating preview images...")
           await buildPreviewImages({
             builtFiles,
             distDir,

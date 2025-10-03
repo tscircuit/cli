@@ -3,13 +3,12 @@ import path from "node:path"
 import { globbySync } from "globby"
 import kleur from "kleur"
 import looksSame from "looks-same"
-import sharp from "sharp"
-
 import {
   convertCircuitJsonToPcbSvg,
   convertCircuitJsonToSchematicSvg,
 } from "circuit-to-svg"
-import { convertCircuitJsonToSimple3dSvg } from "circuit-json-to-simple-3d"
+import { convertCircuitJsonToGltf } from "circuit-json-to-gltf"
+import { renderGLTFToPNGBufferFromGLBBuffer } from "poppygl"
 import { generateCircuitJson } from "lib/shared/generate-circuit-json"
 import type { PlatformConfig } from "@tscircuit/props"
 import {
@@ -92,18 +91,39 @@ export const snapshotProject = async ({
     })
     const pcbSvg = convertCircuitJsonToPcbSvg(circuitJson)
     const schSvg = convertCircuitJsonToSchematicSvg(circuitJson)
-    const svg3d = threeD
-      ? await convertCircuitJsonToSimple3dSvg(circuitJson)
-      : null
+    let png3d: Buffer | null = null
+    if (threeD) {
+      const glbBuffer = await convertCircuitJsonToGltf(circuitJson, {
+        format: "glb",
+      })
+      if (!(glbBuffer instanceof ArrayBuffer)) {
+        throw new Error(
+          "Expected ArrayBuffer from convertCircuitJsonToGltf with glb format",
+        )
+      }
+      png3d = await renderGLTFToPNGBufferFromGLBBuffer(glbBuffer, {
+        camPos: [10, 10, 10],
+        lookAt: [0, 0, 0],
+      })
+    }
 
     const snapDir = path.join(path.dirname(file), "__snapshots__")
     fs.mkdirSync(snapDir, { recursive: true })
 
     const base = path.basename(file).replace(/\.tsx$/, "")
-    const pairs: Array<["pcb" | "schematic" | "3d", string]> = []
-    if (pcbOnly || !schematicOnly) pairs.push(["pcb", pcbSvg])
-    if (schematicOnly || !pcbOnly) pairs.push(["schematic", schSvg])
-    if (threeD && svg3d) pairs.push(["3d", svg3d])
+    const snapshots: Array<
+      | { type: "pcb" | "schematic"; content: string; isBinary: false }
+      | { type: "3d"; content: Buffer; isBinary: true }
+    > = []
+    if (pcbOnly || !schematicOnly) {
+      snapshots.push({ type: "pcb", content: pcbSvg, isBinary: false })
+    }
+    if (schematicOnly || !pcbOnly) {
+      snapshots.push({ type: "schematic", content: schSvg, isBinary: false })
+    }
+    if (threeD && png3d) {
+      snapshots.push({ type: "3d", content: png3d, isBinary: true })
+    }
 
     if (!looksSame) {
       console.error(
@@ -112,7 +132,8 @@ export const snapshotProject = async ({
       return onExit(1)
     }
 
-    for (const [type, newSvg] of pairs) {
+    for (const snapshot of snapshots) {
+      const { type } = snapshot
       const is3d = type === "3d"
       const snapPath = path.join(
         snapDir,
@@ -120,11 +141,11 @@ export const snapshotProject = async ({
       )
       const existing = fs.existsSync(snapPath)
 
-      const newContentBuffer = is3d
-        ? await sharp(Buffer.from(newSvg)).png().toBuffer()
-        : Buffer.from(newSvg, "utf8")
+      const newContentBuffer = snapshot.isBinary
+        ? snapshot.content
+        : Buffer.from(snapshot.content, "utf8")
 
-      const newContentForFile = is3d ? newContentBuffer : newSvg
+      const newContentForFile = snapshot.content
 
       if (!existing) {
         fs.writeFileSync(snapPath, newContentForFile)

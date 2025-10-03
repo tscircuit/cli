@@ -8,6 +8,11 @@ import {
 } from "circuit-to-svg"
 import { convertCircuitJsonToGltf } from "circuit-json-to-gltf"
 import { convertCircuitJsonToDsnString } from "dsn-converter"
+import {
+  CircuitJsonToKicadPcbConverter,
+  CircuitJsonToKicadSchConverter,
+} from "circuit-json-to-kicad"
+import JSZip from "jszip"
 import { generateCircuitJson } from "lib/shared/generate-circuit-json"
 import type { PlatformConfig } from "@tscircuit/props"
 
@@ -23,6 +28,9 @@ const ALLOWED_FORMATS = [
   "gltf",
   "glb",
   "specctra-dsn",
+  "kicad_sch",
+  "kicad_pcb",
+  "kicad_zip",
 ] as const
 
 export type ExportFormat = (typeof ALLOWED_FORMATS)[number]
@@ -37,6 +45,9 @@ const OUTPUT_EXTENSIONS: Record<ExportFormat, string> = {
   gltf: ".gltf",
   glb: ".glb",
   "specctra-dsn": ".dsn",
+  kicad_sch: ".kicad_sch",
+  kicad_pcb: ".kicad_pcb",
+  kicad_zip: "-kicad.zip",
 }
 
 type ExportOptions = {
@@ -117,6 +128,38 @@ export const exportSnippet = async ({
         })) as ArrayBuffer,
       )
       break
+    case "kicad_sch": {
+      const converter = new CircuitJsonToKicadSchConverter(
+        circuitData.circuitJson,
+      )
+      converter.runUntilFinished()
+      outputContent = converter.getOutputString()
+      break
+    }
+    case "kicad_pcb": {
+      const converter = new CircuitJsonToKicadPcbConverter(
+        circuitData.circuitJson,
+      )
+      converter.runUntilFinished()
+      outputContent = converter.getOutputString()
+      break
+    }
+    case "kicad_zip": {
+      const schConverter = new CircuitJsonToKicadSchConverter(
+        circuitData.circuitJson,
+      )
+      schConverter.runUntilFinished()
+      const pcbConverter = new CircuitJsonToKicadPcbConverter(
+        circuitData.circuitJson,
+      )
+      pcbConverter.runUntilFinished()
+
+      const zip = new JSZip()
+      zip.file(`${outputBaseName}.kicad_sch`, schConverter.getOutputString())
+      zip.file(`${outputBaseName}.kicad_pcb`, pcbConverter.getOutputString())
+      outputContent = await zip.generateAsync({ type: "nodebuffer" })
+      break
+    }
     default:
       outputContent = JSON.stringify(circuitData.circuitJson, null, 2)
   }

@@ -1,7 +1,8 @@
 import * as fs from "node:fs"
 import * as path from "node:path"
-import { execSync } from "node:child_process"
+import { prompts } from "lib/utils/prompts"
 import { getPackageManager } from "./get-package-manager"
+import { resolveTarballUrlFromRegistry } from "./resolve-tarball-url-from-registry"
 
 /**
  * Normalizes a tscircuit component path to an npm package name.
@@ -41,24 +42,49 @@ export async function addPackage(
 
   console.log(`Adding ${packageName}...`)
 
-  // Ensure .npmrc exists with the correct registry
-  const npmrcPath = path.join(projectDir, ".npmrc")
-  const npmrcContent = fs.existsSync(npmrcPath)
-    ? fs.readFileSync(npmrcPath, "utf-8")
-    : ""
+  let installTarget = packageName
 
-  if (!npmrcContent.includes("@tsci:registry=https://npm.tscircuit.com")) {
-    fs.writeFileSync(
-      npmrcPath,
-      `${npmrcContent}\n@tsci:registry=https://npm.tscircuit.com\n`,
-    )
-    console.log("Updated .npmrc with tscircuit registry")
+  if (packageName.startsWith("@tsci/")) {
+    const npmrcPath = path.join(projectDir, ".npmrc")
+    const npmrcContent = fs.existsSync(npmrcPath)
+      ? fs.readFileSync(npmrcPath, "utf-8")
+      : ""
+
+    let hasTsciRegistry = /@tsci[/:]/.test(npmrcContent)
+
+    if (!hasTsciRegistry) {
+      const { addRegistry } = await prompts({
+        type: "confirm",
+        name: "addRegistry",
+        message:
+          "No .npmrc entry for @tsci packages was found. Add '@tsci:registry=https://npm.tscircuit.com'?",
+        initial: true,
+      })
+
+      if (addRegistry) {
+        const trimmedContent = npmrcContent.trimEnd()
+        const newContent =
+          (trimmedContent.length > 0 ? `${trimmedContent}\n` : "") +
+          "@tsci:registry=https://npm.tscircuit.com\n"
+        fs.writeFileSync(npmrcPath, newContent)
+        console.log("Updated .npmrc with tscircuit registry")
+        hasTsciRegistry = true
+      } else {
+        console.log(
+          "Continuing without updating .npmrc; will fetch package directly from registry tarball.",
+        )
+      }
+    }
+
+    if (!hasTsciRegistry) {
+      installTarget = await resolveTarballUrlFromRegistry(packageName)
+    }
   }
 
   // Install the package using the detected package manager
   const packageManager = getPackageManager()
   try {
-    packageManager.install({ name: packageName, cwd: projectDir })
+    packageManager.install({ name: installTarget, cwd: projectDir })
     console.log(`Added ${packageName} successfully.`)
   } catch (error) {
     const errorMessage = error instanceof Error ? error.message : String(error)
