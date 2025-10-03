@@ -35,4 +35,13 @@ export interface EndpointResponse {
       }
     }
   }
+  "orgs/get": {
+    org: {
+      org_id: string
+      name: string
+      user_permissions?: {
+        can_manage_org?: boolean
+      }
+    }
+  }
 }
