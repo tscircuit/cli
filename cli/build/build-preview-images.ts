@@ -48,16 +48,22 @@ export const buildPreviewImages = async ({
     const circuitJsonRaw = fs.readFileSync(previewBuild.outputPath, "utf-8")
     const circuitJson = JSON.parse(circuitJsonRaw)
 
+    console.log("Generating PCB SVG...")
     const pcbSvg = convertCircuitJsonToPcbSvg(circuitJson)
+    console.log("Generating schematic SVG...")
     const schematicSvg = convertCircuitJsonToSchematicSvg(circuitJson)
+    console.log("Generating 3D SVG...")
     const simple3dSvg = await convertCircuitJsonToSimple3dSvg(circuitJson)
 
     fs.writeFileSync(path.join(distDir, "pcb.svg"), pcbSvg, "utf-8")
+    console.log("Written pcb.svg")
     fs.writeFileSync(path.join(distDir, "schematic.svg"), schematicSvg, "utf-8")
+    console.log("Written schematic.svg")
 
     if (simple3dSvg) {
       const pngBuffer = await sharp(Buffer.from(simple3dSvg)).png().toBuffer()
       fs.writeFileSync(path.join(distDir, "3d.png"), pngBuffer)
+      console.log("Written 3d.png")
     }
   } catch (error) {
     console.error("Failed to generate preview images:", error)
