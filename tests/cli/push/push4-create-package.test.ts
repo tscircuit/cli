@@ -13,7 +13,7 @@ test("should create package if it does not exist", async () => {
   fs.writeFileSync(snippetFilePath, "// Snippet content")
   fs.writeFileSync(
     path.resolve(tmpDir, "package.json"),
-    JSON.stringify({ name: "test-package", version: "1.0.0" }),
+    JSON.stringify({ name: "test-user/test-package", version: "1.0.0" }),
   )
 
   const { stdout } = await runCommand(`tsci push ${snippetFilePath}`)
