@@ -14,7 +14,7 @@ test("should bump version if release already exists", async () => {
   fs.writeFileSync(snippetFilePath, "// Snippet content")
   fs.writeFileSync(
     packageJsonPath,
-    JSON.stringify({ name: "test-user/test-package", version: "1.0.0" }),
+    JSON.stringify({ name: "test-package", version: "1.0.0" }),
   )
 
   const { stdout: stdout1, stderr: stderr1 } = await runCommand(

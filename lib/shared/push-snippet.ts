@@ -110,7 +110,7 @@ export const pushSnippet = async ({
 
   // Determine the account name to use (either user or org)
   let accountName = currentUsername
-  if (currentUsername !== packageJsonAuthor) {
+  if (packageJsonAuthor && currentUsername !== packageJsonAuthor) {
     const hasOrgAccess = await checkOrgAccess(ky, packageJsonAuthor)
     if (hasOrgAccess) {
       accountName = packageJsonAuthor
