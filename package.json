@@ -49,7 +49,6 @@
     "looks-same": "^9.0.1",
     "make-vfs": "^1.0.15",
     "md5": "^2.3.0",
-    "openai": "^6.1.0",
     "perfect-cli": "^1.0.21",
     "poppygl": "^0.0.12",
     "prompts": "^2.4.2",
