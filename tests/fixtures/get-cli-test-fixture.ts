@@ -51,14 +51,25 @@ export async function getCliTestFixture(
   cliConfig.set("registryApiUrl", apiUrl)
 
   if (opts.loggedIn) {
-    const token = jwt.sign(
-      {
-        account_id: db.accounts[0].account_id,
-        github_username: "test-user",
-        session_id: "session-123",
-      },
-      "secret",
-    )
+    // Create personal organization for the test account
+    const personalOrg = db.addOrganization({
+      name: "test-user",
+      owner_account_id: db.accounts[0].account_id,
+      is_personal_org: true,
+    })
+
+    // Add the account as a member of their personal org
+    db.addOrganizationAccount({
+      org_id: personalOrg.org_id,
+      account_id: db.accounts[0].account_id,
+      is_owner: true,
+    })
+
+    // Update the account to have the personal_org_id
+    db.accounts[0].personal_org_id = personalOrg.org_id
+
+    // Use account_id directly as the token (not JWT) to match fake-snippets expectations
+    const token = db.accounts[0].account_id
     cliConfig.set("githubUsername", "test-user")
     cliConfig.set("sessionToken", token)
     cliConfig.set("accountId", db.accounts[0].account_id)

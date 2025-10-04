@@ -79,10 +79,10 @@ export const registerClone = (program: Command) => {
         }
         try {
           packageFileList = await ky
-            .post<{ package_files: Array<{ file_path: string }> }>(
+            .get<{ package_files: Array<{ file_path: string }> }>(
               "package_files/list",
               {
-                json: {
+                searchParams: {
                   package_name: `${author}/${packageName}`,
                   use_latest_version: true,
                 },
@@ -120,11 +120,12 @@ export const registerClone = (program: Command) => {
 
           try {
             const fileContent = await ky
-              .post<{ package_file: { content_text: string } }>(
+              .get<{ package_file: { content_text: string } }>(
                 "package_files/get",
                 {
-                  json: {
+                  searchParams: {
                     package_name: `${author}/${packageName}`,
+                    use_latest_version: true,
                     file_path: fileInfo.file_path,
                   },
                 },

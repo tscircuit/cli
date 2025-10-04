@@ -10,6 +10,7 @@ import prompts from "lib/utils/prompts"
 import { getUnscopedPackageName } from "lib/utils/get-unscoped-package-name"
 import { getPackageAuthor } from "lib/utils/get-package-author"
 import { getPackageFilePaths } from "cli/dev/get-package-file-paths"
+import { checkOrgAccess } from "lib/utils/check-org-access"
 
 type PushOptions = {
   filePath?: string
@@ -107,15 +108,29 @@ export const pushSnippet = async ({
     fs.writeFileSync(packageJsonPath, JSON.stringify(packageJson, null, 2))
   }
 
-  if (currentUsername !== packageJsonAuthor) {
-    console.warn(
-      `Package author "${packageJsonAuthor}" does not match the logged in GitHub username "${currentUsername}"`,
-    )
-    // TODO check for org access for user
+  // Determine the account name to use (either user or org)
+  let accountName = currentUsername
+  if (packageJsonAuthor && currentUsername !== packageJsonAuthor) {
+    const hasOrgAccess = await checkOrgAccess(ky, packageJsonAuthor)
+    if (hasOrgAccess) {
+      accountName = packageJsonAuthor
+      console.log(
+        kleur.gray(
+          `Publishing to org "${packageJsonAuthor}" (user: ${currentUsername})`,
+        ),
+      )
+    } else {
+      onError(
+        `You don't have access to the org "${packageJsonAuthor}". Either:\n` +
+          `  1. Get added as a member of the "${packageJsonAuthor}" org, or\n` +
+          `  2. Change the package name in package.json to use your username: "${currentUsername}/${unscopedPackageName}"`,
+      )
+      return onExit(1)
+    }
   }
 
-  const scopedPackageName = `${currentUsername}/${unscopedPackageName}`
-  const tsciPackageName = `@tsci/${currentUsername}.${unscopedPackageName}`
+  const scopedPackageName = `${accountName}/${unscopedPackageName}`
+  const tsciPackageName = `@tsci/${accountName}.${unscopedPackageName}`
 
   const previousPackageReleases = await ky
     .post<{
@@ -166,7 +181,7 @@ export const pushSnippet = async ({
     })
 
   if (!doesPackageExist) {
-    const { createPackage, visibility, snippetType } = await prompts([
+    const { createPackage, visibility } = await prompts([
       {
         type: "confirm",
         name: "createPackage",
@@ -182,15 +197,6 @@ export const pushSnippet = async ({
           { title: "Private", value: "private", selected: isPrivate },
         ],
       },
-      {
-        name: "snippetType",
-        type: "select",
-        message: "Package Type:",
-        choices: [
-          { title: "Reusable Package", value: "package", selected: true },
-          { title: "Board", value: "board" },
-        ],
-      },
     ])
     if (!createPackage || !visibility) {
       onError(`aborted`)
@@ -202,8 +208,6 @@ export const pushSnippet = async ({
         json: {
           name: scopedPackageName,
           is_private: visibility === "private",
-          is_snippet: true,
-          snippet_type: snippetType,
         },
         headers: { Authorization: `Bearer ${sessionToken}` },
       })

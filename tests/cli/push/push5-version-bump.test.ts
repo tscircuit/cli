@@ -23,10 +23,7 @@ test("should bump version if release already exists", async () => {
 
   expect({ stdout: stdout1, stderr: stderr1 }).toMatchInlineSnapshot(`
     {
-      "stderr": 
-    "Package author "test-package" does not match the logged in GitHub username "test-user"
-    "
-    ,
+      "stderr": "",
       "stdout": 
     "Package created
 
@@ -46,10 +43,7 @@ test("should bump version if release already exists", async () => {
 
   expect({ stdout: stdout2, stderr: stderr2 }).toMatchInlineSnapshot(`
     {
-      "stderr": 
-    "Package author "test-package" does not match the logged in GitHub username "test-user"
-    "
-    ,
+      "stderr": "",
       "stdout": 
     "Incrementing Package Version 1.0.0 -> 1.0.1
 
