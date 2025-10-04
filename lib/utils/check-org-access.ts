@@ -13,7 +13,9 @@ export const checkOrgAccess = async (
 ): Promise<boolean> => {
   try {
     const { org } = await ky
-      .get<EndpointResponse["orgs/get"]>(`orgs/get?org_name=${accountName}`)
+      .post<EndpointResponse["orgs/get"]>("orgs/get", {
+        json: { org_name: accountName },
+      })
       .json()
     return org.user_permissions?.can_manage_org ?? false
   } catch {
