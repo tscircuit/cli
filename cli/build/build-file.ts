@@ -16,7 +16,6 @@ export const buildFile = async (
   },
 ): Promise<boolean> => {
   try {
-    console.log("Generating circuit JSON...")
     const result = await generateCircuitJson({
       filePath: input,
       platformConfig: options?.platformConfig,
