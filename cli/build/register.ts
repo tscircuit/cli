@@ -127,7 +127,7 @@ export const registerBuild = (program: Command) => {
             runFrameStandaloneBundleContent,
           )
         }
-        
+
         console.log("Build complete!")
         process.exit(0)
       },
