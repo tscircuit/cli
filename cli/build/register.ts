@@ -107,8 +107,6 @@ export const registerBuild = (program: Command) => {
           process.exit(1)
         }
 
-        console.log("Build complete!")
-
         if (options?.previewImages) {
           console.log("Generating preview images...")
           await buildPreviewImages({
