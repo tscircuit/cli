@@ -6,7 +6,6 @@ import Debug from "debug"
 import type { PlatformConfig } from "@tscircuit/props"
 import { abbreviateStringifyObject } from "lib/utils/abbreviate-stringify-object"
 import { importFromUserLand } from "./importFromUserLand"
-import type { RootCircuit } from "tscircuit"
 
 const debug = Debug("tsci:generate-circuit-json")
 
@@ -48,7 +47,7 @@ export async function generateCircuitJson({
 
   const runner = new userLandTscircuit.RootCircuit({
     platform: platformConfig,
-  }) as RootCircuit
+  })
   const projectDir = path.dirname(filePath)
   const resolvedOutputDir = outputDir || projectDir
 
@@ -108,18 +107,8 @@ export async function generateCircuitJson({
     )
   }
 
-  console.log("adding component")
   runner.add(<Component />)
 
-  runner.on("asyncEffect:start", (effect) => {
-    console.log("asyncEffect:start", effect)
-  })
-  runner.on("asyncEffect:end", (effect) => {
-    console.log("asyncEffect:end", effect)
-  })
-
-  console.log("boardRenderPhaseStarted")
-  runner.render()
   // Wait for the circuit to be fully rendered
   await runner.renderUntilSettled()
 
