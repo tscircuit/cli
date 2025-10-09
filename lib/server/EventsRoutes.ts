@@ -4,6 +4,8 @@ export interface EventsRoutes {
       requestJson: {
         event_type: string
         message?: string
+        file_count?: number
+        [key: string]: any
       }
       responseJson: {
         event: {
@@ -23,7 +25,9 @@ export interface EventsRoutes {
             | "FAILED_TO_SAVE_SNIPPET"
             | "SNIPPET_SAVED"
             | "REQUEST_TO_SAVE_SNIPPET"
-          file_path: string
+            | "INITIAL_FILES_UPLOADED"
+          file_path?: string
+          file_count?: number
           created_at: string
           initiator?: string
         }>

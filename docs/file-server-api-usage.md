@@ -45,6 +45,59 @@ REQUEST { event_type: "..." }
 RESPONSE { event: { event_id, ... } }
 ```
 
+## Events
+
+The file server emits several events that clients (like RunFrame) can listen for:
+
+### INITIAL_FILES_UPLOADED
+
+This event is emitted after all initial files have been uploaded to the file server when the dev server starts. Clients should wait for this event before evaluating circuits in autorun mode to ensure all dependencies are available.
+
+```json
+{
+  "event_type": "INITIAL_FILES_UPLOADED",
+  "file_count": 42,
+  "created_at": "2025-10-09T12:00:00.000Z"
+}
+```
+
+### FILE_UPDATED
+
+Emitted whenever a file is modified or created.
+
+### Other Events
+
+- `REQUEST_TO_SAVE_SNIPPET` - Request from the UI to save the current snippet
+- `SNIPPET_SAVED` - Confirmation that a snippet was saved successfully
+- `FAILED_TO_SAVE_SNIPPET` - Notification that snippet save failed
+- `INSTALL_PACKAGE` - Request to install a package
+- `PACKAGE_INSTALLED` - Confirmation that a package was installed
+- `PACKAGE_INSTALL_FAILED` - Notification that package installation failed
+
+## RunFrame Integration
+
+### Autorun Mode
+
+RunFrame waits for the `INITIAL_FILES_UPLOADED` event before evaluating circuits in autorun mode. This ensures that all dependencies are available before attempting to render the circuit.
+
+The file-server API base URL is passed to RunFrame via the `window.TSCIRCUIT_FILESERVER_API_BASE_URL` variable, which RunFrame uses to:
+- Poll for file updates via `GET /api/events/list`
+- Load file contents via `GET /api/files/get`
+- Create events via `POST /api/events/create`
+
+### Testing File Upload Delays
+
+To test scenarios where file uploads are delayed (e.g., slow network conditions or race conditions), you can use the `DELAY_FILE_UPLOADS` environment variable:
+
+```bash
+DELAY_FILE_UPLOADS=100 tsci dev  # Adds 100ms delay between each file upload
+```
+
+This is useful for:
+- Testing that RunFrame properly waits for `INITIAL_FILES_UPLOADED` before running
+- Simulating slow network conditions
+- Debugging race conditions in file loading
+
 ## Starting the File Server
 
 Here's an example of how to start the file server from a vite plugin that starts the file server:
