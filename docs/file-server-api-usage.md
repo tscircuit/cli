@@ -74,13 +74,29 @@ Emitted whenever a file is modified or created.
 - `PACKAGE_INSTALLED` - Confirmation that a package was installed
 - `PACKAGE_INSTALL_FAILED` - Notification that package installation failed
 
-## Testing File Upload Delays
+## RunFrame Integration
 
-To test scenarios where file uploads are delayed (e.g., slow network), you can use the `DELAY_FILE_UPLOADS` environment variable:
+### Autorun Mode
+
+RunFrame waits for the `INITIAL_FILES_UPLOADED` event before evaluating circuits in autorun mode. This ensures that all dependencies are available before attempting to render the circuit.
+
+The file-server API base URL is passed to RunFrame via the `window.TSCIRCUIT_FILESERVER_API_BASE_URL` variable, which RunFrame uses to:
+- Poll for file updates via `GET /api/events/list`
+- Load file contents via `GET /api/files/get`
+- Create events via `POST /api/events/create`
+
+### Testing File Upload Delays
+
+To test scenarios where file uploads are delayed (e.g., slow network conditions or race conditions), you can use the `DELAY_FILE_UPLOADS` environment variable:
 
 ```bash
 DELAY_FILE_UPLOADS=100 tsci dev  # Adds 100ms delay between each file upload
 ```
+
+This is useful for:
+- Testing that RunFrame properly waits for `INITIAL_FILES_UPLOADED` before running
+- Simulating slow network conditions
+- Debugging race conditions in file loading
 
 ## Starting the File Server
 
