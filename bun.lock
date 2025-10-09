@@ -11,7 +11,7 @@
         "@tscircuit/file-server": "^0.0.30",
         "@tscircuit/math-utils": "0.0.21",
         "@tscircuit/props": "^0.0.341",
-        "@tscircuit/runframe": "^0.0.1062",
+        "@tscircuit/runframe": "^0.0.1063",
         "@tscircuit/schematic-match-adapt": "^0.0.22",
         "@types/bun": "^1.2.2",
         "@types/configstore": "^6.0.2",
@@ -248,7 +248,7 @@
 
     "@tscircuit/props": ["@tscircuit/props@0.0.341", "", { "peerDependencies": { "circuit-json": "*", "react": "*", "zod": "*" } }, "sha512-2+4shXcvrc7Of4JmpVoeqbyDvFKPHPeNmzP292jiW1ZQ3BHSod22Z00k6/YtPqtsFzz89P4D4yWBFZnwzNTsbQ=="],
 
-    "@tscircuit/runframe": ["@tscircuit/runframe@0.0.1062", "", {}, "sha512-mWEjPpENFvdRMcngImBevVtKEAsL+/lpFJKKvjGpQ1V9k7k9ACigGrxKW87dYVOwiquy0wrWciwrfnaiwoeoFw=="],
+    "@tscircuit/runframe": ["@tscircuit/runframe@0.0.1063", "", {}, "sha512-q6zAKyCq6o856kpsOukMJzhTSaz7WEJJpKWQxvFtY6srbX+jR6Nj/vwVtITrgiGj2LcYhTd2hx7lGnPSFAVcCQ=="],
 
     "@tscircuit/schematic-autolayout": ["@tscircuit/schematic-autolayout@0.0.6", "", { "dependencies": { "@tscircuit/soup-util": "^0.0.38", "transformation-matrix": "^2.16.1" } }, "sha512-34cQxtlSylBKyHkzaMBCynaWJgN9c/mWm7cz63StTYIafKmfFs383K8Xoc4QX8HXCvVrHYl1aK15onZua9MxeA=="],
 
