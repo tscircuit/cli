@@ -45,6 +45,43 @@ REQUEST { event_type: "..." }
 RESPONSE { event: { event_id, ... } }
 ```
 
+## Events
+
+The file server emits several events that clients (like RunFrame) can listen for:
+
+### INITIAL_FILES_UPLOADED
+
+This event is emitted after all initial files have been uploaded to the file server when the dev server starts. Clients should wait for this event before evaluating circuits in autorun mode to ensure all dependencies are available.
+
+```json
+{
+  "event_type": "INITIAL_FILES_UPLOADED",
+  "file_count": 42,
+  "created_at": "2025-10-09T12:00:00.000Z"
+}
+```
+
+### FILE_UPDATED
+
+Emitted whenever a file is modified or created.
+
+### Other Events
+
+- `REQUEST_TO_SAVE_SNIPPET` - Request from the UI to save the current snippet
+- `SNIPPET_SAVED` - Confirmation that a snippet was saved successfully
+- `FAILED_TO_SAVE_SNIPPET` - Notification that snippet save failed
+- `INSTALL_PACKAGE` - Request to install a package
+- `PACKAGE_INSTALLED` - Confirmation that a package was installed
+- `PACKAGE_INSTALL_FAILED` - Notification that package installation failed
+
+## Testing File Upload Delays
+
+To test scenarios where file uploads are delayed (e.g., slow network), you can use the `DELAY_FILE_UPLOADS` environment variable:
+
+```bash
+DELAY_FILE_UPLOADS=100 tsci dev  # Adds 100ms delay between each file upload
+```
+
 ## Starting the File Server
 
 Here's an example of how to start the file server from a vite plugin that starts the file server:
