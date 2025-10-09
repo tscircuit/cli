@@ -1,9 +1,15 @@
 import { getSessionToken } from "lib/cli-config"
 
-export const getIndex = async (mainComponentPath?: string) => {
+export const getIndex = async (
+  mainComponentPath?: string,
+  fileServerApiBaseUrl?: string,
+) => {
   const sessionToken = getSessionToken()
   const tokenScript = sessionToken
     ? `\n        window.TSCIRCUIT_REGISTRY_TOKEN = ${JSON.stringify(sessionToken)};`
+    : ""
+  const fileServerApiScript = fileServerApiBaseUrl
+    ? `\n        window.TSCIRCUIT_FILESERVER_API_BASE_URL = ${JSON.stringify(fileServerApiBaseUrl)};`
     : ""
   return `<html>
     <head>
@@ -11,7 +17,7 @@ export const getIndex = async (mainComponentPath?: string) => {
     <body>
       <script>
        ${mainComponentPath ? `window.TSCIRCUIT_DEFAULT_MAIN_COMPONENT_PATH = "${mainComponentPath}";` : ""}
-        window.TSCIRCUIT_USE_RUNFRAME_FOR_CLI = true;${tokenScript}
+        window.TSCIRCUIT_USE_RUNFRAME_FOR_CLI = true;${tokenScript}${fileServerApiScript}
       </script>
       <script src="https://cdn.tailwindcss.com"></script>
       <div id="root">loading...</div>
