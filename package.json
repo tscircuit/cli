@@ -78,7 +78,7 @@
   ],
   "scripts": {
     "start": "bun run dev",
-    "dev": "bun --hot ./cli/main.ts dev ./example-dir/index.circuit.tsx",
+    "dev": "bun --hot ./cli/main.ts dev ./examples/basic/index.circuit.tsx",
     "setup": "bun run build && npm install -g .",
     "build": "bun run build:bun",
     "build:bun": "bun run scripts/bun-build.ts",

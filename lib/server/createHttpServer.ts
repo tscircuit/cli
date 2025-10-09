@@ -55,7 +55,11 @@ export const createHttpServer = async ({
     }
 
     if (url.pathname === "/") {
-      const html = await getIndex(defaultMainComponentPath)
+      const fileServerApiBaseUrl = `http://${req.headers.host}/api`
+      const html = await getIndex(
+        defaultMainComponentPath,
+        fileServerApiBaseUrl,
+      )
       res.writeHead(200, { "Content-Type": "text/html" })
       res.end(html)
       return

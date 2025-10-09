@@ -31,5 +31,5 @@
     "noPropertyAccessFromIndexSignature": false,
     "types": ["@tscircuit/core", "@types/bun"]
   },
-  "exclude": ["example-dir", "dist"]
+  "exclude": ["examples", "dist"]
 }
