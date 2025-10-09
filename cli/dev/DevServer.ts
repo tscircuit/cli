@@ -267,8 +267,8 @@ export class DevServer {
     const filePaths = getPackageFilePaths(this.projectDir, this.ignoredFiles)
 
     // Support for DELAY_FILE_UPLOADS environment variable to test race conditions
-    const delayMs = process.env.DELAY_FILE_UPLOADS 
-      ? parseInt(process.env.DELAY_FILE_UPLOADS, 10) 
+    const delayMs = process.env.DELAY_FILE_UPLOADS
+      ? parseInt(process.env.DELAY_FILE_UPLOADS, 10)
       : 0
 
     for (const filePath of filePaths) {
@@ -277,12 +277,12 @@ export class DevServer {
         filePath,
         relativeFilePath,
       )
-      
+
       if (delayMs > 0) {
         // Add artificial delay between file uploads to simulate slow network
-        await new Promise(resolve => setTimeout(resolve, delayMs))
+        await new Promise((resolve) => setTimeout(resolve, delayMs))
       }
-      
+
       await this.fsKy.post("api/files/upsert", {
         json: {
           file_path: relativeFilePath,
@@ -293,7 +293,9 @@ export class DevServer {
     }
 
     // Emit INITIAL_FILES_UPLOADED event to signal that all initial files have been loaded
-    debug(`All ${filePaths.length} initial files uploaded, emitting INITIAL_FILES_UPLOADED event`)
+    debug(
+      `All ${filePaths.length} initial files uploaded, emitting INITIAL_FILES_UPLOADED event`,
+    )
     await this.fsKy.post("api/events/create", {
       json: {
         event_type: "INITIAL_FILES_UPLOADED",

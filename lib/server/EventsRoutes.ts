@@ -4,6 +4,8 @@ export interface EventsRoutes {
       requestJson: {
         event_type: string
         message?: string
+        file_count?: number
+        [key: string]: any
       }
       responseJson: {
         event: {
