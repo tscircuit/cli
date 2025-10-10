@@ -9,7 +9,7 @@
     "@tscircuit/fake-snippets": "^0.0.110",
     "@tscircuit/file-server": "^0.0.30",
     "@tscircuit/math-utils": "0.0.21",
-    "@tscircuit/props": "^0.0.341",
+    "@tscircuit/props": "^0.0.356",
     "@tscircuit/runframe": "^0.0.1066",
     "@tscircuit/schematic-match-adapt": "^0.0.22",
     "@types/bun": "^1.2.2",
@@ -56,9 +56,10 @@
     "semver": "^7.6.3",
     "sharp": "0.32.6",
     "tempy": "^3.1.0",
-    "tscircuit": "^0.0.693-libonly",
+    "tscircuit": "^0.0.723",
     "tsx": "^4.7.1",
     "typed-ky": "^0.0.4",
+    "circuit-json": "^0.0.275",
     "zod": "3"
   },
   "peerDependencies": {
