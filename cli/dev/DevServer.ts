@@ -188,7 +188,7 @@ export class DevServer {
           event_type: "FILE_UPLOAD_DELAYED",
           file_path: relativeFilePath,
           message: "File upload delayed due to DELAY_FILE_UPLOADS flag",
-        },
+        } as any,
         throwHttpErrors: false,
       })
       // Add a 2 second delay to simulate the issue
@@ -212,7 +212,7 @@ export class DevServer {
           event_type: "FILE_UPLOAD_COMPLETED",
           file_path: relativeFilePath,
           message: "File upload completed after delay",
-        },
+        } as any,
         throwHttpErrors: false,
       })
     }
@@ -318,7 +318,7 @@ export class DevServer {
             file_path: relativeFilePath,
             message:
               "Initial file upload delayed due to DELAY_FILE_UPLOADS flag",
-          },
+          } as any,
           throwHttpErrors: false,
         })
         await new Promise((resolve) => setTimeout(resolve, 1000))
@@ -337,7 +337,7 @@ export class DevServer {
             event_type: "INITIAL_FILE_UPLOAD_COMPLETED",
             file_path: relativeFilePath,
             message: "Initial file upload completed after delay",
-          },
+          } as any,
           throwHttpErrors: false,
         })
       }
@@ -404,7 +404,7 @@ export class DevServer {
         event_type: "TRIGGER_AUTORUN",
         file_path: path.relative(this.projectDir, this.componentFilePath),
         message: "Triggering autorun for main component",
-      },
+      } as any,
       throwHttpErrors: false,
     })
   }
