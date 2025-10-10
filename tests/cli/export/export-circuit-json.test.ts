@@ -33,6 +33,7 @@ test("export circuit-json", async () => {
   const { stdout, stderr } = await runCommand(
     `tsci export ${circuitPath} -f circuit-json`,
   )
+  expect(stderr).toBe("")
 
   const circuitJson = await readFile(
     path.join(tmpDir, "test-circuit.circuit.json"),
