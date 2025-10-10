@@ -32,6 +32,9 @@ export const cliConfig = {
   clear: (): void => {
     getCliConfig().clear()
   },
+  get store() {
+    return getCliConfig().store
+  },
 }
 
 export const getSessionToken = (): string | undefined => {

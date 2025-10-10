@@ -22,6 +22,10 @@ export const generatePackageJson = (
       "snapshot:update": "tsci snapshot --update",
       start: "tsci dev",
     },
+    devDependencies: {
+      "@types/react": "*",
+      "tscircuit": "*",
+    },
   }
 
   writeFileIfNotExists(

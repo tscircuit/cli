@@ -83,7 +83,7 @@ export const registerInit = (program: Command) => {
       // Create essential project files
       writeFileIfNotExists(
         path.join(projectDir, "index.tsx"),
-        `
+        `// @ts-nocheck
 export default () => (
   <board>
     <resistor resistance="1k" footprint="0402" name="R1" schX={3} pcbX={3} />
