@@ -24,7 +24,7 @@ export const generatePackageJson = (
     },
     devDependencies: {
       "@types/react": "*",
-      "tscircuit": "*",
+      tscircuit: "*",
     },
   }
 
