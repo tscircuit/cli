@@ -16,10 +16,17 @@ export interface AutorunModeEvent {
 
 export interface FileUploadEvent {
   event_id: string
-  event_type: "FILE_UPLOAD_DELAYED" | "FILE_UPLOAD_COMPLETED" | "INITIAL_FILE_UPLOAD_DELAYED" | "INITIAL_FILE_UPLOAD_COMPLETED"
+  event_type:
+    | "FILE_UPLOAD_DELAYED"
+    | "FILE_UPLOAD_COMPLETED"
+    | "INITIAL_FILE_UPLOAD_DELAYED"
+    | "INITIAL_FILE_UPLOAD_COMPLETED"
   file_path: string
   message?: string
   created_at: string
 }
 
-export type FileServerEvent = FileUpdatedEvent | AutorunModeEvent | FileUploadEvent
+export type FileServerEvent =
+  | FileUpdatedEvent
+  | AutorunModeEvent
+  | FileUploadEvent

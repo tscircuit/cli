@@ -131,7 +131,7 @@ export class DevServer {
     await this.upsertInitialFiles()
 
     this.typesHandler?.handleInitialTypeDependencies(this.componentFilePath)
-    
+
     // Handle autorun mode
     const autorunMode = process.env.TSCIRCUIT_AUTORUN_MODE === "true"
     if (autorunMode) {
@@ -187,12 +187,12 @@ export class DevServer {
         json: {
           event_type: "FILE_UPLOAD_DELAYED",
           file_path: relativeFilePath,
-          message: "File upload delayed due to DELAY_FILE_UPLOADS flag"
+          message: "File upload delayed due to DELAY_FILE_UPLOADS flag",
         },
         throwHttpErrors: false,
       })
       // Add a 2 second delay to simulate the issue
-      await new Promise(resolve => setTimeout(resolve, 2000))
+      await new Promise((resolve) => setTimeout(resolve, 2000))
     }
     console.log(kleur.green(`Saving: ${relativeFilePath}`))
     await this.fsKy
@@ -211,7 +211,7 @@ export class DevServer {
         json: {
           event_type: "FILE_UPLOAD_COMPLETED",
           file_path: relativeFilePath,
-          message: "File upload completed after delay"
+          message: "File upload completed after delay",
         },
         throwHttpErrors: false,
       })
@@ -307,18 +307,21 @@ export class DevServer {
         filePath,
         relativeFilePath,
       )
-      
+
       if (delayFileUploads) {
-        console.log(kleur.yellow(`Delaying initial upload: ${relativeFilePath}`))
+        console.log(
+          kleur.yellow(`Delaying initial upload: ${relativeFilePath}`),
+        )
         await this.fsKy.post("api/events/create", {
           json: {
             event_type: "INITIAL_FILE_UPLOAD_DELAYED",
             file_path: relativeFilePath,
-            message: "Initial file upload delayed due to DELAY_FILE_UPLOADS flag"
+            message:
+              "Initial file upload delayed due to DELAY_FILE_UPLOADS flag",
           },
           throwHttpErrors: false,
         })
-        await new Promise(resolve => setTimeout(resolve, 1000))
+        await new Promise((resolve) => setTimeout(resolve, 1000))
       }
       await this.fsKy.post("api/files/upsert", {
         json: {
@@ -327,13 +330,13 @@ export class DevServer {
           ...filePayload,
         },
       })
-      
+
       if (delayFileUploads) {
         await this.fsKy.post("api/events/create", {
           json: {
             event_type: "INITIAL_FILE_UPLOAD_COMPLETED",
             file_path: relativeFilePath,
-            message: "Initial file upload completed after delay"
+            message: "Initial file upload completed after delay",
           },
           throwHttpErrors: false,
         })
@@ -385,22 +388,22 @@ export class DevServer {
 
   private async handleAutorunMode() {
     console.log(kleur.blue("Autorun mode enabled - sending autorun event"))
-    
+
     // Send event to notify RunFrame about autorun mode
     await this.fsKy.post("api/events/create", {
       json: {
         event_type: "AUTORUN_MODE_ENABLED",
-        message: "DevServer started in autorun mode"
+        message: "DevServer started in autorun mode",
       },
       throwHttpErrors: false,
     })
-    
+
     // Trigger initial circuit compilation/rendering
     await this.fsKy.post("api/events/create", {
       json: {
         event_type: "TRIGGER_AUTORUN",
         file_path: path.relative(this.projectDir, this.componentFilePath),
-        message: "Triggering autorun for main component"
+        message: "Triggering autorun for main component",
       },
       throwHttpErrors: false,
     })
