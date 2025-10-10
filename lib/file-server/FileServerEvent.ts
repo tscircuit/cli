@@ -5,8 +5,6 @@ export interface FileUpdatedEvent {
   initiator?: "filesystem_change" | "browser_edit"
   created_at: string
 }
-<<<<<<< HEAD
-=======
 
 export interface AutorunModeEvent {
   event_id: string
@@ -25,4 +23,3 @@ export interface FileUploadEvent {
 }
 
 export type FileServerEvent = FileUpdatedEvent | AutorunModeEvent | FileUploadEvent
->>>>>>> ab5ad6d (Add autorun mode and DELAY_FILE_UPLOADS flag support)

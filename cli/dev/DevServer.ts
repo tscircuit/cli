@@ -131,15 +131,12 @@ export class DevServer {
     await this.upsertInitialFiles()
 
     this.typesHandler?.handleInitialTypeDependencies(this.componentFilePath)
-<<<<<<< HEAD
-=======
     
     // Handle autorun mode
     const autorunMode = process.env.TSCIRCUIT_AUTORUN_MODE === "true"
     if (autorunMode) {
       await this.handleAutorunMode()
     }
->>>>>>> ab5ad6d (Add autorun mode and DELAY_FILE_UPLOADS flag support)
   }
 
   async handleFileUpdatedEventFromServer(ev: FileUpdatedEvent) {
@@ -181,8 +178,6 @@ export class DevServer {
       relativeFilePath,
     )
 
-<<<<<<< HEAD
-=======
     // Check for DELAY_FILE_UPLOADS flag
     const delayFileUploads = process.env.DELAY_FILE_UPLOADS === "true"
     if (delayFileUploads) {
@@ -199,8 +194,6 @@ export class DevServer {
       // Add a 2 second delay to simulate the issue
       await new Promise(resolve => setTimeout(resolve, 2000))
     }
-
->>>>>>> ab5ad6d (Add autorun mode and DELAY_FILE_UPLOADS flag support)
     console.log(kleur.green(`Saving: ${relativeFilePath}`))
     await this.fsKy
       .post("api/files/upsert", {
@@ -211,8 +204,6 @@ export class DevServer {
         },
       })
       .json()
-<<<<<<< HEAD
-=======
 
     // Send event after successful upload
     if (delayFileUploads) {
@@ -225,7 +216,6 @@ export class DevServer {
         throwHttpErrors: false,
       })
     }
->>>>>>> ab5ad6d (Add autorun mode and DELAY_FILE_UPLOADS flag support)
   }
 
   async handleFileRemovedFromFilesystem(absoluteFilePath: string) {
@@ -309,10 +299,7 @@ export class DevServer {
 
   async upsertInitialFiles() {
     const filePaths = getPackageFilePaths(this.projectDir, this.ignoredFiles)
-<<<<<<< HEAD
-=======
     const delayFileUploads = process.env.DELAY_FILE_UPLOADS === "true"
->>>>>>> ab5ad6d (Add autorun mode and DELAY_FILE_UPLOADS flag support)
 
     for (const filePath of filePaths) {
       const relativeFilePath = path.relative(this.projectDir, filePath)
@@ -320,8 +307,6 @@ export class DevServer {
         filePath,
         relativeFilePath,
       )
-<<<<<<< HEAD
-=======
       
       if (delayFileUploads) {
         console.log(kleur.yellow(`Delaying initial upload: ${relativeFilePath}`))
@@ -335,8 +320,6 @@ export class DevServer {
         })
         await new Promise(resolve => setTimeout(resolve, 1000))
       }
-      
->>>>>>> ab5ad6d (Add autorun mode and DELAY_FILE_UPLOADS flag support)
       await this.fsKy.post("api/files/upsert", {
         json: {
           file_path: relativeFilePath,
@@ -344,8 +327,6 @@ export class DevServer {
           ...filePayload,
         },
       })
-<<<<<<< HEAD
-=======
       
       if (delayFileUploads) {
         await this.fsKy.post("api/events/create", {
@@ -357,7 +338,6 @@ export class DevServer {
           throwHttpErrors: false,
         })
       }
->>>>>>> ab5ad6d (Add autorun mode and DELAY_FILE_UPLOADS flag support)
     }
   }
 
@@ -403,8 +383,6 @@ export class DevServer {
     return { text_content: fs.readFileSync(absoluteFilePath, "utf-8") }
   }
 
-<<<<<<< HEAD
-=======
   private async handleAutorunMode() {
     console.log(kleur.blue("Autorun mode enabled - sending autorun event"))
     
@@ -427,8 +405,6 @@ export class DevServer {
       throwHttpErrors: false,
     })
   }
-
->>>>>>> ab5ad6d (Add autorun mode and DELAY_FILE_UPLOADS flag support)
   private async handleInstallPackage(full_package_name: string) {
     const postEvent = async (
       event: "PACKAGE_INSTALLED" | "PACKAGE_INSTALL_FAILED",
