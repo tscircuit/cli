@@ -11,13 +11,28 @@ export const getIndex = async (
   const fileServerApiScript = fileServerApiBaseUrl
     ? `\n        window.TSCIRCUIT_FILESERVER_API_BASE_URL = ${JSON.stringify(fileServerApiBaseUrl)};`
     : ""
+<<<<<<< HEAD
+=======
+  const autorunMode = process.env.TSCIRCUIT_AUTORUN_MODE === "true"
+  const delayFileUploads = process.env.DELAY_FILE_UPLOADS === "true"
+  const autorunScript = autorunMode
+    ? `\n        window.TSCIRCUIT_AUTORUN_MODE = true;`
+    : ""
+  const delayFileUploadsScript = delayFileUploads
+    ? `\n        window.DELAY_FILE_UPLOADS = true;`
+    : ""
+>>>>>>> ab5ad6d (Add autorun mode and DELAY_FILE_UPLOADS flag support)
   return `<html>
     <head>
     </head>
     <body>
       <script>
        ${mainComponentPath ? `window.TSCIRCUIT_DEFAULT_MAIN_COMPONENT_PATH = "${mainComponentPath}";` : ""}
+<<<<<<< HEAD
         window.TSCIRCUIT_USE_RUNFRAME_FOR_CLI = true;${tokenScript}${fileServerApiScript}
+=======
+        window.TSCIRCUIT_USE_RUNFRAME_FOR_CLI = true;${tokenScript}${fileServerApiScript}${autorunScript}${delayFileUploadsScript}
+>>>>>>> ab5ad6d (Add autorun mode and DELAY_FILE_UPLOADS flag support)
       </script>
       <script src="https://cdn.tailwindcss.com"></script>
       <div id="root">loading...</div>
