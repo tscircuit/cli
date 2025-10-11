@@ -83,7 +83,7 @@ export const registerInit = (program: Command) => {
       // Create essential project files
       writeFileIfNotExists(
         path.join(projectDir, "index.tsx"),
-        `
+        `// @ts-nocheck
 export default () => (
   <board>
     <resistor resistance="1k" footprint="0402" name="R1" schX={3} pcbX={3} />
@@ -117,10 +117,14 @@ export default () => (
       // Create .gitignore file
       generateGitIgnoreFile(projectDir)
       // Setup project dependencies
-      setupTsciProject(projectDir)
+      if (!process.env.TSCI_TEST_MODE) {
+        setupTsciProject(projectDir)
+      }
 
       console.info(
-        `🎉 Initialization complete! Run ${directory ? `"cd ${directory}" & ` : ""}"tsci dev" to start developing.`,
+        `🎉 Initialization complete! Run ${
+          directory ? `"cd ${directory}" & ` : ""
+        }"tsci dev" to start developing.`,
       )
       process.exit(0)
     })

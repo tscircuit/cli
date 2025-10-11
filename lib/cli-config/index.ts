@@ -19,7 +19,23 @@ export const getCliConfig = (
   })
 }
 
-export const cliConfig = getCliConfig()
+// Dynamic CLI config that picks up TSCIRCUIT_CONFIG_DIR
+export const cliConfig = {
+  get: <K extends keyof CliConfig>(key: K): CliConfig[K] | undefined =>
+    getCliConfig().get(key as string) as CliConfig[K] | undefined,
+  set: <K extends keyof CliConfig>(key: K, value: CliConfig[K]): void => {
+    getCliConfig().set(key as string, value)
+  },
+  delete: (key: keyof CliConfig): void => {
+    getCliConfig().delete(key as string)
+  },
+  clear: (): void => {
+    getCliConfig().clear()
+  },
+  get store() {
+    return getCliConfig().store
+  },
+}
 
 export const getSessionToken = (): string | undefined => {
   return cliConfig.get("sessionToken")
