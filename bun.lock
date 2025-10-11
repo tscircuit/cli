@@ -44,7 +44,7 @@
         "jsonwebtoken": "^9.0.2",
         "jszip": "^3.10.1",
         "jwt-decode": "^4.0.0",
-        "kicad-component-converter": "^0.1.14",
+        "kicad-component-converter": "^0.1.22",
         "kicadts": "^0.0.9",
         "kleur": "^4.1.5",
         "ky": "^1.7.4",
@@ -635,7 +635,7 @@
 
     "jwt-decode": ["jwt-decode@4.0.0", "", {}, "sha512-+KJGIyHgkGuIq3IEBNftfhW/LfWhXUIY6OmyVWjliu5KH1y0fw7VQ8YndE2O4qZdMSd9SqbnC8GOcZEy0Om7sA=="],
 
-    "kicad-component-converter": ["kicad-component-converter@0.1.14", "", { "bin": { "kicad-mod-converter": "dist/cli.js" } }, "sha512-E6e1r0N6GNgsEsqA3mgCl1xiMzfo1BcS/0T5VkE4tGhAhMTsxalmsD1tBsnITLj295xYsoEAMpgEmrG6NkkNuQ=="],
+    "kicad-component-converter": ["kicad-component-converter@0.1.22", "", { "bin": { "kicad-mod-converter": "dist/cli.js" } }, "sha512-4p0O/9PkOKFBRXLSWuE8+amY3MS5vAfPev/44p3DBNKV260hlmf3ctKjWz0F8c0a5hLuoHNqI32pVwpVUg+zUg=="],
 
     "kicadts": ["kicadts@0.0.9", "", { "peerDependencies": { "typescript": "^5" } }, "sha512-IfMcQxZ6+sTFLynI+5htPPZPeLCDHNMcMqkJFe9YQg+z2swattZK8KQAn4u0auhzNtwVqy+3MmzPV7MBstrrrQ=="],
 
