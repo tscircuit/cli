@@ -20,7 +20,7 @@ export const generateTsConfig = (dir: string) => {
         sourceMap: true,
         allowSyntheticDefaultImports: true,
         experimentalDecorators: true,
-        types: ["@tscircuit/core"],
+        types: ["tscircuit"],
       },
     },
     null,
