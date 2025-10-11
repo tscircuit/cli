@@ -1,4 +1,3 @@
-// @ts-expect-error tscircuit module is supposed to export this type
 import soicUrl from "./soic8.glb"
 
 export default () => {
