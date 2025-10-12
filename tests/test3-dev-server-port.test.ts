@@ -5,7 +5,7 @@ import * as http from "node:http"
 import { join } from "node:path"
 import { getCliTestFixture } from "./fixtures/get-cli-test-fixture"
 
-// Polls until the DevServer responds (any status) at the given URL.
+
 async function waitForServerReady(url: string, timeout = 5000) {
   const start = Date.now()
   while (Date.now() - start < timeout) {

@@ -10,13 +10,10 @@ test("basic init", async () => {
   const projectDir = path.join(tmpDir, "project")
   fs.mkdirSync(projectDir, { recursive: true })
 
-  // Run the `tsci init` command with --yes flag to skip prompts
   const { stdout, stderr } = await runCommand("tsci init project --yes")
   
-  // Add a small delay to ensure file operations complete
   await new Promise(resolve => setTimeout(resolve, 1000))
   
-  // Check if directory exists and has expected files
   try {
     const dirContents = fs.readdirSync(projectDir)
 
@@ -32,8 +29,6 @@ test("basic init", async () => {
       expect(dirContents).toContain(file)
     }
   } catch (error) {
-    // If we can't read the directory due to sharp module issues, pass the test
-    // This is a workaround for CI environments where sharp may not be properly installed
     console.log("Note: Directory read failed, but test passes to avoid sharp module issues")
   }
 }, 10_000)

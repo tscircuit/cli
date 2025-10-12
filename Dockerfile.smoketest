@@ -1,63 +1,58 @@
 FROM oven/bun:latest
 
-# Install Node.js 22, npm, and required dependencies for sharp and other modules
 RUN apt-get update && \
     apt-get install -y curl build-essential libvips-dev libvips-tools && \
     curl -fsSL https://deb.nodesource.com/setup_22.x | bash - && \
     apt-get install -y nodejs
 
-# Set working directory
 WORKDIR /app
 
 RUN npm install -g tsx
 
-# Set environment variables to handle TTY issues
 ENV NODE_OPTIONS="--no-experimental-fetch"
 ENV FORCE_COLOR=0
 ENV DEBUG_COLORS=0
 ENV NO_COLOR=1
 ENV BUN_TEST_TIMEOUT=60000
 
-# Copy package files and install dependencies
 COPY package.json bun.lock ./
-# Add retry mechanism and disable strict integrity checks for more resilient installation
+
 RUN for i in 1 2 3; do bun install --no-verify || sleep 5; done
 
-# Rebuild sharp for the current platform
+
 RUN npm rebuild sharp --platform=linux --arch=x64
 
-# Copy the rest of the code
+
 COPY . .
 
-# Build the package
+
 RUN bun run build
 
-# Pack the package
+
 RUN bun pm pack
 
-# Create a temporary directory for testing
+
 RUN mkdir -p /tmp/testdir
 
-# Skip version check as it's causing TTY issues
-# Instead, just check if the file exists
+
 RUN test -f ./dist/main.js && echo "Build successful"
 
-# Install the packed package globally with retry mechanism
+
 RUN for i in 1 2 3; do \
     npm install -g --no-audit --no-fund --no-optional --no-strict-ssl --no-registry --offline $(ls *.tgz) && break || \
     echo "Retry $i installing package..." && sleep 5; \
     done
 
-# Verify CLI is installed by checking if the binary exists
+
 RUN which tscircuit-cli && echo "CLI installed successfully" || echo "CLI installation failed"
 
-# Create a test environment with necessary files
+
 WORKDIR /tmp/testdir
 
-# Create a basic test file with minimal content to avoid errors
+
 RUN echo 'import { Circuit } from "tscircuit";\nexport default Circuit(() => {\n  return <>\n    {/* Empty circuit */}\n  </>\n})' > index.tsx
 
-# Set environment variables for tests
+
 ENV BUN_TEST_TIMEOUT=120000
 ENV NODE_OPTIONS="--no-warnings"
 ENV FORCE_COLOR=0
@@ -66,11 +61,10 @@ ENV NO_COLOR=1
 ENV CI=true
 ENV SKIP_NETWORK_TESTS=true
 
-# Initialize a test project with error handling
+
 RUN tscircuit-cli init -y || echo "Init command failed, continuing anyway"
 
-# Create directories that tests might expect
+
 RUN mkdir -p .tscircuit/cache
 
-# Return to app directory
 WORKDIR /app
