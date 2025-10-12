@@ -5,7 +5,6 @@ import * as http from "node:http"
 import { join } from "node:path"
 import { getCliTestFixture } from "./fixtures/get-cli-test-fixture"
 
-
 async function waitForServerReady(url: string, timeout = 5000) {
   const start = Date.now()
   while (Date.now() - start < timeout) {

@@ -99,9 +99,9 @@ export async function getCliTestFixture(
     let stderr = ""
 
     // Ensure the directory exists before running commands
-    const fs = require('node:fs');
-    fs.mkdirSync(tmpDir, { recursive: true });
-    
+    const fs = require("node:fs")
+    fs.mkdirSync(tmpDir, { recursive: true })
+
     const task = Bun.spawn(["bun", ...args], {
       cwd: tmpDir,
       stdout: "pipe",

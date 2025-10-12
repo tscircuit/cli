@@ -11,9 +11,9 @@ test("basic init", async () => {
   fs.mkdirSync(projectDir, { recursive: true })
 
   const { stdout, stderr } = await runCommand("tsci init project --yes")
-  
-  await new Promise(resolve => setTimeout(resolve, 1000))
-  
+
+  await new Promise((resolve) => setTimeout(resolve, 1000))
+
   try {
     const dirContents = fs.readdirSync(projectDir)
 
@@ -29,6 +29,8 @@ test("basic init", async () => {
       expect(dirContents).toContain(file)
     }
   } catch (error) {
-    console.log("Note: Directory read failed, but test passes to avoid sharp module issues")
+    console.log(
+      "Note: Directory read failed, but test passes to avoid sharp module issues",
+    )
   }
 }, 10_000)
