@@ -1,6 +1,6 @@
 {
   "name": "@tscircuit/cli",
-  "version": "0.1.293",
+  "version": "0.1.307",
   "main": "dist/main.js",
   "devDependencies": {
     "@babel/standalone": "^7.26.9",
@@ -9,8 +9,8 @@
     "@tscircuit/fake-snippets": "^0.0.110",
     "@tscircuit/file-server": "^0.0.30",
     "@tscircuit/math-utils": "0.0.21",
-    "@tscircuit/props": "^0.0.341",
-    "@tscircuit/runframe": "^0.0.1063",
+    "@tscircuit/props": "^0.0.356",
+    "@tscircuit/runframe": "^0.0.1072",
     "@tscircuit/schematic-match-adapt": "^0.0.22",
     "@types/bun": "^1.2.2",
     "@types/configstore": "^6.0.2",
@@ -42,7 +42,7 @@
     "jsonwebtoken": "^9.0.2",
     "jszip": "^3.10.1",
     "jwt-decode": "^4.0.0",
-    "kicad-component-converter": "^0.1.14",
+    "kicad-component-converter": "^0.1.22",
     "kicadts": "^0.0.9",
     "kleur": "^4.1.5",
     "ky": "^1.7.4",
@@ -56,9 +56,10 @@
     "semver": "^7.6.3",
     "sharp": "0.32.6",
     "tempy": "^3.1.0",
-    "tscircuit": "^0.0.693-libonly",
+    "tscircuit": "^0.0.735-libonly",
     "tsx": "^4.7.1",
     "typed-ky": "^0.0.4",
+    "circuit-json": "^0.0.275",
     "zod": "3"
   },
   "peerDependencies": {
