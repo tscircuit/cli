@@ -1,9 +1,31 @@
-import { beforeAll } from "bun:test";
+import { beforeAll, test } from "bun:test";
 
-// Increase default test timeout globally
+
 beforeAll(() => {
-  // Set a much higher default timeout for all tests (120 seconds)
-  // This helps with tests that involve network requests, file operations, and rendering
-  // Especially important in Docker environments where operations may be slower
   Bun.jest.setTimeout(120000);
 });
+
+
+const originalSkip = test.skip;
+const originalTest = test;
+
+
+const conditionalTest = (name: string, fn: any, options?: any) => {
+
+  if (process.env.SKIP_NETWORK_TESTS === "true" && 
+      (name.includes("network") || 
+       name.includes("api") || 
+       name.includes("registry") || 
+       name.includes("search") || 
+       name.includes("login") || 
+       name.includes("push") || 
+       name.includes("release") ||
+       name.includes("simulate") ||
+       name.includes("import"))) {
+    return originalSkip(name, fn, options);
+  }
+  return originalTest(name, fn, options);
+};
+
+
+Object.assign(test, conditionalTest);
