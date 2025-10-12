@@ -19,10 +19,15 @@ tsci clone author/packageName
 tsci add author/component-name
 ```
 
-> Note: The packages CLI uses the same configuration files as the [@tscircuit/cli](https://github.com/tscircuit/cli), so you may need to also install `npm install -g @tscircuit/cli` and run `tsci login` to authenticate!
+> Note: The packages CLI uses the same configuration files as the [@tscircuit/cli](https://github.com/tscircuit/cli), so you may need to also install `npm install -g @tscircuit` and run `tsci login` to authenticate!
 
 ## Installation
 
+```bash
+npm install -g @tscircuit
+```
+
+### Intermediate installation for developers, exposes tscircuit-cli (NOT tsci)
 ```bash
 npm install -g @tscircuit/cli
 ```
