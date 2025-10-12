@@ -60,7 +60,8 @@
     "tsx": "^4.7.1",
     "typed-ky": "^0.0.4",
     "circuit-json": "^0.0.275",
-    "zod": "3"
+    "zod": "3",
+    "color": "4.2.3"
   },
   "peerDependencies": {
     "tscircuit": "*"
@@ -90,7 +91,5 @@
     "pkg-pr-new-release": "bunx pkg-pr-new publish --comment=off --peerDeps"
   },
   "type": "module",
-  "dependencies": {
-    "color": "4.2.3"
-  }
+  "dependencies": {}
 }
