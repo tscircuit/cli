@@ -1,9 +1,5 @@
-import { beforeAll, test } from "bun:test";
+import { test } from "bun:test";
 
-
-beforeAll(() => {
-  Bun.jest.setTimeout(120000);
-});
 
 
 const originalSkip = test.skip;
