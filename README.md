@@ -25,10 +25,9 @@ tsci add author/component-name
 
 ```bash
 npm install -g @tscircuit
-```
 
-### Intermediate installation for developers, exposes tscircuit-cli (NOT tsci)
-```bash
+# Intermediate installation for developers, exposes tscircuit-cli (NOT tsci)
+
 npm install -g @tscircuit/cli
 ```
 
