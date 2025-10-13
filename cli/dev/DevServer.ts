@@ -105,6 +105,10 @@ export class DevServer {
       this.handleInstallPackage(event.full_package_name),
     )
 
+    this.eventsWatcher.on("ALL_FILES_LOADED", (event) =>
+      this.handleAllFilesLoaded(event),
+    )
+
     this.filesystemWatcher = chokidar.watch(this.projectDir, {
       persistent: true,
       ignoreInitial: true,
@@ -155,6 +159,12 @@ export class DevServer {
     } else {
       fs.writeFileSync(fullPath, file.text_content ?? "", "utf-8")
     }
+  }
+
+  async handleAllFilesLoaded(event: any) {
+    console.log(kleur.blue("All initial files have been loaded. Circuit evaluation can now begin."))
+    // This event is primarily for RunFrame to know when it's safe to start circuit evaluation
+    // The actual circuit evaluation logic will be handled by RunFrame itself
   }
 
   async handleFileChangedOnFilesystem(absoluteFilePath: string) {
@@ -280,6 +290,12 @@ export class DevServer {
         },
       })
     }
+
+    // Emit event to signal that all initial files have been loaded
+    await this.fsKy.post("api/events/create", {
+      json: { event_type: "ALL_FILES_LOADED" },
+      throwHttpErrors: false,
+    })
   }
 
   private async saveSnippet() {
