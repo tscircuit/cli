@@ -162,7 +162,11 @@ export class DevServer {
   }
 
   async handleAllFilesLoaded(event: any) {
-    console.log(kleur.blue("All initial files have been loaded. Circuit evaluation can now begin."))
+    console.log(
+      kleur.blue(
+        "All initial files have been loaded. Circuit evaluation can now begin.",
+      ),
+    )
     // This event is primarily for RunFrame to know when it's safe to start circuit evaluation
     // The actual circuit evaluation logic will be handled by RunFrame itself
   }

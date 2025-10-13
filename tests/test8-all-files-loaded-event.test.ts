@@ -33,15 +33,17 @@ test("test8 all files loaded event is emitted", async () => {
   await devServer.start()
 
   // Wait a bit for the event to be processed
-  await new Promise(resolve => setTimeout(resolve, 500))
+  await new Promise((resolve) => setTimeout(resolve, 500))
 
   // Check if the ALL_FILES_LOADED event was created in the file server
   const { event_list } = await devServer.fsKy.get("api/events/list").json()
-  const allFilesLoadedEvents = event_list.filter(event => event.event_type === "ALL_FILES_LOADED")
-  
+  const allFilesLoadedEvents = event_list.filter(
+    (event) => event.event_type === "ALL_FILES_LOADED",
+  )
+
   // Verify that the ALL_FILES_LOADED event was emitted
   expect(allFilesLoadedEvents.length).toBeGreaterThan(0)
-  
+
   // Verify that the event has the correct structure
   const event = allFilesLoadedEvents[0]
   expect(event.event_type).toBe("ALL_FILES_LOADED")
