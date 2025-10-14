@@ -13,6 +13,11 @@ export const defineConfig = (config: TscircuitProjectConfig) => {
 
 export const CONFIG_FILENAME = "tscircuit.config.json"
 
+export const DEFAULT_BOARD_FILE_PATTERNS = [
+  "**/*.board.tsx",
+  "**/*.circuit.tsx",
+]
+
 /**
  * Load the tscircuit project configuration from the file system
  */
@@ -33,6 +38,21 @@ export const loadProjectConfig = (
     console.error(`Error loading tscircuit config: ${error}`)
     return null
   }
+}
+
+export const getBoardFilePatterns = (
+  projectDir: string = process.cwd(),
+): string[] => {
+  const config = loadProjectConfig(projectDir)
+  const patterns = config?.includeBoardFiles?.filter((pattern) =>
+    pattern.trim(),
+  )
+
+  if (patterns && patterns.length > 0) {
+    return patterns
+  }
+
+  return DEFAULT_BOARD_FILE_PATTERNS
 }
 
 /**

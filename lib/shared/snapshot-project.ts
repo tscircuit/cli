@@ -1,6 +1,5 @@
 import fs from "node:fs"
 import path from "node:path"
-import { globbySync } from "globby"
 import kleur from "kleur"
 import looksSame from "looks-same"
 import {
@@ -11,6 +10,7 @@ import { convertCircuitJsonToGltf } from "circuit-json-to-gltf"
 import { renderGLTFToPNGBufferFromGLBBuffer } from "poppygl"
 import { generateCircuitJson } from "lib/shared/generate-circuit-json"
 import type { PlatformConfig } from "@tscircuit/props"
+import { findBoardFiles } from "lib/shared/find-board-files"
 import {
   DEFAULT_IGNORED_PATTERNS,
   normalizeIgnorePattern,
@@ -57,22 +57,11 @@ export const snapshotProject = async ({
   ]
 
   const resolvedPaths = filePaths.map((f) => path.resolve(projectDir, f))
-
-  const boardFiles =
-    resolvedPaths.length > 0
-      ? resolvedPaths.flatMap((p) => {
-          if (fs.existsSync(p) && fs.statSync(p).isDirectory()) {
-            return globbySync(["**/*.board.tsx", "**/*.circuit.tsx"], {
-              cwd: p,
-              ignore,
-            }).map((f) => path.join(p, f))
-          }
-          return [p]
-        })
-      : globbySync(["**/*.board.tsx", "**/*.circuit.tsx"], {
-          cwd: projectDir,
-          ignore,
-        }).map((f) => path.join(projectDir, f))
+  const boardFiles = findBoardFiles({
+    projectDir,
+    ignore,
+    filePaths: resolvedPaths,
+  })
 
   if (boardFiles.length === 0) {
     console.log(
