@@ -91,6 +91,7 @@ test("build respects includeBoardFiles config globs", async () => {
     JSON.stringify({ includeBoardFiles: ["boards/**/*.board.tsx"] }),
   )
   await writeFile(includedBoard, circuitCode)
+  await writeFile(anotherIncludedBoard, circuitCode)
   await writeFile(excludedBoard, circuitCode)
   await writeFile(path.join(tmpDir, "package.json"), "{}")
 
@@ -108,7 +109,7 @@ test("build respects includeBoardFiles config globs", async () => {
 
   await expect(
     stat(path.join(tmpDir, "dist", "boards", "anotherboard", "circuit.json")),
-  ).toBeTruthy()
+  ).resolves.toBeTruthy()
 
   await expect(
     stat(path.join(tmpDir, "dist", "ignored", "circuit.json")),
