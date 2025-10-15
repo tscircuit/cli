@@ -14,6 +14,7 @@ export const getStaticIndexHtmlFile = ({
 }: GetStaticIndexHtmlFileOptions) => {
   const scriptLines = [
     "window.TSCIRCUIT_USE_RUNFRAME_FOR_CLI = false;",
+    "window.TSCIRCUIT_DELAY_FILE_UPLOADS = true;",
     `window.TSCIRCUIT_RUNFRAME_STATIC_FILE_LIST = ${JSON.stringify(files)};`,
   ]
 

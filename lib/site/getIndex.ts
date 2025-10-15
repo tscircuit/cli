@@ -17,7 +17,8 @@ export const getIndex = async (
     <body>
       <script>
        ${mainComponentPath ? `window.TSCIRCUIT_DEFAULT_MAIN_COMPONENT_PATH = "${mainComponentPath}";` : ""}
-        window.TSCIRCUIT_USE_RUNFRAME_FOR_CLI = true;${tokenScript}${fileServerApiScript}
+        window.TSCIRCUIT_USE_RUNFRAME_FOR_CLI = true;
+        window.TSCIRCUIT_DELAY_FILE_UPLOADS = true;${tokenScript}${fileServerApiScript}
       </script>
       <script src="https://cdn.tailwindcss.com"></script>
       <div id="root">loading...</div>
