@@ -83,6 +83,7 @@ test("build respects includeBoardFiles config globs", async () => {
   const boardsDir = path.join(tmpDir, "boards")
   await mkdir(boardsDir, { recursive: true })
   const includedBoard = path.join(boardsDir, "selected.board.tsx")
+  const anotherIncludedBoard = path.join(boardsDir, "anotherboard.board.tsx")
   const excludedBoard = path.join(tmpDir, "ignored.board.tsx")
 
   await writeFile(
@@ -104,6 +105,10 @@ test("build respects includeBoardFiles config globs", async () => {
     (c: any) => c.type === "source_component",
   )
   expect(includedComponent.name).toBe("R1")
+
+  await expect(
+    stat(path.join(tmpDir, "dist", "boards", "anotherboard", "circuit.json")),
+  ).toBeTruthy()
 
   await expect(
     stat(path.join(tmpDir, "dist", "ignored", "circuit.json")),
