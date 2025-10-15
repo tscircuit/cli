@@ -11,7 +11,7 @@
         "@tscircuit/file-server": "^0.0.30",
         "@tscircuit/math-utils": "0.0.21",
         "@tscircuit/props": "^0.0.356",
-        "@tscircuit/runframe": "^0.0.1099",
+        "@tscircuit/runframe": "^0.0.1101",
         "@tscircuit/schematic-match-adapt": "^0.0.22",
         "@types/bun": "^1.2.2",
         "@types/configstore": "^6.0.2",
@@ -249,7 +249,7 @@
 
     "@tscircuit/props": ["@tscircuit/props@0.0.364", "", { "peerDependencies": { "circuit-json": "*", "react": "*", "zod": "*" } }, "sha512-65hfajqOBjqiH+DNyKDoN674riyFqSlqCCPDdtI15CEW74cidxJgcBAi1cQwjPop1JRm18yJaAIhtIlPIytGsQ=="],
 
-    "@tscircuit/runframe": ["@tscircuit/runframe@0.0.1099", "", {}, "sha512-F5KL4k1DbI2UP+zG5Uy0COC7AKpWvVtohXJiClMXvc8+qS9D53zspcoLpDZbooTzGLMukC3i9ZAwuvHBLra19A=="],
+    "@tscircuit/runframe": ["@tscircuit/runframe@0.0.1101", "", {}, "sha512-YOscWcJOeKxsJ8xDguUK2UUd1Ah+UPdIU0CB6OrFgi4DFL/D53MQAc0jBhWI7uDII3g06K8ND2hXxaJTXGrCSQ=="],
 
     "@tscircuit/schematic-autolayout": ["@tscircuit/schematic-autolayout@0.0.6", "", { "dependencies": { "@tscircuit/soup-util": "^0.0.38", "transformation-matrix": "^2.16.1" } }, "sha512-34cQxtlSylBKyHkzaMBCynaWJgN9c/mWm7cz63StTYIafKmfFs383K8Xoc4QX8HXCvVrHYl1aK15onZua9MxeA=="],
 
@@ -1058,6 +1058,8 @@
     "tscircuit/@tscircuit/circuit-json-util": ["@tscircuit/circuit-json-util@0.0.72", "", { "dependencies": { "parsel-js": "^1.1.2" }, "peerDependencies": { "circuit-json": "*", "transformation-matrix": "*", "zod": "3" } }, "sha512-8KqdPYz1Q+rYgPuP9VBBxusLgq0MmpVw4FjLORNHYr2qfWmM1m/1OQEokZHZZZLTUbfcn86zUOcv69+LqHa0FA=="],
 
     "tscircuit/@tscircuit/props": ["@tscircuit/props@0.0.363", "", { "peerDependencies": { "circuit-json": "*", "react": "*", "zod": "*" } }, "sha512-ucnczfMs1910Lsz32CSpX4ZUq3CXBWzCDNP+MfwtLIbR66YWvGGZbj9bVZh6VO4njbyslhelVo4WIr/or6wKkg=="],
+
+    "tscircuit/@tscircuit/runframe": ["@tscircuit/runframe@0.0.1099", "", {}, "sha512-F5KL4k1DbI2UP+zG5Uy0COC7AKpWvVtohXJiClMXvc8+qS9D53zspcoLpDZbooTzGLMukC3i9ZAwuvHBLra19A=="],
 
     "tscircuit/@tscircuit/schematic-match-adapt": ["@tscircuit/schematic-match-adapt@0.0.16", "", { "peerDependencies": { "typescript": "^5" } }, "sha512-85e6Pq58zrhZqivyW4bPVZfGfg8xLBCj3yjHl5LZslwfsDRgtWVob4bjJMhCfNL/mLsPUQKnpiDNnFKl9ugUZw=="],
 
