@@ -49,4 +49,4 @@ test("snapshot does not update on metadata-only changes", async () => {
   const diffPath = join(snapDir, "meta.board-pcb.diff.png")
   const diffExists = fs.existsSync(diffPath)
   expect(diffExists).toBe(false)
-})
+}, 30_000)

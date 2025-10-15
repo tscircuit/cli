@@ -125,6 +125,58 @@ test("snapshot command snapshots circuit files", async () => {
   expect(extraSch).toBe(true)
 }, 30_000)
 
+test("snapshot respects includeBoardFiles config", async () => {
+  const { tmpDir, runCommand } = await getCliTestFixture()
+
+  await Bun.write(
+    join(tmpDir, "tscircuit.config.json"),
+    JSON.stringify({ includeBoardFiles: ["boards/**/*.board.tsx"] }),
+  )
+
+  fs.mkdirSync(join(tmpDir, "boards"), { recursive: true })
+
+  await Bun.write(
+    join(tmpDir, "boards", "chosen.board.tsx"),
+    `
+    export const Chosen = () => (
+      <board width="10mm" height="10mm">
+        <chip name="U1" footprint="soic8" />
+      </board>
+    )
+  `,
+  )
+
+  await Bun.write(
+    join(tmpDir, "other.board.tsx"),
+    `
+    export const Other = () => (
+      <board width="10mm" height="10mm">
+        <chip name="U2" footprint="soic8" />
+      </board>
+    )
+  `,
+  )
+
+  const { stdout } = await runCommand("tsci snapshot --update")
+  expect(stdout).toContain("Created snapshots")
+
+  const boardsSnapDir = join(tmpDir, "boards", "__snapshots__")
+  const chosenPcb = await Bun.file(
+    join(boardsSnapDir, "chosen.board-pcb.snap.svg"),
+  ).exists()
+  const chosenSch = await Bun.file(
+    join(boardsSnapDir, "chosen.board-schematic.snap.svg"),
+  ).exists()
+
+  expect(chosenPcb).toBe(true)
+  expect(chosenSch).toBe(true)
+
+  const rootSnapExists = await Bun.file(
+    join(tmpDir, "__snapshots__", "other.board-pcb.snap.svg"),
+  ).exists()
+  expect(rootSnapExists).toBe(false)
+}, 30_000)
+
 test("snapshot command --pcb-only", async () => {
   const { tmpDir, runCommand } = await getCliTestFixture()
 

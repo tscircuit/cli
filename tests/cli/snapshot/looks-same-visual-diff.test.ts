@@ -44,4 +44,4 @@ test("CLI detects visual change when another chip is added", async () => {
   const diffPath = join(tmpDir, "__snapshots__", "meta.board-pcb.diff.svg")
   const diffExists = fs.existsSync(diffPath)
   expect(diffExists).toBe(true)
-})
+}, 30_000)

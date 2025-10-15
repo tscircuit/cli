@@ -8,9 +8,18 @@ import kleur from "kleur"
 import { getVersion } from "lib/getVersion"
 import { getEntrypoint } from "lib/shared/get-entrypoint"
 import { globbySync } from "globby"
+import { findBoardFiles } from "lib/shared/find-board-files"
 import { DEFAULT_IGNORED_PATTERNS } from "lib/shared/should-ignore-path"
 
 const findSelectableTsxFiles = (projectDir: string): string[] => {
+  const boardFiles = findBoardFiles({ projectDir })
+    .filter((file) => fs.existsSync(file))
+    .sort()
+
+  if (boardFiles.length > 0) {
+    return boardFiles
+  }
+
   const files = globbySync(["**/*.tsx", "**/*.ts"], {
     cwd: projectDir,
     ignore: DEFAULT_IGNORED_PATTERNS,

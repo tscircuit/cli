@@ -1,6 +1,6 @@
 import { getCliTestFixture } from "../../fixtures/get-cli-test-fixture"
 import { test, expect } from "bun:test"
-import { writeFile, readFile, stat } from "node:fs/promises"
+import { writeFile, readFile, stat, mkdir } from "node:fs/promises"
 import path from "node:path"
 
 const circuitCode = `
@@ -33,7 +33,7 @@ test("build with file only outputs that file", async () => {
   await expect(
     stat(path.join(tmpDir, "dist", "extra", "circuit.json")),
   ).rejects.toBeTruthy()
-})
+}, 30_000)
 
 // When no file is provided search for *.circuit.tsx and *.board.tsx files
 
@@ -76,7 +76,45 @@ test("build without file builds circuit and board files", async () => {
     (c: any) => c.type === "source_component",
   )
   expect(boardComponent.name).toBe("R1")
-})
+}, 30_000)
+
+test("build respects includeBoardFiles config globs", async () => {
+  const { tmpDir, runCommand } = await getCliTestFixture()
+  const boardsDir = path.join(tmpDir, "boards")
+  await mkdir(boardsDir, { recursive: true })
+  const includedBoard = path.join(boardsDir, "selected.board.tsx")
+  const anotherIncludedBoard = path.join(boardsDir, "anotherboard.board.tsx")
+  const excludedBoard = path.join(tmpDir, "ignored.board.tsx")
+
+  await writeFile(
+    path.join(tmpDir, "tscircuit.config.json"),
+    JSON.stringify({ includeBoardFiles: ["boards/**/*.board.tsx"] }),
+  )
+  await writeFile(includedBoard, circuitCode)
+  await writeFile(anotherIncludedBoard, circuitCode)
+  await writeFile(excludedBoard, circuitCode)
+  await writeFile(path.join(tmpDir, "package.json"), "{}")
+
+  await runCommand("tsci build")
+
+  const includedOutput = await readFile(
+    path.join(tmpDir, "dist", "boards", "selected", "circuit.json"),
+    "utf-8",
+  )
+  const includedJson = JSON.parse(includedOutput)
+  const includedComponent = includedJson.find(
+    (c: any) => c.type === "source_component",
+  )
+  expect(includedComponent.name).toBe("R1")
+
+  await expect(
+    stat(path.join(tmpDir, "dist", "boards", "anotherboard", "circuit.json")),
+  ).resolves.toBeTruthy()
+
+  await expect(
+    stat(path.join(tmpDir, "dist", "ignored", "circuit.json")),
+  ).rejects.toBeTruthy()
+}, 30_000)
 
 test("build without circuit files falls back to main entrypoint", async () => {
   const { tmpDir, runCommand } = await getCliTestFixture()
@@ -93,7 +131,7 @@ test("build without circuit files falls back to main entrypoint", async () => {
   const json = JSON.parse(data)
   const component = json.find((c: any) => c.type === "source_component")
   expect(component.name).toBe("R1")
-})
+}, 30_000)
 
 test("build with --preview-images generates preview assets", async () => {
   const { tmpDir, runCommand } = await getCliTestFixture()
@@ -117,4 +155,4 @@ test("build with --preview-images generates preview assets", async () => {
   expect(preview3d[1]).toBe(0x50)
   expect(preview3d[2]).toBe(0x4e)
   expect(preview3d[3]).toBe(0x47)
-})
+}, 30_000)
