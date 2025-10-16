@@ -281,6 +281,10 @@ export class DevServer {
   }
 
   async upsertInitialFiles() {
+    await this.fsKy.post("api/events/reset", {
+      json: {},
+    })
+
     const filePaths = getPackageFilePaths(this.projectDir, this.ignoredFiles)
 
     for (const filePath of filePaths) {
@@ -297,6 +301,14 @@ export class DevServer {
         },
       })
     }
+
+    await this.fsKy.post("api/events/create", {
+      json: {
+        event_type: "INITIAL_FILES_UPLOADED",
+        file_count: filePaths.length,
+      },
+      throwHttpErrors: false,
+    })
   }
 
   private async saveSnippet() {

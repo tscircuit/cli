@@ -3,7 +3,9 @@ export interface EventsRoutes {
     POST: {
       requestJson: {
         event_type: string
+        file_count?: number
         message?: string
+        full_package_name?: string
       }
       responseJson: {
         event: {
@@ -21,14 +23,27 @@ export interface EventsRoutes {
           event_type:
             | "FILE_UPDATED"
             | "FILE_DELETED"
+            | "INITIAL_FILES_UPLOADED"
             | "FAILED_TO_SAVE_SNIPPET"
             | "SNIPPET_SAVED"
             | "REQUEST_TO_SAVE_SNIPPET"
-          file_path: string
+            | "INSTALL_PACKAGE"
+            | "PACKAGE_INSTALLED"
+            | "PACKAGE_INSTALL_FAILED"
+          file_path?: string
           created_at: string
           initiator?: string
+          file_count?: number
+          message?: string
+          full_package_name?: string
         }>
       }
+    }
+  }
+  "api/events/reset": {
+    POST: {
+      requestJson: {}
+      responseJson: { ok: boolean }
     }
   }
 }
