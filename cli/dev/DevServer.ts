@@ -6,7 +6,10 @@ import type http from "node:http"
 import type { TypedKyInstance } from "typed-ky"
 import path from "node:path"
 import fs from "node:fs"
-import type { FileUpdatedEvent } from "../../lib/file-server/FileServerEvent"
+import type {
+  FileUpdatedEvent,
+  FileDeletedEvent,
+} from "../../lib/file-server/FileServerEvent"
 import * as chokidar from "chokidar"
 import { FilesystemTypesHandler } from "lib/dependency-analysis/FilesystemTypesHandler"
 import { pushSnippet } from "lib/shared/push-snippet"
@@ -97,6 +100,11 @@ export class DevServer {
     )
 
     this.eventsWatcher.on(
+      "FILE_DELETED",
+      this.handleFileDeletedEventFromServer.bind(this),
+    )
+
+    this.eventsWatcher.on(
       "REQUEST_TO_SAVE_SNIPPET",
       this.saveSnippet.bind(this),
     )
@@ -154,6 +162,15 @@ export class DevServer {
       fs.writeFileSync(fullPath, decodedContent)
     } else {
       fs.writeFileSync(fullPath, file.text_content ?? "", "utf-8")
+    }
+  }
+
+  async handleFileDeletedEventFromServer(ev: FileDeletedEvent) {
+    const fullPath = path.join(this.projectDir, ev.file_path)
+
+    if (fs.existsSync(fullPath)) {
+      debug(`Deleting file ${ev.file_path} from filesystem`)
+      fs.unlinkSync(fullPath)
     }
   }
 
