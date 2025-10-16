@@ -10,7 +10,7 @@
     "@tscircuit/file-server": "^0.0.30",
     "@tscircuit/math-utils": "0.0.21",
     "@tscircuit/props": "^0.0.356",
-    "@tscircuit/runframe": "^0.0.1111",
+    "@tscircuit/runframe": "^0.0.1112",
     "@tscircuit/schematic-match-adapt": "^0.0.22",
     "@types/bun": "^1.2.2",
     "@types/configstore": "^6.0.2",
