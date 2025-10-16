@@ -20,6 +20,7 @@ export interface EventsRoutes {
           event_id: string
           event_type:
             | "FILE_UPDATED"
+            | "FILE_DELETED"
             | "FAILED_TO_SAVE_SNIPPET"
             | "SNIPPET_SAVED"
             | "REQUEST_TO_SAVE_SNIPPET"
