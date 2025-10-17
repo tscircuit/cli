@@ -1,5 +1,6 @@
 import type { Command } from "commander"
 import { snapshotProject } from "lib/shared/snapshot-project"
+import { loadProjectConfig } from "lib/project-config"
 
 export const registerSnapshot = (program: Command) => {
   program
@@ -29,6 +30,8 @@ export const registerSnapshot = (program: Command) => {
           disablePartsEngine?: boolean
         },
       ) => {
+        const projectConfig = loadProjectConfig()
+        
         await snapshotProject({
           update: options.update ?? false,
           threeD: options["3d"] ?? false,
@@ -36,6 +39,7 @@ export const registerSnapshot = (program: Command) => {
           schematicOnly: options.schematicOnly ?? false,
           forceUpdate: options.forceUpdate ?? false,
           filePaths: target ? [target] : [],
+          snapshotsDir: projectConfig?.snapshotsDir,
           platformConfig: options.disablePartsEngine
             ? { partsEngineDisabled: true }
             : undefined,

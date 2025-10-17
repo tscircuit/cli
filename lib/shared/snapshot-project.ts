@@ -32,6 +32,8 @@ type SnapshotOptions = {
   forceUpdate?: boolean
   /** Optional platform configuration overrides */
   platformConfig?: PlatformConfig
+  /** Custom directory for snapshots (relative to project root or absolute path) */
+  snapshotsDir?: string
   onExit?: (code: number) => void
   onError?: (message: string) => void
   onSuccess?: (message: string) => void
@@ -45,6 +47,7 @@ export const snapshotProject = async ({
   schematicOnly = false,
   filePaths = [],
   forceUpdate = false,
+  snapshotsDir,
   onExit = (code) => process.exit(code),
   onError = (msg) => console.error(msg),
   onSuccess = (msg) => console.log(msg),
@@ -96,7 +99,16 @@ export const snapshotProject = async ({
       })
     }
 
-    const snapDir = path.join(path.dirname(file), "__snapshots__")
+    let snapDir: string
+    if (snapshotsDir) {
+      // Use custom snapshots directory
+      snapDir = path.isAbsolute(snapshotsDir)
+        ? snapshotsDir
+        : path.join(projectDir, snapshotsDir)
+    } else {
+      // Default: place snapshots in __snapshots__ directory next to the file
+      snapDir = path.join(path.dirname(file), "__snapshots__")
+    }
     fs.mkdirSync(snapDir, { recursive: true })
 
     const base = path.basename(file).replace(/\.tsx$/, "")
