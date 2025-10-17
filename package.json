@@ -9,8 +9,13 @@
     "@tscircuit/fake-snippets": "^0.0.110",
     "@tscircuit/file-server": "^0.0.32",
     "@tscircuit/math-utils": "0.0.21",
+<<<<<<< HEAD
     "@tscircuit/props": "^0.0.370",
     "@tscircuit/runframe": "^0.0.1120",
+=======
+    "@tscircuit/props": "^0.0.356",
+    "@tscircuit/runframe": "^0.0.1121",
+>>>>>>> origin/main
     "@tscircuit/schematic-match-adapt": "^0.0.22",
     "@types/bun": "^1.2.2",
     "@types/configstore": "^6.0.2",
