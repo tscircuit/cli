@@ -31,7 +31,7 @@ export const registerSnapshot = (program: Command) => {
         },
       ) => {
         const projectConfig = loadProjectConfig()
-        
+
         await snapshotProject({
           update: options.update ?? false,
           threeD: options["3d"] ?? false,
