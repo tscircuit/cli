@@ -13,6 +13,54 @@ export interface BuildFileResult {
   ok: boolean
 }
 
+const viewToArrayBuffer = (view: ArrayBufferView): ArrayBuffer => {
+  const copy = new Uint8Array(view.byteLength)
+  copy.set(new Uint8Array(view.buffer, view.byteOffset, view.byteLength))
+  return copy.buffer
+}
+
+const normalizeToArrayBuffer = async (value: unknown): Promise<ArrayBuffer> => {
+  if (value instanceof ArrayBuffer) {
+    return value
+  }
+
+  if (ArrayBuffer.isView(value)) {
+    return viewToArrayBuffer(value as ArrayBufferView)
+  }
+
+  if (value && typeof value === "object") {
+    const maybeArrayBufferLike = value as {
+      arrayBuffer?: () => Promise<ArrayBuffer> | ArrayBuffer
+    }
+    if (typeof maybeArrayBufferLike.arrayBuffer === "function") {
+      const result = maybeArrayBufferLike.arrayBuffer()
+      return result instanceof Promise ? await result : result
+    }
+  }
+
+  throw new Error(
+    "Expected ArrayBuffer, ArrayBufferView, or Buffer-compatible object",
+  )
+}
+
+const normalizeToUint8Array = (value: unknown): Uint8Array => {
+  if (value instanceof Uint8Array) {
+    return value
+  }
+
+  if (value instanceof ArrayBuffer) {
+    return new Uint8Array(value)
+  }
+
+  if (ArrayBuffer.isView(value)) {
+    return new Uint8Array(viewToArrayBuffer(value as ArrayBufferView))
+  }
+
+  throw new Error(
+    "Expected Uint8Array, ArrayBuffer, or ArrayBufferView for PNG",
+  )
+}
+
 const generatePreviewAssets = async ({
   build,
   outputDir,
@@ -38,12 +86,8 @@ const generatePreviewAssets = async ({
       format: "glb",
     })
     console.log(`${prefix}Rendering GLB to PNG buffer...`)
-    if (!(glbBuffer instanceof ArrayBuffer)) {
-      throw new Error(
-        "Expected ArrayBuffer from convertCircuitJsonToGltf with glb format",
-      )
-    }
-    const pngBuffer = await renderGLTFToPNGBufferFromGLBBuffer(glbBuffer, {
+    const glbArrayBuffer = await normalizeToArrayBuffer(glbBuffer)
+    const pngBuffer = await renderGLTFToPNGBufferFromGLBBuffer(glbArrayBuffer, {
       camPos: [10, 10, 10],
       lookAt: [0, 0, 0],
     })
@@ -57,7 +101,10 @@ const generatePreviewAssets = async ({
       "utf-8",
     )
     console.log(`${prefix}Written schematic.svg`)
-    fs.writeFileSync(path.join(outputDir, "3d.png"), Buffer.from(pngBuffer))
+    fs.writeFileSync(
+      path.join(outputDir, "3d.png"),
+      Buffer.from(normalizeToUint8Array(pngBuffer)),
+    )
     console.log(`${prefix}Written 3d.png`)
   } catch (error) {
     console.error(`${prefix}Failed to generate preview images:`, error)
