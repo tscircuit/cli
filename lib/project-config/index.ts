@@ -60,9 +60,7 @@ export const getBoardFilePatterns = (
 /**
  * Get the snapshots directory from the project config
  */
-export const getSnapshotsDir = (
-  projectDir: string = process.cwd(),
-): string => {
+export const getSnapshotsDir = (projectDir: string = process.cwd()): string => {
   const config = loadProjectConfig(projectDir)
   return config?.snapshotsDir ?? DEFAULT_SNAPSHOTS_DIR
 }
