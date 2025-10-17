@@ -74,26 +74,110 @@ export const snapshotProject = async ({
   let didUpdate = false
 
   for (const file of boardFiles) {
-    const { circuitJson } = await generateCircuitJson({
-      filePath: file,
-      platformConfig,
-    })
-    const pcbSvg = convertCircuitJsonToPcbSvg(circuitJson)
-    const schSvg = convertCircuitJsonToSchematicSvg(circuitJson)
+    const relativeFilePath = path.relative(projectDir, file)
+
+    let circuitJson: any
+    let pcbSvg: string
+    let schSvg: string
+
+    try {
+      const result = await generateCircuitJson({
+        filePath: file,
+        platformConfig,
+      })
+      circuitJson = result.circuitJson
+    } catch (error) {
+      const errorMessage =
+        error instanceof Error ? error.message : String(error)
+      onError(
+        kleur.red(
+          `\n❌ Failed to generate circuit JSON for ${relativeFilePath}:\n`,
+        ) + kleur.red(`   ${errorMessage}\n`),
+      )
+      return onExit(1)
+    }
+
+    try {
+      pcbSvg = convertCircuitJsonToPcbSvg(circuitJson)
+    } catch (error) {
+      const errorMessage =
+        error instanceof Error ? error.message : String(error)
+      onError(
+        kleur.red(
+          `\n❌ Failed to generate PCB SVG for ${relativeFilePath}:\n`,
+        ) + kleur.red(`   ${errorMessage}\n`),
+      )
+      return onExit(1)
+    }
+
+    try {
+      schSvg = convertCircuitJsonToSchematicSvg(circuitJson)
+    } catch (error) {
+      const errorMessage =
+        error instanceof Error ? error.message : String(error)
+      onError(
+        kleur.red(
+          `\n❌ Failed to generate schematic SVG for ${relativeFilePath}:\n`,
+        ) + kleur.red(`   ${errorMessage}\n`),
+      )
+      return onExit(1)
+    }
     let png3d: Buffer | null = null
     if (threeD) {
-      const glbBuffer = await convertCircuitJsonToGltf(circuitJson, {
-        format: "glb",
-      })
-      if (!(glbBuffer instanceof ArrayBuffer)) {
-        throw new Error(
-          "Expected ArrayBuffer from convertCircuitJsonToGltf with glb format",
-        )
+      try {
+        const glbBuffer = await convertCircuitJsonToGltf(circuitJson, {
+          format: "glb",
+        })
+        if (!(glbBuffer instanceof ArrayBuffer)) {
+          throw new Error(
+            "Expected ArrayBuffer from convertCircuitJsonToGltf with glb format",
+          )
+        }
+        png3d = await renderGLTFToPNGBufferFromGLBBuffer(glbBuffer, {
+          camPos: [10, 10, 10],
+          lookAt: [0, 0, 0],
+        })
+      } catch (error) {
+        const errorMessage =
+          error instanceof Error ? error.message : String(error)
+
+        // Check if it's a "no pcb_board" error
+        if (errorMessage.includes("No pcb_board found in circuit JSON")) {
+          const snapDir = path.join(path.dirname(file), "__snapshots__")
+          const base = path.basename(file).replace(/\.tsx$/, "")
+          const snap3dPath = path.join(snapDir, `${base}-3d.snap.png`)
+          const existing3dSnapshot = fs.existsSync(snap3dPath)
+
+          if (existing3dSnapshot) {
+            // Error if there's an existing snapshot
+            onError(
+              kleur.red(
+                `\n❌ Failed to generate 3D snapshot for ${relativeFilePath}:\n`,
+              ) +
+                kleur.red(`   No pcb_board found in circuit JSON\n`) +
+                kleur.red(
+                  `   Existing snapshot: ${path.relative(projectDir, snap3dPath)}\n`,
+                ),
+            )
+            return onExit(1)
+          } else {
+            // Skip with warning if no existing snapshot
+            console.log(
+              kleur.red(`⚠️  Skipping 3D snapshot for ${relativeFilePath}:`) +
+                kleur.red(` No pcb_board found in circuit JSON`),
+            )
+            png3d = null
+          }
+        } else {
+          // For any other error, show board name and full error
+          onError(
+            kleur.red(
+              `\n❌ Failed to generate 3D snapshot for ${relativeFilePath}:\n`,
+            ) + kleur.red(`   ${errorMessage}\n`),
+          )
+          return onExit(1)
+        }
       }
-      png3d = await renderGLTFToPNGBufferFromGLBBuffer(glbBuffer, {
-        camPos: [10, 10, 10],
-        lookAt: [0, 0, 0],
-      })
     }
 
     const snapDir = path.join(path.dirname(file), "__snapshots__")
