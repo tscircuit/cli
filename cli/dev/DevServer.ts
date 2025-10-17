@@ -189,6 +189,18 @@ export class DevServer {
       relativeFilePath,
     )
 
+    if (
+      process.env.DELAY_FILE_UPLOADS === "1" ||
+      process.env.DELAY_FILE_UPLOADS === "true"
+    ) {
+      console.log(
+        kleur.yellow(
+          `[DELAY_FILE_UPLOADS] Delaying file upload for: ${relativeFilePath}`,
+        ),
+      )
+      await new Promise((resolve) => setTimeout(resolve, 2000))
+    }
+
     console.log(kleur.green(`Saving: ${relativeFilePath}`))
     await this.fsKy
       .post("api/files/upsert", {
@@ -210,6 +222,18 @@ export class DevServer {
     if (!relativeFilePath || relativeFilePath.trim() === "") {
       debug("Skipping delete for empty file path")
       return
+    }
+
+    if (
+      process.env.DELAY_FILE_UPLOADS === "1" ||
+      process.env.DELAY_FILE_UPLOADS === "true"
+    ) {
+      console.log(
+        kleur.yellow(
+          `[DELAY_FILE_UPLOADS] Delaying file delete for: ${relativeFilePath}`,
+        ),
+      )
+      await new Promise((resolve) => setTimeout(resolve, 2000))
     }
 
     debug(`Deleting file ${relativeFilePath} from server`)
@@ -236,7 +260,9 @@ export class DevServer {
     // Use Promise.resolve to handle network errors without try/catch
     const response = await Promise.resolve(deleteFile()).catch((error) => {
       console.error(
-        `Network error deleting ${relativeFilePath}: ${error instanceof Error ? error.message : String(error)}`,
+        `Network error deleting ${relativeFilePath}: ${
+          error instanceof Error ? error.message : String(error)
+        }`,
       )
       return { error: "Connection error" }
     })
@@ -264,6 +290,17 @@ export class DevServer {
       shouldIgnorePath(newRelativePath, this.ignoredFiles)
     )
       return
+    if (
+      process.env.DELAY_FILE_UPLOADS === "1" ||
+      process.env.DELAY_FILE_UPLOADS === "true"
+    ) {
+      console.log(
+        kleur.yellow(
+          `[DELAY_FILE_UPLOADS] Delaying file rename from: ${oldRelativePath} to: ${newRelativePath}`,
+        ),
+      )
+      await new Promise((resolve) => setTimeout(resolve, 2000))
+    }
     // First delete the old file from the file server
     await this.handleFileRemovedFromFilesystem(oldPath)
 
