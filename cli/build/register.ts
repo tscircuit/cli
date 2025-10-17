@@ -27,6 +27,10 @@ export const registerBuild = (program: Command) => {
     .option("--disable-parts-engine", "Disable the parts engine")
     .option("--site", "Generate a static site in the dist directory")
     .option("--preview-images", "Generate preview images in the dist directory")
+    .option(
+      "--all-images",
+      "Generate preview images for every successful build output",
+    )
     .action(
       async (
         file?: string,
@@ -37,6 +41,7 @@ export const registerBuild = (program: Command) => {
           disablePartsEngine?: boolean
           site?: boolean
           previewImages?: boolean
+          allImages?: boolean
         },
       ) => {
         const { projectDir, circuitFiles, mainEntrypoint } =
@@ -107,12 +112,20 @@ export const registerBuild = (program: Command) => {
           process.exit(1)
         }
 
-        if (options?.previewImages) {
-          console.log("Generating preview images...")
+        const shouldGeneratePreviewImages =
+          options?.previewImages || options?.allImages
+
+        if (shouldGeneratePreviewImages) {
+          console.log(
+            options?.allImages
+              ? "Generating preview images for all builds..."
+              : "Generating preview images...",
+          )
           await buildPreviewImages({
             builtFiles,
             distDir,
             mainEntrypoint,
+            allImages: options?.allImages,
           })
         }
 
