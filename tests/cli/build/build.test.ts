@@ -156,3 +156,35 @@ test("build with --preview-images generates preview assets", async () => {
   expect(preview3d[2]).toBe(0x4e)
   expect(preview3d[3]).toBe(0x47)
 }, 30_000)
+
+test("build with --all-images generates preview assets for each build", async () => {
+  const { tmpDir, runCommand } = await getCliTestFixture()
+  const firstCircuit = path.join(tmpDir, "first.circuit.tsx")
+  const secondCircuit = path.join(tmpDir, "second.circuit.tsx")
+  await writeFile(firstCircuit, circuitCode)
+  await writeFile(secondCircuit, circuitCode)
+  await writeFile(path.join(tmpDir, "package.json"), "{}")
+
+  await runCommand(`tsci build --all-images`)
+
+  const readImageSet = async (name: string) => {
+    const base = path.join(tmpDir, "dist", name)
+    const schematicSvg = await readFile(
+      path.join(base, "schematic.svg"),
+      "utf-8",
+    )
+    const pcbSvg = await readFile(path.join(base, "pcb.svg"), "utf-8")
+    const preview3d = await readFile(path.join(base, "3d.png"))
+
+    expect(schematicSvg).toContain("<svg")
+    expect(pcbSvg).toContain("<svg")
+    expect(preview3d.byteLength).toBeGreaterThan(0)
+    expect(preview3d[0]).toBe(0x89)
+    expect(preview3d[1]).toBe(0x50)
+    expect(preview3d[2]).toBe(0x4e)
+    expect(preview3d[3]).toBe(0x47)
+  }
+
+  await readImageSet("first")
+  await readImageSet("second")
+}, 60_000)
