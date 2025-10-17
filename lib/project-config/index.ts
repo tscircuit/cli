@@ -18,8 +18,6 @@ export const DEFAULT_BOARD_FILE_PATTERNS = [
   "**/*.circuit.tsx",
 ]
 
-export const DEFAULT_SNAPSHOTS_DIR = "__snapshots__"
-
 /**
  * Load the tscircuit project configuration from the file system
  */
