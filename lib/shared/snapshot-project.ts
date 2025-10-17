@@ -16,6 +16,7 @@ import {
   normalizeIgnorePattern,
 } from "lib/shared/should-ignore-path"
 import { compareAndCreateDiff } from "./compare-images"
+import { getSnapshotsDir } from "lib/project-config"
 
 type SnapshotOptions = {
   update?: boolean
@@ -70,6 +71,7 @@ export const snapshotProject = async ({
     return onExit(0)
   }
 
+  const snapshotsDirName = getSnapshotsDir(projectDir)
   const mismatches: string[] = []
   let didUpdate = false
 
@@ -143,7 +145,7 @@ export const snapshotProject = async ({
 
         // Check if it's a "no pcb_board" error
         if (errorMessage.includes("No pcb_board found in circuit JSON")) {
-          const snapDir = path.join(path.dirname(file), "__snapshots__")
+          const snapDir = path.join(path.dirname(file), snapshotsDirName)
           const base = path.basename(file).replace(/\.tsx$/, "")
           const snap3dPath = path.join(snapDir, `${base}-3d.snap.png`)
           const existing3dSnapshot = fs.existsSync(snap3dPath)
@@ -180,7 +182,7 @@ export const snapshotProject = async ({
       }
     }
 
-    const snapDir = path.join(path.dirname(file), "__snapshots__")
+    const snapDir = path.join(path.dirname(file), snapshotsDirName)
     fs.mkdirSync(snapDir, { recursive: true })
 
     const base = path.basename(file).replace(/\.tsx$/, "")

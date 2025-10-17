@@ -18,6 +18,8 @@ export const DEFAULT_BOARD_FILE_PATTERNS = [
   "**/*.circuit.tsx",
 ]
 
+export const DEFAULT_SNAPSHOTS_DIR = "__snapshots__"
+
 /**
  * Load the tscircuit project configuration from the file system
  */
@@ -53,6 +55,16 @@ export const getBoardFilePatterns = (
   }
 
   return DEFAULT_BOARD_FILE_PATTERNS
+}
+
+/**
+ * Get the snapshots directory from the project config
+ */
+export const getSnapshotsDir = (
+  projectDir: string = process.cwd(),
+): string => {
+  const config = loadProjectConfig(projectDir)
+  return config?.snapshotsDir ?? DEFAULT_SNAPSHOTS_DIR
 }
 
 /**
