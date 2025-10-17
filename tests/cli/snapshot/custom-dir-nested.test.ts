@@ -54,14 +54,15 @@ test("snapshot with custom snapshotsDir in nested directories", async () => {
 [
   "circuits/",
   "circuits/led.circuit.tsx",
-  "circuits/snapshots/",
-  "circuits/snapshots/led.circuit-pcb.snap.svg",
-  "circuits/snapshots/led.circuit-schematic.snap.svg",
   "pcb/",
   "pcb/main.board.tsx",
-  "pcb/snapshots/",
-  "pcb/snapshots/main.board-pcb.snap.svg",
-  "pcb/snapshots/main.board-schematic.snap.svg",
+  "snapshots/",
+  "snapshots/circuits/",
+  "snapshots/circuits/led.circuit-pcb.snap.svg",
+  "snapshots/circuits/led.circuit-schematic.snap.svg",
+  "snapshots/pcb/",
+  "snapshots/pcb/main.board-pcb.snap.svg",
+  "snapshots/pcb/main.board-schematic.snap.svg",
   "tscircuit.config.json",
 ]
 `)
