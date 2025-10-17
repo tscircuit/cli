@@ -87,10 +87,12 @@ export const snapshotProject = async ({
       })
       circuitJson = result.circuitJson
     } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : String(error)
+      const errorMessage =
+        error instanceof Error ? error.message : String(error)
       onError(
-        kleur.red(`\n❌ Failed to generate circuit JSON for ${relativeFilePath}:\n`) +
-        kleur.red(`   ${errorMessage}\n`)
+        kleur.red(
+          `\n❌ Failed to generate circuit JSON for ${relativeFilePath}:\n`,
+        ) + kleur.red(`   ${errorMessage}\n`),
       )
       return onExit(1)
     }
@@ -98,10 +100,12 @@ export const snapshotProject = async ({
     try {
       pcbSvg = convertCircuitJsonToPcbSvg(circuitJson)
     } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : String(error)
+      const errorMessage =
+        error instanceof Error ? error.message : String(error)
       onError(
-        kleur.red(`\n❌ Failed to generate PCB SVG for ${relativeFilePath}:\n`) +
-        kleur.red(`   ${errorMessage}\n`)
+        kleur.red(
+          `\n❌ Failed to generate PCB SVG for ${relativeFilePath}:\n`,
+        ) + kleur.red(`   ${errorMessage}\n`),
       )
       return onExit(1)
     }
@@ -109,10 +113,12 @@ export const snapshotProject = async ({
     try {
       schSvg = convertCircuitJsonToSchematicSvg(circuitJson)
     } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : String(error)
+      const errorMessage =
+        error instanceof Error ? error.message : String(error)
       onError(
-        kleur.red(`\n❌ Failed to generate schematic SVG for ${relativeFilePath}:\n`) +
-        kleur.red(`   ${errorMessage}\n`)
+        kleur.red(
+          `\n❌ Failed to generate schematic SVG for ${relativeFilePath}:\n`,
+        ) + kleur.red(`   ${errorMessage}\n`),
       )
       return onExit(1)
     }
@@ -132,7 +138,8 @@ export const snapshotProject = async ({
           lookAt: [0, 0, 0],
         })
       } catch (error) {
-        const errorMessage = error instanceof Error ? error.message : String(error)
+        const errorMessage =
+          error instanceof Error ? error.message : String(error)
 
         // Check if it's a "no pcb_board" error
         if (errorMessage.includes("No pcb_board found in circuit JSON")) {
@@ -144,24 +151,29 @@ export const snapshotProject = async ({
           if (existing3dSnapshot) {
             // Error if there's an existing snapshot
             onError(
-              kleur.red(`\n❌ Failed to generate 3D snapshot for ${relativeFilePath}:\n`) +
-              kleur.red(`   No pcb_board found in circuit JSON\n`) +
-              kleur.red(`   Existing snapshot: ${path.relative(projectDir, snap3dPath)}\n`)
+              kleur.red(
+                `\n❌ Failed to generate 3D snapshot for ${relativeFilePath}:\n`,
+              ) +
+                kleur.red(`   No pcb_board found in circuit JSON\n`) +
+                kleur.red(
+                  `   Existing snapshot: ${path.relative(projectDir, snap3dPath)}\n`,
+                ),
             )
             return onExit(1)
           } else {
             // Skip with warning if no existing snapshot
             console.log(
               kleur.red(`⚠️  Skipping 3D snapshot for ${relativeFilePath}:`) +
-              kleur.red(` No pcb_board found in circuit JSON`)
+                kleur.red(` No pcb_board found in circuit JSON`),
             )
             png3d = null
           }
         } else {
           // For any other error, show board name and full error
           onError(
-            kleur.red(`\n❌ Failed to generate 3D snapshot for ${relativeFilePath}:\n`) +
-            kleur.red(`   ${errorMessage}\n`)
+            kleur.red(
+              `\n❌ Failed to generate 3D snapshot for ${relativeFilePath}:\n`,
+            ) + kleur.red(`   ${errorMessage}\n`),
           )
           return onExit(1)
         }
