@@ -116,6 +116,62 @@ test("build respects includeBoardFiles config globs", async () => {
   ).rejects.toBeTruthy()
 }, 30_000)
 
+test("build with directory argument respects includeBoardFiles", async () => {
+  const { tmpDir, runCommand } = await getCliTestFixture()
+  const srcDir = path.join(tmpDir, "src")
+  const otherDir = path.join(tmpDir, "other")
+  await mkdir(srcDir, { recursive: true })
+  await mkdir(otherDir, { recursive: true })
+
+  await writeFile(
+    path.join(tmpDir, "tscircuit.config.json"),
+    JSON.stringify({
+      includeBoardFiles: ["src/**/*.board.tsx", "other/**/*.board.tsx"],
+    }),
+  )
+
+  const srcBoard = path.join(srcDir, "inside-src.board.tsx")
+  const otherBoard = path.join(otherDir, "inside-other.board.tsx")
+  await writeFile(srcBoard, circuitCode)
+  await writeFile(otherBoard, circuitCode)
+  await writeFile(path.join(tmpDir, "package.json"), "{}")
+
+  await runCommand(`tsci build ${path.relative(tmpDir, srcDir)}`)
+
+  const srcData = await readFile(
+    path.join(tmpDir, "dist", "src", "inside-src", "circuit.json"),
+    "utf-8",
+  )
+  const srcJson = JSON.parse(srcData)
+  const srcComponent = srcJson.find((c: any) => c.type === "source_component")
+  expect(srcComponent.name).toBe("R1")
+
+  await expect(
+    stat(path.join(tmpDir, "dist", "other", "inside-other", "circuit.json")),
+  ).rejects.toBeTruthy()
+}, 30_000)
+
+test("build with directory argument errors when no files match", async () => {
+  const { tmpDir, runCommand } = await getCliTestFixture()
+  const srcDir = path.join(tmpDir, "src")
+  await mkdir(srcDir, { recursive: true })
+
+  await writeFile(
+    path.join(tmpDir, "tscircuit.config.json"),
+    JSON.stringify({ includeBoardFiles: ["src/**/*.board.tsx"] }),
+  )
+
+  await writeFile(path.join(tmpDir, "package.json"), "{}")
+
+  const { stderr } = await runCommand(
+    `tsci build ${path.relative(tmpDir, srcDir)}`,
+  )
+
+  expect(stderr).toContain(
+    'There were no files to build found matching the includeBoardFiles globs: ["src/**/*.board.tsx"]',
+  )
+}, 30_000)
+
 test("build without circuit files falls back to main entrypoint", async () => {
   const { tmpDir, runCommand } = await getCliTestFixture()
   const mainPath = path.join(tmpDir, "index.tsx")

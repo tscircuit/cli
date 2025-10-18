@@ -44,105 +44,114 @@ export const registerBuild = (program: Command) => {
           allImages?: boolean
         },
       ) => {
-        const { projectDir, circuitFiles, mainEntrypoint } =
-          await getBuildEntrypoints({
-            fileOrDir: file,
-          })
+        try {
+          const { projectDir, circuitFiles, mainEntrypoint } =
+            await getBuildEntrypoints({
+              fileOrDir: file,
+            })
 
-        const platformConfig: PlatformConfig | undefined = (() => {
-          if (!options?.disablePcb && !options?.disablePartsEngine) return
+          const platformConfig: PlatformConfig | undefined = (() => {
+            if (!options?.disablePcb && !options?.disablePartsEngine) return
 
-          const config: PlatformConfig = {}
+            const config: PlatformConfig = {}
 
-          if (options?.disablePcb) {
-            config.pcbDisabled = true
+            if (options?.disablePcb) {
+              config.pcbDisabled = true
+            }
+
+            if (options?.disablePartsEngine) {
+              config.partsEngineDisabled = true
+            }
+
+            return config
+          })()
+
+          const distDir = path.join(projectDir, "dist")
+          fs.mkdirSync(distDir, { recursive: true })
+
+          console.log(`Building ${circuitFiles.length} file(s)...`)
+
+          let hasErrors = false
+          const staticFileReferences: StaticBuildFileReference[] = []
+
+          const builtFiles: BuildFileResult[] = []
+
+          for (const filePath of circuitFiles) {
+            const relative = path.relative(projectDir, filePath)
+            console.log(`Building ${relative}...`)
+            const outputDirName = relative.replace(
+              /(\.board|\.circuit)?\.tsx$/,
+              "",
+            )
+            const outputPath = path.join(distDir, outputDirName, "circuit.json")
+            const ok = await buildFile(filePath, outputPath, projectDir, {
+              ignoreErrors: options?.ignoreErrors,
+              ignoreWarnings: options?.ignoreWarnings,
+              platformConfig,
+            })
+            builtFiles.push({
+              sourcePath: filePath,
+              outputPath,
+              ok,
+            })
+            if (!ok) {
+              hasErrors = true
+            } else if (options?.site) {
+              const normalizedSourcePath = relative.split(path.sep).join("/")
+              const relativeOutputPath = path.join(
+                outputDirName,
+                "circuit.json",
+              )
+              const normalizedOutputPath = relativeOutputPath
+                .split(path.sep)
+                .join("/")
+              staticFileReferences.push({
+                filePath: normalizedSourcePath,
+                fileStaticAssetUrl: `./${normalizedOutputPath}`,
+              })
+            }
           }
 
-          if (options?.disablePartsEngine) {
-            config.partsEngineDisabled = true
+          if (hasErrors && !options?.ignoreErrors) {
+            process.exit(1)
           }
 
-          return config
-        })()
+          const shouldGeneratePreviewImages =
+            options?.previewImages || options?.allImages
 
-        const distDir = path.join(projectDir, "dist")
-        fs.mkdirSync(distDir, { recursive: true })
-
-        console.log(`Building ${circuitFiles.length} file(s)...`)
-
-        let hasErrors = false
-        const staticFileReferences: StaticBuildFileReference[] = []
-
-        const builtFiles: BuildFileResult[] = []
-
-        for (const filePath of circuitFiles) {
-          const relative = path.relative(projectDir, filePath)
-          console.log(`Building ${relative}...`)
-          const outputDirName = relative.replace(
-            /(\.board|\.circuit)?\.tsx$/,
-            "",
-          )
-          const outputPath = path.join(distDir, outputDirName, "circuit.json")
-          const ok = await buildFile(filePath, outputPath, projectDir, {
-            ignoreErrors: options?.ignoreErrors,
-            ignoreWarnings: options?.ignoreWarnings,
-            platformConfig,
-          })
-          builtFiles.push({
-            sourcePath: filePath,
-            outputPath,
-            ok,
-          })
-          if (!ok) {
-            hasErrors = true
-          } else if (options?.site) {
-            const normalizedSourcePath = relative.split(path.sep).join("/")
-            const relativeOutputPath = path.join(outputDirName, "circuit.json")
-            const normalizedOutputPath = relativeOutputPath
-              .split(path.sep)
-              .join("/")
-            staticFileReferences.push({
-              filePath: normalizedSourcePath,
-              fileStaticAssetUrl: `./${normalizedOutputPath}`,
+          if (shouldGeneratePreviewImages) {
+            console.log(
+              options?.allImages
+                ? "Generating preview images for all builds..."
+                : "Generating preview images...",
+            )
+            await buildPreviewImages({
+              builtFiles,
+              distDir,
+              mainEntrypoint,
+              allImages: options?.allImages,
             })
           }
-        }
 
-        if (hasErrors && !options?.ignoreErrors) {
+          if (options?.site) {
+            const indexHtml = getStaticIndexHtmlFile({
+              files: staticFileReferences,
+              standaloneScriptSrc: "./standalone.min.js",
+            })
+            fs.writeFileSync(path.join(distDir, "index.html"), indexHtml)
+            fs.writeFileSync(
+              path.join(distDir, "standalone.min.js"),
+              runFrameStandaloneBundleContent,
+            )
+          }
+
+          console.log("Build complete!")
+          process.exit(0)
+        } catch (error) {
+          const message = error instanceof Error ? error.message : String(error)
+          console.error(message)
           process.exit(1)
         }
-
-        const shouldGeneratePreviewImages =
-          options?.previewImages || options?.allImages
-
-        if (shouldGeneratePreviewImages) {
-          console.log(
-            options?.allImages
-              ? "Generating preview images for all builds..."
-              : "Generating preview images...",
-          )
-          await buildPreviewImages({
-            builtFiles,
-            distDir,
-            mainEntrypoint,
-            allImages: options?.allImages,
-          })
-        }
-
-        if (options?.site) {
-          const indexHtml = getStaticIndexHtmlFile({
-            files: staticFileReferences,
-            standaloneScriptSrc: "./standalone.min.js",
-          })
-          fs.writeFileSync(path.join(distDir, "index.html"), indexHtml)
-          fs.writeFileSync(
-            path.join(distDir, "standalone.min.js"),
-            runFrameStandaloneBundleContent,
-          )
-        }
-
-        console.log("Build complete!")
-        process.exit(0)
       },
     )
 }
