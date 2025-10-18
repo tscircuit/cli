@@ -188,7 +188,7 @@ export const snapshotProject = async ({
 
     // Determine snapshot directory based on whether snapshotsDir is configured
     const snapDir = snapshotsDirName
-      ? // New behavior: project root + snapshotsDir + preserve directory structure
+      ? // If snapshotsDir is provided, everything goes in the snapshots directory
         path.join(
           projectDir,
           snapshotsDirName,
