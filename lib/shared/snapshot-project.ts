@@ -16,6 +16,7 @@ import {
   normalizeIgnorePattern,
 } from "lib/shared/should-ignore-path"
 import { compareAndCreateDiff } from "./compare-images"
+import { getSnapshotsDir } from "lib/project-config"
 
 type SnapshotOptions = {
   update?: boolean
@@ -70,6 +71,7 @@ export const snapshotProject = async ({
     return onExit(0)
   }
 
+  const snapshotsDirName = getSnapshotsDir(projectDir)
   const mismatches: string[] = []
   let didUpdate = false
 
@@ -143,7 +145,11 @@ export const snapshotProject = async ({
 
         // Check if it's a "no pcb_board" error
         if (errorMessage.includes("No pcb_board found in circuit JSON")) {
-          const snapDir = path.join(path.dirname(file), "__snapshots__")
+          const fileDir = path.dirname(file)
+          const relativeDir = path.relative(projectDir, fileDir)
+          const snapDir = snapshotsDirName
+            ? path.join(projectDir, snapshotsDirName, relativeDir)
+            : path.join(fileDir, "__snapshots__")
           const base = path.basename(file).replace(/\.tsx$/, "")
           const snap3dPath = path.join(snapDir, `${base}-3d.snap.png`)
           const existing3dSnapshot = fs.existsSync(snap3dPath)
@@ -180,7 +186,17 @@ export const snapshotProject = async ({
       }
     }
 
-    const snapDir = path.join(path.dirname(file), "__snapshots__")
+    // Determine snapshot directory based on whether snapshotsDir is configured
+    const snapDir = snapshotsDirName
+      ? // If snapshotsDir is provided, everything goes in the snapshots directory
+        path.join(
+          projectDir,
+          snapshotsDirName,
+          path.relative(projectDir, path.dirname(file)),
+        )
+      : // If snapshotsDir isn't provided, we create a `__snapshots__` directory next to the file like jest
+        path.join(path.dirname(file), "__snapshots__")
+
     fs.mkdirSync(snapDir, { recursive: true })
 
     const base = path.basename(file).replace(/\.tsx$/, "")

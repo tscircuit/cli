@@ -56,6 +56,16 @@ export const getBoardFilePatterns = (
 }
 
 /**
+ * Get the snapshots directory from the project config
+ */
+export const getSnapshotsDir = (
+  projectDir: string = process.cwd(),
+): string | undefined => {
+  const config = loadProjectConfig(projectDir)
+  return config?.snapshotsDir
+}
+
+/**
  * Save the tscircuit project configuration to the file system
  */
 export const saveProjectConfig = (
