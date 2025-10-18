@@ -194,7 +194,7 @@ export const snapshotProject = async ({
           snapshotsDirName,
           path.relative(projectDir, path.dirname(file)),
         )
-      : // Old behavior: __snapshots__
+      : // If snapshotsDir isn't provided, we create a `__snapshots__` directory next to the file like jest
         path.join(path.dirname(file), "__snapshots__")
 
     fs.mkdirSync(snapDir, { recursive: true })
