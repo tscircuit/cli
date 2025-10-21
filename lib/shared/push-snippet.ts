@@ -15,6 +15,7 @@ import { checkOrgAccess } from "lib/utils/check-org-access"
 type PushOptions = {
   filePath?: string
   isPrivate?: boolean
+  versionTag?: string
   onExit?: (code: number) => void
   onError?: (message: string) => void
   onSuccess?: (message: string) => void
@@ -25,6 +26,7 @@ const debug = Debug("tsci:push-snippet")
 export const pushSnippet = async ({
   filePath,
   isPrivate,
+  versionTag,
   onExit = (code) => process.exit(code),
   onError = (message) => console.error(message),
   onSuccess = (message) => console.log(message),
@@ -142,15 +144,18 @@ export const pushSnippet = async ({
     .json()
     .then((response) => response.package_releases)
 
-  let packageVersion =
+  const lastKnownVersion =
     packageJson.version ??
     previousPackageReleases?.[previousPackageReleases.length - 1]?.version
 
-  if (!packageVersion) {
+  let packageVersion: string
+  if (!lastKnownVersion) {
     console.log(
       "No package version found in package.json or previous releases, setting to 0.0.1",
     )
     packageVersion = "0.0.1"
+  } else {
+    packageVersion = lastKnownVersion
   }
 
   const updatePackageJsonVersion = (newVersion?: string) => {
@@ -222,46 +227,65 @@ export const pushSnippet = async ({
       })
   }
 
-  const doesReleaseExist = await ky
-    .post<{
-      error?: { error_code: string }
-      package_release?: { version: string }
-    }>("package_releases/get", {
-      json: {
-        package_name_with_version: `${scopedPackageName}@${packageVersion}`,
-      },
-    })
-    .json()
-    .then((response) => {
-      debug("doesReleaseExist", response)
-      if (response.package_release?.version) {
-        packageVersion = response.package_release.version
-        updatePackageJsonVersion(response.package_release.version)
-        return true
-      }
-      return !(response.error?.error_code === "package_release_not_found")
-    })
-    .catch((error) => {
-      // Package release not found
-      if (error.response.status === 404) {
-        return false
-      }
-      onError(`Error checking if release exists: ${error}`)
-    })
+  const buildReleaseVersion = (baseVersion: string) =>
+    versionTag ? `${baseVersion}-${versionTag}` : baseVersion
 
-  if (doesReleaseExist) {
-    const bumpedVersion = semver.inc(packageVersion, "patch")!
+  let releaseVersion = buildReleaseVersion(packageVersion)
+
+  while (true) {
+    const releaseExists = await ky
+      .post<{
+        error?: { error_code: string }
+        package_release?: { version: string }
+      }>("package_releases/get", {
+        json: {
+          package_name_with_version: `${scopedPackageName}@${releaseVersion}`,
+        },
+      })
+      .json()
+      .then((response) => {
+        debug("doesReleaseExist", response)
+        if (response.package_release?.version) {
+          return true
+        }
+        return !(response.error?.error_code === "package_release_not_found")
+      })
+      .catch((error: unknown) => {
+        const httpError = error as { response?: { status?: number } }
+        // Package release not found
+        if (httpError?.response?.status === 404) {
+          return false
+        }
+        onError(`Error checking if release exists: ${error}`)
+        return undefined
+      })
+
+    if (releaseExists === undefined) {
+      return onExit(1)
+    }
+
+    if (!releaseExists) {
+      break
+    }
+
+    const bumpedVersion = semver.inc(packageVersion, "patch")
+    if (!bumpedVersion) {
+      onError(`Failed to increment version from ${packageVersion}`)
+      return onExit(1)
+    }
+
     onSuccess(
       `Incrementing Package Version ${packageVersion} -> ${bumpedVersion}`,
     )
     packageVersion = bumpedVersion
     updatePackageJsonVersion(packageVersion)
+    releaseVersion = buildReleaseVersion(packageVersion)
   }
 
   await ky
     .post("package_releases/create", {
       json: {
-        package_name_with_version: `${scopedPackageName}@${packageVersion}`,
+        package_name_with_version: `${scopedPackageName}@${releaseVersion}`,
       },
     })
     .catch((error) => {
@@ -280,7 +304,7 @@ export const pushSnippet = async ({
         json: {
           file_path: relativeFilePath,
           content_text: fileContent,
-          package_name_with_version: `${scopedPackageName}@${packageVersion}`,
+          package_name_with_version: `${scopedPackageName}@${releaseVersion}`,
         },
       })
       .json()
@@ -295,14 +319,14 @@ export const pushSnippet = async ({
 
   await ky.post("package_releases/update", {
     json: {
-      package_name_with_version: `${scopedPackageName}@${packageVersion}`,
+      package_name_with_version: `${scopedPackageName}@${releaseVersion}`,
       ready_to_build: true,
     },
   })
 
   onSuccess(
     [
-      kleur.green(`"${tsciPackageName}@${packageVersion}" published!`),
+      kleur.green(`"${tsciPackageName}@${releaseVersion}" published!`),
       `https://tscircuit.com/${scopedPackageName}`,
     ].join("\n"),
   )

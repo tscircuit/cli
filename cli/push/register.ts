@@ -7,13 +7,23 @@ export const registerPush = (program: Command) => {
     .description("Save snippet code to Registry API")
     .argument("[file]", "Path to the snippet file")
     .option("--private", "Make the snippet private")
-    .action(async (filePath?: string, options: { private?: boolean } = {}) => {
-      await pushSnippet({
-        filePath,
-        isPrivate: options.private ?? false,
-        onExit: (code) => process.exit(code),
-        onError: (message) => console.error(message),
-        onSuccess: (message) => console.log(message),
-      })
-    })
+    .option(
+      "--version-tag <tag>",
+      "Publish as a non-latest version using the provided tag",
+    )
+    .action(
+      async (
+        filePath?: string,
+        options: { private?: boolean; versionTag?: string } = {},
+      ) => {
+        await pushSnippet({
+          filePath,
+          isPrivate: options.private ?? false,
+          versionTag: options.versionTag,
+          onExit: (code) => process.exit(code),
+          onError: (message) => console.error(message),
+          onSuccess: (message) => console.log(message),
+        })
+      },
+    )
 }
