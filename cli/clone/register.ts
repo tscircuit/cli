@@ -55,7 +55,12 @@ export const registerClone = (program: Command) => {
           !urlMatch && packagePath.match(/^(?:@tsci\/)?([^/.]+)[/.]([^/.]+)$/)
 
         const match = urlMatch || originalMatch
-        if (!match) throw new Error("No valid match found") // Should never happen due to earlier check
+        if (!match) {
+          console.error(
+            "Invalid package path. Please use author/packageName or https://tscircuit.com/author/packageName.",
+          )
+          process.exit(1)
+        }
         const [, author, packageName] = match
         console.log(`Cloning ${author}/${packageName}...`)
         const userSettingToIncludeAuthor =
