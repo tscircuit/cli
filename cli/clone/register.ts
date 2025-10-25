@@ -6,36 +6,61 @@ import { setupTsciProject } from "lib/shared/setup-tsci-packages"
 import { generateTsConfig } from "lib/shared/generate-ts-config"
 import kleur from "kleur"
 import { cliConfig } from "lib/cli-config"
+import { cloneBugReport } from "./clone-bug-report"
+import { handleExistingDirectory } from "./handle-existing-directory"
 
 export const registerClone = (program: Command) => {
   program
     .command("clone")
     .description("Clone a package from the registry")
     .argument(
-      "<package>",
+      "[package]",
       "Package to clone (e.g. author/packageName or https://tscircuit.com/author/packageName)",
     )
     .option("-a, --include-author", "Include author name in the directory path")
+    .option("--bug-report <bugReportId>", "Clone a bug report project")
     .action(
-      async (packagePath: string, options: { includeAuthor?: boolean }) => {
+      async (
+        packagePath: string | undefined,
+        options: { includeAuthor?: boolean; bugReport?: string },
+      ) => {
         // First try to match URL format (strict tscircuit.com only)
+        const originalCwd = process.cwd()
+
+        if (options.bugReport) {
+          if (packagePath) {
+            console.warn(
+              "Package argument is ignored when --bug-report is provided.",
+            )
+          }
+          await cloneBugReport({
+            bugReportId: options.bugReport,
+            originalCwd,
+          })
+          return
+        }
+
+        if (!packagePath) {
+          console.error(
+            "Package argument is required unless --bug-report is provided.",
+          )
+          process.exit(1)
+        }
+
         const urlMatch = packagePath.match(
           /^https:\/\/tscircuit\.com\/([^\/]+)\/([^\/]+)\/?$/i,
         )
         // Then try the original format
         const originalMatch =
           !urlMatch && packagePath.match(/^(?:@tsci\/)?([^/.]+)[/.]([^/.]+)$/)
-        const originalCwd = process.cwd()
 
-        if (!urlMatch && !originalMatch) {
+        const match = urlMatch || originalMatch
+        if (!match) {
           console.error(
-            `Invalid package path "${packagePath}". Accepted formats:\n - author/packageName\n - author.packageName \n - @tsci/author.packageName\n - https://tscircuit.com/author/packageName`,
+            "Invalid package path. Please use author/packageName or https://tscircuit.com/author/packageName.",
           )
           process.exit(1)
         }
-
-        const match = urlMatch || originalMatch
-        if (!match) throw new Error("No valid match found") // Should never happen due to earlier check
         const [, author, packageName] = match
         console.log(`Cloning ${author}/${packageName}...`)
         const userSettingToIncludeAuthor =
@@ -45,34 +70,7 @@ export const registerClone = (program: Command) => {
           : path.resolve(packageName)
 
         // Check if directory already exists
-        if (fs.existsSync(dirPath)) {
-          const prompts = await import("prompts")
-          const response = await prompts.default({
-            type: "select",
-            name: "action",
-            message: `Directory "${path.basename(dirPath)}" already exists. What would you like to do?`,
-            choices: [
-              { title: "Merge files into existing directory", value: "merge" },
-              {
-                title: "Delete existing directory and clone fresh",
-                value: "delete",
-              },
-              { title: "Cancel", value: "cancel" },
-            ],
-          })
-
-          if (!response.action || response.action === "cancel") {
-            console.log("Clone cancelled.")
-            process.exit(0)
-          }
-
-          if (response.action === "delete") {
-            fs.rmSync(dirPath, { recursive: true, force: true })
-            console.log(`Deleted existing directory: ${dirPath}`)
-          } else if (response.action === "merge") {
-            console.log(`Merging files into existing directory: ${dirPath}`)
-          }
-        }
+        await handleExistingDirectory(dirPath)
         const ky = getRegistryApiKy()
         let packageFileList: { package_files: Array<{ file_path: string }> } = {
           package_files: [],
@@ -147,7 +145,7 @@ export const registerClone = (program: Command) => {
         )
 
         generateTsConfig(dirPath)
-        setupTsciProject(dirPath)
+        await setupTsciProject(dirPath)
 
         const relativeDirPath = path.relative(originalCwd, dirPath)
 
