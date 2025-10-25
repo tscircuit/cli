@@ -1,11 +1,11 @@
 import * as fs from "node:fs"
 import * as path from "node:path"
+import prompts from "prompts"
 
 export const handleExistingDirectory = async (dirPath: string) => {
   if (!fs.existsSync(dirPath)) return
 
-  const prompts = await import("prompts")
-  const response = await prompts.default({
+  const response = await prompts({
     type: "select",
     name: "action",
     message: `Directory "${path.basename(dirPath)}" already exists. What would you like to do?`,
