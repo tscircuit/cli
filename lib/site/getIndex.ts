@@ -13,6 +13,7 @@ export const getIndex = async (
     : ""
   return `<html>
     <head>
+      <link rel="icon" type="image/png" href="https://github.com/tscircuit.png">
     </head>
     <body>
       <script>
