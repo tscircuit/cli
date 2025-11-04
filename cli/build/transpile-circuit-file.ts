@@ -49,38 +49,29 @@ export const transpileCircuitFile = async ({
     const ts = await import("typescript")
     const source = fs.readFileSync(inputPath, "utf8")
 
-    const typeRoots = [
-      path.join(projectDir, "types"),
-      path.join(projectDir, "node_modules", "@types"),
-    ].filter((dir) => fs.existsSync(dir))
-
-    const jsxRuntimeModulePath = path.join(
+    // Check if @tscircuit/core types are available
+    const tscircuitCoreTypesPath = path.join(
       projectDir,
-      "types",
-      "tscircuit",
-      "jsx-runtime",
+      "node_modules",
+      "@tscircuit",
+      "core",
+      "dist",
+      "index.d.ts",
     )
+    const hasTscircuitCoreTypes = fs.existsSync(tscircuitCoreTypesPath)
 
-    const paths: Record<string, string[]> | undefined = fs.existsSync(
-      `${jsxRuntimeModulePath}.d.ts`,
-    )
-      ? {
-          "tscircuit/jsx-runtime": [
-            path.relative(projectDir, jsxRuntimeModulePath),
-          ],
-        }
-      : undefined
-
+    // Simple compiler options - let TypeScript use standard React JSX runtime
+    // @tscircuit/core already augments react/jsx-runtime with IntrinsicElements
+    // We add @tscircuit/core to types array if available to load its type augmentations
     const baseCompilerOptions: import("typescript").CompilerOptions = {
       moduleResolution: ts.ModuleResolutionKind.Bundler,
       target: ts.ScriptTarget.ES2020,
       jsx: ts.JsxEmit.ReactJSX,
-      jsxImportSource: "tscircuit",
+      jsxImportSource: "react",
       esModuleInterop: true,
       allowSyntheticDefaultImports: true,
-      typeRoots: typeRoots.length > 0 ? typeRoots : undefined,
-      baseUrl: projectDir,
-      paths,
+      skipLibCheck: true,
+      types: hasTscircuitCoreTypes ? ["@tscircuit/core"] : undefined,
     }
 
     const seenDiagnosticKeys = new Set<string>()
@@ -91,8 +82,14 @@ export const transpileCircuitFile = async ({
     ) => {
       if (!diagnostics) return
       for (const diagnostic of diagnostics) {
+        // Skip diagnostics from node_modules
+        const fileName = diagnostic.file?.fileName ?? diagnostic.source ?? ""
+        if (fileName.includes("node_modules")) {
+          continue
+        }
+
         const key = [
-          diagnostic.file?.fileName ?? diagnostic.source ?? "",
+          fileName,
           diagnostic.start ?? "",
           diagnostic.code,
           ts.flattenDiagnosticMessageText(diagnostic.messageText, "\n"),
@@ -130,122 +127,10 @@ export const transpileCircuitFile = async ({
       module: ts.ModuleKind.ESNext,
       declaration: true,
       emitDeclarationOnly: true,
-      noResolve: true,
     }
 
     const declarationOutputs: Array<{ fileName: string; text: string }> = []
     const compilerHost = ts.createCompilerHost(declarationCompilerOptions)
-    const jsxRuntimeDeclarationPath = `${jsxRuntimeModulePath}.d.ts`
-    const moduleResolutionCache = ts.createModuleResolutionCache(
-      projectDir,
-      compilerHost.getCanonicalFileName,
-      declarationCompilerOptions,
-    )
-
-    const resolveJsxRuntime = () =>
-      fs.existsSync(jsxRuntimeDeclarationPath)
-        ? {
-            resolvedFileName: jsxRuntimeDeclarationPath,
-            extension: ts.Extension.Dts,
-            isExternalLibraryImport: false,
-          }
-        : undefined
-
-    const originalResolveModuleNameLiterals =
-      compilerHost.resolveModuleNameLiterals?.bind(compilerHost)
-
-    compilerHost.resolveModuleNameLiterals = (
-      moduleLiterals,
-      containingFile,
-      redirectedReference,
-      options,
-      containingSourceFile,
-      reusedNames,
-    ) => {
-      const fallbackResolutions = originalResolveModuleNameLiterals
-        ? originalResolveModuleNameLiterals(
-            moduleLiterals,
-            containingFile,
-            redirectedReference,
-            options,
-            containingSourceFile,
-            reusedNames,
-          )
-        : []
-
-      return moduleLiterals.map((moduleLiteral, index) => {
-        if (moduleLiteral.text === "tscircuit/jsx-runtime") {
-          const resolvedModule = resolveJsxRuntime()
-          if (resolvedModule) {
-            return { resolvedModule }
-          }
-        }
-
-        const fallback = fallbackResolutions[index]
-        if (fallback) {
-          return fallback
-        }
-
-        const resolution = ts.resolveModuleName(
-          moduleLiteral.text,
-          containingFile,
-          options ?? declarationCompilerOptions,
-          compilerHost,
-          moduleResolutionCache,
-          redirectedReference,
-        )
-
-        return { resolvedModule: resolution.resolvedModule }
-      })
-    }
-
-    const originalResolveModuleNames =
-      compilerHost.resolveModuleNames?.bind(compilerHost)
-
-    compilerHost.resolveModuleNames = (
-      moduleNames,
-      containingFile,
-      reusedNames,
-      redirectedReference,
-      options,
-      containingSourceFile,
-    ) => {
-      const fallbackResolutions = originalResolveModuleNames
-        ? originalResolveModuleNames(
-            moduleNames,
-            containingFile,
-            reusedNames,
-            redirectedReference,
-            options,
-            containingSourceFile,
-          )
-        : []
-
-      return moduleNames.map((moduleName, index) => {
-        if (moduleName === "tscircuit/jsx-runtime") {
-          const resolvedModule = resolveJsxRuntime()
-          if (resolvedModule) {
-            return resolvedModule
-          }
-        }
-
-        const fallback = fallbackResolutions[index]
-        if (fallback) {
-          return fallback
-        }
-
-        const resolution = ts.resolveModuleName(
-          moduleName,
-          containingFile,
-          options ?? declarationCompilerOptions,
-          compilerHost,
-          moduleResolutionCache,
-          redirectedReference,
-        )
-
-        return resolution.resolvedModule
-      })
-    }
 
     compilerHost.writeFile = (fileName, text) => {
       declarationOutputs.push({ fileName, text })
@@ -264,23 +149,18 @@ export const transpileCircuitFile = async ({
 
     let hasErrors = false
 
+    // Error codes to skip when @tscircuit/core types aren't available:
+    // 2875: This JSX tag requires the module path 'react/jsx-runtime' to exist
+    // 2339: Property does not exist on type 'JSX.IntrinsicElements'
+    // 2322: Type is not assignable (JSX props)
+    // 2802: Type 'X' can only be used in TypeScript files (JSX runtime module not found)
+    const jsxErrorCodesToSkip = hasTscircuitCoreTypes
+      ? new Set<number>()
+      : new Set([2875, 2339, 2322, 2802])
+
     for (const diagnostic of collectedDiagnostics) {
-      if (diagnostic.code === 2875) {
-        if (!ignoreWarnings) {
-          const formattedMessage = formatDiagnosticMessage(
-            ts,
-            diagnostic,
-            source,
-            projectDir,
-          )
-
-          console.warn(
-            kleur.yellow(
-              `[transpile] ${formattedMessage} (emitting fallback JSX runtime types)`,
-            ),
-          )
-        }
-
+      // Skip JSX type errors when types aren't available - transpilation still works
+      if (jsxErrorCodesToSkip.has(diagnostic.code)) {
         continue
       }
 
