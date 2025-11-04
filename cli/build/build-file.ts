@@ -70,17 +70,15 @@ export const buildFile = async (
 
     if (encounteredErrors && !options?.ignoreErrors) {
       console.error(
-        kleur.red(`Build failed due to errors. Use --ignore-errors to continue.`),
+        kleur.red(
+          `Build failed due to errors. Use --ignore-errors to continue.`,
+        ),
       )
       return false
     }
 
     if (encounteredErrors && options?.ignoreErrors) {
-      console.warn(
-        kleur.yellow(
-          `Build completed with errors (ignored).`,
-        ),
-      )
+      console.warn(kleur.yellow(`Build completed with errors (ignored).`))
     }
 
     return true

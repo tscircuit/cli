@@ -34,10 +34,7 @@ const formatDiagnosticMessage = (
   const location = fileName
     ? `${relativeFileName}:${position.line + 1}:${position.character + 1}`
     : relativeFileName
-  const message = ts.flattenDiagnosticMessageText(
-    diagnostic.messageText,
-    "\n",
-  )
+  const message = ts.flattenDiagnosticMessageText(diagnostic.messageText, "\n")
 
   return `${location} - ${message}`
 }
@@ -67,7 +64,11 @@ export const transpileCircuitFile = async ({
     const paths: Record<string, string[]> | undefined = fs.existsSync(
       `${jsxRuntimeModulePath}.d.ts`,
     )
-      ? { "tscircuit/jsx-runtime": [path.relative(projectDir, jsxRuntimeModulePath)] }
+      ? {
+          "tscircuit/jsx-runtime": [
+            path.relative(projectDir, jsxRuntimeModulePath),
+          ],
+        }
       : undefined
 
     const baseCompilerOptions: import("typescript").CompilerOptions = {
@@ -159,8 +160,20 @@ export const transpileCircuitFile = async ({
       redirectedReference,
       options,
       containingSourceFile,
-    ) =>
-      moduleLiterals.map((moduleLiteral) => {
+      reusedNames,
+    ) => {
+      const fallbackResolutions = originalResolveModuleNameLiterals
+        ? originalResolveModuleNameLiterals(
+            moduleLiterals,
+            containingFile,
+            redirectedReference,
+            options,
+            containingSourceFile,
+            reusedNames,
+          )
+        : []
+
+      return moduleLiterals.map((moduleLiteral, index) => {
         if (moduleLiteral.text === "tscircuit/jsx-runtime") {
           const resolvedModule = resolveJsxRuntime()
           if (resolvedModule) {
@@ -168,20 +181,15 @@ export const transpileCircuitFile = async ({
           }
         }
 
-        if (originalResolveModuleNameLiterals) {
-          return originalResolveModuleNameLiterals(
-            [moduleLiteral],
-            containingFile,
-            redirectedReference,
-            options,
-            containingSourceFile,
-          )[0]
+        const fallback = fallbackResolutions[index]
+        if (fallback) {
+          return fallback
         }
 
         const resolution = ts.resolveModuleName(
           moduleLiteral.text,
           containingFile,
-          options,
+          options ?? declarationCompilerOptions,
           compilerHost,
           moduleResolutionCache,
           redirectedReference,
@@ -189,6 +197,7 @@ export const transpileCircuitFile = async ({
 
         return { resolvedModule: resolution.resolvedModule }
       })
+    }
 
     const originalResolveModuleNames =
       compilerHost.resolveModuleNames?.bind(compilerHost)
@@ -196,10 +205,23 @@ export const transpileCircuitFile = async ({
     compilerHost.resolveModuleNames = (
       moduleNames,
       containingFile,
+      reusedNames,
       redirectedReference,
       options,
-    ) =>
-      moduleNames.map((moduleName) => {
+      containingSourceFile,
+    ) => {
+      const fallbackResolutions = originalResolveModuleNames
+        ? originalResolveModuleNames(
+            moduleNames,
+            containingFile,
+            reusedNames,
+            redirectedReference,
+            options,
+            containingSourceFile,
+          )
+        : []
+
+      return moduleNames.map((moduleName, index) => {
         if (moduleName === "tscircuit/jsx-runtime") {
           const resolvedModule = resolveJsxRuntime()
           if (resolvedModule) {
@@ -207,23 +229,15 @@ export const transpileCircuitFile = async ({
           }
         }
 
-        if (originalResolveModuleNames) {
-          const result = originalResolveModuleNames(
-            [moduleName],
-            containingFile,
-            redirectedReference,
-            options,
-          )[0]
-
-          if (result) {
-            return result
-          }
+        const fallback = fallbackResolutions[index]
+        if (fallback) {
+          return fallback
         }
 
         const resolution = ts.resolveModuleName(
           moduleName,
           containingFile,
-          options,
+          options ?? declarationCompilerOptions,
           compilerHost,
           moduleResolutionCache,
           redirectedReference,
@@ -231,6 +245,7 @@ export const transpileCircuitFile = async ({
 
         return resolution.resolvedModule
       })
+    }
 
     compilerHost.writeFile = (fileName, text) => {
       declarationOutputs.push({ fileName, text })

@@ -265,12 +265,7 @@ test("build with --transpile emits JavaScript and type outputs", async () => {
     "transpile-test",
     "index.cjs",
   )
-  const typesPath = path.join(
-    tmpDir,
-    "dist",
-    "transpile-test",
-    "index.d.ts",
-  )
+  const typesPath = path.join(tmpDir, "dist", "transpile-test", "index.d.ts")
 
   await expect(stat(transpiledEsmPath)).resolves.toBeTruthy()
   await expect(stat(transpiledCjsPath)).resolves.toBeTruthy()
