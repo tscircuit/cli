@@ -31,6 +31,7 @@ export const registerBuild = (program: Command) => {
       "--all-images",
       "Generate preview images for every successful build output",
     )
+    .option("--transpile", "Transpile circuit files to JavaScript outputs")
     .action(
       async (
         file?: string,
@@ -42,6 +43,7 @@ export const registerBuild = (program: Command) => {
           site?: boolean
           previewImages?: boolean
           allImages?: boolean
+          transpile?: boolean
         },
       ) => {
         try {
@@ -88,6 +90,7 @@ export const registerBuild = (program: Command) => {
               ignoreErrors: options?.ignoreErrors,
               ignoreWarnings: options?.ignoreWarnings,
               platformConfig,
+              transpile: options?.transpile,
             })
             builtFiles.push({
               sourcePath: filePath,

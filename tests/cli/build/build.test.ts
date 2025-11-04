@@ -244,3 +244,44 @@ test("build with --all-images generates preview assets for each build", async ()
   await readImageSet("first")
   await readImageSet("second")
 }, 60_000)
+
+test("build with --transpile emits JavaScript and type outputs", async () => {
+  const { tmpDir, runCommand } = await getCliTestFixture()
+  const circuitPath = path.join(tmpDir, "transpile-test.circuit.tsx")
+  await writeFile(circuitPath, circuitCode)
+  await writeFile(path.join(tmpDir, "package.json"), "{}")
+
+  await runCommand(`tsci build --transpile ${circuitPath}`)
+
+  const transpiledEsmPath = path.join(
+    tmpDir,
+    "dist",
+    "transpile-test",
+    "index.js",
+  )
+  const transpiledCjsPath = path.join(
+    tmpDir,
+    "dist",
+    "transpile-test",
+    "index.cjs",
+  )
+  const typesPath = path.join(
+    tmpDir,
+    "dist",
+    "transpile-test",
+    "index.d.ts",
+  )
+
+  await expect(stat(transpiledEsmPath)).resolves.toBeTruthy()
+  await expect(stat(transpiledCjsPath)).resolves.toBeTruthy()
+  await expect(stat(typesPath)).resolves.toBeTruthy()
+
+  const transpiledEsmContent = await readFile(transpiledEsmPath, "utf-8")
+  expect(transpiledEsmContent).toContain("export default")
+
+  const transpiledCjsContent = await readFile(transpiledCjsPath, "utf-8")
+  expect(transpiledCjsContent).toContain("exports.default")
+
+  const typesContent = await readFile(typesPath, "utf-8")
+  expect(typesContent).toContain("export default")
+}, 30_000)

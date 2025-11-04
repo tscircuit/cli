@@ -4,6 +4,7 @@ import kleur from "kleur"
 import { generateCircuitJson } from "lib/shared/generate-circuit-json"
 import { analyzeCircuitJson } from "lib/shared/circuit-json-diagnostics"
 import type { PlatformConfig } from "@tscircuit/props"
+import { transpileCircuitFile } from "./transpile-circuit-file"
 
 export const buildFile = async (
   input: string,
@@ -13,6 +14,7 @@ export const buildFile = async (
     ignoreErrors?: boolean
     ignoreWarnings?: boolean
     platformConfig?: PlatformConfig
+    transpile?: boolean
   },
 ): Promise<boolean> => {
   try {
@@ -42,16 +44,46 @@ export const buildFile = async (
       }
     }
 
-    if (errors.length > 0 && !options?.ignoreErrors) {
+    let encounteredErrors = errors.length > 0
+
+    if (options?.transpile) {
+      const jsOutputDir = path.dirname(output)
+      const transpileOk = await transpileCircuitFile({
+        inputPath: input,
+        outputDir: jsOutputDir,
+        projectDir,
+        ignoreWarnings: options?.ignoreWarnings,
+      })
+
+      if (!transpileOk) {
+        encounteredErrors = true
+        if (!options?.ignoreErrors) {
+          console.error(
+            kleur.red(
+              `Build failed while transpiling ${path.relative(projectDir, input)}.`,
+            ),
+          )
+          return false
+        }
+      }
+    }
+
+    if (encounteredErrors && !options?.ignoreErrors) {
       console.error(
-        kleur.red(
-          `Build failed with ${errors.length} error(s). Use --ignore-errors to continue.`,
-        ),
+        kleur.red(`Build failed due to errors. Use --ignore-errors to continue.`),
       )
       return false
-    } else {
-      return true
     }
+
+    if (encounteredErrors && options?.ignoreErrors) {
+      console.warn(
+        kleur.yellow(
+          `Build completed with errors (ignored).`,
+        ),
+      )
+    }
+
+    return true
   } catch (err) {
     console.error(`Build failed: ${err}`)
     return false
