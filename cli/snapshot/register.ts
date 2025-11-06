@@ -6,7 +6,7 @@ export const registerSnapshot = (program: Command) => {
     .command("snapshot")
     .argument(
       "[path]",
-      "Path to the board, circuit file, or directory containing them",
+      "Path to file, directory, or glob pattern (e.g., 'examples/**/*.tsx')",
     )
     .description(
       "Generate schematic and PCB snapshots (add --3d for 3d preview)",

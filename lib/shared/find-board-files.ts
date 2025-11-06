@@ -19,6 +19,13 @@ const isSubPath = (maybeChild: string, maybeParent: string) => {
 }
 
 /**
+ * Check if a string looks like a glob pattern
+ */
+const isGlobPattern = (str: string): boolean => {
+  return /[*?[\]{}]/.test(str)
+}
+
+/**
  * Locate all board files that match the configured include globs.
  *
  * The returned paths are absolute to make it easier for callers to work with
@@ -43,37 +50,50 @@ export const findBoardFiles = ({
 
   const boardFileSet = new Set<string>()
 
-  const resolvedPaths = filePaths.map((f) =>
-    path.resolve(resolvedProjectDir, f),
-  )
+  if (filePaths.length > 0) {
+    for (const inputPath of filePaths) {
+      // Check if the input path is a glob pattern
+      if (isGlobPattern(inputPath)) {
+        // Expand the glob pattern relative to the project directory
+        const matches = globbySync(inputPath, {
+          cwd: resolvedProjectDir,
+          ignore,
+          absolute: true,
+        })
 
-  if (resolvedPaths.length > 0) {
-    for (const targetPath of resolvedPaths) {
-      if (!fs.existsSync(targetPath)) {
-        continue
-      }
+        for (const match of matches) {
+          boardFileSet.add(match)
+        }
+      } else {
+        // Handle as a regular file or directory path
+        const targetPath = path.resolve(resolvedProjectDir, inputPath)
 
-      const stat = fs.statSync(targetPath)
-      if (stat.isDirectory()) {
-        const resolvedDir = path.resolve(targetPath)
-        if (isSubPath(resolvedDir, resolvedProjectDir)) {
-          for (const boardFile of absoluteBoardFiles) {
-            if (isSubPath(boardFile, resolvedDir)) {
-              boardFileSet.add(boardFile)
+        if (!fs.existsSync(targetPath)) {
+          continue
+        }
+
+        const stat = fs.statSync(targetPath)
+        if (stat.isDirectory()) {
+          const resolvedDir = path.resolve(targetPath)
+          if (isSubPath(resolvedDir, resolvedProjectDir)) {
+            for (const boardFile of absoluteBoardFiles) {
+              if (isSubPath(boardFile, resolvedDir)) {
+                boardFileSet.add(boardFile)
+              }
+            }
+          } else {
+            const externalMatches = globbySync(boardFilePatterns, {
+              cwd: resolvedDir,
+              ignore,
+            }).map((f) => path.join(resolvedDir, f))
+
+            for (const match of externalMatches) {
+              boardFileSet.add(match)
             }
           }
         } else {
-          const externalMatches = globbySync(boardFilePatterns, {
-            cwd: resolvedDir,
-            ignore,
-          }).map((f) => path.join(resolvedDir, f))
-
-          for (const match of externalMatches) {
-            boardFileSet.add(match)
-          }
+          boardFileSet.add(targetPath)
         }
-      } else {
-        boardFileSet.add(targetPath)
       }
     }
   } else {
