@@ -1,6 +1,6 @@
 {
   "name": "@tscircuit/cli",
-  "version": "0.1.453",
+  "version": "0.1.454",
   "main": "dist/main.js",
   "dependencies": {
     "rollup": "^4.52.5",
