@@ -2,12 +2,16 @@
   "name": "@tscircuit/cli",
   "version": "0.1.446",
   "main": "dist/main.js",
-  "devDependencies": {
-    "@babel/standalone": "^7.26.9",
-    "@biomejs/biome": "^1.9.4",
+  "dependencies": {
+    "rollup": "^4.52.5",
     "@rollup/plugin-commonjs": "^29.0.0",
     "@rollup/plugin-node-resolve": "^16.0.3",
     "@rollup/plugin-typescript": "^12.3.0",
+    "rollup-plugin-dts": "^6.2.3"
+  },
+  "devDependencies": {
+    "@babel/standalone": "^7.26.9",
+    "@biomejs/biome": "^1.9.4",
     "@tscircuit/circuit-json-util": "0.0.67",
     "@tscircuit/fake-snippets": "^0.0.128",
     "@tscircuit/file-server": "^0.0.32",
@@ -57,8 +61,6 @@
     "poppygl": "^0.0.12",
     "prompts": "^2.4.2",
     "redaxios": "^0.5.1",
-    "rollup": "^4.52.5",
-    "rollup-plugin-dts": "^6.2.3",
     "semver": "^7.6.3",
     "sharp": "0.32.6",
     "tempy": "^3.1.0",
