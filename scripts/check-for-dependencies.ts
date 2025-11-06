@@ -3,7 +3,15 @@
 import { readFileSync } from "node:fs"
 import { exit } from "node:process"
 
-const ALLOWED_DEPENDENCIES = ["looks-same", "sharp"] // Add more allowed runtime deps here
+const ALLOWED_DEPENDENCIES = [
+  "looks-same",
+  "sharp",
+  "rollup",
+  "@rollup/plugin-commonjs",
+  "@rollup/plugin-node-resolve",
+  "@rollup/plugin-typescript",
+  "rollup-plugin-dts",
+] // Add more allowed runtime deps here
 
 console.log("Checking for non-dev dependencies...")
 

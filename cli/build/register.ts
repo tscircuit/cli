@@ -10,6 +10,7 @@ import {
 import type { PlatformConfig } from "@tscircuit/props"
 import type { BuildFileResult } from "./build-preview-images"
 import { buildPreviewImages } from "./build-preview-images"
+import { transpileFile } from "./transpile-file"
 
 // @ts-ignore
 import runFrameStandaloneBundleContent from "@tscircuit/runframe/standalone" with {
@@ -31,6 +32,10 @@ export const registerBuild = (program: Command) => {
       "--all-images",
       "Generate preview images for every successful build output",
     )
+    .option(
+      "--transpile",
+      "Transpile TypeScript to ESM (index.js), CommonJS (index.cjs), and types (index.d.ts)",
+    )
     .action(
       async (
         file?: string,
@@ -42,6 +47,7 @@ export const registerBuild = (program: Command) => {
           site?: boolean
           previewImages?: boolean
           allImages?: boolean
+          transpile?: boolean
         },
       ) => {
         try {
@@ -131,6 +137,24 @@ export const registerBuild = (program: Command) => {
               mainEntrypoint,
               allImages: options?.allImages,
             })
+          }
+
+          if (options?.transpile) {
+            console.log("Transpiling entry file...")
+            const entryFile = mainEntrypoint || circuitFiles[0]
+            if (!entryFile) {
+              console.error("No entry file found for transpilation")
+              process.exit(1)
+            }
+            const transpileSuccess = await transpileFile({
+              input: entryFile,
+              outputDir: distDir,
+              projectDir,
+            })
+            if (!transpileSuccess) {
+              console.error("Transpilation failed")
+              process.exit(1)
+            }
           }
 
           if (options?.site) {
