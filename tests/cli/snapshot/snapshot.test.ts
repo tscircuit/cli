@@ -427,3 +427,117 @@ test("snapshot command creates diff files when visuals change", async () => {
   expect(pcbDiff).toBe(true)
   expect(schDiff).toBe(true)
 }, 30_000)
+
+test("snapshot command with glob pattern", async () => {
+  const { tmpDir, runCommand } = await getCliTestFixture()
+
+  const subdir = join(tmpDir, "examples")
+  fs.mkdirSync(subdir)
+
+  await Bun.write(
+    join(subdir, "first.circuit.tsx"),
+    `
+    export const First = () => (
+      <board width="10mm" height="10mm">
+        <chip name="U1" footprint="soic8" />
+      </board>
+    )
+  `,
+  )
+
+  await Bun.write(
+    join(subdir, "second.circuit.tsx"),
+    `
+    export const Second = () => (
+      <board width="10mm" height="10mm">
+        <chip name="U2" footprint="soic8" />
+      </board>
+    )
+  `,
+  )
+
+  await Bun.write(
+    join(tmpDir, "other.board.tsx"),
+    `
+    export const Other = () => (
+      <board width="10mm" height="10mm">
+        <chip name="U3" footprint="soic8" />
+      </board>
+    )
+  `,
+  )
+
+  await runCommand("tsci snapshot examples/**/*.tsx")
+
+  const snapDir = join(subdir, "__snapshots__")
+  const firstPcb = await Bun.file(
+    join(snapDir, "first.circuit-pcb.snap.svg"),
+  ).exists()
+  const secondPcb = await Bun.file(
+    join(snapDir, "second.circuit-pcb.snap.svg"),
+  ).exists()
+
+  expect(firstPcb).toBe(true)
+  expect(secondPcb).toBe(true)
+
+  // Verify that other.board.tsx was not snapshotted
+  const rootSnapDir = join(tmpDir, "__snapshots__")
+  const otherPcb = await Bun.file(
+    join(rootSnapDir, "other.board-pcb.snap.svg"),
+  ).exists()
+  expect(otherPcb).toBe(false)
+}, 30_000)
+
+test("snapshot command with wildcard glob pattern", async () => {
+  const { tmpDir, runCommand } = await getCliTestFixture()
+
+  await Bun.write(
+    join(tmpDir, "match.circuit.tsx"),
+    `
+    export const Match = () => (
+      <board width="10mm" height="10mm">
+        <chip name="U1" footprint="soic8" />
+      </board>
+    )
+  `,
+  )
+
+  await Bun.write(
+    join(tmpDir, "also.circuit.tsx"),
+    `
+    export const Also = () => (
+      <board width="10mm" height="10mm">
+        <chip name="U2" footprint="soic8" />
+      </board>
+    )
+  `,
+  )
+
+  await Bun.write(
+    join(tmpDir, "skip.board.tsx"),
+    `
+    export const Skip = () => (
+      <board width="10mm" height="10mm">
+        <chip name="U3" footprint="soic8" />
+      </board>
+    )
+  `,
+  )
+
+  await runCommand("tsci snapshot *.circuit.tsx")
+
+  const snapDir = join(tmpDir, "__snapshots__")
+  const matchPcb = await Bun.file(
+    join(snapDir, "match.circuit-pcb.snap.svg"),
+  ).exists()
+  const alsoPcb = await Bun.file(
+    join(snapDir, "also.circuit-pcb.snap.svg"),
+  ).exists()
+  const skipPcb = await Bun.file(
+    join(snapDir, "skip.board-pcb.snap.svg"),
+  ).exists()
+
+  expect(matchPcb).toBe(true)
+  expect(alsoPcb).toBe(true)
+  expect(skipPcb).toBe(false)
+}, 30_000)
