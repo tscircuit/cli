@@ -41,18 +41,34 @@ export const registerImport = (program: Command) => {
         )
       }
 
-      try {
-        const searchUrl =
-          "https://jlcsearch.tscircuit.com/api/search?limit=10&q=" +
-          encodeURIComponent(query)
-        const resp = await fetch(searchUrl).then((r) => r.json())
-        jlcResults = resp.components
-      } catch (error) {
-        console.error(
-          kleur.red("Failed to search JLCPCB:"),
-          error instanceof Error ? error.message : error,
-        )
+      const jlcSearchQueries = [query]
+      if (/^C\d+$/i.test(query.trim())) {
+        jlcSearchQueries.push(query.trim().slice(1))
       }
+
+      const jlcResultsMap = new Map<number, (typeof jlcResults)[number]>()
+
+      for (const jlcQuery of jlcSearchQueries) {
+        try {
+          const searchUrl =
+            "https://jlcsearch.tscircuit.com/api/search?limit=10&q=" +
+            encodeURIComponent(jlcQuery)
+          const resp = await fetch(searchUrl).then((r) => r.json())
+          const components: typeof jlcResults = resp.components ?? []
+          for (const component of components) {
+            if (!jlcResultsMap.has(component.lcsc)) {
+              jlcResultsMap.set(component.lcsc, component)
+            }
+          }
+        } catch (error) {
+          console.error(
+            kleur.red("Failed to search JLCPCB:"),
+            error instanceof Error ? error.message : error,
+          )
+        }
+      }
+
+      jlcResults = [...jlcResultsMap.values()]
 
       if (!registryResults.length && !jlcResults.length) {
         console.log(kleur.yellow("No results found matching your query."))
