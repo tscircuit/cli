@@ -94,6 +94,34 @@ export default () => (
 `,
       )
 
+      try {
+        const response = await fetch(
+          "https://raw.githubusercontent.com/tscircuit/tscircuit-prompts/main/lib/prompts/tscircuit-syntax.ts",
+        )
+        if (!response.ok) {
+          throw new Error(
+            `Failed to fetch CLAUDE.md content: ${response.status}`,
+          )
+        }
+
+        let claudeContent = await response.text()
+        const firstBacktick = claudeContent.indexOf("`")
+        const lastBacktick = claudeContent.lastIndexOf("`")
+        if (
+          firstBacktick !== -1 &&
+          lastBacktick !== -1 &&
+          lastBacktick > firstBacktick
+        ) {
+          claudeContent = claudeContent.slice(firstBacktick + 1, lastBacktick)
+        }
+
+        fs.writeFileSync(path.join(projectDir, "CLAUDE.md"), claudeContent)
+      } catch (error) {
+        console.warn(
+          `⚠️  Unable to create CLAUDE.md from remote source: ${(error as Error).message}`,
+        )
+      }
+
       const projectConfig = loadProjectConfig(projectDir) ?? {}
       projectConfig.mainEntrypoint = "index.tsx"
       if (saveProjectConfig(projectConfig, projectDir)) {

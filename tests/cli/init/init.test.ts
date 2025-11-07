@@ -28,6 +28,25 @@ test("init command installs @types/react and passes type-checking", async () => 
   const tsconfigExists = await Bun.file(tsconfigPath).exists()
   expect(tsconfigExists).toBeTrue()
 
+  const claudePath = join(tmpDir, projectDir, "CLAUDE.md")
+  const claudeExists = await Bun.file(claudePath).exists()
+  expect(claudeExists).toBeTrue()
+
+  const claudeContent = await Bun.file(claudePath).text()
+  const remoteResponse = await fetch(
+    "https://raw.githubusercontent.com/tscircuit/tscircuit-prompts/main/lib/prompts/tscircuit-syntax.ts",
+  )
+  expect(remoteResponse.ok).toBeTrue()
+  const remoteText = await remoteResponse.text()
+  const firstTick = remoteText.indexOf("`")
+  const lastTick = remoteText.lastIndexOf("`")
+  const expectedClaudeContent =
+    firstTick !== -1 && lastTick !== -1 && lastTick > firstTick
+      ? remoteText.slice(firstTick + 1, lastTick)
+      : remoteText
+
+  expect(claudeContent).toBe(expectedClaudeContent)
+
   try {
     const typeCheckResult = execSync("bunx tsc --noEmit", {
       cwd: join(tmpDir, projectDir),
@@ -39,4 +58,4 @@ test("init command installs @types/react and passes type-checking", async () => 
       `Type-checking failed for init'd project. ${tmpDir}/${projectDir} ${(error as any).toString()}`,
     )
   }
-}, 10_000)
+}, 20_000)

@@ -14,6 +14,7 @@ test("basic init", async () => {
   const expectedFiles = [
     ".gitignore",
     ".npmrc",
+    "CLAUDE.md",
     "index.tsx",
     "package.json",
     "tsconfig.json",
@@ -22,4 +23,4 @@ test("basic init", async () => {
   for (const file of expectedFiles) {
     expect(dirContents).toContain(file)
   }
-}, 10_000)
+}, 20_000)
