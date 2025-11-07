@@ -2,13 +2,6 @@
   "name": "@tscircuit/cli",
   "version": "0.1.457",
   "main": "dist/main.js",
-  "dependencies": {
-    "rollup": "^4.52.5",
-    "@rollup/plugin-commonjs": "^29.0.0",
-    "@rollup/plugin-node-resolve": "^16.0.3",
-    "@rollup/plugin-typescript": "^12.3.0",
-    "rollup-plugin-dts": "^6.2.3"
-  },
   "devDependencies": {
     "@babel/standalone": "^7.26.9",
     "@biomejs/biome": "^1.9.4",
@@ -29,7 +22,6 @@
     "@types/semver": "^7.5.8",
     "bun-match-svg": "^0.0.12",
     "chokidar": "4.0.1",
-    "circuit-json": "^0.0.275",
     "circuit-json-to-gltf": "^0.0.14",
     "circuit-json-to-kicad": "^0.0.3",
     "circuit-json-to-readable-netlist": "^0.0.13",
@@ -67,6 +59,7 @@
     "tscircuit": "^0.0.757-libonly",
     "tsx": "^4.7.1",
     "typed-ky": "^0.0.4",
+    "circuit-json": "^0.0.275",
     "zod": "3"
   },
   "peerDependencies": {
