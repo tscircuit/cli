@@ -5,6 +5,11 @@ import { generateCircuitJson } from "lib/shared/generate-circuit-json"
 import { analyzeCircuitJson } from "lib/shared/circuit-json-diagnostics"
 import type { PlatformConfig } from "@tscircuit/props"
 
+export type BuildFileOutcome = {
+  ok: boolean
+  circuitJson?: unknown[]
+}
+
 export const buildFile = async (
   input: string,
   output: string,
@@ -14,7 +19,7 @@ export const buildFile = async (
     ignoreWarnings?: boolean
     platformConfig?: PlatformConfig
   },
-): Promise<boolean> => {
+): Promise<BuildFileOutcome> => {
   try {
     console.log("Generating circuit JSON...")
     const result = await generateCircuitJson({
@@ -48,12 +53,15 @@ export const buildFile = async (
           `Build failed with ${errors.length} error(s). Use --ignore-errors to continue.`,
         ),
       )
-      return false
+      return { ok: false }
     } else {
-      return true
+      return {
+        ok: true,
+        circuitJson: result.circuitJson,
+      }
     }
   } catch (err) {
     console.error(`Build failed: ${err}`)
-    return false
+    return { ok: false }
   }
 }

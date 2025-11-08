@@ -10,6 +10,9 @@ import {
 import type { PlatformConfig } from "@tscircuit/props"
 import type { BuildFileResult } from "./build-preview-images"
 import { buildPreviewImages } from "./build-preview-images"
+import { generateKicadProject } from "./generate-kicad-project"
+import type { GeneratedKicadProject } from "./generate-kicad-project"
+import { generateKicadFootprintLibrary } from "./generate-kicad-footprint-library"
 
 // @ts-ignore
 import runFrameStandaloneBundleContent from "@tscircuit/runframe/standalone" with {
@@ -31,6 +34,14 @@ export const registerBuild = (program: Command) => {
       "--all-images",
       "Generate preview images for every successful build output",
     )
+    .option(
+      "--kicad",
+      "Generate KiCad project directories for each successful build output",
+    )
+    .option(
+      "--kicad-footprint-library",
+      "Generate a KiCad footprint library from all successful build outputs",
+    )
     .action(
       async (
         file?: string,
@@ -42,6 +53,8 @@ export const registerBuild = (program: Command) => {
           site?: boolean
           previewImages?: boolean
           allImages?: boolean
+          kicad?: boolean
+          kicadFootprintLibrary?: boolean
         },
       ) => {
         try {
@@ -75,6 +88,12 @@ export const registerBuild = (program: Command) => {
           const staticFileReferences: StaticBuildFileReference[] = []
 
           const builtFiles: BuildFileResult[] = []
+          const kicadProjects: Array<
+            GeneratedKicadProject & { sourcePath: string }
+          > = []
+
+          const shouldGenerateKicad =
+            options?.kicad || options?.kicadFootprintLibrary
 
           for (const filePath of circuitFiles) {
             const relative = path.relative(projectDir, filePath)
@@ -84,17 +103,22 @@ export const registerBuild = (program: Command) => {
               "",
             )
             const outputPath = path.join(distDir, outputDirName, "circuit.json")
-            const ok = await buildFile(filePath, outputPath, projectDir, {
-              ignoreErrors: options?.ignoreErrors,
-              ignoreWarnings: options?.ignoreWarnings,
-              platformConfig,
-            })
+            const buildOutcome = await buildFile(
+              filePath,
+              outputPath,
+              projectDir,
+              {
+                ignoreErrors: options?.ignoreErrors,
+                ignoreWarnings: options?.ignoreWarnings,
+                platformConfig,
+              },
+            )
             builtFiles.push({
               sourcePath: filePath,
               outputPath,
-              ok,
+              ok: buildOutcome.ok,
             })
-            if (!ok) {
+            if (!buildOutcome.ok) {
               hasErrors = true
             } else if (options?.site) {
               const normalizedSourcePath = relative.split(path.sep).join("/")
@@ -108,6 +132,29 @@ export const registerBuild = (program: Command) => {
               staticFileReferences.push({
                 filePath: normalizedSourcePath,
                 fileStaticAssetUrl: `./${normalizedOutputPath}`,
+              })
+            }
+
+            if (
+              buildOutcome.ok &&
+              shouldGenerateKicad &&
+              buildOutcome.circuitJson
+            ) {
+              const projectOutputDir = path.join(
+                distDir,
+                outputDirName,
+                "kicad",
+              )
+              const projectName = path.basename(outputDirName)
+              const project = await generateKicadProject({
+                circuitJson: buildOutcome.circuitJson,
+                outputDir: projectOutputDir,
+                projectName,
+                writeFiles: Boolean(options?.kicad),
+              })
+              kicadProjects.push({
+                ...project,
+                sourcePath: filePath,
               })
             }
           }
@@ -143,6 +190,19 @@ export const registerBuild = (program: Command) => {
               path.join(distDir, "standalone.min.js"),
               runFrameStandaloneBundleContent,
             )
+          }
+
+          if (options?.kicadFootprintLibrary) {
+            if (kicadProjects.length === 0) {
+              console.warn(
+                "No successful build output available for KiCad footprint library generation.",
+              )
+            } else {
+              await generateKicadFootprintLibrary({
+                projects: kicadProjects,
+                distDir,
+              })
+            }
           }
 
           console.log("Build complete!")
