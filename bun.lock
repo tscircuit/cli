@@ -23,7 +23,7 @@
         "@types/semver": "^7.5.8",
         "bun-match-svg": "^0.0.12",
         "chokidar": "4.0.1",
-        "circuit-json": "^0.0.275",
+        "circuit-json": "^0.0.303",
         "circuit-json-to-gltf": "^0.0.14",
         "circuit-json-to-kicad": "^0.0.3",
         "circuit-json-to-readable-netlist": "^0.0.13",
@@ -428,7 +428,7 @@
 
     "chownr": ["chownr@1.1.4", "", {}, "sha512-jJ0bqzaylmJtVnNgzTeSOs8DPavpbYgEr/b0YL8/2GO3xJEhInFmhKMUnEJQjZumK7KXGFhUy89PrsJWlakBVg=="],
 
-    "circuit-json": ["circuit-json@0.0.275", "", {}, "sha512-9MWw1jGHlLkldNBu4rF0vhoaG299MXRikWcPzV+oe+GklGoYtGMXFYfHCosEx/vxvEHvh41zLF66XNNKYj3g/Q=="],
+    "circuit-json": ["circuit-json@0.0.303", "", {}, "sha512-d/blidOV0LIYWpbXsiIbBmVbdwZnGDnS/8Byj7Q9L5dYeJIDLWcZLJoaxzlGHluwe7J7SJyyhgFxNLsVxA1bIQ=="],
 
     "circuit-json-to-bpc": ["circuit-json-to-bpc@0.0.13", "", { "peerDependencies": { "bpc-graph": "*", "circuit-json": "*", "typescript": "^5" } }, "sha512-3wSMtPa6tJkiBQN4tsm7f0Mb7Wp90X2c8dNbULoDVE4mGGoFqP1DXqBlyvvZZl+4SjqznzQQ0EioLe2SCQTOcg=="],
 
