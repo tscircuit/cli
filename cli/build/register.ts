@@ -2,6 +2,7 @@ import type { Command } from "commander"
 import path from "node:path"
 import fs from "node:fs"
 import { buildFile } from "./build-file"
+import { transpileFile } from "./transpile-file"
 import { getBuildEntrypoints } from "./get-build-entrypoints"
 import {
   getStaticIndexHtmlFile,
@@ -28,6 +29,10 @@ export const registerBuild = (program: Command) => {
     .option("--site", "Generate a static site in the dist directory")
     .option("--preview-images", "Generate preview images in the dist directory")
     .option(
+      "--transpile",
+      "Transpile TypeScript to ESM (index.js), CommonJS (index.cjs), and types (index.d.ts)",
+    )
+    .option(
       "--all-images",
       "Generate preview images for every successful build output",
     )
@@ -41,6 +46,7 @@ export const registerBuild = (program: Command) => {
           disablePartsEngine?: boolean
           site?: boolean
           previewImages?: boolean
+          transpile?: boolean
           allImages?: boolean
         },
       ) => {
@@ -49,6 +55,28 @@ export const registerBuild = (program: Command) => {
             await getBuildEntrypoints({
               fileOrDir: file,
             })
+
+          // Handle transpilation mode (do this before regular build)
+          if (options?.transpile) {
+            const entryFile = mainEntrypoint || circuitFiles[0]
+            if (!entryFile) {
+              throw new Error("Could not find a valid entry file to transpile")
+            }
+
+            const distDir = path.join(projectDir, "dist")
+
+            const success = await transpileFile({
+              input: entryFile,
+              outputDir: distDir,
+              projectDir,
+            })
+
+            if (!success) {
+              process.exit(1)
+            }
+
+            // Don't exit yet, continue with regular build
+          }
 
           const platformConfig: PlatformConfig | undefined = (() => {
             if (!options?.disablePcb && !options?.disablePartsEngine) return
