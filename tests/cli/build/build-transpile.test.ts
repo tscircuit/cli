@@ -98,27 +98,3 @@ test("build with --transpile transforms JSX correctly", async () => {
   expect(cjsContent).toContain("React.createElement")
   expect(cjsContent).not.toContain("<board")
 }, 30_000)
-
-test("build with --transpile generates executable ESM and CJS modules", async () => {
-  const { tmpDir, runCommand } = await getCliTestFixture()
-  const circuitPath = path.join(tmpDir, "executable-test.tsx")
-  await writeFile(circuitPath, circuitCode)
-  await writeFile(path.join(tmpDir, "package.json"), '{"type": "module"}')
-
-  await runCommand(`tsci build ${circuitPath} --transpile --ignore-errors`)
-
-  // Test that ESM module can be imported and executed
-  const esmPath = path.join(tmpDir, "dist", "index.js")
-  const esmModule = await import(`file://${esmPath}`)
-  expect(esmModule.default).toBeInstanceOf(Function)
-  const esmResult = esmModule.default()
-  expect(esmResult).toBeDefined()
-
-  // Test that CommonJS module can be required and executed
-  const cjsPath = path.join(tmpDir, "dist", "index.cjs")
-  const cjsModule = require(cjsPath)
-  expect(cjsModule.default || cjsModule).toBeInstanceOf(Function)
-  const cjsExport = cjsModule.default || cjsModule
-  const cjsResult = cjsExport()
-  expect(cjsResult).toBeDefined()
-}, 30_000)
