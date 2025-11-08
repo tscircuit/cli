@@ -1,7 +1,7 @@
 import { getVirtualFileSystemFromDirPath } from "make-vfs"
-import path from "node:path/posix"
-import { relative } from "node:path"
+import path from "node:path"
 import fs from "node:fs"
+import { pathToFileURL } from "node:url"
 import Debug from "debug"
 import type { PlatformConfig } from "@tscircuit/props"
 import { abbreviateStringifyObject } from "lib/utils/abbreviate-stringify-object"
@@ -48,15 +48,18 @@ export async function generateCircuitJson({
   const runner = new userLandTscircuit.RootCircuit({
     platform: platformConfig,
   })
-  const projectDir = path.dirname(filePath)
-  const resolvedOutputDir = outputDir || projectDir
+  const absoluteFilePath = path.isAbsolute(filePath)
+    ? filePath
+    : path.resolve(process.cwd(), filePath)
+  const projectDir = path.dirname(absoluteFilePath)
+  const resolvedOutputDir = outputDir ?? projectDir
 
   // Get the relative path to the component from the project directory
-  const relativeComponentPath = relative(projectDir, filePath)
+  const relativeComponentPath = path.relative(projectDir, absoluteFilePath)
 
   // Create a default output filename if not provided
   const baseFileName =
-    outputFileName || path.basename(filePath).replace(/\.[^.]+$/, "")
+    outputFileName || path.basename(absoluteFilePath).replace(/\.[^.]+$/, "")
   const outputPath = path.join(
     resolvedOutputDir,
     `${baseFileName}.circuit.json`,
@@ -71,11 +74,12 @@ export async function generateCircuitJson({
     ...((await getVirtualFileSystemFromDirPath({
       dirPath: projectDir,
       fileMatchFn: (filePath) => {
-        if (filePath.includes("node_modules/")) return false
-        if (filePath.includes("dist/")) return false
-        if (filePath.includes("build/")) return false
-        if (filePath.match(/^\.[^\/]/)) return false
-        if (!ALLOWED_FILE_EXTENSIONS.includes(path.extname(filePath)))
+        const normalizedFilePath = filePath.replace(/\\/g, "/")
+        if (normalizedFilePath.includes("node_modules/")) return false
+        if (normalizedFilePath.includes("dist/")) return false
+        if (normalizedFilePath.includes("build/")) return false
+        if (normalizedFilePath.match(/^\.[^/]/)) return false
+        if (!ALLOWED_FILE_EXTENSIONS.includes(path.extname(normalizedFilePath)))
           return false
         return true
       },
@@ -86,8 +90,7 @@ export async function generateCircuitJson({
   debug(`fsMap: ${abbreviateStringifyObject(fsMap)}`)
 
   // Execute the circuit runner with the virtual file system
-  const resolvedFilePath = path.resolve(process.cwd(), filePath)
-  const MainComponent = await import(resolvedFilePath)
+  const MainComponent = await import(pathToFileURL(absoluteFilePath).href)
 
   // Handle both default export and named exports
   const Component =
@@ -103,7 +106,7 @@ export async function generateCircuitJson({
 
   if (!Component) {
     throw new Error(
-      `No component found in "${filePath}". Make sure you export a component.`,
+      `No component found in "${absoluteFilePath}". Make sure you export a component.`,
     )
   }
 
