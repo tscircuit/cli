@@ -21,6 +21,11 @@ jobs:
         with:
           bun-version: latest
 
+      - name: Install system dependencies for sharp
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y libvips-dev
+
       - name: Install dependencies
         run: bun install
 
