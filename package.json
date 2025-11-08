@@ -8,7 +8,7 @@
     "@tscircuit/circuit-json-util": "0.0.67",
     "@tscircuit/fake-snippets": "^0.0.128",
     "@tscircuit/file-server": "^0.0.32",
-    "@tscircuit/math-utils": "0.0.21",
+    "@tscircuit/math-utils": "0.0.29",
     "@tscircuit/props": "^0.0.371",
     "@tscircuit/runframe": "^0.0.1225",
     "@tscircuit/schematic-match-adapt": "^0.0.22",
