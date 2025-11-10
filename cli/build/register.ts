@@ -10,6 +10,7 @@ import {
 import type { PlatformConfig } from "@tscircuit/props"
 import type { BuildFileResult } from "./build-preview-images"
 import { buildPreviewImages } from "./build-preview-images"
+import { transpileFile } from "./transpile"
 
 // @ts-ignore
 import runFrameStandaloneBundleContent from "@tscircuit/runframe/standalone" with {
@@ -26,6 +27,7 @@ export const registerBuild = (program: Command) => {
     .option("--disable-pcb", "Disable PCB outputs")
     .option("--disable-parts-engine", "Disable the parts engine")
     .option("--site", "Generate a static site in the dist directory")
+    .option("--transpile", "Transpile the entry file to JavaScript")
     .option("--preview-images", "Generate preview images in the dist directory")
     .option(
       "--all-images",
@@ -40,6 +42,7 @@ export const registerBuild = (program: Command) => {
           disablePcb?: boolean
           disablePartsEngine?: boolean
           site?: boolean
+          transpile?: boolean
           previewImages?: boolean
           allImages?: boolean
         },
@@ -131,6 +134,24 @@ export const registerBuild = (program: Command) => {
               mainEntrypoint,
               allImages: options?.allImages,
             })
+          }
+
+          if (options?.transpile) {
+            console.log("Transpiling entry file...")
+            const entryFile = mainEntrypoint || circuitFiles[0]
+            if (!entryFile) {
+              console.error("No entry file found for transpilation")
+              process.exit(1)
+            }
+            const transpileSuccess = await transpileFile({
+              input: entryFile,
+              outputDir: distDir,
+              projectDir,
+            })
+            if (!transpileSuccess) {
+              console.error("Transpilation failed")
+              process.exit(1)
+            }
           }
 
           if (options?.site) {
