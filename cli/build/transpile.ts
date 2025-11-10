@@ -4,6 +4,7 @@ import { rollup } from "rollup"
 import typescript from "@rollup/plugin-typescript"
 import resolve from "@rollup/plugin-node-resolve"
 import commonjs from "@rollup/plugin-commonjs"
+import json from "@rollup/plugin-json"
 import dts from "rollup-plugin-dts"
 import kleur from "kleur"
 
@@ -32,6 +33,7 @@ export const transpileFile = async ({
           extensions: [".ts", ".tsx", ".js", ".jsx"],
         }),
         commonjs(),
+        json(),
         typescript({
           jsx: "react",
           tsconfig: false,
@@ -42,6 +44,8 @@ export const transpileFile = async ({
             declaration: false,
             sourceMap: false,
             skipLibCheck: true,
+            resolveJsonModule: true,
+            allowSyntheticDefaultImports: true,
           },
         }),
       ],
@@ -70,6 +74,7 @@ export const transpileFile = async ({
           extensions: [".ts", ".tsx", ".js", ".jsx"],
         }),
         commonjs(),
+        json(),
         typescript({
           jsx: "react",
           tsconfig: false,
@@ -80,6 +85,8 @@ export const transpileFile = async ({
             declaration: false,
             sourceMap: false,
             skipLibCheck: true,
+            resolveJsonModule: true,
+            allowSyntheticDefaultImports: true,
           },
         }),
       ],

@@ -98,3 +98,44 @@ test("build with --transpile transforms JSX correctly", async () => {
   expect(cjsContent).toContain("React.createElement")
   expect(cjsContent).not.toContain("<board")
 }, 30_000)
+
+test("build with --transpile JSX with import from other files", async () => {
+  const { tmpDir, runCommand } = await getCliTestFixture()
+  const circuitPath = path.join(tmpDir, "jsx-test.tsx")
+  const pinLabelsPath = path.join(tmpDir, "pinLabels.json")
+  await writeFile(
+    pinLabelsPath,
+    `{
+    "pin1": "A1",
+    "pin2": "B1",
+    "pin3": "C1"
+  }`,
+  )
+  await writeFile(
+    circuitPath,
+    `
+    import pinLabels from "${pinLabelsPath}"
+    export default () => (
+      <board width="10mm" height="10mm">
+        <chip name="U1" pins={pinLabels} />
+      </board>
+    )
+  `,
+  )
+  await writeFile(path.join(tmpDir, "package.json"), "{}")
+
+  await runCommand(`tsci build ${circuitPath} --transpile --ignore-errors`)
+
+  // Check that JSX is transformed to React.createElement() calls
+  const esmPath = path.join(tmpDir, "dist", "index.js")
+  const esmContent = await readFile(esmPath, "utf-8")
+  expect(esmContent).toContain("React.createElement")
+  expect(esmContent).not.toContain("<board")
+  expect(esmContent).not.toContain("<resistor")
+
+  // Check CommonJS also has transformed JSX
+  const cjsPath = path.join(tmpDir, "dist", "index.cjs")
+  const cjsContent = await readFile(cjsPath, "utf-8")
+  expect(cjsContent).toContain("React.createElement")
+  expect(cjsContent).not.toContain("<board")
+}, 30_000)
