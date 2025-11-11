@@ -1,11 +1,10 @@
 import { getVirtualFileSystemFromDirPath } from "make-vfs"
 import path from "node:path"
 import fs from "node:fs"
-import { pathToFileURL } from "node:url"
 import Debug from "debug"
 import type { PlatformConfig } from "@tscircuit/props"
 import { abbreviateStringifyObject } from "lib/utils/abbreviate-stringify-object"
-import { importFromUserLand } from "./importFromUserLand"
+import { CircuitRunner } from "@tscircuit/eval/eval"
 
 const debug = Debug("tsci:generate-circuit-json")
 
@@ -43,11 +42,6 @@ export async function generateCircuitJson({
 }: GenerateCircuitJsonOptions) {
   debug(`Generating circuit JSON for ${filePath}`)
 
-  const userLandTscircuit = await importFromUserLand("tscircuit")
-
-  const runner = new userLandTscircuit.RootCircuit({
-    platform: platformConfig,
-  })
   const absoluteFilePath = path.isAbsolute(filePath)
     ? filePath
     : path.resolve(process.cwd(), filePath)
@@ -89,28 +83,18 @@ export async function generateCircuitJson({
 
   debug(`fsMap: ${abbreviateStringifyObject(fsMap)}`)
 
-  // Execute the circuit runner with the virtual file system
-  const MainComponent = await import(pathToFileURL(absoluteFilePath).href)
+  // Use CircuitRunner from @tscircuit/eval to handle external packages
+  const runner = new CircuitRunner({
+    snippetsApiBaseUrl: "https://api.tscircuit.com",
+    cjsRegistryUrl: "https://cjs.tscircuit.com",
+    platform: platformConfig,
+  })
 
-  // Handle both default export and named exports
-  const Component =
-    MainComponent.default ||
-    (Object.keys(MainComponent).find((k) => k[0] === k[0].toUpperCase()) !==
-    undefined
-      ? MainComponent[
-          Object.keys(MainComponent).find(
-            (k) => k[0] === k[0].toUpperCase(),
-          ) as keyof typeof MainComponent
-        ]
-      : undefined)
-
-  if (!Component) {
-    throw new Error(
-      `No component found in "${absoluteFilePath}". Make sure you export a component.`,
-    )
-  }
-
-  runner.add(<Component />)
+  // Execute with fsMap to enable external package resolution
+  await runner.executeWithFsMap({
+    fsMap,
+    mainComponentPath: relativeComponentPath,
+  })
 
   // Wait for the circuit to be fully rendered
   await runner.renderUntilSettled()
