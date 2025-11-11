@@ -56,16 +56,20 @@
     "semver": "^7.6.3",
     "sharp": "0.32.6",
     "tempy": "^3.1.0",
-    "tscircuit": "^0.0.885-libonly",
+    "tscircuit": "^0.0.886-libonly",
     "tsx": "^4.7.1",
     "typed-ky": "^0.0.4",
     "zod": "3"
   },
   "peerDependencies": {
-    "tscircuit": "*"
+    "tscircuit": "*",
+    "circuit-json": "*"
   },
   "peerDependenciesMeta": {
     "tscircuit": {
+      "optional": false
+    },
+    "circuit-json": {
       "optional": false
     }
   },
