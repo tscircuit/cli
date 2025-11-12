@@ -3,8 +3,7 @@ import path from "node:path"
 import { globbySync } from "globby"
 
 const DEFAULT_PATTERNS = [
-  "**/*.circuit.{ts,tsx,js,jsx}",
-  "**/*.snippet.{ts,tsx,js,jsx}",
+  "**/*.{ts,tsx,js,jsx}",
 ]
 
 const DEFAULT_IGNORES = [
