@@ -43,6 +43,9 @@ export async function generateCircuitJson({
 }: GenerateCircuitJsonOptions) {
   debug(`Generating circuit JSON for ${filePath}`)
 
+  // Import React and make it globally available for packages referencing it
+  const React = await importFromUserLand("react")
+  ;(globalThis as any).React = React
   const userLandTscircuit = await importFromUserLand("tscircuit")
 
   const runner = new userLandTscircuit.RootCircuit({
