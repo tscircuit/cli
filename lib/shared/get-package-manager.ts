@@ -40,6 +40,8 @@ export interface PackageManager {
   }) => void
   getInitCommand: () => string
   getInstallDepsCommand: (deps: string[], dev?: boolean) => string
+  installAll: (opts: { cwd: string }) => void
+  getInstallAllCommand: () => string
 }
 
 export function getPackageManager(): PackageManager {
@@ -83,6 +85,12 @@ export function getPackageManager(): PackageManager {
     },
     getInitCommand,
     getInstallDepsCommand,
+    installAll: ({ cwd }) => {
+      const installCommand = getInstallAllCommand()
+      console.log(kleur.gray(`> ${installCommand}`))
+      execSync(installCommand, { stdio: "inherit", cwd })
+    },
+    getInstallAllCommand,
   }
 
   function getInitCommand() {
@@ -90,6 +98,13 @@ export function getPackageManager(): PackageManager {
     if (pm === "pnpm") return "pnpm init"
     if (pm === "bun") return "bun init -y"
     return "npm init -y"
+  }
+
+  function getInstallAllCommand() {
+    if (pm === "yarn") return "yarn install"
+    if (pm === "pnpm") return "pnpm install"
+    if (pm === "bun") return "bun install"
+    return "npm install"
   }
 
   function getInstallDepsCommand(deps: string[], dev?: boolean) {
