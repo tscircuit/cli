@@ -2,9 +2,7 @@ import fs from "node:fs"
 import path from "node:path"
 import { globbySync } from "globby"
 
-const DEFAULT_PATTERNS = [
-  "**/*.{ts,tsx,js,jsx}",
-]
+const DEFAULT_PATTERNS = ["**/*.{ts,tsx,js,jsx}"]
 
 const DEFAULT_IGNORES = [
   "**/node_modules/**",
