@@ -1,6 +1,6 @@
 {
   "name": "@tscircuit/cli",
-  "version": "0.1.458",
+  "version": "0.1.491",
   "main": "dist/main.js",
   "devDependencies": {
     "@babel/standalone": "^7.26.9",
@@ -8,9 +8,9 @@
     "@tscircuit/circuit-json-util": "0.0.67",
     "@tscircuit/fake-snippets": "^0.0.128",
     "@tscircuit/file-server": "^0.0.32",
-    "@tscircuit/math-utils": "0.0.21",
+    "@tscircuit/math-utils": "0.0.29",
     "@tscircuit/props": "^0.0.371",
-    "@tscircuit/runframe": "^0.0.1219",
+    "@tscircuit/runframe": "^0.0.1252",
     "@tscircuit/schematic-match-adapt": "^0.0.22",
     "@types/bun": "^1.2.2",
     "@types/configstore": "^6.0.2",
@@ -22,6 +22,7 @@
     "@types/semver": "^7.5.8",
     "bun-match-svg": "^0.0.12",
     "chokidar": "4.0.1",
+    "circuit-json": "^0.0.306",
     "circuit-json-to-gltf": "^0.0.14",
     "circuit-json-to-kicad": "^0.0.3",
     "circuit-json-to-readable-netlist": "^0.0.13",
@@ -56,10 +57,9 @@
     "semver": "^7.6.3",
     "sharp": "0.32.6",
     "tempy": "^3.1.0",
-    "tscircuit": "^0.0.757-libonly",
+    "tscircuit": "^0.0.880-libonly",
     "tsx": "^4.7.1",
     "typed-ky": "^0.0.4",
-    "circuit-json": "^0.0.275",
     "zod": "3"
   },
   "peerDependencies": {
