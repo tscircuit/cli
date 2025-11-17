@@ -1,6 +1,7 @@
 import type { Command } from "commander"
 import { exportSnippet } from "lib/shared/export-snippet"
 import type { ExportFormat } from "lib/shared/export-snippet"
+import { ALLOWED_EXPORT_FORMATS } from "lib/shared/export-snippet"
 import { generateCircuitJson } from "lib/shared/generate-circuit-json"
 import { getSpiceWithPaddedSim } from "lib/shared/get-spice-with-sim"
 import { runSimulation } from "lib/eecircuit-engine/run-simulation"
@@ -14,7 +15,10 @@ export const registerExport = (program: Command) => {
     .command("export")
     .description("Export tscircuit code to various formats")
     .argument("<file>", "Path to the package file")
-    .option("-f, --format <format>", "Output format")
+    .option(
+      "-f, --format <format>",
+      `Output format (${ALLOWED_EXPORT_FORMATS.join(", ")})`,
+    )
     .option("-o, --output <path>", "Output file path")
     .option("--disable-parts-engine", "Disable the parts engine")
     .action(
