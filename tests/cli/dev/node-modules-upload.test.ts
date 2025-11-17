@@ -6,13 +6,13 @@ import * as os from "node:os"
 import ky from "ky"
 
 test(
-  "DevServer uploads node_modules files used by component",
+  "DevServer does NOT upload regular npm packages from node_modules",
   async () => {
     // Create a temporary directory for testing
     const tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), "tsci-test-"))
 
     try {
-      // Create a simple package.json
+      // Create a simple package.json with a regular npm package (no file: or .yalc)
       fs.writeFileSync(
         path.join(tmpDir, "package.json"),
         JSON.stringify({
@@ -72,17 +72,17 @@ test(
         file_path: string
       }>
 
-      // Check that react package.json was uploaded
+      // Check that react package.json was NOT uploaded (since it's not a local package)
       const reactPackageJson = fileList.find((f) =>
         f.file_path.includes("node_modules/react/package.json"),
       )
-      expect(reactPackageJson).toBeDefined()
+      expect(reactPackageJson).toBeUndefined()
 
-      // Check that react index.js was uploaded
+      // Check that react index.js was NOT uploaded
       const reactIndex = fileList.find((f) =>
         f.file_path.includes("node_modules/react/index.js"),
       )
-      expect(reactIndex).toBeDefined()
+      expect(reactIndex).toBeUndefined()
 
       await devServer.stop()
     } finally {
