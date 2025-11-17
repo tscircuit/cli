@@ -18,7 +18,7 @@ import type { PlatformConfig } from "@tscircuit/props"
 
 const writeFileAsync = promisify(fs.writeFile)
 
-const ALLOWED_FORMATS = [
+export const ALLOWED_EXPORT_FORMATS = [
   "json",
   "circuit-json",
   "schematic-svg",
@@ -33,7 +33,7 @@ const ALLOWED_FORMATS = [
   "kicad_zip",
 ] as const
 
-export type ExportFormat = (typeof ALLOWED_FORMATS)[number]
+export type ExportFormat = (typeof ALLOWED_EXPORT_FORMATS)[number]
 
 const OUTPUT_EXTENSIONS: Record<ExportFormat, string> = {
   json: ".circuit.json",
@@ -74,7 +74,7 @@ export const exportSnippet = async ({
   onError = (message) => console.error(message),
   onSuccess = (result: unknown) => console.log(result),
 }: ExportOptions) => {
-  if (!ALLOWED_FORMATS.includes(format)) {
+  if (!ALLOWED_EXPORT_FORMATS.includes(format)) {
     onError(`Invalid format: ${format}`)
     return onExit(1)
   }
