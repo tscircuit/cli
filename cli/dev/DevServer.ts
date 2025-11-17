@@ -19,6 +19,7 @@ import Debug from "debug"
 import kleur from "kleur"
 import { loadProjectConfig } from "lib/project-config"
 import { shouldIgnorePath } from "lib/shared/should-ignore-path"
+import { getAllNodeModuleFilePaths } from "lib/dependency-analysis/getNodeModuleDependencies"
 
 const debug = Debug("tscircuit:devserver")
 
@@ -60,6 +61,10 @@ export class DevServer {
   filesystemWatcher?: chokidar.FSWatcher
 
   private typesHandler?: FilesystemTypesHandler
+  /**
+   * Cache of node_modules that have already been uploaded to avoid re-uploading
+   */
+  private uploadedNodeModules: Set<string> = new Set()
 
   constructor({
     port,
@@ -199,6 +204,50 @@ export class DevServer {
         },
       })
       .json()
+
+    // Check if this file has new node_modules dependencies
+    await this.checkAndUploadNewNodeModules(absoluteFilePath)
+  }
+
+  /**
+   * Checks if a file change introduces new local node_modules dependencies and uploads them
+   *
+   * This method is called when a file changes on the filesystem. It analyzes the file
+   * for new imports from local packages (yalc/file: protocol) and uploads any new files
+   * from those packages that haven't been uploaded yet.
+   *
+   * Only applies to TypeScript/JavaScript files, as they're the only files that can have imports.
+   */
+  private async checkAndUploadNewNodeModules(filePath: string) {
+    const ext = path.extname(filePath).toLowerCase()
+    const isSourceFile = [".ts", ".tsx", ".js", ".jsx", ".mjs"].includes(ext)
+
+    if (!isSourceFile) return
+
+    try {
+      const nodeModuleFiles = getAllNodeModuleFilePaths(
+        filePath,
+        this.projectDir,
+      )
+
+      // Filter to only files that haven't been uploaded yet
+      const newFiles = nodeModuleFiles.filter((file) => {
+        const relativePath = path.relative(this.projectDir, file)
+        return !this.uploadedNodeModules.has(relativePath)
+      })
+
+      if (newFiles.length === 0) return
+
+      console.log(
+        kleur.blue(`Uploading ${newFiles.length} new node_modules files...`),
+      )
+
+      await this.uploadNodeModuleFiles(newFiles)
+
+      console.log(kleur.green("New node modules uploaded"))
+    } catch (error) {
+      debug("Error checking for new node modules:", error)
+    }
   }
 
   async handleFileRemovedFromFilesystem(absoluteFilePath: string) {
@@ -302,6 +351,8 @@ export class DevServer {
       })
     }
 
+    await this.uploadInitialNodeModules()
+
     await this.fsKy.post("api/events/create", {
       json: {
         event_type: "INITIAL_FILES_UPLOADED",
@@ -309,6 +360,60 @@ export class DevServer {
       },
       throwHttpErrors: false,
     })
+  }
+
+  private async uploadInitialNodeModules() {
+    try {
+      console.log(kleur.blue("Analyzing node_modules dependencies..."))
+      const nodeModuleFiles = getAllNodeModuleFilePaths(
+        this.componentFilePath,
+        this.projectDir,
+      )
+
+      console.log(
+        kleur.blue(
+          `Found ${nodeModuleFiles.length} node_modules files to upload`,
+        ),
+      )
+
+      if (nodeModuleFiles.length > 0) {
+        await this.uploadNodeModuleFiles(nodeModuleFiles)
+      }
+
+      console.log(kleur.green("Node modules uploaded successfully"))
+    } catch (error) {
+      console.warn(
+        kleur.yellow("Warning: Failed to upload some node_modules files:"),
+        error,
+      )
+    }
+  }
+
+  /**
+   * Uploads a list of node_modules files to the file server
+   *
+   * @param files - Array of absolute file paths to upload
+   */
+  private async uploadNodeModuleFiles(files: string[]) {
+    for (const nodeModuleFile of files) {
+      const relativeFilePath = path.relative(this.projectDir, nodeModuleFile)
+
+      // Mark as uploaded to prevent duplicate uploads
+      this.uploadedNodeModules.add(relativeFilePath)
+
+      const filePayload = this.createFileUploadPayload(
+        nodeModuleFile,
+        relativeFilePath,
+      )
+
+      await this.fsKy.post("api/files/upsert", {
+        json: {
+          file_path: relativeFilePath,
+          initiator: "filesystem_change",
+          ...filePayload,
+        },
+      })
+    }
   }
 
   private async saveSnippet() {
