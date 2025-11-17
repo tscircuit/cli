@@ -12,6 +12,45 @@ interface NodeModuleDependency {
 }
 
 /**
+ * Gets a set of local package names from the project's package.json
+ * Local packages are those installed via yalc (file:.yalc/...) or file: protocol
+ */
+function getLocalPackages(projectDir: string): Set<string> {
+  const packageJsonPath = path.join(projectDir, "package.json")
+  const localPackages = new Set<string>()
+
+  if (!fs.existsSync(packageJsonPath)) {
+    return localPackages
+  }
+
+  try {
+    const packageJson = JSON.parse(fs.readFileSync(packageJsonPath, "utf-8"))
+    const allDeps = {
+      ...packageJson.dependencies,
+      ...packageJson.devDependencies,
+      ...packageJson.peerDependencies,
+    }
+
+    for (const [packageName, version] of Object.entries(allDeps)) {
+      const versionStr = version as string
+      // Check if it's a local package (file:, link:, or .yalc reference)
+      if (
+        versionStr.startsWith("file:") ||
+        versionStr.startsWith("link:") ||
+        versionStr.includes(".yalc")
+      ) {
+        localPackages.add(packageName)
+      }
+    }
+  } catch (error) {
+    // If we can't parse package.json, return empty set
+    console.warn("Failed to parse package.json:", error)
+  }
+
+  return localPackages
+}
+
+/**
  * Extracts all node_modules imports from a source file
  */
 export function getNodeModuleImports(filePath: string): string[] {
@@ -299,7 +338,48 @@ export function collectAllNodeModuleDependencies(
 }
 
 /**
+ * Recursively collects all files from a package directory
+ */
+function collectPackageFiles(packageDir: string): string[] {
+  const files: string[] = []
+
+  function walk(dir: string) {
+    if (!fs.existsSync(dir)) return
+
+    const entries = fs.readdirSync(dir, { withFileTypes: true })
+
+    for (const entry of entries) {
+      const fullPath = path.join(dir, entry.name)
+
+      // Skip common directories that shouldn't be uploaded
+      if (
+        entry.isDirectory() &&
+        (entry.name === "node_modules" ||
+          entry.name === ".git" ||
+          entry.name === ".next" ||
+          entry.name === "dist" ||
+          entry.name === "build" ||
+          entry.name === ".turbo" ||
+          entry.name === "coverage")
+      ) {
+        continue
+      }
+
+      if (entry.isFile()) {
+        files.push(fullPath)
+      } else if (entry.isDirectory()) {
+        walk(fullPath)
+      }
+    }
+  }
+
+  walk(packageDir)
+  return files
+}
+
+/**
  * Gets all unique node_modules file paths that need to be uploaded
+ * Only includes files from local packages (installed via yalc or file: protocol)
  */
 export function getAllNodeModuleFilePaths(
   entryFilePath: string,
@@ -310,20 +390,33 @@ export function getAllNodeModuleFilePaths(
     projectDir,
   )
   const allFiles = new Set<string>()
+  const localPackages = getLocalPackages(projectDir)
+
+  // If no local packages are defined, return empty array
+  if (localPackages.size === 0) {
+    return []
+  }
+
+  // Collect all packages (including those not directly imported)
+  const processedPackages = new Set<string>()
 
   for (const [importPath, files] of dependencies.entries()) {
     const packageName = getPackageNameFromImport(importPath)
-    const packageDir = path.join(projectDir, "node_modules", packageName)
 
-    // Add package.json
-    const packageJsonPath = path.join(packageDir, "package.json")
-    if (fs.existsSync(packageJsonPath)) {
-      allFiles.add(packageJsonPath)
+    // Only include files if this package is a local package
+    if (!localPackages.has(packageName) || processedPackages.has(packageName)) {
+      continue
     }
 
-    // Add all resolved files
-    for (const file of files) {
-      allFiles.add(file)
+    processedPackages.add(packageName)
+    const packageDir = path.join(projectDir, "node_modules", packageName)
+
+    // For local packages, collect all files in the package directory
+    if (fs.existsSync(packageDir)) {
+      const packageFiles = collectPackageFiles(packageDir)
+      for (const file of packageFiles) {
+        allFiles.add(file)
+      }
     }
   }
 

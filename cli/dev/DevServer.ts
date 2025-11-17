@@ -214,6 +214,7 @@ export class DevServer {
     const ext = path.extname(filePath).toLowerCase()
     if (![".ts", ".tsx", ".js", ".jsx", ".mjs"].includes(ext)) return
 
+    // Only uploads local packages (installed via yalc or file: protocol)
     try {
       const nodeModuleFiles = getAllNodeModuleFilePaths(
         filePath,
@@ -359,6 +360,7 @@ export class DevServer {
     }
 
     // Upload node_modules dependencies used by the component
+    // Only uploads local packages (installed via yalc or file: protocol)
     try {
       console.log(kleur.blue("Analyzing node_modules dependencies..."))
       const nodeModuleFiles = getAllNodeModuleFilePaths(
