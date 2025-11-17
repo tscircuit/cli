@@ -19,6 +19,7 @@ import Debug from "debug"
 import kleur from "kleur"
 import { loadProjectConfig } from "lib/project-config"
 import { shouldIgnorePath } from "lib/shared/should-ignore-path"
+import { getAllNodeModuleFilePaths } from "lib/dependency-analysis/getNodeModuleDependencies"
 
 const debug = Debug("tscircuit:devserver")
 
@@ -60,6 +61,10 @@ export class DevServer {
   filesystemWatcher?: chokidar.FSWatcher
 
   private typesHandler?: FilesystemTypesHandler
+  /**
+   * Cache of node_modules that have already been uploaded to avoid re-uploading
+   */
+  private uploadedNodeModules: Set<string> = new Set()
 
   constructor({
     port,
@@ -199,6 +204,57 @@ export class DevServer {
         },
       })
       .json()
+
+    // Check if this file has new node_modules dependencies
+    await this.checkAndUploadNewNodeModules(absoluteFilePath)
+  }
+
+  private async checkAndUploadNewNodeModules(filePath: string) {
+    // Only check TypeScript/JavaScript files
+    const ext = path.extname(filePath).toLowerCase()
+    if (![".ts", ".tsx", ".js", ".jsx", ".mjs"].includes(ext)) return
+
+    try {
+      const nodeModuleFiles = getAllNodeModuleFilePaths(
+        filePath,
+        this.projectDir,
+      )
+
+      // Filter to only new files that haven't been uploaded yet
+      const newFiles = nodeModuleFiles.filter(
+        (file) =>
+          !this.uploadedNodeModules.has(path.relative(this.projectDir, file)),
+      )
+
+      if (newFiles.length > 0) {
+        console.log(
+          kleur.blue(`Uploading ${newFiles.length} new node_modules files...`),
+        )
+
+        for (const nodeModuleFile of newFiles) {
+          const relativeFilePath = path.relative(
+            this.projectDir,
+            nodeModuleFile,
+          )
+          this.uploadedNodeModules.add(relativeFilePath)
+          const filePayload = this.createFileUploadPayload(
+            nodeModuleFile,
+            relativeFilePath,
+          )
+          await this.fsKy.post("api/files/upsert", {
+            json: {
+              file_path: relativeFilePath,
+              initiator: "filesystem_change",
+              ...filePayload,
+            },
+          })
+        }
+
+        console.log(kleur.green("New node modules uploaded"))
+      }
+    } catch (error) {
+      debug("Error checking for new node modules:", error)
+    }
   }
 
   async handleFileRemovedFromFilesystem(absoluteFilePath: string) {
@@ -300,6 +356,44 @@ export class DevServer {
           ...filePayload,
         },
       })
+    }
+
+    // Upload node_modules dependencies used by the component
+    try {
+      console.log(kleur.blue("Analyzing node_modules dependencies..."))
+      const nodeModuleFiles = getAllNodeModuleFilePaths(
+        this.componentFilePath,
+        this.projectDir,
+      )
+
+      console.log(
+        kleur.blue(
+          `Found ${nodeModuleFiles.length} node_modules files to upload`,
+        ),
+      )
+
+      for (const nodeModuleFile of nodeModuleFiles) {
+        const relativeFilePath = path.relative(this.projectDir, nodeModuleFile)
+        this.uploadedNodeModules.add(relativeFilePath)
+        const filePayload = this.createFileUploadPayload(
+          nodeModuleFile,
+          relativeFilePath,
+        )
+        await this.fsKy.post("api/files/upsert", {
+          json: {
+            file_path: relativeFilePath,
+            initiator: "filesystem_change",
+            ...filePayload,
+          },
+        })
+      }
+
+      console.log(kleur.green("Node modules uploaded successfully"))
+    } catch (error) {
+      console.warn(
+        kleur.yellow("Warning: Failed to upload some node_modules files:"),
+        error,
+      )
     }
 
     await this.fsKy.post("api/events/create", {
