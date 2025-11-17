@@ -181,8 +181,6 @@ export function resolveNodeModuleImport(
   const entryPoints = [
     packageJson.main,
     packageJson.module,
-    packageJson.types,
-    packageJson.typings,
     packageJson.exports?.["."]?.default,
     packageJson.exports?.["."]?.import,
     packageJson.exports?.["."]?.require,
@@ -192,28 +190,6 @@ export function resolveNodeModuleImport(
     const entryPath = path.join(packageDir, entry as string)
     if (fs.existsSync(entryPath) && fs.statSync(entryPath).isFile()) {
       resolvedFiles.push(entryPath)
-    }
-  }
-
-  // Fallback to common entry files
-  if (resolvedFiles.length === 0) {
-    const fallbackPaths = [
-      path.join(packageDir, "index.js"),
-      path.join(packageDir, "index.mjs"),
-      path.join(packageDir, "index.ts"),
-      path.join(packageDir, "index.tsx"),
-      path.join(packageDir, "dist", "index.js"),
-      path.join(packageDir, "dist", "index.mjs"),
-      path.join(packageDir, "lib", "index.js"),
-      path.join(packageDir, "src", "index.ts"),
-      path.join(packageDir, "src", "index.tsx"),
-    ]
-
-    for (const p of fallbackPaths) {
-      if (fs.existsSync(p) && fs.statSync(p).isFile()) {
-        resolvedFiles.push(p)
-        break
-      }
     }
   }
 
