@@ -11,10 +11,6 @@ interface NodeModuleDependency {
   resolvedFiles: string[]
 }
 
-/**
- * Gets a set of local package names from the project's package.json
- * Local packages are those installed via yalc (file:.yalc/...) or file: protocol
- */
 function getLocalPackages(projectDir: string): Set<string> {
   const packageJsonPath = path.join(projectDir, "package.json")
   const localPackages = new Set<string>()
@@ -32,19 +28,19 @@ function getLocalPackages(projectDir: string): Set<string> {
     }
 
     for (const [packageName, version] of Object.entries(allDeps)) {
-      const versionStr = version as string
-      // Check if it's a local package (file:, link:, or .yalc reference)
-      if (
-        versionStr.startsWith("file:") ||
-        versionStr.startsWith("link:") ||
-        versionStr.includes(".yalc")
-      ) {
+      if (typeof version !== "string") continue
+
+      const isLocalPackage =
+        version.startsWith("file:") ||
+        version.startsWith("link:") ||
+        version.includes(".yalc")
+
+      if (isLocalPackage) {
         localPackages.add(packageName)
       }
     }
   } catch (error) {
-    // If we can't parse package.json, return empty set
-    console.warn("Failed to parse package.json:", error)
+    console.warn("Failed to parse package.json for local packages:", error)
   }
 
   return localPackages
@@ -338,12 +334,29 @@ export function collectAllNodeModuleDependencies(
 }
 
 /**
- * Recursively collects all files from a package directory
+ * Directories that should be excluded when collecting package files
  */
-function collectPackageFiles(packageDir: string): string[] {
+const EXCLUDED_PACKAGE_DIRECTORIES = new Set([
+  "node_modules",
+  ".git",
+  ".next",
+  "dist",
+  "build",
+  ".turbo",
+  "coverage",
+  ".cache",
+  "tmp",
+  "temp",
+])
+
+/**
+ * Recursively collects all files from a local package directory
+ * Excludes common build/cache directories to reduce upload size
+ */
+function collectLocalPackageFiles(packageDir: string): string[] {
   const files: string[] = []
 
-  function walk(dir: string) {
+  function walkDirectory(dir: string) {
     if (!fs.existsSync(dir)) return
 
     const entries = fs.readdirSync(dir, { withFileTypes: true })
@@ -351,59 +364,47 @@ function collectPackageFiles(packageDir: string): string[] {
     for (const entry of entries) {
       const fullPath = path.join(dir, entry.name)
 
-      // Skip common directories that shouldn't be uploaded
-      if (
-        entry.isDirectory() &&
-        (entry.name === "node_modules" ||
-          entry.name === ".git" ||
-          entry.name === ".next" ||
-          entry.name === "dist" ||
-          entry.name === "build" ||
-          entry.name === ".turbo" ||
-          entry.name === "coverage")
-      ) {
-        continue
-      }
-
-      if (entry.isFile()) {
+      if (entry.isDirectory()) {
+        // Skip excluded directories
+        if (EXCLUDED_PACKAGE_DIRECTORIES.has(entry.name)) {
+          continue
+        }
+        walkDirectory(fullPath)
+      } else if (entry.isFile()) {
         files.push(fullPath)
-      } else if (entry.isDirectory()) {
-        walk(fullPath)
       }
     }
   }
 
-  walk(packageDir)
+  walkDirectory(packageDir)
   return files
 }
 
-/**
- * Gets all unique node_modules file paths that need to be uploaded
- * Only includes files from local packages (installed via yalc or file: protocol)
- */
 export function getAllNodeModuleFilePaths(
   entryFilePath: string,
   projectDir: string,
 ): string[] {
-  const dependencies = collectAllNodeModuleDependencies(
-    entryFilePath,
-    projectDir,
-  )
-  const allFiles = new Set<string>()
   const localPackages = getLocalPackages(projectDir)
 
-  // If no local packages are defined, return empty array
+  // Early return if no local packages are defined
   if (localPackages.size === 0) {
     return []
   }
 
-  // Collect all packages (including those not directly imported)
-  const processedPackages = new Set<string>()
+  // Collect all node_modules dependencies from the entry file
+  const dependencies = collectAllNodeModuleDependencies(
+    entryFilePath,
+    projectDir,
+  )
 
-  for (const [importPath, files] of dependencies.entries()) {
+  const processedPackages = new Set<string>()
+  const allFiles = new Set<string>()
+
+  // Iterate through all discovered dependencies
+  for (const [importPath] of dependencies.entries()) {
     const packageName = getPackageNameFromImport(importPath)
 
-    // Only include files if this package is a local package
+    // Skip if not a local package or already processed
     if (!localPackages.has(packageName) || processedPackages.has(packageName)) {
       continue
     }
@@ -411,12 +412,10 @@ export function getAllNodeModuleFilePaths(
     processedPackages.add(packageName)
     const packageDir = path.join(projectDir, "node_modules", packageName)
 
-    // For local packages, collect all files in the package directory
+    // Collect all files from the local package directory
     if (fs.existsSync(packageDir)) {
-      const packageFiles = collectPackageFiles(packageDir)
-      for (const file of packageFiles) {
-        allFiles.add(file)
-      }
+      const packageFiles = collectLocalPackageFiles(packageDir)
+      packageFiles.forEach((file) => allFiles.add(file))
     }
   }
 

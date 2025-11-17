@@ -209,50 +209,42 @@ export class DevServer {
     await this.checkAndUploadNewNodeModules(absoluteFilePath)
   }
 
+  /**
+   * Checks if a file change introduces new local node_modules dependencies and uploads them
+   *
+   * This method is called when a file changes on the filesystem. It analyzes the file
+   * for new imports from local packages (yalc/file: protocol) and uploads any new files
+   * from those packages that haven't been uploaded yet.
+   *
+   * Only applies to TypeScript/JavaScript files, as they're the only files that can have imports.
+   */
   private async checkAndUploadNewNodeModules(filePath: string) {
-    // Only check TypeScript/JavaScript files
     const ext = path.extname(filePath).toLowerCase()
-    if (![".ts", ".tsx", ".js", ".jsx", ".mjs"].includes(ext)) return
+    const isSourceFile = [".ts", ".tsx", ".js", ".jsx", ".mjs"].includes(ext)
 
-    // Only uploads local packages (installed via yalc or file: protocol)
+    if (!isSourceFile) return
+
     try {
       const nodeModuleFiles = getAllNodeModuleFilePaths(
         filePath,
         this.projectDir,
       )
 
-      // Filter to only new files that haven't been uploaded yet
-      const newFiles = nodeModuleFiles.filter(
-        (file) =>
-          !this.uploadedNodeModules.has(path.relative(this.projectDir, file)),
+      // Filter to only files that haven't been uploaded yet
+      const newFiles = nodeModuleFiles.filter((file) => {
+        const relativePath = path.relative(this.projectDir, file)
+        return !this.uploadedNodeModules.has(relativePath)
+      })
+
+      if (newFiles.length === 0) return
+
+      console.log(
+        kleur.blue(`Uploading ${newFiles.length} new node_modules files...`),
       )
 
-      if (newFiles.length > 0) {
-        console.log(
-          kleur.blue(`Uploading ${newFiles.length} new node_modules files...`),
-        )
+      await this.uploadNodeModuleFiles(newFiles)
 
-        for (const nodeModuleFile of newFiles) {
-          const relativeFilePath = path.relative(
-            this.projectDir,
-            nodeModuleFile,
-          )
-          this.uploadedNodeModules.add(relativeFilePath)
-          const filePayload = this.createFileUploadPayload(
-            nodeModuleFile,
-            relativeFilePath,
-          )
-          await this.fsKy.post("api/files/upsert", {
-            json: {
-              file_path: relativeFilePath,
-              initiator: "filesystem_change",
-              ...filePayload,
-            },
-          })
-        }
-
-        console.log(kleur.green("New node modules uploaded"))
-      }
+      console.log(kleur.green("New node modules uploaded"))
     } catch (error) {
       debug("Error checking for new node modules:", error)
     }
@@ -359,8 +351,18 @@ export class DevServer {
       })
     }
 
-    // Upload node_modules dependencies used by the component
-    // Only uploads local packages (installed via yalc or file: protocol)
+    await this.uploadInitialNodeModules()
+
+    await this.fsKy.post("api/events/create", {
+      json: {
+        event_type: "INITIAL_FILES_UPLOADED",
+        file_count: filePaths.length,
+      },
+      throwHttpErrors: false,
+    })
+  }
+
+  private async uploadInitialNodeModules() {
     try {
       console.log(kleur.blue("Analyzing node_modules dependencies..."))
       const nodeModuleFiles = getAllNodeModuleFilePaths(
@@ -374,20 +376,8 @@ export class DevServer {
         ),
       )
 
-      for (const nodeModuleFile of nodeModuleFiles) {
-        const relativeFilePath = path.relative(this.projectDir, nodeModuleFile)
-        this.uploadedNodeModules.add(relativeFilePath)
-        const filePayload = this.createFileUploadPayload(
-          nodeModuleFile,
-          relativeFilePath,
-        )
-        await this.fsKy.post("api/files/upsert", {
-          json: {
-            file_path: relativeFilePath,
-            initiator: "filesystem_change",
-            ...filePayload,
-          },
-        })
+      if (nodeModuleFiles.length > 0) {
+        await this.uploadNodeModuleFiles(nodeModuleFiles)
       }
 
       console.log(kleur.green("Node modules uploaded successfully"))
@@ -397,14 +387,33 @@ export class DevServer {
         error,
       )
     }
+  }
 
-    await this.fsKy.post("api/events/create", {
-      json: {
-        event_type: "INITIAL_FILES_UPLOADED",
-        file_count: filePaths.length,
-      },
-      throwHttpErrors: false,
-    })
+  /**
+   * Uploads a list of node_modules files to the file server
+   *
+   * @param files - Array of absolute file paths to upload
+   */
+  private async uploadNodeModuleFiles(files: string[]) {
+    for (const nodeModuleFile of files) {
+      const relativeFilePath = path.relative(this.projectDir, nodeModuleFile)
+
+      // Mark as uploaded to prevent duplicate uploads
+      this.uploadedNodeModules.add(relativeFilePath)
+
+      const filePayload = this.createFileUploadPayload(
+        nodeModuleFile,
+        relativeFilePath,
+      )
+
+      await this.fsKy.post("api/files/upsert", {
+        json: {
+          file_path: relativeFilePath,
+          initiator: "filesystem_change",
+          ...filePayload,
+        },
+      })
+    }
   }
 
   private async saveSnippet() {
