@@ -27,6 +27,7 @@ import { registerSetup } from "./setup/register"
 import { registerConvert } from "./convert/register"
 import { registerSimulate } from "./simulate/register"
 import { registerInstall } from "./install/register"
+import { registerTranspile } from "./transpile/register"
 
 export const program = new Command()
 
@@ -51,6 +52,7 @@ registerConfigSet(program)
 
 registerExport(program)
 registerBuild(program)
+registerTranspile(program)
 registerAdd(program)
 registerRemove(program)
 registerSnapshot(program)
