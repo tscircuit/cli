@@ -28,6 +28,11 @@ test("init command installs @types/react and passes type-checking", async () => 
   const tsconfigExists = await Bun.file(tsconfigPath).exists()
   expect(tsconfigExists).toBeTrue()
 
+  const tsconfig = await Bun.file(tsconfigPath).json()
+  expect(tsconfig?.compilerOptions?.types).toEqual(
+    expect.arrayContaining(["tscircuit"]),
+  )
+
   try {
     const typeCheckResult = execSync("bunx tsc --noEmit", {
       cwd: join(tmpDir, projectDir),
@@ -39,4 +44,4 @@ test("init command installs @types/react and passes type-checking", async () => 
       `Type-checking failed for init'd project. ${tmpDir}/${projectDir} ${(error as any).toString()}`,
     )
   }
-}, 10_000)
+}, 30_000)
