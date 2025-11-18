@@ -1,11 +1,13 @@
 import { getVirtualFileSystemFromDirPath } from "make-vfs"
 import path from "node:path"
 import fs from "node:fs"
+import crypto from "node:crypto"
 import { pathToFileURL } from "node:url"
 import Debug from "debug"
 import type { PlatformConfig } from "@tscircuit/props"
 import { abbreviateStringifyObject } from "lib/utils/abbreviate-stringify-object"
 import { importFromUserLand } from "./importFromUserLand"
+import * as esbuild from "esbuild"
 
 const debug = Debug("tsci:generate-circuit-json")
 
@@ -26,6 +28,70 @@ type GenerateCircuitJsonOptions = {
   outputFileName?: string
   saveToFile?: boolean
   platformConfig?: PlatformConfig
+}
+
+const SUPPORTED_TEXT_LOADERS = {
+  ".txt": "text",
+  ".md": "text",
+  ".obj": "text",
+} as const satisfies Record<string, esbuild.Loader>
+
+const findNearestTsconfig = (startDir: string): string | undefined => {
+  let currentDir = startDir
+
+  while (true) {
+    const candidate = path.join(currentDir, "tsconfig.json")
+    if (fs.existsSync(candidate)) {
+      return candidate
+    }
+
+    const parentDir = path.dirname(currentDir)
+    if (parentDir === currentDir) break
+    currentDir = parentDir
+  }
+
+  return undefined
+}
+
+const bundleEntrypointWithEsbuild = async ({
+  entryFilePath,
+  projectDir,
+}: {
+  entryFilePath: string
+  projectDir: string
+}) => {
+  const tsconfigPath = findNearestTsconfig(path.dirname(entryFilePath))
+  const cacheDir = path.join(projectDir, ".tsci", "cache")
+  fs.mkdirSync(cacheDir, { recursive: true })
+  const normalizedName = path
+    .relative(projectDir, entryFilePath)
+    .replace(/[^a-zA-Z0-9._-]/g, "-")
+  const bundleFilePath = path.join(
+    cacheDir,
+    `${normalizedName || "entrypoint"}-${crypto.randomUUID()}.mjs`,
+  )
+
+  await esbuild.build({
+    entryPoints: [entryFilePath],
+    outfile: bundleFilePath,
+    bundle: true,
+    format: "esm",
+    platform: "node",
+    target: "esnext",
+    jsx: "automatic",
+    jsxImportSource: "react",
+    sourcemap: false,
+    absWorkingDir: projectDir,
+    packages: "external",
+    tsconfig: tsconfigPath,
+    logLevel: "silent",
+    loader: {
+      ".json": "json",
+      ...SUPPORTED_TEXT_LOADERS,
+    },
+  })
+
+  return bundleFilePath
 }
 
 /**
@@ -93,7 +159,11 @@ export async function generateCircuitJson({
   debug(`fsMap: ${abbreviateStringifyObject(fsMap)}`)
 
   // Execute the circuit runner with the virtual file system
-  const MainComponent = await import(pathToFileURL(absoluteFilePath).href)
+  const bundledEntrypointPath = await bundleEntrypointWithEsbuild({
+    entryFilePath: absoluteFilePath,
+    projectDir,
+  })
+  const MainComponent = await import(pathToFileURL(bundledEntrypointPath).href)
 
   // Handle both default export and named exports
   const Component =
