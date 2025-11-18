@@ -39,7 +39,6 @@ test("transpile command generates ESM, CommonJS, and type declarations", async (
   expect(dtsContent).toContain("export")
 }, 30_000)
 
-
 test("transpile uses mainEntrypoint when available", async () => {
   const { tmpDir, runCommand } = await getCliTestFixture()
   const mainPath = path.join(tmpDir, "index.tsx")
