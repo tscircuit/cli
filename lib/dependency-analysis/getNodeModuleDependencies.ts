@@ -193,7 +193,7 @@ export function resolveNodeModuleImport(
     }
   }
 
-    if (resolvedFiles.length === 0) {
+  if (resolvedFiles.length === 0) {
     const fallbackPaths = [
       path.join(packageDir, "index.js"),
       path.join(packageDir, "index.mjs"),
