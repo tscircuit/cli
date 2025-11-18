@@ -37,7 +37,7 @@ const tsconfigJson = JSON.stringify(
 
 const pkgJson = JSON.stringify({ name: "type-reexport-repro" })
 
-test("build fails when re-exporting a type alias without type modifier", async () => {
+test("build succeeds when re-exporting a type alias without type modifier", async () => {
   const { tmpDir, runCommand } = await getCliTestFixture()
   const libDir = path.join(tmpDir, "lib", "src")
   await mkdir(libDir, { recursive: true })
@@ -46,7 +46,8 @@ test("build fails when re-exporting a type alias without type modifier", async (
   await writeFile(path.join(tmpDir, "tsconfig.json"), `${tsconfigJson}\n`)
   await writeFile(path.join(tmpDir, "package.json"), `${pkgJson}\n`)
 
-  const { stderr } = await runCommand("tsci build")
+  const { stderr, stdout } = await runCommand("tsci build")
 
-  expect(stderr).toContain("SyntaxError: export 'ExampleType' not found")
+  expect(stderr).not.toContain("SyntaxError: export 'ExampleType' not found")
+  expect(stdout).toContain("Build complete!")
 })

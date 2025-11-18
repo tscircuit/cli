@@ -36,6 +36,7 @@
     "delay": "^6.0.0",
     "dsn-converter": "^0.0.63",
     "easyeda": "^0.0.227",
+    "esbuild": "^0.27.0",
     "fuse.js": "^7.1.0",
     "get-port": "^7.1.0",
     "globby": "^14.1.0",
