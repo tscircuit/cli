@@ -193,6 +193,27 @@ export function resolveNodeModuleImport(
     }
   }
 
+    if (resolvedFiles.length === 0) {
+    const fallbackPaths = [
+      path.join(packageDir, "index.js"),
+      path.join(packageDir, "index.mjs"),
+      path.join(packageDir, "index.ts"),
+      path.join(packageDir, "index.tsx"),
+      path.join(packageDir, "dist", "index.js"),
+      path.join(packageDir, "dist", "index.mjs"),
+      path.join(packageDir, "lib", "index.js"),
+      path.join(packageDir, "src", "index.ts"),
+      path.join(packageDir, "src", "index.tsx"),
+    ]
+
+    for (const p of fallbackPaths) {
+      if (fs.existsSync(p) && fs.statSync(p).isFile()) {
+        resolvedFiles.push(p)
+        break
+      }
+    }
+  }
+
   return resolvedFiles
 }
 
