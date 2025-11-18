@@ -31,6 +31,27 @@ const findSelectableTsxFiles = (projectDir: string): string[] => {
     .sort()
 }
 
+const warnIfTsconfigMissingTscircuitType = (projectDir: string) => {
+  const tsconfigPath = path.join(projectDir, "tsconfig.json")
+  if (!fs.existsSync(tsconfigPath)) {
+    return
+  }
+
+  try {
+    const tsconfig = JSON.parse(fs.readFileSync(tsconfigPath, "utf-8"))
+    const types = tsconfig?.compilerOptions?.types
+    if (!Array.isArray(types) || !types.includes("tscircuit")) {
+      console.warn(
+        kleur.yellow(
+          'Warning: "tscircuit" is missing from tsconfig.json compilerOptions.types. Add it (e.g. "types": ["tscircuit"]) to ensure CLI-provided types work correctly.',
+        ),
+      )
+    }
+  } catch {
+    // ignore JSON parse errors here; other parts of the CLI will surface them if needed
+  }
+}
+
 export const registerDev = (program: Command) => {
   program
     .command("dev")
@@ -91,6 +112,8 @@ export const registerDev = (program: Command) => {
           )
         }
       }
+
+      warnIfTsconfigMissingTscircuitType(process.cwd())
 
       try {
         process.stdout.write(
