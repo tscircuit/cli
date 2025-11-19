@@ -15,6 +15,17 @@ import {
 
 const CLI_TYPES_ROOT = path.resolve(__dirname, "../../../types")
 
+const externalFunction = (id: string): boolean => {
+  if (id.startsWith(".") || id.startsWith("/")) {
+    return false // Don't externalize relative paths
+  }
+  if (path.isAbsolute(id)) {
+    return false // Don't externalize absolute file paths
+  }
+  // Everything else (npm packages like 'react', '@rollup/plugin-foo', etc.) is external
+  return true
+}
+
 export const transpileFile = async ({
   input,
   outputDir,
@@ -76,10 +87,7 @@ export const transpileFile = async ({
 
     const esmBundle = await rollup({
       input,
-      external: (id) => {
-        // Mark all imports as external except relative imports
-        return !id.startsWith(".") && !id.startsWith("/")
-      },
+      external: externalFunction,
       plugins: getPlugins("ESNext"),
     })
 
@@ -97,10 +105,7 @@ export const transpileFile = async ({
     console.log("Building CommonJS bundle...")
     const cjsBundle = await rollup({
       input,
-      external: (id) => {
-        // Mark all imports as external except relative imports
-        return !id.startsWith(".") && !id.startsWith("/")
-      },
+      external: externalFunction,
       plugins: getPlugins("CommonJS"),
     })
 
@@ -118,10 +123,7 @@ export const transpileFile = async ({
     console.log("Generating type declarations...")
     const dtsBundle = await rollup({
       input,
-      external: (id) => {
-        // Mark all imports as external except relative imports
-        return !id.startsWith(".") && !id.startsWith("/")
-      },
+      external: externalFunction,
       plugins: [
         dts({
           respectExternal: true,
