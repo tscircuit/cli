@@ -8,6 +8,13 @@ import json from "@rollup/plugin-json"
 import dts from "rollup-plugin-dts"
 import kleur from "kleur"
 
+import {
+  createStaticAssetPlugin,
+  STATIC_ASSET_EXTENSIONS,
+} from "./static-asset-plugin"
+
+const CLI_TYPES_ROOT = path.resolve(__dirname, "../../../types")
+
 export const transpileFile = async ({
   input,
   outputDir,
@@ -20,35 +27,60 @@ export const transpileFile = async ({
   try {
     fs.mkdirSync(outputDir, { recursive: true })
 
+    const typeRootCandidates = [
+      path.join(projectDir, "node_modules", "@types"),
+      path.join(projectDir, "types"),
+      CLI_TYPES_ROOT,
+    ]
+    const typeRoots = Array.from(
+      new Set(
+        typeRootCandidates.filter((candidate) => fs.existsSync(candidate)),
+      ),
+    )
+
     // Build ESM bundle
     console.log("Building ESM bundle...")
+    const staticAssetExtensions = Array.from(STATIC_ASSET_EXTENSIONS)
+
+    const getPlugins = (moduleKind: "ESNext" | "CommonJS") => [
+      createStaticAssetPlugin({ outputDir }),
+      resolve({
+        extensions: [
+          ".ts",
+          ".tsx",
+          ".js",
+          ".jsx",
+          ".json",
+          ...staticAssetExtensions,
+        ],
+      }),
+      commonjs(),
+      json(),
+      typescript({
+        jsx: "react",
+        tsconfig: false,
+        compilerOptions: {
+          target: "ES2020",
+          module: moduleKind,
+          jsx: "react",
+          declaration: false,
+          sourceMap: false,
+          skipLibCheck: true,
+          resolveJsonModule: true,
+          allowSyntheticDefaultImports: true,
+          allowArbitraryExtensions: true,
+          ...(typeRoots.length ? { typeRoots } : {}),
+        },
+      }),
+    ]
+
     const esmBundle = await rollup({
       input,
       external: (id) => {
         // Mark all imports as external except relative imports
         return !id.startsWith(".") && !id.startsWith("/")
       },
-      plugins: [
-        resolve({
-          extensions: [".ts", ".tsx", ".js", ".jsx"],
-        }),
-        commonjs(),
-        json(),
-        typescript({
-          jsx: "react",
-          tsconfig: false,
-          compilerOptions: {
-            target: "ES2020",
-            module: "ESNext",
-            jsx: "react",
-            declaration: false,
-            sourceMap: false,
-            skipLibCheck: true,
-            resolveJsonModule: true,
-            allowSyntheticDefaultImports: true,
-          },
-        }),
-      ],
+      plugins: getPlugins("ESNext"),
     })
 
     await esmBundle.write({
@@ -69,27 +101,7 @@ export const transpileFile = async ({
         // Mark all imports as external except relative imports
         return !id.startsWith(".") && !id.startsWith("/")
       },
-      plugins: [
-        resolve({
-          extensions: [".ts", ".tsx", ".js", ".jsx"],
-        }),
-        commonjs(),
-        json(),
-        typescript({
-          jsx: "react",
-          tsconfig: false,
-          compilerOptions: {
-            target: "ES2020",
-            module: "CommonJS",
-            jsx: "react",
-            declaration: false,
-            sourceMap: false,
-            skipLibCheck: true,
-            resolveJsonModule: true,
-            allowSyntheticDefaultImports: true,
-          },
-        }),
-      ],
+      plugins: getPlugins("CommonJS"),
     })
 
     await cjsBundle.write({
