@@ -62,6 +62,29 @@ export const buildFile = async (
     }
   } catch (err) {
     console.error(`Build failed: ${err}`)
+    if (err instanceof Error) {
+      logTypeReexportHint(err, input)
+    }
     return { ok: false }
   }
+}
+
+const TYPE_REEXPORT_ERROR_REGEX =
+  /SyntaxError: export '([^']+)' not found in '([^']+)'/
+
+const logTypeReexportHint = (error: Error, entryFilePath: string) => {
+  const match = String(error).match(TYPE_REEXPORT_ERROR_REGEX)
+  if (!match) return
+  const [, exportName, fromSpecifier] = match
+  const entryFileName = path.basename(entryFilePath)
+  console.error(
+    [
+      "",
+      `It looks like "${entryFileName}" re-exports the type-only symbol "${exportName}" from "${fromSpecifier}" without the \"type\" modifier.`,
+      "Type-only exports must be re-exported with `export type { ... }`.",
+      "Try rewriting the statement as:",
+      `  export type { ${exportName} } from "${fromSpecifier}"`,
+      "",
+    ].join("\n"),
+  )
 }
