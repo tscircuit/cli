@@ -8,6 +8,21 @@ import json from "@rollup/plugin-json"
 import dts from "rollup-plugin-dts"
 import kleur from "kleur"
 
+// Shared external function for rollup configuration
+// Mark all imports as external except:
+// - Relative imports starting with . or /
+// - Absolute file system paths (detected by path.isAbsolute)
+const externalFunction = (id: string): boolean => {
+  if (id.startsWith(".") || id.startsWith("/")) {
+    return false // Don't externalize relative paths
+  }
+  if (path.isAbsolute(id)) {
+    return false // Don't externalize absolute file paths
+  }
+  // Everything else (npm packages like 'react', '@rollup/plugin-foo', etc.) is external
+  return true
+}
+
 export const transpileFile = async ({
   input,
   outputDir,
@@ -24,10 +39,7 @@ export const transpileFile = async ({
     console.log("Building ESM bundle...")
     const esmBundle = await rollup({
       input,
-      external: (id) => {
-        // Mark all imports as external except relative imports
-        return !id.startsWith(".") && !id.startsWith("/")
-      },
+      external: externalFunction,
       plugins: [
         resolve({
           extensions: [".ts", ".tsx", ".js", ".jsx"],
@@ -37,6 +49,7 @@ export const transpileFile = async ({
         typescript({
           jsx: "react",
           tsconfig: false,
+          noForceEmit: true,
           compilerOptions: {
             target: "ES2020",
             module: "ESNext",
@@ -46,6 +59,7 @@ export const transpileFile = async ({
             skipLibCheck: true,
             resolveJsonModule: true,
             allowSyntheticDefaultImports: true,
+            noEmit: false,
           },
         }),
       ],
@@ -65,10 +79,7 @@ export const transpileFile = async ({
     console.log("Building CommonJS bundle...")
     const cjsBundle = await rollup({
       input,
-      external: (id) => {
-        // Mark all imports as external except relative imports
-        return !id.startsWith(".") && !id.startsWith("/")
-      },
+      external: externalFunction,
       plugins: [
         resolve({
           extensions: [".ts", ".tsx", ".js", ".jsx"],
@@ -78,6 +89,7 @@ export const transpileFile = async ({
         typescript({
           jsx: "react",
           tsconfig: false,
+          noForceEmit: true,
           compilerOptions: {
             target: "ES2020",
             module: "CommonJS",
@@ -87,6 +99,7 @@ export const transpileFile = async ({
             skipLibCheck: true,
             resolveJsonModule: true,
             allowSyntheticDefaultImports: true,
+            noEmit: false,
           },
         }),
       ],
@@ -106,10 +119,7 @@ export const transpileFile = async ({
     console.log("Generating type declarations...")
     const dtsBundle = await rollup({
       input,
-      external: (id) => {
-        // Mark all imports as external except relative imports
-        return !id.startsWith(".") && !id.startsWith("/")
-      },
+      external: externalFunction,
       plugins: [
         dts({
           respectExternal: true,
