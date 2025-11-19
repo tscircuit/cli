@@ -1,6 +1,6 @@
 import type { Command } from "commander"
 import path from "node:path"
-import { transpileFile } from "../build/transpile"
+import { transpileFile } from "../build/transpile/index"
 import { getBuildEntrypoints } from "../build/get-build-entrypoints"
 
 export const registerTranspile = (program: Command) => {

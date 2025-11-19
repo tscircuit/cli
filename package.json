@@ -75,7 +75,8 @@
   },
   "files": [
     "dist",
-    "cli/entrypoint.js"
+    "cli/entrypoint.js",
+    "types"
   ],
   "scripts": {
     "start": "bun run dev",
