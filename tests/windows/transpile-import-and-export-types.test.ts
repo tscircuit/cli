@@ -40,7 +40,6 @@ const ResistorComponent = ({ name, resistance, footprint }: ResistorProps) => (
   />
 )
 export default ResistorComponent
-export type { ResistorProps }
 `
 
 const indexFile = `
