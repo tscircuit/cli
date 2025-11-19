@@ -12,6 +12,20 @@ const isSubPath = (maybeChild: string, maybeParent: string) => {
   )
 }
 
+const findProjectRoot = (startDir: string): string => {
+  let currentDir = startDir
+  while (currentDir !== path.dirname(currentDir)) {
+    // Check if package.json exists in current directory
+    const packageJsonPath = path.join(currentDir, "package.json")
+    if (fs.existsSync(packageJsonPath)) {
+      return currentDir
+    }
+    currentDir = path.dirname(currentDir)
+  }
+  // If no package.json found, return the starting directory
+  return startDir
+}
+
 export async function getBuildEntrypoints({
   fileOrDir,
   rootDir = process.cwd(),
@@ -75,7 +89,10 @@ export async function getBuildEntrypoints({
         circuitFiles,
       }
     }
-    return { projectDir: path.dirname(resolved), circuitFiles: [resolved] }
+    // Find project root by looking for package.json
+    const fileDir = path.dirname(resolved)
+    const projectDir = findProjectRoot(fileDir)
+    return { projectDir, circuitFiles: [resolved] }
   }
 
   return buildFromProjectDir()
