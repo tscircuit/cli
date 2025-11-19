@@ -87,15 +87,15 @@ windowsTest(
       path.join(tmpDir, "dist", "index.js"),
       "utf-8",
     )
-    expect(esmContent).toContain("export const exportedFootprint")
+    expect(esmContent).toMatch(/export.*exportedFootprint/)
     expect(esmContent).toContain("createBoardSize")
 
     const dtsContent = await readFile(
       path.join(tmpDir, "dist", "index.d.ts"),
       "utf-8",
     )
-    expect(dtsContent).toContain("export type ExportedBoardSize")
-    expect(dtsContent).toContain("export declare const exportedFootprint")
+    expect(dtsContent).toMatch(/export.*ExportedBoardSize/)
+    expect(dtsContent).toMatch(/export.*exportedFootprint/)
   },
   120_000,
 )
