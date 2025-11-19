@@ -41,7 +41,12 @@ export const transpileFile = async ({
     outputDir = path.normalize(outputDir)
     projectDir = path.normalize(projectDir)
 
+    console.log("[DEBUG] Input file:", input)
+    console.log("[DEBUG] Output directory:", outputDir)
+    console.log("[DEBUG] Project directory:", projectDir)
+
     fs.mkdirSync(outputDir, { recursive: true })
+    console.log("[DEBUG] Output directory created/verified:", outputDir)
 
     const typeRootCandidates = [
       path.join(projectDir, "node_modules", "@types"),
@@ -96,14 +101,24 @@ export const transpileFile = async ({
       plugins: getPlugins("ESNext"),
     })
 
+    const esmOutputPath = path.join(outputDir, "index.js")
+    console.log("[DEBUG] Writing ESM bundle to:", esmOutputPath)
+
     await esmBundle.write({
-      file: path.join(outputDir, "index.js"),
+      file: esmOutputPath,
       format: "es",
       sourcemap: false,
     })
 
+    console.log("[DEBUG] ESM write completed")
+    console.log("[DEBUG] Checking if ESM file exists:", fs.existsSync(esmOutputPath))
+    if (fs.existsSync(esmOutputPath)) {
+      const stats = fs.statSync(esmOutputPath)
+      console.log("[DEBUG] ESM file size:", stats.size, "bytes")
+    }
+
     console.log(
-      `ESM bundle written to ${path.relative(projectDir, path.join(outputDir, "index.js"))}`,
+      `ESM bundle written to ${path.relative(projectDir, esmOutputPath)}`,
     )
 
     // Build CommonJS bundle
@@ -114,14 +129,24 @@ export const transpileFile = async ({
       plugins: getPlugins("CommonJS"),
     })
 
+    const cjsOutputPath = path.join(outputDir, "index.cjs")
+    console.log("[DEBUG] Writing CJS bundle to:", cjsOutputPath)
+
     await cjsBundle.write({
-      file: path.join(outputDir, "index.cjs"),
+      file: cjsOutputPath,
       format: "cjs",
       sourcemap: false,
     })
 
+    console.log("[DEBUG] CJS write completed")
+    console.log("[DEBUG] Checking if CJS file exists:", fs.existsSync(cjsOutputPath))
+    if (fs.existsSync(cjsOutputPath)) {
+      const stats = fs.statSync(cjsOutputPath)
+      console.log("[DEBUG] CJS file size:", stats.size, "bytes")
+    }
+
     console.log(
-      `CommonJS bundle written to ${path.relative(projectDir, path.join(outputDir, "index.cjs"))}`,
+      `CommonJS bundle written to ${path.relative(projectDir, cjsOutputPath)}`,
     )
 
     // Build type declarations
@@ -154,11 +179,28 @@ export const transpileFile = async ({
     // Remove empty exports (same as reference implementation)
     dtsContent = dtsContent.replace(/export\s*{\s*};\s*$/gm, "").trim()
 
-    fs.writeFileSync(path.join(outputDir, "index.d.ts"), dtsContent)
+    const dtsOutputPath = path.join(outputDir, "index.d.ts")
+    console.log("[DEBUG] Writing type declarations to:", dtsOutputPath)
+    fs.writeFileSync(dtsOutputPath, dtsContent)
+    console.log("[DEBUG] Type declarations write completed")
+    console.log("[DEBUG] Checking if DTS file exists:", fs.existsSync(dtsOutputPath))
+    if (fs.existsSync(dtsOutputPath)) {
+      const stats = fs.statSync(dtsOutputPath)
+      console.log("[DEBUG] DTS file size:", stats.size, "bytes")
+    }
 
     console.log(
-      `Type declarations written to ${path.relative(projectDir, path.join(outputDir, "index.d.ts"))}`,
+      `Type declarations written to ${path.relative(projectDir, dtsOutputPath)}`,
     )
+
+    // Final debug: list all files in output directory
+    console.log("[DEBUG] Listing files in output directory:")
+    const filesInOutputDir = fs.readdirSync(outputDir)
+    for (const file of filesInOutputDir) {
+      const filePath = path.join(outputDir, file)
+      const stats = fs.statSync(filePath)
+      console.log(`[DEBUG]   - ${file} (${stats.size} bytes)`)
+    }
 
     console.log(kleur.green("Transpilation complete!"))
     return true
