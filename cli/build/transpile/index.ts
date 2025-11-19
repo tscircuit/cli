@@ -15,6 +15,17 @@ import {
 
 const CLI_TYPES_ROOT = path.resolve(__dirname, "../../../types")
 
+const externalFunction = (id: string): boolean => {
+  if (id.startsWith(".") || id.startsWith("/")) {
+    return false // Don't externalize relative paths
+  }
+  if (path.isAbsolute(id)) {
+    return false // Don't externalize absolute file paths
+  }
+  // Everything else (npm packages like 'react', '@rollup/plugin-foo', etc.) is external
+  return true
+}
+
 export const transpileFile = async ({
   input,
   outputDir,
@@ -76,52 +87,48 @@ export const transpileFile = async ({
 
     const esmBundle = await rollup({
       input,
-      external: (id) => {
-        // Mark all imports as external except relative imports
-        return !id.startsWith(".") && !id.startsWith("/")
-      },
+      external: externalFunction,
       plugins: getPlugins("ESNext"),
     })
 
+    const esmOutputPath = path.join(outputDir, "index.js")
+
     await esmBundle.write({
-      file: path.join(outputDir, "index.js"),
+      file: esmOutputPath,
       format: "es",
       sourcemap: false,
     })
 
     console.log(
-      `ESM bundle written to ${path.relative(projectDir, path.join(outputDir, "index.js"))}`,
+      `ESM bundle written to ${path.relative(projectDir, esmOutputPath)}`,
     )
 
     // Build CommonJS bundle
     console.log("Building CommonJS bundle...")
     const cjsBundle = await rollup({
       input,
-      external: (id) => {
-        // Mark all imports as external except relative imports
-        return !id.startsWith(".") && !id.startsWith("/")
-      },
+      external: externalFunction,
       plugins: getPlugins("CommonJS"),
     })
 
+    const cjsOutputPath = path.join(outputDir, "index.cjs")
+    console.log("[DEBUG] Writing CJS bundle to:", cjsOutputPath)
+
     await cjsBundle.write({
-      file: path.join(outputDir, "index.cjs"),
+      file: cjsOutputPath,
       format: "cjs",
       sourcemap: false,
     })
 
     console.log(
-      `CommonJS bundle written to ${path.relative(projectDir, path.join(outputDir, "index.cjs"))}`,
+      `CommonJS bundle written to ${path.relative(projectDir, cjsOutputPath)}`,
     )
 
     // Build type declarations
     console.log("Generating type declarations...")
     const dtsBundle = await rollup({
       input,
-      external: (id) => {
-        // Mark all imports as external except relative imports
-        return !id.startsWith(".") && !id.startsWith("/")
-      },
+      external: externalFunction,
       plugins: [
         dts({
           respectExternal: true,
@@ -147,10 +154,11 @@ export const transpileFile = async ({
     // Remove empty exports (same as reference implementation)
     dtsContent = dtsContent.replace(/export\s*{\s*};\s*$/gm, "").trim()
 
-    fs.writeFileSync(path.join(outputDir, "index.d.ts"), dtsContent)
+    const dtsOutputPath = path.join(outputDir, "index.d.ts")
+    fs.writeFileSync(dtsOutputPath, dtsContent)
 
     console.log(
-      `Type declarations written to ${path.relative(projectDir, path.join(outputDir, "index.d.ts"))}`,
+      `Type declarations written to ${path.relative(projectDir, dtsOutputPath)}`,
     )
 
     console.log(kleur.green("Transpilation complete!"))
