@@ -22,6 +22,7 @@ export const createBoardSize = (width: string, height: string): BoardSize => ({
 `
 
 const resistorFile = `
+import React from "react"
 import type { ResistorFootprint } from "../types"
 export type ResistorProps = {
   name: string
@@ -43,6 +44,7 @@ export default ResistorComponent
 `
 
 const indexFile = `
+import React from "react"
 import ResistorComponent, { type ResistorProps } from "./components/resistor"
 import { createBoardSize } from "./helpers"
 import type { BoardSize } from "./types"
