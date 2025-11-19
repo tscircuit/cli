@@ -99,10 +99,6 @@ export const transpileFile = async ({
       sourcemap: false,
     })
 
-    if (fs.existsSync(esmOutputPath)) {
-      const stats = fs.statSync(esmOutputPath)
-    }
-
     console.log(
       `ESM bundle written to ${path.relative(projectDir, esmOutputPath)}`,
     )
