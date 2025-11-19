@@ -36,6 +36,11 @@ export const transpileFile = async ({
   projectDir: string
 }): Promise<boolean> => {
   try {
+    // Normalize paths for cross-platform compatibility
+    input = path.normalize(input)
+    outputDir = path.normalize(outputDir)
+    projectDir = path.normalize(projectDir)
+
     fs.mkdirSync(outputDir, { recursive: true })
 
     const typeRootCandidates = [
