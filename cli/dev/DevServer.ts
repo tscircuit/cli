@@ -430,11 +430,12 @@ export class DevServer {
       filePath: this.componentFilePath,
       onExit: () => {},
       onError: (e) => {
-        console.error("Failed to save snippet:- ", e)
+        console.error("Failed to save package:- ", e)
         postEvent("FAILED_TO_SAVE_SNIPPET", e)
       },
-      onSuccess: () => {
+      onSuccess: (message: string) => {
         postEvent("SNIPPET_SAVED")
+        console.log(message)
       },
     })
   }

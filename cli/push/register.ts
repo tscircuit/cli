@@ -4,9 +4,9 @@ import { pushSnippet } from "lib/shared/push-snippet"
 export const registerPush = (program: Command) => {
   program
     .command("push")
-    .description("Save snippet code to Registry API")
-    .argument("[file]", "Path to the snippet file")
-    .option("--private", "Make the snippet private")
+    .description("Save package code to Registry API")
+    .argument("[file]", "Path to the package file")
+    .option("--private", "Make the package private")
     .option(
       "--version-tag <tag>",
       "Publish as a non-latest version using the provided tag",

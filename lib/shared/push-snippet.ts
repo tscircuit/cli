@@ -16,6 +16,7 @@ type PushOptions = {
   filePath?: string
   isPrivate?: boolean
   versionTag?: string
+  log?: (message: string) => void
   onExit?: (code: number) => void
   onError?: (message: string) => void
   onSuccess?: (message: string) => void
@@ -27,6 +28,7 @@ export const pushSnippet = async ({
   filePath,
   isPrivate,
   versionTag,
+  log = console.log,
   onExit = (code) => process.exit(code),
   onError = (message) => console.error(message),
   onSuccess = (message) => console.log(message),
@@ -159,13 +161,11 @@ export const pushSnippet = async ({
   }
 
   const updatePackageJsonVersion = (newVersion?: string) => {
-    if (packageJson.version) {
-      try {
-        packageJson.version = newVersion ?? `${packageVersion}`
-        fs.writeFileSync(packageJsonPath, JSON.stringify(packageJson, null, 2))
-      } catch (error) {
-        onError(`Failed to update package.json version: ${error}`)
-      }
+    try {
+      packageJson.version = newVersion ?? `${packageVersion}`
+      fs.writeFileSync(packageJsonPath, JSON.stringify(packageJson, null, 2))
+    } catch (error) {
+      onError(`Failed to update package.json version: ${error}`)
     }
   }
 
@@ -219,7 +219,7 @@ export const pushSnippet = async ({
       .json()
       .then((response) => {
         debug("createPackage", response)
-        onSuccess(`Package created`)
+        log(`Package created`)
       })
       .catch((error) => {
         onError(`Error creating package: ${error}`)
@@ -274,9 +274,7 @@ export const pushSnippet = async ({
       return onExit(1)
     }
 
-    onSuccess(
-      `Incrementing Package Version ${packageVersion} -> ${bumpedVersion}`,
-    )
+    log(`Incrementing Package Version ${packageVersion} -> ${bumpedVersion}`)
     packageVersion = bumpedVersion
     updatePackageJsonVersion(packageVersion)
     releaseVersion = buildReleaseVersion(packageVersion)
@@ -293,7 +291,7 @@ export const pushSnippet = async ({
       return onExit(1)
     })
 
-  onSuccess("\n")
+  log("\n")
 
   const filePaths = getPackageFilePaths(projectDir)
   for (const fullFilePath of filePaths) {
@@ -327,7 +325,7 @@ export const pushSnippet = async ({
   onSuccess(
     [
       kleur.green(`"${tsciPackageName}@${releaseVersion}" published!`),
-      `https://tscircuit.com/${scopedPackageName}`,
+      kleur.underline(kleur.blue(`https://tscircuit.com/${scopedPackageName}`)),
     ].join("\n"),
   )
 
