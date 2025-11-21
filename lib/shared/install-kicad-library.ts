@@ -114,7 +114,7 @@ export function normalizeGitHubUrl(packageName: string): string {
 }
 
 /**
- * Generates TypeScript declarations for .kicad_mod files in node_modules
+ * Creates types in types/ folder
  */
 export async function generateKicadTypeDeclarations(
   cwd: string = process.cwd(),
@@ -135,8 +135,14 @@ export async function generateKicadTypeDeclarations(
     return
   }
 
-  // Generate type declaration file
-  const typeDeclarationPath = path.join(cwd, "kicad_mod.d.ts")
+  // Create types directory if it doesn't exist
+  const typesDir = path.join(cwd, "types")
+  if (!fs.existsSync(typesDir)) {
+    fs.mkdirSync(typesDir, { recursive: true })
+  }
+
+  // Generate type declaration file in types/ folder
+  const typeDeclarationPath = path.join(typesDir, "kicad_mod.d.ts")
   const typeDeclaration = `declare module "*.kicad_mod" {
   const value: string
   export default value
@@ -147,7 +153,7 @@ export async function generateKicadTypeDeclarations(
   console.log(
     `Generated type declarations for ${kicadModFiles.length} .kicad_mod file(s)`,
   )
-  console.log(`Type declarations saved to: kicad_mod.d.ts`)
+  console.log(`Type declarations saved to: types/kicad_mod.d.ts`)
 }
 
 /**
