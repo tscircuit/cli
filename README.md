@@ -31,42 +31,7 @@ npm install -g @tscircuit/cli
 
 <!-- START_HELP_OUTPUT -->
 ```
-Usage: tsci [options] [command]
 
-CLI for developing tscircuit packages
-
-Options:
-  -h, --help                  display help for command
-
-Commands:
-  init [options] [directory]  Initialize a new TSCircuit project in the
-                              specified directory (or current directory if none
-                              is provided)
-  dev [options] [file]        Start development server for a package
-  clone [options] <package>   Clone a package from the registry
-  push [options] [file]       Save snippet code to Registry API
-  auth                        Login/logout
-  login                       Login to tscircuit registry
-  logout                      Logout from tscircuit registry
-  config                      Manage tscircuit CLI configuration
-  export [options] <file>     Export tscircuit code to various formats
-  build [options] [file]      Run tscircuit eval and output circuit json
-  add <component>             Add a tscircuit component package to your project
-  remove <component>          Remove a tscircuit component package from your
-                              project
-  snapshot [options] [path]   Generate schematic and PCB snapshots (add --3d for
-                              3d preview)
-  setup                       Setup utilities like GitHub Actions
-  upgrade                     Upgrade CLI to the latest version
-  search [options] <query>    Search for footprints, CAD models or packages in
-                              the tscircuit ecosystem
-  import <query>              Search JLCPCB or the tscircuit registry and import
-                              a component
-  convert [options] <file>    Convert a .kicad_mod footprint to a tscircuit
-                              component
-  simulate                    Run a simulation
-  version                     Print CLI version
-  help [command]              display help for command
 ```
 <!-- END_HELP_OUTPUT -->
 
