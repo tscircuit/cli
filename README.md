@@ -37,7 +37,7 @@ CLI for developing tscircuit packages
 
 Options:
   -h, --help                  display help for command
-  
+
 Commands:
   init [options] [directory]  Initialize a new TSCircuit project in the
                               specified directory (or current directory if none
