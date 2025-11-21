@@ -10,7 +10,7 @@ export function isGitHubUrl(packageName: string): boolean {
     packageName.startsWith("https://github.com/") ||
     packageName.startsWith("http://github.com/") ||
     packageName.startsWith("github:") ||
-    /^[\w-]+\/[\w-]+$/.test(packageName) // owner/repo format
+    /^[\w-]+\/[\w-]+$/.test(packageName)
   )
 }
 
