@@ -12,6 +12,7 @@ import {
   CircuitJsonToKicadPcbConverter,
   CircuitJsonToKicadSchConverter,
 } from "circuit-json-to-kicad"
+import { convertCircuitJsonToLbrn } from "circuit-json-to-lbrn"
 import JSZip from "jszip"
 import { generateCircuitJson } from "lib/shared/generate-circuit-json"
 import type { PlatformConfig } from "@tscircuit/props"
@@ -31,6 +32,7 @@ export const ALLOWED_EXPORT_FORMATS = [
   "kicad_sch",
   "kicad_pcb",
   "kicad_zip",
+  "lbrn",
 ] as const
 
 export type ExportFormat = (typeof ALLOWED_EXPORT_FORMATS)[number]
@@ -48,6 +50,7 @@ const OUTPUT_EXTENSIONS: Record<ExportFormat, string> = {
   kicad_sch: ".kicad_sch",
   kicad_pcb: ".kicad_pcb",
   kicad_zip: "-kicad.zip",
+  lbrn: ".lbrn",
 }
 
 type ExportOptions = {
@@ -158,6 +161,11 @@ export const exportSnippet = async ({
       zip.file(`${outputBaseName}.kicad_sch`, schConverter.getOutputString())
       zip.file(`${outputBaseName}.kicad_pcb`, pcbConverter.getOutputString())
       outputContent = await zip.generateAsync({ type: "nodebuffer" })
+      break
+    }
+    case "lbrn": {
+      const lbrnProject = convertCircuitJsonToLbrn(circuitData.circuitJson)
+      outputContent = lbrnProject.getString()
       break
     }
     default:
