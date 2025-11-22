@@ -77,7 +77,8 @@ export async function generateKicadTypeDeclarations(
   // Generate type declaration file in types/ folder
   const typeDeclarationPath = path.join(typesDir, "kicad_mod.d.ts")
   const typeDeclaration = `declare module "*.kicad_mod" {
-  const value: string
+  import type { AnyCircuitElement } from "circuit-json"
+  const value: AnyCircuitElement[]
   export default value
 }
 `
