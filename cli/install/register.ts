@@ -1,11 +1,7 @@
 import type { Command } from "commander"
 import { installProjectDependencies } from "lib/shared/install-project-dependencies"
-import {
-  isGitHubUrl,
-  extractGitHubInfo,
-  generateKicadTypeDeclarations,
-  generateKicadExports,
-} from "lib/shared/install-kicad-library"
+import { isGitHubUrl } from "lib/shared/is-github-url"
+import { installKicadLibrary } from "lib/shared/install-kicad-library"
 import { getPackageManager } from "lib/shared/get-package-manager"
 
 export const registerInstall = (program: Command) => {
@@ -36,29 +32,10 @@ export const registerInstall = (program: Command) => {
         if (!isGitHubUrl(packageArg)) {
           // Install as a regular npm package
           packageManager.install({ name: packageArg, cwd })
-          console.log(`\n✓ Successfully installed ${packageArg}`)
-          return
+        } else {
+          // Handle GitHub repository installation
+          await installKicadLibrary(packageArg, cwd)
         }
-
-        // Handle GitHub repository installation
-        console.log(`Detected GitHub repository`)
-
-        const info = extractGitHubInfo(packageArg)
-        if (!info) {
-          throw new Error(`Invalid GitHub URL: ${packageArg}`)
-        }
-
-        const githubUrl = `github:${info.owner}/${info.repo}`
-        console.log(`Installing from ${githubUrl}...`)
-
-        // Use package manager to install (bun/yarn/pnpm support GitHub repos)
-        packageManager.install({ name: githubUrl, cwd })
-
-        // Generate TypeScript declarations for .kicad_mod files
-        await generateKicadTypeDeclarations(cwd)
-
-        // Show usage examples
-        await generateKicadExports(packageArg, cwd)
 
         console.log(`\n✓ Successfully installed ${packageArg}`)
       } catch (error) {
