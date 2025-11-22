@@ -59,4 +59,8 @@ export async function generateKicadRepoTypeDeclarations(
     .join("\n\n")
 
   fs.writeFileSync(typeDeclarationPath, imports)
+  console.log(
+    `Generated type declarations for ${kicadModFiles.length} .kicad_mod file(s)`,
+  )
+  console.log(`Type declarations saved to: types/${packageDirName}.d.ts`)
 }
