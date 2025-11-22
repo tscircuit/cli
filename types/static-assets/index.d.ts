@@ -1,5 +1,3 @@
-import type { FootprintSoupElements } from "@tscircuit/props/lib/common/footprintProp"
-
 declare module "*.glb" {
   const src: string
   export default src
@@ -66,6 +64,6 @@ declare module "*.kicad_sch" {
 }
 
 declare module "*.kicad_mod" {
-  const footprint: FootprintSoupElements[]
-  export default footprint
+  const src: string
+  export default src
 }

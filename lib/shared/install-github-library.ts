@@ -2,8 +2,6 @@ import { extractGitHubInfo } from "./extract-github-info"
 import { generateKicadRepoTypeDeclarations } from "../kicad/generate-kicad-repo-type-declarations"
 import { printKicadRepoUsage } from "../kicad/print-kicad-repo-usage"
 import { getPackageManager } from "./get-package-manager"
-import { cacheKicadFootprints } from "../kicad/cache-kicad-footprints"
-import { patchKicadPackageExports } from "../kicad/patch-kicad-package-exports"
 
 /**
  * Installs a KiCad library from a GitHub repository
@@ -26,15 +24,8 @@ export async function installGithubLibrary(
   const packageManager = getPackageManager()
   packageManager.install({ name: githubUrl, cwd })
 
-  const cachedInfo = await cacheKicadFootprints(packageArg, cwd)
-
-  if (cachedInfo) {
-    patchKicadPackageExports(cachedInfo)
-    await generateKicadRepoTypeDeclarations(packageArg, cwd, {
-      packageDirName: cachedInfo.packageDirName,
-      kicadModFiles: cachedInfo.kicadModFiles,
-    })
-  }
+  // Generate type declarations for the specific package
+  await generateKicadRepoTypeDeclarations(packageArg, cwd)
 
   // Print usage examples
   await printKicadRepoUsage(packageArg, cwd)

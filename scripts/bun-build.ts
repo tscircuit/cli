@@ -22,7 +22,6 @@ const result = await Bun.build({
     "react",
     "react-dom",
     "react-reconciler",
-    "./lib/kicad/kicad-loader-plugin.ts", // Exclude Bun plugin to avoid bundling "bun" module
   ],
 })
 

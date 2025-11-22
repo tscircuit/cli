@@ -3,25 +3,22 @@ import path from "node:path"
 import { glob } from "glob"
 import { extractGitHubInfo } from "../shared/extract-github-info"
 
-export interface GenerateKicadRepoTypeDeclarationsOptions {
-  packageDirName?: string
-  kicadModFiles?: string[]
-}
-
 /**
- * Generates TypeScript declarations so TypeScript knows that importing paths
- * like `${packageDir}/some/path/file.kicad_mod` returns `FootprintSoupElements[]`.
+ * Generates TypeScript type declarations for .kicad_mod files
+ *
+ * For each .kicad_mod file, creates a type declaration that:
+ * - Declares the module as exporting a string (the file path to the .kicad_mod file)
+ * - Matches how static-asset-plugin handles .kicad_mod files during build
  */
 export async function generateKicadRepoTypeDeclarations(
   packageName: string,
   cwd: string = process.cwd(),
-  options: GenerateKicadRepoTypeDeclarationsOptions = {},
 ): Promise<void> {
   const nodeModulesPath = path.join(cwd, "node_modules")
 
   // Extract the package directory name from the normalized package name
   const info = extractGitHubInfo(packageName)
-  let packageDirName = options.packageDirName ?? packageName
+  let packageDirName = packageName
 
   if (info) {
     packageDirName = info.repo
@@ -33,20 +30,11 @@ export async function generateKicadRepoTypeDeclarations(
     return
   }
 
-  const normalizeRelativePath = (file: string) => file.split(path.sep).join("/")
-  let kicadModFiles = options.kicadModFiles
-    ? options.kicadModFiles.map(normalizeRelativePath)
-    : null
-
-  if (!kicadModFiles) {
-    const discoveredFiles = await glob("**/*.kicad_mod", {
-      cwd: packagePath,
-      absolute: false,
-    })
-    kicadModFiles = discoveredFiles.map(normalizeRelativePath)
-  }
-
-  kicadModFiles.sort()
+  // Find all .kicad_mod files in the package
+  const kicadModFiles = await glob("**/*.kicad_mod", {
+    cwd: packagePath,
+    absolute: false,
+  })
 
   if (kicadModFiles.length === 0) {
     return
@@ -58,21 +46,20 @@ export async function generateKicadRepoTypeDeclarations(
     fs.mkdirSync(typesDir, { recursive: true })
   }
 
-  // Generate type declaration file that declares .kicad_mod files as Circuit JSON array modules
+  // Generate type declaration file that declares .kicad_mod files as string modules
+  // (matching how static-asset-plugin handles them - as file paths)
   const typeDeclarationPath = path.join(typesDir, `${packageDirName}.d.ts`)
   const declarations = kicadModFiles
     .map((file) => {
       const importPath = `${packageDirName}/${file}`
       return `declare module "${importPath}" {
-  const value: FootprintSoupElements[]
+  const value: string
   export default value
 }`
     })
     .join("\n\n")
 
-  const fileContents = `import type { FootprintSoupElements } from "@tscircuit/props/lib/common/footprintProp"\n\n${declarations}\n`
-
-  fs.writeFileSync(typeDeclarationPath, fileContents)
+  fs.writeFileSync(typeDeclarationPath, declarations)
   console.log(
     `Generated type declarations for ${kicadModFiles.length} .kicad_mod file(s)`,
   )
