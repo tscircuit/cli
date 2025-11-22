@@ -29,6 +29,18 @@ import { registerSimulate } from "./simulate/register"
 import { registerInstall } from "./install/register"
 import { registerTranspile } from "./transpile/register"
 
+// Register KiCad loader plugin for automatic .kicad_mod → Circuit JSON conversion
+// Only register if running in Bun (plugin API is Bun-specific)
+if (typeof Bun !== "undefined") {
+  try {
+    // Dynamic import to avoid bundling issues
+    const kicadModule = await import("../lib/kicad/kicad-loader-plugin")
+    kicadModule.registerKicadLoader()
+  } catch (error) {
+    // Plugin not available, users will need to manually parse .kicad_mod files
+  }
+}
+
 export const program = new Command()
 
 program.name("tsci").description("CLI for developing tscircuit packages")
