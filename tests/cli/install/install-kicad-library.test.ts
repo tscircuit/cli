@@ -18,25 +18,25 @@ test(
     expect(stdout).toMatchInlineSnapshot(`
       "Installing espressif/kicad-libraries...
       No package.json found. Generating a new one.
-      Created: /tmp/52f4600e9aef2b8fae826c45163564aa/package.json
+      Created: /tmp/db439734543e9b05998d448f5b2cb241/package.json
       Creating .npmrc with tscircuit registry configuration.
       No @tsci dependencies detected in circuit files.
       Installing dependencies using bun...
       > bun install
-      bun install v1.3.2 (b131639c)
+      bun install v1.3.3 (274e01c7)
 
-      + tscircuit@0.0.930
+      + tscircuit@0.0.931
 
-      289 packages installed [1188.00ms]
+      289 packages installed [3.29s]
       Dependencies installed successfully.
       Detected GitHub repository
       Installing from github:espressif/kicad-libraries...
       > bun add github:espressif/kicad-libraries
-      bun add v1.3.2 (b131639c)
+      bun add v1.3.3 (274e01c7)
 
       installed kicad-libraries@github:espressif/kicad-libraries#93d7c10
 
-      1 package installed [7.48s]
+      1 package installed [8.56s]
       Generated type declarations for 47 .kicad_mod file(s)
       Type declarations saved to: types/kicad-libraries.d.ts
 
@@ -44,9 +44,9 @@ test(
 
       You can import them like this:
       \`\`\`tsx
-      import ESP32_C3_MINI_1U from "kicad-libraries/footprints/Espressif.pretty/ESP32-C3-MINI-1U.kicad_mod"
-      import ESP32_S3_WROOM_2 from "kicad-libraries/footprints/Espressif.pretty/ESP32-S3-WROOM-2.kicad_mod"
-      import ESP32_PICO_MINI_02U from "kicad-libraries/footprints/Espressif.pretty/ESP32-PICO-MINI-02U.kicad_mod"
+      import ESP32_C6_WROOM_1U from "kicad-libraries/footprints/Espressif.pretty/ESP32-C6-WROOM-1U.kicad_mod"
+      import ESP32_S2_MINI_1U from "kicad-libraries/footprints/Espressif.pretty/ESP32-S2-MINI-1U.kicad_mod"
+      import ESP32_S2_SOLO from "kicad-libraries/footprints/Espressif.pretty/ESP32-S2-SOLO.kicad_mod"
       // ... and 44 more
 
       // Then use in your circuit:
