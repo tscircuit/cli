@@ -4,6 +4,9 @@
   "workspaces": {
     "": {
       "name": "@tscircuit/cli",
+      "dependencies": {
+        "kicad-libraries": "https://github.com/espressif/kicad-libraries",
+      },
       "devDependencies": {
         "@babel/standalone": "^7.26.9",
         "@biomejs/biome": "^1.9.4",
@@ -729,6 +732,8 @@
     "jwt-decode": ["jwt-decode@4.0.0", "", {}, "sha512-+KJGIyHgkGuIq3IEBNftfhW/LfWhXUIY6OmyVWjliu5KH1y0fw7VQ8YndE2O4qZdMSd9SqbnC8GOcZEy0Om7sA=="],
 
     "kicad-component-converter": ["kicad-component-converter@0.1.31", "", { "bin": { "kicad-mod-converter": "dist/cli.js" } }, "sha512-18Xt8lw0SofyFS7gFwbfgy1UPOE34b68WJIA/QP5yAzYs/+IUctyyLEa7Dznz290ghIgIysuSN1eqFiLK/7vJQ=="],
+
+    "kicad-libraries": ["kicad-libraries@github:espressif/kicad-libraries#93d7c10", {}, "espressif-kicad-libraries-93d7c10"],
 
     "kicadts": ["kicadts@0.0.9", "", { "peerDependencies": { "typescript": "^5" } }, "sha512-IfMcQxZ6+sTFLynI+5htPPZPeLCDHNMcMqkJFe9YQg+z2swattZK8KQAn4u0auhzNtwVqy+3MmzPV7MBstrrrQ=="],
 

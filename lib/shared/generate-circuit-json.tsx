@@ -18,6 +18,7 @@ const ALLOWED_FILE_EXTENSIONS = [
   ".txt",
   ".md",
   ".obj",
+  ".kicad_mod",
 ]
 
 type GenerateCircuitJsonOptions = {
@@ -78,6 +79,12 @@ export async function generateCircuitJson({
       dirPath: projectDir,
       fileMatchFn: (filePath) => {
         const normalizedFilePath = filePath.replace(/\\/g, "/")
+
+        // Allow .kicad_mod files from node_modules
+        if (normalizedFilePath.endsWith(".kicad_mod")) {
+          return true
+        }
+
         if (normalizedFilePath.includes("node_modules/")) return false
         if (normalizedFilePath.includes("dist/")) return false
         if (normalizedFilePath.includes("build/")) return false
