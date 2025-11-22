@@ -1,12 +1,11 @@
 import { extractGitHubInfo } from "./extract-github-info"
-import { generateKicadTypeDeclarations } from "./generate-kicad-type-declarations"
-import { generateKicadExports } from "./generate-kicad-exports"
+import { generateKicadRepoTypeDeclarations } from "./generate-kicad-repo-type-declarations"
 import { getPackageManager } from "./get-package-manager"
 
 /**
  * Installs a KiCad library from a GitHub repository
  */
-export async function installKicadLibrary(
+export async function installGithubLibrary(
   packageArg: string,
   cwd: string = process.cwd(),
 ): Promise<void> {
@@ -24,9 +23,6 @@ export async function installKicadLibrary(
   const packageManager = getPackageManager()
   packageManager.install({ name: githubUrl, cwd })
 
-  // Generate TypeScript declarations for .kicad_mod files
-  await generateKicadTypeDeclarations(cwd)
-
-  // Show usage examples
-  await generateKicadExports(packageArg, cwd)
+  // Generate type declarations for the specific package
+  await generateKicadRepoTypeDeclarations(packageArg, cwd)
 }

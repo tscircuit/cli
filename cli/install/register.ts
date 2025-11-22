@@ -1,7 +1,7 @@
 import type { Command } from "commander"
 import { installProjectDependencies } from "lib/shared/install-project-dependencies"
 import { isGitHubUrl } from "lib/shared/is-github-url"
-import { installKicadLibrary } from "lib/shared/install-kicad-library"
+import { installGithubLibrary } from "lib/shared/install-github-library"
 import { getPackageManager } from "lib/shared/get-package-manager"
 
 export const registerInstall = (program: Command) => {
@@ -34,7 +34,7 @@ export const registerInstall = (program: Command) => {
           packageManager.install({ name: packageArg, cwd })
         } else {
           // Handle GitHub repository installation
-          await installKicadLibrary(packageArg, cwd)
+          await installGithubLibrary(packageArg, cwd)
         }
 
         console.log(`\n✓ Successfully installed ${packageArg}`)

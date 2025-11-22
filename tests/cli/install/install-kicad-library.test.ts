@@ -24,7 +24,6 @@ test(
     // Verify CLI output
     expect(stdout).toContain("Detected GitHub repository")
     expect(stdout).toContain("Installing from github:espressif/kicad-libraries")
-    expect(stdout).toContain("Generated type declarations")
     expect(stdout).toContain("Successfully installed espressif/kicad-libraries")
 
     // Verify package.json was updated
@@ -52,13 +51,14 @@ test(
     const kicadModFiles = footprintFiles.filter((f) => f.endsWith(".kicad_mod"))
     expect(kicadModFiles.length).toBeGreaterThan(0)
 
-    // Verify type declarations were generated
-    const typesPath = join(tmpDir, "types", "kicad_mod.d.ts")
+    // Verify type declarations were generated for the specific package
+    const typesPath = join(tmpDir, "types", "kicad-libraries.d.ts")
     expect(existsSync(typesPath)).toBe(true)
 
     const typesContent = readFileSync(typesPath, "utf-8")
     expect(typesContent).toContain("declare module")
-    expect(typesContent).toContain("*.kicad_mod")
+    expect(typesContent).toContain("kicad-libraries/")
+    expect(typesContent).toContain(".kicad_mod")
 
     // Verify bun install reinstalls the library
     const { $ } = Bun
