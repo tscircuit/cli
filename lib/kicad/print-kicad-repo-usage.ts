@@ -39,7 +39,9 @@ export async function printKicadRepoUsage(
   console.log(
     `\nFound ${kicadModFiles.length} KiCad footprint(s) in ${packageDirName}:`,
   )
-  console.log("\nYou can import them like this:")
+  console.log(
+    "\ntsci install cached the footprints locally, so you can import them without a Bun plugin:",
+  )
   console.log("```tsx")
 
   // Show first few examples
@@ -57,7 +59,9 @@ export async function printKicadRepoUsage(
     console.log(`// ... and ${kicadModFiles.length - exampleCount} more`)
   }
 
-  console.log("\n// Then use in your circuit:")
+  console.log(
+    "\n// Each import is a FootprintSoupElements[] so you can pass it directly:",
+  )
   console.log('<chip footprint={ESP32_C3_DevKitM_1} name="U1" />')
   console.log("```")
 }

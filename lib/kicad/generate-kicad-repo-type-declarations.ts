@@ -3,23 +3,25 @@ import path from "node:path"
 import { glob } from "glob"
 import { extractGitHubInfo } from "../shared/extract-github-info"
 
+export interface GenerateKicadRepoTypeDeclarationsOptions {
+  packageDirName?: string
+  kicadModFiles?: string[]
+}
+
 /**
- * Generates wrapper TypeScript files that import .kicad_mod as text and parse to Circuit JSON
- *
- * For each .kicad_mod file, creates a .ts wrapper that:
- * 1. Imports the raw text (via bunfig.toml loader)
- * 2. Parses it to Circuit JSON using parseKicadModToCircuitJson
- * 3. Exports the Circuit JSON array
+ * Generates TypeScript declarations so TypeScript knows that importing paths
+ * like `${packageDir}/some/path/file.kicad_mod` returns `FootprintSoupElements[]`.
  */
 export async function generateKicadRepoTypeDeclarations(
   packageName: string,
   cwd: string = process.cwd(),
+  options: GenerateKicadRepoTypeDeclarationsOptions = {},
 ): Promise<void> {
   const nodeModulesPath = path.join(cwd, "node_modules")
 
   // Extract the package directory name from the normalized package name
   const info = extractGitHubInfo(packageName)
-  let packageDirName = packageName
+  let packageDirName = options.packageDirName ?? packageName
 
   if (info) {
     packageDirName = info.repo
@@ -31,11 +33,20 @@ export async function generateKicadRepoTypeDeclarations(
     return
   }
 
-  // Find all .kicad_mod files in the package
-  const kicadModFiles = await glob("**/*.kicad_mod", {
-    cwd: packagePath,
-    absolute: false,
-  })
+  const normalizeRelativePath = (file: string) => file.split(path.sep).join("/")
+  let kicadModFiles = options.kicadModFiles
+    ? options.kicadModFiles.map(normalizeRelativePath)
+    : null
+
+  if (!kicadModFiles) {
+    const discoveredFiles = await glob("**/*.kicad_mod", {
+      cwd: packagePath,
+      absolute: false,
+    })
+    kicadModFiles = discoveredFiles.map(normalizeRelativePath)
+  }
+
+  kicadModFiles.sort()
 
   if (kicadModFiles.length === 0) {
     return
@@ -53,13 +64,15 @@ export async function generateKicadRepoTypeDeclarations(
     .map((file) => {
       const importPath = `${packageDirName}/${file}`
       return `declare module "${importPath}" {
-  const value: any[]
+  const value: FootprintSoupElements[]
   export default value
 }`
     })
     .join("\n\n")
 
-  fs.writeFileSync(typeDeclarationPath, declarations)
+  const fileContents = `import type { FootprintSoupElements } from "@tscircuit/props/lib/common/footprintProp"\n\n${declarations}\n`
+
+  fs.writeFileSync(typeDeclarationPath, fileContents)
   console.log(
     `Generated type declarations for ${kicadModFiles.length} .kicad_mod file(s)`,
   )

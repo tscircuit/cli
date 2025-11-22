@@ -18,7 +18,7 @@ test(
     expect(stdout).toMatchInlineSnapshot(`
       "Installing espressif/kicad-libraries...
       No package.json found. Generating a new one.
-      Created: /tmp/eab46754b031fab46c20da9cac3723d9/package.json
+      Created: /tmp/d4155ad285c0047822a3b1e33370db94/package.json
       Creating .npmrc with tscircuit registry configuration.
       No @tsci dependencies detected in circuit files.
       Installing dependencies using bun...
@@ -27,7 +27,7 @@ test(
 
       + tscircuit@0.0.931
 
-      289 packages installed [3.84s]
+      289 packages installed [19.99s]
       Dependencies installed successfully.
       Detected GitHub repository
       Installing from github:espressif/kicad-libraries...
@@ -36,20 +36,24 @@ test(
 
       installed kicad-libraries@github:espressif/kicad-libraries#93d7c10
 
-      1 package installed [8.15s]
+      1 package installed [8.38s]
+
+      Converting 47 KiCad footprint(s) to cached modules...
+      Cached footprint modules written to node_modules/kicad-libraries/.tsci-cache
+      Patched package exports for kicad-libraries to reference cached KiCad modules.
       Generated type declarations for 47 .kicad_mod file(s)
       Type declarations saved to: types/kicad-libraries.d.ts
 
       Found 47 KiCad footprint(s) in kicad-libraries:
 
-      You can import them like this:
+      tsci install cached the footprints locally, so you can import them without a Bun plugin:
       \`\`\`tsx
       import ESP32_C6_WROOM_1U from "kicad-libraries/footprints/Espressif.pretty/ESP32-C6-WROOM-1U.kicad_mod"
-      import ESP32_S2_MINI_1U from "kicad-libraries/footprints/Espressif.pretty/ESP32-S2-MINI-1U.kicad_mod"
-      import ESP32_S2_SOLO from "kicad-libraries/footprints/Espressif.pretty/ESP32-S2-SOLO.kicad_mod"
+      import ESP32_S3_WROOM_2 from "kicad-libraries/footprints/Espressif.pretty/ESP32-S3-WROOM-2.kicad_mod"
+      import ESP32_DevKitC from "kicad-libraries/footprints/Espressif.pretty/ESP32-DevKitC.kicad_mod"
       // ... and 44 more
 
-      // Then use in your circuit:
+      // Each import is a FootprintSoupElements[] so you can pass it directly:
       <chip footprint={ESP32_C3_DevKitM_1} name="U1" />
       \`\`\`
 
@@ -74,7 +78,7 @@ test(
     )
 
     // Write the circuit file (simulating what customer would write)
-    // Users can import .kicad_mod directly and use it - automatic conversion via Bun plugin
+    // Users can import .kicad_mod directly because tsci install caches each footprint as ESM
     const circuitCode = `import "tscircuit"
 import ESP32_C3_MINI_1 from "kicad-libraries/footprints/Espressif.pretty/ESP32-C3-MINI-1.kicad_mod"
 

@@ -13,7 +13,6 @@ export const STATIC_ASSET_EXTENSIONS = new Set([
   ".gif",
   ".bmp",
   ".step",
-  ".kicad_mod",
   ".kicad_pcb",
   ".kicad_pro",
   ".kicad_sch",

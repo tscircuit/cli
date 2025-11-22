@@ -1,8 +1,4 @@
 import { afterEach } from "bun:test"
-import { registerKicadLoader } from "../../lib/kicad/kicad-loader-plugin"
-
-// Register KiCad loader plugin for automatic .kicad_mod conversion
-registerKicadLoader()
 
 declare global {
   // Add the property to the globalThis type
