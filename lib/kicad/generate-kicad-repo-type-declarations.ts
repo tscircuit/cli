@@ -1,7 +1,7 @@
 import fs from "node:fs"
 import path from "node:path"
 import { glob } from "glob"
-import { extractGitHubInfo } from "./extract-github-info"
+import { extractGitHubInfo } from "../shared/extract-github-info"
 
 /**
  * Generates a type declaration file (types/${module}.d.ts) with all imports from a KiCad package

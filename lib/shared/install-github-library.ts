@@ -1,5 +1,6 @@
 import { extractGitHubInfo } from "./extract-github-info"
-import { generateKicadRepoTypeDeclarations } from "./generate-kicad-repo-type-declarations"
+import { generateKicadRepoTypeDeclarations } from "../kicad/generate-kicad-repo-type-declarations"
+import { printKicadRepoUsage } from "../kicad/print-kicad-repo-usage"
 import { getPackageManager } from "./get-package-manager"
 
 /**
@@ -25,4 +26,7 @@ export async function installGithubLibrary(
 
   // Generate type declarations for the specific package
   await generateKicadRepoTypeDeclarations(packageArg, cwd)
+
+  // Print usage examples
+  await printKicadRepoUsage(packageArg, cwd)
 }
