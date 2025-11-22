@@ -51,8 +51,7 @@ export async function generateKicadRepoTypeDeclarations(
         .basename(file, ".kicad_mod")
         .replace(/[^a-zA-Z0-9]/g, "_")
       return `declare module "${importPath}" {
-  import type { AnyCircuitElement } from "circuit-json"
-  const value: AnyCircuitElement[]
+  const value: any[]
   export default value
 }`
     })

@@ -6,6 +6,7 @@ import Debug from "debug"
 import type { PlatformConfig } from "@tscircuit/props"
 import { abbreviateStringifyObject } from "lib/utils/abbreviate-stringify-object"
 import { importFromUserLand } from "./importFromUserLand"
+import { registerKicadLoader } from "../kicad/kicad-loader-plugin"
 
 const debug = Debug("tsci:generate-circuit-json")
 
@@ -42,6 +43,9 @@ export async function generateCircuitJson({
   platformConfig,
 }: GenerateCircuitJsonOptions) {
   debug(`Generating circuit JSON for ${filePath}`)
+
+  // Register KiCad loader to handle .kicad_mod imports
+  registerKicadLoader()
 
   // Import React and make it globally available for packages referencing it
   const React = await importFromUserLand("react")
