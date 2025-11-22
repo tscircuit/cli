@@ -11,41 +11,6 @@ interface NodeModuleDependency {
   resolvedFiles: string[]
 }
 
-function getLocalPackages(projectDir: string): Set<string> {
-  const packageJsonPath = path.join(projectDir, "package.json")
-  const localPackages = new Set<string>()
-
-  if (!fs.existsSync(packageJsonPath)) {
-    return localPackages
-  }
-
-  try {
-    const packageJson = JSON.parse(fs.readFileSync(packageJsonPath, "utf-8"))
-    const allDeps = {
-      ...packageJson.dependencies,
-      ...packageJson.devDependencies,
-      ...packageJson.peerDependencies,
-    }
-
-    for (const [packageName, version] of Object.entries(allDeps)) {
-      if (typeof version !== "string") continue
-
-      const isLocalPackage =
-        version.startsWith("file:") ||
-        version.startsWith("link:") ||
-        version.includes(".yalc")
-
-      if (isLocalPackage) {
-        localPackages.add(packageName)
-      }
-    }
-  } catch (error) {
-    console.warn("Failed to parse package.json for local packages:", error)
-  }
-
-  return localPackages
-}
-
 /**
  * Extracts all node_modules imports from a source file
  */
@@ -381,13 +346,6 @@ export function getAllNodeModuleFilePaths(
   entryFilePath: string,
   projectDir: string,
 ): string[] {
-  const localPackages = getLocalPackages(projectDir)
-
-  // Early return if no local packages are defined
-  if (localPackages.size === 0) {
-    return []
-  }
-
   // Collect all node_modules dependencies from the entry file
   const dependencies = collectAllNodeModuleDependencies(
     entryFilePath,
@@ -398,22 +356,25 @@ export function getAllNodeModuleFilePaths(
   const allFiles = new Set<string>()
 
   // Iterate through all discovered dependencies
-  for (const [importPath] of dependencies.entries()) {
+  for (const [importPath, resolvedFiles] of dependencies.entries()) {
     const packageName = getPackageNameFromImport(importPath)
 
-    // Skip if not a local package or already processed
-    if (!localPackages.has(packageName) || processedPackages.has(packageName)) {
+    // Skip if already processed
+    if (processedPackages.has(packageName)) {
       continue
     }
 
     processedPackages.add(packageName)
     const packageDir = path.join(projectDir, "node_modules", packageName)
 
-    // Collect all files from the local package directory
+    // Collect all files from the package directory
     if (fs.existsSync(packageDir)) {
       const packageFiles = collectLocalPackageFiles(packageDir)
       packageFiles.forEach((file) => allFiles.add(file))
     }
+
+    // Also include any resolved files directly (in case they live outside the package root)
+    resolvedFiles.forEach((file) => allFiles.add(file))
   }
 
   return Array.from(allFiles)
