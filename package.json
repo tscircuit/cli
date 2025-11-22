@@ -65,6 +65,11 @@
   "peerDependencies": {
     "tscircuit": "*"
   },
+  "peerDependenciesMeta": {
+    "tscircuit": {
+      "optional": false
+    }
+  },
   "bin": {
     "tscircuit-cli": "./cli/entrypoint.js"
   },
@@ -73,11 +78,6 @@
     "cli/entrypoint.js",
     "types"
   ],
-  "peerDependenciesMeta": {
-    "tscircuit": {
-      "optional": false
-    }
-  },
   "scripts": {
     "start": "bun run dev",
     "dev": "bun --hot ./cli/main.ts dev ./examples/basic/index.circuit.tsx",
