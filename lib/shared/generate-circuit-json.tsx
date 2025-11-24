@@ -6,6 +6,7 @@ import Debug from "debug"
 import type { PlatformConfig } from "@tscircuit/props"
 import { abbreviateStringifyObject } from "lib/utils/abbreviate-stringify-object"
 import { importFromUserLand } from "./importFromUserLand"
+import { getPlatformConfig } from "./getPlatformConfig"
 
 const debug = Debug("tsci:generate-circuit-json")
 
@@ -49,8 +50,22 @@ export async function generateCircuitJson({
   ;(globalThis as any).React = React
   const userLandTscircuit = await importFromUserLand("tscircuit")
 
+  // Get default platform config with KiCad parsing support
+  const defaultPlatformConfig = getPlatformConfig()
+
+  // Merge with user-provided platform config
+  const mergedPlatformConfig: PlatformConfig = {
+    ...defaultPlatformConfig,
+    ...platformConfig,
+    // Merge nested objects
+    footprintFileParserMap: {
+      ...defaultPlatformConfig.footprintFileParserMap,
+      ...platformConfig?.footprintFileParserMap,
+    },
+  }
+
   const runner = new userLandTscircuit.RootCircuit({
-    platform: platformConfig,
+    platform: mergedPlatformConfig,
   })
   const absoluteFilePath = path.isAbsolute(filePath)
     ? filePath
