@@ -1,6 +1,6 @@
 import type { Command } from "commander"
 import { installProjectDependencies } from "lib/shared/install-project-dependencies"
-import { installGithubKicadLibrary } from "../../lib/shared/install-github-kicad-library"
+import { installGithubKicadLibrary } from "../../lib/shared/install-github-library"
 
 export const registerInstall = (program: Command) => {
   program
