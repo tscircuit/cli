@@ -4,7 +4,7 @@ import { installGithubKicadLibrary } from "../../lib/shared/install-github-libra
 
 export const registerInstall = (program: Command) => {
   program
-    .command("install [githubUrl]")
+    .command("install")
     .description(
       "Install project dependencies or install a GitHub KiCad library (e.g., tsci install https://github.com/espressif/kicad-libraries)",
     )

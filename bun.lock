@@ -4,6 +4,9 @@
   "workspaces": {
     "": {
       "name": "@tscircuit/cli",
+      "dependencies": {
+        "circuit-json": "^0.0.306",
+      },
       "devDependencies": {
         "@babel/standalone": "^7.26.9",
         "@biomejs/biome": "^1.9.4",
@@ -24,7 +27,6 @@
         "@types/semver": "^7.5.8",
         "bun-match-svg": "^0.0.12",
         "chokidar": "4.0.1",
-        "circuit-json": "^0.0.306",
         "circuit-json-to-gltf": "^0.0.14",
         "circuit-json-to-kicad": "^0.0.3",
         "circuit-json-to-readable-netlist": "^0.0.13",
