@@ -13,36 +13,65 @@ import {
   STATIC_ASSET_EXTENSIONS,
 } from "./static-asset-plugin"
 
-const CLI_TYPES_ROOT = path.resolve(__dirname, "../../../types")
-
 const createExternalFunction =
-  (projectDir: string) =>
+  (projectDir: string, tsconfigPath?: string) =>
   (id: string): boolean => {
-    if (id.startsWith(".") || id.startsWith("/")) {
-      return false // Don't externalize relative paths
-    }
-    if (path.isAbsolute(id)) {
-      return false // Don't externalize absolute file paths
-    }
-
-    // Check if this is a local project file (e.g., lib/src/MachinePin)
-    const potentialPaths = [
-      path.join(projectDir, id),
-      path.join(projectDir, `${id}.ts`),
-      path.join(projectDir, `${id}.tsx`),
-      path.join(projectDir, `${id}.js`),
-      path.join(projectDir, `${id}.jsx`),
-      path.join(projectDir, id, "index.ts"),
-      path.join(projectDir, id, "index.tsx"),
-      path.join(projectDir, id, "index.js"),
-      path.join(projectDir, id, "index.jsx"),
-    ]
-
-    if (potentialPaths.some((p) => fs.existsSync(p))) {
+    // Don't externalize relative or absolute paths (these are local files)
+    if (id.startsWith(".") || id.startsWith("/") || path.isAbsolute(id)) {
       return false
     }
 
-    // Everything else (npm packages like 'react', '@rollup/plugin-foo', etc.) is external
+    // Read tsconfig to understand path mappings and baseUrl
+    let baseUrl = projectDir
+    let pathMappings: Record<string, string[]> = {}
+
+    if (tsconfigPath && fs.existsSync(tsconfigPath)) {
+      try {
+        const tsconfigContent = fs.readFileSync(tsconfigPath, "utf-8")
+        const tsconfig = JSON.parse(tsconfigContent)
+
+        if (tsconfig.compilerOptions?.baseUrl) {
+          baseUrl = path.resolve(
+            path.dirname(tsconfigPath),
+            tsconfig.compilerOptions.baseUrl,
+          )
+        }
+
+        if (tsconfig.compilerOptions?.paths) {
+          pathMappings = tsconfig.compilerOptions.paths
+        }
+      } catch {
+        // Ignore tsconfig parsing errors
+      }
+    }
+
+    // Check if this matches any path mapping pattern
+    for (const [pattern, targets] of Object.entries(pathMappings)) {
+      const patternWithoutWildcard = pattern.replace("/*", "/")
+      if (id.startsWith(patternWithoutWildcard)) {
+        return false // Path-mapped import, don't externalize
+      }
+    }
+
+    // Check if this could be a baseUrl-relative import
+    // Try to resolve it as a file relative to baseUrl
+    const potentialPaths = [
+      path.join(baseUrl, id),
+      path.join(baseUrl, `${id}.ts`),
+      path.join(baseUrl, `${id}.tsx`),
+      path.join(baseUrl, `${id}.js`),
+      path.join(baseUrl, `${id}.jsx`),
+      path.join(baseUrl, id, "index.ts"),
+      path.join(baseUrl, id, "index.tsx"),
+      path.join(baseUrl, id, "index.js"),
+      path.join(baseUrl, id, "index.jsx"),
+    ]
+
+    if (potentialPaths.some((p) => fs.existsSync(p))) {
+      return false // This is a local file, don't externalize
+    }
+
+    // Everything else (npm packages like 'react', 'tscircuit', etc.) is external
     return true
   }
 
@@ -58,53 +87,9 @@ export const transpileFile = async ({
   try {
     fs.mkdirSync(outputDir, { recursive: true })
 
-    // Read project's tsconfig.json to get types, but validate they exist
+    // Check if user has a tsconfig.json
     const tsconfigPath = path.join(projectDir, "tsconfig.json")
-    const validTypes: string[] = []
-
-    if (fs.existsSync(tsconfigPath)) {
-      try {
-        const tsconfigContent = fs.readFileSync(tsconfigPath, "utf-8")
-        const tsconfig = JSON.parse(tsconfigContent)
-
-        if (tsconfig.compilerOptions?.types) {
-          // For each type, check if it exists in @types or as a package
-          for (const typeName of tsconfig.compilerOptions.types) {
-            const typesPath = path.join(
-              projectDir,
-              "node_modules",
-              "@types",
-              typeName.replace(/^@/, "").replace(/\//g, "__"),
-            )
-            const packagePath = path.join(projectDir, "node_modules", typeName)
-
-            // Include if it exists in @types OR if it's 'bun' (special case)
-            if (fs.existsSync(typesPath) || typeName === "bun") {
-              validTypes.push(typeName)
-            }
-            // For packages that ship their own types, include them if they exist
-            // TypeScript will find them via typeRoots containing node_modules
-            else if (fs.existsSync(packagePath)) {
-              validTypes.push(typeName)
-            }
-          }
-        }
-      } catch (err) {
-        // Ignore tsconfig parsing errors
-      }
-    }
-
-    const typeRootCandidates = [
-      path.join(projectDir, "node_modules", "@types"),
-      path.join(projectDir, "types"),
-      path.join(projectDir, "node_modules"), // Add node_modules as a typeRoot for packages with global augmentations
-      CLI_TYPES_ROOT,
-    ]
-    const typeRoots = Array.from(
-      new Set(
-        typeRootCandidates.filter((candidate) => fs.existsSync(candidate)),
-      ),
-    )
+    const hasTsConfig = fs.existsSync(tsconfigPath)
 
     // Build ESM bundle
     console.log("Building ESM bundle...")
@@ -125,30 +110,39 @@ export const transpileFile = async ({
       commonjs(),
       json(),
       typescript({
-        jsx: "react-jsx",
-        tsconfig: false,
-        compilerOptions: {
-          target: "ES2020",
-          module: "ESNext",
-          jsx: "react-jsx",
-          declaration: false,
-          sourceMap: false,
-          skipLibCheck: true,
-          resolveJsonModule: true,
-          allowSyntheticDefaultImports: true,
-          allowArbitraryExtensions: true,
-          baseUrl: projectDir,
-          ...(typeRoots.length ? { typeRoots } : {}),
-          ...(validTypes.length ? { types: validTypes } : {}),
-        },
+        // Use user's tsconfig if available, otherwise use defaults
+        tsconfig: hasTsConfig ? tsconfigPath : false,
+        compilerOptions: hasTsConfig
+          ? {
+              // Override options that conflict with transpilation
+              declaration: false,
+              sourceMap: false,
+              noEmit: false,
+              emitDeclarationOnly: false,
+              allowImportingTsExtensions: false,
+            }
+          : {
+              // Fallback defaults when no tsconfig exists
+              target: "ES2020",
+              module: "ESNext",
+              jsx: "react-jsx",
+              declaration: false,
+              sourceMap: false,
+              skipLibCheck: true,
+              resolveJsonModule: true,
+              allowSyntheticDefaultImports: true,
+              allowArbitraryExtensions: true,
+              baseUrl: projectDir,
+            },
       }),
     ]
 
-    const externalFunction = createExternalFunction(projectDir)
-
     const esmBundle = await rollup({
       input,
-      external: externalFunction,
+      external: createExternalFunction(
+        projectDir,
+        hasTsConfig ? tsconfigPath : undefined,
+      ),
       plugins: getPlugins(),
     })
 
@@ -167,7 +161,10 @@ export const transpileFile = async ({
     console.log("Building CommonJS bundle...")
     const cjsBundle = await rollup({
       input,
-      external: externalFunction,
+      external: createExternalFunction(
+        projectDir,
+        hasTsConfig ? tsconfigPath : undefined,
+      ),
       plugins: getPlugins(),
     })
 
@@ -188,16 +185,22 @@ export const transpileFile = async ({
     console.log("Generating type declarations...")
     const dtsBundle = await rollup({
       input,
-      external: externalFunction,
+      external: createExternalFunction(
+        projectDir,
+        hasTsConfig ? tsconfigPath : undefined,
+      ),
       plugins: [
         resolve({
           extensions: [".ts", ".tsx", ".d.ts"],
         }),
         dts({
           respectExternal: true,
-          compilerOptions: {
-            baseUrl: projectDir,
-          },
+          tsconfig: hasTsConfig ? tsconfigPath : undefined,
+          compilerOptions: hasTsConfig
+            ? undefined
+            : {
+                baseUrl: projectDir,
+              },
         }),
       ],
     })
