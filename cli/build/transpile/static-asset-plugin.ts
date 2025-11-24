@@ -21,12 +21,42 @@ export const STATIC_ASSET_EXTENSIONS = new Set([
 
 export const createStaticAssetPlugin = ({
   outputDir,
+  projectDir,
 }: {
   outputDir: string
+  projectDir: string
 }) => {
   const copiedAssets = new Map<string, string>()
   return {
     name: "tsci-static-assets",
+    resolveId(source: string, importer: string | undefined) {
+      const ext = path.extname(source).toLowerCase()
+      if (!STATIC_ASSET_EXTENSIONS.has(ext)) return null
+
+      // If it's already an absolute path, use it
+      if (path.isAbsolute(source)) {
+        return fs.existsSync(source) ? source : null
+      }
+
+      // Try to resolve relative to the importer
+      if (importer) {
+        const resolvedFromImporter = path.resolve(
+          path.dirname(importer),
+          source,
+        )
+        if (fs.existsSync(resolvedFromImporter)) {
+          return resolvedFromImporter
+        }
+      }
+
+      // Try to resolve relative to projectDir (for baseUrl imports)
+      const resolvedFromProject = path.resolve(projectDir, source)
+      if (fs.existsSync(resolvedFromProject)) {
+        return resolvedFromProject
+      }
+
+      return null
+    },
     load(id: string) {
       const ext = path.extname(id).toLowerCase()
       if (!STATIC_ASSET_EXTENSIONS.has(ext)) return null

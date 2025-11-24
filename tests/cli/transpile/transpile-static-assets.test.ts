@@ -28,8 +28,17 @@ test("transpile copies static assets and preserves glb_model_url", async () => {
 
   await writeFile(circuitPath, glbCircuitCode)
   await writeFile(glbPath, glbBytes)
-  await writeFile(path.join(tmpDir, "package.json"), "{}")
+  await writeFile(
+    path.join(tmpDir, "package.json"),
+    JSON.stringify({
+      type: "module",
+      dependencies: {
+        react: "^19.1.0",
+      },
+    }),
+  )
 
+  await runCommand(`tsci install`)
   await runCommand(`tsci transpile ${circuitPath}`)
 
   const assetsDir = path.join(tmpDir, "dist", "assets")
