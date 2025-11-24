@@ -15,16 +15,36 @@ import {
 
 const CLI_TYPES_ROOT = path.resolve(__dirname, "../../../types")
 
-const externalFunction = (id: string): boolean => {
-  if (id.startsWith(".") || id.startsWith("/")) {
-    return false // Don't externalize relative paths
+const createExternalFunction =
+  (projectDir: string) =>
+  (id: string): boolean => {
+    if (id.startsWith(".") || id.startsWith("/")) {
+      return false // Don't externalize relative paths
+    }
+    if (path.isAbsolute(id)) {
+      return false // Don't externalize absolute file paths
+    }
+
+    // Check if this is a local project file (e.g., lib/src/MachinePin)
+    const potentialPaths = [
+      path.join(projectDir, id),
+      path.join(projectDir, `${id}.ts`),
+      path.join(projectDir, `${id}.tsx`),
+      path.join(projectDir, `${id}.js`),
+      path.join(projectDir, `${id}.jsx`),
+      path.join(projectDir, id, "index.ts"),
+      path.join(projectDir, id, "index.tsx"),
+      path.join(projectDir, id, "index.js"),
+      path.join(projectDir, id, "index.jsx"),
+    ]
+
+    if (potentialPaths.some((p) => fs.existsSync(p))) {
+      return false
+    }
+
+    // Everything else (npm packages like 'react', '@rollup/plugin-foo', etc.) is external
+    return true
   }
-  if (path.isAbsolute(id)) {
-    return false // Don't externalize absolute file paths
-  }
-  // Everything else (npm packages like 'react', '@rollup/plugin-foo', etc.) is external
-  return true
-}
 
 export const transpileFile = async ({
   input,
@@ -38,9 +58,46 @@ export const transpileFile = async ({
   try {
     fs.mkdirSync(outputDir, { recursive: true })
 
+    // Read project's tsconfig.json to get types, but validate they exist
+    const tsconfigPath = path.join(projectDir, "tsconfig.json")
+    const validTypes: string[] = []
+
+    if (fs.existsSync(tsconfigPath)) {
+      try {
+        const tsconfigContent = fs.readFileSync(tsconfigPath, "utf-8")
+        const tsconfig = JSON.parse(tsconfigContent)
+
+        if (tsconfig.compilerOptions?.types) {
+          // For each type, check if it exists in @types or as a package
+          for (const typeName of tsconfig.compilerOptions.types) {
+            const typesPath = path.join(
+              projectDir,
+              "node_modules",
+              "@types",
+              typeName.replace(/^@/, "").replace(/\//g, "__"),
+            )
+            const packagePath = path.join(projectDir, "node_modules", typeName)
+
+            // Include if it exists in @types OR if it's 'bun' (special case)
+            if (fs.existsSync(typesPath) || typeName === "bun") {
+              validTypes.push(typeName)
+            }
+            // For packages that ship their own types, include them if they exist
+            // TypeScript will find them via typeRoots containing node_modules
+            else if (fs.existsSync(packagePath)) {
+              validTypes.push(typeName)
+            }
+          }
+        }
+      } catch (err) {
+        // Ignore tsconfig parsing errors
+      }
+    }
+
     const typeRootCandidates = [
       path.join(projectDir, "node_modules", "@types"),
       path.join(projectDir, "types"),
+      path.join(projectDir, "node_modules"), // Add node_modules as a typeRoot for packages with global augmentations
       CLI_TYPES_ROOT,
     ]
     const typeRoots = Array.from(
@@ -53,8 +110,8 @@ export const transpileFile = async ({
     console.log("Building ESM bundle...")
     const staticAssetExtensions = Array.from(STATIC_ASSET_EXTENSIONS)
 
-    const getPlugins = (moduleKind: "ESNext" | "CommonJS") => [
-      createStaticAssetPlugin({ outputDir }),
+    const getPlugins = () => [
+      createStaticAssetPlugin({ outputDir, projectDir }),
       resolve({
         extensions: [
           ".ts",
@@ -68,27 +125,31 @@ export const transpileFile = async ({
       commonjs(),
       json(),
       typescript({
-        jsx: "react",
+        jsx: "react-jsx",
         tsconfig: false,
         compilerOptions: {
           target: "ES2020",
-          module: moduleKind,
-          jsx: "react",
+          module: "ESNext",
+          jsx: "react-jsx",
           declaration: false,
           sourceMap: false,
           skipLibCheck: true,
           resolveJsonModule: true,
           allowSyntheticDefaultImports: true,
           allowArbitraryExtensions: true,
+          baseUrl: projectDir,
           ...(typeRoots.length ? { typeRoots } : {}),
+          ...(validTypes.length ? { types: validTypes } : {}),
         },
       }),
     ]
 
+    const externalFunction = createExternalFunction(projectDir)
+
     const esmBundle = await rollup({
       input,
       external: externalFunction,
-      plugins: getPlugins("ESNext"),
+      plugins: getPlugins(),
     })
 
     const esmOutputPath = path.join(outputDir, "index.js")
@@ -102,17 +163,16 @@ export const transpileFile = async ({
     console.log(
       `ESM bundle written to ${path.relative(projectDir, esmOutputPath)}`,
     )
-
     // Build CommonJS bundle
     console.log("Building CommonJS bundle...")
     const cjsBundle = await rollup({
       input,
       external: externalFunction,
-      plugins: getPlugins("CommonJS"),
+      plugins: getPlugins(),
     })
 
     const cjsOutputPath = path.join(outputDir, "index.cjs")
-    console.log("[DEBUG] Writing CJS bundle to:", cjsOutputPath)
+    console.log("Writing CJS bundle to:", cjsOutputPath)
 
     await cjsBundle.write({
       file: cjsOutputPath,
@@ -130,8 +190,14 @@ export const transpileFile = async ({
       input,
       external: externalFunction,
       plugins: [
+        resolve({
+          extensions: [".ts", ".tsx", ".d.ts"],
+        }),
         dts({
           respectExternal: true,
+          compilerOptions: {
+            baseUrl: projectDir,
+          },
         }),
       ],
     })
