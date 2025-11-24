@@ -20,6 +20,7 @@ import kleur from "kleur"
 import { loadProjectConfig } from "lib/project-config"
 import { shouldIgnorePath } from "lib/shared/should-ignore-path"
 import { getAllNodeModuleFilePaths } from "lib/dependency-analysis/getNodeModuleDependencies"
+import { setSessionToken } from "lib/cli-config"
 
 const debug = Debug("tscircuit:devserver")
 
@@ -116,6 +117,10 @@ export class DevServer {
 
     this.eventsWatcher.on("INSTALL_PACKAGE", (event) =>
       this.handleInstallPackage(event.full_package_name),
+    )
+
+    this.eventsWatcher.on("TOKEN_UPDATED", (event) =>
+      this.handleTokenUpdated(event.registry_token),
     )
 
     this.filesystemWatcher = chokidar.watch(this.projectDir, {
@@ -486,6 +491,17 @@ export class DevServer {
         "PACKAGE_INSTALL_FAILED",
         err instanceof Error ? err.message : String(err),
       )
+    }
+  }
+
+  private handleTokenUpdated(registry_token: string) {
+    try {
+      setSessionToken(registry_token)
+      console.log(
+        kleur.green("Session token overridden successfully via runframe"),
+      )
+    } catch (err) {
+      console.error("Failed to update session token:", err)
     }
   }
 }
