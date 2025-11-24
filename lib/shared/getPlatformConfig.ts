@@ -1,5 +1,5 @@
 import type { PlatformConfig } from "@tscircuit/props"
-// import { getPlatformConfig as getEvalPlatformConfig } from "@tscircuit/eval"
+import { getPlatformConfig as getEvalPlatformConfig } from "@tscircuit/eval"
 
 /**
  * Get platform configuration for CLI build process.
@@ -9,15 +9,15 @@ import type { PlatformConfig } from "@tscircuit/props"
  * Bun's fetch() requires proper file:// URLs.
  */
 export function getPlatformConfig(): PlatformConfig {
-  // const evalConfig = getEvalPlatformConfig()
+  const evalConfig = getEvalPlatformConfig()
 
   // Wrap the kicad_mod loader to convert plain paths to file:// URLs
-  // const originalKicadLoader = evalConfig.footprintFileParserMap?.kicad_mod
+  const originalKicadLoader = evalConfig.footprintFileParserMap?.kicad_mod
 
   return {
-    // ...evalConfig,
+    ...evalConfig,
     footprintFileParserMap: {
-      // ...evalConfig.footprintFileParserMap,
+      ...evalConfig.footprintFileParserMap,
       kicad_mod: {
         loadFromUrl: async (url: string) => {
           // Convert plain file paths to file:// URLs for Bun's fetch
@@ -26,7 +26,7 @@ export function getPlatformConfig(): PlatformConfig {
               ? url
               : `file://${url.startsWith("/") ? "" : "/"}${url}`
 
-          return []
+          return originalKicadLoader!.loadFromUrl(fileUrl)
         },
       },
     },
