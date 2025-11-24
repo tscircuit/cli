@@ -74,8 +74,6 @@ test(
     console.log("✓ tsconfig.json configured with types directory")
 
     // Create a circuit file that imports and uses the kicad footprint
-    // Note: The footprint string will be available but full parsing to PCB elements
-    // happens in the viewer/runframe environment with kicad-component-converter
     const circuitContent = `import kicadFootprint from "kicad-libraries/${firstKicadModPath}"
 
 export default () => (
