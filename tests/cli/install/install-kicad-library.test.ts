@@ -74,7 +74,7 @@ test(
     console.log("✓ tsconfig.json configured with types directory")
 
     // Create a circuit file that imports and uses the kicad footprint
-    const circuitContent = `import kicadFootprint from "kicad-libraries/${firstKicadModPath}"
+    const circuitContent = `import kicadFootprint from "kicad-libraries/footprints/Espressif.pretty/ESP32-C3-MINI-1.kicad_mod"
 
 export default () => (
   <board width="50mm" height="50mm">
