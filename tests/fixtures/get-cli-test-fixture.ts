@@ -11,7 +11,10 @@ import * as path from "node:path"
 
 export interface CliTestFixture {
   tmpDir: string
-  runCommand: (command: string) => Promise<{ stdout: string; stderr: string }>
+  runCommand: (
+    command: string,
+    options?: { cwd?: string; env?: Record<string, string> },
+  ) => Promise<{ stdout: string; stderr: string }>
   registryServer: any
   registryDb: DbClient
   registryApiUrl: string
@@ -77,7 +80,10 @@ export async function getCliTestFixture(
   }
 
   // Create command runner
-  const runCommand = async (command: string) => {
+  const runCommand = async (
+    command: string,
+    options: { cwd?: string; env?: Record<string, string> } = {},
+  ) => {
     const args = command.split(" ")
     if (args[0] !== "tsci") {
       throw new Error(
@@ -89,6 +95,7 @@ export async function getCliTestFixture(
     // Set test mode environment variable
     const env = {
       ...process.env,
+      ...options.env,
       TSCI_TEST_MODE: "true",
       FORCE_COLOR: "0",
       NODE_ENV: "test",
@@ -99,7 +106,7 @@ export async function getCliTestFixture(
     let stderr = ""
 
     const task = Bun.spawn(["bun", ...args], {
-      cwd: tmpDir,
+      cwd: options.cwd ?? tmpDir,
       stdout: "pipe",
       stderr: "pipe",
       env,
