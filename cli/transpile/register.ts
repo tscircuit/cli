@@ -1,4 +1,5 @@
 import type { Command } from "commander"
+import fs from "node:fs"
 import path from "node:path"
 import { transpileFile } from "../build/transpile/index"
 import { getBuildEntrypoints } from "../build/get-build-entrypoints"
@@ -18,6 +19,26 @@ export const registerTranspile = (program: Command) => {
           })
 
         const distDir = path.join(projectDir, "dist")
+
+        const packageJsonPath = path.join(projectDir, "package.json")
+        if (fs.existsSync(packageJsonPath)) {
+          const packageJson = JSON.parse(
+            fs.readFileSync(packageJsonPath, "utf-8"),
+          )
+
+          if (typeof packageJson.main === "string") {
+            const resolvedMainPath = path.resolve(projectDir, packageJson.main)
+            const isMainInDist =
+              resolvedMainPath === distDir ||
+              resolvedMainPath.startsWith(`${distDir}${path.sep}`)
+
+            if (!isMainInDist) {
+              throw new Error(
+                'When using transpilation, your package\'s "main" field should point inside the `dist/*` directory, usually to "dist/index.js"',
+              )
+            }
+          }
+        }
 
         console.log("Transpiling entry file...")
         const entryFile = mainEntrypoint || circuitFiles[0]
