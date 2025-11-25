@@ -21,12 +21,70 @@ export const STATIC_ASSET_EXTENSIONS = new Set([
 
 export const createStaticAssetPlugin = ({
   outputDir,
+  projectDir,
+  baseUrl,
+  pathMappings,
 }: {
   outputDir: string
+  projectDir: string
+  baseUrl?: string
+  pathMappings?: Record<string, string[]>
 }) => {
   const copiedAssets = new Map<string, string>()
+  const resolvedBaseUrl = baseUrl ?? projectDir
+  const resolvedPathMappings = pathMappings ?? {}
   return {
     name: "tsci-static-assets",
+    resolveId(source: string, importer: string | undefined) {
+      const ext = path.extname(source).toLowerCase()
+      if (!STATIC_ASSET_EXTENSIONS.has(ext)) return null
+
+      // If it's already an absolute path, use it
+      if (path.isAbsolute(source)) {
+        return fs.existsSync(source) ? source : null
+      }
+
+      // Try to resolve relative to the importer
+      if (importer) {
+        const resolvedFromImporter = path.resolve(
+          path.dirname(importer),
+          source,
+        )
+        if (fs.existsSync(resolvedFromImporter)) {
+          return resolvedFromImporter
+        }
+      }
+
+      // Try to resolve relative to projectDir (for baseUrl imports)
+      const resolvedFromProject = path.resolve(resolvedBaseUrl, source)
+      if (fs.existsSync(resolvedFromProject)) {
+        return resolvedFromProject
+      }
+
+      for (const [pattern, targets] of Object.entries(resolvedPathMappings)) {
+        const isWildcard = pattern.endsWith("/*")
+        const patternPrefix = isWildcard ? pattern.slice(0, -1) : pattern
+
+        if (
+          isWildcard ? source.startsWith(patternPrefix) : source === pattern
+        ) {
+          const wildcard = isWildcard ? source.slice(patternPrefix.length) : ""
+
+          for (const target of targets) {
+            const targetPath = isWildcard
+              ? target.replace("*", wildcard)
+              : target
+            const resolvedTarget = path.resolve(resolvedBaseUrl, targetPath)
+
+            if (fs.existsSync(resolvedTarget)) {
+              return resolvedTarget
+            }
+          }
+        }
+      }
+
+      return null
+    },
     load(id: string) {
       const ext = path.extname(id).toLowerCase()
       if (!STATIC_ASSET_EXTENSIONS.has(ext)) return null

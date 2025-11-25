@@ -22,14 +22,14 @@ test("transpile command generates ESM, CommonJS, and type declarations", async (
   const esmPath = path.join(tmpDir, "dist", "index.js")
   const esmContent = await readFile(esmPath, "utf-8")
   expect(esmContent).toContain("export")
-  expect(esmContent).toContain("React.createElement")
+  expect(esmContent).toContain("react/jsx-runtime")
   expect(esmContent).toContain("board")
 
   // Check that index.cjs (CommonJS) was created
   const cjsPath = path.join(tmpDir, "dist", "index.cjs")
   const cjsContent = await readFile(cjsPath, "utf-8")
   expect(cjsContent).toContain("exports")
-  expect(cjsContent).toContain("React.createElement")
+  expect(cjsContent).toContain("react/jsx-runtime")
   expect(cjsContent).toContain("board")
 
   // Check that index.d.ts (TypeScript types) was created
@@ -75,16 +75,18 @@ test("transpile transforms JSX correctly", async () => {
 
   await runCommand(`tsci transpile ${circuitPath}`)
 
-  // Check that JSX is transformed to React.createElement() calls
+  // Check that JSX is transformed to jsx() calls from react/jsx-runtime
   const esmPath = path.join(tmpDir, "dist", "index.js")
   const esmContent = await readFile(esmPath, "utf-8")
-  expect(esmContent).toContain("React.createElement")
+  expect(esmContent).toContain("jsx")
+  expect(esmContent).toContain("react/jsx-runtime")
   expect(esmContent).not.toContain("<board")
   expect(esmContent).not.toContain("<resistor")
 
   // Check CommonJS also has transformed JSX
   const cjsPath = path.join(tmpDir, "dist", "index.cjs")
   const cjsContent = await readFile(cjsPath, "utf-8")
-  expect(cjsContent).toContain("React.createElement")
+  expect(cjsContent).toContain("jsx")
+  expect(cjsContent).toContain("react/jsx-runtime")
   expect(cjsContent).not.toContain("<board")
 }, 30_000)

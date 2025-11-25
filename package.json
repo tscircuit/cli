@@ -1,6 +1,6 @@
 {
   "name": "@tscircuit/cli",
-  "version": "0.1.522",
+  "version": "0.1.535",
   "main": "dist/main.js",
   "devDependencies": {
     "@babel/standalone": "^7.26.9",
@@ -10,7 +10,7 @@
     "@tscircuit/file-server": "^0.0.32",
     "@tscircuit/math-utils": "0.0.29",
     "@tscircuit/props": "^0.0.371",
-    "@tscircuit/runframe": "^0.0.1273",
+    "@tscircuit/runframe": "^0.0.1285",
     "@tscircuit/schematic-match-adapt": "^0.0.22",
     "@types/bun": "^1.2.2",
     "@types/configstore": "^6.0.2",
