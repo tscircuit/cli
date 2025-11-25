@@ -6,7 +6,6 @@ import Debug from "debug"
 import type { PlatformConfig } from "@tscircuit/props"
 import { abbreviateStringifyObject } from "lib/utils/abbreviate-stringify-object"
 import { importFromUserLand } from "./importFromUserLand"
-import { getPlatformConfig } from "@tscircuit/eval"
 const debug = Debug("tsci:generate-circuit-json")
 
 const ALLOWED_FILE_EXTENSIONS = [
@@ -50,6 +49,7 @@ export async function generateCircuitJson({
   const userLandTscircuit = await importFromUserLand("tscircuit")
 
   // Get default platform config with KiCad parsing support
+  const { getPlatformConfig } = await import("@tscircuit/eval")
   const defaultPlatformConfig = {
     ...getPlatformConfig(),
     projectBaseUrl: "file://",

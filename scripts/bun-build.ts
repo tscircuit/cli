@@ -18,7 +18,6 @@ const result = await Bun.build({
     "tscircuit",
     "typescript",
     "circuit-to-svg",
-    "circuit-json",
     "@types/*",
     "react",
     "react-dom",
