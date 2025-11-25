@@ -73,27 +73,11 @@ test("producer tsconfig paths and GLB exports are preserved when linked", async 
   }
 
   const glbBytes = Buffer.from([0x67, 0x6c, 0x54, 0x46, 0x01, 0x00, 0x00, 0x00])
-  const glbPath = path.join(producerDir, "assets", "chip.glb")
-  const aliasedBoardPath = path.join(
-    producerDir,
-    "src",
-    "components",
-    "AliasedBoard.tsx",
-  )
   const entryPath = path.join(producerDir, "src", "board.tsx")
-  const assetTypesPath = path.join(producerDir, "glb.d.ts")
-
-  await writeFile(
-    path.join(producerDir, "tsconfig.json"),
-    JSON.stringify(tsconfig),
-  )
-  await writeFile(
-    path.join(producerDir, "package.json"),
-    JSON.stringify(producerPkg, null, 2),
-  )
-  await writeFile(
-    aliasedBoardPath,
-    `import cadModelUrl from "@assets/chip.glb"
+  const producerFiles: Record<string, string | Buffer> = {
+    "tsconfig.json": JSON.stringify(tsconfig),
+    "package.json": JSON.stringify(producerPkg, null, 2),
+    "src/components/AliasedBoard.tsx": `import cadModelUrl from "@assets/chip.glb"
 
 export const AliasedBoard = () => (
   <board width="15mm" height="15mm">
@@ -105,22 +89,22 @@ export const AliasedBoard = () => (
   </board>
 )
 `,
-  )
-  await writeFile(
-    entryPath,
-    `import { AliasedBoard } from "@src/components/AliasedBoard"
+    "src/board.tsx": `import { AliasedBoard } from "@src/components/AliasedBoard"
 
 export default AliasedBoard
 `,
-  )
-  await writeFile(glbPath, glbBytes)
-  await writeFile(
-    assetTypesPath,
-    `declare module "*.glb" {
+    "assets/chip.glb": glbBytes,
+    "glb.d.ts": `declare module "*.glb" {
   const url: string
   export default url
 }
 `,
+  }
+
+  await Promise.all(
+    Object.entries(producerFiles).map(([relativePath, content]) =>
+      writeFile(path.join(producerDir, relativePath), content),
+    ),
   )
 
   const producerInstall = await runBunCommand(["bun", "install"], producerDir)
@@ -144,19 +128,21 @@ export default AliasedBoard
   }
 
   const consumerIndex = path.join(consumerDir, "index.tsx")
-  await writeFile(
-    path.join(consumerDir, "package.json"),
-    JSON.stringify(consumerPkg, null, 2),
-  )
-  const consumerInstall = await runBunCommand(["bun", "install"], consumerDir)
-  expect(consumerInstall.exitCode).toBe(0)
-  await writeFile(
-    consumerIndex,
-    `import AliasedBoard from "aliased-glb-lib"
+  const consumerFiles: Record<string, string | Buffer> = {
+    "package.json": JSON.stringify(consumerPkg, null, 2),
+    "index.tsx": `import AliasedBoard from "aliased-glb-lib"
 
 export default () => <AliasedBoard />
 `,
+  }
+
+  await Promise.all(
+    Object.entries(consumerFiles).map(([relativePath, content]) =>
+      writeFile(path.join(consumerDir, relativePath), content),
+    ),
   )
+  const consumerInstall = await runBunCommand(["bun", "install"], consumerDir)
+  expect(consumerInstall.exitCode).toBe(0)
 
   const consumerLink = await runBunCommand(
     ["bun", "link", "aliased-glb-lib"],
@@ -184,5 +170,11 @@ export default () => <AliasedBoard />
     cadComponent?.model_glb_url ?? cadComponent?.glb_model_url ?? undefined
 
   expect(modelGlbUrl).toBeDefined()
-  expect(modelGlbUrl).toContain(".glb")
+  const normalizedModelGlbUrl = String(modelGlbUrl)
+    .replaceAll(tmpDir, "<tmp>")
+    .replace(/\\/g, "/")
+
+  expect(normalizedModelGlbUrl).toMatchInlineSnapshot(
+    `"./assets/chip-e043b555.glb"`,
+  )
 }, 60_000)
