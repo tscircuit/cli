@@ -90,13 +90,38 @@ export const transpileFile = async ({
     // Check if user has a tsconfig.json
     const tsconfigPath = path.join(projectDir, "tsconfig.json")
     const hasTsConfig = fs.existsSync(tsconfigPath)
+    let tsconfigBaseUrl = projectDir
+    let tsconfigPathMappings: Record<string, string[]> | undefined
+
+    if (hasTsConfig) {
+      try {
+        const tsconfigContent = fs.readFileSync(tsconfigPath, "utf-8")
+        const tsconfig = JSON.parse(tsconfigContent)
+        if (tsconfig.compilerOptions?.baseUrl) {
+          tsconfigBaseUrl = path.resolve(
+            path.dirname(tsconfigPath),
+            tsconfig.compilerOptions.baseUrl,
+          )
+        }
+        if (tsconfig.compilerOptions?.paths) {
+          tsconfigPathMappings = tsconfig.compilerOptions.paths
+        }
+      } catch {
+        // Ignore tsconfig parsing errors
+      }
+    }
 
     // Build ESM bundle
     console.log("Building ESM bundle...")
     const staticAssetExtensions = Array.from(STATIC_ASSET_EXTENSIONS)
 
     const getPlugins = () => [
-      createStaticAssetPlugin({ outputDir, projectDir }),
+      createStaticAssetPlugin({
+        outputDir,
+        projectDir,
+        baseUrl: tsconfigBaseUrl,
+        pathMappings: tsconfigPathMappings,
+      }),
       resolve({
         extensions: [
           ".ts",
