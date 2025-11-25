@@ -22,11 +22,17 @@ export const STATIC_ASSET_EXTENSIONS = new Set([
 export const createStaticAssetPlugin = ({
   outputDir,
   projectDir,
+  baseUrl,
+  pathMappings,
 }: {
   outputDir: string
   projectDir: string
+  baseUrl?: string
+  pathMappings?: Record<string, string[]>
 }) => {
   const copiedAssets = new Map<string, string>()
+  const resolvedBaseUrl = baseUrl ?? projectDir
+  const resolvedPathMappings = pathMappings ?? {}
   return {
     name: "tsci-static-assets",
     resolveId(source: string, importer: string | undefined) {
@@ -50,9 +56,31 @@ export const createStaticAssetPlugin = ({
       }
 
       // Try to resolve relative to projectDir (for baseUrl imports)
-      const resolvedFromProject = path.resolve(projectDir, source)
+      const resolvedFromProject = path.resolve(resolvedBaseUrl, source)
       if (fs.existsSync(resolvedFromProject)) {
         return resolvedFromProject
+      }
+
+      for (const [pattern, targets] of Object.entries(resolvedPathMappings)) {
+        const isWildcard = pattern.endsWith("/*")
+        const patternPrefix = isWildcard ? pattern.slice(0, -1) : pattern
+
+        if (
+          isWildcard ? source.startsWith(patternPrefix) : source === pattern
+        ) {
+          const wildcard = isWildcard ? source.slice(patternPrefix.length) : ""
+
+          for (const target of targets) {
+            const targetPath = isWildcard
+              ? target.replace("*", wildcard)
+              : target
+            const resolvedTarget = path.resolve(resolvedBaseUrl, targetPath)
+
+            if (fs.existsSync(resolvedTarget)) {
+              return resolvedTarget
+            }
+          }
+        }
       }
 
       return null
