@@ -25,10 +25,11 @@ const globalPackageJson = require("../package.json")
 let mainPath = join(packageRoot, "dist/main.js")
 
 try {
-  const localPackageJsonPath = require.resolve("@tscircuit/cli/package.json", {
-    paths: [process.cwd()],
-  })
-  const localPackageJson = require(localPackageJsonPath)
+  const localRequire = createRequire(join(process.cwd(), "package.json"))
+  const localPackageJsonPath = localRequire.resolve(
+    "@tscircuit/cli/package.json",
+  )
+  const localPackageJson = localRequire(localPackageJsonPath)
   const localPackageRoot = dirname(localPackageJsonPath)
   const localMainPath = join(localPackageRoot, "dist/main.js")
 
