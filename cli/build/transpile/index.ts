@@ -13,18 +13,67 @@ import {
   STATIC_ASSET_EXTENSIONS,
 } from "./static-asset-plugin"
 
-const CLI_TYPES_ROOT = path.resolve(__dirname, "../../../types")
+const createExternalFunction =
+  (projectDir: string, tsconfigPath?: string) =>
+  (id: string): boolean => {
+    // Don't externalize relative or absolute paths (these are local files)
+    if (id.startsWith(".") || id.startsWith("/") || path.isAbsolute(id)) {
+      return false
+    }
 
-const externalFunction = (id: string): boolean => {
-  if (id.startsWith(".") || id.startsWith("/")) {
-    return false // Don't externalize relative paths
+    // Read tsconfig to understand path mappings and baseUrl
+    let baseUrl = projectDir
+    let pathMappings: Record<string, string[]> = {}
+
+    if (tsconfigPath && fs.existsSync(tsconfigPath)) {
+      try {
+        const tsconfigContent = fs.readFileSync(tsconfigPath, "utf-8")
+        const tsconfig = JSON.parse(tsconfigContent)
+
+        if (tsconfig.compilerOptions?.baseUrl) {
+          baseUrl = path.resolve(
+            path.dirname(tsconfigPath),
+            tsconfig.compilerOptions.baseUrl,
+          )
+        }
+
+        if (tsconfig.compilerOptions?.paths) {
+          pathMappings = tsconfig.compilerOptions.paths
+        }
+      } catch {
+        // Ignore tsconfig parsing errors
+      }
+    }
+
+    // Check if this matches any path mapping pattern
+    for (const [pattern, targets] of Object.entries(pathMappings)) {
+      const patternWithoutWildcard = pattern.replace("/*", "/")
+      if (id.startsWith(patternWithoutWildcard)) {
+        return false // Path-mapped import, don't externalize
+      }
+    }
+
+    // Check if this could be a baseUrl-relative import
+    // Try to resolve it as a file relative to baseUrl
+    const potentialPaths = [
+      path.join(baseUrl, id),
+      path.join(baseUrl, `${id}.ts`),
+      path.join(baseUrl, `${id}.tsx`),
+      path.join(baseUrl, `${id}.js`),
+      path.join(baseUrl, `${id}.jsx`),
+      path.join(baseUrl, id, "index.ts"),
+      path.join(baseUrl, id, "index.tsx"),
+      path.join(baseUrl, id, "index.js"),
+      path.join(baseUrl, id, "index.jsx"),
+    ]
+
+    if (potentialPaths.some((p) => fs.existsSync(p))) {
+      return false // This is a local file, don't externalize
+    }
+
+    // Everything else (npm packages like 'react', 'tscircuit', etc.) is external
+    return true
   }
-  if (path.isAbsolute(id)) {
-    return false // Don't externalize absolute file paths
-  }
-  // Everything else (npm packages like 'react', '@rollup/plugin-foo', etc.) is external
-  return true
-}
 
 export const transpileFile = async ({
   input,
@@ -38,23 +87,41 @@ export const transpileFile = async ({
   try {
     fs.mkdirSync(outputDir, { recursive: true })
 
-    const typeRootCandidates = [
-      path.join(projectDir, "node_modules", "@types"),
-      path.join(projectDir, "types"),
-      CLI_TYPES_ROOT,
-    ]
-    const typeRoots = Array.from(
-      new Set(
-        typeRootCandidates.filter((candidate) => fs.existsSync(candidate)),
-      ),
-    )
+    // Check if user has a tsconfig.json
+    const tsconfigPath = path.join(projectDir, "tsconfig.json")
+    const hasTsConfig = fs.existsSync(tsconfigPath)
+    let tsconfigBaseUrl = projectDir
+    let tsconfigPathMappings: Record<string, string[]> | undefined
+
+    if (hasTsConfig) {
+      try {
+        const tsconfigContent = fs.readFileSync(tsconfigPath, "utf-8")
+        const tsconfig = JSON.parse(tsconfigContent)
+        if (tsconfig.compilerOptions?.baseUrl) {
+          tsconfigBaseUrl = path.resolve(
+            path.dirname(tsconfigPath),
+            tsconfig.compilerOptions.baseUrl,
+          )
+        }
+        if (tsconfig.compilerOptions?.paths) {
+          tsconfigPathMappings = tsconfig.compilerOptions.paths
+        }
+      } catch {
+        // Ignore tsconfig parsing errors
+      }
+    }
 
     // Build ESM bundle
     console.log("Building ESM bundle...")
     const staticAssetExtensions = Array.from(STATIC_ASSET_EXTENSIONS)
 
-    const getPlugins = (moduleKind: "ESNext" | "CommonJS") => [
-      createStaticAssetPlugin({ outputDir }),
+    const getPlugins = () => [
+      createStaticAssetPlugin({
+        outputDir,
+        projectDir,
+        baseUrl: tsconfigBaseUrl,
+        pathMappings: tsconfigPathMappings,
+      }),
       resolve({
         extensions: [
           ".ts",
@@ -68,27 +135,40 @@ export const transpileFile = async ({
       commonjs(),
       json(),
       typescript({
-        jsx: "react",
-        tsconfig: false,
-        compilerOptions: {
-          target: "ES2020",
-          module: moduleKind,
-          jsx: "react",
-          declaration: false,
-          sourceMap: false,
-          skipLibCheck: true,
-          resolveJsonModule: true,
-          allowSyntheticDefaultImports: true,
-          allowArbitraryExtensions: true,
-          ...(typeRoots.length ? { typeRoots } : {}),
-        },
+        // Use user's tsconfig if available, otherwise use defaults
+        tsconfig: hasTsConfig ? tsconfigPath : false,
+        compilerOptions: hasTsConfig
+          ? {
+              // Override options that conflict with transpilation
+              declaration: false,
+              sourceMap: false,
+              noEmit: false,
+              emitDeclarationOnly: false,
+              allowImportingTsExtensions: false,
+            }
+          : {
+              // Fallback defaults when no tsconfig exists
+              target: "ES2020",
+              module: "ESNext",
+              jsx: "react-jsx",
+              declaration: false,
+              sourceMap: false,
+              skipLibCheck: true,
+              resolveJsonModule: true,
+              allowSyntheticDefaultImports: true,
+              allowArbitraryExtensions: true,
+              baseUrl: projectDir,
+            },
       }),
     ]
 
     const esmBundle = await rollup({
       input,
-      external: externalFunction,
-      plugins: getPlugins("ESNext"),
+      external: createExternalFunction(
+        projectDir,
+        hasTsConfig ? tsconfigPath : undefined,
+      ),
+      plugins: getPlugins(),
     })
 
     const esmOutputPath = path.join(outputDir, "index.js")
@@ -102,17 +182,19 @@ export const transpileFile = async ({
     console.log(
       `ESM bundle written to ${path.relative(projectDir, esmOutputPath)}`,
     )
-
     // Build CommonJS bundle
     console.log("Building CommonJS bundle...")
     const cjsBundle = await rollup({
       input,
-      external: externalFunction,
-      plugins: getPlugins("CommonJS"),
+      external: createExternalFunction(
+        projectDir,
+        hasTsConfig ? tsconfigPath : undefined,
+      ),
+      plugins: getPlugins(),
     })
 
     const cjsOutputPath = path.join(outputDir, "index.cjs")
-    console.log("[DEBUG] Writing CJS bundle to:", cjsOutputPath)
+    console.log("Writing CJS bundle to:", cjsOutputPath)
 
     await cjsBundle.write({
       file: cjsOutputPath,
@@ -128,10 +210,22 @@ export const transpileFile = async ({
     console.log("Generating type declarations...")
     const dtsBundle = await rollup({
       input,
-      external: externalFunction,
+      external: createExternalFunction(
+        projectDir,
+        hasTsConfig ? tsconfigPath : undefined,
+      ),
       plugins: [
+        resolve({
+          extensions: [".ts", ".tsx", ".d.ts"],
+        }),
         dts({
           respectExternal: true,
+          tsconfig: hasTsConfig ? tsconfigPath : undefined,
+          compilerOptions: hasTsConfig
+            ? undefined
+            : {
+                baseUrl: projectDir,
+              },
         }),
       ],
     })
