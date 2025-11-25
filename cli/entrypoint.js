@@ -1,7 +1,9 @@
 #!/usr/bin/env node
 import { spawnSync } from "node:child_process"
-import { fileURLToPath } from "node:url"
+import { existsSync } from "node:fs"
+import { createRequire } from "node:module"
 import { dirname, join } from "node:path"
+import { fileURLToPath } from "node:url"
 
 function commandExists(cmd) {
   try {
@@ -15,7 +17,28 @@ function commandExists(cmd) {
 const runner = commandExists("bun") ? "bun" : "tsx"
 
 const __dirname = dirname(fileURLToPath(import.meta.url))
-const mainPath = join(__dirname, "../dist/main.js")
+const packageRoot = join(__dirname, "..")
+const require = createRequire(import.meta.url)
+
+const globalPackageJson = require("../package.json")
+
+let mainPath = join(packageRoot, "dist/main.js")
+
+try {
+  const localPackageJsonPath = require.resolve("@tscircuit/cli/package.json", {
+    paths: [process.cwd()],
+  })
+  const localPackageJson = require(localPackageJsonPath)
+  const localPackageRoot = dirname(localPackageJsonPath)
+  const localMainPath = join(localPackageRoot, "dist/main.js")
+
+  if (localPackageRoot !== packageRoot && existsSync(localMainPath)) {
+    console.warn(
+      `Using local @tscircuit/cli v${localPackageJson.version} instead of global v${globalPackageJson.version}`,
+    )
+    mainPath = localMainPath
+  }
+} catch {}
 
 const { status } = spawnSync(runner, [mainPath, ...process.argv.slice(2)], {
   stdio: "inherit",
