@@ -1,13 +1,16 @@
 import type { PlatformConfig } from "@tscircuit/props"
-import { getPlatformConfig as getEvalPlatformConfig } from "@tscircuit/eval"
 
 /**
  * Get platform configuration for CLI build process.
- * Extends @tscircuit/eval's getPlatformConfig to handle file paths that
- * @tscircuit/core passes (which are plain paths, not file:// URLs).
- * Bun's fetch() requires proper file:// URLs.
+ *
+ * Lazy loads @tscircuit/eval to avoid import errors when tscircuit
+ * is not yet installed (e.g., during `tsci init`).
  */
 export function getPlatformConfig(): PlatformConfig {
+  // Lazy import eval - will only run when actually building/using KiCad footprints
+  const {
+    getPlatformConfig: getEvalPlatformConfig,
+  } = require("@tscircuit/eval")
   const evalConfig = getEvalPlatformConfig()
 
   // Wrap the kicad_mod loader to convert plain paths to file:// URLs
