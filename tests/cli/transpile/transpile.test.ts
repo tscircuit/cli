@@ -48,7 +48,7 @@ test("transpile uses mainEntrypoint when available", async () => {
   await writeFile(otherPath, circuitCode)
   await writeFile(
     path.join(tmpDir, "package.json"),
-    JSON.stringify({ main: "index.tsx" }),
+    JSON.stringify({ main: "dist/index.js" }),
   )
 
   await runCommand(`tsci transpile`)
@@ -65,6 +65,23 @@ test("transpile uses mainEntrypoint when available", async () => {
   const dtsPath = path.join(tmpDir, "dist", "index.d.ts")
   const dtsStat = await stat(dtsPath)
   expect(dtsStat.isFile()).toBe(true)
+}, 30_000)
+
+test("transpile errors when main is outside dist", async () => {
+  const { tmpDir, runCommand } = await getCliTestFixture()
+  const mainPath = path.join(tmpDir, "index.tsx")
+
+  await writeFile(mainPath, circuitCode)
+  await writeFile(
+    path.join(tmpDir, "package.json"),
+    JSON.stringify({ main: "index.tsx" }),
+  )
+
+  const { stderr } = await runCommand(`tsci transpile`)
+
+  expect(stderr).toContain(
+    'When using transpilation, your package\'s "main" field should point inside the `dist/*` directory, usually to "dist/index.js"',
+  )
 }, 30_000)
 
 test("transpile transforms JSX correctly", async () => {
