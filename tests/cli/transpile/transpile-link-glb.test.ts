@@ -178,3 +178,71 @@ export default () => <AliasedBoard />
     `"./assets/chip-e043b555.glb"`,
   )
 }, 60_000)
+
+test("transpiled dist index points to copied GLB asset", async () => {
+  const { tmpDir, runCommand } = await getCliTestFixture()
+  const projectDir = path.join(tmpDir, "glb-link-project")
+
+  await mkdir(projectDir, { recursive: true })
+  await mkdir(path.join(projectDir, "assets"), { recursive: true })
+
+  const entryPath = path.join(projectDir, "index.tsx")
+  const files: Record<string, string | Buffer> = {
+    "package.json": JSON.stringify(
+      {
+        name: "glb-link-project",
+        version: "1.0.0",
+        main: "dist/index.js",
+        module: "dist/index.js",
+        dependencies: { react: "19.0.0" },
+      },
+      null,
+      2,
+    ),
+    "tsconfig.json": JSON.stringify({
+      compilerOptions: {
+        jsx: "react-jsx",
+        module: "esnext",
+        target: "esnext",
+      },
+    }),
+    "index.tsx": `import cadModelUrl from "./assets/chip.glb"
+
+export default () => <cadmodel modelUrl={cadModelUrl} />
+`,
+    "glb.d.ts": `declare module "*.glb" {
+  const url: string
+  export default url
+}
+`,
+    "assets/chip.glb": Buffer.from([
+      0x67, 0x6c, 0x54, 0x46, 0x01, 0x00, 0x00, 0x00,
+    ]),
+  }
+
+  await Promise.all(
+    Object.entries(files).map(([relativePath, content]) =>
+      writeFile(path.join(projectDir, relativePath), content),
+    ),
+  )
+
+  const installResult = await runBunCommand(["bun", "install"], projectDir)
+  expect(installResult.exitCode).toBe(0)
+
+  const { stderr } = await runCommand(`tsci transpile ${entryPath}`)
+  expect(stderr).toBe("")
+
+  const distIndexPath = path.join(projectDir, "dist", "index.js")
+  const distIndexContent = await readFile(distIndexPath, "utf-8")
+
+  expect(distIndexContent).toMatchInlineSnapshot(`
+"import { jsx } from 'react/jsx-runtime';
+
+var cadModelUrl = \"./assets/chip-e043b555.glb\";
+
+var index = () => jsx(\"cadmodel\", { modelUrl: cadModelUrl });
+
+export { index as default };
+"
+`)
+}, 60_000)
