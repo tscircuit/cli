@@ -3,7 +3,6 @@ import { getPlatformConfig as getEvalPlatformConfig } from "@tscircuit/eval"
 
 /**
  * Get platform configuration for CLI build process.
- *
  * Extends @tscircuit/eval's getPlatformConfig to handle file paths that
  * @tscircuit/core passes (which are plain paths, not file:// URLs).
  * Bun's fetch() requires proper file:// URLs.
