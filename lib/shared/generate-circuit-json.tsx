@@ -51,7 +51,7 @@ export async function generateCircuitJson({
   const userLandTscircuit = await importFromUserLand("tscircuit")
 
   // Get default platform config with KiCad parsing support
-  const defaultPlatformConfig = getPlatformConfig()
+  const defaultPlatformConfig = await getPlatformConfig()
 
   // Merge with user-provided platform config
   const mergedPlatformConfig: PlatformConfig = {
