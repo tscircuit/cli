@@ -31,6 +31,7 @@ export const createStaticAssetPlugin = ({
   pathMappings?: Record<string, string[]>
 }) => {
   const copiedAssets = new Map<string, string>()
+  const sourceToRelative = new Map<string, string>() // Maps original source to relative output path
   const resolvedBaseUrl = baseUrl ?? projectDir
   const resolvedPathMappings = pathMappings ?? {}
 
@@ -116,6 +117,9 @@ export const createStaticAssetPlugin = ({
         copiedAssets.set(resolvedPath, relativePath)
       }
 
+      // Store the mapping from original source to relative path
+      sourceToRelative.set(source, copiedAssets.get(resolvedPath)!)
+
       // Mark as external so rollup preserves the import statement
       return {
         id: resolvedPath,
@@ -123,8 +127,25 @@ export const createStaticAssetPlugin = ({
       }
     },
     renderChunk(code: string) {
-      // Replace absolute paths with hashed relative paths
+      // Replace both original sources and absolute paths with hashed relative paths
       let modifiedCode = code
+
+      // First, try replacing based on original source paths (what Rollup preserves as external)
+      for (const [source, relativePath] of sourceToRelative.entries()) {
+        const escapedSource = source.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")
+        const patterns = [
+          new RegExp(
+            `(import\\s+[^'"]*from\\s+['"])${escapedSource}(['"])`,
+            "g",
+          ),
+          new RegExp(`(require\\s*\\(['"])${escapedSource}(['"]\\))`, "g"),
+        ]
+        for (const pattern of patterns) {
+          modifiedCode = modifiedCode.replace(pattern, `$1${relativePath}$2`)
+        }
+      }
+
+      // Also try replacing absolute paths (in case Rollup uses those)
       for (const [absolutePath, relativePath] of copiedAssets.entries()) {
         const escapedPath = absolutePath.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")
         const patterns = [
