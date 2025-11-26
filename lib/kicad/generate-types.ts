@@ -2,6 +2,7 @@ import * as fs from "node:fs"
 import * as path from "node:path"
 import kleur from "kleur"
 import { globbySync } from "globby"
+import { generateTsConfig } from "../shared/generate-ts-config"
 
 /**
  * Generate TypeScript declaration file for KiCad modules in the installed package
@@ -72,24 +73,7 @@ function ensureTsconfigIncludesTypes(projectRoot: string): void {
 
   if (!fs.existsSync(tsconfigPath)) {
     console.log(kleur.gray("Creating tsconfig.json..."))
-    const tsconfig = {
-      compilerOptions: {
-        target: "ES2020",
-        module: "ESNext",
-        moduleResolution: "bundler",
-        jsx: "react",
-        jsxImportSource: "@tscircuit/core",
-        types: ["tscircuit"],
-        typeRoots: ["./node_modules/@types", "./types"],
-        esModuleInterop: true,
-        skipLibCheck: true,
-        strict: true,
-      },
-      include: ["**/*.ts", "**/*.tsx"],
-      exclude: ["node_modules"],
-    }
-    fs.writeFileSync(tsconfigPath, JSON.stringify(tsconfig, null, 2))
-    return
+    generateTsConfig(projectRoot)
   }
 
   try {
