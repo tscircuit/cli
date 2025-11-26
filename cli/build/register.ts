@@ -14,6 +14,7 @@ import { generateKicadProject } from "./generate-kicad-project"
 import type { GeneratedKicadProject } from "./generate-kicad-project"
 import { generateKicadFootprintLibrary } from "./generate-kicad-footprint-library"
 import { transpileFile } from "./transpile"
+import { validateMainInDist } from "../utils/validate-main-in-dist"
 
 // @ts-ignore
 import runFrameStandaloneBundleContent from "@tscircuit/runframe/standalone" with {
@@ -184,6 +185,8 @@ export const registerBuild = (program: Command) => {
           }
 
           if (options?.transpile) {
+            validateMainInDist(projectDir, distDir)
+
             console.log("Transpiling entry file...")
             const entryFile = mainEntrypoint || circuitFiles[0]
             if (!entryFile) {
