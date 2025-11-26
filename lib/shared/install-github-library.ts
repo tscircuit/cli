@@ -4,6 +4,7 @@ import { ensurePackageJson } from "../kicad/ensure-package-json"
 import { installPackage } from "../kicad/install-package"
 import { generateKicadTypesForPackage } from "../kicad/generate-types"
 import { extractPackageName } from "lib/kicad/extract-package-name"
+import { setupTsciProject } from "./setup-tsci-packages"
 import * as fs from "node:fs"
 import * as path from "node:path"
 
@@ -35,6 +36,9 @@ export async function installKicadLibrary(packageSpec: string) {
 
   // Generate types file for .kicad_mod files
   await generateKicadTypesForPackage(projectRoot, packageName)
+
+  // Setup tscircuit project dependencies (React, tscircuit, etc.)
+  await setupTsciProject(projectRoot)
 
   console.log(kleur.green(`✓ Successfully installed ${packageName}`))
   console.log(
