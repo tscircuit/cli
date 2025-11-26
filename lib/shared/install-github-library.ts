@@ -1,19 +1,19 @@
 import kleur from "kleur"
-import { validateGithubUrl } from "../kicad/validate-github-url"
 import { findProjectRoot } from "../kicad/find-project-root"
 import { ensurePackageJson } from "../kicad/ensure-package-json"
 import { installPackage } from "../kicad/install-package"
 import { generateKicadTypesForPackage } from "../kicad/generate-types"
+import { extractPackageName } from "lib/kicad/extract-package-name"
 
 /**
- * Install a GitHub repository as a KiCad library
- * @param githubUrl - GitHub URL (e.g., https://github.com/espressif/kicad-libraries)
+ * Install a package as a KiCad library
+ * @param packageSpec - Any valid npm/bun package specifier (e.g., https://github.com/espressif/kicad-libraries, kicad-libraries@1.0.0, etc.)
  */
-export async function installGithubKicadLibrary(githubUrl: string) {
-  console.log(kleur.gray(`Installing KiCad library from ${githubUrl}...`))
+export async function installKicadLibrary(packageSpec: string) {
+  console.log(kleur.gray(`Installing KiCad library: ${packageSpec}...`))
 
-  // Validate GitHub URL
-  const [owner, repo] = validateGithubUrl(githubUrl)
+  // Extract package name from the package specifier
+  const packageName = extractPackageName(packageSpec)
 
   // Find project root (where package.json exists or should be created)
   const projectRoot = findProjectRoot()
@@ -21,17 +21,17 @@ export async function installGithubKicadLibrary(githubUrl: string) {
   // Ensure package.json exists
   ensurePackageJson(projectRoot)
 
-  // Install the GitHub repository using bun add
-  console.log(kleur.gray(`Running: bun add ${githubUrl}`))
-  installPackage(githubUrl, projectRoot)
+  // Install the package using bun add
+  console.log(kleur.gray(`Running: bun add ${packageSpec}`))
+  installPackage(packageSpec, projectRoot)
 
   // Generate types file for .kicad_mod files
-  await generateKicadTypesForPackage(projectRoot, repo)
+  await generateKicadTypesForPackage(projectRoot, packageName)
 
-  console.log(kleur.green(`✓ Successfully installed ${owner}/${repo}`))
+  console.log(kleur.green(`✓ Successfully installed ${packageName}`))
   console.log(
     kleur.gray(
-      `\nYou can now import KiCad modules like:\nimport kicadMod from "${repo}/path/to/footprint.kicad_mod"`,
+      `\nYou can now import KiCad modules like:\nimport kicadMod from "${packageName}/path/to/footprint.kicad_mod"`,
     ),
   )
 }

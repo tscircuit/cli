@@ -1,18 +1,18 @@
 import type { Command } from "commander"
 import { installProjectDependencies } from "lib/shared/install-project-dependencies"
-import { installGithubKicadLibrary } from "../../lib/shared/install-github-library"
+import { installKicadLibrary } from "../../lib/shared/install-github-library"
 
 export const registerInstall = (program: Command) => {
   program
-    .command("install [githubUrl]")
+    .command("install [packageSpec]")
     .description(
-      "Install project dependencies or install a GitHub KiCad library (e.g., tsci install https://github.com/espressif/kicad-libraries)",
+      "Install project dependencies or install a KiCad library package (e.g., tsci install https://github.com/espressif/kicad-libraries or tsci install kicad-libraries@1.0.0)",
     )
-    .action(async (githubUrl?: string) => {
+    .action(async (packageSpec?: string) => {
       try {
-        if (githubUrl) {
-          // Install GitHub KiCad library
-          await installGithubKicadLibrary(githubUrl)
+        if (packageSpec) {
+          // Install KiCad library package
+          await installKicadLibrary(packageSpec)
         } else {
           // Install project dependencies
           await installProjectDependencies()

@@ -1,15 +1,15 @@
 import { execSync } from "node:child_process"
 
 /**
- * Install a GitHub repository using bun add
+ * Install a package using bun add
  */
-export function installPackage(githubUrl: string, projectRoot: string): void {
+export function installPackage(packageSpec: string, projectRoot: string): void {
   try {
-    execSync(`bun add ${githubUrl}`, {
+    execSync(`bun add ${packageSpec}`, {
       cwd: projectRoot,
       stdio: "inherit",
     })
   } catch (error) {
-    throw new Error(`Failed to install ${githubUrl}`)
+    throw new Error(`Failed to install ${packageSpec}`)
   }
 }
