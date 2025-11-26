@@ -33,80 +33,107 @@ export const createStaticAssetPlugin = ({
   const copiedAssets = new Map<string, string>()
   const resolvedBaseUrl = baseUrl ?? projectDir
   const resolvedPathMappings = pathMappings ?? {}
+
   return {
     name: "tsci-static-assets",
     resolveId(source: string, importer: string | undefined) {
       const ext = path.extname(source).toLowerCase()
       if (!STATIC_ASSET_EXTENSIONS.has(ext)) return null
 
+      let resolvedPath: string | null = null
+
       // If it's already an absolute path, use it
       if (path.isAbsolute(source)) {
-        return fs.existsSync(source) ? source : null
+        if (fs.existsSync(source)) {
+          resolvedPath = source
+        }
       }
-
       // Try to resolve relative to the importer
-      if (importer) {
+      else if (importer && !importer.startsWith("\0")) {
         const resolvedFromImporter = path.resolve(
           path.dirname(importer),
           source,
         )
         if (fs.existsSync(resolvedFromImporter)) {
-          return resolvedFromImporter
+          resolvedPath = resolvedFromImporter
         }
       }
 
       // Try to resolve relative to projectDir (for baseUrl imports)
-      const resolvedFromProject = path.resolve(resolvedBaseUrl, source)
-      if (fs.existsSync(resolvedFromProject)) {
-        return resolvedFromProject
-      }
-
-      for (const [pattern, targets] of Object.entries(resolvedPathMappings)) {
-        const isWildcard = pattern.endsWith("/*")
-        const patternPrefix = isWildcard ? pattern.slice(0, -1) : pattern
-
-        if (
-          isWildcard ? source.startsWith(patternPrefix) : source === pattern
-        ) {
-          const wildcard = isWildcard ? source.slice(patternPrefix.length) : ""
-
-          for (const target of targets) {
-            const targetPath = isWildcard
-              ? target.replace("*", wildcard)
-              : target
-            const resolvedTarget = path.resolve(resolvedBaseUrl, targetPath)
-
-            if (fs.existsSync(resolvedTarget)) {
-              return resolvedTarget
-            }
-          }
+      if (!resolvedPath) {
+        const resolvedFromProject = path.resolve(resolvedBaseUrl, source)
+        if (fs.existsSync(resolvedFromProject)) {
+          resolvedPath = resolvedFromProject
         }
       }
 
-      return null
-    },
-    load(id: string) {
-      const ext = path.extname(id).toLowerCase()
-      if (!STATIC_ASSET_EXTENSIONS.has(ext)) return null
+      // Try path mappings
+      if (!resolvedPath) {
+        for (const [pattern, targets] of Object.entries(resolvedPathMappings)) {
+          const isWildcard = pattern.endsWith("/*")
+          const patternPrefix = isWildcard ? pattern.slice(0, -1) : pattern
 
-      const assetDir = path.join(outputDir, "assets")
-      fs.mkdirSync(assetDir, { recursive: true })
+          if (
+            isWildcard ? source.startsWith(patternPrefix) : source === pattern
+          ) {
+            const wildcard = isWildcard
+              ? source.slice(patternPrefix.length)
+              : ""
 
-      const fileBuffer = fs.readFileSync(id)
-      const hash = createHash("sha1")
-        .update(fileBuffer)
-        .digest("hex")
-        .slice(0, 8)
-      const fileName = `${path.basename(id, ext)}-${hash}${ext}`
-      const outputPath = path.join(assetDir, fileName)
+            for (const target of targets) {
+              const targetPath = isWildcard
+                ? target.replace("*", wildcard)
+                : target
+              const resolvedTarget = path.resolve(resolvedBaseUrl, targetPath)
 
-      if (!copiedAssets.has(id)) {
-        fs.writeFileSync(outputPath, fileBuffer)
-        copiedAssets.set(id, outputPath)
+              if (fs.existsSync(resolvedTarget)) {
+                resolvedPath = resolvedTarget
+                break
+              }
+            }
+          }
+          if (resolvedPath) break
+        }
       }
 
-      const relativePath = `./assets/${fileName}`
-      return `export default ${JSON.stringify(relativePath)};`
+      if (!resolvedPath) return null
+
+      // Copy the asset and compute hashed filename
+      if (!copiedAssets.has(resolvedPath)) {
+        const assetDir = path.join(outputDir, "assets")
+        fs.mkdirSync(assetDir, { recursive: true })
+
+        const fileBuffer = fs.readFileSync(resolvedPath)
+        const hash = createHash("sha1")
+          .update(fileBuffer)
+          .digest("hex")
+          .slice(0, 8)
+        const fileName = `${path.basename(resolvedPath, ext)}-${hash}${ext}`
+        const outputPath = path.join(assetDir, fileName)
+
+        fs.writeFileSync(outputPath, fileBuffer)
+        const relativePath = `./assets/${fileName}`
+        copiedAssets.set(resolvedPath, relativePath)
+      }
+
+      // Mark as external so rollup preserves the import statement
+      return {
+        id: resolvedPath,
+        external: true,
+      }
+    },
+    renderChunk(code: string) {
+      // Replace absolute paths with hashed relative paths
+      let modifiedCode = code
+      for (const [absolutePath, relativePath] of copiedAssets.entries()) {
+        const escapedPath = absolutePath.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")
+        const importRegex = new RegExp(
+          `(import\\s+[^'"]*from\\s+['"])${escapedPath}(['"])`,
+          "g",
+        )
+        modifiedCode = modifiedCode.replace(importRegex, `$1${relativePath}$2`)
+      }
+      return { code: modifiedCode }
     },
   }
 }
