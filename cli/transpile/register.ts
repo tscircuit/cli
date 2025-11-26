@@ -2,6 +2,7 @@ import type { Command } from "commander"
 import path from "node:path"
 import { transpileFile } from "../build/transpile/index"
 import { getBuildEntrypoints } from "../build/get-build-entrypoints"
+import { validateMainInDist } from "../utils/validate-main-in-dist"
 
 export const registerTranspile = (program: Command) => {
   program
@@ -18,6 +19,8 @@ export const registerTranspile = (program: Command) => {
           })
 
         const distDir = path.join(projectDir, "dist")
+
+        validateMainInDist(projectDir, distDir)
 
         console.log("Transpiling entry file...")
         const entryFile = mainEntrypoint || circuitFiles[0]
