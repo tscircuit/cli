@@ -127,11 +127,13 @@ export const createStaticAssetPlugin = ({
       let modifiedCode = code
       for (const [absolutePath, relativePath] of copiedAssets.entries()) {
         const escapedPath = absolutePath.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")
-        const importRegex = new RegExp(
-          `(import\\s+[^'"]*from\\s+['"])${escapedPath}(['"])`,
-          "g",
-        )
-        modifiedCode = modifiedCode.replace(importRegex, `$1${relativePath}$2`)
+        const patterns = [
+          new RegExp(`(import\\s+[^'"]*from\\s+['"])${escapedPath}(['"])`, "g"),
+          new RegExp(`(require\\s*\\(['"])${escapedPath}(['"]\\))`, "g"),
+        ]
+        for (const pattern of patterns) {
+          modifiedCode = modifiedCode.replace(pattern, `$1${relativePath}$2`)
+        }
       }
       return { code: modifiedCode }
     },
