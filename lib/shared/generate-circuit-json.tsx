@@ -6,7 +6,7 @@ import Debug from "debug"
 import type { PlatformConfig } from "@tscircuit/props"
 import { abbreviateStringifyObject } from "lib/utils/abbreviate-stringify-object"
 import { importFromUserLand } from "./importFromUserLand"
-
+import { getPlatformConfig } from "@tscircuit/eval/platform-config"
 const debug = Debug("tsci:generate-circuit-json")
 
 const ALLOWED_FILE_EXTENSIONS = [
@@ -18,6 +18,7 @@ const ALLOWED_FILE_EXTENSIONS = [
   ".txt",
   ".md",
   ".obj",
+  ".kicad_mod",
 ]
 
 type GenerateCircuitJsonOptions = {
@@ -48,8 +49,26 @@ export async function generateCircuitJson({
   ;(globalThis as any).React = React
   const userLandTscircuit = await importFromUserLand("tscircuit")
 
+  // Get default platform config with KiCad parsing support
+  // const { getPlatformConfig } = await import("@tscircuit/eval")
+  const defaultPlatformConfig = {
+    ...getPlatformConfig(),
+    projectBaseUrl: "file://",
+  }
+
+  // Merge with user-provided platform config
+  const mergedPlatformConfig: PlatformConfig = {
+    ...defaultPlatformConfig,
+    ...platformConfig,
+    // Merge nested objects
+    footprintFileParserMap: {
+      ...defaultPlatformConfig.footprintFileParserMap,
+      ...platformConfig?.footprintFileParserMap,
+    },
+  }
+
   const runner = new userLandTscircuit.RootCircuit({
-    platform: platformConfig,
+    platform: mergedPlatformConfig,
   })
   const absoluteFilePath = path.isAbsolute(filePath)
     ? filePath
@@ -78,6 +97,12 @@ export async function generateCircuitJson({
       dirPath: projectDir,
       fileMatchFn: (filePath) => {
         const normalizedFilePath = filePath.replace(/\\/g, "/")
+
+        // Allow .kicad_mod files from node_modules
+        if (normalizedFilePath.endsWith(".kicad_mod")) {
+          return true
+        }
+
         if (normalizedFilePath.includes("node_modules/")) return false
         if (normalizedFilePath.includes("dist/")) return false
         if (normalizedFilePath.includes("build/")) return false

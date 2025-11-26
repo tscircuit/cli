@@ -44,7 +44,7 @@
     "jszip": "^3.10.1",
     "jwt-decode": "^4.0.0",
     "kicad-component-converter": "^0.1.22",
-    "kicadts": "^0.0.9",
+    "kicadts": "^0.0.22",
     "kleur": "^4.1.5",
     "ky": "^1.7.4",
     "looks-same": "^9.0.1",
@@ -57,7 +57,7 @@
     "semver": "^7.6.3",
     "sharp": "0.32.6",
     "tempy": "^3.1.0",
-    "tscircuit": "^0.0.880-libonly",
+    "tscircuit": "^0.0.956",
     "tsx": "^4.7.1",
     "typed-ky": "^0.0.4",
     "zod": "3"
