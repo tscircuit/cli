@@ -10,6 +10,7 @@ import { convertCircuitJsonToGltf } from "circuit-json-to-gltf"
 import { renderGLTFToPNGBufferFromGLBBuffer } from "poppygl"
 import { generateCircuitJson } from "lib/shared/generate-circuit-json"
 import type { PlatformConfig } from "@tscircuit/props"
+import { getCompletePlatformConfig } from "lib/shared/get-complete-platform-config"
 import { findBoardFiles } from "lib/shared/find-board-files"
 import {
   DEFAULT_IGNORED_PATTERNS,
@@ -83,9 +84,11 @@ export const snapshotProject = async ({
     let schSvg: string
 
     try {
+      const completePlatformConfig = getCompletePlatformConfig(platformConfig)
+
       const result = await generateCircuitJson({
         filePath: file,
-        platformConfig,
+        platformConfig: completePlatformConfig,
       })
       circuitJson = result.circuitJson
     } catch (error) {

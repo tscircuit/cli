@@ -4,6 +4,7 @@ import kleur from "kleur"
 import { generateCircuitJson } from "lib/shared/generate-circuit-json"
 import { analyzeCircuitJson } from "lib/shared/circuit-json-diagnostics"
 import type { PlatformConfig } from "@tscircuit/props"
+import { getCompletePlatformConfig } from "lib/shared/get-complete-platform-config"
 
 export type BuildFileOutcome = {
   ok: boolean
@@ -22,9 +23,14 @@ export const buildFile = async (
 ): Promise<BuildFileOutcome> => {
   try {
     console.log("Generating circuit JSON...")
+
+    const completePlatformConfig = getCompletePlatformConfig(
+      options?.platformConfig,
+    )
+
     const result = await generateCircuitJson({
       filePath: input,
-      platformConfig: options?.platformConfig,
+      platformConfig: completePlatformConfig,
     })
     fs.mkdirSync(path.dirname(output), { recursive: true })
     fs.writeFileSync(output, JSON.stringify(result.circuitJson, null, 2))
