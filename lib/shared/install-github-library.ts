@@ -4,6 +4,8 @@ import { ensurePackageJson } from "../kicad/ensure-package-json"
 import { installPackage } from "../kicad/install-package"
 import { generateKicadTypesForPackage } from "../kicad/generate-types"
 import { extractPackageName } from "lib/kicad/extract-package-name"
+import * as fs from "node:fs"
+import * as path from "node:path"
 
 /**
  * Install a package as a KiCad library
@@ -20,6 +22,12 @@ export async function installKicadLibrary(packageSpec: string) {
 
   // Ensure package.json exists
   ensurePackageJson(projectRoot)
+
+  // Create .npmrc if it doesn't exist (needed for resolving tscircuit dependencies)
+  const npmrcPath = path.join(projectRoot, ".npmrc")
+  if (!fs.existsSync(npmrcPath)) {
+    fs.writeFileSync(npmrcPath, "@tsci:registry=https://npm.tscircuit.com")
+  }
 
   // Install the package using bun add
   console.log(kleur.gray(`Running: bun add ${packageSpec}`))
