@@ -13,7 +13,8 @@ export async function removePackage(
   componentPath: string,
   projectDir: string = process.cwd(),
 ) {
-  const packageName = normalizePackageNameToNpm(componentPath)
+  const normalizedName = normalizePackageNameToNpm(componentPath)
+  const packageName = normalizedName || componentPath
 
   console.log(`Removing ${packageName}...`)
 
