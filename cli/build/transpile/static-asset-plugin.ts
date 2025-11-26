@@ -30,8 +30,9 @@ export const createStaticAssetPlugin = ({
   baseUrl?: string
   pathMappings?: Record<string, string[]>
 }) => {
-  const copiedAssets = new Map<string, string>()
-  const sourceToRelative = new Map<string, string>() // Maps original source to relative output path
+  const sourceToRelative = new Map<string, string>()
+  const absoluteToRelative = new Map<string, string>()
+
   const resolvedBaseUrl = baseUrl ?? projectDir
   const resolvedPathMappings = pathMappings ?? {}
 
@@ -99,8 +100,11 @@ export const createStaticAssetPlugin = ({
 
       if (!resolvedPath) return null
 
-      // Copy the asset and compute hashed filename
-      if (!copiedAssets.has(resolvedPath)) {
+      // Check if we've already processed this absolute path
+      let relativePath = absoluteToRelative.get(resolvedPath)
+
+      if (!relativePath) {
+        // First time seeing this file - copy it with a hashed filename
         const assetDir = path.join(outputDir, "assets")
         fs.mkdirSync(assetDir, { recursive: true })
 
@@ -113,12 +117,13 @@ export const createStaticAssetPlugin = ({
         const outputPath = path.join(assetDir, fileName)
 
         fs.writeFileSync(outputPath, fileBuffer)
-        const relativePath = `./assets/${fileName}`
-        copiedAssets.set(resolvedPath, relativePath)
+        relativePath = `./assets/${fileName}`
+        absoluteToRelative.set(resolvedPath, relativePath)
       }
 
-      // Store the mapping from original source to relative path
-      sourceToRelative.set(source, copiedAssets.get(resolvedPath)!)
+      // Store the mapping from this specific import source to the relative path
+      // (multiple import sources might map to the same file)
+      sourceToRelative.set(source, relativePath)
 
       // Mark as external so rollup preserves the import statement
       return {
@@ -127,12 +132,13 @@ export const createStaticAssetPlugin = ({
       }
     },
     renderChunk(code: string) {
-      // Replace both original sources and absolute paths with hashed relative paths
       let modifiedCode = code
 
-      // First, try replacing based on original source paths (what Rollup preserves as external)
+      // First pass: Replace based on original source paths (e.g., "@assets/chip.glb")
       for (const [source, relativePath] of sourceToRelative.entries()) {
+        // Escape special regex characters in the source path
         const escapedSource = source.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")
+        // Match both ESM (import) and CommonJS (require) patterns
         const patterns = [
           new RegExp(
             `(import\\s+[^'"]*from\\s+['"])${escapedSource}(['"])`,
@@ -145,8 +151,8 @@ export const createStaticAssetPlugin = ({
         }
       }
 
-      // Also try replacing absolute paths (in case Rollup uses those)
-      for (const [absolutePath, relativePath] of copiedAssets.entries()) {
+      // Second pass: Replace absolute paths (Rollup sometimes outputs these)
+      for (const [absolutePath, relativePath] of absoluteToRelative.entries()) {
         const escapedPath = absolutePath.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")
         const patterns = [
           new RegExp(`(import\\s+[^'"]*from\\s+['"])${escapedPath}(['"])`, "g"),
