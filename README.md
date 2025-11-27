@@ -43,20 +43,24 @@ Commands:
                               specified directory (or current directory if none
                               is provided)
   dev [options] [file]        Start development server for a package
-  clone [options] <package>   Clone a package from the registry
-  push [options] [file]       Save snippet code to Registry API
+  clone [options] [package]   Clone a package from the registry
+  push [options] [file]       Save package code to Registry API
   auth                        Login/logout
   login                       Login to tscircuit registry
   logout                      Logout from tscircuit registry
   config                      Manage tscircuit CLI configuration
   export [options] <file>     Export tscircuit code to various formats
   build [options] [file]      Run tscircuit eval and output circuit json
-  add <component>             Add a tscircuit component package to your project
+  transpile [file]            Transpile TypeScript/TSX to JavaScript (ESM,
+                              CommonJS, and type declarations)
+  add <packageSpec>           Add a tscircuit component package to your project
   remove <component>          Remove a tscircuit component package from your
                               project
   snapshot [options] [path]   Generate schematic and PCB snapshots (add --3d for
                               3d preview)
   setup                       Setup utilities like GitHub Actions
+  install                     Install project dependencies and generate
+                              package.json if needed
   upgrade                     Upgrade CLI to the latest version
   search [options] <query>    Search for footprints, CAD models or packages in
                               the tscircuit ecosystem

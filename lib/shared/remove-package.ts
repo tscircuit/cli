@@ -1,5 +1,5 @@
 import { getPackageManager } from "./get-package-manager"
-import { normalizePackageNameToNpm } from "./add-package"
+import { normalizeTscircuitPackageName } from "./add-package"
 import path from "node:path"
 import fs from "node:fs"
 /**
@@ -13,7 +13,8 @@ export async function removePackage(
   componentPath: string,
   projectDir: string = process.cwd(),
 ) {
-  const packageName = normalizePackageNameToNpm(componentPath)
+  const normalizedName = normalizeTscircuitPackageName(componentPath)
+  const packageName = normalizedName || componentPath
 
   console.log(`Removing ${packageName}...`)
 
