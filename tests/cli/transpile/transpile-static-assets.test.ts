@@ -63,7 +63,7 @@ test("transpile copies static assets and preserves glb_model_url", async () => {
     const cadComponent = circuitJson.find(
       (element: any) => element.type === "cad_component",
     )
-    const expectedAssetPath = `./assets/${copiedGlb}`
+    const expectedAssetPath = path.join(tmpDir, "dist", "assets", copiedGlb!)
     const cadComponentWithGlb = cadComponent as
       | { glb_model_url?: string; model_glb_url?: string }
       | undefined

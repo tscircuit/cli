@@ -117,8 +117,7 @@ export default AliasedBoard
 
   expect(esmContent).toMatchInlineSnapshot(`
     "import { jsx } from 'react/jsx-runtime';
-
-    var cadModelUrl = "./assets/chip-e043b555.glb";
+    import cadModelUrl from './assets/chip-e043b555.glb';
 
     const AliasedBoard = () => (jsx("board", { width: "15mm", height: "15mm", children: jsx("chip", { name: "U1", footprint: "soic8", cadModel: jsx("cadmodel", { modelUrl: cadModelUrl }) }) }));
 
@@ -185,6 +184,6 @@ export default () => <AliasedBoard />
     .replace(/\\/g, "/")
 
   expect(normalizedModelGlbUrl).toMatchInlineSnapshot(
-    `"./assets/chip-e043b555.glb"`,
+    `"<tmp>/aliased-glb-lib/dist/assets/chip-e043b555.glb"`,
   )
 }, 60_000)
