@@ -35,12 +35,8 @@ if (!useGlobal) {
   } catch {}
 }
 
-const { status } = spawnSync(
-  process.execPath,
-  [mainPath, ...args],
-  {
-    stdio: "inherit",
-  },
-)
+const { status } = spawnSync(process.execPath, [mainPath, ...args], {
+  stdio: "inherit",
+})
 
 process.exit(status ?? 0)
