@@ -53,7 +53,7 @@ Commands:
   build [options] [file]      Run tscircuit eval and output circuit json
   transpile [file]            Transpile TypeScript/TSX to JavaScript (ESM,
                               CommonJS, and type declarations)
-  add <component>             Add a tscircuit component package to your project
+  add <packageSpec>           Add a tscircuit component package to your project
   remove <component>          Remove a tscircuit component package from your
                               project
   snapshot [options] [path]   Generate schematic and PCB snapshots (add --3d for
