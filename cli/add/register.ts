@@ -5,10 +5,13 @@ export const registerAdd = (program: Command) => {
   program
     .command("add")
     .description("Add a tscircuit component package to your project")
-    .argument("<component>", "Component to add (e.g. author/component-name)")
-    .action(async (componentPath: string) => {
+    .argument(
+      "<packageSpec>",
+      "Package to add (e.g. package-name, author/component, https://github.com/user/repo, package@version)",
+    )
+    .action(async (packageSpec: string) => {
       try {
-        await addPackage(componentPath)
+        await addPackage(packageSpec)
       } catch (error) {
         process.exit(1)
       }

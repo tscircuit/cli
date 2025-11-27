@@ -5,46 +5,80 @@ import { getPackageManager } from "./get-package-manager"
 import { resolveTarballUrlFromRegistry } from "./resolve-tarball-url-from-registry"
 
 /**
- * Normalizes a tscircuit component path to an npm package name.
- * @param componentPath - The component identifier (e.g., author/name, @tsci/author.name)
- * @returns The normalized npm package name.
+ * Checks if a package spec is a tscircuit component format and normalizes it.
+ * Returns null if it's not a tscircuit component format (e.g., regular npm package, URL, etc.)
+ * @param packageSpec - The package specifier
+ * @returns The normalized @tsci scoped package name or null if not a tscircuit component
  */
-export function normalizePackageNameToNpm(componentPath: string): string {
-  if (componentPath.startsWith("@tscircuit/")) {
-    return componentPath
-  } else if (componentPath.startsWith("@tsci/")) {
-    return componentPath
-  } else {
-    const match = componentPath.match(/^([^/.]+)[/.](.+)$/)
-    if (!match) {
-      throw new Error(
-        "Invalid component path. Use format: author/component-name, author.component-name, @tscircuit/package-name, or @tsci/author.component-name",
-      )
-    }
+export function normalizeTscircuitPackageName(
+  packageSpec: string,
+): string | null {
+  // Already a tscircuit scoped package
+  if (
+    packageSpec.startsWith("@tscircuit/") ||
+    packageSpec.startsWith("@tsci/")
+  ) {
+    return packageSpec
+  }
+
+  // Check for URLs or git repos - these are not tscircuit components
+  if (
+    packageSpec.startsWith("http://") ||
+    packageSpec.startsWith("https://") ||
+    packageSpec.startsWith("git+") ||
+    packageSpec.startsWith("git://")
+  ) {
+    return null
+  }
+
+  // Check for npm package with version (e.g., lodash@4.17.21) - not a tscircuit component
+  if (packageSpec.includes("@") && !packageSpec.startsWith("@")) {
+    return null
+  }
+
+  // Check for scoped packages that aren't tscircuit
+  if (
+    packageSpec.startsWith("@") &&
+    !packageSpec.startsWith("@tsci/") &&
+    !packageSpec.startsWith("@tscircuit/")
+  ) {
+    return null
+  }
+
+  // Try to match author/component or author.component format
+  const match = packageSpec.match(/^([^/.@]+)[/.]([^/.@]+)$/)
+  if (match) {
     const [, author, componentName] = match
     return `@tsci/${author}.${componentName}`
   }
+
+  // Anything else is treated as a regular package name
+  return null
 }
 
 /**
- * Installs a tscircuit component package.
- * Handles different package name formats, ensures .npmrc is configured,
- * and uses the appropriate package manager.
+ * Adds a package to the project (works like bun add).
+ * Detects tscircuit component formats and handles @tsci registry setup.
+ * All other package specs are passed directly to the package manager.
  *
- * @param componentPath - The component identifier (e.g., author/name, @tsci/author.name)
+ * @param packageSpec - Any package specifier (e.g., package-name, author/component, https://github.com/user/repo, package@version)
  * @param projectDir - The root directory of the project (defaults to process.cwd())
  */
 export async function addPackage(
-  componentPath: string,
+  packageSpec: string,
   projectDir: string = process.cwd(),
 ) {
-  const packageName = normalizePackageNameToNpm(componentPath)
+  // Check if this is a tscircuit component format
+  const normalizedName = normalizeTscircuitPackageName(packageSpec)
 
-  console.log(`Adding ${packageName}...`)
+  // Determine what to display and what to install
+  const displayName = normalizedName || packageSpec
+  let installTarget = normalizedName || packageSpec
 
-  let installTarget = packageName
+  console.log(`Adding ${displayName}...`)
 
-  if (packageName.startsWith("@tsci/")) {
+  // Only handle @tsci registry setup if it's a tscircuit component
+  if (normalizedName && normalizedName.startsWith("@tsci/")) {
     const npmrcPath = path.join(projectDir, ".npmrc")
     const npmrcContent = fs.existsSync(npmrcPath)
       ? fs.readFileSync(npmrcPath, "utf-8")
@@ -77,19 +111,19 @@ export async function addPackage(
     }
 
     if (!hasTsciRegistry) {
-      installTarget = await resolveTarballUrlFromRegistry(packageName)
+      installTarget = await resolveTarballUrlFromRegistry(normalizedName)
     }
   }
+  // For all other cases (URLs, scoped packages, regular npm packages), use packageSpec as-is
 
   // Install the package using the detected package manager
   const packageManager = getPackageManager()
   try {
     packageManager.install({ name: installTarget, cwd: projectDir })
-    console.log(`Added ${packageName} successfully.`)
+    console.log(`Added ${displayName} successfully.`)
   } catch (error) {
     const errorMessage = error instanceof Error ? error.message : String(error)
-    console.error(`Failed to add ${packageName}:`, errorMessage)
-    // Re-throw the error so the caller can handle it
-    throw new Error(`Failed to add ${packageName}: ${errorMessage}`)
+    console.error(`Failed to add ${displayName}:`, errorMessage)
+    throw new Error(`Failed to add ${displayName}: ${errorMessage}`)
   }
 }
