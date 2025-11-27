@@ -1,6 +1,7 @@
 import { getCliTestFixture } from "../../fixtures/get-cli-test-fixture"
 import { test, expect } from "bun:test"
 import { join } from "node:path"
+import { existsSync } from "node:fs"
 
 test("tsci add - adds package with version", async () => {
   const { tmpDir, runCommand } = await getCliTestFixture()
@@ -24,4 +25,8 @@ test("tsci add - adds package with version", async () => {
     await Bun.file(join(tmpDir, "package.json")).text(),
   )
   expect(pkgJson.dependencies["zod"]).toBe("3.22.0")
+
+  // Verify package was actually installed in node_modules
+  const nodeModulesPath = join(tmpDir, "node_modules", "zod")
+  expect(existsSync(nodeModulesPath)).toBe(true)
 })

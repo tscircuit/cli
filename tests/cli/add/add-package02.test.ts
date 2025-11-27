@@ -1,6 +1,7 @@
 import { getCliTestFixture } from "../../fixtures/get-cli-test-fixture"
 import { test, expect } from "bun:test"
 import { join } from "node:path"
+import { existsSync } from "node:fs"
 
 test("tsci add - adds package from GitHub URL", async () => {
   const { tmpDir, runCommand } = await getCliTestFixture()
@@ -26,4 +27,8 @@ test("tsci add - adds package from GitHub URL", async () => {
     await Bun.file(join(tmpDir, "package.json")).text(),
   )
   expect(pkgJson.dependencies["lodash"]).toBeDefined()
+
+  // Verify package was actually installed in node_modules
+  const nodeModulesPath = join(tmpDir, "node_modules", "lodash")
+  expect(existsSync(nodeModulesPath)).toBe(true)
 })
