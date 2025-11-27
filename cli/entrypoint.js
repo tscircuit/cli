@@ -5,17 +5,6 @@ import { createRequire } from "node:module"
 import { dirname, join } from "node:path"
 import { fileURLToPath } from "node:url"
 
-function commandExists(cmd) {
-  try {
-    const res = spawnSync(cmd, ["--version"], { stdio: "ignore" })
-    return res.status === 0
-  } catch {
-    return false
-  }
-}
-
-const runner = commandExists("bun") ? "bun" : "tsx"
-
 const __dirname = dirname(fileURLToPath(import.meta.url))
 const packageRoot = join(__dirname, "..")
 const require = createRequire(import.meta.url)
@@ -41,8 +30,12 @@ try {
   }
 } catch {}
 
-const { status } = spawnSync(runner, [mainPath, ...process.argv.slice(2)], {
-  stdio: "inherit",
-})
+const { status } = spawnSync(
+  process.execPath,
+  [mainPath, ...process.argv.slice(2)],
+  {
+    stdio: "inherit",
+  },
+)
 
 process.exit(status ?? 0)
