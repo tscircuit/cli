@@ -37,7 +37,7 @@ if (!useGlobal) {
 
 const { status } = spawnSync(
   process.execPath,
-  [mainPath, ...process.argv.slice(2)],
+  [mainPath, ...args],
   {
     stdio: "inherit",
   },
