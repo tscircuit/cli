@@ -8,9 +8,11 @@ import { resolveTarballUrlFromRegistry } from "./resolve-tarball-url-from-regist
  * Checks if a package spec is a tscircuit component format and normalizes it.
  * Returns null if it's not a tscircuit component format (e.g., regular npm package, URL, etc.)
  * @param packageSpec - The package specifier
- * @returns The normalized npm package name or null if not a tscircuit component
+ * @returns The normalized @tsci scoped package name or null if not a tscircuit component
  */
-export function normalizePackageNameToNpm(packageSpec: string): string | null {
+export function normalizeTscircuitPackageName(
+  packageSpec: string,
+): string | null {
   // Already a tscircuit scoped package
   if (
     packageSpec.startsWith("@tscircuit/") ||
@@ -67,7 +69,7 @@ export async function addPackage(
   projectDir: string = process.cwd(),
 ) {
   // Check if this is a tscircuit component format
-  const normalizedName = normalizePackageNameToNpm(packageSpec)
+  const normalizedName = normalizeTscircuitPackageName(packageSpec)
 
   // Determine what to display and what to install
   const displayName = normalizedName || packageSpec

@@ -4,7 +4,7 @@ import { addPackage } from "lib/shared/add-package"
 export const registerAdd = (program: Command) => {
   program
     .command("add")
-    .description("Add a package to your project (works like bun add)")
+    .description("Add a tscircuit component package to your project")
     .argument(
       "<packageSpec>",
       "Package to add (e.g. package-name, author/component, https://github.com/user/repo, package@version)",
