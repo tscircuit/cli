@@ -5,6 +5,7 @@ import { setupTsciProject } from "lib/shared/setup-tsci-packages"
 import kleur from "kleur"
 import * as fs from "node:fs"
 import * as path from "node:path"
+import prompts from "prompts"
 import { handleExistingDirectory } from "./handle-existing-directory"
 
 const getCommonDirectoryPrefix = (paths: string[]) => {
@@ -51,7 +52,7 @@ export const cloneBugReport = async ({
     process.exit(1)
   }
 
-  const dirPath = path.resolve(`bug-report-${trimmedBugReportId}`)
+  let dirPath = path.resolve(`bug-report-${trimmedBugReportId}`)
   await handleExistingDirectory(dirPath)
 
   const ky = getRegistryApiKy()
@@ -109,6 +110,38 @@ export const cloneBugReport = async ({
     fs.mkdirSync(path.dirname(fullPath), { recursive: true })
     const fileContent = await entry.async("nodebuffer")
     fs.writeFileSync(fullPath, fileContent)
+  }
+
+  const packageJsonPath = path.join(dirPath, "package.json")
+  if (fs.existsSync(packageJsonPath)) {
+    try {
+      const packageJson = JSON.parse(fs.readFileSync(packageJsonPath, "utf-8"))
+      const packageName = packageJson?.name
+
+      if (typeof packageName === "string" && packageName.trim()) {
+        const sanitizedName = packageName.replace(/[^a-zA-Z0-9]/g, "_")
+        const suggestedDirPath = path.resolve(
+          `${sanitizedName}_${trimmedBugReportId.slice(7)}`,
+        )
+
+        if (suggestedDirPath !== dirPath) {
+          const response = await prompts({
+            type: "confirm",
+            name: "rename",
+            initial: true,
+            message: `Rename the directory to "${path.basename(suggestedDirPath)}"?`,
+          })
+
+          if (response.rename) {
+            await handleExistingDirectory(suggestedDirPath)
+            fs.renameSync(dirPath, suggestedDirPath)
+            dirPath = suggestedDirPath
+          }
+        }
+      }
+    } catch (error) {
+      console.warn("Unable to read package name for renaming:", error)
+    }
   }
 
   fs.writeFileSync(
