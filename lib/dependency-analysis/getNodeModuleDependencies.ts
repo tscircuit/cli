@@ -444,7 +444,6 @@ const RUNTIME_PROVIDED_PACKAGES = new Set([
   "react",
   "react-dom",
   "react/jsx-runtime",
-  "react/jsx-dev-runtime",
   "tscircuit",
   "@tscircuit/core",
   "@tscircuit/props",
