@@ -448,9 +448,6 @@ const RUNTIME_PROVIDED_PACKAGES = new Set([
   "tscircuit",
   "@tscircuit/core",
   "@tscircuit/props",
-  "@tscircuit/mm",
-  "circuit-json",
-  "zod",
 ])
 
 /**
@@ -499,7 +496,7 @@ export function getAllNodeModuleFilePaths(
     // Check if this is a local package
     const isLocalPackage = localPackages.has(packageName)
 
-    // Skip runtime-provided packages UNLESS they are local packages
+    // Skip pre-supplied packages UNLESS they are local packages being developed
     if (isRuntimeProvidedPackage(packageName) && !isLocalPackage) {
       continue
     }
