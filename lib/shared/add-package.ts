@@ -122,7 +122,7 @@ export async function addPackage(
   try {
     packageManager.install({ name: installTarget, cwd: projectDir })
     console.log(`Added ${displayName} successfully.`)
-    
+
     // After installation, check if it's a KiCad library and setup types if needed
     await detectAndSetupKicadLibrary(packageSpec, projectDir)
   } catch (error) {

@@ -23,7 +23,9 @@ test(
       "tsci add https://github.com/espressif/kicad-libraries",
     )
 
-    expect(stdout).toContain("Adding https://github.com/espressif/kicad-libraries")
+    expect(stdout).toContain(
+      "Adding https://github.com/espressif/kicad-libraries",
+    )
     expect(stdout).toContain("successfully")
 
     // Verify package.json was updated

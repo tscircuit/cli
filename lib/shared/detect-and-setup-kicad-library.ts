@@ -10,7 +10,9 @@ import { generateTsConfig } from "./generate-ts-config"
 export function extractPackageName(packageSpec: string): string {
   // GitHub URL: https://github.com/user/repo or https://github.com/user/repo.git
   if (packageSpec.startsWith("http")) {
-    const match = packageSpec.match(/github\.com\/([^/]+)\/([^/]+?)(?:\.git)?(?:[/#]|$)/)
+    const match = packageSpec.match(
+      /github\.com\/([^/]+)\/([^/]+?)(?:\.git)?(?:[/#]|$)/,
+    )
     if (match) {
       return match[2].replace(/\.git$/, "")
     }
@@ -26,9 +28,9 @@ export function extractPackageName(packageSpec: string): string {
 
   // Scoped package with version: @scope/package@version
   if (packageSpec.startsWith("@")) {
-    const match = packageSpec.match(/@[^/]+\/([^@]+)/)
+    const match = packageSpec.match(/@([^/]+)\/([^@]+)/)
     if (match) {
-      return match[0].split("@")[0] + "/" + match[1]
+      return `@${match[1]}/${match[2]}`
     }
   }
 
@@ -49,37 +51,45 @@ export async function detectAndSetupKicadLibrary(
   packageSpec: string,
   projectDir: string = process.cwd(),
 ): Promise<boolean> {
-  const packageName = extractPackageName(packageSpec)
-  const nodeModulesPath = path.join(projectDir, "node_modules", packageName)
+  try {
+    const packageName = extractPackageName(packageSpec)
+    const nodeModulesPath = path.join(projectDir, "node_modules", packageName)
 
-  // Check if package exists in node_modules
-  if (!fs.existsSync(nodeModulesPath)) {
+    // Check if package exists in node_modules
+    if (!fs.existsSync(nodeModulesPath)) {
+      return false
+    }
+
+    // Look for .kicad_mod files
+    const kicadModFiles = globbySync(["**/*.kicad_mod"], {
+      cwd: nodeModulesPath,
+      absolute: false,
+    })
+
+    if (kicadModFiles.length === 0) {
+      return false
+    }
+
+    console.log(
+      `Detected ${kicadModFiles.length} KiCad footprint file(s), generating types...`,
+    )
+
+    // Generate TypeScript type definitions
+    await generateKicadTypes(projectDir, packageName, kicadModFiles)
+
+    // Setup tsconfig.json
+    await setupTsConfig(projectDir)
+
+    console.log(`✓ Generated types for KiCad library: ${packageName}`)
+
+    return true
+  } catch (error) {
+    // Silently fail if KiCad detection has issues - don't break the add command
+    console.warn(
+      `Warning: Failed to detect/setup KiCad library: ${error instanceof Error ? error.message : String(error)}`,
+    )
     return false
   }
-
-  // Look for .kicad_mod files
-  const kicadModFiles = globbySync(["**/*.kicad_mod"], {
-    cwd: nodeModulesPath,
-    absolute: false,
-  })
-
-  if (kicadModFiles.length === 0) {
-    return false
-  }
-
-  console.log(
-    `Detected ${kicadModFiles.length} KiCad footprint file(s), generating types...`,
-  )
-
-  // Generate TypeScript type definitions
-  await generateKicadTypes(projectDir, packageName, kicadModFiles)
-
-  // Setup tsconfig.json
-  await setupTsConfig(projectDir)
-
-  console.log(`✓ Generated types for KiCad library: ${packageName}`)
-
-  return true
 }
 
 /**
