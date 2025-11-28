@@ -399,6 +399,34 @@ function walkDirectory(dir: string, excludedDirs: Set<string>): string[] {
   return files
 }
 
+const RUNTIME_PROVIDED_PACKAGES = new Set([
+  "react",
+  "react-dom",
+  "react/jsx-runtime",
+  "react/jsx-dev-runtime",
+  "tscircuit",
+  "zod",
+])
+
+/**
+ * Check if a package is provided by the runtime and should not be uploaded
+ */
+function isRuntimeProvidedPackage(packageName: string): boolean {
+  // Check exact match
+  if (RUNTIME_PROVIDED_PACKAGES.has(packageName)) {
+    return true
+  }
+
+  // Check if it's a subpath of a runtime package
+  for (const runtimePkg of RUNTIME_PROVIDED_PACKAGES) {
+    if (packageName.startsWith(`${runtimePkg}/`)) {
+      return true
+    }
+  }
+
+  return false
+}
+
 export function getAllNodeModuleFilePaths(
   entryFilePath: string,
   projectDir: string,
@@ -423,18 +451,24 @@ export function getAllNodeModuleFilePaths(
   for (const [importPath] of dependencies.entries()) {
     const packageName = getPackageNameFromImport(importPath)
 
-    // Skip if not a local package or already processed
-    if (!localPackages.has(packageName) || processedPackages.has(packageName)) {
+    // Check if this is a local package
+    const isLocalPackage = localPackages.has(packageName)
+
+    // Skip runtime-provided packages UNLESS they are local packages
+    if (isRuntimeProvidedPackage(packageName) && !isLocalPackage) {
       continue
     }
 
-    processedPackages.add(packageName)
-    const packageDir = path.join(projectDir, "node_modules", packageName)
+    // Upload local packages and their dependencies
+    if (!processedPackages.has(packageName)) {
+      processedPackages.add(packageName)
+      const packageDir = path.join(projectDir, "node_modules", packageName)
 
-    // Collect all files from the local package directory
-    if (fs.existsSync(packageDir)) {
-      const packageFiles = collectLocalPackageFiles(packageDir)
-      packageFiles.forEach((file) => allFiles.add(file))
+      // Collect all files from the package directory
+      if (fs.existsSync(packageDir)) {
+        const packageFiles = collectLocalPackageFiles(packageDir)
+        packageFiles.forEach((file) => allFiles.add(file))
+      }
     }
   }
 
