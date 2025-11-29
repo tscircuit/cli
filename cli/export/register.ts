@@ -32,10 +32,12 @@ export const registerExport = (program: Command) => {
       ) => {
         const formatOption = options.format ?? "json"
 
-        const platformConfig: PlatformConfig | undefined =
-          options.disablePartsEngine === true
+        const platformConfig: PlatformConfig = {
+          projectBaseUrl: `file://${process.cwd()}`,
+          ...(options.disablePartsEngine === true
             ? { partsEngineDisabled: true }
-            : undefined
+            : {}),
+        }
 
         if (formatOption === "spice") {
           const { circuitJson } = await generateCircuitJson({

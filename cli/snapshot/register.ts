@@ -36,9 +36,12 @@ export const registerSnapshot = (program: Command) => {
           schematicOnly: options.schematicOnly ?? false,
           forceUpdate: options.forceUpdate ?? false,
           filePaths: target ? [target] : [],
-          platformConfig: options.disablePartsEngine
-            ? { partsEngineDisabled: true }
-            : undefined,
+          platformConfig: {
+            projectBaseUrl: `file://${process.cwd()}`,
+            ...(options.disablePartsEngine
+              ? { partsEngineDisabled: true }
+              : {}),
+          },
           onExit: (code) => process.exit(code),
           onError: (msg) => console.error(msg),
           onSuccess: (msg) => console.log(msg),

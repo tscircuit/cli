@@ -68,9 +68,9 @@ export const registerBuild = (program: Command) => {
             })
 
           const platformConfig: PlatformConfig | undefined = (() => {
-            if (!options?.disablePcb && !options?.disablePartsEngine) return
-
-            const config: PlatformConfig = {}
+            const config: PlatformConfig = {
+              projectBaseUrl: `file://${projectDir}`,
+            }
 
             if (options?.disablePcb) {
               config.pcbDisabled = true

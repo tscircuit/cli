@@ -16,10 +16,12 @@ export const registerSimulate = (program: Command) => {
     .argument("<file>", "Path to tscircuit tsx or circuit json file")
     .option("--disable-parts-engine", "Disable the parts engine")
     .action(async (file: string, options: { disablePartsEngine?: boolean }) => {
-      const platformConfig: PlatformConfig | undefined =
-        options.disablePartsEngine === true
+      const platformConfig: PlatformConfig = {
+        projectBaseUrl: `file://${process.cwd()}`,
+        ...(options.disablePartsEngine === true
           ? { partsEngineDisabled: true }
-          : undefined
+          : {}),
+      }
 
       const { circuitJson } = await generateCircuitJson({
         filePath: file,
