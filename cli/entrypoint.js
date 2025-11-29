@@ -22,26 +22,31 @@ const require = createRequire(import.meta.url)
 
 const globalPackageJson = require("../package.json")
 
+const useGlobal = process.argv.includes("--use-global")
+const args = process.argv.slice(2).filter((arg) => arg !== "--use-global")
+
 let mainPath = join(packageRoot, "dist/main.js")
 
-try {
-  const localRequire = createRequire(join(process.cwd(), "package.json"))
-  const localPackageJsonPath = localRequire.resolve(
-    "@tscircuit/cli/package.json",
-  )
-  const localPackageJson = localRequire(localPackageJsonPath)
-  const localPackageRoot = dirname(localPackageJsonPath)
-  const localMainPath = join(localPackageRoot, "dist/main.js")
-
-  if (localPackageRoot !== packageRoot && existsSync(localMainPath)) {
-    console.warn(
-      `Using local @tscircuit/cli v${localPackageJson.version} instead of global v${globalPackageJson.version}`,
+if (!useGlobal) {
+  try {
+    const localRequire = createRequire(join(process.cwd(), "package.json"))
+    const localPackageJsonPath = localRequire.resolve(
+      "@tscircuit/cli/package.json",
     )
-    mainPath = localMainPath
-  }
-} catch {}
+    const localPackageJson = localRequire(localPackageJsonPath)
+    const localPackageRoot = dirname(localPackageJsonPath)
+    const localMainPath = join(localPackageRoot, "dist/main.js")
 
-const { status } = spawnSync(runner, [mainPath, ...process.argv.slice(2)], {
+    if (localPackageRoot !== packageRoot && existsSync(localMainPath)) {
+      console.warn(
+        `Using local @tscircuit/cli v${localPackageJson.version} instead of global v${globalPackageJson.version}`,
+      )
+      mainPath = localMainPath
+    }
+  } catch {}
+}
+
+const { status } = spawnSync(runner, [mainPath, ...args], {
   stdio: "inherit",
 })
 

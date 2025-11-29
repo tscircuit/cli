@@ -45,6 +45,8 @@ Commands:
   dev [options] [file]        Start development server for a package
   clone [options] [package]   Clone a package from the registry
   push [options] [file]       Save package code to Registry API
+  clone [options] [package]   Clone a package from the registry
+  push [options] [file]       Save package code to Registry API
   auth                        Login/logout
   login                       Login to tscircuit registry
   logout                      Logout from tscircuit registry
@@ -59,6 +61,8 @@ Commands:
   snapshot [options] [path]   Generate schematic and PCB snapshots (add --3d for
                               3d preview)
   setup                       Setup utilities like GitHub Actions
+  install                     Install project dependencies and generate
+                              package.json if needed
   install                     Install project dependencies and generate
                               package.json if needed
   upgrade                     Upgrade CLI to the latest version
