@@ -65,11 +65,6 @@
   "peerDependencies": {
     "tscircuit": "*"
   },
-  "peerDependenciesMeta": {
-    "tscircuit": {
-      "optional": false
-    }
-  },
   "bin": {
     "tscircuit-cli": "./cli/entrypoint.js"
   },
@@ -78,6 +73,11 @@
     "cli/entrypoint.js",
     "types"
   ],
+  "peerDependenciesMeta": {
+    "tscircuit": {
+      "optional": false
+    }
+  },
   "scripts": {
     "start": "bun run dev",
     "dev": "bun --hot ./cli/main.ts dev ./examples/basic/index.circuit.tsx",
@@ -90,8 +90,5 @@
     "cli": "bun ./cli/main.ts",
     "pkg-pr-new-release": "bunx pkg-pr-new publish --comment=off --peerDeps"
   },
-  "type": "module",
-  "dependencies": {
-    "kicad-libraries": "https://github.com/espressif/kicad-libraries"
-  }
+  "type": "module"
 }
