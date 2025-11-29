@@ -90,31 +90,23 @@ test(
     // Now test using the KiCad footprint in a circuit with tsci snapshot
     console.log("\nTesting KiCad footprint usage with tsci snapshot...")
 
-    // Find a .kicad_mod file in the installed library
-    const kicadLibPath = join(tmpDir, "node_modules", "kicad-libraries")
-    const findKicadModFile = (dir: string): string | null => {
-      const entries = readdirSync(dir, { withFileTypes: true })
-      for (const entry of entries) {
-        const fullPath = join(dir, entry.name)
-        if (entry.isDirectory()) {
-          const result = findKicadModFile(fullPath)
-          if (result) return result
-        } else if (entry.name.endsWith(".kicad_mod")) {
-          return fullPath
-        }
-      }
-      return null
-    }
-
-    const kicadModFile = findKicadModFile(kicadLibPath)
-    expect(kicadModFile).not.toBeNull()
-    console.log(`Found KiCad mod file: ${kicadModFile}`)
-
-    // Get the import path from node_modules (e.g., "kicad-libraries/footprints/ESP32-WROOM-32.kicad_mod")
-    const relativeKicadModPath = kicadModFile!.replace(
-      join(tmpDir, "node_modules") + "/",
-      "",
+    // Use a specific known footprint file for consistent snapshots across environments
+    // The espressif/kicad-libraries repo has this footprint in a known location
+    const specificFootprintPath =
+      "footprints/Espressif.pretty/ESP32-S2-MINI-1.kicad_mod"
+    const kicadModFile = join(
+      tmpDir,
+      "node_modules",
+      "kicad-libraries",
+      specificFootprintPath,
     )
+
+    // Verify the footprint file exists
+    expect(existsSync(kicadModFile)).toBe(true)
+    console.log(`Using KiCad mod file: ${kicadModFile}`)
+
+    // Get the import path from node_modules
+    const relativeKicadModPath = `kicad-libraries/${specificFootprintPath}`
     console.log(`Import path: ${relativeKicadModPath}`)
 
     // Create a circuit file that uses the kicad footprint
