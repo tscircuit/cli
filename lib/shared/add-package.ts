@@ -3,6 +3,7 @@ import * as path from "node:path"
 import { prompts } from "lib/utils/prompts"
 import { getPackageManager } from "./get-package-manager"
 import { resolveTarballUrlFromRegistry } from "./resolve-tarball-url-from-registry"
+import { detectAndSetupKicadLibrary } from "./detect-and-setup-kicad-library"
 
 /**
  * Checks if a package spec is a tscircuit component format and normalizes it.
@@ -121,6 +122,9 @@ export async function addPackage(
   try {
     packageManager.install({ name: installTarget, cwd: projectDir })
     console.log(`Added ${displayName} successfully.`)
+
+    // After installation, check if it's a KiCad library and setup types if needed
+    await detectAndSetupKicadLibrary(packageSpec, projectDir)
   } catch (error) {
     const errorMessage = error instanceof Error ? error.message : String(error)
     console.error(`Failed to add ${displayName}:`, errorMessage)
