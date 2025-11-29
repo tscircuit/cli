@@ -2,6 +2,7 @@ import * as fs from "node:fs"
 import * as path from "node:path"
 import { globbySync } from "globby"
 import { generateTsConfig } from "./generate-ts-config"
+import { setupTsciProject } from "./setup-tsci-packages"
 
 /**
  * Extracts the package name from a package spec
@@ -79,6 +80,10 @@ export async function detectAndSetupKicadLibrary(
 
     // Setup tsconfig.json
     await setupTsConfig(projectDir)
+
+    // Setup tscircuit project dependencies (tscircuit includes react)
+    // This ensures the user can build circuits using the KiCad footprints
+    await setupTsciProject(projectDir)
 
     console.log(`✓ Generated types for KiCad library: ${packageName}`)
 
