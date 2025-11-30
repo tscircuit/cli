@@ -75,7 +75,9 @@ export async function detectAndSetupKicadLibrary(
     }
 
     console.log(
-      kleur.cyan(`Detected ${kleur.bold(kicadModFiles.length.toString())} KiCad footprint file(s)`),
+      kleur.cyan(
+        `Detected ${kleur.bold(kicadModFiles.length.toString())} KiCad footprint file(s)`,
+      ),
       kleur.dim("generating types..."),
     )
 
@@ -89,13 +91,19 @@ export async function detectAndSetupKicadLibrary(
     // This ensures the user can build circuits using the KiCad footprints
     await setupTsciProject(projectDir)
 
-    console.log(kleur.green(`✓ Generated types for KiCad library: ${kleur.bold(packageName)}`))
+    console.log(
+      kleur.green(
+        `✓ Generated types for KiCad library: ${kleur.bold(packageName)}`,
+      ),
+    )
 
     return true
   } catch (error) {
     // Silently fail if KiCad detection has issues - don't break the add command
     console.warn(
-      kleur.yellow(`Warning: Failed to detect/setup KiCad library: ${error instanceof Error ? error.message : String(error)}`),
+      kleur.yellow(
+        `Warning: Failed to detect/setup KiCad library: ${error instanceof Error ? error.message : String(error)}`,
+      ),
     )
     return false
   }
@@ -127,7 +135,9 @@ async function generateKicadTypes(
     .join("\n\n")
 
   fs.writeFileSync(typesFilePath, declarations)
-  console.log(kleur.green(`✓ Generated types at ${kleur.cyan(`types/${typeFileName}`)}`))
+  console.log(
+    kleur.green(`✓ Generated types at ${kleur.cyan(`types/${typeFileName}`)}`),
+  )
 }
 
 /**
