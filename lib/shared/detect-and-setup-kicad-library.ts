@@ -1,6 +1,9 @@
 import * as fs from "node:fs"
 import * as path from "node:path"
 import { globbySync } from "globby"
+import kleur from "kleur"
+// @ts-ignore - strip-json-comments doesn't have types
+import stripJsonComments from "strip-json-comments"
 import { generateTsConfig } from "./generate-ts-config"
 import { setupTsciProject } from "./setup-tsci-packages"
 
@@ -72,7 +75,8 @@ export async function detectAndSetupKicadLibrary(
     }
 
     console.log(
-      `Detected ${kicadModFiles.length} KiCad footprint file(s), generating types...`,
+      kleur.cyan(`Detected ${kleur.bold(kicadModFiles.length.toString())} KiCad footprint file(s)`),
+      kleur.dim("generating types..."),
     )
 
     // Generate TypeScript type definitions
@@ -85,13 +89,13 @@ export async function detectAndSetupKicadLibrary(
     // This ensures the user can build circuits using the KiCad footprints
     await setupTsciProject(projectDir)
 
-    console.log(`✓ Generated types for KiCad library: ${packageName}`)
+    console.log(kleur.green(`✓ Generated types for KiCad library: ${kleur.bold(packageName)}`))
 
     return true
   } catch (error) {
     // Silently fail if KiCad detection has issues - don't break the add command
     console.warn(
-      `Warning: Failed to detect/setup KiCad library: ${error instanceof Error ? error.message : String(error)}`,
+      kleur.yellow(`Warning: Failed to detect/setup KiCad library: ${error instanceof Error ? error.message : String(error)}`),
     )
     return false
   }
@@ -123,7 +127,7 @@ async function generateKicadTypes(
     .join("\n\n")
 
   fs.writeFileSync(typesFilePath, declarations)
-  console.log(`✓ Generated types at types/${typeFileName}`)
+  console.log(kleur.green(`✓ Generated types at ${kleur.cyan(`types/${typeFileName}`)}`))
 }
 
 /**
@@ -134,13 +138,14 @@ async function setupTsConfig(projectDir: string): Promise<void> {
 
   // Generate tsconfig if it doesn't exist
   if (!fs.existsSync(tsconfigPath)) {
-    console.log("Creating tsconfig.json...")
+    console.log(kleur.dim("Creating tsconfig.json..."))
     generateTsConfig(projectDir)
   }
 
   // Read and update tsconfig to include types directory
   const content = fs.readFileSync(tsconfigPath, "utf-8")
-  const tsconfig = JSON.parse(content)
+  // Use strip-json-comments to handle tsconfig.json with comments
+  const tsconfig = JSON.parse(stripJsonComments(content))
 
   // Ensure compilerOptions exists
   if (!tsconfig.compilerOptions) {
@@ -151,10 +156,10 @@ async function setupTsConfig(projectDir: string): Promise<void> {
   if (!tsconfig.compilerOptions.typeRoots) {
     tsconfig.compilerOptions.typeRoots = ["./types", "./node_modules/@types"]
     fs.writeFileSync(tsconfigPath, JSON.stringify(tsconfig, null, 2))
-    console.log("✓ Updated tsconfig.json with types directory")
+    console.log(kleur.green("✓ Updated tsconfig.json with types directory"))
   } else if (!tsconfig.compilerOptions.typeRoots.includes("./types")) {
     tsconfig.compilerOptions.typeRoots.unshift("./types")
     fs.writeFileSync(tsconfigPath, JSON.stringify(tsconfig, null, 2))
-    console.log("✓ Updated tsconfig.json with types directory")
+    console.log(kleur.green("✓ Updated tsconfig.json with types directory"))
   }
 }
