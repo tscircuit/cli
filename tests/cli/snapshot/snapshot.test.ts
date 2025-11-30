@@ -125,6 +125,45 @@ test("snapshot command snapshots circuit files", async () => {
   expect(extraSch).toBe(true)
 }, 30_000)
 
+test("snapshot command handles pcb snapshots for imported kicad_mod footprints", async () => {
+  const { tmpDir, runCommand } = await getCliTestFixture()
+
+  const kicadModPath = join(tmpDir, "imported-footprint.kicad_mod")
+  const sourceMod = await Bun.file(
+    join(process.cwd(), "examples", "kicad-import", "footprint.kicad_mod"),
+  ).text()
+  await Bun.write(kicadModPath, sourceMod)
+
+  await Bun.write(
+    join(tmpDir, "kicad-board.tsx"),
+    `
+      import footprint from "./imported-footprint.kicad_mod"
+
+      export const KicadBoard = () => (
+        <board width="20mm" height="20mm">
+          <chip name="U1" footprint={footprint} />
+        </board>
+      )
+    `,
+  )
+
+  const { stdout } = await runCommand(
+    "tsci snapshot kicad-board.tsx --update --pcb-only",
+  )
+
+  expect(stdout).toContain("Created snapshots")
+  expect(stdout).toContain(
+    `✅ ${join("__snapshots__", "kicad-board-pcb.snap.svg")}`,
+  )
+
+  const snapshotDir = join(tmpDir, "__snapshots__")
+  const pcbSnapshot = join(snapshotDir, "kicad-board-pcb.snap.svg")
+  const pcbContent = await Bun.file(pcbSnapshot).text()
+
+  expect(pcbContent).toContain("pcb_smtpad")
+  expect(pcbContent).toMatchSvgSnapshot(import.meta.path, "kicad-imported-pcb")
+}, 30_000)
+
 test("snapshot respects includeBoardFiles config", async () => {
   const { tmpDir, runCommand } = await getCliTestFixture()
 
