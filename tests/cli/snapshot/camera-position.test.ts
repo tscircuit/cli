@@ -97,9 +97,7 @@ const expectPngToMatchBaseline = async (
     }
   }
 
-  const baselineBytes = toUint8Array(
-    await Bun.file(baselinePath).arrayBuffer(),
-  )
+  const baselineBytes = toUint8Array(await Bun.file(baselinePath).arrayBuffer())
   expect(pngArray).toEqual(baselineBytes)
 }
 
@@ -107,27 +105,27 @@ for (const fixture of BOARD_FIXTURES) {
   test(
     `tsci snapshot renders stable 3d preview for ${fixture.name} board`,
     async () => {
-    const { tmpDir, runCommand } = await getCliTestFixture()
-    const boardPath = path.join(tmpDir, fixture.fileName)
-    await Bun.write(boardPath, fixture.source)
+      const { tmpDir, runCommand } = await getCliTestFixture()
+      const boardPath = path.join(tmpDir, fixture.fileName)
+      await Bun.write(boardPath, fixture.source)
 
-    const { stdout: updateStdout } = await runCommand(
-      `tsci snapshot ${fixture.fileName} --update --3d`,
-    )
-    expect(updateStdout).toContain("Created snapshots")
+      const { stdout: updateStdout } = await runCommand(
+        `tsci snapshot ${fixture.fileName} --update --3d`,
+      )
+      expect(updateStdout).toContain("Created snapshots")
 
-    const generatedSnapshotPath = path.join(
-      tmpDir,
-      "__snapshots__",
-      fixture.snapshotFile,
-    )
-    const pngBuffer = await Bun.file(generatedSnapshotPath).arrayBuffer()
-    await expectPngToMatchBaseline(fixture.baseline, pngBuffer)
+      const generatedSnapshotPath = path.join(
+        tmpDir,
+        "__snapshots__",
+        fixture.snapshotFile,
+      )
+      const pngBuffer = await Bun.file(generatedSnapshotPath).arrayBuffer()
+      await expectPngToMatchBaseline(fixture.baseline, pngBuffer)
 
-    const { stdout: verifyStdout } = await runCommand(
-      `tsci snapshot ${fixture.fileName} --3d`,
-    )
-    expect(verifyStdout).toContain("All snapshots match")
+      const { stdout: verifyStdout } = await runCommand(
+        `tsci snapshot ${fixture.fileName} --3d`,
+      )
+      expect(verifyStdout).toContain("All snapshots match")
     },
     { timeout: SNAPSHOT_TIMEOUT_MS },
   )
