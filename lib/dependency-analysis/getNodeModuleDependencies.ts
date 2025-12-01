@@ -176,11 +176,13 @@ export function resolveNodeModuleImport({
   ]
 
   if (searchFromDir) {
-    // Walk up the directory tree from searchFromDir to find node_modules
+    // Walk up the directory tree from searchFromDir to find node_modules.
+    // Don't stop at the project directory so we can detect hoisted
+    // node_modules (e.g. workspaces or bug reports cloned inside another
+    // repo).
     let currentDir = path.dirname(searchFromDir)
-    const projectDirNormalized = path.normalize(projectDir)
 
-    while (currentDir.startsWith(projectDirNormalized)) {
+    while (true) {
       const candidatePath = path.join(currentDir, "node_modules", packageName)
       if (!searchPaths.includes(candidatePath)) {
         searchPaths.push(candidatePath)
@@ -438,6 +440,28 @@ function collectLocalPackageFiles(packageDir: string): string[] {
   return walkDirectory(packageDir, EXCLUDED_PACKAGE_DIRECTORIES)
 }
 
+function findPackageDir(
+  packageName: string,
+  projectDir: string,
+): string | null {
+  let currentDir = projectDir
+
+  while (true) {
+    const candidate = path.join(currentDir, "node_modules", packageName)
+    const packageJsonPath = path.join(candidate, "package.json")
+
+    if (fs.existsSync(packageJsonPath)) {
+      return candidate
+    }
+
+    const parentDir = path.dirname(currentDir)
+    if (parentDir === currentDir) break
+    currentDir = parentDir
+  }
+
+  return null
+}
+
 function walkDirectory(dir: string, excludedDirs: Set<string>): string[] {
   const files: string[] = []
 
@@ -578,6 +602,20 @@ export function getAllNodeModuleFilePaths(
         }
       }
     }
+  }
+
+  // Ensure all declared dependencies are uploaded even if they aren't
+  // discovered through static analysis (e.g., path aliases, dynamic imports)
+  for (const packageName of allDependencyPackages) {
+    if (processedPackages.has(packageName)) continue
+    if (isRuntimeProvidedPackage(packageName)) continue
+
+    const packageDir = findPackageDir(packageName, projectDir)
+    if (!packageDir) continue
+
+    processedPackages.add(packageName)
+    const packageFiles = collectLocalPackageFiles(packageDir)
+    packageFiles.forEach((file) => allFiles.add(file))
   }
 
   return Array.from(allFiles)
