@@ -111,7 +111,9 @@ export default Board
   expect(esmContent).not.toMatch(/['"]\/tmp\//i)
 
   // Assert: The import statement specifically uses relative path
-  const importMatch = esmContent.match(/import\s+\w+\s+from\s+['"]([^'"]+\.glb)['"]/i)
+  const importMatch = esmContent.match(
+    /import\s+\w+\s+from\s+['"]([^'"]+\.glb)['"]/i,
+  )
   expect(importMatch).not.toBeNull()
   expect(importMatch![1]).toStartWith("./assets/")
 }, 60_000)
