@@ -508,6 +508,21 @@ export function getAllNodeModuleFilePaths(
     projectDir,
   )
 
+  // Ensure all direct dependencies are included even if not imported
+  for (const packageName of allDependencyPackages) {
+    if (dependencies.has(packageName)) continue
+
+    const resolvedFiles = resolveNodeModuleImport({
+      importPath: packageName,
+      projectDir,
+      searchFromDir: entryFilePath,
+    })
+
+    if (resolvedFiles.length > 0) {
+      dependencies.set(packageName, resolvedFiles)
+    }
+  }
+
   const processedPackages = new Set<string>()
   const allFiles = new Set<string>()
 
