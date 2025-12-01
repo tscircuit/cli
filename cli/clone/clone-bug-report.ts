@@ -150,7 +150,7 @@ export const cloneBugReport = async ({
   )
 
   generateTsConfig(dirPath)
-  await setupTsciProject(dirPath)
+  await setupTsciProject(dirPath, [])
 
   const relativeDirPath = path.relative(originalCwd, dirPath)
 
