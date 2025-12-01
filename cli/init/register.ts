@@ -23,7 +23,8 @@ export const registerInit = (program: Command) => {
       "Directory name (optional, defaults to current directory)",
     )
     .option("-y, --yes", "Use defaults and skip prompts")
-    .action(async (directory?: string, options?: { yes?: boolean }) => {
+    .option("--no-install", "Skip installing dependencies")
+    .action(async (directory?: string, options?: { yes?: boolean; install?: boolean }) => {
       await checkForTsciUpdates()
 
       if (!directory && !options?.yes) {
@@ -117,7 +118,7 @@ export default () => (
       // Create .gitignore file
       generateGitIgnoreFile(projectDir)
       // Setup project dependencies
-      setupTsciProject(projectDir)
+      setupTsciProject(projectDir, options?.install ? undefined : [])
 
       console.info(
         `🎉 Initialization complete! Run ${directory ? `"cd ${directory}" & ` : ""}"tsci dev" to start developing.`,
