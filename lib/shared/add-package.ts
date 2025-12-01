@@ -1,5 +1,6 @@
 import * as fs from "node:fs"
 import * as path from "node:path"
+import kleur from "kleur"
 import { prompts } from "lib/utils/prompts"
 import { getPackageManager } from "./get-package-manager"
 import { resolveTarballUrlFromRegistry } from "./resolve-tarball-url-from-registry"
@@ -76,7 +77,7 @@ export async function addPackage(
   const displayName = normalizedName || packageSpec
   let installTarget = normalizedName || packageSpec
 
-  console.log(`Adding ${displayName}...`)
+  console.log(kleur.cyan(`Adding ${kleur.bold(displayName)}...`))
 
   // Only handle @tsci registry setup if it's a tscircuit component
   if (normalizedName && normalizedName.startsWith("@tsci/")) {
@@ -102,7 +103,7 @@ export async function addPackage(
           (trimmedContent.length > 0 ? `${trimmedContent}\n` : "") +
           "@tsci:registry=https://npm.tscircuit.com\n"
         fs.writeFileSync(npmrcPath, newContent)
-        console.log("Updated .npmrc with tscircuit registry")
+        console.log(kleur.green("✓ Updated .npmrc with tscircuit registry"))
         hasTsciRegistry = true
       } else {
         console.log(
@@ -121,13 +122,13 @@ export async function addPackage(
   const packageManager = getPackageManager()
   try {
     packageManager.install({ name: installTarget, cwd: projectDir })
-    console.log(`Added ${displayName} successfully.`)
+    console.log(kleur.green(`✓ Added ${kleur.bold(displayName)} successfully`))
 
     // After installation, check if it's a KiCad library and setup types if needed
     await detectAndSetupKicadLibrary(packageSpec, projectDir)
   } catch (error) {
     const errorMessage = error instanceof Error ? error.message : String(error)
-    console.error(`Failed to add ${displayName}:`, errorMessage)
+    console.error(kleur.red(`✗ Failed to add ${displayName}:`), errorMessage)
     throw new Error(`Failed to add ${displayName}: ${errorMessage}`)
   }
 }
