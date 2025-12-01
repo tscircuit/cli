@@ -68,7 +68,7 @@ export const registerExport = (program: Command) => {
               `Exported to ${outputSpicePath} and ${outputCsvPath} (simulation results)!`,
             )
           }
-          return
+          process.exit(0)
         }
 
         const format = formatOption as ExportFormat
@@ -81,7 +81,7 @@ export const registerExport = (program: Command) => {
           onExit: (code) => process.exit(code),
           onError: (message) => console.error(message),
           onSuccess: ({ outputDestination }) =>
-            console.log("Exported to " + outputDestination + "!"),
+            console.log(`Exported to ${outputDestination}!`),
         })
       },
     )

@@ -174,4 +174,6 @@ export const exportSnippet = async ({
     outputDestination,
     outputContent,
   })
+
+  onExit(0)
 }
