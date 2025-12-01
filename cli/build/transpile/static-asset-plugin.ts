@@ -134,8 +134,10 @@ export const createStaticAssetPlugin = ({
             const outputFilePath = path.join(assetDir, fileName)
 
             fs.writeFileSync(outputFilePath, fileBuffer)
-            copiedAssets.set(importedId, `./assets/${fileName}`)
-            assetIdToOutputPath.set(importedId, `./assets/${fileName}`)
+            // Use path.posix for import paths to ensure they work cross-platform
+            const importPath = path.posix.join("./assets", fileName)
+            copiedAssets.set(importedId, importPath)
+            assetIdToOutputPath.set(importedId, importPath)
           }
         }
 
