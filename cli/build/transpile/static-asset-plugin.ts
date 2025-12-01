@@ -41,7 +41,9 @@ export const createStaticAssetPlugin = ({
   return {
     name: "tsci-static-assets",
     resolveId(source: string, importer: string | undefined) {
-      const ext = path.extname(source).toLowerCase()
+      // Normalize the source to use forward slashes for consistent checking across platforms
+      const normalizedSource = source.replace(/\\/g, "/")
+      const ext = path.extname(normalizedSource).toLowerCase()
       if (!STATIC_ASSET_EXTENSIONS.has(ext)) return null
 
       // If it's already an absolute path, use it

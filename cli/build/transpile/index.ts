@@ -16,8 +16,11 @@ import {
 const createExternalFunction =
   (projectDir: string, tsconfigPath?: string) =>
   (id: string): boolean => {
+    // Normalize the id to use forward slashes for consistent checking across platforms
+    const normalizedId = id.replace(/\\/g, "/")
+
     // Don't externalize relative or absolute paths (these are local files)
-    if (id.startsWith(".") || id.startsWith("/") || path.isAbsolute(id)) {
+    if (normalizedId.startsWith(".") || normalizedId.startsWith("/") || path.isAbsolute(id)) {
       return false
     }
 
