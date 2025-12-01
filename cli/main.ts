@@ -26,6 +26,7 @@ import { registerSnapshot } from "./snapshot/register"
 import { registerSetup } from "./setup/register"
 import { registerConvert } from "./convert/register"
 import { registerSimulate } from "./simulate/register"
+import { registerDebug } from "./debug/register"
 import { registerInstall } from "./install/register"
 import { registerTranspile } from "./transpile/register"
 
@@ -64,6 +65,7 @@ registerSearch(program)
 registerImport(program)
 registerConvert(program)
 registerSimulate(program)
+registerDebug(program)
 
 // Manually handle --version, -v, and -V flags
 if (

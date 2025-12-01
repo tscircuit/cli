@@ -43,7 +43,7 @@ export const cloneBugReport = async ({
 }: {
   bugReportId: string
   originalCwd: string
-}) => {
+}): Promise<string> => {
   const trimmedBugReportId = bugReportId.trim()
 
   if (!trimmedBugReportId) {
@@ -157,4 +157,6 @@ export const cloneBugReport = async ({
   console.log(kleur.bold("Start reviewing:"))
   console.log(kleur.cyan(`  cd ${relativeDirPath}`))
   console.log(kleur.cyan("  tsci dev\n"))
+
+  return dirPath
 }
