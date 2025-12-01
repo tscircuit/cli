@@ -11,6 +11,7 @@ import { getUnscopedPackageName } from "lib/utils/get-unscoped-package-name"
 import { getPackageAuthor } from "lib/utils/get-package-author"
 import { getPackageFilePaths } from "cli/dev/get-package-file-paths"
 import { checkOrgAccess } from "lib/utils/check-org-access"
+import { isBinaryFile, hasBinaryContent } from "./binary-file-utils"
 
 type PushOptions = {
   filePath?: string
@@ -294,9 +295,24 @@ export const pushSnippet = async ({
   log("\n")
 
   const filePaths = getPackageFilePaths(projectDir)
+  const skippedBinaryFiles: string[] = []
+
   for (const fullFilePath of filePaths) {
     const relativeFilePath = path.relative(projectDir, fullFilePath)
-    const fileContent = fs.readFileSync(fullFilePath, "utf-8")
+
+    // Check if file is binary by extension first, then by content if needed
+    const fileBuffer = fs.readFileSync(fullFilePath)
+    const isBinary =
+      isBinaryFile(relativeFilePath) || hasBinaryContent(fileBuffer)
+
+    if (isBinary) {
+      skippedBinaryFiles.push(relativeFilePath)
+      console.log(kleur.yellow(`⚠ Skipping binary file: ${relativeFilePath}`))
+      continue
+    }
+
+    const fileContent = fileBuffer.toString("utf-8")
+
     await ky
       .post("package_files/create", {
         json: {
@@ -309,10 +325,32 @@ export const pushSnippet = async ({
       .then((response) => {
         console.log(kleur.gray(`⬆︎ ${relativeFilePath}`))
       })
-      .catch((error) => {
-        onError(`Error uploading file ${fullFilePath}: ${error}`)
+      .catch(async (error) => {
+        // Try to get more details from the error response
+        let errorDetails = ""
+        try {
+          const errorResponse = await error.response?.json()
+          if (errorResponse?.error?.message) {
+            errorDetails = `: ${errorResponse.error.message}`
+          }
+        } catch {
+          // Ignore JSON parsing errors
+        }
+        onError(
+          `Error uploading file "${relativeFilePath}"${errorDetails}\n` +
+            `  Full path: ${fullFilePath}\n` +
+            `  This may be a binary file that cannot be uploaded as text.`,
+        )
         return onExit(1)
       })
+  }
+
+  if (skippedBinaryFiles.length > 0) {
+    console.log(
+      kleur.yellow(
+        `\n⚠ ${skippedBinaryFiles.length} binary file(s) were skipped. Binary files are not currently supported for package uploads.`,
+      ),
+    )
   }
 
   await ky.post("package_releases/update", {
