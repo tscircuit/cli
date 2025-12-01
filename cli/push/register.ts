@@ -21,7 +21,7 @@ export const registerPush = (program: Command) => {
           isPrivate: options.private ?? false,
           versionTag: options.versionTag,
           onExit: (code) => process.exit(code),
-          onError: (message) => console.error(message),
+          onError: (message) => console.error(`Error while pushing ${filePath }: ${message}`),
           onSuccess: (message) => console.log(message),
         })
       },
