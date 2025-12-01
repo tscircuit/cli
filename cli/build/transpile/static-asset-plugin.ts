@@ -3,6 +3,14 @@ import path from "node:path"
 import { createHash } from "node:crypto"
 import type { Plugin } from "rollup"
 
+/**
+ * Normalize a file path to use forward slashes consistently.
+ * This ensures transpiled code works the same on Windows and Unix.
+ */
+function normalizePathSeparators(filePath: string): string {
+  return filePath.split(path.sep).join("/")
+}
+
 export const STATIC_ASSET_EXTENSIONS = new Set([
   ".glb",
   ".gltf",
@@ -46,24 +54,34 @@ export const createStaticAssetPlugin = ({
 
       // If it's already an absolute path, use it
       if (path.isAbsolute(source)) {
-        return fs.existsSync(source) ? { id: source, external: true } : null
+        return fs.existsSync(source)
+          ? { id: normalizePathSeparators(source), external: true }
+          : null
       }
 
       // Try to resolve relative to the importer
       if (importer) {
+        // Importer may be normalized already, convert back for path.dirname
+        const importerNative = importer.split("/").join(path.sep)
         const resolvedFromImporter = path.resolve(
-          path.dirname(importer),
+          path.dirname(importerNative),
           source,
         )
         if (fs.existsSync(resolvedFromImporter)) {
-          return { id: resolvedFromImporter, external: true }
+          return {
+            id: normalizePathSeparators(resolvedFromImporter),
+            external: true,
+          }
         }
       }
 
       // Try to resolve relative to projectDir (for baseUrl imports)
       const resolvedFromProject = path.resolve(resolvedBaseUrl, source)
       if (fs.existsSync(resolvedFromProject)) {
-        return { id: resolvedFromProject, external: true }
+        return {
+          id: normalizePathSeparators(resolvedFromProject),
+          external: true,
+        }
       }
 
       for (const [pattern, targets] of Object.entries(resolvedPathMappings)) {
@@ -82,7 +100,10 @@ export const createStaticAssetPlugin = ({
             const resolvedTarget = path.resolve(resolvedBaseUrl, targetPath)
 
             if (fs.existsSync(resolvedTarget)) {
-              return { id: resolvedTarget, external: true }
+              return {
+                id: normalizePathSeparators(resolvedTarget),
+                external: true,
+              }
             }
           }
         }
@@ -123,7 +144,9 @@ export const createStaticAssetPlugin = ({
             const assetDir = path.join(outputDir, "assets")
             fs.mkdirSync(assetDir, { recursive: true })
 
-            const fileBuffer = fs.readFileSync(importedId)
+            // Convert normalized path back to native for file system operations
+            const nativePath = importedId.split("/").join(path.sep)
+            const fileBuffer = fs.readFileSync(nativePath)
             const hash = createHash("sha1")
               .update(fileBuffer)
               .digest("hex")
