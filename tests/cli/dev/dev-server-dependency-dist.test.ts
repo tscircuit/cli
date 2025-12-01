@@ -23,14 +23,15 @@ test("dev server should upload node_modules dependency dist files to file server
   await writeFile(
     join(projectDir, "index.tsx"),
     `
-import { resistorFootprint } from "@tscircuit/mm"
+import { mm } from "@tscircuit/mm"
 
 export const MyCircuit = () => (
   <board width="10mm" height="10mm">
     <resistor
       name="R1"
       resistance="10k"
-      footprint={resistorFootprint}
+      pcbX={mm("10mm")}
+      pcbY={mm("10mm")}
     />
   </board>
 )
