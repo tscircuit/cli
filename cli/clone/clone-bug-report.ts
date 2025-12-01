@@ -1,7 +1,6 @@
 import JSZip from "jszip"
 import { getRegistryApiKy } from "lib/registry-api/get-ky"
 import { generateTsConfig } from "lib/shared/generate-ts-config"
-import { setupTsciProject } from "lib/shared/setup-tsci-packages"
 import kleur from "kleur"
 import * as fs from "node:fs"
 import * as path from "node:path"
@@ -150,7 +149,6 @@ export const cloneBugReport = async ({
   )
 
   generateTsConfig(dirPath)
-  await setupTsciProject(dirPath)
 
   const relativeDirPath = path.relative(originalCwd, dirPath)
 
