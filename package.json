@@ -10,7 +10,7 @@
     "@tscircuit/file-server": "^0.0.32",
     "@tscircuit/math-utils": "0.0.29",
     "@tscircuit/props": "^0.0.371",
-    "@tscircuit/runframe": "^0.0.1314",
+    "@tscircuit/runframe": "^0.0.1316",
     "@tscircuit/schematic-match-adapt": "^0.0.22",
     "@types/bun": "^1.2.2",
     "@types/configstore": "^6.0.2",
@@ -60,7 +60,7 @@
     "tscircuit": "^0.0.977",
     "tsx": "^4.7.1",
     "typed-ky": "^0.0.4",
-    "zod": "3"
+    "zod": "^3.25.67"
   },
   "peerDependencies": {
     "tscircuit": "*"
