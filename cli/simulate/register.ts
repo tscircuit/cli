@@ -28,7 +28,7 @@ export const registerSimulate = (program: Command) => {
       })
       if (!circuitJson) {
         console.log("error: Failed to generate circuit JSON")
-        return
+        process.exit(1)
       }
       const spiceString = getSpiceWithPaddedSim(circuitJson)
 
@@ -45,5 +45,6 @@ export const registerSimulate = (program: Command) => {
       const tableContent = resultToTable(result)
 
       console.log(tableContent)
+      process.exit(0)
     })
 }
