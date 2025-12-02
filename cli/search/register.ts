@@ -17,7 +17,8 @@ export const registerSearch = (program: Command) => {
       let results: {
         packages: Array<{
           name: string
-          version: string
+          version?: string
+          latest_version?: string | null
           description?: string
           star_count?: number
         }>
@@ -101,8 +102,9 @@ export const registerSearch = (program: Command) => {
 
         results.packages.forEach((pkg, idx) => {
           const star = pkg.star_count ?? 0
+          const version = pkg.version ?? pkg.latest_version ?? "unknown"
           console.log(
-            `${idx + 1}. ${pkg.name} (v${pkg.version}) - Stars: ${star}${
+            `${idx + 1}. ${pkg.name} (v${version}) - Stars: ${star}${
               pkg.description ? ` - ${pkg.description}` : ""
             }`,
           )
