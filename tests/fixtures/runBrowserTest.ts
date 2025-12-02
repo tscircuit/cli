@@ -7,6 +7,7 @@ import * as fs from "node:fs"
 import * as path from "node:path"
 import { temporaryDirectory } from "tempy"
 import ky from "ky"
+import { execSync } from "node:child_process"
 
 interface RunBrowserTestOptions {
   /**
@@ -237,6 +238,18 @@ export async function runBrowserTest(
     path.join(tmpDir, ".npmrc"),
     "@tsci:registry=https://npm.tscircuit.com",
   )
+
+  // Install dependencies
+  try {
+    execSync("bun install", {
+      cwd: tmpDir,
+      stdio: "inherit",
+    })
+  } catch (error) {
+    console.warn(
+      `Warning: Failed to install dependencies: ${error instanceof Error ? error.message : error}`,
+    )
+  }
 
   // Start DevServer
   const port = await getPort()
