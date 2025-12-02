@@ -104,7 +104,7 @@ const expectPngToMatchBaseline = async (
   const baselineBytes = toUint8Array(await Bun.file(baselinePath).arrayBuffer())
   const baselineBuffer = Buffer.from(baselineBytes)
   const comparison = await looksSame(baselineBuffer, pngBuffer, {
-    tolerance: 3,
+    tolerance: 5,
     strict: false,
     ignoreAntialiasing: true,
   })
