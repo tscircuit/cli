@@ -25,7 +25,7 @@ describe("calculateCameraPosition", () => {
       },
     ]
     const result = calculateCameraPosition(circuitJson as AnyCircuitElement[])
-    
+
     // Board is 10x10 centered at 0,0.
     // effectiveMinX = -5, effectiveMaxX = 5
     // effectiveMinY = -5, effectiveMaxY = 5
@@ -34,7 +34,7 @@ describe("calculateCameraPosition", () => {
     // cameraDistance = 10 * 1.2 = 12
     // centerX = 0, centerY = 0
     // camPos = [0 + 12*0.7, 0 + 12*0.7, 12*0.7] = [8.4, 8.4, 8.4]
-    
+
     expect(result.lookAt).toEqual([0, 0, 0])
     expect(result.camPos[0]).toBeCloseTo(8.4)
     expect(result.camPos[1]).toBeCloseTo(8.4)
@@ -79,9 +79,9 @@ describe("calculateCameraPosition", () => {
     expect(result.camPos[1]).toBeCloseTo(18.48)
     expect(result.camPos[2]).toBeCloseTo(18.48)
   })
-  
+
   test("should handle string dimensions", () => {
-     const circuitJson: any[] = [
+    const circuitJson: any[] = [
       {
         type: "pcb_board",
         width: "10mm",
