@@ -1,5 +1,4 @@
 import { expect, test } from "bun:test"
-import type { AnyCircuitElement } from "circuit-json"
 import fs from "node:fs"
 import path from "node:path"
 import { getCliTestFixture } from "tests/fixtures/get-cli-test-fixture"
@@ -12,7 +11,7 @@ const BOARD_FIXTURES = [
     name: "small",
     fileName: "small.board.tsx",
     snapshotFile: "small.board-3d.snap.png",
-    baseline: "calculate-camera-position-small.snap.png",
+    baseline: "camera-position-small.snap.png",
     source: `
       export default function SmallBoard() {
         return (
@@ -27,7 +26,7 @@ const BOARD_FIXTURES = [
     name: "medium",
     fileName: "medium.board.tsx",
     snapshotFile: "medium.board-3d.snap.png",
-    baseline: "calculate-camera-position-medium.snap.png",
+    baseline: "camera-position-medium.snap.png",
     source: `
       export default function MediumBoard() {
         return (
@@ -50,7 +49,7 @@ const BOARD_FIXTURES = [
     name: "large",
     fileName: "large.board.tsx",
     snapshotFile: "large.board-3d.snap.png",
-    baseline: "calculate-camera-position-large.snap.png",
+    baseline: "camera-position-large.snap.png",
     source: `
       export default function LargeBoard() {
         return (
