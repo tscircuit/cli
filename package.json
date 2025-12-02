@@ -60,11 +60,11 @@
     "tempy": "^3.1.0",
     "tscircuit": "^0.0.997-libonly",
     "tsx": "^4.7.1",
-    "typed-ky": "^0.0.4",
-    "zod": "^3.23.8"
+    "typed-ky": "^0.0.4"
   },
   "peerDependencies": {
-    "tscircuit": "*"
+    "tscircuit": "*",
+    "zod": "*"
   },
   "bin": {
     "tscircuit-cli": "./cli/entrypoint.js"
@@ -77,6 +77,9 @@
   "peerDependenciesMeta": {
     "tscircuit": {
       "optional": false
+    },
+    "zod": {
+      "optional": true
     }
   },
   "scripts": {
