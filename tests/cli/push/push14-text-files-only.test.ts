@@ -3,7 +3,7 @@ import { getCliTestFixture } from "../../fixtures/get-cli-test-fixture"
 import * as fs from "node:fs"
 import * as path from "node:path"
 
-test("should upload text files normally without binary warnings", async () => {
+test("should upload text files normally", async () => {
   const { tmpDir, runCommand } = await getCliTestFixture({
     loggedIn: true,
   })
@@ -23,15 +23,14 @@ test("should upload text files normally without binary warnings", async () => {
 
   const { stdout, stderr } = await runCommand(`tsci push ${snippetFilePath}`)
 
-  // Should NOT show warning about binary files
-  expect(stdout).not.toContain("Skipping binary file")
-  expect(stdout).not.toContain("binary file(s) were skipped")
-
-  // Should upload all files
+  // Should upload all text files with ⬆︎ icon (not 📦 which is for binary)
   expect(stdout).toContain("⬆︎ package.json")
   expect(stdout).toContain("⬆︎ snippet.tsx")
   expect(stdout).toContain("⬆︎ README.md")
   expect(stdout).toContain("⬆︎ tsconfig.json")
+
+  // Should NOT have any binary file uploads
+  expect(stdout).not.toContain("📦")
 
   // Should successfully publish
   expect(stdout).toContain("published!")

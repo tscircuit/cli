@@ -3,7 +3,7 @@ import { getCliTestFixture } from "../../fixtures/get-cli-test-fixture"
 import * as fs from "node:fs"
 import * as path from "node:path"
 
-test("should skip gerber files when pushing", async () => {
+test("should upload gerber files using base64 encoding", async () => {
   const { tmpDir, runCommand } = await getCliTestFixture({
     loggedIn: true,
   })
@@ -29,11 +29,11 @@ test("should skip gerber files when pushing", async () => {
 
   const { stdout, stderr } = await runCommand(`tsci push ${snippetFilePath}`)
 
-  // Should show warning about skipped binary files
-  expect(stdout).toContain("Skipping binary file")
-  expect(stdout).toContain(".gbr")
+  // Should upload gerber files with 📦 icon
+  expect(stdout).toContain("📦 gerbers/board.gbr")
+  expect(stdout).toContain("📦 gerbers/board-F_Mask.gbr")
 
-  // Should still successfully publish
+  // Should successfully publish
   expect(stdout).toContain("published!")
   expect(stderr).toBe("")
 }, 30_000)

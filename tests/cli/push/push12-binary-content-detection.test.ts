@@ -3,7 +3,7 @@ import { getCliTestFixture } from "../../fixtures/get-cli-test-fixture"
 import * as fs from "node:fs"
 import * as path from "node:path"
 
-test("should skip files with binary content even without binary extension", async () => {
+test("should upload files with binary content using base64 encoding", async () => {
   const { tmpDir, runCommand } = await getCliTestFixture({
     loggedIn: true,
   })
@@ -23,10 +23,10 @@ test("should skip files with binary content even without binary extension", asyn
 
   const { stdout, stderr } = await runCommand(`tsci push ${snippetFilePath}`)
 
-  // Should show warning about skipped binary file
-  expect(stdout).toContain("Skipping binary file: data.txt")
+  // Should upload binary content file with 📦 icon
+  expect(stdout).toContain("📦 data.txt")
 
-  // Should still successfully publish
+  // Should successfully publish
   expect(stdout).toContain("published!")
   expect(stderr).toBe("")
 }, 30_000)
