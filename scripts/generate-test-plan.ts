@@ -8,26 +8,33 @@ interface TestMatrix {
   globPatterns: string[]
 }
 
+const EXCLUDED_DIRECTORIES = ["tests/windows/"]
+
 const TEST_MATRIX: TestMatrix = {
-  nodeCount: 4,
+  nodeCount: 5,
   globPatterns: [
-    "tests/windows/**/*.test.ts",
     "tests/cli/dev/**/*.test.ts",
-    "tests/cli/export/**/*.test.ts",
+    "tests/cli/snapshot/**/*.test.ts",
+    "tests/cli/build/**/*.test.ts",
+    "tests/cli/add/**/*.test.ts",
+    "tests/cli/import/**/*.test.ts",
     "tests/cli/install/**/*.test.ts",
     "tests/cli/auth/**/*.test.ts",
     "tests/cli/**/*.test.ts",
     "tests/test*.test.ts",
     "tests/*.test.ts",
-    // Catchall pattern to distribute any remaining tests
+    // Catchall pattern to distribute any remaining tests while excluding Windows
     "tests/**/*.test.ts",
   ],
 }
 
+const isExcluded = (file: string) =>
+  EXCLUDED_DIRECTORIES.some((prefix) => file.startsWith(prefix))
+
 function getAllTestFiles(): string[] {
   const glob = new Glob("tests/**/*.test.ts")
   const allTests = Array.from(glob.scanSync({ cwd: process.cwd() }))
-  return allTests.sort()
+  return allTests.filter((file) => !isExcluded(file)).sort()
 }
 
 function generateTestPlans() {
@@ -42,9 +49,9 @@ function generateTestPlans() {
 
   TEST_MATRIX.globPatterns.forEach((pattern, patternIdx) => {
     const glob = new Glob(pattern)
-    const matchingFiles = Array.from(
-      glob.scanSync({ cwd: process.cwd() }),
-    ).sort()
+    const matchingFiles = Array.from(glob.scanSync({ cwd: process.cwd() }))
+      .filter((file) => !isExcluded(file))
+      .sort()
     const unclaimedMatches = matchingFiles.filter(
       (file) => !claimedFiles.has(file),
     )

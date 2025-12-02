@@ -12,7 +12,7 @@ jobs:
     timeout-minutes: 15
     strategy:
       matrix:
-        node: [1, 2, 3, 4]
+        node: [1, 2, 3, 4, 5]
 
     steps:
       - name: Checkout code
