@@ -59,8 +59,9 @@ Commands:
   snapshot [options] [path]   Generate schematic and PCB snapshots (add --3d for
                               3d preview)
   setup                       Setup utilities like GitHub Actions
-  install                     Install project dependencies and generate
-                              package.json if needed
+  install [packageSpec]       Install project dependencies, or install a
+                              specific package (e.g., tsci install
+                              https://github.com/espressif/kicad-libraries)
   upgrade                     Upgrade CLI to the latest version
   search [options] <query>    Search for footprints, CAD models or packages in
                               the tscircuit ecosystem
