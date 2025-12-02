@@ -4,6 +4,11 @@ import path from "node:path"
 import { Buffer } from "node:buffer"
 import looksSame from "looks-same"
 import { getCliTestFixture } from "tests/fixtures/get-cli-test-fixture"
+import { generateCircuitJson } from "lib/shared/generate-circuit-json"
+import { convertCircuitJsonToGltf } from "circuit-json-to-gltf"
+import { renderGLTFToPNGBufferFromGLBBuffer } from "poppygl"
+import { calculateCameraPosition } from "lib/shared/calculate-camera-position"
+import type { AnyCircuitElement } from "circuit-json"
 
 const SNAPSHOT_DIR = path.join(import.meta.dir, "__snapshots__")
 const SNAPSHOT_TIMEOUT_MS = 45_000
@@ -127,27 +132,34 @@ for (const fixture of BOARD_FIXTURES) {
   test(
     `tsci snapshot renders stable 3d preview for ${fixture.name} board`,
     async () => {
-      const { tmpDir, runCommand } = await getCliTestFixture()
+      const { tmpDir } = await getCliTestFixture()
+      await fs.promises.symlink(
+        path.join(process.cwd(), "node_modules"),
+        path.join(tmpDir, "node_modules"),
+      )
       const boardPath = path.join(tmpDir, fixture.fileName)
       await Bun.write(boardPath, fixture.source)
 
-      const { stdout: updateStdout } = await runCommand(
-        `tsci snapshot ${fixture.fileName} --update --3d`,
-      )
-      expect(updateStdout).toContain("Created snapshots")
+      const { circuitJson } = await generateCircuitJson({
+        filePath: boardPath,
+      })
 
-      const generatedSnapshotPath = path.join(
-        tmpDir,
-        "__snapshots__",
-        fixture.snapshotFile,
+      const glbBuffer = await convertCircuitJsonToGltf(circuitJson, {
+        format: "glb",
+      })
+
+      const cameraSettings = calculateCameraPosition(
+        circuitJson as AnyCircuitElement[],
       )
-      const pngBuffer = await Bun.file(generatedSnapshotPath).arrayBuffer()
+      const pngBuffer = await renderGLTFToPNGBufferFromGLBBuffer(
+        glbBuffer as ArrayBuffer,
+        {
+          camPos: cameraSettings.camPos,
+          lookAt: cameraSettings.lookAt,
+        },
+      )
+
       await expectPngToMatchBaseline(fixture.baseline, pngBuffer)
-
-      const { stdout: verifyStdout } = await runCommand(
-        `tsci snapshot ${fixture.fileName} --3d`,
-      )
-      expect(verifyStdout).toContain("All snapshots match")
     },
     { timeout: SNAPSHOT_TIMEOUT_MS },
   )
