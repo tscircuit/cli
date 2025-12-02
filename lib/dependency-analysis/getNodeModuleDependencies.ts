@@ -23,8 +23,6 @@ function getLocalPackages(projectDir: string): Set<string> {
     const packageJson = JSON.parse(fs.readFileSync(packageJsonPath, "utf-8"))
     const allDeps = {
       ...packageJson.dependencies,
-      ...packageJson.devDependencies,
-      ...packageJson.peerDependencies,
     }
 
     for (const [packageName, version] of Object.entries(allDeps)) {
