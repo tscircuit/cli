@@ -110,16 +110,13 @@ export default () => {
       )
       expect(localLibIndex).toBeDefined()
 
-      // Check that is-even was also uploaded (dependency of my-local-lib)
-      const isEvenPackageJson = fileList.find((f) =>
-        f.file_path.includes("node_modules/is-even/package.json"),
+      // Note: is-even is NOT uploaded because it's not in the root package.json
+      // The simplified node_modules upload only includes direct dependencies
+      // (see commit d26f7a9: "Simplify node_modules upload dependency scope")
+      const isEvenFiles = fileList.filter((f) =>
+        f.file_path.includes("node_modules/is-even/"),
       )
-      expect(isEvenPackageJson).toBeDefined()
-
-      const isEvenIndex = fileList.find((f) =>
-        f.file_path.includes("node_modules/is-even/index.js"),
-      )
-      expect(isEvenIndex).toBeDefined()
+      expect(isEvenFiles.length).toBe(0)
 
       // Check that React was NOT uploaded (runtime-provided package)
       const reactFiles = fileList.filter((f) =>
