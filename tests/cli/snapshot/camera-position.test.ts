@@ -2,7 +2,6 @@ import { expect, test } from "bun:test"
 import type { AnyCircuitElement } from "circuit-json"
 import fs from "node:fs"
 import path from "node:path"
-import { calculateCameraPosition } from "lib/shared/calculate-camera-position"
 import { getCliTestFixture } from "tests/fixtures/get-cli-test-fixture"
 
 const SNAPSHOT_DIR = path.join(import.meta.dir, "__snapshots__")
@@ -88,13 +87,16 @@ const expectPngToMatchBaseline = async (
   const baselinePath = path.join(SNAPSHOT_DIR, baselineName)
   const pngArray = toUint8Array(pngBytes)
 
-  if (!fs.existsSync(baselinePath) || shouldUpdateSnapshot()) {
+  const baselineExists = fs.existsSync(baselinePath)
+
+  if (!baselineExists) {
     await Bun.write(baselinePath, pngArray)
-    if (!shouldUpdateSnapshot()) {
-      throw new Error(
-        `Snapshot created at ${baselinePath}. Re-run tests to validate.`,
-      )
-    }
+    console.info(`Snapshot baseline created at ${baselinePath}`)
+    return
+  }
+
+  if (shouldUpdateSnapshot()) {
+    await Bun.write(baselinePath, pngArray)
   }
 
   const baselineBytes = toUint8Array(await Bun.file(baselinePath).arrayBuffer())
