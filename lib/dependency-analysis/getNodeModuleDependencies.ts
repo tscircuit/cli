@@ -202,16 +202,22 @@ export function resolveNodeModuleImport({
     return []
   }
 
-  // Read package.json to find entry points
+  // Read package.json to find entry points (if it exists)
   const packageJsonPath = path.join(packageDir, "package.json")
-  if (!fs.existsSync(packageJsonPath)) {
-    return []
+  const hasPackageJson = fs.existsSync(packageJsonPath)
+
+  let packageJson: Record<string, any> = {}
+  if (hasPackageJson) {
+    try {
+      packageJson = JSON.parse(fs.readFileSync(packageJsonPath, "utf-8"))
+    } catch {
+      // Ignore parse errors
+    }
   }
 
-  const packageJson = JSON.parse(fs.readFileSync(packageJsonPath, "utf-8"))
   const resolvedFiles: string[] = []
 
-  // If importing a subpath (e.g., "react/jsx-runtime")
+  // If importing a subpath (e.g., "react/jsx-runtime" or "kicad-libraries/footprints/...")
   if (importPath !== packageName) {
     const subpath = importPath.slice(packageName.length + 1)
     const possiblePaths = [
@@ -268,6 +274,20 @@ export function resolveNodeModuleImport({
         resolvedFiles.push(p)
         break
       }
+    }
+  }
+
+  // If still no resolved files but the package directory exists,
+  // return the package directory path as a marker so the package gets processed.
+  // This handles packages without standard entry points (e.g., KiCad libraries from GitHub)
+  if (resolvedFiles.length === 0 && fs.existsSync(packageDir)) {
+    // Use package.json if it exists, otherwise use the directory itself as a marker
+    if (hasPackageJson) {
+      resolvedFiles.push(packageJsonPath)
+    } else {
+      // Return the directory path with a special marker
+      // The getAllNodeModuleFilePaths function will handle this
+      resolvedFiles.push(packageDir)
     }
   }
 
@@ -560,28 +580,66 @@ export function getAllNodeModuleFilePaths(
       // The resolved files are the actual entry points we found
       if (resolvedFiles.length > 0) {
         const firstResolvedFile = resolvedFiles[0]
-        // Find the package directory by walking up from the resolved file
-        let packageDir = path.dirname(firstResolvedFile)
 
-        // Walk up until we find the package.json for this package
-        while (packageDir.includes("node_modules")) {
-          const packageJsonPath = path.join(packageDir, "package.json")
-          if (fs.existsSync(packageJsonPath)) {
-            try {
-              const pkgJson = JSON.parse(
-                fs.readFileSync(packageJsonPath, "utf-8"),
-              )
-              if (pkgJson.name === packageName) {
-                // Found the right package directory
+        // Check if the resolved "file" is actually a directory (package without entry point)
+        const isDirectory =
+          fs.existsSync(firstResolvedFile) &&
+          fs.statSync(firstResolvedFile).isDirectory()
+
+        let packageDir: string
+
+        if (isDirectory) {
+          // The resolved file is the package directory itself
+          packageDir = firstResolvedFile
+        } else {
+          // Find the package directory by walking up from the resolved file
+          packageDir = path.dirname(firstResolvedFile)
+
+          // Walk up until we find the package.json for this package OR
+          // we reach the node_modules/<package-name> directory
+          while (packageDir.includes("node_modules")) {
+            const packageJsonPath = path.join(packageDir, "package.json")
+            if (fs.existsSync(packageJsonPath)) {
+              try {
+                const pkgJson = JSON.parse(
+                  fs.readFileSync(packageJsonPath, "utf-8"),
+                )
+                if (pkgJson.name === packageName) {
+                  // Found the right package directory
+                  break
+                }
+              } catch {
+                // Continue searching
+              }
+            }
+
+            // Check if this is the package directory (node_modules/<package-name>)
+            // This handles packages without package.json
+            const dirName = path.basename(packageDir)
+            const parentDirName = path.basename(path.dirname(packageDir))
+
+            // Handle scoped packages (@scope/package) and regular packages
+            if (packageName.startsWith("@")) {
+              // Scoped package: check if we're at node_modules/@scope/package
+              const scopedName = `${parentDirName}/${dirName}`
+              if (
+                scopedName === packageName &&
+                path.basename(path.dirname(path.dirname(packageDir))) ===
+                  "node_modules"
+              ) {
                 break
               }
-            } catch {
-              // Continue searching
+            } else {
+              // Regular package: check if we're at node_modules/package
+              if (dirName === packageName && parentDirName === "node_modules") {
+                break
+              }
             }
+
+            const parentDir = path.dirname(packageDir)
+            if (parentDir === packageDir) break
+            packageDir = parentDir
           }
-          const parentDir = path.dirname(packageDir)
-          if (parentDir === packageDir) break
-          packageDir = parentDir
         }
 
         // Collect all files from the package directory
