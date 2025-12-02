@@ -87,7 +87,7 @@ const shouldUpdateSnapshot = () =>
 
 const expectPngToMatchBaseline = async (
   baselineName: string,
-  pngBytes: ArrayBuffer,
+  pngBytes: ArrayBuffer | Uint8Array,
 ) => {
   ensureSnapshotDir()
   const baselinePath = path.join(SNAPSHOT_DIR, baselineName)
