@@ -11,7 +11,8 @@ import { getUnscopedPackageName } from "lib/utils/get-unscoped-package-name"
 import { getPackageAuthor } from "lib/utils/get-package-author"
 import { getPackageFilePaths } from "cli/dev/get-package-file-paths"
 import { checkOrgAccess } from "lib/utils/check-org-access"
-import { isBinaryFile, hasBinaryContent } from "./binary-file-utils"
+import { isBinaryFile } from "./is-binary-file"
+import { hasBinaryContent } from "./has-binary-content"
 
 type PushOptions = {
   filePath?: string
