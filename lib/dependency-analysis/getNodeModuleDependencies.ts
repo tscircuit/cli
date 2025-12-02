@@ -234,22 +234,43 @@ export function resolveNodeModuleImport({
     }
   }
 
+  // Helper to resolve potentially nested export values
+  // exports["."].import can be a string or an object like { types: "...", default: "..." }
+  const resolveExportValue = (value: unknown): string | undefined => {
+    if (typeof value === "string") return value
+    if (value && typeof value === "object" && "default" in value) {
+      const defaultVal = (value as Record<string, unknown>).default
+      if (typeof defaultVal === "string") return defaultVal
+      // Handle double-nested: { default: { types: "...", default: "..." } }
+      if (
+        defaultVal &&
+        typeof defaultVal === "object" &&
+        "default" in defaultVal
+      ) {
+        const nestedDefault = (defaultVal as Record<string, unknown>).default
+        if (typeof nestedDefault === "string") return nestedDefault
+      }
+    }
+    return undefined
+  }
+
   // Main entry points from package.json
   const entryPoints = [
     packageJson.main,
     packageJson.module,
-    packageJson.exports?.["."]?.default,
-    packageJson.exports?.["."]?.import,
-    packageJson.exports?.["."]?.require,
-  ].filter(Boolean)
+    resolveExportValue(packageJson.exports?.["."]?.default),
+    resolveExportValue(packageJson.exports?.["."]?.import),
+    resolveExportValue(packageJson.exports?.["."]?.require),
+  ].filter((entry): entry is string => typeof entry === "string")
 
   for (const entry of entryPoints) {
-    const entryPath = path.join(packageDir, entry as string)
+    const entryPath = path.join(packageDir, entry)
     if (fs.existsSync(entryPath) && fs.statSync(entryPath).isFile()) {
       resolvedFiles.push(entryPath)
     }
   }
 
+  // Fallback to common entry point locations
   if (resolvedFiles.length === 0) {
     const fallbackPaths = [
       path.join(packageDir, "index.js"),
