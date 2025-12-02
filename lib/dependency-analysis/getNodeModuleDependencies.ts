@@ -488,6 +488,7 @@ const RUNTIME_PROVIDED_PACKAGES = new Set([
   "tscircuit",
   "@tscircuit/core",
   "@tscircuit/props",
+  "tslib",
 ])
 
 /**
