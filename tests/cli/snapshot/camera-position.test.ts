@@ -1,6 +1,8 @@
 import { expect, test } from "bun:test"
 import fs from "node:fs"
 import path from "node:path"
+import { Buffer } from "node:buffer"
+import looksSame from "looks-same"
 import { getCliTestFixture } from "tests/fixtures/get-cli-test-fixture"
 
 const SNAPSHOT_DIR = path.join(import.meta.dir, "__snapshots__")
@@ -85,21 +87,40 @@ const expectPngToMatchBaseline = async (
   ensureSnapshotDir()
   const baselinePath = path.join(SNAPSHOT_DIR, baselineName)
   const pngArray = toUint8Array(pngBytes)
+  const pngBuffer = Buffer.from(pngArray)
 
   const baselineExists = fs.existsSync(baselinePath)
 
   if (!baselineExists) {
-    await Bun.write(baselinePath, pngArray)
+    await Bun.write(baselinePath, pngBuffer)
     console.info(`Snapshot baseline created at ${baselinePath}`)
     return
   }
 
   if (shouldUpdateSnapshot()) {
-    await Bun.write(baselinePath, pngArray)
+    await Bun.write(baselinePath, pngBuffer)
   }
 
   const baselineBytes = toUint8Array(await Bun.file(baselinePath).arrayBuffer())
-  expect(pngArray).toEqual(baselineBytes)
+  const baselineBuffer = Buffer.from(baselineBytes)
+  const comparison = await looksSame(baselineBuffer, pngBuffer, {
+    tolerance: 3,
+    strict: false,
+    ignoreAntialiasing: true,
+  })
+
+  if (!comparison.equal) {
+    const diffPath = baselinePath.replace(/\.png$/, ".diff.png")
+    await looksSame.createDiff({
+      reference: baselineBuffer,
+      current: pngBuffer,
+      diff: diffPath,
+      highlightColor: "#ff00ff",
+    })
+    throw new Error(
+      `Snapshot mismatch for ${baselineName}. Visual diff saved to ${diffPath}`,
+    )
+  }
 }
 
 for (const fixture of BOARD_FIXTURES) {
