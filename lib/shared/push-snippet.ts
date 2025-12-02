@@ -11,6 +11,8 @@ import { getUnscopedPackageName } from "lib/utils/get-unscoped-package-name"
 import { getPackageAuthor } from "lib/utils/get-package-author"
 import { getPackageFilePaths } from "cli/dev/get-package-file-paths"
 import { checkOrgAccess } from "lib/utils/check-org-access"
+import { isBinaryFile } from "./is-binary-file"
+import { hasBinaryContent } from "./has-binary-content"
 
 type PushOptions = {
   filePath?: string
@@ -294,23 +296,56 @@ export const pushSnippet = async ({
   log("\n")
 
   const filePaths = getPackageFilePaths(projectDir)
+
   for (const fullFilePath of filePaths) {
     const relativeFilePath = path.relative(projectDir, fullFilePath)
-    const fileContent = fs.readFileSync(fullFilePath, "utf-8")
+
+    // Check if file is binary by extension first, then by content if needed
+    const fileBuffer = fs.readFileSync(fullFilePath)
+    const isBinary =
+      isBinaryFile(relativeFilePath) || hasBinaryContent(fileBuffer)
+
+    // Build the request payload based on whether the file is binary or text
+    const payload: {
+      file_path: string
+      package_name_with_version: string
+      content_text?: string
+      content_base64?: string
+    } = {
+      file_path: relativeFilePath,
+      package_name_with_version: `${scopedPackageName}@${releaseVersion}`,
+    }
+
+    if (isBinary) {
+      payload.content_base64 = fileBuffer.toString("base64")
+    } else {
+      payload.content_text = fileBuffer.toString("utf-8")
+    }
+
     await ky
       .post("package_files/create", {
-        json: {
-          file_path: relativeFilePath,
-          content_text: fileContent,
-          package_name_with_version: `${scopedPackageName}@${releaseVersion}`,
-        },
+        json: payload,
       })
       .json()
       .then((response) => {
-        console.log(kleur.gray(`⬆︎ ${relativeFilePath}`))
+        const icon = isBinary ? "📦" : "⬆︎"
+        console.log(kleur.gray(`${icon} ${relativeFilePath}`))
       })
-      .catch((error) => {
-        onError(`Error uploading file ${fullFilePath}: ${error}`)
+      .catch(async (error) => {
+        // Try to get more details from the error response
+        let errorDetails = ""
+        try {
+          const errorResponse = await error.response?.json()
+          if (errorResponse?.error?.message) {
+            errorDetails = `: ${errorResponse.error.message}`
+          }
+        } catch {
+          // Ignore JSON parsing errors
+        }
+        onError(
+          `Error uploading file "${relativeFilePath}"${errorDetails}\n` +
+            `  Full path: ${fullFilePath}`,
+        )
         return onExit(1)
       })
   }
