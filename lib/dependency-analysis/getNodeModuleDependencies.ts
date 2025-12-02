@@ -1,70 +1,13 @@
 import * as ts from "typescript"
 import * as path from "path"
 import * as fs from "fs"
-
-interface NodeModuleDependency {
-  /** The package name (e.g., "react" or "@tscircuit/core") */
-  packageName: string
-  /** The import path used in the source (e.g., "react/jsx-runtime") */
-  importPath: string
-  /** Resolved absolute file paths for this dependency */
-  resolvedFiles: string[]
-}
-
-function getLocalPackages(projectDir: string): Set<string> {
-  const packageJsonPath = path.join(projectDir, "package.json")
-  const localPackages = new Set<string>()
-
-  if (!fs.existsSync(packageJsonPath)) {
-    return localPackages
-  }
-
-  try {
-    const packageJson = JSON.parse(fs.readFileSync(packageJsonPath, "utf-8"))
-    const allDeps = {
-      ...packageJson.dependencies,
-    }
-
-    for (const [packageName, version] of Object.entries(allDeps)) {
-      if (typeof version !== "string") continue
-
-      const isLocalPackage =
-        version.startsWith("file:") ||
-        version.startsWith("link:") ||
-        version.includes(".yalc")
-
-      if (isLocalPackage) {
-        localPackages.add(packageName)
-      }
-    }
-  } catch (error) {
-    console.warn("Failed to parse package.json for local packages:", error)
-  }
-
-  return localPackages
-}
-
-function getAllDependencyPackages(projectDir: string): Set<string> {
-  const packageJsonPath = path.join(projectDir, "package.json")
-  const allPackages = new Set<string>()
-
-  if (!fs.existsSync(packageJsonPath)) {
-    return allPackages
-  }
-
-  try {
-    const packageJson = JSON.parse(fs.readFileSync(packageJsonPath, "utf-8"))
-    const deps = packageJson.dependencies || {}
-
-    for (const packageName of Object.keys(deps)) {
-      allPackages.add(packageName)
-    }
-  } catch (error) {
-    console.warn("Failed to parse package.json for dependencies:", error)
-  }
-
-  return allPackages
-}
+import { isRuntimeProvidedPackage } from "../utils/isRuntimeProvidedPackage"
+import { getPackageNameFromImport } from "../utils/getPackageNameFromImport"
+import { getPackageNameFromFilePath } from "../utils/getPackageNameFromFilePath"
+import { getAllDependencyPackages } from "../utils/getAllDependencyPackages"
+import { findPackageDir } from "../utils/findPackageDir"
+import { findPackageDirFromResolvedFile } from "../utils/findPackageDirFromResolvedFile"
+import { collectPackageFiles } from "../utils/collectPackageFiles"
 
 /**
  * Extracts all node_modules imports from a source file
@@ -137,23 +80,8 @@ export function getNodeModuleImports(filePath: string): string[] {
 }
 
 /**
- * Extracts the package name from an import path
- * e.g., "react/jsx-runtime" -> "react"
- * e.g., "@tscircuit/core/components" -> "@tscircuit/core"
- */
-function getPackageNameFromImport(importPath: string): string {
-  if (importPath.startsWith("@")) {
-    // Scoped package
-    const parts = importPath.split("/")
-    return `${parts[0]}/${parts[1]}`
-  }
-  // Regular package
-  return importPath.split("/")[0]
-}
-
-/**
- * Resolves a node_modules import to actual file paths
- * Searches in both the project's node_modules and parent directories for hoisted packages
+ * Resolves a node_modules import to actual file paths.
+ * Searches in both the project's node_modules and parent directories for hoisted packages.
  */
 export function resolveNodeModuleImport({
   importPath,
@@ -165,50 +93,12 @@ export function resolveNodeModuleImport({
   searchFromDir?: string
 }): string[] {
   const packageName = getPackageNameFromImport(importPath)
-
-  // Try to find the package in multiple locations:
-  // 1. Project's node_modules
-  // 2. If searchFromDir is provided (e.g., inside a local package), search upwards
-  const searchPaths: string[] = [
-    path.join(projectDir, "node_modules", packageName),
-  ]
-
-  if (searchFromDir) {
-    // Walk up the directory tree from searchFromDir to find node_modules
-    let currentDir = path.dirname(searchFromDir)
-    const projectDirNormalized = path.normalize(projectDir)
-
-    while (currentDir.startsWith(projectDirNormalized)) {
-      const candidatePath = path.join(currentDir, "node_modules", packageName)
-      if (!searchPaths.includes(candidatePath)) {
-        searchPaths.push(candidatePath)
-      }
-
-      const parentDir = path.dirname(currentDir)
-      if (parentDir === currentDir) break
-      currentDir = parentDir
-    }
-  }
-
-  let packageDir: string | undefined
-  for (const candidatePath of searchPaths) {
-    if (fs.existsSync(candidatePath)) {
-      packageDir = candidatePath
-      break
-    }
-  }
+  const packageDir = findPackageDir({ packageName, projectDir, searchFromDir })
 
   if (!packageDir) {
     return []
   }
 
-  // Read package.json to find entry points
-  const packageJsonPath = path.join(packageDir, "package.json")
-  if (!fs.existsSync(packageJsonPath)) {
-    return []
-  }
-
-  const packageJson = JSON.parse(fs.readFileSync(packageJsonPath, "utf-8"))
   const resolvedFiles: string[] = []
 
   // If importing a subpath (e.g., "react/jsx-runtime")
@@ -232,24 +122,38 @@ export function resolveNodeModuleImport({
         break
       }
     }
-  }
 
-  // Main entry points from package.json
-  const entryPoints = [
-    packageJson.main,
-    packageJson.module,
-    packageJson.exports?.["."]?.default,
-    packageJson.exports?.["."]?.import,
-    packageJson.exports?.["."]?.require,
-  ].filter(Boolean)
-
-  for (const entry of entryPoints) {
-    const entryPath = path.join(packageDir, entry as string)
-    if (fs.existsSync(entryPath) && fs.statSync(entryPath).isFile()) {
-      resolvedFiles.push(entryPath)
+    if (resolvedFiles.length > 0) {
+      return resolvedFiles
     }
   }
 
+  // Read package.json to find entry points (if it exists)
+  const packageJsonPath = path.join(packageDir, "package.json")
+  if (fs.existsSync(packageJsonPath)) {
+    try {
+      const packageJson = JSON.parse(fs.readFileSync(packageJsonPath, "utf-8"))
+
+      const entryPoints = [
+        packageJson.main,
+        packageJson.module,
+        packageJson.exports?.["."]?.default,
+        packageJson.exports?.["."]?.import,
+        packageJson.exports?.["."]?.require,
+      ].filter(Boolean)
+
+      for (const entry of entryPoints) {
+        const entryPath = path.join(packageDir, entry as string)
+        if (fs.existsSync(entryPath) && fs.statSync(entryPath).isFile()) {
+          resolvedFiles.push(entryPath)
+        }
+      }
+    } catch {
+      // Ignore parse errors
+    }
+  }
+
+  // Fallback to common entry point locations
   if (resolvedFiles.length === 0) {
     const fallbackPaths = [
       path.join(packageDir, "index.js"),
@@ -275,7 +179,7 @@ export function resolveNodeModuleImport({
 }
 
 /**
- * Recursively collects all node_modules files used by a source file and its dependencies
+ * Recursively collects all node_modules dependencies from a source file and its local imports
  */
 export function collectAllNodeModuleDependencies(
   entryFilePath: string,
@@ -283,7 +187,7 @@ export function collectAllNodeModuleDependencies(
   maxDepth = 10,
 ): Map<string, string[]> {
   const visited = new Set<string>()
-  const nodeModuleFiles = new Map<string, string[]>() // importPath -> resolved files
+  const nodeModuleFiles = new Map<string, string[]>()
 
   function processFile(filePath: string, depth: number) {
     if (depth > maxDepth || visited.has(filePath)) {
@@ -392,122 +296,27 @@ export function collectAllNodeModuleDependencies(
 }
 
 /**
- * Directories that should be excluded when collecting package files
+ * Gets all file paths from node_modules that should be uploaded for a project.
+ * Only uploads packages explicitly listed in dependencies (excluding runtime-provided packages).
  */
-const EXCLUDED_PACKAGE_DIRECTORIES = new Set([
-  "node_modules",
-  ".git",
-  ".next",
-  "dist",
-  "build",
-  ".turbo",
-  "coverage",
-  ".cache",
-  "tmp",
-  "temp",
-])
-
-/**
- * Recursively collects all files from a local package directory
- * Prioritizes transpiled files (dist/, build/) over source files to avoid
- * path alias resolution issues in the browser
- */
-function collectLocalPackageFiles(packageDir: string): string[] {
-  // First, check if there's a dist/ or build/ directory with transpiled files
-  const buildDirs = ["dist", "build"]
-
-  // Check build directories in order
-  for (const dirName of buildDirs) {
-    const dirPath = path.join(packageDir, dirName)
-    if (fs.existsSync(dirPath)) {
-      const files = walkDirectory(dirPath, new Set())
-      if (files.length > 0) {
-        // Also include package.json for metadata
-        const packageJsonPath = path.join(packageDir, "package.json")
-        if (fs.existsSync(packageJsonPath)) {
-          files.push(packageJsonPath)
-        }
-        return files
-      }
-    }
-  }
-
-  // Fall back to collecting all source files (excluding build directories)
-  return walkDirectory(packageDir, EXCLUDED_PACKAGE_DIRECTORIES)
-}
-
-function walkDirectory(dir: string, excludedDirs: Set<string>): string[] {
-  const files: string[] = []
-
-  if (!fs.existsSync(dir)) return files
-
-  const entries = fs.readdirSync(dir, { withFileTypes: true })
-
-  for (const entry of entries) {
-    const fullPath = path.join(dir, entry.name)
-
-    if (entry.isDirectory()) {
-      // Skip excluded directories
-      if (excludedDirs.has(entry.name)) {
-        continue
-      }
-      files.push(...walkDirectory(fullPath, excludedDirs))
-    } else if (entry.isFile()) {
-      files.push(fullPath)
-    }
-  }
-
-  return files
-}
-
-const RUNTIME_PROVIDED_PACKAGES = new Set([
-  "react",
-  "react-dom",
-  "react/jsx-runtime",
-  "tscircuit",
-  "@tscircuit/core",
-  "@tscircuit/props",
-])
-
-/**
- * Check if a package is provided by the runtime and should not be uploaded
- */
-function isRuntimeProvidedPackage(packageName: string): boolean {
-  // Check exact match
-  if (RUNTIME_PROVIDED_PACKAGES.has(packageName)) {
-    return true
-  }
-
-  // Check if it's a subpath of a runtime package
-  for (const runtimePkg of RUNTIME_PROVIDED_PACKAGES) {
-    if (packageName.startsWith(`${runtimePkg}/`)) {
-      return true
-    }
-  }
-
-  return false
-}
-
 export function getAllNodeModuleFilePaths(
   entryFilePath: string,
   projectDir: string,
 ): string[] {
-  const localPackages = getLocalPackages(projectDir)
   const allDependencyPackages = getAllDependencyPackages(projectDir)
 
-  // Early return if no dependencies are defined
   if (allDependencyPackages.size === 0) {
     return []
   }
 
-  // Collect all node_modules dependencies from the entry file
+  // Collect dependencies from imports in the entry file
   const dependencies = collectAllNodeModuleDependencies(
     entryFilePath,
     projectDir,
   )
 
   // Ensure all direct dependencies are included even if not imported
-  for (const packageName of allDependencyPackages) {
+  for (const packageName of Array.from(allDependencyPackages)) {
     if (dependencies.has(packageName)) continue
 
     const resolvedFiles = resolveNodeModuleImport({
@@ -524,74 +333,37 @@ export function getAllNodeModuleFilePaths(
   const processedPackages = new Set<string>()
   const allFiles = new Set<string>()
 
-  // When there are local packages, we also need to upload their transitive dependencies
-  const hasLocalPackages = localPackages.size > 0
-
-  // Iterate through all discovered dependencies
-  for (const [importPath, resolvedFiles] of dependencies.entries()) {
+  for (const [importPath, resolvedFiles] of Array.from(
+    dependencies.entries(),
+  )) {
     const packageName = getPackageNameFromImport(importPath)
-
-    // Check if this is a local package
-    const isLocalPackage = localPackages.has(packageName)
-
-    // Check if this package is in the project's dependencies
     const isProjectDependency = allDependencyPackages.has(packageName)
 
-    // Skip pre-supplied packages UNLESS they are local packages being developed
-    if (isRuntimeProvidedPackage(packageName) && !isLocalPackage) {
+    // Skip runtime-provided packages and non-project dependencies
+    if (isRuntimeProvidedPackage(packageName) || !isProjectDependency) {
       continue
     }
 
-    // Upload packages that are:
-    // 1. Explicitly listed in the project's dependencies (direct deps)
-    // 2. Local packages
-    // 3. Transitive dependencies when there are local packages
-    const shouldUpload =
-      isProjectDependency || isLocalPackage || hasLocalPackages
-    if (!shouldUpload) {
-      continue
-    }
-
-    // Upload project dependencies and local packages
     if (!processedPackages.has(packageName)) {
       processedPackages.add(packageName)
 
-      // Use the first resolved file to find the package directory
-      // The resolved files are the actual entry points we found
       if (resolvedFiles.length > 0) {
-        const firstResolvedFile = resolvedFiles[0]
-        // Find the package directory by walking up from the resolved file
-        let packageDir = path.dirname(firstResolvedFile)
+        const packageDir = findPackageDirFromResolvedFile(
+          resolvedFiles[0],
+          packageName,
+        )
 
-        // Walk up until we find the package.json for this package
-        while (packageDir.includes("node_modules")) {
-          const packageJsonPath = path.join(packageDir, "package.json")
-          if (fs.existsSync(packageJsonPath)) {
-            try {
-              const pkgJson = JSON.parse(
-                fs.readFileSync(packageJsonPath, "utf-8"),
-              )
-              if (pkgJson.name === packageName) {
-                // Found the right package directory
-                break
-              }
-            } catch {
-              // Continue searching
-            }
-          }
-          const parentDir = path.dirname(packageDir)
-          if (parentDir === packageDir) break
-          packageDir = parentDir
-        }
-
-        // Collect all files from the package directory
-        if (fs.existsSync(packageDir)) {
-          const packageFiles = collectLocalPackageFiles(packageDir)
+        if (packageDir && fs.existsSync(packageDir)) {
+          const packageFiles = collectPackageFiles(packageDir)
           packageFiles.forEach((file) => allFiles.add(file))
         }
       }
     }
   }
 
-  return Array.from(allFiles)
+  // Filter out files inside runtime-provided packages (handles transitive deps)
+  return Array.from(allFiles).filter((file) => {
+    const pkgName = getPackageNameFromFilePath(file)
+    return !pkgName || !isRuntimeProvidedPackage(pkgName)
+  })
 }

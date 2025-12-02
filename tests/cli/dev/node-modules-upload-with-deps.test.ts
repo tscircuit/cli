@@ -6,13 +6,14 @@ import * as os from "node:os"
 import ky from "ky"
 
 test(
-  "DevServer uploads dependencies of yalc/bun link packages",
+  "DevServer uploads all explicit dependencies from package.json",
   async () => {
     // Create a temporary directory for testing
     const tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), "tsci-test-deps-"))
 
     try {
-      // Create package.json with a yalc package that has npm dependencies
+      // Create package.json with multiple dependencies
+      // All dependencies in package.json should be uploaded
       fs.writeFileSync(
         path.join(tmpDir, "package.json"),
         JSON.stringify({
@@ -20,6 +21,7 @@ test(
           version: "1.0.0",
           dependencies: {
             "my-local-lib": "file:.yalc/my-local-lib",
+            "is-even": "^1.0.0",
           },
         }),
       )
@@ -47,7 +49,7 @@ test(
 module.exports = { checkEven: isEven };`,
       )
 
-      // Create is-even package (dependency of my-local-lib)
+      // Create is-even package (also listed in dependencies)
       const isEvenDir = path.join(nodeModulesDir, "is-even")
       fs.mkdirSync(isEvenDir, { recursive: true })
 
