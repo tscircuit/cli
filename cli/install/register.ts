@@ -1,15 +1,22 @@
 import type { Command } from "commander"
 import { installProjectDependencies } from "lib/shared/install-project-dependencies"
+import { addPackage } from "lib/shared/add-package"
 
 export const registerInstall = (program: Command) => {
   program
-    .command("install")
+    .command("install [packageSpec]")
     .description(
-      "Install project dependencies and generate package.json if needed",
+      "Install project dependencies, or install a specific package (e.g., tsci install https://github.com/espressif/kicad-libraries)",
     )
-    .action(async () => {
+    .action(async (packageSpec?: string) => {
       try {
-        await installProjectDependencies()
+        if (packageSpec) {
+          // Install a specific package (supports KiCad libraries, npm packages, GitHub URLs, etc.)
+          await addPackage(packageSpec)
+        } else {
+          // Install all project dependencies
+          await installProjectDependencies()
+        }
       } catch (error) {
         if (error instanceof Error) {
           console.error(error.message)
