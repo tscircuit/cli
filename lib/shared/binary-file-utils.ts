@@ -5,63 +5,22 @@ import * as path from "node:path"
  * Binary files cannot be safely read as UTF-8 text and need special handling.
  */
 export const BINARY_FILE_EXTENSIONS = new Set([
-  // 3D model formats
+  // 3D model formats (common in PCB projects)
   ".glb",
   ".gltf",
   ".obj",
   ".stl",
   ".step",
-  ".stp",
-  ".iges",
-  ".igs",
   // Image formats
   ".png",
   ".jpg",
   ".jpeg",
   ".gif",
-  ".bmp",
   ".webp",
-  ".ico",
-  ".tiff",
-  ".tif",
   // Archive formats
   ".zip",
-  ".tar",
   ".gz",
-  ".rar",
-  ".7z",
-  // PCB/EDA formats (gerber files are typically binary-safe but can cause issues)
-  ".gbr",
-  ".gtl",
-  ".gbl",
-  ".gts",
-  ".gbs",
-  ".gto",
-  ".gbo",
-  ".gtp",
-  ".gbp",
-  ".gm1",
-  ".gko",
-  ".drl",
-  // KiCad formats (some are text, but can have binary data)
-  ".kicad_mod",
-  ".kicad_pcb",
-  ".kicad_pro",
-  ".kicad_sch",
-  // Other binary formats
-  ".pdf",
-  ".doc",
-  ".docx",
-  ".xls",
-  ".xlsx",
-  ".ppt",
-  ".pptx",
-  ".exe",
-  ".dll",
-  ".so",
-  ".dylib",
-  ".bin",
-  ".dat",
+  ".tar",
 ])
 
 /**
