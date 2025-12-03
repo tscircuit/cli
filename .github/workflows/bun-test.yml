@@ -32,7 +32,7 @@ jobs:
       - name: npm ls zod (sanity)
         run: npm ls zod || true
 
-      - name: One-shot deep diagnostics (heredoc-safe)
+      - name: One-shot deep diagnostics (no heredocs)
         shell: bash
         env:
           FAILING_CMD: "bun test"
@@ -41,6 +41,9 @@ jobs:
 
           mkdir -p .ci-debug
           LOG=".ci-debug/diagnostics.log"
+          : > "$LOG"
+
+          # Log everything to file and console
           exec > >(tee -a "$LOG") 2>&1
 
           section () { echo; echo "============================================================"; echo "$1"; echo "============================================================"; }
@@ -68,14 +71,13 @@ jobs:
           trybash "ls -la bun.lock bun.lockb package-lock.json pnpm-lock.yaml yarn.lock 2>/dev/null || true"
 
           section "Bun install (record if bun.lock changes)"
-          # You have bun.lock in the repo; capture changes as signal (but don't fail).
           before_hash="$(sha256sum bun.lock 2>/dev/null | awk '{print $1}' || true)"
           trybash "bun install"
           after_hash="$(sha256sum bun.lock 2>/dev/null | awk '{print $1}' || true)"
           echo "bun.lock sha256 before: ${before_hash}"
           echo "bun.lock sha256 after : ${after_hash}"
           if [ -n "${before_hash}" ] && [ -n "${after_hash}" ] && [ "${before_hash}" != "${after_hash}" ]; then
-            echo "WARNING: bun.lock changed during CI install (non-determinism!)"
+            echo "WARNING: bun.lock changed during CI install"
             trybash "git --no-pager diff -- bun.lock || true"
           fi
 
@@ -83,8 +85,8 @@ jobs:
           trybash "bun pm ls zod || true"
           trybash "bun pm ls @tscircuit/props tscircuit easyeda @tscircuit/core winterspec @anatine/zod-openapi || true"
 
-          section "Resolution & runtime sanity (zod)"
-          bun - <<'EOF' || true
+          section "Write JS diagnostics scripts"
+          cat > .ci-debug/zod_sanity.mjs <<'JS'
           try {
             console.log("import.meta.resolve('zod') =", import.meta.resolve("zod"));
             console.log("import.meta.resolve('zod/package.json') =", import.meta.resolve("zod/package.json"));
@@ -107,10 +109,9 @@ jobs:
           } catch (e) {
             console.error("ERROR importing zod:", e?.stack ?? e);
           }
-EOF
+JS
 
-          section "Inspect package entrypoints for key deps (CJS/ESM hints)"
-          bun - <<'EOF' || true
+          cat > .ci-debug/pkg_entrypoints.mjs <<'JS'
           const pkgs = ["@tscircuit/props","easyeda","@tscircuit/file-server","winterspec","@anatine/zod-openapi","tscircuit"];
           for (const name of pkgs) {
             try {
@@ -127,19 +128,21 @@ EOF
               console.log("could not import package.json:", e?.message ?? e);
             }
           }
-EOF
+JS
+
+          section "Run JS diagnostics via bun"
+          trybash "bun .ci-debug/zod_sanity.mjs"
+          trybash "bun .ci-debug/pkg_entrypoints.mjs"
 
           section "Print first 140 lines of compiled entrypoints (props + easyeda)"
           trybash "if [ -f node_modules/@tscircuit/props/dist/index.js ]; then echo '--- @tscircuit/props/dist/index.js ---'; sed -n '1,140p' node_modules/@tscircuit/props/dist/index.js; fi"
           trybash "if [ -f node_modules/easyeda/dist/index.js ]; then echo '--- easyeda/dist/index.js ---'; sed -n '1,140p' node_modules/easyeda/dist/index.js; fi"
           trybash "if [ -f node_modules/easyeda/dist/browser/index.js ]; then echo '--- easyeda/dist/browser/index.js ---'; sed -n '1,140p' node_modules/easyeda/dist/browser/index.js; fi"
 
-          section "Fingerprint search for the crash site (should locate the offending file)"
+          section "Fingerprint search for the crash site"
           trybash "rg -n --hidden --no-ignore 'keyValidator\\._parse|ParseInputLazyPath|_parse\\(new ParseInputLazyPath' node_modules || true"
 
           section "Search node_modules for suspicious z.record() patterns"
-          # - missing parentheses: z.record(z.string, ...) or minified z.record(z.string,...
-          # - variable key schema: z.record(keyValidator,...)
           trybash "rg -n --hidden --no-ignore 'z\\.record\\(\\s*z\\.(string|number|enum)\\b(?!\\()|z\\.record\\(z\\.(string|number|enum)\\b(?!\\()|z\\.record\\(\\s*[A-Za-z_$][A-Za-z0-9_$]*\\s*,' node_modules || true"
 
           section "Search repo and node_modules for the exact error string"
@@ -149,7 +152,7 @@ EOF
           trybash "find node_modules -path '*/node_modules/zod/package.json' -maxdepth 6 -print || true"
           trybash "find node_modules -type d -name zod -maxdepth 6 -print | head -n 200 || true"
 
-          section "Run failing command with full capture (this is the key part)"
+          section "Run failing command with full capture"
           run_capture () {
             local cmd="$1"
             echo
@@ -186,8 +189,6 @@ EOF
                 nl -ba "$f" | sed -n "${start},${end}p" || true
               fi
             fi
-
-            # We never fail this step; it's diagnostics
             return 0
           }
 
@@ -214,6 +215,8 @@ EOF
           name: ci-debug-zod-parse
           path: |
             .ci-debug/diagnostics.log
+            .ci-debug/zod_sanity.mjs
+            .ci-debug/pkg_entrypoints.mjs
             .ci-debug/failing_cmd.out.txt
             .ci-debug/failing_cmd.err.txt
             .ci-debug/failing_cmd.combined.txt
