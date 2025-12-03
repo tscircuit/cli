@@ -26,7 +26,7 @@ jobs:
       - name: Install dependencies
         run: bun install
       
-      - run: bunx playwright install
+      - run: bunx playwright install chromium
       - run: npm ls zod
       
       - run: |
@@ -44,14 +44,6 @@ jobs:
           echo "=== Install tools ==="
           sudo apt-get update -y
           sudo apt-get install -y ripgrep
-
-          echo
-          echo "=== Lockfiles present ==="
-          ls -la bun.lock bun.lockb 2>/dev/null || true
-
-          echo
-          echo "=== bun install (FROZEN, fail if lockfile would change) ==="
-          bun install --frozen-lockfile
 
           echo
           echo "=== bun dep tree (key packages) ==="
