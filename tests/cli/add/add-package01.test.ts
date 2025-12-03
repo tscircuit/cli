@@ -16,17 +16,17 @@ test("tsci add - adds regular npm package", async () => {
   )
 
   // Test adding a regular npm package
-  const { stdout } = await runCommand("tsci add zod")
-  expect(stdout).toContain("Adding zod")
+  const { stdout } = await runCommand("tsci add is-number")
+  expect(stdout).toContain("Adding is-number")
   expect(stdout).toContain("successfully")
 
   // Verify package.json was updated
   const pkgJson = JSON.parse(
     await Bun.file(join(tmpDir, "package.json")).text(),
   )
-  expect(pkgJson.dependencies["zod"]).toBeDefined()
+  expect(pkgJson.dependencies["is-number"]).toBeDefined()
 
   // Verify package was actually installed in node_modules
-  const nodeModulesPath = join(tmpDir, "node_modules", "zod")
+  const nodeModulesPath = join(tmpDir, "node_modules", "is-number")
   expect(existsSync(nodeModulesPath)).toBe(true)
 })

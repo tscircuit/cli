@@ -16,17 +16,17 @@ test("tsci add - adds package with version", async () => {
   )
 
   // Test adding with version
-  const { stdout } = await runCommand("tsci add zod@3.22.0")
-  expect(stdout).toContain("Adding zod@3.22.0")
+  const { stdout } = await runCommand("tsci add is-number@6")
+  expect(stdout).toContain("Adding is-number@6")
   expect(stdout).toContain("successfully")
 
   // Verify package.json was updated with specific version
   const pkgJson = JSON.parse(
     await Bun.file(join(tmpDir, "package.json")).text(),
   )
-  expect(pkgJson.dependencies["zod"]).toBe("3.22.0")
+  expect(pkgJson.dependencies["is-number"]).toBe("6")
 
   // Verify package was actually installed in node_modules
-  const nodeModulesPath = join(tmpDir, "node_modules", "zod")
+  const nodeModulesPath = join(tmpDir, "node_modules", "is-number")
   expect(existsSync(nodeModulesPath)).toBe(true)
 })
