@@ -202,16 +202,16 @@ export function resolveNodeModuleImport({
     return []
   }
 
-  // Read package.json to find entry points
+  // Read package.json to find entry points (may not exist for some packages like KiCad libraries from GitHub)
   const packageJsonPath = path.join(packageDir, "package.json")
-  if (!fs.existsSync(packageJsonPath)) {
-    return []
-  }
-
-  const packageJson = JSON.parse(fs.readFileSync(packageJsonPath, "utf-8"))
+  const hasPackageJson = fs.existsSync(packageJsonPath)
+  const packageJson = hasPackageJson
+    ? JSON.parse(fs.readFileSync(packageJsonPath, "utf-8"))
+    : null
   const resolvedFiles: string[] = []
 
-  // If importing a subpath (e.g., "react/jsx-runtime")
+  // If importing a subpath (e.g., "react/jsx-runtime" or "kicad-libraries/footprints/file.kicad_mod")
+  // This should work even without a package.json
   if (importPath !== packageName) {
     const subpath = importPath.slice(packageName.length + 1)
     const possiblePaths = [
@@ -232,6 +232,12 @@ export function resolveNodeModuleImport({
         break
       }
     }
+  }
+
+  // If no package.json and we found subpath files, return them
+  // This handles packages like KiCad libraries installed from GitHub that don't have package.json
+  if (!hasPackageJson) {
+    return resolvedFiles
   }
 
   // Helper to resolve potentially nested export values
@@ -584,8 +590,10 @@ export function getAllNodeModuleFilePaths(
         const firstResolvedFile = resolvedFiles[0]
         // Find the package directory by walking up from the resolved file
         let packageDir = path.dirname(firstResolvedFile)
+        let hasPackageJson = false
 
-        // Walk up until we find the package.json for this package
+        // Walk up until we find the package.json for this package OR
+        // we reach the expected node_modules/packageName directory
         while (packageDir.includes("node_modules")) {
           const packageJsonPath = path.join(packageDir, "package.json")
           if (fs.existsSync(packageJsonPath)) {
@@ -595,21 +603,45 @@ export function getAllNodeModuleFilePaths(
               )
               if (pkgJson.name === packageName) {
                 // Found the right package directory
+                hasPackageJson = true
                 break
               }
             } catch {
               // Continue searching
             }
           }
+
+          // For packages without package.json (e.g., KiCad libraries from GitHub),
+          // check if we're at the expected node_modules/packageName location
+          const expectedPackagePath = packageName.startsWith("@")
+            ? `node_modules/${packageName}` // @scope/package
+            : `node_modules/${packageName}` // regular package
+          if (
+            packageDir.endsWith(expectedPackagePath) ||
+            packageDir.endsWith(expectedPackagePath.replace(/\//g, path.sep))
+          ) {
+            // We're at the expected package directory
+            break
+          }
+
           const parentDir = path.dirname(packageDir)
           if (parentDir === packageDir) break
           packageDir = parentDir
         }
 
-        // Collect all files from the package directory
+        // For packages WITH package.json, collect all files from the package directory
+        // For packages WITHOUT package.json (e.g., KiCad libraries), only upload the specific resolved files
         if (fs.existsSync(packageDir)) {
-          const packageFiles = collectLocalPackageFiles(packageDir)
-          packageFiles.forEach((file) => allFiles.add(file))
+          if (hasPackageJson) {
+            const packageFiles = collectLocalPackageFiles(packageDir)
+            packageFiles.forEach((file) => allFiles.add(file))
+          } else {
+            // Only add the specifically resolved files for packages without package.json
+            // This avoids uploading hundreds of unnecessary files from KiCad libraries
+            for (const file of resolvedFiles) {
+              allFiles.add(file)
+            }
+          }
         }
       }
     }
