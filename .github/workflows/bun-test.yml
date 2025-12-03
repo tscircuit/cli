@@ -29,6 +29,162 @@ jobs:
       - run: bunx playwright install
       - run: npm ls zod
 
+      - name: Debug zod/_parse + props runtime (bun + ubuntu diagnostics)
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          echo "=== Basic env ==="
+          echo "pwd: $(pwd)"
+          echo "CI: ${CI:-}"
+          echo "NODE_ENV: ${NODE_ENV:-}"
+          bun --version
+          node -v || true
+          npm -v || true
+          uname -a || true
+
+          echo
+          echo "=== lockfiles present ==="
+          ls -la bun.lockb bun.lock package-lock.json pnpm-lock.yaml yarn.lock 2>/dev/null || true
+
+          echo
+          echo "=== bun install (if needed) ==="
+          # no-op if already installed in previous steps; safe to run again
+          bun install --frozen-lockfile || bun install
+
+          echo
+          echo "=== bun dependency tree: zod + key deps ==="
+          bun pm ls zod || true
+          bun pm ls @tscircuit/props tscircuit easyeda @tscircuit/core || true
+
+          echo
+          echo "=== Resolution: where is zod coming from? (bun) ==="
+          bun -e 'console.log("import.meta.resolve(zod) =", import.meta.resolve("zod"))' || true
+          bun -e 'console.log("import.meta.resolve(zod/package.json) =", import.meta.resolve("zod/package.json"))' || true
+
+          echo
+          echo "=== Runtime sanity: is z.string()._parse present? (bun) ==="
+          bun - <<'BUN'
+          try {
+            const mod = await import("zod");
+            console.log('zod module keys:', Object.keys(mod));
+            const z = mod.z;
+            console.log('has z:', !!z);
+            console.log('typeof z?.string:', typeof z?.string);
+            if (z && typeof z.string === "function") {
+              const s = z.string();
+              console.log('typeof z.string()._parse:', typeof s._parse);
+            } else {
+              console.log("Cannot call z.string()");
+            }
+
+            // also print the declared version
+            const pkg = await import("zod/package.json");
+            console.log("zod version:", pkg.default?.version ?? pkg.version);
+          } catch (e) {
+            console.error("ERROR importing zod:", e?.stack ?? e);
+          }
+          BUN
+
+          echo
+          echo "=== Require/import @tscircuit/props and print entrypoints ==="
+          bun - <<'BUN'
+          try {
+            const propsPkg = await import("@tscircuit/props/package.json");
+            const p = propsPkg.default ?? propsPkg;
+            console.log("@tscircuit/props version:", p.version);
+            console.log("@tscircuit/props main:", p.main);
+            console.log("@tscircuit/props module:", p.module);
+            console.log("@tscircuit/props type:", p.type);
+            console.log("@tscircuit/props exports:", p.exports);
+
+            await import("@tscircuit/props");
+            console.log('import("@tscircuit/props") succeeded');
+          } catch (e) {
+            console.error("ERROR importing @tscircuit/props:", e?.stack ?? e);
+          }
+          BUN
+
+          echo
+          echo "=== Inspect how @tscircuit/props imports zod (top of compiled JS) ==="
+          for f in \
+            node_modules/@tscircuit/props/lib/platformConfig.js \
+            node_modules/@tscircuit/props/lib/common/layout.js \
+            node_modules/@tscircuit/props/lib/index.js; do
+            if [ -f "$f" ]; then
+              echo "--- $f (first 80 lines) ---"
+              sed -n '1,80p' "$f" || true
+              echo
+            fi
+          done
+
+          echo
+          echo "=== Grep node_modules for suspicious zod usage ==="
+          if command -v rg >/dev/null 2>&1; then
+            rg "z\.record\(\s*z\.string\b" node_modules -n || true
+            rg "z\.record\(\s*z\.number\b" node_modules -n || true
+            rg 'import\s+z\s+from\s+"zod"|require\("zod"\)\.default|from\s+"zod"\s*;\s*$' node_modules -n || true
+          else
+            echo "(rg not found; using grep -R)"
+            grep -RIn --include='*.js' "z.record( *z.string" node_modules || true
+            grep -RIn --include='*.js' "z.record( *z.number" node_modules || true
+            grep -RIn --include='*.js' -E 'import[[:space:]]+z[[:space:]]+from[[:space:]]+"zod"|require\("zod"\)\.default' node_modules || true
+          fi
+
+          echo
+          echo "=== Done diagnostics ==="
+
+
+            - name: Generate test plans
+              run: bun run scripts/generate-test-plan.ts
+
+            - name: Run tests for node ${{ matrix.node }}
+              run: |
+                if [ ! -f ".github/test-plans/node${{ matrix.node }}-testplan.txt" ]; then
+                  echo "ERROR: No test plan found for node ${{ matrix.node }}"
+                  exit 1
+                fi
+
+                mapfile -t test_files < .github/test-plans/node${{ matrix.node }}-testplan.txt
+                if [ ${#test_files[@]} -eq 0 ]; then
+                  echo "ERROR: No test files in plan for node ${{ matrix.node }}"
+                  exit 1
+                fi
+
+                echo "Running ${#test_files[@]} test files for node ${{ matrix.node }}"
+                attempt=1
+                while [ $attempt -le 4 ]; do
+                  bun test ${test_files[@]} --timeout 20000
+                  code=$?
+
+                  if [ $code -eq 0 ]; then
+                    break
+                  fi
+
+                  if [ $code -ne 139 ] && [ $code -ne 132 ]; then
+                    exit $code
+                  fi
+
+                  if [ $attempt -eq 4 ]; then
+                    echo "Segmentation fault or illegal instruction detected after $attempt attempts (exit=$code)."
+                    exit $code
+                  fi
+
+                  attempt=$((attempt + 1))
+                  echo "Segfault (139) or illegal instruction (132) detected, retrying ($attempt/4)..."
+                done
+
+            - name: Upload Snapshot Artifacts on Failure
+              if: failure()
+              uses: actions/upload-artifact@v4
+              with:
+                name: snapshots-node${{ matrix.node }}
+                path: |
+                  tests/**/__snapshots__/*.diff.png
+                  tests/**/__snapshots__/*.snap.png
+                if-no-files-found: ignore
+
+
       - name: Generate test plans
         run: bun run scripts/generate-test-plan.ts
 
