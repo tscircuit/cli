@@ -16,6 +16,7 @@ export const registerTranspile = (program: Command) => {
         const { projectDir, circuitFiles, mainEntrypoint } =
           await getBuildEntrypoints({
             fileOrDir: file,
+            includeBoardFiles: false,
           })
 
         const distDir = path.join(projectDir, "dist")
