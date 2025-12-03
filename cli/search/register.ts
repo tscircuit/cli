@@ -101,8 +101,9 @@ export const registerSearch = (program: Command) => {
 
         results.packages.forEach((pkg, idx) => {
           const star = pkg.star_count ?? 0
+          const versionStr = pkg.version ? ` (v${pkg.version})` : ""
           console.log(
-            `${idx + 1}. ${pkg.name} (v${pkg.version}) - Stars: ${star}${
+            `${idx + 1}. ${pkg.name}${versionStr} - Stars: ${star}${
               pkg.description ? ` - ${pkg.description}` : ""
             }`,
           )
