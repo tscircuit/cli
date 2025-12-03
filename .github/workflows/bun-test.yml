@@ -27,6 +27,7 @@ jobs:
         run: bun install
       
       - run: bunx playwright install
+      - run: npm ls zod
 
       - name: Generate test plans
         run: bun run scripts/generate-test-plan.ts
