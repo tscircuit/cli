@@ -119,7 +119,7 @@ jobs:
             } catch (e) {
               console.log("Could not resolve ${pkg}/package.json:", e && e.message);
             }
-      NODE
+            NODE
             echo
           done
 
