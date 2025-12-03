@@ -189,7 +189,6 @@ jobs:
         run: bun run scripts/generate-test-plan.ts
 
       - name: Diagnostics: zod/_parse + compiled node_modules
-        shell: bash
         run: |
           set -euo pipefail
 
