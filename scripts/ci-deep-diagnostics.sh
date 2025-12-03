@@ -110,8 +110,18 @@ trybash "if [ -f node_modules/easyeda/dist/browser/index.js ]; then echo '--- ea
 section "Fingerprint search for the crash site"
 trybash "rg -n --hidden --no-ignore 'keyValidator\\._parse|ParseInputLazyPath|_parse\\(new ParseInputLazyPath' node_modules || true"
 
-section "Search node_modules for suspicious z.record() patterns"
-trybash "rg -n --hidden --no-ignore 'z\\.record\\(\\s*z\\.(string|number|enum)\\b(?!\\()|z\\.record\\(z\\.(string|number|enum)\\b(?!\\()|z\\.record\\(\\s*[A-Za-z_$][A-Za-z0-9_$]*\\s*,' node_modules || true"
+section "Scan node_modules for z.record(...) suspicious patterns"
+# ripgrep's default engine doesn't support lookarounds; use --pcre2
+# Goal: find cases like z.record(z.string, ...) or z.record(z.enum, ...) (missing parentheses)
+trybash "rg --pcre2 -n --hidden --no-ignore 'z\\.record\\(\\s*z\\.(string|number|enum)\\b(?!\\s*\\()' node_modules || true"
+
+# Also catch cases like z.record(keyValidator, ...) where keyValidator might be a function
+trybash "rg -n --hidden --no-ignore 'z\\.record\\(\\s*[A-Za-z_\$][A-Za-z0-9_\$]*\\s*,' node_modules || true"
+
+# Quick plain-string backup searches (no fancy regex)
+trybash "rg -n --hidden --no-ignore 'z.record(z.string' node_modules || true"
+trybash "rg -n --hidden --no-ignore 'z.record(z.number' node_modules || true"
+trybash "rg -n --hidden --no-ignore 'z.record(z.enum' node_modules || true"
 
 section "Search repo and node_modules for the exact error string"
 trybash "rg -n --hidden --no-ignore 'keyValidator\\._parse is not a function|Failed to generate circuit JSON' . || true"
