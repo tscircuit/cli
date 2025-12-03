@@ -19,6 +19,7 @@ import Debug from "debug"
 import kleur from "kleur"
 import { loadProjectConfig } from "lib/project-config"
 import { shouldIgnorePath } from "lib/shared/should-ignore-path"
+import { globbySync } from "globby"
 import { getAllNodeModuleFilePaths } from "lib/dependency-analysis/getNodeModuleDependencies"
 import { setSessionToken } from "lib/cli-config"
 
@@ -60,6 +61,11 @@ export class DevServer {
    * A chokidar instance that watches the project directory for file changes
    */
   filesystemWatcher?: chokidar.FSWatcher
+  /**
+   * A chokidar instance that watches node_modules for dist/index.js changes
+   * Only watches top-level node modules to avoid creating too many watchers
+   */
+  nodeModulesWatcher?: chokidar.FSWatcher
 
   private typesHandler?: FilesystemTypesHandler
   /**
@@ -146,6 +152,48 @@ export class DevServer {
       this.handleFileRename(oldPath, newPath),
     )
 
+    // Watch node_modules for dist/index.js changes (top-level modules only)
+    // This allows hot-reloading when developing linked packages (e.g., via yalc or npm link)
+    const nodeModulesDir = path.join(this.projectDir, "node_modules")
+    if (fs.existsSync(nodeModulesDir)) {
+      // Find all existing dist/index.js files in top-level node_modules
+      // We need to find specific files because chokidar's glob patterns don't work well
+      // for watching existing files with multiple wildcards
+      const distIndexFiles = globbySync(
+        [
+          // Regular packages: node_modules/package-name/dist/index.js
+          "*/dist/index.js",
+          // Scoped packages: node_modules/@scope/package-name/dist/index.js
+          "@*/*/dist/index.js",
+        ],
+        {
+          cwd: nodeModulesDir,
+          absolute: true,
+        },
+      )
+
+      if (distIndexFiles.length > 0) {
+        debug(
+          `Setting up node_modules watcher for ${distIndexFiles.length} dist/index.js files`,
+        )
+
+        this.nodeModulesWatcher = chokidar.watch(distIndexFiles, {
+          persistent: true,
+          ignoreInitial: true,
+          // Use polling for more reliable cross-platform detection
+          usePolling: true,
+          interval: 300,
+        })
+
+        this.nodeModulesWatcher.on("change", (filePath) => {
+          this.handleNodeModuleFileChanged(filePath)
+        })
+        this.nodeModulesWatcher.on("add", (filePath) => {
+          this.handleNodeModuleFileChanged(filePath)
+        })
+      }
+    }
+
     await this.upsertInitialFiles()
 
     this.typesHandler?.handleInitialTypeDependencies(this.componentFilePath)
@@ -212,6 +260,33 @@ export class DevServer {
 
     // Check if this file has new node_modules dependencies
     await this.checkAndUploadNewNodeModules(absoluteFilePath)
+  }
+
+  /**
+   * Handles changes to node_modules dist/index.js files
+   * This is called when a watched node_module's dist/index.js file changes,
+   * allowing hot-reload when developing linked packages
+   */
+  private async handleNodeModuleFileChanged(absoluteFilePath: string) {
+    const relativeFilePath = path.relative(this.projectDir, absoluteFilePath)
+
+    debug(`Node module file changed: ${relativeFilePath}`)
+
+    const filePayload = this.createFileUploadPayload(
+      absoluteFilePath,
+      relativeFilePath,
+    )
+
+    console.log(kleur.blue(`Node module updated: ${relativeFilePath}`))
+    await this.fsKy
+      .post("api/files/upsert", {
+        json: {
+          file_path: relativeFilePath,
+          initiator: "filesystem_change",
+          ...filePayload,
+        },
+      })
+      .json()
   }
 
   /**
@@ -448,6 +523,7 @@ export class DevServer {
     this.httpServer?.close()
     this.eventsWatcher?.stop()
     await this.filesystemWatcher?.close()
+    await this.nodeModulesWatcher?.close()
   }
 
   private createFileUploadPayload(
