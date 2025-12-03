@@ -61,7 +61,7 @@
     "tscircuit": "^0.0.997-libonly",
     "tsx": "^4.7.1",
     "typed-ky": "^0.0.4",
-    "zod": "3.25.68"
+    "zod": "^3.25.67"
   },
   "peerDependencies": {
     "tscircuit": "*",
