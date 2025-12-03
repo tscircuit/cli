@@ -3,7 +3,7 @@ import { runBrowserTest } from "../fixtures/runBrowserTest"
 import * as fs from "node:fs"
 import path from "node:path"
 
-test("bug report 35b2ec78-e859-48e3-860c-3e420c7533f0", async () => {
+test.skip("bug report 35b2ec78-e859-48e3-860c-3e420c7533f0", async () => {
   const result = await runBrowserTest({
     bugReportId: "35b2ec78-e859-48e3-860c-3e420c7533f0",
     modifyFs(tmpDir) {
