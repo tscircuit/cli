@@ -25,31 +25,26 @@ jobs:
 
       - name: Install dependencies
         run: bun install
-      
-      - run: bunx playwright install chromium
-      - run: npm ls zod
-      
 
-      - name: One-shot deep diagnostics (zod/_parse CI-only bug)
+      - name: Install Playwright chromium
+        run: bunx playwright install chromium
+
+      - name: npm ls zod (sanity)
+        run: npm ls zod || true
+
+      - name: One-shot deep diagnostics (heredoc-safe)
         shell: bash
         env:
-          # Put the exact failing command here if you know it.
-          # Examples:
-          #   bun test
-          #   bun run test
-          #   bun run snapshots
           FAILING_CMD: "bun test"
         run: |
           set -euo pipefail
 
-          ### --------- helpers ----------
           mkdir -p .ci-debug
           LOG=".ci-debug/diagnostics.log"
           exec > >(tee -a "$LOG") 2>&1
 
           section () { echo; echo "============================================================"; echo "$1"; echo "============================================================"; }
-          try () { echo; echo "+ $*"; ( "$@" ) || echo "!! command failed (continuing): $*"; }
-          trybash () { echo; echo "+ $*"; ( bash -lc "$*" ) || echo "!! command failed (continuing): $*"; }
+          trybash () { echo; echo "+ $*"; bash -lc "$*" || echo "!! command failed (continuing): $*"; }
 
           section "Basic env"
           echo "pwd: $(pwd)"
@@ -57,40 +52,50 @@ jobs:
           echo "NODE_ENV: ${NODE_ENV:-}"
           echo "Bun: $(bun --version)"
           echo "Node: $(node -v || true)"
+          echo "npm: $(npm -v || true)"
           echo "OS: $(uname -a || true)"
           echo "Date: $(date -u || true)"
 
-          section "Install tools (rg, jq)"
-          try sudo apt-get update -y
-          try sudo apt-get install -y ripgrep jq
+          section "Install tools (ripgrep, jq)"
+          trybash "sudo apt-get update -y"
+          trybash "sudo apt-get install -y ripgrep jq"
 
           section "Repo + package.json overview"
-          try ls -la
-          if [ -f package.json ]; then
-            try cat package.json
-          fi
+          trybash "ls -la"
+          trybash "cat package.json"
           echo
           echo "Lockfiles present:"
-          try ls -la bun.lock bun.lockb package-lock.json pnpm-lock.yaml yarn.lock 2>/dev/null
+          trybash "ls -la bun.lock bun.lockb package-lock.json pnpm-lock.yaml yarn.lock 2>/dev/null || true"
 
-          section "Bun install"
-          # Since you said no lockfiles, we DON'T use frozen.
-          # We still capture bun's output and installed graph.
-          try bun install
+          section "Bun install (record if bun.lock changes)"
+          # You have bun.lock in the repo; capture changes as signal (but don't fail).
+          before_hash="$(sha256sum bun.lock 2>/dev/null | awk '{print $1}' || true)"
+          trybash "bun install"
+          after_hash="$(sha256sum bun.lock 2>/dev/null | awk '{print $1}' || true)"
+          echo "bun.lock sha256 before: ${before_hash}"
+          echo "bun.lock sha256 after : ${after_hash}"
+          if [ -n "${before_hash}" ] && [ -n "${after_hash}" ] && [ "${before_hash}" != "${after_hash}" ]; then
+            echo "WARNING: bun.lock changed during CI install (non-determinism!)"
+            trybash "git --no-pager diff -- bun.lock || true"
+          fi
 
-          section "Dependency overview (bun pm ls)"
-          try bun pm ls zod
-          try bun pm ls @tscircuit/props tscircuit easyeda @tscircuit/core winterspec @anatine/zod-openapi
+          section "Dependency overview"
+          trybash "bun pm ls zod || true"
+          trybash "bun pm ls @tscircuit/props tscircuit easyeda @tscircuit/core winterspec @anatine/zod-openapi || true"
 
-          section "Resolution checks (zod)"
-          try bun -e 'console.log("import.meta.resolve(zod) =", import.meta.resolve("zod"))'
-          try bun -e 'console.log("import.meta.resolve(zod/package.json) =", import.meta.resolve("zod/package.json"))'
-          try bun - <<'BUN'
+          section "Resolution & runtime sanity (zod)"
+          bun - <<'EOF' || true
           try {
+            console.log("import.meta.resolve('zod') =", import.meta.resolve("zod"));
+            console.log("import.meta.resolve('zod/package.json') =", import.meta.resolve("zod/package.json"));
+
             const zod = await import("zod");
             const pkg = await import("zod/package.json");
             const p = pkg.default ?? pkg;
+
             console.log("zod version:", p.version);
+            console.log("has default export:", ("default" in zod));
+            console.log("typeof default:", typeof zod.default);
 
             const z = zod.z;
             console.log("has z:", !!z);
@@ -99,136 +104,108 @@ jobs:
               const s = z.string();
               console.log("typeof z.string()._parse:", typeof s._parse);
             }
-
-            // also show whether default export exists (interop hints)
-            console.log("has default export:", "default" in zod);
-            console.log("typeof default:", typeof (zod.default));
           } catch (e) {
             console.error("ERROR importing zod:", e?.stack ?? e);
           }
-          BUN
+EOF
 
-          section "Resolution checks (who imports zod and how)"
-          # show how some key internal packages import zod in their compiled output
-          for pkg in "@tscircuit/props" "easyeda" "@tscircuit/file-server" "winterspec"; do
-            node - <<NODE || true
+          section "Inspect package entrypoints for key deps (CJS/ESM hints)"
+          bun - <<'EOF' || true
+          const pkgs = ["@tscircuit/props","easyeda","@tscircuit/file-server","winterspec","@anatine/zod-openapi","tscircuit"];
+          for (const name of pkgs) {
             try {
-              const p = require.resolve("${pkg}/package.json");
-              console.log("${pkg} package.json path:", p);
-              console.log(require("${pkg}/package.json"));
+              const pj = await import(`${name}/package.json`);
+              const p = pj.default ?? pj;
+              console.log("\n---", name, "---");
+              console.log("version:", p.version);
+              console.log("type:", p.type);
+              console.log("main:", p.main);
+              console.log("module:", p.module);
+              console.log("exports:", p.exports);
             } catch (e) {
-              console.log("Could not resolve ${pkg}/package.json:", e && e.message);
+              console.log("\n---", name, "---");
+              console.log("could not import package.json:", e?.message ?? e);
             }
-            NODE
-            echo
-          done
+          }
+EOF
 
-          section "Scan node_modules for fingerprints of the crash (keyValidator._parse / ParseInputLazyPath)"
-          # This usually locates the exact file/line for the failing runtime.
-          try rg -n --hidden --no-ignore "keyValidator\._parse|ParseInputLazyPath|_parse\(new ParseInputLazyPath" node_modules || true
+          section "Print first 140 lines of compiled entrypoints (props + easyeda)"
+          trybash "if [ -f node_modules/@tscircuit/props/dist/index.js ]; then echo '--- @tscircuit/props/dist/index.js ---'; sed -n '1,140p' node_modules/@tscircuit/props/dist/index.js; fi"
+          trybash "if [ -f node_modules/easyeda/dist/index.js ]; then echo '--- easyeda/dist/index.js ---'; sed -n '1,140p' node_modules/easyeda/dist/index.js; fi"
+          trybash "if [ -f node_modules/easyeda/dist/browser/index.js ]; then echo '--- easyeda/dist/browser/index.js ---'; sed -n '1,140p' node_modules/easyeda/dist/browser/index.js; fi"
 
-          section "Scan node_modules for z.record(...) suspicious patterns"
-          # 1) classic: z.record(z.string, ...) without parentheses (unminified)
-          # 2) minified/no-space: z.record(z.string,...
-          # 3) variable key validator: z.record(keyValidator,...)
-          try rg -n --hidden --no-ignore "z\.record\(\s*z\.(string|number|enum)\b(?!\()|z\.record\(z\.(string|number|enum)\b(?!\()|z\.record\(\s*[A-Za-z_$][A-Za-z0-9_$]*\s*," node_modules || true
+          section "Fingerprint search for the crash site (should locate the offending file)"
+          trybash "rg -n --hidden --no-ignore 'keyValidator\\._parse|ParseInputLazyPath|_parse\\(new ParseInputLazyPath' node_modules || true"
 
-          section "Scan node_modules for other ways to pass non-schema validators"
-          # Not exhaustive, but catches common accidental passes of functions/objects as schemas
-          try rg -n --hidden --no-ignore "catchall\(\s*[A-Za-z_$][A-Za-z0-9_$]*\s*\)|pipe\(\s*[A-Za-z_$][A-Za-z0-9_$]*\s*\)|keyof\(\s*[A-Za-z_$][A-Za-z0-9_$]*\s*\)" node_modules || true
+          section "Search node_modules for suspicious z.record() patterns"
+          # - missing parentheses: z.record(z.string, ...) or minified z.record(z.string,...
+          # - variable key schema: z.record(keyValidator,...)
+          trybash "rg -n --hidden --no-ignore 'z\\.record\\(\\s*z\\.(string|number|enum)\\b(?!\\()|z\\.record\\(z\\.(string|number|enum)\\b(?!\\()|z\\.record\\(\\s*[A-Za-z_$][A-Za-z0-9_$]*\\s*,' node_modules || true"
 
-          section "Show surrounding context for top matches (first 10)"
-          # If the earlier scan found candidates, dump context so you can see the actual buggy code in one CI run.
-          matches=$(rg -n --hidden --no-ignore "keyValidator\._parse|ParseInputLazyPath|_parse\(new ParseInputLazyPath|z\.record\(\s*z\.(string|number|enum)\b(?!\()|z\.record\(z\.(string|number|enum)\b(?!\()|z\.record\(\s*[A-Za-z_$][A-Za-z0-9_$]*\s*," node_modules || true | head -n 10 || true)
-          echo "$matches" | sed '/^$/d' || true
+          section "Search repo and node_modules for the exact error string"
+          trybash "rg -n --hidden --no-ignore 'keyValidator\\._parse is not a function|Failed to generate circuit JSON' . || true"
 
-          i=0
-          echo "$matches" | while IFS= read -r line; do
-            [ -z "$line" ] && continue
-            i=$((i+1))
-            file=$(echo "$line" | cut -d: -f1)
-            lno=$(echo "$line" | cut -d: -f2)
-            echo
-            echo "---- Match #$i: $file:$lno ----"
-            if [ -f "$file" ]; then
-              start=$((lno-30)); if [ $start -lt 1 ]; then start=1; fi
-              end=$((lno+30))
-              nl -ba "$file" | sed -n "${start},${end}p" || true
-            else
-              echo "(file missing?)"
-            fi
-          done || true
+          section "Multiple zod copies check"
+          trybash "find node_modules -path '*/node_modules/zod/package.json' -maxdepth 6 -print || true"
+          trybash "find node_modules -type d -name zod -maxdepth 6 -print | head -n 200 || true"
 
-          section "Check for multiple zod copies (filesystem + package graph)"
-          trybash 'find node_modules -path "*/node_modules/zod/package.json" -maxdepth 6 -print || true'
-          trybash 'node -e "try{const p=require.resolve(\"zod/package.json\"); console.log(\"zod package.json:\", p); console.log(require(p).version);}catch(e){console.error(e)}"'
-          # also list any nested zod folders if present
-          trybash 'find node_modules -type d -name zod -maxdepth 6 -print | head -n 200 || true'
-
-          section "Attempt to reproduce failing command with full stack capture"
-          # We run the failing command under a wrapper that tries to preserve stacks.
-          # If FAILING_CMD isn't set, we try a few likely suspects.
-          run_with_capture () {
+          section "Run failing command with full capture (this is the key part)"
+          run_capture () {
             local cmd="$1"
             echo
             echo "### Running: $cmd"
-            # Node flags can sometimes improve stack traces even when invoked indirectly.
             export NODE_OPTIONS="${NODE_OPTIONS:-} --enable-source-maps --unhandled-rejections=strict"
-            # Bun respects NODE_OPTIONS for node-compat runs; harmless otherwise.
+
             set +e
             bash -lc "$cmd" > .ci-debug/failing_cmd.out.txt 2> .ci-debug/failing_cmd.err.txt
             status=$?
             set -e
+
             echo "Exit status: $status"
-            echo "--- stderr (last 200 lines) ---"
-            tail -n 200 .ci-debug/failing_cmd.err.txt || true
-            echo "--- stdout (last 200 lines) ---"
-            tail -n 200 .ci-debug/failing_cmd.out.txt || true
+            echo "--- stderr (last 250 lines) ---"
+            tail -n 250 .ci-debug/failing_cmd.err.txt || true
+            echo "--- stdout (last 250 lines) ---"
+            tail -n 250 .ci-debug/failing_cmd.out.txt || true
 
-            # Extract likely stack locations from stderr/stdout
             cat .ci-debug/failing_cmd.err.txt .ci-debug/failing_cmd.out.txt > .ci-debug/failing_cmd.combined.txt || true
-            rg -n "keyValidator\._parse is not a function|ParseInputLazyPath|node_modules/.+:\d+:\d+" .ci-debug/failing_cmd.combined.txt || true
 
-            # Best-effort: if we find a node_modules file:line:col, dump that file region
-            loc=$(rg -o "node_modules/[^: ]+:\d+:\d+" .ci-debug/failing_cmd.combined.txt | head -n 1 || true)
+            echo
+            echo "Extract likely stack locations from output:"
+            rg -n "keyValidator\\._parse is not a function|ParseInputLazyPath|node_modules/.+:[0-9]+:[0-9]+" .ci-debug/failing_cmd.combined.txt || true
+
+            loc=$(rg -o "node_modules/[^: ]+:[0-9]+:[0-9]+" .ci-debug/failing_cmd.combined.txt | head -n 1 || true)
             if [ -n "$loc" ]; then
               echo
-              echo "First node_modules location from logs: $loc"
+              echo "First node_modules location: $loc"
               f=$(echo "$loc" | cut -d: -f1)
               l=$(echo "$loc" | cut -d: -f2)
               if [ -f "$f" ]; then
-                start=$((l-40)); if [ $start -lt 1 ]; then start=1; fi
-                end=$((l+40))
-                echo "--- Context for $f:$l ---"
+                start=$((l-60)); [ $start -lt 1 ] && start=1
+                end=$((l+60))
+                echo "--- Context $f:$l ---"
                 nl -ba "$f" | sed -n "${start},${end}p" || true
               fi
             fi
 
+            # We never fail this step; it's diagnostics
             return 0
           }
 
-          if [ "${FAILING_CMD:-}" != "" ] && [ "${FAILING_CMD}" != "YOUR_FAILING_COMMAND_HERE" ]; then
-            run_with_capture "$FAILING_CMD"
+          if [ -n "${FAILING_CMD:-}" ]; then
+            run_capture "${FAILING_CMD}"
           else
-            echo "FAILING_CMD not provided; trying a few common commands (won't fail the job)."
-            trybash 'cat package.json | jq -r ".scripts // {}"'
-            # Try in a safe order; adjust to your project scripts
-            run_with_capture "bun test"
-            run_with_capture "bun run test"
-            run_with_capture "bun run snapshots"
-            run_with_capture "bun run snap"
-            run_with_capture "bun run ci"
+            echo "FAILING_CMD not set; skipping"
           fi
 
-          section "Snapshot/output directory sanity (common ENOENT follow-up)"
-          trybash 'ls -la /tmp || true'
-          trybash 'find /tmp -maxdepth 3 -type d -name "__snapshots__" -print || true'
-          trybash 'find /tmp -maxdepth 5 -type f -name "*.snap.svg" -print | head -n 200 || true'
+          section "Snapshot/output sanity (common ENOENT follow-up)"
+          trybash "ls -la /tmp || true"
+          trybash "find /tmp -maxdepth 4 -type d -name '__snapshots__' -print || true"
+          trybash "find /tmp -maxdepth 6 -type f -name '*.snap.svg' -print | head -n 200 || true"
 
           section "Finished diagnostics"
           echo "Wrote logs to: $LOG"
-          echo "Other artifacts in .ci-debug/:"
-          ls -la .ci-debug || true
+          echo "Artifacts:"
+          trybash "ls -la .ci-debug || true"
 
       - name: Upload diagnostics artifacts
         if: always()
