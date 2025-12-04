@@ -63,6 +63,9 @@
     "typed-ky": "^0.0.4",
     "zod": "^3.23.8"
   },
+  "overrides": {
+    "zod": "3.23.8"
+  },
   "peerDependencies": {
     "tscircuit": "*"
   },
