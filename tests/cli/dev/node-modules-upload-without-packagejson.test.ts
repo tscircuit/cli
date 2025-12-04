@@ -84,6 +84,8 @@ test(
         f.file_path.includes("kicad-libraries"),
       )
 
+      console.log("files", kicadFiles)
+
       // Should have uploaded ONLY the specifically imported file
       expect(kicadFiles.length).toBe(1)
       expect(kicadFiles[0].file_path).toContain("ESP32-S2-MINI-1.kicad_mod")
