@@ -11,7 +11,6 @@ import type {
   FileDeletedEvent,
 } from "../../lib/file-server/FileServerEvent"
 import * as chokidar from "chokidar"
-import { FilesystemTypesHandler } from "lib/dependency-analysis/FilesystemTypesHandler"
 import { pushSnippet } from "lib/shared/push-snippet"
 import { getPackageFilePaths } from "./get-package-file-paths"
 import { addPackage } from "lib/shared/add-package"
@@ -61,7 +60,6 @@ export class DevServer {
    */
   filesystemWatcher?: chokidar.FSWatcher
 
-  private typesHandler?: FilesystemTypesHandler
   /**
    * Cache of node_modules that have already been uploaded to avoid re-uploading
    */
@@ -84,7 +82,6 @@ export class DevServer {
     this.fsKy = ky.create({
       prefixUrl: `http://localhost:${port}`,
     }) as any
-    this.typesHandler = new FilesystemTypesHandler(this.projectDir)
   }
 
   async start() {
@@ -147,8 +144,6 @@ export class DevServer {
     )
 
     await this.upsertInitialFiles()
-
-    this.typesHandler?.handleInitialTypeDependencies(this.componentFilePath)
   }
 
   async handleFileUpdatedEventFromServer(ev: FileUpdatedEvent) {
@@ -191,8 +186,6 @@ export class DevServer {
     if (relativeFilePath.includes("manual-edits.json")) return
     // Skip files inside the .git directory
     if (shouldIgnorePath(relativeFilePath, this.ignoredFiles)) return
-
-    await this.typesHandler?.handleFileTypeDependencies(absoluteFilePath)
 
     const filePayload = this.createFileUploadPayload(
       absoluteFilePath,

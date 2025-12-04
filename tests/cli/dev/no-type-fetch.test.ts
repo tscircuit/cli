@@ -9,19 +9,19 @@ import { getCliTestFixture } from "../../fixtures/get-cli-test-fixture"
  * This test verifies that the dev server does NOT try to fetch types
  * for @tsci/ packages from the registry API, since types are now
  * included inside the modules themselves.
+ *
+ * Previously this would cause errors like:
+ *   Failed to fetch types for @tsci/adom-inc.molecule
  */
-test("types are NOT fetched from registry (types are bundled in modules)", async () => {
+test("dev server should not fetch types for @tsci/ packages (types are included in modules)", async () => {
   const fixture = await getCliTestFixture()
 
   const devServerPort = await getPort()
 
-  // Create test files using Bun.write
+  // Start with a simple snippet without @tsci/ imports
   await Bun.write(
     path.join(fixture.tmpDir, "snippet.tsx"),
-    `
-    import { useRedLed } from "@tsci/seveibar.red-led"
-    export const MyCircuit = () => <></>
-    `,
+    `export const MyCircuit = () => <></>`,
   )
 
   await Bun.write(path.join(fixture.tmpDir, "package.json"), "{}")
@@ -33,27 +33,20 @@ test("types are NOT fetched from registry (types are bundled in modules)", async
 
   await devServer.start()
 
-  // Verify that NO type files were fetched/created
-  // (since types are now bundled in modules, not fetched from registry)
-  const typePath = path.join(
-    fixture.tmpDir,
-    "node_modules/@tsci/seveibar.red-led/index.d.ts",
-  )
-  expect(fs.existsSync(typePath)).toBe(false)
-
-  // Simulate file change with new import
+  // Simulate a file change that adds a @tsci/ import
   const updatedContent = `
-  import { useUsbC } from "@tsci/seveibar.smd-usb-c"
-  export const MyCircuit = () => <></>
+    import { useMolecule } from "@tsci/adom-inc.molecule"
+    export const MyCircuit = () => <></>
   `
   fs.writeFileSync(path.join(fixture.tmpDir, "snippet.tsx"), updatedContent)
 
-  // Verify that NO type files were fetched for the new import either
-  const typePath2 = path.join(
+  // Verify that NO type files were fetched/created for the @tsci/ package
+  // (since types are now bundled in modules, not fetched from registry)
+  const typePath = path.join(
     fixture.tmpDir,
-    "node_modules/@tsci/seveibar.smd-usb-c/index.d.ts",
+    "node_modules/@tsci/adom-inc.molecule/index.d.ts",
   )
-  expect(fs.existsSync(typePath2)).toBe(false)
+  expect(fs.existsSync(typePath)).toBe(false)
 
   await devServer.stop()
 }, 10_000)
