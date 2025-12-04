@@ -129,22 +129,6 @@ export class DevServer {
       ignoreInitial: true,
       ignored: (p) => {
         const relativePath = path.relative(this.projectDir, p)
-        // Allow node_modules/*/dist/index.js and node_modules/@*/*/dist/index.js
-        if (
-          relativePath.startsWith("node_modules/") &&
-          relativePath.endsWith("/dist/index.js")
-        ) {
-          // Check if it's a top-level package (not nested node_modules)
-          const parts = relativePath.split("/")
-          // node_modules/pkg/dist/index.js = 4 parts
-          // node_modules/@scope/pkg/dist/index.js = 5 parts
-          if (
-            parts.length === 4 ||
-            (parts.length === 5 && parts[1].startsWith("@"))
-          ) {
-            return false // Don't ignore these files
-          }
-        }
         return shouldIgnorePath(relativePath, this.ignoredFiles)
       },
     })
