@@ -303,3 +303,68 @@ test("build with --kicad-footprint-library generates footprint library", async (
   )
   expect(footprintContent).toContain("(footprint")
 }, 60_000)
+
+const circuitCodeWithGlbCadModel = `
+import cadModelUrl from "./chip.glb"
+
+export default () => (
+  <board width="10mm" height="10mm">
+    <chip
+      name="U1"
+      footprint="soic8"
+      cadModel={<cadmodel modelUrl={cadModelUrl} />}
+    />
+  </board>
+)`
+
+test("build with --preview-images generates preview assets with GLB cad_model", async () => {
+  const { tmpDir, runCommand } = await getCliTestFixture()
+  const circuitPath = path.join(tmpDir, "glb-preview.circuit.tsx")
+
+  // Copy a real GLB file from the examples directory
+  const sourceGlbPath = path.join(
+    process.cwd(),
+    "examples/glb-loading/soic8.glb",
+  )
+  const glbContent = await readFile(sourceGlbPath)
+  const glbPath = path.join(tmpDir, "chip.glb")
+
+  await writeFile(circuitPath, circuitCodeWithGlbCadModel)
+  await writeFile(glbPath, glbContent)
+  await writeFile(
+    path.join(tmpDir, "package.json"),
+    JSON.stringify({
+      type: "module",
+      dependencies: {
+        react: "^19.1.0",
+      },
+    }),
+  )
+
+  await runCommand("tsci install")
+
+  const { stdout, stderr } = await runCommand(
+    `tsci build --preview-images ${circuitPath}`,
+  )
+
+  // The error "TypeError: fetch() URL is invalid" should not appear
+  expect(stderr).not.toContain("fetch() URL is invalid")
+  expect(stderr).not.toContain("ERR_INVALID_URL")
+
+  // Preview images should be generated successfully
+  const schematicSvg = await readFile(
+    path.join(tmpDir, "dist", "schematic.svg"),
+    "utf-8",
+  )
+  const pcbSvg = await readFile(path.join(tmpDir, "dist", "pcb.svg"), "utf-8")
+  const preview3d = await readFile(path.join(tmpDir, "dist", "3d.png"))
+
+  expect(schematicSvg).toContain("<svg")
+  expect(pcbSvg).toContain("<svg")
+  expect(preview3d.byteLength).toBeGreaterThan(0)
+  // PNG magic bytes
+  expect(preview3d[0]).toBe(0x89)
+  expect(preview3d[1]).toBe(0x50)
+  expect(preview3d[2]).toBe(0x4e)
+  expect(preview3d[3]).toBe(0x47)
+}, 60_000)

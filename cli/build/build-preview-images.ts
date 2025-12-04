@@ -1,5 +1,6 @@
 import fs from "node:fs"
 import path from "node:path"
+import { pathToFileURL } from "node:url"
 import {
   convertCircuitJsonToPcbSvg,
   convertCircuitJsonToSchematicSvg,
@@ -61,6 +62,45 @@ const normalizeToUint8Array = (value: unknown): Uint8Array => {
   )
 }
 
+/**
+ * Convert local file paths in model URLs to file:// URLs for fetch() compatibility.
+ * The circuit-json-to-gltf library uses fetch() to load GLB/STL/OBJ/GLTF files,
+ * which requires proper URLs rather than local file paths.
+ */
+const convertModelUrlsToFileUrls = (circuitJson: any[]): any[] => {
+  const modelUrlKeys = [
+    "model_glb_url",
+    "glb_model_url",
+    "model_stl_url",
+    "stl_model_url",
+    "model_obj_url",
+    "obj_model_url",
+    "model_gltf_url",
+    "gltf_model_url",
+  ]
+
+  return circuitJson.map((element) => {
+    if (!element || typeof element !== "object") return element
+
+    const updated = { ...element }
+    for (const key of modelUrlKeys) {
+      const value = updated[key]
+      if (typeof value === "string" && value.length > 0) {
+        console.log("value", value)
+        // Check if it's a local file path (starts with / or drive letter on Windows)
+        // and not already a URL (http://, https://, file://, etc.)
+        if (
+          !value.match(/^[a-zA-Z]+:\/\//) &&
+          (value.startsWith("/") || value.match(/^[a-zA-Z]:\\/))
+        ) {
+          updated[key] = pathToFileURL(value).href
+        }
+      }
+    }
+    return updated
+  })
+}
+
 const generatePreviewAssets = async ({
   build,
   outputDir,
@@ -82,7 +122,8 @@ const generatePreviewAssets = async ({
     console.log(`${prefix}Generating schematic SVG...`)
     const schematicSvg = convertCircuitJsonToSchematicSvg(circuitJson)
     console.log(`${prefix}Converting circuit to GLB...`)
-    const glbBuffer = await convertCircuitJsonToGltf(circuitJson, {
+    const circuitJsonWithFileUrls = convertModelUrlsToFileUrls(circuitJson)
+    const glbBuffer = await convertCircuitJsonToGltf(circuitJsonWithFileUrls, {
       format: "glb",
     })
     console.log(`${prefix}Rendering GLB to PNG buffer...`)
