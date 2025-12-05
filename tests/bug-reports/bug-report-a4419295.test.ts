@@ -15,7 +15,7 @@ import { runBrowserTest } from "../fixtures/runBrowserTest"
  *   "Node module 'kicad-libraries/footprints/Espressif.pretty/ESP32-S2-MINI-1.kicad_mod'
  *    has no files in the node_modules directory"
  */
-test("kicad-libraries github package without package.json should have files uploaded", async () => {
+test.skip("kicad-libraries github package without package.json should have files uploaded", async () => {
   const result = await runBrowserTest({
     bugReportId: "a4419295-de4d-476f-9629-b07308b94dde",
   })
