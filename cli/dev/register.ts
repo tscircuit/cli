@@ -2,7 +2,6 @@ import type { Command } from "commander"
 import * as fs from "node:fs"
 import * as net from "node:net"
 import * as path from "node:path"
-import { installNodeModuleTypesForSnippet } from "../../lib/dependency-analysis/installNodeModuleTypesForSnippet"
 import { DevServer } from "./DevServer"
 import kleur from "kleur"
 import { getVersion } from "lib/getVersion"
@@ -114,16 +113,6 @@ export const registerDev = (program: Command) => {
       }
 
       warnIfTsconfigMissingTscircuitType(process.cwd())
-
-      try {
-        process.stdout.write(
-          kleur.gray("Installing types for imported packages..."),
-        )
-        await installNodeModuleTypesForSnippet(absolutePath)
-        console.log(kleur.green(" done"))
-      } catch (error) {
-        console.warn("Failed to install types:", error)
-      }
 
       const server = new DevServer({
         port,
