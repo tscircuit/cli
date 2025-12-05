@@ -40,6 +40,7 @@ export const createStaticAssetPlugin = ({
   pathMappings?: Record<string, string[]>
 }): Plugin => {
   const copiedAssets = new Map<string, string>()
+  const contentHashToOutputPath = new Map<string, string>()
   const resolvedBaseUrl = baseUrl ?? projectDir
   const resolvedPathMappings = pathMappings ?? {}
 
@@ -147,16 +148,28 @@ export const createStaticAssetPlugin = ({
             // Convert normalized path back to native for file system operations
             const nativePath = importedId.split("/").join(path.sep)
             const fileBuffer = fs.readFileSync(nativePath)
-            const hash = createHash("sha1")
+            const contentHash = createHash("sha1")
               .update(fileBuffer)
               .digest("hex")
               .slice(0, 8)
-            const fileName = `${path.basename(importedId, ext)}-${hash}${ext}`
-            const outputFilePath = path.join(assetDir, fileName)
+            const contentKey = `${contentHash}:${ext}`
 
-            fs.writeFileSync(outputFilePath, fileBuffer)
-            copiedAssets.set(importedId, `./assets/${fileName}`)
-            assetIdToOutputPath.set(importedId, `./assets/${fileName}`)
+            // Reuse the same hashed filename for identical content
+            const existingOutputPath = contentHashToOutputPath.get(contentKey)
+            if (existingOutputPath) {
+              copiedAssets.set(importedId, existingOutputPath)
+              assetIdToOutputPath.set(importedId, existingOutputPath)
+            } else {
+              const fileName = `${path.basename(importedId, ext)}-${contentHash}${ext}`
+              const outputFilePath = path.join(assetDir, fileName)
+
+              fs.writeFileSync(outputFilePath, fileBuffer)
+              const relativePath = `./assets/${fileName}`
+
+              copiedAssets.set(importedId, relativePath)
+              assetIdToOutputPath.set(importedId, relativePath)
+              contentHashToOutputPath.set(contentKey, relativePath)
+            }
           }
         }
 
