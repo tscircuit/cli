@@ -1,5 +1,6 @@
-import path from "node:path"
 import fs from "node:fs"
+import { builtinModules } from "node:module"
+import path from "node:path"
 import { rollup } from "rollup"
 import typescript from "@rollup/plugin-typescript"
 import resolve from "@rollup/plugin-node-resolve"
@@ -12,6 +13,19 @@ import {
   createStaticAssetPlugin,
   STATIC_ASSET_EXTENSIONS,
 } from "./static-asset-plugin"
+
+const isNodeBuiltin = (id: string) => {
+  const withoutNodePrefix = id.replace(/^node:/, "")
+
+  return (
+    builtinModules.includes(id) ||
+    builtinModules.includes(withoutNodePrefix) ||
+    builtinModules.includes(`node:${withoutNodePrefix}`)
+  )
+}
+
+const isTscircuitDependency = (id: string) =>
+  id === "tscircuit" || id.startsWith("tscircuit/")
 
 const createExternalFunction =
   (projectDir: string, tsconfigPath?: string) =>
@@ -71,8 +85,18 @@ const createExternalFunction =
       return false // This is a local file, don't externalize
     }
 
-    // Everything else (npm packages like 'react', 'tscircuit', etc.) is external
-    return true
+    // Keep Node.js built-ins external
+    if (isNodeBuiltin(id)) {
+      return true
+    }
+
+    // Always externalize tscircuit so it's not bundled with user output
+    if (isTscircuitDependency(id)) {
+      return true
+    }
+
+    // Bundle all other dependencies into the output
+    return false
   }
 
 export const transpileFile = async ({
