@@ -79,9 +79,9 @@ test(
         file_path: string
       }>
 
-      // Get all uploaded kicad-libraries files
+      // Get all uploaded kicad-libraries files from node_modules (not types/)
       const kicadFiles = fileList.filter((f) =>
-        f.file_path.includes("kicad-libraries"),
+        f.file_path.includes("node_modules/kicad-libraries"),
       )
 
       // Should have uploaded ONLY the specifically imported file
