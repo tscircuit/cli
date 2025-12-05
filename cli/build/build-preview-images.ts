@@ -113,14 +113,43 @@ const generatePreviewAssets = async ({
   const prefixRelative = path.relative(distDir, outputDir) || "."
   const prefix = prefixRelative === "." ? "" : `[${prefixRelative}] `
 
+  let circuitJson: any[]
   try {
     const circuitJsonRaw = fs.readFileSync(build.outputPath, "utf-8")
-    const circuitJson = JSON.parse(circuitJsonRaw)
+    circuitJson = JSON.parse(circuitJsonRaw)
+  } catch (error) {
+    console.error(`${prefix}Failed to read circuit JSON:`, error)
+    return
+  }
 
+  fs.mkdirSync(outputDir, { recursive: true })
+
+  // Generate PCB SVG
+  try {
     console.log(`${prefix}Generating PCB SVG...`)
     const pcbSvg = convertCircuitJsonToPcbSvg(circuitJson)
+    fs.writeFileSync(path.join(outputDir, "pcb.svg"), pcbSvg, "utf-8")
+    console.log(`${prefix}Written pcb.svg`)
+  } catch (error) {
+    console.error(`${prefix}Failed to generate PCB SVG:`, error)
+  }
+
+  // Generate schematic SVG
+  try {
     console.log(`${prefix}Generating schematic SVG...`)
     const schematicSvg = convertCircuitJsonToSchematicSvg(circuitJson)
+    fs.writeFileSync(
+      path.join(outputDir, "schematic.svg"),
+      schematicSvg,
+      "utf-8",
+    )
+    console.log(`${prefix}Written schematic.svg`)
+  } catch (error) {
+    console.error(`${prefix}Failed to generate schematic SVG:`, error)
+  }
+
+  // Generate 3D PNG
+  try {
     console.log(`${prefix}Converting circuit to GLB...`)
     const circuitJsonWithFileUrls = convertModelUrlsToFileUrls(circuitJson)
     const glbBuffer = await convertCircuitJsonToGltf(circuitJsonWithFileUrls, {
@@ -132,23 +161,13 @@ const generatePreviewAssets = async ({
       camPos: [10, 10, 10],
       lookAt: [0, 0, 0],
     })
-
-    fs.mkdirSync(outputDir, { recursive: true })
-    fs.writeFileSync(path.join(outputDir, "pcb.svg"), pcbSvg, "utf-8")
-    console.log(`${prefix}Written pcb.svg`)
-    fs.writeFileSync(
-      path.join(outputDir, "schematic.svg"),
-      schematicSvg,
-      "utf-8",
-    )
-    console.log(`${prefix}Written schematic.svg`)
     fs.writeFileSync(
       path.join(outputDir, "3d.png"),
       Buffer.from(normalizeToUint8Array(pngBuffer)),
     )
     console.log(`${prefix}Written 3d.png`)
   } catch (error) {
-    console.error(`${prefix}Failed to generate preview images:`, error)
+    console.error(`${prefix}Failed to generate 3D PNG:`, error)
   }
 }
 
