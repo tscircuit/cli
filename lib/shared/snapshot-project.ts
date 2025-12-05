@@ -10,6 +10,7 @@ import { convertCircuitJsonToGltf } from "circuit-json-to-gltf"
 import { renderGLTFToPNGBufferFromGLBBuffer } from "poppygl"
 import { generateCircuitJson } from "lib/shared/generate-circuit-json"
 import type { PlatformConfig } from "@tscircuit/props"
+import type { AnyCircuitElement } from "circuit-json"
 import { getCompletePlatformConfig } from "lib/shared/get-complete-platform-config"
 import { findBoardFiles } from "lib/shared/find-board-files"
 import {
@@ -18,6 +19,7 @@ import {
 } from "lib/shared/should-ignore-path"
 import { compareAndCreateDiff } from "./compare-images"
 import { getSnapshotsDir } from "lib/project-config"
+import { calculateCameraPosition } from "lib/shared/calculate-camera-position"
 
 type SnapshotOptions = {
   update?: boolean
@@ -139,9 +141,12 @@ export const snapshotProject = async ({
             "Expected ArrayBuffer from convertCircuitJsonToGltf with glb format",
           )
         }
+        const cameraSettings = calculateCameraPosition(
+          circuitJson as AnyCircuitElement[],
+        )
         png3d = await renderGLTFToPNGBufferFromGLBBuffer(glbBuffer, {
-          camPos: [10, 10, 10],
-          lookAt: [0, 0, 0],
+          camPos: cameraSettings.camPos,
+          lookAt: cameraSettings.lookAt,
         })
       } catch (error) {
         const errorMessage =
