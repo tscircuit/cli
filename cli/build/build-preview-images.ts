@@ -7,6 +7,7 @@ import {
 } from "circuit-to-svg"
 import { renderGLTFToPNGBufferFromGLBBuffer } from "poppygl"
 import { convertCircuitJsonToGltf } from "circuit-json-to-gltf"
+import type { AnyCircuitElement } from "circuit-json"
 
 export interface BuildFileResult {
   sourcePath: string
@@ -113,7 +114,7 @@ const generatePreviewAssets = async ({
   const prefixRelative = path.relative(distDir, outputDir) || "."
   const prefix = prefixRelative === "." ? "" : `[${prefixRelative}] `
 
-  let circuitJson: any[]
+  let circuitJson: AnyCircuitElement[]
   try {
     const circuitJsonRaw = fs.readFileSync(build.outputPath, "utf-8")
     circuitJson = JSON.parse(circuitJsonRaw)
