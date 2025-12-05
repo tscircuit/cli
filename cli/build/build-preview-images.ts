@@ -7,8 +7,6 @@ import {
 } from "circuit-to-svg"
 import { renderGLTFToPNGBufferFromGLBBuffer } from "poppygl"
 import { convertCircuitJsonToGltf } from "circuit-json-to-gltf"
-import type { AnyCircuitElement } from "circuit-json"
-import { calculateCameraPosition } from "lib/shared/calculate-camera-position"
 
 export interface BuildFileResult {
   sourcePath: string
@@ -118,7 +116,7 @@ const generatePreviewAssets = async ({
   let circuitJson: AnyCircuitElement[]
   try {
     const circuitJsonRaw = fs.readFileSync(build.outputPath, "utf-8")
-    const circuitJson = JSON.parse(circuitJsonRaw) as AnyCircuitElement[]
+    const circuitJson = JSON.parse(circuitJsonRaw)
 
     console.log(`${prefix}Generating PCB SVG...`)
     const pcbSvg = convertCircuitJsonToPcbSvg(circuitJson)
@@ -138,10 +136,9 @@ const generatePreviewAssets = async ({
     })
     console.log(`${prefix}Rendering GLB to PNG buffer...`)
     const glbArrayBuffer = await normalizeToArrayBuffer(glbBuffer)
-    const cameraSettings = calculateCameraPosition(circuitJson)
     const pngBuffer = await renderGLTFToPNGBufferFromGLBBuffer(glbArrayBuffer, {
-      camPos: cameraSettings.camPos,
-      lookAt: cameraSettings.lookAt,
+      camPos: [10, 10, 10],
+      lookAt: [0, 0, 0],
     })
 
     fs.mkdirSync(outputDir, { recursive: true })
