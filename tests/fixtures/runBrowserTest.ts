@@ -244,6 +244,13 @@ export async function runBrowserTest(
     execSync("bun install", {
       cwd: tmpDir,
       stdio: "inherit",
+      env: {
+        ...process.env,
+        // Isolate bun's install cache per-test to avoid cross-test pollution that
+        // can lead to different dependency resolutions (e.g., zod). Using a
+        // tmp-local cache keeps installs hermetic regardless of execution order.
+        BUN_INSTALL_CACHE: path.join(tmpDir, ".bun-install-cache"),
+      },
     })
   } catch (error) {
     console.warn(
