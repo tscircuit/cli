@@ -303,6 +303,12 @@ async function executeCloneBugReportStep(
     execSync("bun install", {
       cwd: clonedReport.tmpDir,
       stdio: "inherit",
+      env: {
+        ...process.env,
+        // Isolate bun's install cache per cloned report so dependency resolution
+        // stays consistent regardless of test execution order.
+        BUN_INSTALL_CACHE: path.join(clonedReport.tmpDir, ".bun-install-cache"),
+      },
     })
   } catch (error) {
     console.warn(
