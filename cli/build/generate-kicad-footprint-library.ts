@@ -145,3 +145,39 @@ export const generateKicadFootprintLibrary = async ({
     fs.writeFileSync(path.join(libraryRoot, "fp-lib-table"), libTableContent)
   }
 }
+
+export type FootprintEntry = {
+  libraryName: string
+  footprintName: string
+  content: string
+}
+
+export const extractFootprintsFromPcb = (
+  pcbContent: string,
+): FootprintEntry[] => {
+  const uniqueFootprints = new Map<string, FootprintEntry>()
+
+  try {
+    const parsed = parseKicadSexpr(pcbContent)
+    const pcb = parsed.find(
+      (node): node is KicadPcb => node instanceof KicadPcb,
+    )
+    if (!pcb) return []
+
+    const footprints = pcb.footprints ?? []
+    for (const footprint of footprints) {
+      const sanitized = sanitizeFootprint(footprint)
+      const key = `${sanitized.libraryName}::${sanitized.footprintName}`
+      if (!uniqueFootprints.has(key)) {
+        uniqueFootprints.set(key, sanitized)
+      }
+    }
+  } catch (error) {
+    console.warn(
+      "Failed to parse KiCad PCB content for footprint extraction:",
+      error,
+    )
+  }
+
+  return Array.from(uniqueFootprints.values())
+}
