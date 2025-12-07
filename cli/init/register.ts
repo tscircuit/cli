@@ -84,7 +84,6 @@ export const registerInit = (program: Command) => {
               initial: defaultPackageName,
             })
 
-
         let authorName = cliConfig.get("githubUsername")
         if (!authorName) {
           const token = getSessionToken()
