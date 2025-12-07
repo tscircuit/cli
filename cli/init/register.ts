@@ -57,7 +57,24 @@ export const registerInit = (program: Command) => {
           ? path.resolve(process.cwd(), directory)
           : process.cwd()
 
-        const defaultPackageName = path.basename(projectDir)
+        let tsciHandle: string | null = null
+        const token = getSessionToken()
+        if (token) {
+          try {
+            const decoded = jwtDecode<{ tscircuit_handle?: string }>(token)
+            if (decoded.tscircuit_handle) {
+              tsciHandle = decoded.tscircuit_handle
+            }
+          } catch {}
+        }
+
+        const dirName = path.basename(projectDir)
+
+        let defaultPackageName = dirName
+        if (tsciHandle) {
+          defaultPackageName = `@tsci/${tsciHandle}.${dirName}`
+        }
+
         const { packageName } = options?.yes
           ? { packageName: defaultPackageName }
           : await prompts({
@@ -66,6 +83,7 @@ export const registerInit = (program: Command) => {
               message: "Package name",
               initial: defaultPackageName,
             })
+
 
         let authorName = cliConfig.get("githubUsername")
         if (!authorName) {
