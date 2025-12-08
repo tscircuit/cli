@@ -92,7 +92,7 @@ test("transpile ignores includeBoardFiles globs in favor of detected entrypoint"
   expect(esmContent).not.toContain("BOARD_FILE_MARKER")
 }, 30_000)
 
-test("transpile errors when main is outside dist", async () => {
+test("transpile warns when main is outside dist", async () => {
   const { tmpDir, runCommand } = await getCliTestFixture()
   const mainPath = path.join(tmpDir, "index.tsx")
 
