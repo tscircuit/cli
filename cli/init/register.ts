@@ -11,6 +11,7 @@ import { jwtDecode } from "jwt-decode"
 import { loadProjectConfig, saveProjectConfig } from "lib/project-config"
 import { checkForTsciUpdates } from "lib/shared/check-for-cli-update"
 import { prompts } from "lib/utils/prompts"
+import { execSync } from "node:child_process"
 
 export const registerInit = (program: Command) => {
   program
@@ -121,13 +122,26 @@ export default () => (
         generateTsConfig(projectDir)
         // Create .gitignore file
         generateGitIgnoreFile(projectDir)
-        // Setup project dependencies
+        console.log(">>> before setupTsciProject")
+
+        console.log("Initializing Git repository...")
+        try {
+          execSync("git init", {
+            cwd: projectDir,
+            stdio: "inherit",
+          })
+          console.log("Git repository initialized.")
+        } catch (err) {
+          console.warn("Warning: Could not initialize Git repository")
+        }
+
         setupTsciProject(projectDir, options?.install ? undefined : [])
 
         console.info(
           `🎉 Initialization complete! Run ${directory ? `"cd ${directory}" & ` : ""}"tsci dev" to start developing.`,
         )
         process.exit(0)
+        // ...
       },
     )
 }

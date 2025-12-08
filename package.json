@@ -91,5 +91,8 @@
     "cli": "bun ./cli/main.ts",
     "pkg-pr-new-release": "bunx pkg-pr-new publish --comment=off --peerDeps"
   },
-  "type": "module"
+  "type": "module",
+  "dependencies": {
+    "execSync": "^1.0.2"
+  }
 }
