@@ -125,15 +125,15 @@ export default () => (
 
         console.log("Initializing Git repository...")
         try {
-        // Set default branch to 'main' for this repository only
-        execSync("git init -b main", {
-          cwd: projectDir,
-          stdio: "inherit",
-        });
-        console.log("Git repository initialized with branch 'main'.");
-      } catch (err) {
-        console.warn("Warning: Could not initialize Git repository");
-}
+          // Set default branch to 'main' for this repository only
+          execSync("git init -b main", {
+            cwd: projectDir,
+            stdio: "inherit",
+          })
+          console.log("Git repository initialized with branch 'main'.")
+        } catch (err) {
+          console.warn("Warning: Could not initialize Git repository")
+        }
 
         setupTsciProject(projectDir, options?.install ? undefined : [])
 
