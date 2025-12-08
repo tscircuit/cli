@@ -122,18 +122,18 @@ export default () => (
         generateTsConfig(projectDir)
         // Create .gitignore file
         generateGitIgnoreFile(projectDir)
-        console.log(">>> before setupTsciProject")
 
         console.log("Initializing Git repository...")
         try {
-          execSync("git init", {
-            cwd: projectDir,
-            stdio: "inherit",
-          })
-          console.log("Git repository initialized.")
-        } catch (err) {
-          console.warn("Warning: Could not initialize Git repository")
-        }
+        // Set default branch to 'main' for this repository only
+        execSync("git init -b main", {
+          cwd: projectDir,
+          stdio: "inherit",
+        });
+        console.log("Git repository initialized with branch 'main'.");
+      } catch (err) {
+        console.warn("Warning: Could not initialize Git repository");
+}
 
         setupTsciProject(projectDir, options?.install ? undefined : [])
 
@@ -141,7 +141,6 @@ export default () => (
           `🎉 Initialization complete! Run ${directory ? `"cd ${directory}" & ` : ""}"tsci dev" to start developing.`,
         )
         process.exit(0)
-        // ...
       },
     )
 }
