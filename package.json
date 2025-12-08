@@ -61,7 +61,8 @@
     "tscircuit": "^0.0.1014-libonly",
     "tsx": "^4.7.1",
     "typed-ky": "^0.0.4",
-    "zod": "^3.23.8"
+    "zod": "^3.23.8",
+    "execSync": "^1.0.2"
   },
   "peerDependencies": {
     "tscircuit": "*"
@@ -93,6 +94,6 @@
   },
   "type": "module",
   "dependencies": {
-    "execSync": "^1.0.2"
+    
   }
 }

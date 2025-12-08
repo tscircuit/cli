@@ -5,7 +5,7 @@
     "": {
       "name": "@tscircuit/cli",
       "dependencies": {
-        "execSync": "^1.0.2",
+        "execSync": "^1.0.2"
       },
       "devDependencies": {
         "@babel/standalone": "^7.26.9",
