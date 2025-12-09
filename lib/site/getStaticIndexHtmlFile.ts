@@ -21,6 +21,7 @@ export const getStaticIndexHtmlFile = ({
 
   return `<html>
     <head>
+      <meta charset="UTF-8" />
     </head>
     <body>
 ${scriptBlock}      <script src="https://cdn.tailwindcss.com"></script>
@@ -28,7 +29,7 @@ ${scriptBlock}      <script src="https://cdn.tailwindcss.com"></script>
       <script>
       globalThis.process = { env: { NODE_ENV: "production" } }
       </script>
-      <script src="${standaloneScriptSrc}"></script>
+      <script type="module" src="${standaloneScriptSrc}"></script>
     </body>
   </html>`
 }
