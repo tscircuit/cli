@@ -14,7 +14,10 @@ test("transpile command generates ESM, CommonJS, and type declarations", async (
   const { tmpDir, runCommand } = await getCliTestFixture()
   const circuitPath = path.join(tmpDir, "test-circuit.tsx")
   await writeFile(circuitPath, circuitCode)
-  await writeFile(path.join(tmpDir, "package.json"), "{}")
+  await writeFile(
+    path.join(tmpDir, "package.json"),
+    JSON.stringify({ main: "dist/index.js" }),
+  )
 
   await runCommand(`tsci transpile ${circuitPath}`)
 
@@ -130,7 +133,10 @@ test("transpile transforms JSX correctly", async () => {
   const { tmpDir, runCommand } = await getCliTestFixture()
   const circuitPath = path.join(tmpDir, "jsx-test.tsx")
   await writeFile(circuitPath, circuitCode)
-  await writeFile(path.join(tmpDir, "package.json"), "{}")
+  await writeFile(
+    path.join(tmpDir, "package.json"),
+    JSON.stringify({ main: "dist/index.js" }),
+  )
 
   await runCommand(`tsci transpile ${circuitPath}`)
 

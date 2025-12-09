@@ -14,7 +14,10 @@ test("build with --transpile generates ESM, CommonJS, and type declarations", as
   const { tmpDir, runCommand } = await getCliTestFixture()
   const circuitPath = path.join(tmpDir, "test-circuit.tsx")
   await writeFile(circuitPath, circuitCode)
-  await writeFile(path.join(tmpDir, "package.json"), "{}")
+  await writeFile(
+    path.join(tmpDir, "package.json"),
+    JSON.stringify({ main: "dist/index.js" }),
+  )
 
   await runCommand(`tsci build ${circuitPath} --transpile --ignore-errors`)
 
@@ -117,7 +120,10 @@ test("build with --transpile transforms JSX correctly", async () => {
   const { tmpDir, runCommand } = await getCliTestFixture()
   const circuitPath = path.join(tmpDir, "jsx-test.tsx")
   await writeFile(circuitPath, circuitCode)
-  await writeFile(path.join(tmpDir, "package.json"), "{}")
+  await writeFile(
+    path.join(tmpDir, "package.json"),
+    JSON.stringify({ main: "dist/index.js" }),
+  )
 
   await runCommand(`tsci build ${circuitPath} --transpile --ignore-errors`)
 
@@ -160,7 +166,10 @@ test("build with --transpile JSX with import from other files", async () => {
     )
   `,
   )
-  await writeFile(path.join(tmpDir, "package.json"), "{}")
+  await writeFile(
+    path.join(tmpDir, "package.json"),
+    JSON.stringify({ main: "dist/index.js" }),
+  )
 
   await runCommand(`tsci build ${circuitPath} --transpile --ignore-errors`)
 
