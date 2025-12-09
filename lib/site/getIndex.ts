@@ -13,6 +13,7 @@ export const getIndex = async (
     : ""
   return `<html>
     <head>
+      <meta charset="UTF-8" />
       <link rel="icon" type="image/png" href="https://github.com/tscircuit.png">
     </head>
     <body>
@@ -25,7 +26,7 @@ export const getIndex = async (
       <script>
       globalThis.process = { env: { NODE_ENV: "production" } }
       </script>
-      <script src="/standalone.min.js"></script>
+      <script type="module" src="/standalone.min.js"></script>
     </body>
   </html>`
 }
