@@ -7,16 +7,8 @@ https://github.com/user-attachments/assets/0228e09d-48fc-4bf5-814b-762b60fc35c7
 ## Usage
 
 ```bash
-# Start a local server that watches for changes in
-# this file or it's dependencies and updates the
-# browser preview
-tsci dev ./path/to/file.tsx
-
-# Clone a package from the registry
-tsci clone author/packageName
-
-# Add a component from tscircuit.com
-tsci add author/component-name
+# Start a local dev server in your current directory
+tsci dev
 ```
 
 > Note: The packages CLI uses the same configuration files as the [@tscircuit/cli](https://github.com/tscircuit/cli), so you may need to also install `npm install -g @tscircuit/cli` and run `tsci login` to authenticate!
@@ -24,7 +16,7 @@ tsci add author/component-name
 ## Installation
 
 ```bash
-npm install -g @tscircuit/cli
+npm install -g tscircuit
 ```
 
 ## CLI USAGE
