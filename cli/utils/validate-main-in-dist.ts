@@ -12,9 +12,10 @@ export const validateMainInDist = (projectDir: string, distDir: string) => {
     typeof packageJson.exports === "object" && packageJson.exports !== null
 
   if (!hasMain && !hasExports) {
-    throw new Error(
+    console.warn(
       'When using transpilation, your package.json must have either a "main" or "exports" field pointing to the output in the `dist/*` directory',
     )
+    return
   }
 
   if (hasMain) {
@@ -24,8 +25,8 @@ export const validateMainInDist = (projectDir: string, distDir: string) => {
       resolvedMainPath.startsWith(`${distDir}${path.sep}`)
 
     if (!isMainInDist) {
-      throw new Error(
-        'When using transpilation, your package\'s "main" field must point inside the `dist/*` directory, usually to "dist/index.js"',
+      console.warn(
+        'When using transpilation, your package\'s "main" field should point inside the `dist/*` directory, usually to "dist/index.js"',
       )
     }
   }
@@ -37,8 +38,8 @@ export const validateMainInDist = (projectDir: string, distDir: string) => {
       distDir,
     )
     if (!isExportsValid) {
-      throw new Error(
-        'When using transpilation, your package\'s "exports" field must point to outputs in the `dist/*` directory',
+      console.warn(
+        'When using transpilation, your package\'s "exports" field should point to outputs in the `dist/*` directory',
       )
     }
   }

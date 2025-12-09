@@ -82,7 +82,7 @@ test("build with --transpile uses mainEntrypoint when available", async () => {
   expect(dtsStat.isFile()).toBe(true)
 }, 30_000)
 
-test("build with --transpile throws error when main is outside dist", async () => {
+test("build with --transpile warns when main is outside dist", async () => {
   const { tmpDir, runCommand } = await getCliTestFixture()
   const mainPath = path.join(tmpDir, "index.tsx")
 
@@ -95,11 +95,11 @@ test("build with --transpile throws error when main is outside dist", async () =
   const { stderr } = await runCommand(`tsci build --transpile`)
 
   expect(stderr).toContain(
-    'When using transpilation, your package\'s "main" field must point inside the `dist/*` directory, usually to "dist/index.js"',
+    'When using transpilation, your package\'s "main" field should point inside the `dist/*` directory, usually to "dist/index.js"',
   )
 }, 30_000)
 
-test("build with --transpile throws error when main and exports are not set", async () => {
+test("build with --transpile warns when main and exports are not set", async () => {
   const { tmpDir, runCommand } = await getCliTestFixture()
   const mainPath = path.join(tmpDir, "index.tsx")
 
