@@ -18,7 +18,6 @@ import {
 } from "lib/shared/should-ignore-path"
 import { compareAndCreateDiff } from "./compare-images"
 import { getSnapshotsDir } from "lib/project-config"
-// import type { AnyCircuitElement } from "circuit-json"
 import { calculateCameraPosition } from "lib/shared/calculate-camera-position"
 
 type SnapshotOptions = {
