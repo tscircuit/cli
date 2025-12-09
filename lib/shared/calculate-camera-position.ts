@@ -52,6 +52,7 @@ export function calculateCameraPosition(
     }
 
     if (item.type === "pcb_component" && item.center) {
+      // Components expand the bounding box so dense clusters pull the camera back
       const x = item.center.x ?? 0
       const y = item.center.y ?? 0
 
