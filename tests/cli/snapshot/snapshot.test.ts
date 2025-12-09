@@ -51,9 +51,9 @@ test("snapshot command creates 3D snapshots for different board sizes", async ()
 
   const small3dBuffer = await Bun.file(smallSnapPath).arrayBuffer()
   const large3dBuffer = await Bun.file(largeSnapPath).arrayBuffer()
-  expect(Buffer.compare(Buffer.from(small3dBuffer), Buffer.from(large3dBuffer))).not.toBe(
-    0,
-  )
+  expect(
+    Buffer.compare(Buffer.from(small3dBuffer), Buffer.from(large3dBuffer)),
+  ).not.toBe(0)
 
   const repoSnapshotsDir = join(import.meta.dir, "__snapshots__")
   fs.mkdirSync(repoSnapshotsDir, { recursive: true })
