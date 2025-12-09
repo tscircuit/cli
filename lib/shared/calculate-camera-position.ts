@@ -22,7 +22,7 @@ const parseDimension = (value?: string | number): number | undefined => {
     return value
   }
   if (typeof value === "string") {
-    const match = value.trim().match(/^[+-]?\d+\.?\d*/)
+    const match = value.trim().match(/^[+-]?(\d+\.?\d*|\d*\.\d+)/)
     if (!match) {
       return undefined
     }
