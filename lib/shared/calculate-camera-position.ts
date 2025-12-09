@@ -68,8 +68,8 @@ export function calculateCameraPosition(
         boardHeight = maybeBoardHeight
       }
       if (item.center) {
-        centerX = item.center.x
-        centerY = item.center.y
+        centerX = item.center.x ?? 0
+        centerY = item.center.y ?? 0
       }
     }
 
