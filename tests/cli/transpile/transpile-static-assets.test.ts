@@ -32,6 +32,7 @@ test("transpile copies static assets and preserves glb_model_url", async () => {
     path.join(tmpDir, "package.json"),
     JSON.stringify({
       type: "module",
+      main: "dist/index.js",
       dependencies: {
         react: "^19.1.0",
       },
