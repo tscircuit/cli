@@ -59,41 +59,34 @@ const ExampleCircuit = () => {
 export default ExampleCircuit
 `
 
-test(
-  "tsci transpile handles import/export type statements on Windows",
-  async () => {
-    const { tmpDir, runCommand } = await getCliTestFixture()
-    const srcDir = path.join(tmpDir, "src")
-    await mkdir(path.join(srcDir, "components"), { recursive: true })
+test("tsci transpile handles import/export type statements on Windows", async () => {
+  const { tmpDir, runCommand } = await getCliTestFixture()
+  const srcDir = path.join(tmpDir, "src")
+  await mkdir(path.join(srcDir, "components"), { recursive: true })
 
-    await writeFile(path.join(srcDir, "types.ts"), typesFile)
-    await writeFile(path.join(srcDir, "helpers.ts"), helperFile)
-    await writeFile(
-      path.join(srcDir, "components", "resistor.tsx"),
-      resistorFile,
-    )
-    await writeFile(path.join(srcDir, "index.tsx"), indexFile)
-    await writeFile(
-      path.join(tmpDir, "package.json"),
-      JSON.stringify({ name: "windows-transpile-test", main: "dist/index.js" }),
-    )
+  await writeFile(path.join(srcDir, "types.ts"), typesFile)
+  await writeFile(path.join(srcDir, "helpers.ts"), helperFile)
+  await writeFile(path.join(srcDir, "components", "resistor.tsx"), resistorFile)
+  await writeFile(path.join(srcDir, "index.tsx"), indexFile)
+  await writeFile(
+    path.join(tmpDir, "package.json"),
+    JSON.stringify({ name: "windows-transpile-test", main: "dist/index.js" }),
+  )
 
-    const entryFile = path.join(srcDir, "index.tsx")
-    await runCommand(`tsci transpile ${entryFile}`)
+  const entryFile = path.join(srcDir, "index.tsx")
+  await runCommand(`tsci transpile ${entryFile}`)
 
-    const esmContent = await readFile(
-      path.join(tmpDir, "dist", "index.js"),
-      "utf-8",
-    )
-    expect(esmContent).toMatch(/export.*exportedFootprint/)
-    expect(esmContent).toContain("createBoardSize")
+  const esmContent = await readFile(
+    path.join(tmpDir, "dist", "index.js"),
+    "utf-8",
+  )
+  expect(esmContent).toMatch(/export.*exportedFootprint/)
+  expect(esmContent).toContain("createBoardSize")
 
-    const dtsContent = await readFile(
-      path.join(tmpDir, "dist", "index.d.ts"),
-      "utf-8",
-    )
-    expect(dtsContent).toMatch(/export.*ExportedBoardSize/)
-    expect(dtsContent).toMatch(/export.*exportedFootprint/)
-  },
-  120_000,
-)
+  const dtsContent = await readFile(
+    path.join(tmpDir, "dist", "index.d.ts"),
+    "utf-8",
+  )
+  expect(dtsContent).toMatch(/export.*ExportedBoardSize/)
+  expect(dtsContent).toMatch(/export.*exportedFootprint/)
+}, 120_000)
