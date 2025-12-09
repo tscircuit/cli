@@ -18,6 +18,8 @@ import {
 } from "lib/shared/should-ignore-path"
 import { compareAndCreateDiff } from "./compare-images"
 import { getSnapshotsDir } from "lib/project-config"
+// import type { AnyCircuitElement } from "circuit-json"
+import { calculateCameraPosition } from "lib/shared/calculate-camera-position"
 
 type SnapshotOptions = {
   update?: boolean
@@ -139,9 +141,10 @@ export const snapshotProject = async ({
             "Expected ArrayBuffer from convertCircuitJsonToGltf with glb format",
           )
         }
+        const cameraSettings = calculateCameraPosition(circuitJson)
         png3d = await renderGLTFToPNGBufferFromGLBBuffer(glbBuffer, {
-          camPos: [10, 10, 10],
-          lookAt: [0, 0, 0],
+          camPos: cameraSettings.camPos,
+          lookAt: cameraSettings.lookAt,
         })
       } catch (error) {
         const errorMessage =
