@@ -4,6 +4,72 @@ import { join } from "node:path"
 import fs from "node:fs"
 import "bun-match-svg"
 
+test("snapshot command creates 3D snapshots for different board sizes", async () => {
+  const { tmpDir, runCommand } = await getCliTestFixture()
+
+  await Bun.write(
+    join(tmpDir, "small.board.tsx"),
+    `
+    export const SmallBoard = () => (
+      <board width="10mm" height="10mm">
+        <chip name="U1" footprint="soic8" />
+      </board>
+    )
+  `,
+  )
+
+  await Bun.write(
+    join(tmpDir, "large.board.tsx"),
+    `
+    export const LargeBoard = () => (
+      <board width="60mm" height="40mm">
+        <chip name="U1" footprint="soic8" />
+      </board>
+    )
+  `,
+  )
+
+  const { stdout: updateStdout } = await runCommand(
+    "tsci snapshot --update --3d",
+  )
+  expect(updateStdout).toContain("Created snapshots")
+  expect(updateStdout).toContain(
+    `✅ ${join("__snapshots__", "small.board-3d.snap.png")}`,
+  )
+  expect(updateStdout).toContain(
+    `✅ ${join("__snapshots__", "large.board-3d.snap.png")}`,
+  )
+
+  const snapshotDir = join(tmpDir, "__snapshots__")
+  const smallSnapPath = join(snapshotDir, "small.board-3d.snap.png")
+  const largeSnapPath = join(snapshotDir, "large.board-3d.snap.png")
+
+  const small3dExists = await Bun.file(smallSnapPath).exists()
+  const large3dExists = await Bun.file(largeSnapPath).exists()
+  expect(small3dExists).toBe(true)
+  expect(large3dExists).toBe(true)
+
+  const small3dBuffer = await Bun.file(smallSnapPath).arrayBuffer()
+  const large3dBuffer = await Bun.file(largeSnapPath).arrayBuffer()
+  expect(Buffer.compare(Buffer.from(small3dBuffer), Buffer.from(large3dBuffer))).not.toBe(
+    0,
+  )
+
+  const repoSnapshotsDir = join(import.meta.dir, "__snapshots__")
+  fs.mkdirSync(repoSnapshotsDir, { recursive: true })
+  fs.writeFileSync(
+    join(repoSnapshotsDir, "small.board-3d.snap.png"),
+    Buffer.from(small3dBuffer),
+  )
+  fs.writeFileSync(
+    join(repoSnapshotsDir, "large.board-3d.snap.png"),
+    Buffer.from(large3dBuffer),
+  )
+
+  const { stdout: verifyStdout } = await runCommand("tsci snapshot --3d")
+  expect(verifyStdout).toContain("All snapshots match")
+}, 30_000)
+
 test("snapshot command creates SVG snapshots", async () => {
   const { tmpDir, runCommand } = await getCliTestFixture()
 
