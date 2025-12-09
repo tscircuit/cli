@@ -55,17 +55,11 @@ export function calculateCameraPosition(
 
   for (const item of circuitJson) {
     if (item.type === "pcb_board") {
-      const maybeBoardWidth = parseDimension(
-        item.width as string | number | undefined,
-      )
-      const maybeBoardHeight = parseDimension(
-        item.height as string | number | undefined,
-      )
-      if (maybeBoardWidth !== undefined) {
-        boardWidth = maybeBoardWidth
+      if (typeof item.width === "number" && Number.isFinite(item.width)) {
+        boardWidth = item.width
       }
-      if (maybeBoardHeight !== undefined) {
-        boardHeight = maybeBoardHeight
+      if (typeof item.height === "number" && Number.isFinite(item.height)) {
+        boardHeight = item.height
       }
       if (item.center) {
         centerX = item.center.x ?? 0

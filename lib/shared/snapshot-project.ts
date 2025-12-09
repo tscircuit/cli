@@ -140,10 +140,10 @@ export const snapshotProject = async ({
             "Expected ArrayBuffer from convertCircuitJsonToGltf with glb format",
           )
         }
-        const cameraSettings = calculateCameraPosition(circuitJson)
+        const { camPos, lookAt } = calculateCameraPosition(circuitJson)
         png3d = await renderGLTFToPNGBufferFromGLBBuffer(glbBuffer, {
-          camPos: cameraSettings.camPos,
-          lookAt: cameraSettings.lookAt,
+          camPos,
+          lookAt,
         })
       } catch (error) {
         const errorMessage =
