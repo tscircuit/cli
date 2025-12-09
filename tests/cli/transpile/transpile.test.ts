@@ -92,7 +92,7 @@ test("transpile ignores includeBoardFiles globs in favor of detected entrypoint"
   expect(esmContent).not.toContain("BOARD_FILE_MARKER")
 }, 30_000)
 
-test("transpile warns when main is outside dist", async () => {
+test("transpile throws error when main is outside dist", async () => {
   const { tmpDir, runCommand } = await getCliTestFixture()
   const mainPath = path.join(tmpDir, "index.tsx")
 
@@ -105,7 +105,24 @@ test("transpile warns when main is outside dist", async () => {
   const { stderr } = await runCommand(`tsci transpile`)
 
   expect(stderr).toContain(
-    'When using transpilation, your package\'s "main" field should point inside the `dist/*` directory, usually to "dist/index.js"',
+    'When using transpilation, your package\'s "main" field must point inside the `dist/*` directory, usually to "dist/index.js"',
+  )
+}, 30_000)
+
+test("transpile throws error when main and exports are not set", async () => {
+  const { tmpDir, runCommand } = await getCliTestFixture()
+  const mainPath = path.join(tmpDir, "index.tsx")
+
+  await writeFile(mainPath, circuitCode)
+  await writeFile(
+    path.join(tmpDir, "package.json"),
+    JSON.stringify({ name: "test-package", version: "1.0.0" }),
+  )
+
+  const { stderr } = await runCommand(`tsci transpile`)
+
+  expect(stderr).toContain(
+    'When using transpilation, your package.json must have either a "main" or "exports" field',
   )
 }, 30_000)
 
