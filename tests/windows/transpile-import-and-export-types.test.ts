@@ -3,8 +3,6 @@ import { mkdir, writeFile, readFile } from "node:fs/promises"
 import path from "node:path"
 import { getCliTestFixture } from "../fixtures/get-cli-test-fixture"
 
-const windowsTest = process.platform === "win32" ? test : test.skip
-
 const typesFile = `
 export type BoardSize = {
   width: string
@@ -61,7 +59,7 @@ const ExampleCircuit = () => {
 export default ExampleCircuit
 `
 
-windowsTest(
+test(
   "tsci transpile handles import/export type statements on Windows",
   async () => {
     const { tmpDir, runCommand } = await getCliTestFixture()
