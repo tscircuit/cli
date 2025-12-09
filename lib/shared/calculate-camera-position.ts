@@ -16,22 +16,6 @@ const CAMERA_OFFSET_RATIO = 0.7
 // Fallback ensures we do not pull the camera too close for tiny circuits
 const MIN_EFFECTIVE_DIMENSION = 1
 
-const parseDimension = (value?: string | number): number | undefined => {
-  if (value === undefined) return undefined
-  if (typeof value === "number" && Number.isFinite(value)) {
-    return value
-  }
-  if (typeof value === "string") {
-    const match = value.trim().match(/^[+-]?(\d+\.?\d*|\d*\.\d+)/)
-    if (!match) {
-      return undefined
-    }
-    const parsed = Number(match[0])
-    return Number.isFinite(parsed) ? parsed : undefined
-  }
-  return undefined
-}
-
 export function calculateCameraPosition(
   circuitJson: AnyCircuitElement[],
 ): CameraPosition {
@@ -76,16 +60,18 @@ export function calculateCameraPosition(
       minY = Math.min(minY, y)
       maxY = Math.max(maxY, y)
 
-      const compWidth = parseDimension(
-        item.width as string | number | undefined,
-      )
+      const compWidth =
+        typeof item.width === "number" && Number.isFinite(item.width)
+          ? item.width
+          : undefined
       if (compWidth !== undefined) {
         minX = Math.min(minX, x - compWidth / 2)
         maxX = Math.max(maxX, x + compWidth / 2)
       }
-      const compHeight = parseDimension(
-        item.height as string | number | undefined,
-      )
+      const compHeight =
+        typeof item.height === "number" && Number.isFinite(item.height)
+          ? item.height
+          : undefined
       if (compHeight !== undefined) {
         minY = Math.min(minY, y - compHeight / 2)
         maxY = Math.max(maxY, y + compHeight / 2)

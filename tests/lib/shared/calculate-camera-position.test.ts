@@ -79,20 +79,4 @@ describe("calculateCameraPosition", () => {
     expect(result.camPos[1]).toBeCloseTo(18.48)
     expect(result.camPos[2]).toBeCloseTo(18.48)
   })
-
-  test("should handle string dimensions", () => {
-    const circuitJson: any[] = [
-      {
-        type: "pcb_board",
-        width: "10mm",
-        height: "10mm",
-        center: { x: 0, y: 0 },
-        pcb_board_id: "board1",
-      },
-    ]
-    const result = calculateCameraPosition(circuitJson as AnyCircuitElement[])
-    // Should be same as number test if parser works
-    expect(result.lookAt).toEqual([0, 0, 0])
-    expect(result.camPos[0]).toBeCloseTo(10)
-  })
 })
