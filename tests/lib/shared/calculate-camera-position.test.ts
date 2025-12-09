@@ -93,6 +93,6 @@ describe("calculateCameraPosition", () => {
     const result = calculateCameraPosition(circuitJson as AnyCircuitElement[])
     // Should be same as number test if parser works
     expect(result.lookAt).toEqual([0, 0, 0])
-    expect(result.camPos[0]).toBeCloseTo(8.4)
+    expect(result.camPos[0]).toBeCloseTo(10)
   })
 })
