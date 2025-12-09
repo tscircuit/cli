@@ -77,7 +77,7 @@ windowsTest(
     await writeFile(path.join(srcDir, "index.tsx"), indexFile)
     await writeFile(
       path.join(tmpDir, "package.json"),
-      JSON.stringify({ name: "windows-transpile-test" }),
+      JSON.stringify({ name: "windows-transpile-test", main: "dist/index.js" }),
     )
 
     const entryFile = path.join(srcDir, "index.tsx")
