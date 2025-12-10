@@ -92,22 +92,23 @@ export const pushSnippet = async ({
 
   // Sanitize the unscoped package name if it already exists
   if (unscopedPackageName) {
-    const sanitized = sanitizePackageName(unscopedPackageName)
-    if (sanitized !== unscopedPackageName) {
+    const originalName = unscopedPackageName
+    const cleanedName = sanitizePackageName(originalName)
+    if (cleanedName !== originalName) {
       console.log(
         kleur.yellow(
-          `Package name sanitized: "${unscopedPackageName}" → "${sanitized}"`,
+          `Package name sanitized: "${originalName}" → "${cleanedName}"`,
         ),
       )
-      unscopedPackageName = sanitized
+      unscopedPackageName = cleanedName
       // Update package.json with sanitized name
       if (packageJson.name?.startsWith("@tsci/")) {
-        packageJson.name = `@tsci/${currentUsername}.${sanitized}`
+        packageJson.name = `@tsci/${currentUsername}.${cleanedName}`
       } else if (packageJson.name?.startsWith("@")) {
         const scope = packageJson.name.split("/")[0]
-        packageJson.name = `${scope}/${sanitized}`
+        packageJson.name = `${scope}/${cleanedName}`
       } else {
-        packageJson.name = sanitized
+        packageJson.name = cleanedName
       }
       fs.writeFileSync(packageJsonPath, JSON.stringify(packageJson, null, 2))
     }
