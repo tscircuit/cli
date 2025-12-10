@@ -101,7 +101,7 @@ export const pushSnippet = async ({
         ),
       )
       unscopedPackageName = cleanedName
-      // Update package.json with sanitized names
+      // Update package.json with sanitized name
       if (packageJson.name?.startsWith("@tsci/")) {
         packageJson.name = `@tsci/${currentUsername}.${cleanedName}`
       } else if (packageJson.name?.startsWith("@")) {
