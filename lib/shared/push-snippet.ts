@@ -9,6 +9,7 @@ import { getEntrypoint } from "./get-entrypoint"
 import prompts from "lib/utils/prompts"
 import { getUnscopedPackageName } from "lib/utils/get-unscoped-package-name"
 import { getPackageAuthor } from "lib/utils/get-package-author"
+import { sanitizePackageName } from "lib/utils/sanitize-package-name"
 import { getPackageFilePaths } from "cli/dev/get-package-file-paths"
 import { checkOrgAccess } from "lib/utils/check-org-access"
 import { isBinaryFile } from "./is-binary-file"
@@ -89,24 +90,65 @@ export const pushSnippet = async ({
   let unscopedPackageName = getUnscopedPackageName(packageJson.name ?? "")
   const packageJsonAuthor = getPackageAuthor(packageJson.name ?? "")
 
+  // Sanitize the unscoped package name if it already exists
+  if (unscopedPackageName) {
+    const sanitized = sanitizePackageName(unscopedPackageName)
+    if (sanitized !== unscopedPackageName) {
+      console.log(
+        kleur.yellow(
+          `Package name sanitized: "${unscopedPackageName}" → "${sanitized}"`,
+        ),
+      )
+      unscopedPackageName = sanitized
+      // Update package.json with sanitized name
+      if (packageJson.name?.startsWith("@tsci/")) {
+        packageJson.name = `@tsci/${currentUsername}.${sanitized}`
+      } else if (packageJson.name?.startsWith("@")) {
+        const scope = packageJson.name.split("/")[0]
+        packageJson.name = `${scope}/${sanitized}`
+      } else {
+        packageJson.name = sanitized
+      }
+      fs.writeFileSync(packageJsonPath, JSON.stringify(packageJson, null, 2))
+    }
+  }
+
   const packageJsonHasName = Boolean(packageJson.name)
   if (!packageJsonHasName) {
     console.log(kleur.gray("No package name found in package.json"))
-    ;({ unscopedPackageName } = await prompts({
+    let inputName: string
+    ;({ unscopedPackageName: inputName } = await prompts({
       type: "text",
       name: "unscopedPackageName",
       message: `Enter the unscoped package name:`,
       instructions: `Your package will be published as "@tsci/${currentUsername}.<unscoped package name>"`,
     }))
 
-    if (!unscopedPackageName) {
+    if (!inputName) {
       onError("Package name is required")
       return onExit(1)
     }
 
-    if (unscopedPackageName.includes("/")) {
+    if (inputName.includes("/")) {
       onError("Package name cannot contain a '/'")
       return onExit(1)
+    }
+
+    // Sanitize the package name
+    unscopedPackageName = sanitizePackageName(inputName)
+
+    if (!unscopedPackageName) {
+      onError("Package name contains only invalid characters")
+      return onExit(1)
+    }
+
+    // If the sanitized name is different from the input, inform the user
+    if (unscopedPackageName !== inputName) {
+      console.log(
+        kleur.yellow(
+          `Package name sanitized: "${inputName}" → "${unscopedPackageName}"`,
+        ),
+      )
     }
 
     // Write the package name to the package.json file
