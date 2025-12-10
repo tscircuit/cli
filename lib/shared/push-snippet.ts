@@ -9,7 +9,7 @@ import { getEntrypoint } from "./get-entrypoint"
 import prompts from "lib/utils/prompts"
 import { getUnscopedPackageName } from "lib/utils/get-unscoped-package-name"
 import { getPackageAuthor } from "lib/utils/get-package-author"
-import { sanitizePackageName } from "lib/utils/sanitize-package-name"
+import { validatePackageName } from "lib/utils/validate-package-name"
 import { getPackageFilePaths } from "cli/dev/get-package-file-paths"
 import { checkOrgAccess } from "lib/utils/check-org-access"
 import { isBinaryFile } from "./is-binary-file"
@@ -90,27 +90,14 @@ export const pushSnippet = async ({
   let unscopedPackageName = getUnscopedPackageName(packageJson.name ?? "")
   const packageJsonAuthor = getPackageAuthor(packageJson.name ?? "")
 
-  // Sanitize the unscoped package name if it already exists
+  // Validate the unscoped package name if it already exists
   if (unscopedPackageName) {
-    const originalName = unscopedPackageName
-    const cleanedName = sanitizePackageName(originalName)
-    if (cleanedName !== originalName) {
-      console.log(
-        kleur.yellow(
-          `Package name sanitized: "${originalName}" → "${cleanedName}"`,
-        ),
+    const validationError = validatePackageName(unscopedPackageName)
+    if (validationError) {
+      onError(
+        `Invalid package name "${unscopedPackageName}": ${validationError}`,
       )
-      unscopedPackageName = cleanedName
-      // Update package.json with sanitized name
-      if (packageJson.name?.startsWith("@tsci/")) {
-        packageJson.name = `@tsci/${currentUsername}.${cleanedName}`
-      } else if (packageJson.name?.startsWith("@")) {
-        const scope = packageJson.name.split("/")[0]
-        packageJson.name = `${scope}/${cleanedName}`
-      } else {
-        packageJson.name = cleanedName
-      }
-      fs.writeFileSync(packageJsonPath, JSON.stringify(packageJson, null, 2))
+      return onExit(1)
     }
   }
 
@@ -130,27 +117,14 @@ export const pushSnippet = async ({
       return onExit(1)
     }
 
-    if (inputName.includes("/")) {
-      onError("Package name cannot contain a '/'")
+    // Validate the package name
+    const validationError = validatePackageName(inputName)
+    if (validationError) {
+      onError(`Invalid package name: ${validationError}`)
       return onExit(1)
     }
 
-    // Sanitize the package name
-    unscopedPackageName = sanitizePackageName(inputName)
-
-    if (!unscopedPackageName) {
-      onError("Package name contains only invalid characters")
-      return onExit(1)
-    }
-
-    // If the sanitized name is different from the input, inform the user
-    if (unscopedPackageName !== inputName) {
-      console.log(
-        kleur.yellow(
-          `Package name sanitized: "${inputName}" → "${unscopedPackageName}"`,
-        ),
-      )
-    }
+    unscopedPackageName = inputName
 
     // Write the package name to the package.json file
     packageJson.name = `@tsci/${currentUsername}.${unscopedPackageName}`
