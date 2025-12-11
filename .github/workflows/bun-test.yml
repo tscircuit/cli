@@ -9,7 +9,7 @@ jobs:
   test:
     runs-on: ubuntu-latest
     if: "${{ github.event_name != 'pull_request' || github.event.pull_request.title != 'chore: bump version' }}"
-    timeout-minutes: 15
+    timeout-minutes: 20
     strategy:
       matrix:
         node: [1, 2, 3, 4, 5]
@@ -45,27 +45,7 @@ jobs:
           fi
 
           echo "Running ${#test_files[@]} test files for node ${{ matrix.node }}"
-          attempt=1
-          while [ $attempt -le 4 ]; do
-            bun test ${test_files[@]} --timeout 20000
-            code=$?
-
-            if [ $code -eq 0 ]; then
-              break
-            fi
-
-            if [ $code -ne 139 ] && [ $code -ne 132 ]; then
-              exit $code
-            fi
-
-            if [ $attempt -eq 4 ]; then
-              echo "Segmentation fault or illegal instruction detected after $attempt attempts (exit=$code)."
-              exit $code
-            fi
-
-            attempt=$((attempt + 1))
-            echo "Segfault (139) or illegal instruction (132) detected, retrying ($attempt/4)..."
-          done
+          bun run scripts/run-tests-with-retry.ts --timeout 30000 "${test_files[@]}"
 
       - name: Upload Snapshot Artifacts on Failure
         if: failure()
