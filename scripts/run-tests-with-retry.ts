@@ -212,7 +212,7 @@ async function main() {
     console.log(`  - ${file}`)
   }
 
-  // Retry only the failed tests
+  // Retrying only the failed tests
   for (let retry = 1; retry <= config.maxRetries; retry++) {
     console.log("")
     console.log(
