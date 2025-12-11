@@ -193,7 +193,7 @@ async function main() {
     process.exit(result.exitCode)
   }
 
-  // Identify the failed tests
+  // Identify failed tests
   console.log("")
   console.log("================================")
   console.log("Some tests failed. Identifying failed tests for retry...")
