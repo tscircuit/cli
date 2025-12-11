@@ -95,7 +95,8 @@ export const pushSnippet = async ({
     const validationError = validatePackageName(unscopedPackageName)
     if (validationError) {
       onError(
-        `Invalid package name "${unscopedPackageName}": ${validationError}`,
+        `Invalid package name "${unscopedPackageName}": ${validationError}\n` +
+          `Please fix the package name in: ${packageJsonPath}`,
       )
       return onExit(1)
     }
