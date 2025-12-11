@@ -9,6 +9,7 @@ import { getEntrypoint } from "./get-entrypoint"
 import prompts from "lib/utils/prompts"
 import { getUnscopedPackageName } from "lib/utils/get-unscoped-package-name"
 import { getPackageAuthor } from "lib/utils/get-package-author"
+import { validatePackageName } from "lib/utils/validate-package-name"
 import { getPackageFilePaths } from "cli/dev/get-package-file-paths"
 import { checkOrgAccess } from "lib/utils/check-org-access"
 import { isBinaryFile } from "./is-binary-file"
@@ -89,25 +90,42 @@ export const pushSnippet = async ({
   let unscopedPackageName = getUnscopedPackageName(packageJson.name ?? "")
   const packageJsonAuthor = getPackageAuthor(packageJson.name ?? "")
 
+  // Validate the unscoped package name if it already exists
+  if (unscopedPackageName) {
+    const validationError = validatePackageName(unscopedPackageName)
+    if (validationError) {
+      onError(
+        `Invalid package name "${unscopedPackageName}": ${validationError}\n` +
+          `Please fix the package name in: ${packageJsonPath}`,
+      )
+      return onExit(1)
+    }
+  }
+
   const packageJsonHasName = Boolean(packageJson.name)
   if (!packageJsonHasName) {
     console.log(kleur.gray("No package name found in package.json"))
-    ;({ unscopedPackageName } = await prompts({
+    let inputName: string
+    ;({ unscopedPackageName: inputName } = await prompts({
       type: "text",
       name: "unscopedPackageName",
       message: `Enter the unscoped package name:`,
       instructions: `Your package will be published as "@tsci/${currentUsername}.<unscoped package name>"`,
     }))
 
-    if (!unscopedPackageName) {
+    if (!inputName) {
       onError("Package name is required")
       return onExit(1)
     }
 
-    if (unscopedPackageName.includes("/")) {
-      onError("Package name cannot contain a '/'")
+    // Validate the package name
+    const validationError = validatePackageName(inputName)
+    if (validationError) {
+      onError(`Invalid package name: ${validationError}`)
       return onExit(1)
     }
+
+    unscopedPackageName = inputName
 
     // Write the package name to the package.json file
     packageJson.name = `@tsci/${currentUsername}.${unscopedPackageName}`
