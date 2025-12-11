@@ -202,9 +202,10 @@ async function main() {
   let failedFiles = getFailedTestFiles(result.output, config.testFiles)
 
   if (failedFiles.length === 0) {
-    console.log("Could not identify specific failed tests from output.")
-    console.log(`Test run failed with exit code ${result.exitCode}`)
-    process.exit(result.exitCode)
+    console.log(
+      "Could not identify specific failed tests. Retrying all provided paths...",
+    )
+    failedFiles = config.testFiles
   }
 
   console.log(`Identified ${failedFiles.length} failed test file(s):`)

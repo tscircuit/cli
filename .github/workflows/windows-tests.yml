@@ -26,5 +26,5 @@ jobs:
       - name: Run Windows-only tests
         shell: bash
         run: |
-          bun run scripts/run-tests-with-retry.ts --timeout 30000 tests/windows/*.test.ts
+          bun run scripts/run-tests-with-retry.ts --timeout 30000 tests/windows/**/*.test.ts
 
