@@ -34,7 +34,7 @@ jobs:
 
       - name: Get package version
         id: package-version
-        run: echo "version=$(node -p \"require('./package.json').version\")" >> "$GITHUB_OUTPUT"
+        run: node -e "const { appendFileSync } = require('fs'); const { version } = require('./package.json'); appendFileSync(process.env.GITHUB_OUTPUT, `version=${version}\\n`);"
 
       - name: Create Pull Request
         id: create-pr
