@@ -1,6 +1,5 @@
 {
   "lockfileVersion": 1,
-  "configVersion": 0,
   "workspaces": {
     "": {
       "name": "@tscircuit/cli",
@@ -24,7 +23,7 @@
         "@types/semver": "^7.5.8",
         "bun-match-svg": "^0.0.12",
         "chokidar": "4.0.1",
-        "circuit-json": "0.0.325",
+        "circuit-json": "^0.0.333",
         "circuit-json-to-gltf": "^0.0.56",
         "circuit-json-to-kicad": "^0.0.3",
         "circuit-json-to-readable-netlist": "^0.0.13",
@@ -437,7 +436,7 @@
 
     "chownr": ["chownr@1.1.4", "", {}, "sha512-jJ0bqzaylmJtVnNgzTeSOs8DPavpbYgEr/b0YL8/2GO3xJEhInFmhKMUnEJQjZumK7KXGFhUy89PrsJWlakBVg=="],
 
-    "circuit-json": ["circuit-json@0.0.325", "", {}, "sha512-6RBqf+G2HlyIb4Fi+w94QqTNT2L9LJA828V5T4039QEllFBhy2vORJ9GiyYB6VcfxTf/JSsLl3dfOnL3SLeYqg=="],
+    "circuit-json": ["circuit-json@0.0.333", "", {}, "sha512-rKvYTrMsXo3NEW4KDn+qNT5c/mfu8AT57GogaOcOlIrP4uNiPyygLi01PvLIvnHRyoYTvLNLp/Qj1VezAhIsPg=="],
 
     "circuit-json-to-bpc": ["circuit-json-to-bpc@0.0.13", "", { "peerDependencies": { "bpc-graph": "*", "circuit-json": "*", "typescript": "^5" } }, "sha512-3wSMtPa6tJkiBQN4tsm7f0Mb7Wp90X2c8dNbULoDVE4mGGoFqP1DXqBlyvvZZl+4SjqznzQQ0EioLe2SCQTOcg=="],
 
@@ -1182,6 +1181,8 @@
     "tscircuit/@tscircuit/runframe": ["@tscircuit/runframe@0.0.1347", "", {}, "sha512-oLAiI0D5RQ67e0aijrZX6RkgG7qAZQxo+twoqTKYWBuCNwiyDufw1E0g0TVvbRfCHJtgKDCkBQDLkWSMGWt7qQ=="],
 
     "tscircuit/@tscircuit/schematic-match-adapt": ["@tscircuit/schematic-match-adapt@0.0.16", "", { "peerDependencies": { "typescript": "^5" } }, "sha512-85e6Pq58zrhZqivyW4bPVZfGfg8xLBCj3yjHl5LZslwfsDRgtWVob4bjJMhCfNL/mLsPUQKnpiDNnFKl9ugUZw=="],
+
+    "tscircuit/circuit-json": ["circuit-json@0.0.325", "", {}, "sha512-6RBqf+G2HlyIb4Fi+w94QqTNT2L9LJA828V5T4039QEllFBhy2vORJ9GiyYB6VcfxTf/JSsLl3dfOnL3SLeYqg=="],
 
     "tscircuit/circuit-json-to-gltf": ["circuit-json-to-gltf@0.0.31", "", { "dependencies": { "@jscad/modeling": "^2.12.6", "jscad-electronics": "^0.0.53", "jscad-to-gltf": "^0.0.5" }, "peerDependencies": { "@resvg/resvg-js": "2", "@resvg/resvg-wasm": "2", "@tscircuit/circuit-json-util": "*", "circuit-json": "*", "circuit-to-svg": "*", "typescript": "^5" }, "optionalPeers": ["@resvg/resvg-js", "@resvg/resvg-wasm"] }, "sha512-TJ2yT7Ph//UyCt5u5W6PdyvAxil3Opy25hzzwRheqTw+UMo2WhcY6oug6svjPmaGyjjN6fhl0eMeoUgcfgq3sQ=="],
 
