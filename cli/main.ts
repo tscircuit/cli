@@ -24,6 +24,7 @@ import { registerRemove } from "./remove/register"
 import { registerBuild } from "./build/register"
 import { registerSnapshot } from "./snapshot/register"
 import { registerSetup } from "./setup/register"
+import { registerSetupNpmrc } from "./setup-npmrc/register"
 import { registerConvert } from "./convert/register"
 import { registerSimulate } from "./simulate/register"
 import { registerInstall } from "./install/register"
@@ -57,6 +58,7 @@ registerAdd(program)
 registerRemove(program)
 registerSnapshot(program)
 registerSetup(program)
+registerSetupNpmrc(program)
 registerInstall(program)
 registerUpgradeCommand(program)
 
