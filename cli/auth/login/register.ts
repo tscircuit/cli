@@ -15,7 +15,7 @@ export const registerAuthLogin = (program: Command) => {
       const handle = account?.tscircuit_handle
       console.log(
         kleur.yellow(
-          `Already logged in as ${kleur.bold(`@${handle ?? account?.account_id}`)}! Use ${kleur.cyan("tsci logout")} to switch accounts or.`,
+          `Already logged in as ${kleur.bold(`@${handle ?? account?.account_id}`)}! Use ${kleur.cyan("tsci logout")} to switch accounts.`,
         ),
       )
       return
