@@ -31,10 +31,11 @@ jobs:
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
           GITHUB_TOKEN: ${{ secrets.TSCIRCUIT_BOT_GITHUB_TOKEN }}
-
+      
       - name: Get package version
         id: package-version
-        run: node -e "const { appendFileSync } = require('fs'); const { version } = require('./package.json'); appendFileSync(process.env.GITHUB_OUTPUT, `version=${version}\\n`);"
+        run: |
+          echo "version=$(node -p 'require("./package.json").version')" >> "$GITHUB_OUTPUT
 
       - name: Create Pull Request
         id: create-pr
