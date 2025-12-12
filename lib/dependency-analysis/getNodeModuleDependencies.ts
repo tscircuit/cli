@@ -11,39 +11,6 @@ interface NodeModuleDependency {
   resolvedFiles: string[]
 }
 
-function getLocalPackages(projectDir: string): Set<string> {
-  const packageJsonPath = path.join(projectDir, "package.json")
-  const localPackages = new Set<string>()
-
-  if (!fs.existsSync(packageJsonPath)) {
-    return localPackages
-  }
-
-  try {
-    const packageJson = JSON.parse(fs.readFileSync(packageJsonPath, "utf-8"))
-    const allDeps = {
-      ...packageJson.dependencies,
-    }
-
-    for (const [packageName, version] of Object.entries(allDeps)) {
-      if (typeof version !== "string") continue
-
-      const isLocalPackage =
-        version.startsWith("file:") ||
-        version.startsWith("link:") ||
-        version.includes(".yalc")
-
-      if (isLocalPackage) {
-        localPackages.add(packageName)
-      }
-    }
-  } catch (error) {
-    console.warn("Failed to parse package.json for local packages:", error)
-  }
-
-  return localPackages
-}
-
 function getAllDependencyPackages(projectDir: string): Set<string> {
   const packageJsonPath = path.join(projectDir, "package.json")
   const allPackages = new Set<string>()
@@ -520,7 +487,6 @@ export function getAllNodeModuleFilePaths(
   entryFilePath: string,
   projectDir: string,
 ): string[] {
-  const localPackages = getLocalPackages(projectDir)
   const allDependencyPackages = getAllDependencyPackages(projectDir)
 
   // Early return if no dependencies are defined
@@ -552,35 +518,14 @@ export function getAllNodeModuleFilePaths(
   const processedPackages = new Set<string>()
   const allFiles = new Set<string>()
 
-  // When there are local packages, we also need to upload their transitive dependencies
-  const hasLocalPackages = localPackages.size > 0
-
   // Iterate through all discovered dependencies
   for (const [importPath, resolvedFiles] of dependencies.entries()) {
     const packageName = getPackageNameFromImport(importPath)
 
-    // Check if this is a local package
-    const isLocalPackage = localPackages.has(packageName)
-
-    // Check if this package is in the project's dependencies
-    const isProjectDependency = allDependencyPackages.has(packageName)
-
-    // Skip pre-supplied packages UNLESS they are local packages being developed
-    if (isRuntimeProvidedPackage(packageName) && !isLocalPackage) {
+    if (isRuntimeProvidedPackage(packageName)) {
       continue
     }
 
-    // Upload packages that are:
-    // 1. Explicitly listed in the project's dependencies (direct deps)
-    // 2. Local packages
-    // 3. Transitive dependencies when there are local packages
-    const shouldUpload =
-      isProjectDependency || isLocalPackage || hasLocalPackages
-    if (!shouldUpload) {
-      continue
-    }
-
-    // Upload project dependencies and local packages
     if (!processedPackages.has(packageName)) {
       processedPackages.add(packageName)
 

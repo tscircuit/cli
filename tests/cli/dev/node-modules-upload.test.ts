@@ -107,7 +107,7 @@ test(
           name: "test-project",
           version: "1.0.0",
           dependencies: {
-            "@tscircuit/core": "file:.yalc/@tscircuit/core",
+            "@tscircuit/test": "file:.yalc/@tscircuit/test",
           },
         }),
       )
@@ -115,20 +115,20 @@ test(
       // Simulate yalc installing a package to node_modules
       const nodeModulesDir = path.join(tmpDir, "node_modules")
       const tscircuitDir = path.join(nodeModulesDir, "@tscircuit")
-      const coreDir = path.join(tscircuitDir, "core")
-      fs.mkdirSync(coreDir, { recursive: true })
+      const testDir = path.join(tscircuitDir, "test")
+      fs.mkdirSync(testDir, { recursive: true })
 
       fs.writeFileSync(
-        path.join(coreDir, "package.json"),
+        path.join(testDir, "package.json"),
         JSON.stringify({
-          name: "@tscircuit/core",
+          name: "@tscircuit/test",
           version: "0.0.1-local",
           main: "index.js",
         }),
       )
 
       fs.writeFileSync(
-        path.join(coreDir, "index.js"),
+        path.join(testDir, "index.js"),
         "module.exports = { createBoard: () => {} }",
       )
 
@@ -136,7 +136,7 @@ test(
       const componentPath = path.join(tmpDir, "component.tsx")
       fs.writeFileSync(
         componentPath,
-        `import { createBoard } from "@tscircuit/core"\n\nexport default createBoard`,
+        `import { createBoard } from "@tscircuit/test"\n\nexport default createBoard`,
       )
 
       // Start the dev server
@@ -161,17 +161,17 @@ test(
         file_path: string
       }>
 
-      // Check that @tscircuit/core package.json was uploaded
-      const corePackageJson = fileList.find((f) =>
-        f.file_path.includes("node_modules/@tscircuit/core/package.json"),
+      // Check that @tscircuit/test package.json was uploaded
+      const testPackageJson = fileList.find((f) =>
+        f.file_path.includes("node_modules/@tscircuit/test/package.json"),
       )
-      expect(corePackageJson).toBeDefined()
+      expect(testPackageJson).toBeDefined()
 
-      // Check that @tscircuit/core index.js was uploaded
-      const coreIndex = fileList.find((f) =>
-        f.file_path.includes("node_modules/@tscircuit/core/index.js"),
+      // Check that @tscircuit/test index.js was uploaded
+      const testIndex = fileList.find((f) =>
+        f.file_path.includes("node_modules/@tscircuit/test/index.js"),
       )
-      expect(coreIndex).toBeDefined()
+      expect(testIndex).toBeDefined()
 
       await devServer.stop()
     } finally {
