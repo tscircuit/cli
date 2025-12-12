@@ -24,6 +24,7 @@ import { registerRemove } from "./remove/register"
 import { registerBuild } from "./build/register"
 import { registerSnapshot } from "./snapshot/register"
 import { registerSetup } from "./setup/register"
+import { registerAuthSetupNpmrc } from "./auth/setup-npmrc/register"
 import { registerConvert } from "./convert/register"
 import { registerSimulate } from "./simulate/register"
 import { registerInstall } from "./install/register"
@@ -45,6 +46,7 @@ registerAuthLogout(program)
 registerAuthPrintToken(program)
 registerAuthSetToken(program)
 registerAuthWhoami(program)
+registerAuthSetupNpmrc(program)
 
 registerConfig(program)
 registerConfigPrint(program)

@@ -23,67 +23,89 @@ export const registerInit = (program: Command) => {
       "Directory name (optional, defaults to current directory)",
     )
     .option("-y, --yes", "Use defaults and skip prompts")
-    .action(async (directory?: string, options?: { yes?: boolean }) => {
-      await checkForTsciUpdates()
+    .option("--no-install", "Skip installing dependencies")
+    .action(
+      async (
+        directory?: string,
+        options?: { yes?: boolean; install?: boolean },
+      ) => {
+        await checkForTsciUpdates()
 
-      if (!directory && !options?.yes) {
-        const { continueInCurrentDirectory } = await prompts({
-          type: "confirm",
-          name: "continueInCurrentDirectory",
-          message:
-            "Do you want to initialize a new project in the current directory?",
-        })
-        if (!continueInCurrentDirectory) {
-          const { desiredDirectory } = await prompts({
-            type: "text",
-            name: "desiredDirectory",
-            message: "Enter the desired directory name",
+        if (!directory && !options?.yes) {
+          const { continueInCurrentDirectory } = await prompts({
+            type: "confirm",
+            name: "continueInCurrentDirectory",
+            message:
+              "Do you want to initialize a new project in the current directory?",
           })
-          if (desiredDirectory) {
-            directory = desiredDirectory
-          } else {
-            console.log("Project initialization cancelled.")
-            return process.exit(0)
+          if (!continueInCurrentDirectory) {
+            const { desiredDirectory } = await prompts({
+              type: "text",
+              name: "desiredDirectory",
+              message: "Enter the desired directory name",
+            })
+            if (desiredDirectory) {
+              directory = desiredDirectory
+            } else {
+              console.log("Project initialization cancelled.")
+              return process.exit(0)
+            }
           }
         }
-      }
 
-      const projectDir = directory
-        ? path.resolve(process.cwd(), directory)
-        : process.cwd()
+        const projectDir = directory
+          ? path.resolve(process.cwd(), directory)
+          : process.cwd()
 
-      const defaultPackageName = path.basename(projectDir)
-      const { packageName } = options?.yes
-        ? { packageName: defaultPackageName }
-        : await prompts({
-            type: "text",
-            name: "packageName",
-            message: "Package name",
-            initial: defaultPackageName,
-          })
-
-      let authorName = cliConfig.get("githubUsername")
-      if (!authorName) {
+        let tsciHandle: string | null = null
         const token = getSessionToken()
         if (token) {
           try {
-            const decoded = jwtDecode<{
-              github_username?: string
-            }>(token)
-            if (decoded.github_username) {
-              authorName = decoded.github_username
+            const decoded = jwtDecode<{ tscircuit_handle?: string }>(token)
+            if (decoded.tscircuit_handle) {
+              tsciHandle = decoded.tscircuit_handle
             }
           } catch {}
         }
-      }
 
-      // Ensure the directory exists
-      fs.mkdirSync(projectDir, { recursive: true })
+        const dirName = path.basename(projectDir)
 
-      // Create essential project files
-      writeFileIfNotExists(
-        path.join(projectDir, "index.tsx"),
-        `
+        let defaultPackageName = dirName
+        if (tsciHandle) {
+          defaultPackageName = `@tsci/${tsciHandle}.${dirName}`
+        }
+
+        const { packageName } = options?.yes
+          ? { packageName: defaultPackageName }
+          : await prompts({
+              type: "text",
+              name: "packageName",
+              message: "Package name",
+              initial: defaultPackageName,
+            })
+
+        let authorName = cliConfig.get("githubUsername")
+        if (!authorName) {
+          const token = getSessionToken()
+          if (token) {
+            try {
+              const decoded = jwtDecode<{
+                github_username?: string
+              }>(token)
+              if (decoded.github_username) {
+                authorName = decoded.github_username
+              }
+            } catch {}
+          }
+        }
+
+        // Ensure the directory exists
+        fs.mkdirSync(projectDir, { recursive: true })
+
+        // Create essential project files
+        writeFileIfNotExists(
+          path.join(projectDir, "index.tsx"),
+          `
 export default () => (
   <board>
     <resistor resistance="1k" footprint="0402" name="R1" schX={3} pcbX={3} />
@@ -92,36 +114,37 @@ export default () => (
   </board>
 )
 `,
-      )
-
-      const projectConfig = loadProjectConfig(projectDir) ?? {}
-      projectConfig.mainEntrypoint = "index.tsx"
-      if (saveProjectConfig(projectConfig, projectDir)) {
-        console.log(
-          "Updated tscircuit.config.json with mainEntrypoint: 'index.tsx'",
         )
-      }
 
-      writeFileIfNotExists(
-        path.join(projectDir, ".npmrc"),
-        `
+        const projectConfig = loadProjectConfig(projectDir) ?? {}
+        projectConfig.mainEntrypoint = "index.tsx"
+        if (saveProjectConfig(projectConfig, projectDir)) {
+          console.log(
+            "Updated tscircuit.config.json with mainEntrypoint: 'index.tsx'",
+          )
+        }
+
+        writeFileIfNotExists(
+          path.join(projectDir, ".npmrc"),
+          `
 @tsci:registry=https://npm.tscircuit.com
 `,
-      )
+        )
 
-      console.log("Generating package.json")
-      // Generate package.json
-      generatePackageJson(projectDir, { packageName, authorName })
-      // Generate tsconfig.json
-      generateTsConfig(projectDir)
-      // Create .gitignore file
-      generateGitIgnoreFile(projectDir)
-      // Setup project dependencies
-      setupTsciProject(projectDir)
+        console.log("Generating package.json")
+        // Generate package.json
+        generatePackageJson(projectDir, { packageName, authorName })
+        // Generate tsconfig.json
+        generateTsConfig(projectDir)
+        // Create .gitignore file
+        generateGitIgnoreFile(projectDir)
+        // Setup project dependencies
+        setupTsciProject(projectDir, options?.install ? undefined : [])
 
-      console.info(
-        `🎉 Initialization complete! Run ${directory ? `"cd ${directory}" & ` : ""}"tsci dev" to start developing.`,
-      )
-      process.exit(0)
-    })
+        console.info(
+          `🎉 Initialization complete! Run ${directory ? `"cd ${directory}" & ` : ""}"tsci dev" to start developing.`,
+        )
+        process.exit(0)
+      },
+    )
 }

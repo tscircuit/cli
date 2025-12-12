@@ -67,7 +67,32 @@ test("transpile uses mainEntrypoint when available", async () => {
   expect(dtsStat.isFile()).toBe(true)
 }, 30_000)
 
-test("transpile errors when main is outside dist", async () => {
+test("transpile ignores includeBoardFiles globs in favor of detected entrypoint", async () => {
+  const { tmpDir, runCommand } = await getCliTestFixture()
+  const mainPath = path.join(tmpDir, "index.tsx")
+  const globbedPath = path.join(tmpDir, "secondary.circuit.tsx")
+
+  await writeFile(mainPath, "export default 'MAIN_ENTRY_FILE'")
+  await writeFile(globbedPath, "export default 'BOARD_FILE_MARKER'")
+  await writeFile(
+    path.join(tmpDir, "tscircuit.config.json"),
+    JSON.stringify({ includeBoardFiles: ["**/*.circuit.tsx"] }),
+  )
+  await writeFile(
+    path.join(tmpDir, "package.json"),
+    JSON.stringify({ main: "dist/index.js" }),
+  )
+
+  await runCommand(`tsci transpile`)
+
+  const esmPath = path.join(tmpDir, "dist", "index.js")
+  const esmContent = await readFile(esmPath, "utf-8")
+
+  expect(esmContent).toContain("MAIN_ENTRY_FILE")
+  expect(esmContent).not.toContain("BOARD_FILE_MARKER")
+}, 30_000)
+
+test("transpile warns when main is outside dist", async () => {
   const { tmpDir, runCommand } = await getCliTestFixture()
   const mainPath = path.join(tmpDir, "index.tsx")
 

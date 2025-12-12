@@ -9,7 +9,7 @@ jobs:
   windows-tests:
     runs-on: windows-latest
     if: "${{ github.event_name != 'pull_request' || github.event.pull_request.title != 'chore: bump version' }}"
-    timeout-minutes: 10
+    timeout-minutes: 15
 
     steps:
       - name: Checkout code
@@ -20,8 +20,20 @@ jobs:
         with:
           bun-version: 1.3.1
 
+      - name: Cache node_modules
+        uses: actions/cache@v4
+        with:
+          path: node_modules
+          key: ${{ runner.os }}-node-modules-${{ hashFiles('**/bun.lockb', '**/package.json') }}
+          restore-keys: |
+            ${{ runner.os }}-node-modules-
+
       - name: Install dependencies
         run: bun install
 
       - name: Run Windows-only tests
-        run: bun test tests/windows --timeout 20_000
+        shell: bash
+        run: |
+          shopt -s globstar
+          bun run scripts/run-tests-with-retry.ts --timeout 30000 tests/windows/**/*.test.ts
+

@@ -45,5 +45,7 @@ test("getStaticIndexHtmlFile output includes file list and omits registry token"
     `window.TSCIRCUIT_RUNFRAME_STATIC_FILE_LIST = ${JSON.stringify(staticFileList)}`,
   )
   expect(html).not.toContain("TSCIRCUIT_REGISTRY_TOKEN")
-  expect(html).toContain('<script src="./standalone.min.js"></script>')
+  expect(html).toContain(
+    '<script type="module" src="./standalone.min.js"></script>',
+  )
 })

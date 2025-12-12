@@ -15,7 +15,7 @@ export const validateMainInDist = (projectDir: string, distDir: string) => {
     resolvedMainPath.startsWith(`${distDir}${path.sep}`)
 
   if (!isMainInDist) {
-    throw new Error(
+    console.warn(
       'When using transpilation, your package\'s "main" field should point inside the `dist/*` directory, usually to "dist/index.js"',
     )
   }

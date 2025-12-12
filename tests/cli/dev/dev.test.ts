@@ -5,25 +5,14 @@ import fs from "node:fs"
 import path from "node:path"
 import { getCliTestFixture } from "../../fixtures/get-cli-test-fixture"
 
-async function waitForFile(
-  filePath: string,
-  timeout = 5000,
-  interval = 500,
-): Promise<boolean> {
-  const endTime = Date.now() + timeout
-  while (Date.now() < endTime) {
-    if (fs.existsSync(filePath)) {
-      return true
-    }
-    await new Promise((resolve) => setTimeout(resolve, interval))
-  }
-  return false
-}
-
-test("types are installed and refreshed when files change", async () => {
+/**
+ * This test verifies that the dev server does NOT try to fetch types
+ * for @tsci/ packages from the registry API, since types are now
+ * included inside the modules themselves.
+ */
+test("types are NOT fetched from registry (types are bundled in modules)", async () => {
   const fixture = await getCliTestFixture()
 
-  // Get a unique port for the DevServer
   const devServerPort = await getPort()
 
   // Create test files using Bun.write
@@ -44,13 +33,13 @@ test("types are installed and refreshed when files change", async () => {
 
   await devServer.start()
 
-  // Wait for the initial type file to be installed
+  // Verify that NO type files were fetched/created
+  // (since types are now bundled in modules, not fetched from registry)
   const typePath = path.join(
     fixture.tmpDir,
     "node_modules/@tsci/seveibar.red-led/index.d.ts",
   )
-  const typeFileExists = await waitForFile(typePath)
-  expect(typeFileExists).toBe(true)
+  expect(fs.existsSync(typePath)).toBe(false)
 
   // Simulate file change with new import
   const updatedContent = `
@@ -59,14 +48,12 @@ test("types are installed and refreshed when files change", async () => {
   `
   fs.writeFileSync(path.join(fixture.tmpDir, "snippet.tsx"), updatedContent)
 
-  // Wait for the new type file to be installed after update
+  // Verify that NO type files were fetched for the new import either
   const typePath2 = path.join(
     fixture.tmpDir,
     "node_modules/@tsci/seveibar.smd-usb-c/index.d.ts",
   )
-  const typeFileExists2 = await waitForFile(typePath2)
-  expect(typeFileExists2).toBe(true)
+  expect(fs.existsSync(typePath2)).toBe(false)
 
-  // Stop the dev server after the test
   await devServer.stop()
 }, 10_000)

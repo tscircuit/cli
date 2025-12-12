@@ -9,8 +9,10 @@ jobs:
   test:
     runs-on: ubuntu-latest
     if: "${{ github.event_name != 'pull_request' || github.event.pull_request.title != 'chore: bump version' }}"
-    
-    timeout-minutes: 5
+    timeout-minutes: 20
+    strategy:
+      matrix:
+        node: [1, 2, 3, 4, 5]
 
     steps:
       - name: Checkout code
@@ -21,8 +23,44 @@ jobs:
         with:
           bun-version: 1.3.1
 
+      - name: Cache node_modules
+        uses: actions/cache@v4
+        with:
+          path: node_modules
+          key: ${{ runner.os }}-node-modules-${{ hashFiles('**/bun.lockb', '**/package.json') }}
+          restore-keys: |
+            ${{ runner.os }}-node-modules-
+
       - name: Install dependencies
         run: bun install
+      
+      - run: bunx playwright install chromium
 
-      - name: Run tests
-        run: bun test --timeout 20_000
+      - name: Generate test plans
+        run: bun run scripts/generate-test-plan.ts
+
+      - name: Run tests for node ${{ matrix.node }}
+        run: |
+          if [ ! -f ".github/test-plans/node${{ matrix.node }}-testplan.txt" ]; then
+            echo "ERROR: No test plan found for node ${{ matrix.node }}"
+            exit 1
+          fi
+
+          mapfile -t test_files < .github/test-plans/node${{ matrix.node }}-testplan.txt
+          if [ ${#test_files[@]} -eq 0 ]; then
+            echo "ERROR: No test files in plan for node ${{ matrix.node }}"
+            exit 1
+          fi
+
+          echo "Running ${#test_files[@]} test files for node ${{ matrix.node }}"
+          bun run scripts/run-tests-with-retry.ts --timeout 30000 "${test_files[@]}"
+
+      - name: Upload Snapshot Artifacts on Failure
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: snapshots-node${{ matrix.node }}
+          path: |
+            tests/**/__snapshots__/*.diff.png
+            tests/**/__snapshots__/*.snap.png
+          if-no-files-found: ignore

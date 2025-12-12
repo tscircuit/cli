@@ -1,11 +1,13 @@
 import fs from "node:fs"
 import path from "node:path"
+import { pathToFileURL } from "node:url"
 import {
   convertCircuitJsonToPcbSvg,
   convertCircuitJsonToSchematicSvg,
 } from "circuit-to-svg"
 import { renderGLTFToPNGBufferFromGLBBuffer } from "poppygl"
 import { convertCircuitJsonToGltf } from "circuit-json-to-gltf"
+import type { AnyCircuitElement } from "circuit-json"
 
 export interface BuildFileResult {
   sourcePath: string
@@ -61,6 +63,45 @@ const normalizeToUint8Array = (value: unknown): Uint8Array => {
   )
 }
 
+/**
+ * Convert local file paths in model URLs to file:// URLs for fetch() compatibility.
+ * The circuit-json-to-gltf library uses fetch() to load GLB/STL/OBJ/GLTF files,
+ * which requires proper URLs rather than local file paths.
+ */
+const convertModelUrlsToFileUrls = (circuitJson: any[]): any[] => {
+  const modelUrlKeys = [
+    "model_glb_url",
+    "glb_model_url",
+    "model_stl_url",
+    "stl_model_url",
+    "model_obj_url",
+    "obj_model_url",
+    "model_gltf_url",
+    "gltf_model_url",
+  ]
+
+  return circuitJson.map((element) => {
+    if (!element || typeof element !== "object") return element
+
+    const updated = { ...element }
+    for (const key of modelUrlKeys) {
+      const value = updated[key]
+      if (typeof value === "string" && value.length > 0) {
+        console.log("value", value)
+        // Check if it's a local file path (starts with / or drive letter on Windows)
+        // and not already a URL (http://, https://, file://, etc.)
+        if (
+          !value.match(/^[a-zA-Z]+:\/\//) &&
+          (value.startsWith("/") || value.match(/^[a-zA-Z]:\\/))
+        ) {
+          updated[key] = pathToFileURL(value).href
+        }
+      }
+    }
+    return updated
+  })
+}
+
 const generatePreviewAssets = async ({
   build,
   outputDir,
@@ -73,16 +114,46 @@ const generatePreviewAssets = async ({
   const prefixRelative = path.relative(distDir, outputDir) || "."
   const prefix = prefixRelative === "." ? "" : `[${prefixRelative}] `
 
+  let circuitJson: AnyCircuitElement[]
   try {
     const circuitJsonRaw = fs.readFileSync(build.outputPath, "utf-8")
-    const circuitJson = JSON.parse(circuitJsonRaw)
+    circuitJson = JSON.parse(circuitJsonRaw)
+  } catch (error) {
+    console.error(`${prefix}Failed to read circuit JSON:`, error)
+    return
+  }
 
+  fs.mkdirSync(outputDir, { recursive: true })
+
+  // Generate PCB SVG
+  try {
     console.log(`${prefix}Generating PCB SVG...`)
     const pcbSvg = convertCircuitJsonToPcbSvg(circuitJson)
+    fs.writeFileSync(path.join(outputDir, "pcb.svg"), pcbSvg, "utf-8")
+    console.log(`${prefix}Written pcb.svg`)
+  } catch (error) {
+    console.error(`${prefix}Failed to generate PCB SVG:`, error)
+  }
+
+  // Generate schematic SVG
+  try {
     console.log(`${prefix}Generating schematic SVG...`)
     const schematicSvg = convertCircuitJsonToSchematicSvg(circuitJson)
+    fs.writeFileSync(
+      path.join(outputDir, "schematic.svg"),
+      schematicSvg,
+      "utf-8",
+    )
+    console.log(`${prefix}Written schematic.svg`)
+  } catch (error) {
+    console.error(`${prefix}Failed to generate schematic SVG:`, error)
+  }
+
+  // Generate 3D PNG
+  try {
     console.log(`${prefix}Converting circuit to GLB...`)
-    const glbBuffer = await convertCircuitJsonToGltf(circuitJson, {
+    const circuitJsonWithFileUrls = convertModelUrlsToFileUrls(circuitJson)
+    const glbBuffer = await convertCircuitJsonToGltf(circuitJsonWithFileUrls, {
       format: "glb",
     })
     console.log(`${prefix}Rendering GLB to PNG buffer...`)
@@ -91,23 +162,13 @@ const generatePreviewAssets = async ({
       camPos: [10, 10, 10],
       lookAt: [0, 0, 0],
     })
-
-    fs.mkdirSync(outputDir, { recursive: true })
-    fs.writeFileSync(path.join(outputDir, "pcb.svg"), pcbSvg, "utf-8")
-    console.log(`${prefix}Written pcb.svg`)
-    fs.writeFileSync(
-      path.join(outputDir, "schematic.svg"),
-      schematicSvg,
-      "utf-8",
-    )
-    console.log(`${prefix}Written schematic.svg`)
     fs.writeFileSync(
       path.join(outputDir, "3d.png"),
       Buffer.from(normalizeToUint8Array(pngBuffer)),
     )
     console.log(`${prefix}Written 3d.png`)
   } catch (error) {
-    console.error(`${prefix}Failed to generate preview images:`, error)
+    console.error(`${prefix}Failed to generate 3D PNG:`, error)
   }
 }
 

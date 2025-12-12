@@ -5,6 +5,7 @@ import { getRegistryApiKy } from "lib/registry-api/get-ky"
 import type { EndpointResponse } from "lib/registry-api/endpoint-types"
 import { fetchAccount } from "lib/registry-api/fetch-account"
 import kleur from "kleur"
+import { setupNpmrc } from "../setup-npmrc/setup-npmrc"
 
 export const registerAuthLogin = (program: Command) => {
   // Define the login action once to share between both commands
@@ -79,6 +80,9 @@ export const registerAuthLogin = (program: Command) => {
 
     setSessionToken(session.token)
     console.log("\nReady to use!")
+
+    // Setup npmrc with the new session token in global level ~/.npmrc file
+    setupNpmrc(session.token)
   }
 
   // Register the auth login subcommand

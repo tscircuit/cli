@@ -3,6 +3,10 @@ import micromatch from "micromatch"
 /** Default directories and patterns ignored by the CLI */
 export const DEFAULT_IGNORED_PATTERNS = [
   "**/node_modules/**",
+  // Allow watching top-level node_modules dist/index.js files and their parent directories
+  "!node_modules{,/*,/*/dist,/*/dist/index.js,/@*,/@*/*,/@*/*/dist,/@*/*/dist/index.js}",
+  // Re-ignore loose files directly in node_modules
+  "node_modules/*.{js,ts,json}",
   "**/.git/**",
   "**/.vscode/**",
   // Ignore any directory that starts with a dot
@@ -23,8 +27,8 @@ export const shouldIgnorePath = (
   configIgnored: string[] = [],
 ): boolean => {
   const extraPatterns = configIgnored.map(normalizeIgnorePattern)
-  return micromatch.isMatch(relativePath, [
-    ...DEFAULT_IGNORED_PATTERNS,
-    ...extraPatterns,
-  ])
+  return (
+    micromatch([relativePath], [...DEFAULT_IGNORED_PATTERNS, ...extraPatterns])
+      .length > 0
+  )
 }

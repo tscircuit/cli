@@ -137,50 +137,50 @@ export default () => {
 )
 
 test(
-  "DevServer does NOT upload npm dependencies when no local packages exist",
+  "DevServer uploads npm dependencies even when they are not imported",
   async () => {
     // Create a temporary directory for testing
-    const tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), "tsci-test-no-deps-"))
+    const tmpDir = fs.mkdtempSync(
+      path.join(os.tmpdir(), "tsci-test-direct-deps-"),
+    )
 
     try {
-      // Create package.json with ONLY regular npm packages (no yalc/file:)
+      // Create package.json with a regular npm dependency
       fs.writeFileSync(
         path.join(tmpDir, "package.json"),
         JSON.stringify({
           name: "test-project",
           version: "1.0.0",
           dependencies: {
-            react: "^18.0.0",
+            "@tscircuit/mm": "^0.0.1",
           },
         }),
       )
 
-      // Create node_modules with react
+      // Create node_modules with @tscircuit/mm
       const nodeModulesDir = path.join(tmpDir, "node_modules")
-      const reactDir = path.join(nodeModulesDir, "react")
-      fs.mkdirSync(reactDir, { recursive: true })
+      const mmDir = path.join(nodeModulesDir, "@tscircuit", "mm")
+      fs.mkdirSync(path.join(mmDir, "dist"), { recursive: true })
 
       fs.writeFileSync(
-        path.join(reactDir, "package.json"),
+        path.join(mmDir, "package.json"),
         JSON.stringify({
-          name: "react",
-          version: "18.0.0",
-          main: "index.js",
+          name: "@tscircuit/mm",
+          version: "0.0.1",
+          main: "dist/index.js",
         }),
       )
 
       fs.writeFileSync(
-        path.join(reactDir, "index.js"),
-        "module.exports = { createElement: () => {} }",
+        path.join(mmDir, "dist", "index.js"),
+        "module.exports = { demo: true }",
       )
 
-      // Create a component that imports from node_modules
+      // Create a component that does NOT import @tscircuit/mm
       const componentPath = path.join(tmpDir, "component.tsx")
       fs.writeFileSync(
         componentPath,
-        `import React from "react"
-
-export default () => <board width={10} height={10} />`,
+        `export default () => <board width={10} height={10} />`,
       )
 
       // Start the dev server
@@ -205,16 +205,16 @@ export default () => <board width={10} height={10} />`,
         file_path: string
       }>
 
-      // React should NOT be uploaded (no local packages = no uploads)
-      const reactPackageJson = fileList.find((f) =>
-        f.file_path.includes("node_modules/react/package.json"),
+      // @tscircuit/mm should be uploaded even though it's not imported
+      const mmPackageJson = fileList.find((f) =>
+        f.file_path.includes("node_modules/@tscircuit/mm/package.json"),
       )
-      expect(reactPackageJson).toBeUndefined()
+      expect(mmPackageJson).toBeDefined()
 
-      const reactIndex = fileList.find((f) =>
-        f.file_path.includes("node_modules/react/index.js"),
+      const mmIndex = fileList.find((f) =>
+        f.file_path.includes("node_modules/@tscircuit/mm/dist/index.js"),
       )
-      expect(reactIndex).toBeUndefined()
+      expect(mmIndex).toBeDefined()
 
       await devServer.stop()
     } finally {

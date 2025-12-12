@@ -11,41 +11,6 @@ interface NodeModuleDependency {
   resolvedFiles: string[]
 }
 
-function getLocalPackages(projectDir: string): Set<string> {
-  const packageJsonPath = path.join(projectDir, "package.json")
-  const localPackages = new Set<string>()
-
-  if (!fs.existsSync(packageJsonPath)) {
-    return localPackages
-  }
-
-  try {
-    const packageJson = JSON.parse(fs.readFileSync(packageJsonPath, "utf-8"))
-    const allDeps = {
-      ...packageJson.dependencies,
-      ...packageJson.devDependencies,
-      ...packageJson.peerDependencies,
-    }
-
-    for (const [packageName, version] of Object.entries(allDeps)) {
-      if (typeof version !== "string") continue
-
-      const isLocalPackage =
-        version.startsWith("file:") ||
-        version.startsWith("link:") ||
-        version.includes(".yalc")
-
-      if (isLocalPackage) {
-        localPackages.add(packageName)
-      }
-    }
-  } catch (error) {
-    console.warn("Failed to parse package.json for local packages:", error)
-  }
-
-  return localPackages
-}
-
 function getAllDependencyPackages(projectDir: string): Set<string> {
   const packageJsonPath = path.join(projectDir, "package.json")
   const allPackages = new Set<string>()
@@ -204,16 +169,16 @@ export function resolveNodeModuleImport({
     return []
   }
 
-  // Read package.json to find entry points
+  // Read package.json to find entry points (may not exist for some packages like KiCad libraries from GitHub)
   const packageJsonPath = path.join(packageDir, "package.json")
-  if (!fs.existsSync(packageJsonPath)) {
-    return []
-  }
-
-  const packageJson = JSON.parse(fs.readFileSync(packageJsonPath, "utf-8"))
+  const hasPackageJson = fs.existsSync(packageJsonPath)
+  const packageJson = hasPackageJson
+    ? JSON.parse(fs.readFileSync(packageJsonPath, "utf-8"))
+    : null
   const resolvedFiles: string[] = []
 
-  // If importing a subpath (e.g., "react/jsx-runtime")
+  // If importing a subpath (e.g., "react/jsx-runtime" or "kicad-libraries/footprints/file.kicad_mod")
+  // This should work even without a package.json
   if (importPath !== packageName) {
     const subpath = importPath.slice(packageName.length + 1)
     const possiblePaths = [
@@ -236,22 +201,49 @@ export function resolveNodeModuleImport({
     }
   }
 
+  // If no package.json and we found subpath files, return them
+  // This handles packages like KiCad libraries installed from GitHub that don't have package.json
+  if (!hasPackageJson) {
+    return resolvedFiles
+  }
+
+  // Helper to resolve potentially nested export values
+  // exports["."].import can be a string or an object like { types: "...", default: "..." }
+  const resolveExportValue = (value: unknown): string | undefined => {
+    if (typeof value === "string") return value
+    if (value && typeof value === "object" && "default" in value) {
+      const defaultVal = (value as Record<string, unknown>).default
+      if (typeof defaultVal === "string") return defaultVal
+      // Handle double-nested: { default: { types: "...", default: "..." } }
+      if (
+        defaultVal &&
+        typeof defaultVal === "object" &&
+        "default" in defaultVal
+      ) {
+        const nestedDefault = (defaultVal as Record<string, unknown>).default
+        if (typeof nestedDefault === "string") return nestedDefault
+      }
+    }
+    return undefined
+  }
+
   // Main entry points from package.json
   const entryPoints = [
     packageJson.main,
     packageJson.module,
-    packageJson.exports?.["."]?.default,
-    packageJson.exports?.["."]?.import,
-    packageJson.exports?.["."]?.require,
-  ].filter(Boolean)
+    resolveExportValue(packageJson.exports?.["."]?.default),
+    resolveExportValue(packageJson.exports?.["."]?.import),
+    resolveExportValue(packageJson.exports?.["."]?.require),
+  ].filter((entry): entry is string => typeof entry === "string")
 
   for (const entry of entryPoints) {
-    const entryPath = path.join(packageDir, entry as string)
+    const entryPath = path.join(packageDir, entry)
     if (fs.existsSync(entryPath) && fs.statSync(entryPath).isFile()) {
       resolvedFiles.push(entryPath)
     }
   }
 
+  // Fallback to common entry point locations
   if (resolvedFiles.length === 0) {
     const fallbackPaths = [
       path.join(packageDir, "index.js"),
@@ -469,6 +461,7 @@ const RUNTIME_PROVIDED_PACKAGES = new Set([
   "tscircuit",
   "@tscircuit/core",
   "@tscircuit/props",
+  "tslib",
 ])
 
 /**
@@ -494,7 +487,6 @@ export function getAllNodeModuleFilePaths(
   entryFilePath: string,
   projectDir: string,
 ): string[] {
-  const localPackages = getLocalPackages(projectDir)
   const allDependencyPackages = getAllDependencyPackages(projectDir)
 
   // Early return if no dependencies are defined
@@ -508,38 +500,32 @@ export function getAllNodeModuleFilePaths(
     projectDir,
   )
 
+  // Ensure all direct dependencies are included even if not imported
+  for (const packageName of allDependencyPackages) {
+    if (dependencies.has(packageName)) continue
+
+    const resolvedFiles = resolveNodeModuleImport({
+      importPath: packageName,
+      projectDir,
+      searchFromDir: entryFilePath,
+    })
+
+    if (resolvedFiles.length > 0) {
+      dependencies.set(packageName, resolvedFiles)
+    }
+  }
+
   const processedPackages = new Set<string>()
   const allFiles = new Set<string>()
-
-  // When there are local packages, we also need to upload their transitive dependencies
-  const hasLocalPackages = localPackages.size > 0
 
   // Iterate through all discovered dependencies
   for (const [importPath, resolvedFiles] of dependencies.entries()) {
     const packageName = getPackageNameFromImport(importPath)
 
-    // Check if this is a local package
-    const isLocalPackage = localPackages.has(packageName)
-
-    // Check if this package is in the project's dependencies
-    const isProjectDependency = allDependencyPackages.has(packageName)
-
-    // Skip pre-supplied packages UNLESS they are local packages being developed
-    if (isRuntimeProvidedPackage(packageName) && !isLocalPackage) {
+    if (isRuntimeProvidedPackage(packageName)) {
       continue
     }
 
-    // Upload packages that are:
-    // 1. Explicitly listed in the project's dependencies (direct deps)
-    // 2. Local packages
-    // 3. Transitive dependencies when there are local packages
-    const shouldUpload =
-      isProjectDependency || isLocalPackage || hasLocalPackages
-    if (!shouldUpload) {
-      continue
-    }
-
-    // Upload project dependencies and local packages
     if (!processedPackages.has(packageName)) {
       processedPackages.add(packageName)
 
@@ -549,8 +535,10 @@ export function getAllNodeModuleFilePaths(
         const firstResolvedFile = resolvedFiles[0]
         // Find the package directory by walking up from the resolved file
         let packageDir = path.dirname(firstResolvedFile)
+        let hasPackageJson = false
 
-        // Walk up until we find the package.json for this package
+        // Walk up until we find the package.json for this package OR
+        // we reach the expected node_modules/packageName directory
         while (packageDir.includes("node_modules")) {
           const packageJsonPath = path.join(packageDir, "package.json")
           if (fs.existsSync(packageJsonPath)) {
@@ -560,21 +548,45 @@ export function getAllNodeModuleFilePaths(
               )
               if (pkgJson.name === packageName) {
                 // Found the right package directory
+                hasPackageJson = true
                 break
               }
             } catch {
               // Continue searching
             }
           }
+
+          // For packages without package.json (e.g., KiCad libraries from GitHub),
+          // check if we're at the expected node_modules/packageName location
+          const expectedPackagePath = packageName.startsWith("@")
+            ? `node_modules/${packageName}` // @scope/package
+            : `node_modules/${packageName}` // regular package
+          if (
+            packageDir.endsWith(expectedPackagePath) ||
+            packageDir.endsWith(expectedPackagePath.replace(/\//g, path.sep))
+          ) {
+            // We're at the expected package directory
+            break
+          }
+
           const parentDir = path.dirname(packageDir)
           if (parentDir === packageDir) break
           packageDir = parentDir
         }
 
-        // Collect all files from the package directory
+        // For packages WITH package.json, collect all files from the package directory
+        // For packages WITHOUT package.json (e.g., KiCad libraries), only upload the specific resolved files
         if (fs.existsSync(packageDir)) {
-          const packageFiles = collectLocalPackageFiles(packageDir)
-          packageFiles.forEach((file) => allFiles.add(file))
+          if (hasPackageJson) {
+            const packageFiles = collectLocalPackageFiles(packageDir)
+            packageFiles.forEach((file) => allFiles.add(file))
+          } else {
+            // Only add the specifically resolved files for packages without package.json
+            // This avoids uploading hundreds of unnecessary files from KiCad libraries
+            for (const file of resolvedFiles) {
+              allFiles.add(file)
+            }
+          }
         }
       }
     }
