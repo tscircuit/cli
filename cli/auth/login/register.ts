@@ -3,14 +3,20 @@ import { setSessionToken, getSessionToken } from "lib/cli-config"
 import delay from "delay"
 import { getRegistryApiKy } from "lib/registry-api/get-ky"
 import type { EndpointResponse } from "lib/registry-api/endpoint-types"
+import { fetchAccount } from "lib/registry-api/fetch-account"
+import kleur from "kleur"
 
 export const registerAuthLogin = (program: Command) => {
   // Define the login action once to share between both commands
   const loginAction = async () => {
     const sessionToken = getSessionToken()
     if (sessionToken) {
+      const account = await fetchAccount()
+      const handle = account?.tscircuit_handle
       console.log(
-        "Already logged in! Use 'tsci logout' if you need to switch accounts.",
+        kleur.yellow(
+          `Already logged in as ${kleur.bold(`@${handle ?? account?.account_id}`)}! Use ${kleur.cyan("tsci logout")} to switch accounts or.`,
+        ),
       )
       return
     }

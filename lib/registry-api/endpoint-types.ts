@@ -20,19 +20,11 @@ export interface EndpointResponse {
   "accounts/get": {
     account: {
       account_id: string
-      github_username: string
-      shippingInfo?: {
-        firstName: string
-        lastName: string
-        companyName?: string
-        address: string
-        apartment?: string
-        city: string
-        state: string
-        zipCode: string
-        country: string
-        phone: string
-      }
+      github_username: string | null
+      tscircuit_handle: string
+      personal_org_id: string
+      created_at: string
+      email: string
     }
   }
   "orgs/get": {
