@@ -18,11 +18,9 @@ test("login command: already logged in", async () => {
 
   const { stdout, stderr } = await runCommand("tsci login")
 
-  // TODO: Remove this when the autorouter is not emitting this warning
   expect(stderr).toBe("")
-  expect(stdout).toContain(
-    "Already logged in! Use 'tsci logout' if you need to switch accounts.",
-  )
+  expect(stdout).toContain("Already logged in as")
+  expect(stdout).toContain("tsci logout")
 
   cliConfig.delete("sessionToken")
 })

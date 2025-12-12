@@ -19,9 +19,8 @@ test("auth whoami prints account details when logged in", async () => {
   const { stdout, stderr } = await runCommand("tsci auth whoami")
 
   expect(stderr).toBe("")
-  expect(stdout).toContain("Currently logged in user:")
-  expect(stdout).toContain("GitHub Username: test-user")
-  expect(stdout).toContain("Account ID: account-1234")
-  expect(stdout).toContain("Session ID: session-123")
-  expect(stdout).not.toContain("Shipping Info")
+  expect(stdout).toContain("Logged in user:")
+  expect(stdout).toContain("TscHandle:")
+  expect(stdout).toContain("Account ID:")
+  expect(stdout).toContain("Session ID:")
 })

@@ -1,7 +1,18 @@
 import type { Command } from "commander"
 import { cliConfig, getSessionToken } from "lib/cli-config"
-import { getRegistryApiKy } from "lib/registry-api/get-ky"
-import type { EndpointResponse } from "lib/registry-api/endpoint-types"
+import { fetchAccount } from "lib/registry-api/fetch-account"
+import kleur from "kleur"
+
+const formatDate = (date: string | undefined): string | null => {
+  if (!date) return null
+  return new Date(date).toLocaleDateString("en-US", {
+    year: "numeric",
+    month: "long",
+    day: "numeric",
+    hour: "2-digit",
+    minute: "2-digit",
+  })
+}
 
 export const registerAuthWhoami = (program: Command) => {
   program.commands
@@ -9,59 +20,33 @@ export const registerAuthWhoami = (program: Command) => {
     .command("whoami")
     .description("Show information about the current authenticated user")
     .action(async () => {
-      const sessionToken = getSessionToken()
-
-      if (!sessionToken) {
-        console.log("You need to log in to access this.")
+      if (!getSessionToken()) {
+        console.log(kleur.yellow("You need to log in to access this."))
         return
       }
 
-      const ky = getRegistryApiKy({ sessionToken })
+      const account = await fetchAccount()
 
-      const githubUsernameFromConfig = cliConfig.get("githubUsername")
-      const accountIdFromConfig = cliConfig.get("accountId")
-
-      let account: EndpointResponse["accounts/get"]["account"] | undefined
-
-      if (githubUsernameFromConfig && !accountIdFromConfig) {
-        const tryFetchAccount = async (
-          username: string,
-        ): Promise<EndpointResponse["accounts/get"]["account"] | undefined> => {
-          try {
-            const { account } = await ky
-              .post<EndpointResponse["accounts/get"]>("accounts/get", {
-                json: { github_username: username },
-              })
-              .json()
-            return account
-          } catch {
-            return undefined
-          }
-        }
-
-        account = await tryFetchAccount(githubUsernameFromConfig)
-
-        if (!account && process.env.TSCI_TEST_MODE === "true") {
-          const sanitized = githubUsernameFromConfig.replace(
-            /[^a-zA-Z0-9]/g,
-            "",
-          )
-          if (sanitized && sanitized !== githubUsernameFromConfig) {
-            account = await tryFetchAccount(sanitized)
-          }
-        }
-      }
-
-      const githubUsername =
-        account?.github_username ?? githubUsernameFromConfig ?? "(unknown)"
-      const accountId =
-        account?.account_id ?? accountIdFromConfig ?? "(unknown)"
-
-      console.log("Currently logged in user:")
-      console.log(`  GitHub Username: ${githubUsername}`)
-      console.log(`  Account ID: ${accountId}`)
-
-      const sessionId = cliConfig.get("sessionId")
-      console.log(`  Session ID: ${sessionId ?? "(unknown)"}`)
+      console.log(kleur.bold().green("\nLogged in user:\n"))
+      console.log(
+        `  ${kleur.cyan("TscHandle:")}    @${kleur.white(account?.tscircuit_handle ?? kleur.dim("(not set)"))}`,
+      )
+      console.log(
+        `  ${kleur.cyan("Account ID:")}   ${kleur.white(account?.account_id ?? cliConfig.get("accountId") ?? kleur.dim("(unknown)"))}`,
+      )
+      console.log(
+        `  ${kleur.cyan("Email:")}        ${kleur.white(account?.email ?? kleur.dim("(unknown)"))}`,
+      )
+      console.log(
+        `  ${kleur.cyan("Session ID:")}   ${kleur.white(cliConfig.get("sessionId") ?? kleur.dim("(unknown)"))}`,
+      )
+      console.log(
+        `  ${kleur.cyan("Personal Org:")} ${kleur.white(account?.personal_org_id ?? kleur.dim("(unknown)"))}`,
+      )
+      const createdAt = formatDate(account?.created_at)
+      console.log(
+        `  ${kleur.cyan("Created:")}      ${createdAt ? kleur.white(createdAt) : kleur.dim("(unknown)")}`,
+      )
+      console.log()
     })
 }
