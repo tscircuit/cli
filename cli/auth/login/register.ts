@@ -11,19 +11,18 @@ export const registerAuthLogin = (program: Command) => {
     if (sessionToken) {
       const ky = getRegistryApiKy({ sessionToken })
 
-      const githubUsernameFromConfig = cliConfig.get("githubUsername")
       const accountIdFromConfig = cliConfig.get("accountId")
 
       let account: EndpointResponse["accounts/get"]["account"] | undefined
 
-      if (githubUsernameFromConfig && !accountIdFromConfig) {
+      if (accountIdFromConfig) {
         const tryFetchAccount = async (
-          username: string,
+          accountId: string,
         ): Promise<EndpointResponse["accounts/get"]["account"] | undefined> => {
           try {
             const { account } = await ky
               .post<EndpointResponse["accounts/get"]>("accounts/get", {
-                json: { github_username: username },
+                json: { account_id: accountId },
               })
               .json()
             return account
@@ -32,24 +31,13 @@ export const registerAuthLogin = (program: Command) => {
           }
         }
 
-        account = await tryFetchAccount(githubUsernameFromConfig)
-
-        if (!account && process.env.TSCI_TEST_MODE === "true") {
-          const sanitized = githubUsernameFromConfig.replace(
-            /[^a-zA-Z0-9]/g,
-            "",
-          )
-          if (sanitized && sanitized !== githubUsernameFromConfig) {
-            account = await tryFetchAccount(sanitized)
-          }
-        }
+        account = await tryFetchAccount(accountIdFromConfig)
       }
 
-      const githubUsername =
-        account?.github_username ?? githubUsernameFromConfig ?? "(unknown)"
+      const tscircuitHandle = account?.tscircuit_handle ?? "(unknown)"
 
       console.log(
-        `Already logged in as ${githubUsername}! Use 'tsci logout' if you need to switch accounts.`,
+        `Already logged in as ${tscircuitHandle}! Use 'tsci logout' if you need to switch accounts.`,
       )
       return
     }
