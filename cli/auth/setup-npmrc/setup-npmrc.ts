@@ -5,8 +5,8 @@ import * as os from "node:os"
 
 const REGISTRY_URL = "npm.tscircuit.com"
 
-function findUserNpmrc(): string | null {
-  // Common locations for user-level .npmrc
+function findGlobalNpmrc(): string | null {
+  // Common locations for global .npmrc file
   const possiblePaths = [
     // Unix/Linux/macOS: ~/.npmrc
     path.join(os.homedir(), ".npmrc"),
@@ -14,8 +14,6 @@ function findUserNpmrc(): string | null {
     process.env.USERPROFILE
       ? path.join(process.env.USERPROFILE, ".npmrc")
       : null,
-    // npm config prefix location (for some setups)
-    process.env.NPM_CONFIG_USERCONFIG,
   ].filter(Boolean) as string[]
 
   // Return the first existing path, or the default home directory path
@@ -40,7 +38,7 @@ function printManualInstructions(sessionToken: string) {
 
 export function setupNpmrc(sessionToken: string): boolean {
   const authLine = `//${REGISTRY_URL}/:_authToken=${sessionToken}`
-  const npmrcPath = findUserNpmrc()
+  const npmrcPath = findGlobalNpmrc()
 
   if (!npmrcPath) {
     console.log(kleur.red("Could not find your global .npmrc file location."))
