@@ -35,7 +35,8 @@ export const registerAuthLogin = (program: Command) => {
         account = await tryFetchAccount(githubUsernameFromConfig)
       }
 
-      const tscircuitHandle = account?.tscircuit_handle ?? account?.github_username ?? "(unknown)"
+      const tscircuitHandle =
+        account?.tscircuit_handle ?? account?.github_username ?? "(unknown)"
 
       console.log(
         `Already logged in as ${tscircuitHandle}! Use 'tsci logout' if you need to switch accounts.`,
