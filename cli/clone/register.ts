@@ -4,6 +4,7 @@ import * as fs from "node:fs"
 import * as path from "node:path"
 import { setupTsciProject } from "lib/shared/setup-tsci-packages"
 import { generateTsConfig } from "lib/shared/generate-ts-config"
+import { generateNpmrcContent } from "lib/shared/generate-npmrc-content"
 import kleur from "kleur"
 import { cliConfig } from "lib/cli-config"
 import { cloneBugReport } from "./clone-bug-report"
@@ -139,10 +140,7 @@ export const registerClone = (program: Command) => {
           }
         }
 
-        fs.writeFileSync(
-          path.join(dirPath, ".npmrc"),
-          "@tsci:registry=https://npm.tscircuit.com",
-        )
+        fs.writeFileSync(path.join(dirPath, ".npmrc"), generateNpmrcContent())
 
         generateTsConfig(dirPath)
         await setupTsciProject(dirPath)

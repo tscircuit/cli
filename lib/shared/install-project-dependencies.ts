@@ -4,6 +4,7 @@ import kleur from "kleur"
 import { generatePackageJson } from "./generate-package-json"
 import { getPackageManager } from "./get-package-manager"
 import { collectTsciDependencies } from "./collect-tsci-dependencies"
+import { generateNpmrcContent } from "./generate-npmrc-content"
 
 export interface InstallProjectDependenciesOptions {
   cwd?: string
@@ -34,7 +35,7 @@ export async function installProjectDependencies({
   // Create .npmrc if it doesn't exist
   if (!fs.existsSync(npmrcPath)) {
     console.log("Creating .npmrc with tscircuit registry configuration.")
-    fs.writeFileSync(npmrcPath, "@tsci:registry=https://npm.tscircuit.com")
+    fs.writeFileSync(npmrcPath, generateNpmrcContent())
   }
 
   const packageJson = JSON.parse(

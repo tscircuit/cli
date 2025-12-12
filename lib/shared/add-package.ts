@@ -5,6 +5,7 @@ import { prompts } from "lib/utils/prompts"
 import { getPackageManager } from "./get-package-manager"
 import { resolveTarballUrlFromRegistry } from "./resolve-tarball-url-from-registry"
 import { detectAndSetupKicadLibrary } from "./detect-and-setup-kicad-library"
+import { generateNpmrcContent } from "./generate-npmrc-content"
 
 /**
  * Checks if a package spec is a tscircuit component format and normalizes it.
@@ -99,9 +100,10 @@ export async function addPackage(
 
       if (addRegistry) {
         const trimmedContent = npmrcContent.trimEnd()
+        const newNpmrcContent = generateNpmrcContent()
         const newContent =
           (trimmedContent.length > 0 ? `${trimmedContent}\n` : "") +
-          "@tsci:registry=https://npm.tscircuit.com\n"
+          newNpmrcContent
         fs.writeFileSync(npmrcPath, newContent)
         console.log(kleur.green("✓ Updated .npmrc with tscircuit registry"))
         hasTsciRegistry = true

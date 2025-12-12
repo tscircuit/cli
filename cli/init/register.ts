@@ -10,6 +10,7 @@ import { cliConfig, getSessionToken } from "lib/cli-config"
 import { jwtDecode } from "jwt-decode"
 import { loadProjectConfig, saveProjectConfig } from "lib/project-config"
 import { checkForTsciUpdates } from "lib/shared/check-for-cli-update"
+import { generateNpmrcContent } from "lib/shared/generate-npmrc-content"
 import { prompts } from "lib/utils/prompts"
 
 export const registerInit = (program: Command) => {
@@ -126,9 +127,7 @@ export default () => (
 
         writeFileIfNotExists(
           path.join(projectDir, ".npmrc"),
-          `
-@tsci:registry=https://npm.tscircuit.com
-`,
+          generateNpmrcContent(),
         )
 
         console.log("Generating package.json")

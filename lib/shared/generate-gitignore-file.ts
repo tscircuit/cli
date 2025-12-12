@@ -29,6 +29,8 @@ Thumbs.db
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
+
+.npmrc
 `
 
   writeFileIfNotExists(gitignorePath, gitignoreContent)
