@@ -1,16 +1,55 @@
 import type { Command } from "commander"
-import { setSessionToken, getSessionToken } from "lib/cli-config"
 import delay from "delay"
-import { getRegistryApiKy } from "lib/registry-api/get-ky"
+import { cliConfig, getSessionToken, setSessionToken } from "lib/cli-config"
 import type { EndpointResponse } from "lib/registry-api/endpoint-types"
+import { getRegistryApiKy } from "lib/registry-api/get-ky"
 
 export const registerAuthLogin = (program: Command) => {
   // Define the login action once to share between both commands
   const loginAction = async () => {
     const sessionToken = getSessionToken()
     if (sessionToken) {
+      const ky = getRegistryApiKy({ sessionToken })
+
+      const githubUsernameFromConfig = cliConfig.get("githubUsername")
+      const accountIdFromConfig = cliConfig.get("accountId")
+
+      let account: EndpointResponse["accounts/get"]["account"] | undefined
+
+      if (githubUsernameFromConfig && !accountIdFromConfig) {
+        const tryFetchAccount = async (
+          username: string,
+        ): Promise<EndpointResponse["accounts/get"]["account"] | undefined> => {
+          try {
+            const { account } = await ky
+              .post<EndpointResponse["accounts/get"]>("accounts/get", {
+                json: { github_username: username },
+              })
+              .json()
+            return account
+          } catch {
+            return undefined
+          }
+        }
+
+        account = await tryFetchAccount(githubUsernameFromConfig)
+
+        if (!account && process.env.TSCI_TEST_MODE === "true") {
+          const sanitized = githubUsernameFromConfig.replace(
+            /[^a-zA-Z0-9]/g,
+            "",
+          )
+          if (sanitized && sanitized !== githubUsernameFromConfig) {
+            account = await tryFetchAccount(sanitized)
+          }
+        }
+      }
+
+      const githubUsername =
+        account?.github_username ?? githubUsernameFromConfig ?? "(unknown)"
+
       console.log(
-        "Already logged in! Use 'tsci logout' if you need to switch accounts.",
+        `Already logged in as ${githubUsername}! Use 'tsci logout' if you need to switch accounts.`,
       )
       return
     }
