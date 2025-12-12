@@ -4,6 +4,7 @@ on:
   push:
     branches:
       - main
+      - '!version-bumps/**'
   workflow_dispatch:
 
 env:
@@ -12,7 +13,6 @@ env:
 
 jobs:
   publish:
-    if: ${{ !(github.event_name == 'push' && startsWith(github.event.head_commit.message, 'v')) }}
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -31,15 +31,19 @@ jobs:
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
           GITHUB_TOKEN: ${{ secrets.TSCIRCUIT_BOT_GITHUB_TOKEN }}
-          
+
+      - name: Get package version
+        id: package-version
+        run: echo "version=$(node -p \"require('./package.json').version\")" >> "$GITHUB_OUTPUT"
+
       - name: Create Pull Request
         id: create-pr
-        uses: peter-evans/create-pull-request@v5
+        uses: peter-evans/create-pull-request@v6
         with:
           commit-message: "chore: bump version"
-          title: "chore: bump version"
+          title: "chore: bump version to v${{ steps.package-version.outputs.version }}"
           body: "Automated package update"
-          branch: bump-version-${{ github.run_number }}
+          branch: version-bumps/v${{ steps.package-version.outputs.version }}
           base: main
           token: ${{ secrets.TSCIRCUIT_BOT_GITHUB_TOKEN }}
           committer: tscircuitbot <githubbot@tscircuit.com>
