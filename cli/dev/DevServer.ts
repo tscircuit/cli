@@ -23,7 +23,7 @@ import { setSessionToken } from "lib/cli-config"
 
 const debug = Debug("tscircuit:devserver")
 
-const BINARY_FILE_EXTENSIONS = new Set([".glb", ".png", ".jpeg", ".jpg"])
+const BINARY_FILE_EXTENSIONS = new Set([".glb", ".png", ".jpeg", ".jpg", ".step"])
 
 type FileUploadPayload = Pick<
   FileServerRoutes["api/files/upsert"]["POST"]["requestJson"],
