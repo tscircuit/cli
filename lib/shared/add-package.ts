@@ -128,6 +128,29 @@ export async function addPackage(
     await detectAndSetupKicadLibrary(packageSpec, projectDir)
   } catch (error) {
     const errorMessage = error instanceof Error ? error.message : String(error)
+    const errorOutput = String(error)
+
+    const is401Error =
+      errorOutput.includes("401") ||
+      errorOutput.toLowerCase().includes("unauthorized") ||
+      errorMessage.includes("401") ||
+      errorMessage.toLowerCase().includes("unauthorized")
+
+    if (is401Error && normalizedName?.startsWith("@tsci/")) {
+      console.error(kleur.red(`\n✗ Authentication failed for ${displayName}`))
+      console.error(
+        kleur.yellow(
+          "\nNo valid tscircuit session token found in your npmrc files.",
+        ),
+      )
+      console.error(kleur.yellow("Your token may be missing or expired.\n"))
+      console.error(
+        kleur.cyan("Run the following command to set up authentication:"),
+      )
+      console.error(kleur.bold("\n  tsci auth setup-npmrc\n"))
+      throw new Error(`Authentication failed for ${displayName}`)
+    }
+
     console.error(kleur.red(`✗ Failed to add ${displayName}:`), errorMessage)
     throw new Error(`Failed to add ${displayName}: ${errorMessage}`)
   }
