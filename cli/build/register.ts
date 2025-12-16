@@ -188,9 +188,18 @@ export const registerBuild = (program: Command) => {
             validateMainInDist(projectDir, distDir)
 
             console.log("Transpiling entry file...")
-            const entryFile = mainEntrypoint || circuitFiles[0]
+            // For transpilation, we need to find the main library entrypoint
+            // (not board files).
+            const { mainEntrypoint: transpileEntrypoint } =
+              await getBuildEntrypoints({
+                fileOrDir: file,
+                includeBoardFiles: false,
+              })
+            const entryFile = transpileEntrypoint
             if (!entryFile) {
-              console.error("No entry file found for transpilation")
+              console.error(
+                "No entry file found for transpilation. Make sure you have a lib/index.ts or set mainEntrypoint in tscircuit.config.json",
+              )
               process.exit(1)
             }
             const transpileSuccess = await transpileFile({
