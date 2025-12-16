@@ -1,12 +1,12 @@
 import { test, expect } from "bun:test"
 import { join } from "node:path"
-import { temporaryDirectory } from "tempy"
+import { getCliTestFixture } from "../../fixtures/get-cli-test-fixture"
 import getPort from "get-port"
 
 test(
   "tsci add - shows auth error message when 401 from registry",
   async () => {
-    const tmpDir = temporaryDirectory()
+    const { tmpDir, runCommand } = await getCliTestFixture()
 
     // Create a fake server that returns 401 for all requests
     const port = await getPort()
@@ -41,49 +41,7 @@ test(
         `@tsci:registry=http://localhost:${port}\n`,
       )
 
-      // Run tsci add
-      const args = [
-        "bun",
-        join(process.cwd(), "cli/main.ts"),
-        "add",
-        "@tsci/test.package",
-      ]
-
-      const task = Bun.spawn(args, {
-        cwd: tmpDir,
-        stdout: "pipe",
-        stderr: "pipe",
-        env: {
-          ...process.env,
-          TSCI_TEST_MODE: "true",
-          FORCE_COLOR: "0",
-          NODE_ENV: "test",
-        },
-      })
-
-      let stdout = ""
-      let stderr = ""
-
-      const stdoutReader = task.stdout.getReader()
-      const stderrReader = task.stderr.getReader()
-
-      const readStream = async (
-        reader: ReadableStreamDefaultReader<Uint8Array>,
-      ) => {
-        let result = ""
-        while (true) {
-          const { value, done } = await reader.read()
-          if (done) break
-          result += new TextDecoder().decode(value)
-        }
-        return result
-      }
-      ;[stdout, stderr] = await Promise.all([
-        readStream(stdoutReader),
-        readStream(stderrReader),
-        task.exited,
-      ])
-
+      const { stdout, stderr } = await runCommand("tsci add @tsci/test.package")
       const output = stdout + stderr
 
       // Should show auth error message prompting user to run tsci auth setup-npmrc
@@ -105,7 +63,7 @@ test(
 test(
   "tsci add - shows expired token message when 401 and has npmrc token",
   async () => {
-    const tmpDir = temporaryDirectory()
+    const { tmpDir, runCommand } = await getCliTestFixture()
 
     // Create a fake server that returns 401 for all requests
     const port = await getPort()
@@ -140,49 +98,7 @@ test(
         `@tsci:registry=http://localhost:${port}\n//npm.tscircuit.com/:_authToken=expired-token-123\n`,
       )
 
-      // Run tsci add
-      const args = [
-        "bun",
-        join(process.cwd(), "cli/main.ts"),
-        "add",
-        "@tsci/test.package",
-      ]
-
-      const task = Bun.spawn(args, {
-        cwd: tmpDir,
-        stdout: "pipe",
-        stderr: "pipe",
-        env: {
-          ...process.env,
-          TSCI_TEST_MODE: "true",
-          FORCE_COLOR: "0",
-          NODE_ENV: "test",
-        },
-      })
-
-      let stdout = ""
-      let stderr = ""
-
-      const stdoutReader = task.stdout.getReader()
-      const stderrReader = task.stderr.getReader()
-
-      const readStream = async (
-        reader: ReadableStreamDefaultReader<Uint8Array>,
-      ) => {
-        let result = ""
-        while (true) {
-          const { value, done } = await reader.read()
-          if (done) break
-          result += new TextDecoder().decode(value)
-        }
-        return result
-      }
-      ;[stdout, stderr] = await Promise.all([
-        readStream(stdoutReader),
-        readStream(stderrReader),
-        task.exited,
-      ])
-
+      const { stdout, stderr } = await runCommand("tsci add @tsci/test.package")
       const output = stdout + stderr
 
       // Should show the expired token message
