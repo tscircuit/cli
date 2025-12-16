@@ -5,6 +5,7 @@ import { prompts } from "lib/utils/prompts"
 import { getPackageManager } from "./get-package-manager"
 import { resolveTarballUrlFromRegistry } from "./resolve-tarball-url-from-registry"
 import { detectAndSetupKicadLibrary } from "./detect-and-setup-kicad-library"
+import { handleRegistryAuthError } from "./handle-registry-auth-error"
 
 /**
  * Checks if a package spec is a tscircuit component format and normalizes it.
@@ -80,7 +81,7 @@ export async function addPackage(
   console.log(kleur.cyan(`Adding ${kleur.bold(displayName)}...`))
 
   // Only handle @tsci registry setup if it's a tscircuit component
-  if (normalizedName && normalizedName.startsWith("@tsci/")) {
+  if (normalizedName?.startsWith("@tsci/")) {
     const npmrcPath = path.join(projectDir, ".npmrc")
     const npmrcContent = fs.existsSync(npmrcPath)
       ? fs.readFileSync(npmrcPath, "utf-8")
@@ -99,9 +100,7 @@ export async function addPackage(
 
       if (addRegistry) {
         const trimmedContent = npmrcContent.trimEnd()
-        const newContent =
-          (trimmedContent.length > 0 ? `${trimmedContent}\n` : "") +
-          "@tsci:registry=https://npm.tscircuit.com\n"
+        const newContent = `${trimmedContent.length > 0 ? `${trimmedContent}\n` : ""}@tsci:registry=https://npm.tscircuit.com\n`
         fs.writeFileSync(npmrcPath, newContent)
         console.log(kleur.green("✓ Updated .npmrc with tscircuit registry"))
         hasTsciRegistry = true
@@ -129,6 +128,7 @@ export async function addPackage(
   } catch (error) {
     const errorMessage = error instanceof Error ? error.message : String(error)
     console.error(kleur.red(`✗ Failed to add ${displayName}:`), errorMessage)
+    handleRegistryAuthError({ error, projectDir })
     throw new Error(`Failed to add ${displayName}: ${errorMessage}`)
   }
 }
