@@ -28,8 +28,7 @@ test("preview build selection: falls back to mainEntrypoint when no previewCompo
   const previewBuild = (() => {
     if (resolvedPreviewEntrypoint) {
       const match = successfulBuilds.find(
-        (built) =>
-          path.resolve(built.sourcePath) === resolvedPreviewEntrypoint,
+        (built) => path.resolve(built.sourcePath) === resolvedPreviewEntrypoint,
       )
       if (match) return match
     }

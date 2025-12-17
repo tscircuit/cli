@@ -133,7 +133,11 @@ export async function getBuildEntrypoints({
     const resolvedPreviewComponentPath = projectConfig?.previewComponentPath
       ? path.resolve(projectDir, projectConfig.previewComponentPath)
       : undefined
-    return { projectDir, previewComponentPath: resolvedPreviewComponentPath, circuitFiles: [resolved] }
+    return {
+      projectDir,
+      previewComponentPath: resolvedPreviewComponentPath,
+      circuitFiles: [resolved],
+    }
   }
 
   return buildFromProjectDir()
