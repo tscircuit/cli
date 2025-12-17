@@ -2,7 +2,7 @@ import fs from "node:fs"
 import path from "node:path"
 import { getEntrypoint } from "lib/shared/get-entrypoint"
 import { findBoardFiles } from "lib/shared/find-board-files"
-import { getBoardFilePatterns } from "lib/project-config"
+import { getBoardFilePatterns, loadProjectConfig } from "lib/project-config"
 
 const isSubPath = (maybeChild: string, maybeParent: string) => {
   const relative = path.relative(maybeParent, maybeChild)
@@ -37,6 +37,7 @@ export async function getBuildEntrypoints({
 }): Promise<{
   projectDir: string
   mainEntrypoint?: string
+  previewComponentPath?: string
   circuitFiles: string[]
 }> {
   const resolvedRoot = path.resolve(rootDir)
@@ -45,12 +46,18 @@ export async function getBuildEntrypoints({
     : []
 
   const buildFromProjectDir = async () => {
+    const projectConfig = loadProjectConfig(resolvedRoot)
+    const previewComponentPath = projectConfig?.previewComponentPath
+      ? path.resolve(resolvedRoot, projectConfig.previewComponentPath)
+      : undefined
+
     if (includeBoardFiles) {
       const files = findBoardFiles({ projectDir: resolvedRoot })
 
       if (files.length > 0) {
         return {
           projectDir: resolvedRoot,
+          previewComponentPath,
           circuitFiles: files,
         }
       }
@@ -66,12 +73,14 @@ export async function getBuildEntrypoints({
       return {
         projectDir: resolvedRoot,
         mainEntrypoint,
+        previewComponentPath,
         circuitFiles: [mainEntrypoint],
       }
     }
 
     return {
       projectDir: resolvedRoot,
+      previewComponentPath,
       circuitFiles: [],
     }
   }
@@ -79,6 +88,11 @@ export async function getBuildEntrypoints({
   if (fileOrDir) {
     const resolved = path.resolve(resolvedRoot, fileOrDir)
     if (fs.existsSync(resolved) && fs.statSync(resolved).isDirectory()) {
+      const projectConfig = loadProjectConfig(resolvedRoot)
+      const previewComponentPath = projectConfig?.previewComponentPath
+        ? path.resolve(resolvedRoot, projectConfig.previewComponentPath)
+        : undefined
+
       if (includeBoardFiles) {
         const circuitFiles = findBoardFiles({
           projectDir: resolvedRoot,
@@ -93,6 +107,7 @@ export async function getBuildEntrypoints({
 
         return {
           projectDir: resolvedRoot,
+          previewComponentPath,
           circuitFiles,
         }
       }
@@ -107,13 +122,18 @@ export async function getBuildEntrypoints({
       return {
         projectDir,
         mainEntrypoint: mainEntrypoint || undefined,
+        previewComponentPath,
         circuitFiles: mainEntrypoint ? [mainEntrypoint] : [],
       }
     }
     // Find project root by looking for package.json
     const fileDir = path.dirname(resolved)
     const projectDir = findProjectRoot(fileDir)
-    return { projectDir, circuitFiles: [resolved] }
+    const projectConfig = loadProjectConfig(projectDir)
+    const previewComponentPath = projectConfig?.previewComponentPath
+      ? path.resolve(projectDir, projectConfig.previewComponentPath)
+      : undefined
+    return { projectDir, previewComponentPath, circuitFiles: [resolved] }
   }
 
   return buildFromProjectDir()
