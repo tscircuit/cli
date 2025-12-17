@@ -188,7 +188,7 @@ export const buildPreviewImages = async ({
   const successfulBuilds = builtFiles.filter((file) => file.ok)
   // previewComponentPath takes precedence over mainEntrypoint for preview images
   const previewEntrypoint = previewComponentPath || mainEntrypoint
-  const normalizedPreviewEntrypoint = previewEntrypoint
+  const resolvedPreviewEntrypoint = previewEntrypoint
     ? path.resolve(previewEntrypoint)
     : undefined
 
@@ -212,10 +212,10 @@ export const buildPreviewImages = async ({
   }
 
   const previewBuild = (() => {
-    if (normalizedPreviewEntrypoint) {
+    if (resolvedPreviewEntrypoint) {
       const match = successfulBuilds.find(
         (built) =>
-          path.resolve(built.sourcePath) === normalizedPreviewEntrypoint,
+          path.resolve(built.sourcePath) === resolvedPreviewEntrypoint,
       )
       if (match) return match
     }

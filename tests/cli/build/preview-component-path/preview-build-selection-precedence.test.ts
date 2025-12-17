@@ -23,15 +23,15 @@ test("preview build selection: previewComponentPath takes precedence", () => {
   // This mimics the logic in buildPreviewImages
   const successfulBuilds = builtFiles.filter((file) => file.ok)
   const previewEntrypoint = previewComponentPath || mainEntrypoint
-  const normalizedPreviewEntrypoint = previewEntrypoint
+  const resolvedPreviewEntrypoint = previewEntrypoint
     ? path.resolve(previewEntrypoint)
     : undefined
 
   const previewBuild = (() => {
-    if (normalizedPreviewEntrypoint) {
+    if (resolvedPreviewEntrypoint) {
       const match = successfulBuilds.find(
         (built) =>
-          path.resolve(built.sourcePath) === normalizedPreviewEntrypoint,
+          path.resolve(built.sourcePath) === resolvedPreviewEntrypoint,
       )
       if (match) return match
     }
