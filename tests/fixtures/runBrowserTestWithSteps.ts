@@ -298,17 +298,20 @@ async function executeCloneBugReportStep(
     "@tsci:registry=https://npm.tscircuit.com",
   )
 
+  // Environment for bun commands to isolate cache/global directories per cloned
+  // report so dependency resolution stays consistent regardless of test execution order.
+  const bunEnv = {
+    ...process.env,
+    BUN_INSTALL_CACHE: path.join(clonedReport.tmpDir, ".bun-install-cache"),
+    BUN_INSTALL_GLOBAL_DIR: path.join(clonedReport.tmpDir, ".bun-global"),
+  }
+
   // Install dependencies
   try {
     execSync("bun install", {
       cwd: clonedReport.tmpDir,
       stdio: "inherit",
-      env: {
-        ...process.env,
-        // Isolate bun's install cache per cloned report so dependency resolution
-        // stays consistent regardless of test execution order.
-        BUN_INSTALL_CACHE: path.join(clonedReport.tmpDir, ".bun-install-cache"),
-      },
+      env: bunEnv,
     })
   } catch (error) {
     console.warn(
@@ -322,6 +325,7 @@ async function executeCloneBugReportStep(
       execSync(step.postInstallScript, {
         cwd: clonedReport.tmpDir,
         stdio: "inherit",
+        env: bunEnv,
       })
     } catch (error) {
       console.warn(
@@ -340,6 +344,7 @@ async function executeCloneBugReportStep(
         execSync(`bun link ${packageName}`, {
           cwd: clonedReport.tmpDir,
           stdio: "inherit",
+          env: bunEnv,
         })
       } catch (error) {
         console.warn(

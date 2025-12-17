@@ -93,9 +93,10 @@ export async function getCliTestFixture(
       FORCE_COLOR: "0",
       NODE_ENV: "test",
       TSCIRCUIT_CONFIG_DIR: testConfigDir,
-      // Isolate bun's install cache per-test to avoid cross-test pollution
-      // that can lead to different dependency resolutions
+      // Isolate bun's install cache and global directory per-test to avoid
+      // cross-test pollution that can lead to different dependency resolutions
       BUN_INSTALL_CACHE: path.join(tmpDir, ".bun-install-cache"),
+      BUN_INSTALL_GLOBAL_DIR: path.join(tmpDir, ".bun-global"),
     }
 
     let stdout = ""
