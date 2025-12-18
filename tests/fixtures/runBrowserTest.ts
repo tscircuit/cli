@@ -246,10 +246,16 @@ export async function runBrowserTest(
       stdio: "inherit",
       env: {
         ...process.env,
-        // Isolate bun's install cache per-test to avoid cross-test pollution that
-        // can lead to different dependency resolutions (e.g., zod). Using a
-        // tmp-local cache keeps installs hermetic regardless of execution order.
+        // Isolate all Bun caches per-test to avoid cross-test pollution that
+        // can lead to different dependency resolutions (e.g., zod version mismatches
+        // causing "keyValidator._parse is not a function"). Using tmp-local paths
+        // keeps installs hermetic regardless of test execution order.
         BUN_INSTALL_CACHE: path.join(tmpDir, ".bun-install-cache"),
+        BUN_INSTALL_GLOBAL_DIR: path.join(tmpDir, ".bun-global"),
+        BUN_RUNTIME_TRANSPILER_CACHE_PATH: path.join(
+          tmpDir,
+          ".bun-transpiler-cache",
+        ),
       },
     })
   } catch (error) {

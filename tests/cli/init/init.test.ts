@@ -1,6 +1,7 @@
 import { expect, test } from "bun:test"
 import { execSync } from "node:child_process"
 import { join } from "node:path"
+import path from "node:path"
 import { getCliTestFixture } from "../../fixtures/get-cli-test-fixture"
 
 test("init command installs @types/react and passes type-checking", async () => {
@@ -34,9 +35,20 @@ test("init command installs @types/react and passes type-checking", async () => 
   )
 
   try {
+    const projectPath = join(tmpDir, projectDir)
     const typeCheckResult = execSync("bunx tsc --noEmit", {
-      cwd: join(tmpDir, projectDir),
+      cwd: projectPath,
       stdio: "inherit",
+      env: {
+        ...process.env,
+        // Isolate Bun caches to prevent cross-test pollution
+        BUN_INSTALL_CACHE: path.join(projectPath, ".bun-install-cache"),
+        BUN_INSTALL_GLOBAL_DIR: path.join(projectPath, ".bun-global"),
+        BUN_RUNTIME_TRANSPILER_CACHE_PATH: path.join(
+          projectPath,
+          ".bun-transpiler-cache",
+        ),
+      },
     })
   } catch (error) {
     console.log(` ${tmpDir}/${projectDir}`)

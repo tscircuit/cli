@@ -27,6 +27,13 @@ const runBunCommand = async (
     env: {
       ...process.env,
       NODE_ENV: "test",
+      // Isolate Bun caches to prevent cross-test pollution
+      BUN_INSTALL_CACHE: path.join(cwd, ".bun-install-cache"),
+      BUN_INSTALL_GLOBAL_DIR: path.join(cwd, ".bun-global"),
+      BUN_RUNTIME_TRANSPILER_CACHE_PATH: path.join(
+        cwd,
+        ".bun-transpiler-cache",
+      ),
     },
   })
 

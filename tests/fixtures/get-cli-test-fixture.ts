@@ -93,6 +93,12 @@ export async function getCliTestFixture(
       FORCE_COLOR: "0",
       NODE_ENV: "test",
       TSCIRCUIT_CONFIG_DIR: testConfigDir,
+      BUN_INSTALL_CACHE: path.join(tmpDir, ".bun-install-cache"),
+      BUN_INSTALL_GLOBAL_DIR: path.join(tmpDir, ".bun-global"),
+      BUN_RUNTIME_TRANSPILER_CACHE_PATH: path.join(
+        tmpDir,
+        ".bun-transpiler-cache",
+      ),
     }
 
     let stdout = ""

@@ -84,6 +84,16 @@ export default Board
     cwd: projectDir,
     stdout: "pipe",
     stderr: "pipe",
+    env: {
+      ...process.env,
+      // Isolate Bun caches to prevent cross-test pollution
+      BUN_INSTALL_CACHE: path.join(projectDir, ".bun-install-cache"),
+      BUN_INSTALL_GLOBAL_DIR: path.join(projectDir, ".bun-global"),
+      BUN_RUNTIME_TRANSPILER_CACHE_PATH: path.join(
+        projectDir,
+        ".bun-transpiler-cache",
+      ),
+    },
   })
   expect(install.exitCode).toBe(0)
 

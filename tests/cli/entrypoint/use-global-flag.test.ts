@@ -4,6 +4,14 @@ import { join, resolve } from "node:path"
 import { spawnSync } from "node:child_process"
 import { temporaryDirectory } from "tempy"
 
+// Helper to get isolated Bun cache environment variables
+const getBunCacheEnv = (cacheDir: string) => ({
+  ...process.env,
+  BUN_INSTALL_CACHE: join(cacheDir, ".bun-install-cache"),
+  BUN_INSTALL_GLOBAL_DIR: join(cacheDir, ".bun-global"),
+  BUN_RUNTIME_TRANSPILER_CACHE_PATH: join(cacheDir, ".bun-transpiler-cache"),
+})
+
 test("entrypoint uses local version by default when available", async () => {
   const tmpDir = temporaryDirectory()
   const localCliPath = join(tmpDir, "node_modules", "@tscircuit", "cli")
@@ -31,6 +39,7 @@ test("entrypoint uses local version by default when available", async () => {
   const result = spawnSync("bun", [entrypointPath, "--version"], {
     cwd: tmpDir,
     encoding: "utf-8",
+    env: getBunCacheEnv(tmpDir),
   })
 
   const output = result.stdout + result.stderr
@@ -70,6 +79,7 @@ test("entrypoint skips local version when --use-global flag is passed", async ()
     {
       cwd: tmpDir,
       encoding: "utf-8",
+      env: getBunCacheEnv(tmpDir),
     },
   )
 
