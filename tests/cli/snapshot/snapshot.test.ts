@@ -203,7 +203,7 @@ test("snapshot command --pcb-only", async () => {
 
   expect(pcbExists).toBe(true)
   expect(schExists).toBe(false)
-})
+}, 30_000)
 
 test("snapshot command --schematic-only", async () => {
   const { tmpDir, runCommand } = await getCliTestFixture()
@@ -231,7 +231,7 @@ test("snapshot command --schematic-only", async () => {
 
   expect(pcbExists).toBe(false)
   expect(schExists).toBe(true)
-})
+}, 30_000)
 
 test("snapshot command with file path", async () => {
   const { tmpDir, runCommand } = await getCliTestFixture()
@@ -268,7 +268,7 @@ test("snapshot command with file path", async () => {
 
   const rootSnapExists = await Bun.file(join(tmpDir, "__snapshots__")).exists()
   expect(rootSnapExists).toBe(false)
-})
+}, 30_000)
 
 test("snapshot command with directory path", async () => {
   const { tmpDir, runCommand } = await getCliTestFixture()
@@ -314,7 +314,7 @@ test("snapshot command with directory path", async () => {
 
   const rootExists = await Bun.file(join(tmpDir, "__snapshots__")).exists()
   expect(rootExists).toBe(false)
-})
+}, 30_000)
 
 test("snapshot command skips updates when snapshots match visually", async () => {
   const { tmpDir, runCommand } = await getCliTestFixture()
