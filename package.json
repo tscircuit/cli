@@ -60,7 +60,9 @@
     "tempy": "^3.1.0",
     "tscircuit": "^0.0.1014-libonly",
     "tsx": "^4.7.1",
-    "typed-ky": "^0.0.4",
+    "typed-ky": "^0.0.4"
+  },
+  "dependencies": {
     "zod": "^3.23.8"
   },
   "peerDependencies": {
