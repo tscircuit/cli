@@ -2,12 +2,7 @@ import { expect, test } from "bun:test"
 import { readFile, mkdir, writeFile } from "node:fs/promises"
 import path from "node:path"
 import { getCliTestFixture } from "../../fixtures/get-cli-test-fixture"
-
-type BunCommandResult = {
-  stdout: string
-  stderr: string
-  exitCode: number
-}
+import { runBunCommandWithCache } from "../../fixtures/runBunCommandWithCache"
 
 const circuitCode = `
 export default () => (
@@ -15,35 +10,6 @@ export default () => (
     <resistor resistance="1k" footprint="0402" name="R1" schX={3} pcbX={3} />
   </board>
 )`
-
-const runBunCommand = async (
-  args: string[],
-  cwd: string,
-): Promise<BunCommandResult> => {
-  const task = Bun.spawn(args, {
-    cwd,
-    stdout: "pipe",
-    stderr: "pipe",
-    env: {
-      ...process.env,
-      NODE_ENV: "test",
-      // Isolate Bun caches to prevent cross-test pollution
-      BUN_INSTALL_CACHE: path.join(cwd, ".bun-install-cache"),
-      BUN_INSTALL_GLOBAL_DIR: path.join(cwd, ".bun-global"),
-      BUN_RUNTIME_TRANSPILER_CACHE_PATH: path.join(
-        cwd,
-        ".bun-transpiler-cache",
-      ),
-    },
-  })
-
-  const stdoutPromise = new Response(task.stdout).text()
-  const stderrPromise = new Response(task.stderr).text()
-  const exitCode = await task.exited
-  const [stdout, stderr] = await Promise.all([stdoutPromise, stderrPromise])
-
-  return { stdout, stderr, exitCode }
-}
 
 test("transpiled package can be linked and consumed", async () => {
   const { tmpDir, runCommand } = await getCliTestFixture()
@@ -77,7 +43,12 @@ test("transpiled package can be linked and consumed", async () => {
   )
   await writeFile(circuitPath, circuitCode)
 
-  const producerInstall = await runBunCommand(["bun", "install"], producerDir)
+  // Use tmpDir as the shared cache base for all bun commands so bun link works
+  const producerInstall = await runBunCommandWithCache(
+    ["bun", "install"],
+    producerDir,
+    tmpDir,
+  )
   expect(producerInstall.exitCode).toBe(0)
 
   await runCommand(`tsci transpile ${circuitPath}`)
@@ -86,7 +57,11 @@ test("transpiled package can be linked and consumed", async () => {
   const esmContent = await readFile(esmPath, "utf-8")
   expect(esmContent).toContain("jsx")
 
-  const linkResult = await runBunCommand(["bun", "link"], producerDir)
+  const linkResult = await runBunCommandWithCache(
+    ["bun", "link"],
+    producerDir,
+    tmpDir,
+  )
   expect(linkResult.exitCode).toBe(0)
 
   const consumerPkg = {
@@ -103,7 +78,11 @@ test("transpiled package can be linked and consumed", async () => {
     path.join(consumerDir, "package.json"),
     JSON.stringify(consumerPkg, null, 2),
   )
-  const consumerInstall = await runBunCommand(["bun", "install"], consumerDir)
+  const consumerInstall = await runBunCommandWithCache(
+    ["bun", "install"],
+    consumerDir,
+    tmpDir,
+  )
   expect(consumerInstall.exitCode).toBe(0)
   await writeFile(
     consumerEntry,
@@ -125,9 +104,10 @@ export default () => <ProducerBoard />
 `,
   )
 
-  const consumerLink = await runBunCommand(
+  const consumerLink = await runBunCommandWithCache(
     ["bun", "link", "linked-transpiled-lib"],
     consumerDir,
+    tmpDir,
   )
   expect(consumerLink.exitCode).toBe(0)
 
@@ -149,7 +129,11 @@ export default () => <ProducerBoard />
   )
   expect(resistor).toBeDefined()
 
-  const consumerRun = await runBunCommand(["bun", consumerEntry], consumerDir)
+  const consumerRun = await runBunCommandWithCache(
+    ["bun", consumerEntry],
+    consumerDir,
+    tmpDir,
+  )
   expect(consumerRun.exitCode).toBe(0)
   expect(consumerRun.stdout).toContain("linked-board function object")
 }, 60_000)

@@ -2,41 +2,7 @@ import { expect, test } from "bun:test"
 import { mkdir, readFile, writeFile } from "node:fs/promises"
 import path from "node:path"
 import { getCliTestFixture } from "../../fixtures/get-cli-test-fixture"
-
-type BunCommandResult = {
-  stdout: string
-  stderr: string
-  exitCode: number
-}
-
-const runBunCommand = async (
-  args: string[],
-  cwd: string,
-): Promise<BunCommandResult> => {
-  const task = Bun.spawn(args, {
-    cwd,
-    stdout: "pipe",
-    stderr: "pipe",
-    env: {
-      ...process.env,
-      NODE_ENV: "test",
-      // Isolate Bun caches to prevent cross-test pollution
-      BUN_INSTALL_CACHE: path.join(cwd, ".bun-install-cache"),
-      BUN_INSTALL_GLOBAL_DIR: path.join(cwd, ".bun-global"),
-      BUN_RUNTIME_TRANSPILER_CACHE_PATH: path.join(
-        cwd,
-        ".bun-transpiler-cache",
-      ),
-    },
-  })
-
-  const stdoutPromise = new Response(task.stdout).text()
-  const stderrPromise = new Response(task.stderr).text()
-  const exitCode = await task.exited
-  const [stdout, stderr] = await Promise.all([stdoutPromise, stderrPromise])
-
-  return { stdout, stderr, exitCode }
-}
+import { runBunCommandWithCache } from "../../fixtures/runBunCommandWithCache"
 
 test("producer tsconfig paths and GLB exports are preserved when linked", async () => {
   const { tmpDir, runCommand } = await getCliTestFixture()
@@ -114,7 +80,12 @@ export default AliasedBoard
     ),
   )
 
-  const producerInstall = await runBunCommand(["bun", "install"], producerDir)
+  // Use tmpDir as the shared cache base for all bun commands so bun link works
+  const producerInstall = await runBunCommandWithCache(
+    ["bun", "install"],
+    producerDir,
+    tmpDir,
+  )
   expect(producerInstall.exitCode).toBe(0)
 
   await runCommand(`tsci transpile ${entryPath}`)
@@ -132,7 +103,11 @@ export default AliasedBoard
     "
   `)
 
-  const linkResult = await runBunCommand(["bun", "link"], producerDir)
+  const linkResult = await runBunCommandWithCache(
+    ["bun", "link"],
+    producerDir,
+    tmpDir,
+  )
   expect(linkResult.exitCode).toBe(0)
 
   const consumerPkg = {
@@ -157,12 +132,17 @@ export default () => <AliasedBoard />
       writeFile(path.join(consumerDir, relativePath), content),
     ),
   )
-  const consumerInstall = await runBunCommand(["bun", "install"], consumerDir)
+  const consumerInstall = await runBunCommandWithCache(
+    ["bun", "install"],
+    consumerDir,
+    tmpDir,
+  )
   expect(consumerInstall.exitCode).toBe(0)
 
-  const consumerLink = await runBunCommand(
+  const consumerLink = await runBunCommandWithCache(
     ["bun", "link", "aliased-glb-lib"],
     consumerDir,
+    tmpDir,
   )
   expect(consumerLink.exitCode).toBe(0)
 
