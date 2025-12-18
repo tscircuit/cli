@@ -73,7 +73,13 @@ export function getPackageManager(): PackageManager {
         installCommand = `npm install ${name}`
       }
       console.log(kleur.gray(`> ${installCommand}`))
-      execSync(installCommand, { stdio: "inherit", cwd })
+      const output = execSync(installCommand, {
+        stdio: ["inherit", "pipe", "pipe"],
+        cwd,
+      })
+      if (output) {
+        process.stdout.write(output)
+      }
     },
     init: ({ cwd }) => {
       const initCommand = getInitCommand()
@@ -88,7 +94,13 @@ export function getPackageManager(): PackageManager {
     installAll: ({ cwd }) => {
       const installCommand = getInstallAllCommand()
       console.log(kleur.gray(`> ${installCommand}`))
-      execSync(installCommand, { stdio: "inherit", cwd })
+      const output = execSync(installCommand, {
+        stdio: ["inherit", "pipe", "pipe"],
+        cwd,
+      })
+      if (output) {
+        process.stdout.write(output)
+      }
     },
     getInstallAllCommand,
   }

@@ -4,6 +4,7 @@ import kleur from "kleur"
 import { generatePackageJson } from "./generate-package-json"
 import { getPackageManager } from "./get-package-manager"
 import { collectTsciDependencies } from "./collect-tsci-dependencies"
+import { handleRegistryAuthError } from "./handle-registry-auth-error"
 
 export interface InstallProjectDependenciesOptions {
   cwd?: string
@@ -72,6 +73,7 @@ export async function installProjectDependencies({
     console.warn(
       `Please run \`${packageManager.getInstallAllCommand()}\` manually.`,
     )
+    handleRegistryAuthError({ error, projectDir: projectRoot })
     throw error
   }
 }
