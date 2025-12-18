@@ -52,7 +52,8 @@ describe("calculateCameraPosition", () => {
         source_component_id: "source1",
         layer: "top",
         rotation: 0,
-      } as any,
+        obstructs_within_bounds: true,
+      },
       {
         type: "pcb_component",
         center: { x: -10, y: -10 },
@@ -62,9 +63,10 @@ describe("calculateCameraPosition", () => {
         source_component_id: "source2",
         layer: "top",
         rotation: 0,
-      } as any,
+        obstructs_within_bounds: true,
+      },
     ]
-    const result = calculateCameraPosition(circuitJson as AnyCircuitElement[])
+    const result = calculateCameraPosition(circuitJson)
 
     // minX = -11, maxX = 11 (center +/- width/2)
     // minY = -11, maxY = 11
