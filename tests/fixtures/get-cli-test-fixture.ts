@@ -93,6 +93,12 @@ export async function getCliTestFixture(
       FORCE_COLOR: "0",
       NODE_ENV: "test",
       TSCIRCUIT_CONFIG_DIR: testConfigDir,
+      // Keep installs hermetic per test run to avoid cache pollution across
+      // unrelated projects (e.g., mismatched zod versions in CI)
+      BUN_INSTALL_CACHE: path.join(tmpDir, ".bun-install-cache"),
+      // Ensure bun resolves dependencies from the workspace rather than trying
+      // to auto-install a fresh copy in the temp project
+      NODE_PATH: path.join(process.cwd(), "node_modules"),
     }
 
     let stdout = ""
