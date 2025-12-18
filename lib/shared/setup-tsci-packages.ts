@@ -1,10 +1,14 @@
 import fs from "node:fs"
 import path from "node:path"
 import { getPackageManager } from "./get-package-manager"
+import { getDefaultTscircuitVersion } from "./get-default-tscircuit-version"
 
 export async function setupTsciProject(
   directory = process.cwd(),
-  devDependencies = ["@types/react", "tscircuit"],
+  devDependencies = [
+    "@types/react",
+    `tscircuit@${getDefaultTscircuitVersion()}`,
+  ],
 ) {
   const projectPath = path.resolve(directory)
   if (!fs.existsSync(projectPath)) {

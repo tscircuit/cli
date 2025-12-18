@@ -1,5 +1,6 @@
 import * as path from "node:path"
 import { writeFileIfNotExists } from "./write-file-if-not-exists"
+import { getDefaultTscircuitVersion } from "./get-default-tscircuit-version"
 
 export const generatePackageJson = (
   dir: string,
@@ -23,7 +24,7 @@ export const generatePackageJson = (
       start: "tsci dev",
     },
     devDependencies: {
-      tscircuit: "latest",
+      tscircuit: getDefaultTscircuitVersion(),
     },
   }
 
