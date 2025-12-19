@@ -53,24 +53,34 @@ export default () => (
   expect(files).toContain("circuit.kicad_sym")
   const symContent = await zip.file("circuit.kicad_sym")!.async("string")
   expect(symContent).toContain("kicad_symbol_lib")
+  // Verify symbol references correct footprint library (same name as project)
+  expect(symContent).toContain('"circuit:')
 
-  // Verify footprint library
-  expect(files.some((f) => f.includes("tscircuit.pretty/"))).toBe(true)
+  // Verify footprint library (uses same name as project: "circuit")
+  expect(files.some((f) => f.includes("circuit.pretty/"))).toBe(true)
   expect(
     files.filter((f) => f.endsWith(".kicad_mod")).length,
   ).toBeGreaterThanOrEqual(3)
 
   // Verify chip footprint has 3D model reference
   const chipContent = await zip
-    .file("tscircuit.pretty/simple_chip.kicad_mod")!
+    .file("circuit.pretty/simple_chip.kicad_mod")!
     .async("string")
   expect(chipContent).toContain("(model")
   expect(chipContent).toContain("SW_Push_1P1T_NO_CK_KMR2.step")
 
   // Verify 3D model file is included
-  expect(files).toContain("tscircuit.3dshapes/SW_Push_1P1T_NO_CK_KMR2.step")
+  expect(files).toContain("circuit.3dshapes/SW_Push_1P1T_NO_CK_KMR2.step")
 
   // Verify library tables
   expect(files).toContain("fp-lib-table")
   expect(files).toContain("sym-lib-table")
+
+  // Save to debug-output for inspection
+  const debugOutputDir = path.join(__dirname, "../../../debug-output")
+  await import("node:fs/promises").then((fs) =>
+    fs.mkdir(debugOutputDir, { recursive: true }),
+  )
+  await copyFile(zipPath, path.join(debugOutputDir, "circuit-kicad-library.zip"))
+  console.log("Saved to debug-output/circuit-kicad-library.zip")
 }, 120_000)
