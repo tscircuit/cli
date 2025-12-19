@@ -1,10 +1,52 @@
 #!/usr/bin/env bun
 
 import { readFileSync, readdirSync, statSync } from "node:fs"
-import { join } from "node:path"
+import { join, relative } from "node:path"
 import { exit } from "node:process"
 
 console.log("🔍 Checking runtime dependencies...")
+
+type RuntimeDependencyError = Error & { runtimeDependencyError: true }
+
+function createDevDependencyRequiredError(
+  packageName: string,
+): RuntimeDependencyError {
+  const error = new Error(
+    [
+      `❌ Error: "${packageName}" is in devDependencies but is required at runtime.`,
+      `👉 Move "${packageName}" from devDependencies to dependencies in package.json.`,
+    ].join("\n"),
+  )
+  error.name = "DevDependencyRequiredError"
+  ;(error as RuntimeDependencyError).runtimeDependencyError = true
+  return error as RuntimeDependencyError
+}
+
+function createMissingRuntimeDependencyError(
+  packageName: string,
+): RuntimeDependencyError {
+  const error = new Error(
+    [
+      `❌ Error: "${packageName}" is required in source code but is missing from package.json.`,
+      `👉 Add "${packageName}" to dependencies.`,
+    ].join("\n"),
+  )
+  error.name = "MissingRuntimeDependencyError"
+  ;(error as RuntimeDependencyError).runtimeDependencyError = true
+  return error as RuntimeDependencyError
+}
+
+function isRuntimeDependencyError(
+  error: unknown,
+): error is RuntimeDependencyError {
+  return (
+    typeof error === "object" &&
+    error !== null &&
+    "runtimeDependencyError" in error &&
+    (error as { runtimeDependencyError?: unknown }).runtimeDependencyError ===
+      true
+  )
+}
 
 try {
   const packageJson = JSON.parse(readFileSync("package.json", "utf-8"))
@@ -24,26 +66,20 @@ try {
     }
 
     if (devDependencies[pkg]) {
-      console.error(
-        `❌ Error: "${pkg}" is in devDependencies but is required at runtime.`,
-      )
-      console.error(
-        `👉 Move "${pkg}" from devDependencies to dependencies in package.json.`,
-      )
-      exit(1)
+      throw createDevDependencyRequiredError(pkg)
     }
 
-    console.error(
-      `❌ Error: "${pkg}" is required in source code but is missing from package.json.`,
-    )
-    console.error(`👉 Add "${pkg}" to dependencies.`)
-    exit(1)
+    throw createMissingRuntimeDependencyError(pkg)
   }
 
   console.log("✅ All runtime dependencies are valid.")
   exit(0)
 } catch (error) {
-  console.error("❌ Dependency check failed:", error)
+  if (isRuntimeDependencyError(error)) {
+    console.error(error.message)
+  } else {
+    console.error("❌ Dependency check failed:", error)
+  }
   exit(1)
 }
 
@@ -71,17 +107,34 @@ function getSourceFiles(dir: string): string[] {
 }
 
 function getRuntimeFiles(): string[] {
-  const files: string[] = []
+  const files = new Set<string>()
+  const cwd = process.cwd()
+  const distDir = join(cwd, "dist")
+  const distMain = join(distDir, "main.js")
 
-  if (existsSync("dist/main.js")) {
-    files.push("dist/main.js")
+  const addFile = (filePath: string) => {
+    const normalized = relative(cwd, filePath)
+    if (!normalized || normalized.startsWith("..")) return
+    files.add(normalized.replace(/\\/g, "/"))
   }
 
-  if (existsSync("dist")) {
-    files.push(...getSourceFiles("dist").filter((f) => f !== "dist/main.js"))
+  if (existsSync(distMain)) {
+    addFile(distMain)
   }
 
-  return files
+  if (existsSync(distDir)) {
+    for (const file of getSourceFiles(distDir)) {
+      if (file === distMain) continue
+      addFile(file)
+    }
+  }
+
+  for (const file of getSourceFiles(cwd)) {
+    if (file.startsWith(distDir)) continue
+    addFile(file)
+  }
+
+  return Array.from(files)
 }
 
 function existsSync(path: string): boolean {
@@ -97,9 +150,10 @@ function getUsedPackages(files: string[]): Set<string> {
   const packages = new Set<string>()
 
   const patterns = [
-    /import\s+.*?\s+from\s+["'](@[^/]+\/[^/"'"]+|(?![.\/])\w[^"']*)["']/g,
-    /import\s*\(\s*["'](@[^/]+\/[^/"'"]+|(?![.\/])\w[^"']*)["']\s*\)/g,
-    /require\s*\(\s*["'](@[^/]+\/[^/"'"]+|(?![.\/])\w[^"']*)["']\s*\)/g,
+    /import\s+.*?\s+from\s+["'](@[^/]+\/[^/"']+|(?![.\/])\w[^"']*)["']/g,
+    /import\s*\(\s*["'](@[^/]+\/[^/"']+|(?![.\/])\w[^"']*)["']\s*\)/g,
+    /import\s*["'](@[^/]+\/[^/"']+|(?![.\/])\w[^"']*)["']/g,
+    /require\s*\(\s*["'](@[^/]+\/[^/"']+|(?![.\/])\w[^"']*)["']\s*\)/g,
   ]
 
   for (const file of files) {
