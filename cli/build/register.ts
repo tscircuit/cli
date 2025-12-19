@@ -62,10 +62,14 @@ export const registerBuild = (program: Command) => {
         },
       ) => {
         try {
-          const { projectDir, circuitFiles, mainEntrypoint } =
-            await getBuildEntrypoints({
-              fileOrDir: file,
-            })
+          const {
+            projectDir,
+            circuitFiles,
+            mainEntrypoint,
+            previewComponentPath,
+          } = await getBuildEntrypoints({
+            fileOrDir: file,
+          })
 
           const platformConfig: PlatformConfig | undefined = (() => {
             if (!options?.disablePcb && !options?.disablePartsEngine) return
@@ -180,6 +184,7 @@ export const registerBuild = (program: Command) => {
               builtFiles,
               distDir,
               mainEntrypoint,
+              previewComponentPath,
               allImages: options?.allImages,
             })
           }
