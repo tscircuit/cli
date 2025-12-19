@@ -75,12 +75,4 @@ export default () => (
   // Verify library tables
   expect(files).toContain("fp-lib-table")
   expect(files).toContain("sym-lib-table")
-
-  // Save to debug-output for inspection
-  const debugOutputDir = path.join(__dirname, "../../../debug-output")
-  await import("node:fs/promises").then((fs) =>
-    fs.mkdir(debugOutputDir, { recursive: true }),
-  )
-  await copyFile(zipPath, path.join(debugOutputDir, "circuit-kicad-library.zip"))
-  console.log("Saved to debug-output/circuit-kicad-library.zip")
 }, 120_000)
