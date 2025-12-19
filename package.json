@@ -1,6 +1,6 @@
 {
   "name": "@tscircuit/cli",
-  "version": "0.1.652",
+  "version": "0.1.666",
   "main": "dist/main.js",
   "devDependencies": {
     "@babel/standalone": "^7.26.9",
@@ -10,7 +10,7 @@
     "@tscircuit/file-server": "^0.0.32",
     "@tscircuit/math-utils": "0.0.29",
     "@tscircuit/props": "^0.0.423",
-    "@tscircuit/runframe": "^0.0.1401",
+    "@tscircuit/runframe": "^0.0.1420",
     "@tscircuit/schematic-match-adapt": "^0.0.22",
     "@types/bun": "^1.2.2",
     "@types/configstore": "^6.0.2",
@@ -24,7 +24,7 @@
     "chokidar": "4.0.1",
     "circuit-json": "0.0.325",
     "circuit-json-to-gltf": "^0.0.56",
-    "circuit-json-to-kicad": "^0.0.30",
+    "circuit-json-to-kicad": "^0.0.29",
     "circuit-json-to-readable-netlist": "^0.0.13",
     "circuit-json-to-spice": "^0.0.10",
     "circuit-json-to-tscircuit": "^0.0.9",
