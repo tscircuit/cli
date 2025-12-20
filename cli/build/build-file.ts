@@ -70,10 +70,29 @@ export const buildFile = async (
   } catch (err) {
     console.error(`Build failed: ${err}`)
     if (err instanceof Error) {
+      logTsxExtensionHint(err, input)
       logTypeReexportHint(err, input)
     }
     return { ok: false }
   }
+}
+
+const logTsxExtensionHint = (error: Error, entryFilePath: string) => {
+  const lowerPath = entryFilePath.toLowerCase()
+  const isTsEntry = lowerPath.endsWith(".ts") && !lowerPath.endsWith(".d.ts")
+  const isAggregateError =
+    error instanceof AggregateError || String(error).includes("AggregateError")
+  if (!isTsEntry || !isAggregateError) return
+
+  const entryFileName = path.basename(entryFilePath)
+  console.error(
+    [
+      "",
+      `It looks like "${entryFileName}" is a ".ts" file. tscircuit component files must use the ".tsx" extension.`,
+      "Try renaming the file to .tsx and re-running the build.",
+      "",
+    ].join("\n"),
+  )
 }
 
 const TYPE_REEXPORT_ERROR_REGEX =
