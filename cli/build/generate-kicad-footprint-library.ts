@@ -1,6 +1,12 @@
 import fs from "node:fs"
 import path from "node:path"
-import { At, Footprint, KicadPcb, parseKicadSexpr } from "kicadts"
+import {
+  At,
+  Footprint,
+  KicadPcb,
+  parseKicadSexpr,
+  FootprintModel,
+} from "kicadts"
 
 type KicadProjectSummary = {
   pcbContent: string
@@ -43,10 +49,16 @@ const sanitizeLibraryAndFootprintName = (libraryLink?: string) => {
   }
 }
 
-const sanitizeFootprint = (footprint: Footprint) => {
+const sanitizeFootprint = (
+  footprint: Footprint,
+  outputLibraryName?: string,
+) => {
   const { libraryName, footprintName } = sanitizeLibraryAndFootprintName(
     footprint.libraryLink,
   )
+
+  // Use provided library name or fall back to extracted one
+  const targetLibraryName = outputLibraryName || libraryName
 
   footprint.libraryLink = footprintName
   footprint.position = At.from([0, 0, 0])
@@ -76,10 +88,34 @@ const sanitizeFootprint = (footprint: Footprint) => {
   }
   footprint.fpPads = pads
 
+  // Handle 3D models - update paths to use library's .3dshapes folder
+  const models = footprint.models ?? []
+  const updatedModels: FootprintModel[] = []
+  const modelFiles: string[] = []
+
+  for (const model of models) {
+    if (model.path) {
+      // Extract filename from the model path
+      const modelFilename = path.basename(model.path)
+      // Update path to use the library's .3dshapes folder
+      const newPath = `\${KIPRJMOD}/${targetLibraryName}.3dshapes/${modelFilename}`
+
+      const newModel = new FootprintModel(newPath)
+      if (model.offset) newModel.offset = model.offset
+      if (model.scale) newModel.scale = model.scale
+      if (model.rotate) newModel.rotate = model.rotate
+
+      updatedModels.push(newModel)
+      modelFiles.push(model.path) // Keep original path for copying
+    }
+  }
+  footprint.models = updatedModels
+
   return {
     libraryName,
     footprintName,
     content: footprint.getString(),
+    modelFiles, // Return original model file paths for copying
   }
 }
 
@@ -150,10 +186,12 @@ export type FootprintEntry = {
   libraryName: string
   footprintName: string
   content: string
+  modelFiles?: string[]
 }
 
 export const extractFootprintsFromPcb = (
   pcbContent: string,
+  outputLibraryName?: string,
 ): FootprintEntry[] => {
   const uniqueFootprints = new Map<string, FootprintEntry>()
 
@@ -166,10 +204,15 @@ export const extractFootprintsFromPcb = (
 
     const footprints = pcb.footprints ?? []
     for (const footprint of footprints) {
-      const sanitized = sanitizeFootprint(footprint)
+      const sanitized = sanitizeFootprint(footprint, outputLibraryName)
       const key = `${sanitized.libraryName}::${sanitized.footprintName}`
       if (!uniqueFootprints.has(key)) {
-        uniqueFootprints.set(key, sanitized)
+        uniqueFootprints.set(key, {
+          libraryName: sanitized.libraryName,
+          footprintName: sanitized.footprintName,
+          content: sanitized.content,
+          modelFiles: sanitized.modelFiles,
+        })
       }
     }
   } catch (error) {
