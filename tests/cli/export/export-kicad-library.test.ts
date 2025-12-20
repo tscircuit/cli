@@ -1,8 +1,8 @@
 import { getCliTestFixture } from "../../fixtures/get-cli-test-fixture"
 import { test, expect } from "bun:test"
-import { writeFile, readFile, copyFile } from "node:fs/promises"
+import { writeFile, readFile, copyFile, readdir, stat } from "node:fs/promises"
 import path from "node:path"
-import JSZip from "jszip"
+import fs from "node:fs"
 
 test("export kicad-library generates complete library", async () => {
   const { tmpDir, runCommand } = await getCliTestFixture()
@@ -44,14 +44,36 @@ export default () => (
   )
   expect(stderr).toBe("")
 
-  // Read the generated zip
-  const zipPath = path.join(tmpDir, "circuit-kicad-library.zip")
-  const zip = await JSZip.loadAsync(await readFile(zipPath))
-  const files = Object.keys(zip.files)
+  // Read the generated directory
+  const libDir = path.join(tmpDir, "circuit-kicad-library")
+  expect(fs.existsSync(libDir)).toBe(true)
+
+  // Helper to recursively list all files in a directory
+  const listFiles = async (dir: string, prefix = ""): Promise<string[]> => {
+    const entries = await readdir(dir)
+    const files: string[] = []
+    for (const entry of entries) {
+      const fullPath = path.join(dir, entry)
+      const relativePath = prefix ? `${prefix}/${entry}` : entry
+      const stats = await stat(fullPath)
+      if (stats.isDirectory()) {
+        files.push(`${relativePath}/`)
+        files.push(...(await listFiles(fullPath, relativePath)))
+      } else {
+        files.push(relativePath)
+      }
+    }
+    return files
+  }
+
+  const files = await listFiles(libDir)
 
   // Verify symbol library
   expect(files).toContain("circuit.kicad_sym")
-  const symContent = await zip.file("circuit.kicad_sym")!.async("string")
+  const symContent = await readFile(
+    path.join(libDir, "circuit.kicad_sym"),
+    "utf-8",
+  )
   expect(symContent).toContain("kicad_symbol_lib")
   // Verify symbol references correct footprint library (same name as project)
   expect(symContent).toContain('"circuit:')
@@ -63,9 +85,10 @@ export default () => (
   ).toBeGreaterThanOrEqual(3)
 
   // Verify chip footprint has 3D model reference
-  const chipContent = await zip
-    .file("circuit.pretty/simple_chip.kicad_mod")!
-    .async("string")
+  const chipContent = await readFile(
+    path.join(libDir, "circuit.pretty", "simple_chip.kicad_mod"),
+    "utf-8",
+  )
   expect(chipContent).toContain("(model")
   expect(chipContent).toContain("SW_Push_1P1T_NO_CK_KMR2.step")
 

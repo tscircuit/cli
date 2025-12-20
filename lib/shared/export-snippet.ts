@@ -53,7 +53,7 @@ const OUTPUT_EXTENSIONS: Record<ExportFormat, string> = {
   kicad_pcb: ".kicad_pcb",
   kicad_zip: "-kicad.zip",
   "kicad-footprint-library": "-footprints.zip",
-  "kicad-library": "-kicad-library.zip",
+  "kicad-library": "-kicad-library",
 }
 
 type ExportOptions = {
@@ -218,39 +218,55 @@ export const exportSnippet = async ({
       libConverter.runUntilFinished()
       const libOutput = libConverter.getOutput()
 
-      const zip = new JSZip()
+      // Create output directory
+      const libDir = outputDestination
+      fs.mkdirSync(libDir, { recursive: true })
 
-      // Add symbol library
-      zip.file(`${libraryName}.kicad_sym`, libOutput.kicadSymString)
+      // Write symbol library
+      fs.writeFileSync(
+        path.join(libDir, `${libraryName}.kicad_sym`),
+        libOutput.kicadSymString,
+      )
 
-      // Add footprints
+      // Create footprint library directory and write footprints
+      const fpDir = path.join(libDir, `${fpLibName}.pretty`)
+      fs.mkdirSync(fpDir, { recursive: true })
       for (const fp of libOutput.footprints) {
-        const libraryFolder = zip.folder(`${fpLibName}.pretty`)
-        if (libraryFolder) {
-          libraryFolder.file(
-            `${fp.footprintName}.kicad_mod`,
-            `${fp.kicadModString}\n`,
-          )
-        }
+        fs.writeFileSync(
+          path.join(fpDir, `${fp.footprintName}.kicad_mod`),
+          `${fp.kicadModString}\n`,
+        )
       }
 
       // Copy 3D model files to .3dshapes folder
-      for (const modelPath of libOutput.model3dSourcePaths) {
-        if (fs.existsSync(modelPath)) {
-          const filename = path.basename(modelPath)
-          const shapesFolder = zip.folder(`${fpLibName}.3dshapes`)
-          if (shapesFolder) {
-            const fileContent = fs.readFileSync(modelPath)
-            shapesFolder.file(filename, fileContent)
+      if (libOutput.model3dSourcePaths.length > 0) {
+        const shapesDir = path.join(libDir, `${fpLibName}.3dshapes`)
+        fs.mkdirSync(shapesDir, { recursive: true })
+        for (const modelPath of libOutput.model3dSourcePaths) {
+          if (fs.existsSync(modelPath)) {
+            const filename = path.basename(modelPath)
+            fs.copyFileSync(modelPath, path.join(shapesDir, filename))
           }
         }
       }
 
-      // Add library tables
-      zip.file("fp-lib-table", libOutput.fpLibTableString)
-      zip.file("sym-lib-table", libOutput.symLibTableString)
+      // Write library tables
+      fs.writeFileSync(
+        path.join(libDir, "fp-lib-table"),
+        libOutput.fpLibTableString,
+      )
+      fs.writeFileSync(
+        path.join(libDir, "sym-lib-table"),
+        libOutput.symLibTableString,
+      )
 
-      outputContent = await zip.generateAsync({ type: "nodebuffer" })
+      // For directory output, we don't write a single file
+      outputContent = ""
+      if (writeFile) {
+        // Already wrote files above, skip the default writeFile below
+        onSuccess({ outputDestination: libDir, outputContent: "" })
+        return onExit(0)
+      }
       break
     }
     default:
