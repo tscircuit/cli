@@ -6,6 +6,7 @@ import { getBuildEntrypoints } from "./get-build-entrypoints"
 import {
   getStaticIndexHtmlFile,
   type StaticBuildFileReference,
+  type StaticBuildFileWithData,
 } from "lib/site/getStaticIndexHtmlFile"
 import type { PlatformConfig } from "@tscircuit/props"
 import type { BuildFileResult } from "./build-preview-images"
@@ -90,6 +91,7 @@ export const registerBuild = (program: Command) => {
 
           let hasErrors = false
           const staticFileReferences: StaticBuildFileReference[] = []
+          const staticFilesWithData: StaticBuildFileWithData[] = []
 
           const builtFiles: BuildFileResult[] = []
           const kicadProjects: Array<
@@ -137,6 +139,13 @@ export const registerBuild = (program: Command) => {
                 filePath: normalizedSourcePath,
                 fileStaticAssetUrl: `./${normalizedOutputPath}`,
               })
+              if (buildOutcome.circuitJson) {
+                staticFilesWithData.push({
+                  filePath: normalizedSourcePath,
+                  fileStaticAssetUrl: `./${normalizedOutputPath}`,
+                  circuitJson: buildOutcome.circuitJson,
+                })
+              }
             }
 
             if (
@@ -207,13 +216,10 @@ export const registerBuild = (program: Command) => {
           if (options?.site) {
             const indexHtml = getStaticIndexHtmlFile({
               files: staticFileReferences,
-              standaloneScriptSrc: "./standalone.min.js",
+              standaloneScriptContent: runFrameStandaloneBundleContent,
+              filesWithData: staticFilesWithData,
             })
             fs.writeFileSync(path.join(distDir, "index.html"), indexHtml)
-            fs.writeFileSync(
-              path.join(distDir, "standalone.min.js"),
-              runFrameStandaloneBundleContent,
-            )
           }
 
           if (options?.kicadFootprintLibrary) {
