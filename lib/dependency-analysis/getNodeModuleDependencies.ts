@@ -22,8 +22,12 @@ function getAllDependencyPackages(projectDir: string): Set<string> {
   try {
     const packageJson = JSON.parse(fs.readFileSync(packageJsonPath, "utf-8"))
     const deps = packageJson.dependencies || {}
+    const devDeps = packageJson.devDependencies || {}
 
     for (const packageName of Object.keys(deps)) {
+      allPackages.add(packageName)
+    }
+    for (const packageName of Object.keys(devDeps)) {
       allPackages.add(packageName)
     }
   } catch (error) {
