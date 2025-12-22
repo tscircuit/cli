@@ -9,6 +9,10 @@ import { getEntrypoint } from "lib/shared/get-entrypoint"
 import { globbySync } from "globby"
 import { findBoardFiles } from "lib/shared/find-board-files"
 import { DEFAULT_IGNORED_PATTERNS } from "lib/shared/should-ignore-path"
+import {
+  getStaticBuildInfoFromPath,
+  startStaticFileServer,
+} from "./static-file-server"
 
 const findSelectableTsxFiles = (projectDir: string): string[] => {
   const boardFiles = findBoardFiles({ projectDir })
@@ -55,7 +59,7 @@ export const registerDev = (program: Command) => {
   program
     .command("dev")
     .description("Start development server for a package")
-    .argument("[file]", "Path to the package file")
+    .argument("[file]", "Path to the package file or build output directory")
     .option("-p, --port <number>", "Port to run server on", "3020")
     .action(async (file: string, options: { port: string }) => {
       let port = parseInt(options.port)
@@ -83,8 +87,27 @@ export const registerDev = (program: Command) => {
 
       if (file) {
         absolutePath = path.resolve(file)
+        if (!fs.existsSync(absolutePath)) {
+          console.error(`Error: Path does not exist: ${absolutePath}`)
+          return
+        }
+
+        // Check if it's a static build directory or Circuit JSON file
+        const staticBuildInfo = getStaticBuildInfoFromPath(absolutePath)
+        if (staticBuildInfo) {
+          await startStaticFileServer({
+            port,
+            directory: staticBuildInfo.directory,
+            files: staticBuildInfo.files,
+            startTime,
+          })
+          return
+        }
+
         if (!absolutePath.endsWith(".tsx") && !absolutePath.endsWith(".ts")) {
-          console.error("Error: Only .tsx files are supported")
+          console.error(
+            "Error: Only .tsx/.ts files or Circuit JSON files are supported",
+          )
           return
         }
       } else {
