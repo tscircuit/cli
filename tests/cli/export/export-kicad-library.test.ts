@@ -85,8 +85,9 @@ export default () => (
   ).toBeGreaterThanOrEqual(3)
 
   // Verify chip footprint has 3D model reference
+  // Note: "simple_chip" is cleaned to "chip" by getKicadCompatibleComponentName
   const chipContent = await readFile(
-    path.join(libDir, "circuit.pretty", "simple_chip.kicad_mod"),
+    path.join(libDir, "circuit.pretty", "chip.kicad_mod"),
     "utf-8",
   )
   expect(chipContent).toContain("(model")
