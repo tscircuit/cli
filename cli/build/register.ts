@@ -10,6 +10,7 @@ import {
 import type { PlatformConfig } from "@tscircuit/props"
 import type { BuildFileResult } from "./build-preview-images"
 import { buildPreviewImages } from "./build-preview-images"
+import { buildPreviewGltf } from "./build-preview-gltf"
 import { generateKicadProject } from "./generate-kicad-project"
 import type { GeneratedKicadProject } from "./generate-kicad-project"
 import { generateKicadFootprintLibrary } from "./generate-kicad-footprint-library"
@@ -45,6 +46,10 @@ export const registerBuild = (program: Command) => {
       "--kicad-footprint-library",
       "Generate a KiCad footprint library from all successful build outputs",
     )
+    .option(
+      "--preview-gltf",
+      "Generate a GLTF file from the preview entrypoint",
+    )
     .action(
       async (
         file?: string,
@@ -59,6 +64,7 @@ export const registerBuild = (program: Command) => {
           allImages?: boolean
           kicad?: boolean
           kicadFootprintLibrary?: boolean
+          previewGltf?: boolean
         },
       ) => {
         try {
@@ -186,6 +192,16 @@ export const registerBuild = (program: Command) => {
               mainEntrypoint,
               previewComponentPath,
               allImages: options?.allImages,
+            })
+          }
+
+          if (options?.previewGltf) {
+            console.log("Generating preview GLTF...")
+            await buildPreviewGltf({
+              builtFiles,
+              distDir,
+              mainEntrypoint,
+              previewComponentPath,
             })
           }
 
