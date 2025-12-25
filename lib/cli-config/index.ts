@@ -6,6 +6,7 @@ export interface CliConfig {
   githubUsername?: string
   accountId?: string
   sessionId?: string
+  tscircuitHandle?: string
   registryApiUrl?: string
   alwaysCloneWithAuthorName?: boolean
 }
@@ -31,17 +32,17 @@ export const setSessionToken = (token: string) => {
     github_username: string
     account_id?: string
     session_id?: string
+    tscircuit_handle?: string
   }>(token)
-  cliConfig.set("githubUsername", decoded.github_username)
+
+  if (decoded.tscircuit_handle)
+    cliConfig.set("tscircuitHandle", decoded.tscircuit_handle)
   if (decoded.account_id) cliConfig.set("accountId", decoded.account_id)
   if (decoded.session_id) cliConfig.set("sessionId", decoded.session_id)
 }
 
 export const clearSession = () => {
-  cliConfig.delete("sessionToken")
-  cliConfig.delete("githubUsername")
-  cliConfig.delete("accountId")
-  cliConfig.delete("sessionId")
+  cliConfig.clear()
 }
 
 export const getRegistryApiUrl = (): string => {

@@ -85,8 +85,13 @@ export const registerInit = (program: Command) => {
               initial: defaultPackageName,
             })
 
-        const account = await fetchAccount()
-        let authorName = account?.tscircuit_handle
+        let authorName = cliConfig.get("tscircuitHandle")
+        if (!authorName) {
+          const account = await fetchAccount()
+          if (account?.tscircuit_handle) {
+            authorName = account.tscircuit_handle
+          }
+        }
 
         // Ensure the directory exists
         fs.mkdirSync(projectDir, { recursive: true })
