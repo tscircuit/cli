@@ -14,6 +14,7 @@ import { getPackageFilePaths } from "cli/dev/get-package-file-paths"
 import { checkOrgAccess } from "lib/utils/check-org-access"
 import { isBinaryFile } from "./is-binary-file"
 import { hasBinaryContent } from "./has-binary-content"
+import { fetchAccount } from "lib/registry-api/fetch-account"
 
 type PushOptions = {
   filePath?: string
@@ -43,6 +44,8 @@ export const pushSnippet = async ({
     )
     return onExit(1)
   }
+
+  const account = await fetchAccount()
 
   // Detect the entrypoint file
   const snippetFilePath = await getEntrypoint({
@@ -86,7 +89,7 @@ export const pushSnippet = async ({
   }
 
   const ky = getRegistryApiKy({ sessionToken })
-  const currentUsername = cliConfig.get("githubUsername")
+  const currentUsername = account?.tscircuit_handle
   let unscopedPackageName = getUnscopedPackageName(packageJson.name ?? "")
   const packageJsonAuthor = getPackageAuthor(packageJson.name ?? "")
 
@@ -134,6 +137,7 @@ export const pushSnippet = async ({
 
   // Determine the account name to use (either user or org)
   let accountName = currentUsername
+  console.log(currentUsername, packageJsonAuthor)
   if (packageJsonAuthor && currentUsername !== packageJsonAuthor) {
     const hasOrgAccess = await checkOrgAccess(ky, packageJsonAuthor)
     if (hasOrgAccess) {
@@ -377,7 +381,8 @@ export const pushSnippet = async ({
 
   onSuccess(
     [
-      kleur.green(`"${tsciPackageName}@${releaseVersion}" published!`),
+      "\n",
+      kleur.bold().green(`"${tsciPackageName}@${releaseVersion}" published!`),
       kleur.underline(kleur.blue(`https://tscircuit.com/${scopedPackageName}`)),
     ].join("\n"),
   )
