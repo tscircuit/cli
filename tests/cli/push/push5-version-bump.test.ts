@@ -52,6 +52,8 @@ test("should bump version if release already exists", async () => {
 
     ⬆︎ package.json
     ⬆︎ snippet.tsx
+
+    
     "@tsci/test-user.test-package@1.0.1" published!
     https://tscircuit.com/test-user/test-package
     "
