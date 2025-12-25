@@ -19,7 +19,7 @@ test("should upload files to the registry", async () => {
 
   expect({ stdout, stderr }).toMatchObject({
     stdout:
-      'Publishing to org "test-user" (user: test-user)\nPackage created\n\n\n⬆︎ package.json\n⬆︎ snippet.tsx\n\n\n"@tsci/test-user.test-package@1.0.0" published!\nhttps://tscircuit.com/test-user/test-package\n',
+      'Package created\n\n\n⬆︎ package.json\n⬆︎ snippet.tsx\n\n\n"@tsci/test-user.test-package@1.0.0" published!\nhttps://tscircuit.com/test-user/test-package\n',
     stderr: "",
   })
 }, 30_000)
