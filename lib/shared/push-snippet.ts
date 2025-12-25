@@ -14,7 +14,6 @@ import { getPackageFilePaths } from "cli/dev/get-package-file-paths"
 import { checkOrgAccess } from "lib/utils/check-org-access"
 import { isBinaryFile } from "./is-binary-file"
 import { hasBinaryContent } from "./has-binary-content"
-import { fetchAccount } from "lib/registry-api/fetch-account"
 
 type PushOptions = {
   filePath?: string
@@ -44,8 +43,6 @@ export const pushSnippet = async ({
     )
     return onExit(1)
   }
-
-  const account = await fetchAccount()
 
   // Detect the entrypoint file
   const snippetFilePath = await getEntrypoint({
@@ -89,7 +86,11 @@ export const pushSnippet = async ({
   }
 
   const ky = getRegistryApiKy({ sessionToken })
-  const currentUsername = account?.tscircuit_handle
+  const currentUsername = cliConfig.get("tscircuitHandle")
+  if (!currentUsername) {
+    onError("You need to set your tscircuit handle to publish packages")
+    return onExit(1)
+  }
   let unscopedPackageName = getUnscopedPackageName(packageJson.name ?? "")
   const packageJsonAuthor = getPackageAuthor(packageJson.name ?? "")
 
