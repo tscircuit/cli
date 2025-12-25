@@ -11,6 +11,7 @@ import { jwtDecode } from "jwt-decode"
 import { loadProjectConfig, saveProjectConfig } from "lib/project-config"
 import { checkForTsciUpdates } from "lib/shared/check-for-cli-update"
 import { prompts } from "lib/utils/prompts"
+import { fetchAccount } from "lib/registry-api/fetch-account"
 
 export const registerInit = (program: Command) => {
   program
@@ -84,20 +85,8 @@ export const registerInit = (program: Command) => {
               initial: defaultPackageName,
             })
 
-        let authorName = cliConfig.get("githubUsername")
-        if (!authorName) {
-          const token = getSessionToken()
-          if (token) {
-            try {
-              const decoded = jwtDecode<{
-                github_username?: string
-              }>(token)
-              if (decoded.github_username) {
-                authorName = decoded.github_username
-              }
-            } catch {}
-          }
-        }
+        const account = await fetchAccount()
+        let authorName = account?.tscircuit_handle
 
         // Ensure the directory exists
         fs.mkdirSync(projectDir, { recursive: true })
