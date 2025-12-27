@@ -273,14 +273,16 @@ export const registerBuild = (program: Command) => {
           ].filter(Boolean) as string[]
 
           console.log("")
-          console.log(kleur.bold("Build Summary"))
+          console.log(kleur.bold("Build Complete"))
           console.log(
             `  Circuits  ${kleur.green(`${successCount} passed`)}${failCount > 0 ? kleur.red(` ${failCount} failed`) : ""}`,
           )
           if (enabledOpts.length > 0) {
             console.log(`  Options   ${kleur.cyan(enabledOpts.join(", "))}`)
           }
-          console.log(`  Output    ${kleur.dim(path.relative(process.cwd(), distDir) || "dist")}`)
+          console.log(
+            `  Output    ${kleur.dim(path.relative(process.cwd(), distDir) || "dist")}`,
+          )
           console.log(
             hasErrors
               ? kleur.yellow("\n⚠ Build completed with errors")
