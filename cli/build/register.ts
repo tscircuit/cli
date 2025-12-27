@@ -16,6 +16,7 @@ import type { GeneratedKicadProject } from "./generate-kicad-project"
 import { generateKicadFootprintLibrary } from "./generate-kicad-footprint-library"
 import { transpileFile } from "./transpile"
 import { validateMainInDist } from "../utils/validate-main-in-dist"
+import kleur from "kleur"
 
 // @ts-ignore
 import runFrameStandaloneBundleContent from "@tscircuit/runframe/standalone" with {
@@ -259,7 +260,34 @@ export const registerBuild = (program: Command) => {
             }
           }
 
-          console.log("Build complete!")
+          const successCount = builtFiles.filter((f) => f.ok).length
+          const failCount = builtFiles.length - successCount
+          const enabledOpts = [
+            options?.site && "site",
+            options?.transpile && "transpile",
+            options?.previewImages && "preview-images",
+            options?.allImages && "all-images",
+            options?.kicad && "kicad",
+            options?.kicadFootprintLibrary && "kicad-footprint-library",
+            options?.previewGltf && "preview-gltf",
+          ].filter(Boolean) as string[]
+
+          console.log("")
+          console.log(kleur.bold("Build complete"))
+          console.log(
+            `  Circuits  ${kleur.green(`${successCount} passed`)}${failCount > 0 ? kleur.red(` ${failCount} failed`) : ""}`,
+          )
+          if (enabledOpts.length > 0) {
+            console.log(`  Options   ${kleur.cyan(enabledOpts.join(", "))}`)
+          }
+          console.log(
+            `  Output    ${kleur.dim(path.relative(process.cwd(), distDir) || "dist")}`,
+          )
+          console.log(
+            hasErrors
+              ? kleur.yellow("\n⚠ Build completed with errors")
+              : kleur.green("\n✓ Done"),
+          )
           process.exit(0)
         } catch (error) {
           const message = error instanceof Error ? error.message : String(error)
