@@ -273,7 +273,7 @@ export const registerBuild = (program: Command) => {
           ].filter(Boolean) as string[]
 
           console.log("")
-          console.log(kleur.bold("Build Complete"))
+          console.log(kleur.bold("Build complete"))
           console.log(
             `  Circuits  ${kleur.green(`${successCount} passed`)}${failCount > 0 ? kleur.red(` ${failCount} failed`) : ""}`,
           )
