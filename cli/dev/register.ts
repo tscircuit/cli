@@ -10,7 +10,7 @@ import { globbySync } from "globby"
 import { findBoardFiles } from "lib/shared/find-board-files"
 import { DEFAULT_IGNORED_PATTERNS } from "lib/shared/should-ignore-path"
 
-const findSelectableTsxFiles = (projectDir: string): string[] => {
+const findSelectableFiles = (projectDir: string): string[] => {
   const boardFiles = findBoardFiles({ projectDir })
     .filter((file) => fs.existsSync(file))
     .sort()
@@ -19,7 +19,7 @@ const findSelectableTsxFiles = (projectDir: string): string[] => {
     return boardFiles
   }
 
-  const files = globbySync(["**/*.tsx", "**/*.ts"], {
+  const files = globbySync(["**/*.tsx", "**/*.ts", "**/*.circuit.json"], {
     cwd: projectDir,
     ignore: DEFAULT_IGNORED_PATTERNS,
   })
@@ -55,7 +55,7 @@ export const registerDev = (program: Command) => {
   program
     .command("dev")
     .description("Start development server for a package")
-    .argument("[file]", "Path to the package file")
+    .argument("[file]", "Path to the package file or directory")
     .option("-p, --port <number>", "Port to run server on", "3020")
     .action(async (file: string, options: { port: string }) => {
       let port = parseInt(options.port)
@@ -80,12 +80,48 @@ export const registerDev = (program: Command) => {
       }
 
       let absolutePath: string
+      let projectDir = process.cwd()
 
       if (file) {
-        absolutePath = path.resolve(file)
-        if (!absolutePath.endsWith(".tsx") && !absolutePath.endsWith(".ts")) {
-          console.error("Error: Only .tsx files are supported")
-          return
+        const resolvedPath = path.resolve(file)
+
+        if (
+          fs.existsSync(resolvedPath) &&
+          fs.statSync(resolvedPath).isDirectory()
+        ) {
+          // Use the directory as the project directory
+          projectDir = resolvedPath
+
+          const availableFiles = findSelectableFiles(projectDir)
+
+          if (availableFiles.length === 0) {
+            console.log(
+              `No .tsx, .ts, or .circuit.json files found in ${projectDir}. Run 'tsci init' to bootstrap a basic project.`,
+            )
+            return
+          }
+          absolutePath = availableFiles[0]
+          console.log("Selected file:", path.relative(projectDir, absolutePath))
+        } else {
+          // It's a file path
+          absolutePath = resolvedPath
+
+          if (!fs.existsSync(absolutePath)) {
+            console.error(`Error: File not found: ${file}`)
+            return
+          }
+
+          const isValidFile =
+            absolutePath.endsWith(".tsx") ||
+            absolutePath.endsWith(".ts") ||
+            absolutePath.endsWith(".circuit.json")
+
+          if (!isValidFile) {
+            console.error(
+              "Error: Only .tsx, .ts, and .circuit.json files are supported",
+            )
+            return
+          }
         }
       } else {
         const entrypointPath = await getEntrypoint({
@@ -95,29 +131,26 @@ export const registerDev = (program: Command) => {
           absolutePath = entrypointPath
           console.log("Found entrypoint at:", entrypointPath)
         } else {
-          // Find all .tsx files in the project
-          const availableFiles = findSelectableTsxFiles(process.cwd())
+          // Find all selectable files in the project
+          const availableFiles = findSelectableFiles(projectDir)
 
           if (availableFiles.length === 0) {
             console.log(
-              "No .tsx or .ts files found in the project. Run 'tsci init' to bootstrap a basic project.",
+              "No .tsx, .ts, or .circuit.json files found in the project. Run 'tsci init' to bootstrap a basic project.",
             )
             return
           }
           absolutePath = availableFiles[0]
-          console.log(
-            "Selected file:",
-            path.relative(process.cwd(), absolutePath),
-          )
+          console.log("Selected file:", path.relative(projectDir, absolutePath))
         }
       }
 
-      warnIfTsconfigMissingTscircuitType(process.cwd())
+      warnIfTsconfigMissingTscircuitType(projectDir)
 
       const server = new DevServer({
         port,
         componentFilePath: absolutePath,
-        projectDir: process.cwd(),
+        projectDir,
       })
 
       await server.start()
