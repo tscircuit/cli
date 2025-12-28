@@ -54,6 +54,25 @@ export const createHttpServer = async ({
       return
     }
 
+    if (url.pathname === "/kicad-converter.js") {
+      try {
+        const build = await Bun.build({
+          entrypoints: [require.resolve("kicad-component-converter")],
+          target: "browser",
+          format: "esm",
+        });
+        const content = await build.outputs[0].text();
+        res.writeHead(200, { "Content-Type": "application/javascript" });
+        res.end(content);
+        return;
+      } catch (e) {
+        console.error("Failed to bundle kicad-component-converter", e);
+        res.writeHead(500);
+        res.end("Internal Server Error");
+        return;
+      }
+    }
+
     if (url.pathname === "/") {
       const fileServerApiBaseUrl = `http://${req.headers.host}/api`
       const html = await getIndex(

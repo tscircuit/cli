@@ -21,6 +21,20 @@ export const getIndex = async (
        ${mainComponentPath ? `window.TSCIRCUIT_DEFAULT_MAIN_COMPONENT_PATH = "${mainComponentPath}";` : ""}
         window.TSCIRCUIT_USE_RUNFRAME_FOR_CLI = true;${tokenScript}${fileServerApiScript}
       </script>
+      <script type="module">
+        import { parseKicadModToCircuitJson } from "/kicad-converter.js";
+        window.TSCIRCUIT_PLATFORM_CONFIG = {
+          footprintFileParserMap: {
+            kicad_mod: {
+              loadFromUrl: async (url) => {
+                const text = await fetch(url).then(r => r.text());
+                const json = await parseKicadModToCircuitJson(text);
+                return { footprintCircuitJson: json };
+              }
+            }
+          }
+        };
+      </script>
       <script src="https://cdn.tailwindcss.com"></script>
       <div id="root">loading...</div>
       <script>
