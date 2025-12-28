@@ -47,7 +47,10 @@ export const resolveDevTarget = async (
     const resolvedPath = path.resolve(file)
 
     // Check if the argument is a directory
-    if (fs.existsSync(resolvedPath) && fs.statSync(resolvedPath).isDirectory()) {
+    if (
+      fs.existsSync(resolvedPath) &&
+      fs.statSync(resolvedPath).isDirectory()
+    ) {
       projectDir = resolvedPath
       const availableFiles = findSelectableFiles(projectDir)
 
@@ -58,7 +61,10 @@ export const resolveDevTarget = async (
         return null
       }
 
-      console.log("Selected file:", path.relative(projectDir, availableFiles[0]))
+      console.log(
+        "Selected file:",
+        path.relative(projectDir, availableFiles[0]),
+      )
       return { absolutePath: availableFiles[0], projectDir }
     }
 
@@ -69,7 +75,9 @@ export const resolveDevTarget = async (
     }
 
     if (!isValidDevFile(resolvedPath)) {
-      console.error("Error: Only .tsx, .ts, and .circuit.json files are supported")
+      console.error(
+        "Error: Only .tsx, .ts, and .circuit.json files are supported",
+      )
       return null
     }
 
