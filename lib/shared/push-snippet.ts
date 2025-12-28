@@ -86,7 +86,11 @@ export const pushSnippet = async ({
   }
 
   const ky = getRegistryApiKy({ sessionToken })
-  const currentUsername = cliConfig.get("githubUsername")
+  const currentUsername = cliConfig.get("tscircuitHandle")
+  if (!currentUsername) {
+    onError("You need to set your tscircuit handle to publish packages")
+    return onExit(1)
+  }
   let unscopedPackageName = getUnscopedPackageName(packageJson.name ?? "")
   const packageJsonAuthor = getPackageAuthor(packageJson.name ?? "")
 
@@ -134,13 +138,14 @@ export const pushSnippet = async ({
 
   // Determine the account name to use (either user or org)
   let accountName = currentUsername
+
   if (packageJsonAuthor && currentUsername !== packageJsonAuthor) {
     const hasOrgAccess = await checkOrgAccess(ky, packageJsonAuthor)
     if (hasOrgAccess) {
       accountName = packageJsonAuthor
       console.log(
         kleur.gray(
-          `Publishing to org "${packageJsonAuthor}" (user: ${currentUsername})`,
+          `Publishing to org "${packageJsonAuthor}" (user: ${accountName})`,
         ),
       )
     } else {
@@ -377,7 +382,8 @@ export const pushSnippet = async ({
 
   onSuccess(
     [
-      kleur.green(`"${tsciPackageName}@${releaseVersion}" published!`),
+      "\n",
+      kleur.bold().green(`"${tsciPackageName}@${releaseVersion}" published!`),
       kleur.underline(kleur.blue(`https://tscircuit.com/${scopedPackageName}`)),
     ].join("\n"),
   )

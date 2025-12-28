@@ -71,6 +71,7 @@ export async function getCliTestFixture(
     // Use account_id directly as the token (not JWT) to match fake-snippets expectations
     const token = db.accounts[0].account_id
     cliConfig.set("githubUsername", "test-user")
+    cliConfig.set("tscircuitHandle", "test-user")
     cliConfig.set("sessionToken", token)
     cliConfig.set("accountId", db.accounts[0].account_id)
     cliConfig.set("sessionId", "session-123")

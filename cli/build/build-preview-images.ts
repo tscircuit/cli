@@ -1,6 +1,5 @@
 import fs from "node:fs"
 import path from "node:path"
-import { pathToFileURL } from "node:url"
 import {
   convertCircuitJsonToPcbSvg,
   convertCircuitJsonToSchematicSvg,
@@ -8,6 +7,7 @@ import {
 import { renderGLTFToPNGBufferFromGLBBuffer } from "poppygl"
 import { convertCircuitJsonToGltf } from "circuit-json-to-gltf"
 import type { AnyCircuitElement } from "circuit-json"
+import { convertModelUrlsToFileUrls } from "./convert-model-urls-to-file-urls"
 
 export interface BuildFileResult {
   sourcePath: string
@@ -61,45 +61,6 @@ const normalizeToUint8Array = (value: unknown): Uint8Array => {
   throw new Error(
     "Expected Uint8Array, ArrayBuffer, or ArrayBufferView for PNG",
   )
-}
-
-/**
- * Convert local file paths in model URLs to file:// URLs for fetch() compatibility.
- * The circuit-json-to-gltf library uses fetch() to load GLB/STL/OBJ/GLTF files,
- * which requires proper URLs rather than local file paths.
- */
-const convertModelUrlsToFileUrls = (circuitJson: any[]): any[] => {
-  const modelUrlKeys = [
-    "model_glb_url",
-    "glb_model_url",
-    "model_stl_url",
-    "stl_model_url",
-    "model_obj_url",
-    "obj_model_url",
-    "model_gltf_url",
-    "gltf_model_url",
-  ]
-
-  return circuitJson.map((element) => {
-    if (!element || typeof element !== "object") return element
-
-    const updated = { ...element }
-    for (const key of modelUrlKeys) {
-      const value = updated[key]
-      if (typeof value === "string" && value.length > 0) {
-        console.log("value", value)
-        // Check if it's a local file path (starts with / or drive letter on Windows)
-        // and not already a URL (http://, https://, file://, etc.)
-        if (
-          !value.match(/^[a-zA-Z]+:\/\//) &&
-          (value.startsWith("/") || value.match(/^[a-zA-Z]:\\/))
-        ) {
-          updated[key] = pathToFileURL(value).href
-        }
-      }
-    }
-    return updated
-  })
 }
 
 const generatePreviewAssets = async ({

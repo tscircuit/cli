@@ -30,6 +30,8 @@ test("should publish a tagged release and increment when needed", async () => {
 
     ⬆︎ package.json
     ⬆︎ snippet.tsx
+
+
     "@tsci/test-user.test-package@1.0.0-bugreport1" published!
     https://tscircuit.com/test-user/test-package
     "
@@ -50,6 +52,8 @@ test("should publish a tagged release and increment when needed", async () => {
 
     ⬆︎ package.json
     ⬆︎ snippet.tsx
+
+
     "@tsci/test-user.test-package@1.0.1-bugreport1" published!
     https://tscircuit.com/test-user/test-package
     "
