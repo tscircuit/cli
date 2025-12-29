@@ -16,6 +16,7 @@ export const CONFIG_FILENAME = "tscircuit.config.json"
 export const DEFAULT_BOARD_FILE_PATTERNS = [
   "**/*.board.tsx",
   "**/*.circuit.tsx",
+  "**/*.circuit.json",
 ]
 
 /**

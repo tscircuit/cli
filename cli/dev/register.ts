@@ -3,31 +3,19 @@ import * as fs from "node:fs"
 import * as net from "node:net"
 import * as path from "node:path"
 import { DevServer } from "./DevServer"
+import { resolveDevTarget } from "./resolve-dev-target"
 import kleur from "kleur"
 import { getVersion } from "lib/getVersion"
-import { getEntrypoint } from "lib/shared/get-entrypoint"
-import { globbySync } from "globby"
-import { findBoardFiles } from "lib/shared/find-board-files"
-import { DEFAULT_IGNORED_PATTERNS } from "lib/shared/should-ignore-path"
 
-const findSelectableTsxFiles = (projectDir: string): string[] => {
-  const boardFiles = findBoardFiles({ projectDir })
-    .filter((file) => fs.existsSync(file))
-    .sort()
-
-  if (boardFiles.length > 0) {
-    return boardFiles
-  }
-
-  const files = globbySync(["**/*.tsx", "**/*.ts"], {
-    cwd: projectDir,
-    ignore: DEFAULT_IGNORED_PATTERNS,
+const isPortAvailable = (port: number): Promise<boolean> => {
+  return new Promise((resolve) => {
+    const server = net.createServer()
+    server.once("error", () => resolve(false))
+    server.once("listening", () => {
+      server.close(() => resolve(true))
+    })
+    server.listen(port)
   })
-
-  return files
-    .map((file) => path.resolve(projectDir, file))
-    .filter((file) => fs.existsSync(file))
-    .sort()
 }
 
 const warnIfTsconfigMissingTscircuitType = (projectDir: string) => {
@@ -55,22 +43,11 @@ export const registerDev = (program: Command) => {
   program
     .command("dev")
     .description("Start development server for a package")
-    .argument("[file]", "Path to the package file")
+    .argument("[file]", "Path to the package file or directory")
     .option("-p, --port <number>", "Port to run server on", "3020")
     .action(async (file: string, options: { port: string }) => {
       let port = parseInt(options.port)
       const startTime = Date.now()
-
-      const isPortAvailable = (port: number): Promise<boolean> => {
-        return new Promise((resolve) => {
-          const server = net.createServer()
-          server.once("error", () => resolve(false))
-          server.once("listening", () => {
-            server.close(() => resolve(true))
-          })
-          server.listen(port)
-        })
-      }
 
       while (!(await isPortAvailable(port))) {
         console.log(
@@ -79,45 +56,17 @@ export const registerDev = (program: Command) => {
         port += 1
       }
 
-      let absolutePath: string
+      const target = await resolveDevTarget(file)
+      if (!target) return
 
-      if (file) {
-        absolutePath = path.resolve(file)
-        if (!absolutePath.endsWith(".tsx") && !absolutePath.endsWith(".ts")) {
-          console.error("Error: Only .tsx files are supported")
-          return
-        }
-      } else {
-        const entrypointPath = await getEntrypoint({
-          onError: () => {},
-        })
-        if (entrypointPath && fs.existsSync(entrypointPath)) {
-          absolutePath = entrypointPath
-          console.log("Found entrypoint at:", entrypointPath)
-        } else {
-          // Find all .tsx files in the project
-          const availableFiles = findSelectableTsxFiles(process.cwd())
+      const { absolutePath, projectDir } = target
 
-          if (availableFiles.length === 0) {
-            console.log(
-              "No .tsx or .ts files found in the project. Run 'tsci init' to bootstrap a basic project.",
-            )
-            return
-          }
-          absolutePath = availableFiles[0]
-          console.log(
-            "Selected file:",
-            path.relative(process.cwd(), absolutePath),
-          )
-        }
-      }
-
-      warnIfTsconfigMissingTscircuitType(process.cwd())
+      warnIfTsconfigMissingTscircuitType(projectDir)
 
       const server = new DevServer({
         port,
         componentFilePath: absolutePath,
-        projectDir: process.cwd(),
+        projectDir,
       })
 
       await server.start()
