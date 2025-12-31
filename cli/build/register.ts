@@ -16,6 +16,7 @@ import type { GeneratedKicadProject } from "./generate-kicad-project"
 import { generateKicadFootprintLibrary } from "./generate-kicad-footprint-library"
 import { transpileFile } from "./transpile"
 import { validateMainInDist } from "../utils/validate-main-in-dist"
+import { getLatestTscircuitCdnUrl } from "../utils/get-latest-tscircuit-cdn-url"
 import kleur from "kleur"
 
 // @ts-ignore
@@ -51,6 +52,10 @@ export const registerBuild = (program: Command) => {
       "--preview-gltf",
       "Generate a GLTF file from the preview entrypoint",
     )
+    .option(
+      "--use-cdn-javascript",
+      "Use CDN-hosted JavaScript instead of bundled standalone file for --site",
+    )
     .action(
       async (
         file?: string,
@@ -66,6 +71,7 @@ export const registerBuild = (program: Command) => {
           kicad?: boolean
           kicadFootprintLibrary?: boolean
           previewGltf?: boolean
+          useCdnJavascript?: boolean
         },
       ) => {
         try {
@@ -236,15 +242,20 @@ export const registerBuild = (program: Command) => {
           }
 
           if (options?.site) {
+            let standaloneScriptSrc = "./standalone.min.js"
+            if (options?.useCdnJavascript) {
+              standaloneScriptSrc = await getLatestTscircuitCdnUrl()
+            } else {
+              fs.writeFileSync(
+                path.join(distDir, "standalone.min.js"),
+                runFrameStandaloneBundleContent,
+              )
+            }
             const indexHtml = getStaticIndexHtmlFile({
               files: staticFileReferences,
-              standaloneScriptSrc: "./standalone.min.js",
+              standaloneScriptSrc,
             })
             fs.writeFileSync(path.join(distDir, "index.html"), indexHtml)
-            fs.writeFileSync(
-              path.join(distDir, "standalone.min.js"),
-              runFrameStandaloneBundleContent,
-            )
           }
 
           if (options?.kicadFootprintLibrary) {
