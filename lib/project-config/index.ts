@@ -12,6 +12,8 @@ export const defineConfig = (config: TscircuitProjectConfig) => {
 }
 
 export const CONFIG_FILENAME = "tscircuit.config.json"
+export const CONFIG_SCHEMA_URL =
+  "https://cdn.jsdelivr.net/npm/@tscircuit/cli/types/tscircuit.config.schema.json"
 
 export const DEFAULT_BOARD_FILE_PATTERNS = [
   "**/*.board.tsx",
@@ -76,7 +78,11 @@ export const saveProjectConfig = (
   const configPath = path.join(projectDir, CONFIG_FILENAME)
 
   try {
-    fs.writeFileSync(configPath, JSON.stringify(config, null, 2))
+    const configWithSchema = {
+      $schema: CONFIG_SCHEMA_URL,
+      ...config,
+    }
+    fs.writeFileSync(configPath, JSON.stringify(configWithSchema, null, 2))
     return true
   } catch (error) {
     console.error(`Error saving tscircuit config: ${error}`)

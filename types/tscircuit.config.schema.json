@@ -1,0 +1,40 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://cdn.jsdelivr.net/npm/@tscircuit/cli/types/tscircuit.config.schema.json",
+  "title": "TSCircuit Config",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "$schema": {
+      "type": "string",
+      "format": "uri",
+      "description": "JSON schema reference for the config file."
+    },
+    "mainEntrypoint": {
+      "type": "string",
+      "description": "Entry file for the circuit project."
+    },
+    "previewComponentPath": {
+      "type": "string",
+      "description": "Optional component path used for previews."
+    },
+    "ignoredFiles": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "File globs to ignore."
+    },
+    "includeBoardFiles": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "File globs to include as board files."
+    },
+    "snapshotsDir": {
+      "type": "string",
+      "description": "Directory path for storing snapshots."
+    }
+  }
+}
