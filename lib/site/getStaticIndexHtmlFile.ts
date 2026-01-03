@@ -21,7 +21,9 @@ export const getStaticIndexHtmlFile = ({
 
   return `<html>
     <head>
+      <link rel="icon" type="image/png" href="https://github.com/tscircuit.png">
       <meta charset="UTF-8" />
+      <title>tscircuit</title>
     </head>
     <body>
 ${scriptBlock}      <script src="https://cdn.tailwindcss.com"></script>
