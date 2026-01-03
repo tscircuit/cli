@@ -1,0 +1,56 @@
+import { getCliTestFixture } from "../../fixtures/get-cli-test-fixture"
+import { test, expect } from "bun:test"
+import { writeFile, readFile } from "node:fs/promises"
+import path from "node:path"
+import "bun-match-svg"
+
+const circuitCode = `export default () => (
+  <board schMaxTraceDistance={10} routingDisabled>
+    <voltagesource name="V1" voltage="5V" />
+    <resistor name="R_base" resistance="10k" schY={2} />
+    <switch name="SW1" simSwitchFrequency="1kHz" schX={1.5} schY={2} />
+    <transistor
+      name="Q1"
+      type="npn"
+      footprint="sot23"
+      schX={2}
+      schY={0.3}
+      schRotation={180}
+    />
+    <resistor name="R_collector" resistance="10k" schY={-2} />
+
+    <trace from=".V1 > .pin1" to=".R_base > .pin1" />
+    <trace from=".R_base > .pin2" to=".SW1 > .pin1" />
+    <trace from=".SW1 > .pin2" to=".Q1 > .base" />
+
+    <trace from=".V1 > .pin1" to=".R_collector > .pin1" />
+    <trace from=".R_collector > .pin2" to=".Q1 > .collector" />
+
+    <trace from=".Q1 > .emitter" to=".V1 > .pin2" />
+
+    <voltageprobe name="VP_COLLECTOR" connectsTo=".R_collector > .pin2" />
+
+    <analogsimulation duration="4ms" timePerStep="1us" />
+  </board>
+)`
+
+test("export schematic-simulation-svg", async () => {
+  const { tmpDir, runCommand } = await getCliTestFixture()
+  const circuitPath = path.join(tmpDir, "test-circuit.tsx")
+
+  await writeFile(circuitPath, circuitCode)
+
+  const { stdout, stderr } = await runCommand(
+    `tsci export ${circuitPath} -f schematic-simulation-svg`,
+  )
+  expect(stderr).toBe("")
+
+  const schematicSimulationSvg = await readFile(
+    path.join(tmpDir, "test-circuit-schematic-simulation.svg"),
+    "utf-8",
+  )
+  expect(schematicSimulationSvg).toMatchSvgSnapshot(
+    import.meta.path,
+    "schematic-simulation",
+  )
+})

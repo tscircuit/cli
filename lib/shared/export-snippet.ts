@@ -5,6 +5,7 @@ import { convertCircuitJsonToReadableNetlist } from "circuit-json-to-readable-ne
 import {
   convertCircuitJsonToPcbSvg,
   convertCircuitJsonToSchematicSvg,
+  convertCircuitJsonToSchematicSimulationSvg,
 } from "circuit-to-svg"
 import { convertCircuitJsonToGltf } from "circuit-json-to-gltf"
 import { convertCircuitJsonToDsnString } from "dsn-converter"
@@ -24,6 +25,7 @@ export const ALLOWED_EXPORT_FORMATS = [
   "json",
   "circuit-json",
   "schematic-svg",
+  "schematic-simulation-svg",
   "pcb-svg",
   "gerbers",
   "readable-netlist",
@@ -43,6 +45,7 @@ const OUTPUT_EXTENSIONS: Record<ExportFormat, string> = {
   json: ".circuit.json",
   "circuit-json": ".circuit.json",
   "schematic-svg": "-schematic.svg",
+  "schematic-simulation-svg": "-schematic-simulation.svg",
   "pcb-svg": "-pcb.svg",
   gerbers: "-gerbers.zip",
   "readable-netlist": "-readable.netlist",
@@ -106,6 +109,11 @@ export const exportSnippet = async ({
   switch (format) {
     case "schematic-svg":
       outputContent = convertCircuitJsonToSchematicSvg(circuitData.circuitJson)
+      break
+    case "schematic-simulation-svg":
+      outputContent = convertCircuitJsonToSchematicSimulationSvg(
+        circuitData.circuitJson,
+      )
       break
     case "pcb-svg":
       outputContent = convertCircuitJsonToPcbSvg(circuitData.circuitJson)
