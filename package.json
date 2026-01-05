@@ -1,6 +1,6 @@
 {
   "name": "@tscircuit/cli",
-  "version": "0.1.719",
+  "version": "0.1.720",
   "main": "dist/main.js",
   "devDependencies": {
     "@babel/standalone": "^7.26.9",
