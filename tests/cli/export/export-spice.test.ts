@@ -61,7 +61,7 @@ const circuitCode = `export default () => (
   </board>
 )`
 
-test.skip(
+test(
   "export spice",
   async () => {
     const { tmpDir, runCommand } = await getCliTestFixture()

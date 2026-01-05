@@ -25,7 +25,7 @@ export default () => (
   </board>
 )`
 
-test.skip("export kicad schematic", async () => {
+test("export kicad schematic", async () => {
   const { tmpDir, runCommand } = await getCliTestFixture()
   const circuitPath = path.join(tmpDir, "test-circuit.tsx")
 
@@ -42,7 +42,7 @@ test.skip("export kicad schematic", async () => {
   expect(schContent).toContain("kicad_sch")
 }, 60_000)
 
-test.skip("export kicad pcb", async () => {
+test("export kicad pcb", async () => {
   const { tmpDir, runCommand } = await getCliTestFixture()
   const circuitPath = path.join(tmpDir, "test-circuit.tsx")
 
@@ -59,7 +59,7 @@ test.skip("export kicad pcb", async () => {
   expect(pcbContent).toContain("kicad_pcb")
 }, 60_000)
 
-test.skip("export kicad zip", async () => {
+test("export kicad zip", async () => {
   const { tmpDir, runCommand } = await getCliTestFixture()
   const circuitPath = path.join(tmpDir, "test-circuit.tsx")
 
