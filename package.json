@@ -6,7 +6,7 @@
     "@babel/standalone": "^7.26.9",
     "@biomejs/biome": "^1.9.4",
     "@tscircuit/circuit-json-util": "0.0.72",
-    "@tscircuit/fake-snippets": "^0.0.128",
+    "@tscircuit/fake-snippets": "^0.0.182",
     "@tscircuit/file-server": "^0.0.32",
     "@tscircuit/math-utils": "0.0.29",
     "@tscircuit/props": "^0.0.423",
