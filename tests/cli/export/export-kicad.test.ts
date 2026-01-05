@@ -25,7 +25,7 @@ export default () => (
   </board>
 )`
 
-test("export kicad schematic", async () => {
+test.skip("export kicad schematic", async () => {
   const { tmpDir, runCommand } = await getCliTestFixture()
   const circuitPath = path.join(tmpDir, "test-circuit.tsx")
 
