@@ -7,9 +7,10 @@ export const generatePackageJson = (
 ) => {
   const packageJsonPath = path.join(dir, "package.json")
   const baseName = opts.packageName || path.basename(dir)
-  const name = opts.authorName
-    ? `@tsci/${opts.authorName}.${baseName}`
-    : baseName
+  const name =
+    opts.packageName ||
+    (opts.authorName ? `@tsci/${opts.authorName}.${baseName}` : baseName)
+
   const packageJsonContent = {
     name,
     version: "1.0.0",
