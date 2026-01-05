@@ -35,6 +35,29 @@
     "snapshotsDir": {
       "type": "string",
       "description": "Directory path for storing snapshots."
+    },
+    "build": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "circuitJson": {
+          "type": "boolean",
+          "description": "Enable circuit JSON output in build."
+        },
+        "kicadLibrary": {
+          "type": "boolean",
+          "description": "Enable KiCad library output in build."
+        },
+        "previewImages": {
+          "type": "boolean",
+          "description": "Enable preview image outputs in build."
+        },
+        "typescriptLibrary": {
+          "type": "boolean",
+          "description": "Enable TypeScript library output in build."
+        }
+      },
+      "description": "Build output toggles."
     }
   }
 }
