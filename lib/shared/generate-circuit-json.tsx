@@ -107,7 +107,7 @@ export async function generateCircuitJson({
     runner.add(<MainComponent.default />)
   } else {
     // No default export: render all named component exports
-    // This is library mode - each named export becomes a component with its export name
+    // Each named export is rendered directly (must be a board-level component or wrapped in a board)
     const componentExports = Object.entries(MainComponent).filter(
       ([name, value]) =>
         name[0] === name[0].toUpperCase() && typeof value === "function",
@@ -119,20 +119,27 @@ export async function generateCircuitJson({
       )
     }
 
-    debug(
-      `Library mode: rendering ${componentExports.length} named exports: ${componentExports.map(([name]) => name).join(", ")}`,
-    )
+    if (componentExports.length === 1) {
+      // Single named export: render it directly (likely a board component)
+      const [exportName, Component] = componentExports[0] as [string, any]
+      debug(`Single named export: rendering ${exportName}`)
+      runner.add(<Component />)
+    } else {
+      // Multiple named exports: library mode - wrap in a board with export names
+      debug(
+        `Library mode: rendering ${componentExports.length} named exports: ${componentExports.map(([name]) => name).join(", ")}`,
+      )
 
-    // Render all components on a board, each with its export name
-    const LibraryBoard = () => (
-      <board width="100mm" height="100mm">
-        {componentExports.map(([exportName, Component]: [string, any], i) => (
-          <Component key={exportName} name={exportName} pcbX={i * 10} />
-        ))}
-      </board>
-    )
+      const LibraryBoard = () => (
+        <board width="100mm" height="100mm">
+          {componentExports.map(([exportName, Component]: [string, any], i) => (
+            <Component key={exportName} name={exportName} pcbX={i * 10} />
+          ))}
+        </board>
+      )
 
-    runner.add(<LibraryBoard />)
+      runner.add(<LibraryBoard />)
+    }
   }
 
   // Wait for the circuit to be fully rendered
