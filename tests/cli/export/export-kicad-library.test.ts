@@ -45,7 +45,7 @@ export default () => (
   expect(stderr).toBe("")
 
   // Read the generated directory
-  const libDir = path.join(tmpDir, "circuit-kicad-library")
+  const libDir = path.join(tmpDir, "circuit")
   expect(fs.existsSync(libDir)).toBe(true)
 
   // Helper to recursively list all files in a directory
