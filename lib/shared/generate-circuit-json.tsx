@@ -131,7 +131,7 @@ export async function generateCircuitJson({
       )
 
       const LibraryBoard = () => (
-        <board width="100mm" height="100mm">
+        <board>
           {componentExports.map(([exportName, Component]: [string, any], i) => (
             <Component key={exportName} name={exportName} pcbX={i * 10} />
           ))}
