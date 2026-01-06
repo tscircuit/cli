@@ -53,7 +53,7 @@ const OUTPUT_EXTENSIONS: Record<ExportFormat, string> = {
   kicad_pcb: ".kicad_pcb",
   kicad_zip: "-kicad.zip",
   "kicad-footprint-library": "-footprints.zip",
-  "kicad-library": "-kicad-library",
+  "kicad-library": "",
 }
 
 type ExportOptions = {
