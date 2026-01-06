@@ -13,7 +13,6 @@ import { buildPreviewImages } from "./build-preview-images"
 import { buildPreviewGltf } from "./build-preview-gltf"
 import { generateKicadProject } from "./generate-kicad-project"
 import type { GeneratedKicadProject } from "./generate-kicad-project"
-import { generateKicadFootprintLibrary } from "./generate-kicad-footprint-library"
 import { transpileFile } from "./transpile"
 import { validateMainInDist } from "../utils/validate-main-in-dist"
 import { getLatestTscircuitCdnUrl } from "../utils/get-latest-tscircuit-cdn-url"
@@ -43,10 +42,6 @@ export const registerBuild = (program: Command) => {
     .option(
       "--kicad",
       "Generate KiCad project directories for each successful build output",
-    )
-    .option(
-      "--kicad-footprint-library",
-      "Generate a KiCad footprint library from all successful build outputs",
     )
     .option(
       "--preview-gltf",
@@ -258,19 +253,6 @@ export const registerBuild = (program: Command) => {
             fs.writeFileSync(path.join(distDir, "index.html"), indexHtml)
           }
 
-          if (options?.kicadFootprintLibrary) {
-            if (kicadProjects.length === 0) {
-              console.warn(
-                "No successful build output available for KiCad footprint library generation.",
-              )
-            } else {
-              await generateKicadFootprintLibrary({
-                projects: kicadProjects,
-                distDir,
-              })
-            }
-          }
-
           const successCount = builtFiles.filter((f) => f.ok).length
           const failCount = builtFiles.length - successCount
           const enabledOpts = [
@@ -279,7 +261,6 @@ export const registerBuild = (program: Command) => {
             options?.previewImages && "preview-images",
             options?.allImages && "all-images",
             options?.kicad && "kicad",
-            options?.kicadFootprintLibrary && "kicad-footprint-library",
             options?.previewGltf && "preview-gltf",
           ].filter(Boolean) as string[]
 

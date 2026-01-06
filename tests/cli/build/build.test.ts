@@ -273,37 +273,6 @@ test("build with --kicad generates KiCad project files", async () => {
   expect(proContent).toContain("kicad-board.kicad_pcb")
 }, 60_000)
 
-test("build with --kicad-footprint-library generates footprint library", async () => {
-  const { tmpDir, runCommand } = await getCliTestFixture()
-  const circuitPath = path.join(tmpDir, "footprints-board.tsx")
-  await writeFile(circuitPath, circuitCode)
-  await writeFile(path.join(tmpDir, "package.json"), "{}")
-
-  const { stderr } = await runCommand(
-    `tsci build --kicad-footprint-library ${circuitPath}`,
-  )
-  expect(stderr).toBe("")
-
-  const footprintRoot = path.join(tmpDir, "dist", "kicad-footprints")
-  const entries = await readdir(footprintRoot)
-  const libTable = await readFile(
-    path.join(footprintRoot, "fp-lib-table"),
-    "utf-8",
-  )
-  expect(libTable).toContain("(fp_lib_table")
-  const prettyDirs = entries.filter((entry) => entry.endsWith(".pretty"))
-  expect(prettyDirs.length).toBeGreaterThan(0)
-  const firstPrettyDir = prettyDirs[0]
-  const footprintFiles = await readdir(path.join(footprintRoot, firstPrettyDir))
-  const kicadMod = footprintFiles.find((file) => file.endsWith(".kicad_mod"))
-  expect(kicadMod).toBeDefined()
-  const footprintContent = await readFile(
-    path.join(footprintRoot, firstPrettyDir, kicadMod!),
-    "utf-8",
-  )
-  expect(footprintContent).toContain("(footprint")
-}, 60_000)
-
 const circuitCodeWithGlbCadModel = `
 import cadModelUrl from "./chip.glb"
 
