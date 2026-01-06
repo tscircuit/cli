@@ -29,6 +29,13 @@ type GenerateCircuitJsonOptions = {
   platformConfig?: PlatformConfig
 }
 
+export type GenerateCircuitJsonResult = {
+  circuitJson: any
+  outputPath: string
+  /** Individual circuit JSONs for each named export (library mode) */
+  namedExportResults?: Array<{ circuitJson: any; exportName: string }>
+}
+
 /**
  * Generates circuit JSON from a TSCircuit component file
  *
@@ -41,7 +48,7 @@ export async function generateCircuitJson({
   outputFileName,
   saveToFile = false,
   platformConfig,
-}: GenerateCircuitJsonOptions) {
+}: GenerateCircuitJsonOptions): Promise<GenerateCircuitJsonResult> {
   debug(`Generating circuit JSON for ${filePath}`)
 
   // Import React and make it globally available for packages referencing it
@@ -49,9 +56,6 @@ export async function generateCircuitJson({
   ;(globalThis as any).React = React
   const userLandTscircuit = await importFromUserLand("tscircuit")
 
-  const runner = new userLandTscircuit.RootCircuit({
-    platform: platformConfig,
-  })
   const absoluteFilePath = path.isAbsolute(filePath)
     ? filePath
     : path.resolve(process.cwd(), filePath)
@@ -102,60 +106,77 @@ export async function generateCircuitJson({
   // Execute the circuit runner with the virtual file system
   const MainComponent = await import(pathToFileURL(absoluteFilePath).href)
 
+  // Default export: render directly
   if (MainComponent.default) {
-    // Default export: render it directly (normal board/component)
+    const runner = new userLandTscircuit.RootCircuit({
+      platform: platformConfig,
+    })
     runner.add(<MainComponent.default />)
-  } else {
-    // No default export: render all named component exports
-    // Each named export is rendered directly (must be a board-level component or wrapped in a board)
-    const componentExports = Object.entries(MainComponent).filter(
-      ([name, value]) =>
-        name[0] === name[0].toUpperCase() && typeof value === "function",
-    )
+    await runner.renderUntilSettled()
+    const circuitJson = await runner.getCircuitJson()
 
-    if (componentExports.length === 0) {
-      throw new Error(
-        `No component found in "${absoluteFilePath}". Make sure you export a component.`,
-      )
+    // Save the circuit JSON to a file if requested
+    if (saveToFile) {
+      debug(`Saving circuit JSON to ${outputPath}`)
+      fs.writeFileSync(outputPath, JSON.stringify(circuitJson, null, 2))
     }
-
-    if (componentExports.length === 1) {
-      // Single named export: render it directly (likely a board component)
-      const [exportName, Component] = componentExports[0] as [string, any]
-      debug(`Single named export: rendering ${exportName}`)
-      runner.add(<Component />)
-    } else {
-      // Multiple named exports: library mode - wrap in a board with export names
-      debug(
-        `Library mode: rendering ${componentExports.length} named exports: ${componentExports.map(([name]) => name).join(", ")}`,
-      )
-
-      const LibraryBoard = () => (
-        <board>
-          {componentExports.map(([exportName, Component]: [string, any], i) => (
-            <Component key={exportName} name={exportName} pcbX={i * 10} />
-          ))}
-        </board>
-      )
-
-      runner.add(<LibraryBoard />)
-    }
+    return { circuitJson, outputPath }
   }
 
-  // Wait for the circuit to be fully rendered
-  await runner.renderUntilSettled()
+  // Named exports: find all component exports (start with uppercase)
+  const namedExports = Object.entries(MainComponent).filter(
+    ([name, value]) =>
+      name[0] === name[0].toUpperCase() && typeof value === "function",
+  ) as [string, React.ComponentType<any>][]
 
-  // Get the circuit JSON
-  const circuitJson = await runner.getCircuitJson()
+  if (namedExports.length === 0) {
+    throw new Error(
+      `No component found in "${absoluteFilePath}". Make sure you export a component.`,
+    )
+  }
 
-  // Save the circuit JSON to a file if requested
-  if (saveToFile) {
-    debug(`Saving circuit JSON to ${outputPath}`)
-    fs.writeFileSync(outputPath, JSON.stringify(circuitJson, null, 2))
+  // Single named export: render directly
+  if (namedExports.length === 1) {
+    const [, Component] = namedExports[0]
+    const runner = new userLandTscircuit.RootCircuit({
+      platform: platformConfig,
+    })
+    runner.add(<Component />)
+    await runner.renderUntilSettled()
+
+    // Get the circuit JSON
+    const circuitJson = await runner.getCircuitJson()
+
+    // Save the circuit JSON to a file if requested
+    if (saveToFile) {
+      debug(`Saving circuit JSON to ${outputPath}`)
+      fs.writeFileSync(outputPath, JSON.stringify(circuitJson, null, 2))
+    }
+    return { circuitJson, outputPath }
+  }
+
+  // Multiple named exports: generate individual circuit JSON for each
+  debug(
+    `Library mode: ${namedExports.length} exports: ${namedExports.map(([n]) => n).join(", ")}`,
+  )
+
+  const namedExportResults: Array<{ circuitJson: any; exportName: string }> = []
+
+  for (const [exportName, Component] of namedExports) {
+    const runner = new userLandTscircuit.RootCircuit({
+      platform: platformConfig,
+    })
+    runner.add(<Component name={exportName} />)
+    await runner.renderUntilSettled()
+    namedExportResults.push({
+      circuitJson: await runner.getCircuitJson(),
+      exportName,
+    })
   }
 
   return {
-    circuitJson,
+    circuitJson: namedExportResults[0]?.circuitJson ?? [],
     outputPath,
+    namedExportResults,
   }
 }

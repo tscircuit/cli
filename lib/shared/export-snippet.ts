@@ -171,26 +171,61 @@ export const exportSnippet = async ({
       const libDir = outputDestination
       fs.mkdirSync(libDir, { recursive: true })
 
-      const libConverter = new CircuitJsonToKicadLibraryConverter(
-        circuitData.circuitJson,
-        {
+      // Collect all footprints and symbols from individual circuit JSONs
+      const allFootprints: Array<{
+        footprintName: string
+        kicadModString: string
+      }> = []
+      const allModel3dPaths: string[] = []
+      let kicadSymString = ""
+      let fpLibTableString = ""
+      let symLibTableString = ""
+
+      // Process each named export's circuit JSON individually
+      const circuitJsonsToProcess = circuitData.namedExportResults
+        ? circuitData.namedExportResults.map((r) => r.circuitJson)
+        : [circuitData.circuitJson]
+
+      for (const cj of circuitJsonsToProcess) {
+        const libConverter = new CircuitJsonToKicadLibraryConverter(cj, {
           libraryName,
           footprintLibraryName: fpLibName,
-        },
-      )
-      libConverter.runUntilFinished()
-      const libOutput = libConverter.getOutput()
+        })
+        libConverter.runUntilFinished()
+        const libOutput = libConverter.getOutput()
+
+        // Collect footprints (avoid duplicates by name)
+        for (const fp of libOutput.footprints) {
+          if (
+            !allFootprints.some((f) => f.footprintName === fp.footprintName)
+          ) {
+            allFootprints.push(fp)
+          }
+        }
+
+        // Collect 3D model paths
+        for (const modelPath of libOutput.model3dSourcePaths) {
+          if (!allModel3dPaths.includes(modelPath)) {
+            allModel3dPaths.push(modelPath)
+          }
+        }
+
+        // Use the last converter's symbol and table strings (they should be consistent)
+        kicadSymString = libOutput.kicadSymString
+        fpLibTableString = libOutput.fpLibTableString
+        symLibTableString = libOutput.symLibTableString
+      }
 
       // Write symbol library
       fs.writeFileSync(
         path.join(libDir, `${libraryName}.kicad_sym`),
-        libOutput.kicadSymString,
+        kicadSymString,
       )
 
       // Create footprint library directory and write footprints
       const fpDir = path.join(libDir, `${fpLibName}.pretty`)
       fs.mkdirSync(fpDir, { recursive: true })
-      for (const fp of libOutput.footprints) {
+      for (const fp of allFootprints) {
         fs.writeFileSync(
           path.join(fpDir, `${fp.footprintName}.kicad_mod`),
           `${fp.kicadModString}\n`,
@@ -198,10 +233,10 @@ export const exportSnippet = async ({
       }
 
       // Copy 3D model files to .3dshapes folder
-      if (libOutput.model3dSourcePaths.length > 0) {
+      if (allModel3dPaths.length > 0) {
         const shapesDir = path.join(libDir, `${fpLibName}.3dshapes`)
         fs.mkdirSync(shapesDir, { recursive: true })
-        for (const modelPath of libOutput.model3dSourcePaths) {
+        for (const modelPath of allModel3dPaths) {
           if (fs.existsSync(modelPath)) {
             const filename = path.basename(modelPath)
             fs.copyFileSync(modelPath, path.join(shapesDir, filename))
@@ -210,14 +245,8 @@ export const exportSnippet = async ({
       }
 
       // Write library tables
-      fs.writeFileSync(
-        path.join(libDir, "fp-lib-table"),
-        libOutput.fpLibTableString,
-      )
-      fs.writeFileSync(
-        path.join(libDir, "sym-lib-table"),
-        libOutput.symLibTableString,
-      )
+      fs.writeFileSync(path.join(libDir, "fp-lib-table"), fpLibTableString)
+      fs.writeFileSync(path.join(libDir, "sym-lib-table"), symLibTableString)
 
       // For directory output, we don't write a single file
       outputContent = ""
