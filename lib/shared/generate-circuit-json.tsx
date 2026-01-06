@@ -102,25 +102,38 @@ export async function generateCircuitJson({
   // Execute the circuit runner with the virtual file system
   const MainComponent = await import(pathToFileURL(absoluteFilePath).href)
 
-  // Handle both default export and named exports
-  const Component =
-    MainComponent.default ||
-    (Object.keys(MainComponent).find((k) => k[0] === k[0].toUpperCase()) !==
-    undefined
-      ? MainComponent[
-          Object.keys(MainComponent).find(
-            (k) => k[0] === k[0].toUpperCase(),
-          ) as keyof typeof MainComponent
-        ]
-      : undefined)
-
-  if (!Component) {
-    throw new Error(
-      `No component found in "${absoluteFilePath}". Make sure you export a component.`,
+  if (MainComponent.default) {
+    // Default export: render it directly (normal board/component)
+    runner.add(<MainComponent.default />)
+  } else {
+    // No default export: render all named component exports
+    // This is library mode - each named export becomes a component with its export name
+    const componentExports = Object.entries(MainComponent).filter(
+      ([name, value]) =>
+        name[0] === name[0].toUpperCase() && typeof value === "function",
     )
-  }
 
-  runner.add(<Component />)
+    if (componentExports.length === 0) {
+      throw new Error(
+        `No component found in "${absoluteFilePath}". Make sure you export a component.`,
+      )
+    }
+
+    debug(
+      `Library mode: rendering ${componentExports.length} named exports: ${componentExports.map(([name]) => name).join(", ")}`,
+    )
+
+    // Render all components on a board, each with its export name
+    const LibraryBoard = () => (
+      <board width="100mm" height="100mm">
+        {componentExports.map(([exportName, Component]: [string, any], i) => (
+          <Component key={exportName} name={exportName} pcbX={i * 10} />
+        ))}
+      </board>
+    )
+
+    runner.add(<LibraryBoard />)
+  }
 
   // Wait for the circuit to be fully rendered
   await runner.renderUntilSettled()

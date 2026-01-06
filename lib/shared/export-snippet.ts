@@ -165,9 +165,12 @@ export const exportSnippet = async ({
     }
     case "kicad-library": {
       const libraryName = outputBaseName
-      const fpLibName = outputBaseName // Use same name for symbol and footprint libraries
+      const fpLibName = outputBaseName
 
-      // Use CircuitJsonToKicadLibraryConverter from circuit-json-to-kicad
+      // Create output directory
+      const libDir = outputDestination
+      fs.mkdirSync(libDir, { recursive: true })
+
       const libConverter = new CircuitJsonToKicadLibraryConverter(
         circuitData.circuitJson,
         {
@@ -177,10 +180,6 @@ export const exportSnippet = async ({
       )
       libConverter.runUntilFinished()
       const libOutput = libConverter.getOutput()
-
-      // Create output directory
-      const libDir = outputDestination
-      fs.mkdirSync(libDir, { recursive: true })
 
       // Write symbol library
       fs.writeFileSync(
