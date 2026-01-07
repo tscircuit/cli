@@ -318,8 +318,6 @@ export const pushSnippet = async ({
       return onExit(1)
     })
 
-  log("\n")
-
   const filePaths = getPackageFilePaths(
     projectDir,
     includeDist ? [] : ["**/dist/**"],
@@ -358,23 +356,14 @@ export const pushSnippet = async ({
       .post("package_files/create", {
         json: payload,
       })
-      .json()
       .then(() => {
         const icon = isBinary ? "📦" : "⬆︎"
         console.log(kleur.gray(`${icon} ${relativeFilePath}`))
         uploadResults.succeeded.push(relativeFilePath)
       })
       .catch(async (error) => {
-        let errorDetails = String(error)
-        try {
-          const errorResponse = await error.response?.json()
-          if (errorResponse?.error?.message) {
-            errorDetails = errorResponse.error.message
-          }
-        } catch {}
-        console.log(
-          kleur.red(`  ${relativeFilePath} - failed: ${errorDetails}`),
-        )
+        const errorDetails = String(error)?.split(`\n\nRequest Body:`)?.[0]
+        console.log(kleur.red(`  ${relativeFilePath} - failed`))
         uploadResults.failed.push({
           file: relativeFilePath,
           error: errorDetails,
@@ -392,14 +381,19 @@ export const pushSnippet = async ({
       log(kleur.gray(`      ${error}`))
     }
   }
-
-  if (uploadResults.failed.length > 0) {
+  if (uploadResults.failed.length > 0 && uploadResults.succeeded.length === 0) {
     onError(
       `\nPublish completed with ${uploadResults.failed.length} failed upload(s)`,
     )
     return onExit(1)
   }
 
+  if (uploadResults.failed.length > 0 && uploadResults.succeeded.length > 0) {
+    onSuccess(
+      `\nPublish completed with ${uploadResults.succeeded.length} files uploaded and ${uploadResults.failed.length} failed upload(s)`,
+    )
+    return onExit(1)
+  }
   await ky.post("package_releases/update", {
     json: {
       package_name_with_version: `${scopedPackageName}@${releaseVersion}`,
