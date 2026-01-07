@@ -324,6 +324,10 @@ export const pushSnippet = async ({
     projectDir,
     includeDist ? [] : ["**/dist/**"],
   )
+  const uploadResults: {
+    succeeded: string[]
+    failed: { file: string; error: string }[]
+  } = { succeeded: [], failed: [] }
 
   for (const fullFilePath of filePaths) {
     const relativeFilePath = path.relative(projectDir, fullFilePath)
@@ -355,27 +359,45 @@ export const pushSnippet = async ({
         json: payload,
       })
       .json()
-      .then((response) => {
+      .then(() => {
         const icon = isBinary ? "📦" : "⬆︎"
         console.log(kleur.gray(`${icon} ${relativeFilePath}`))
+        uploadResults.succeeded.push(relativeFilePath)
       })
       .catch(async (error) => {
-        // Try to get more details from the error response
-        let errorDetails = ""
+        let errorDetails = String(error)
         try {
           const errorResponse = await error.response?.json()
           if (errorResponse?.error?.message) {
-            errorDetails = `: ${errorResponse.error.message}`
+            errorDetails = errorResponse.error.message
           }
-        } catch {
-          // Ignore JSON parsing errors
-        }
-        onError(
-          `Error uploading file "${relativeFilePath}"${errorDetails}\n` +
-            `  Full path: ${fullFilePath}`,
+        } catch {}
+        console.log(
+          kleur.red(`  ${relativeFilePath} - failed: ${errorDetails}`),
         )
-        return onExit(1)
+        uploadResults.failed.push({
+          file: relativeFilePath,
+          error: errorDetails,
+        })
       })
+  }
+
+  log("\n")
+  log(kleur.bold("Upload Summary"))
+  log(kleur.green(`  Succeeded: ${uploadResults.succeeded.length} files`))
+  if (uploadResults.failed.length > 0) {
+    log(kleur.red(`  Failed: ${uploadResults.failed.length} files`))
+    for (const { file, error } of uploadResults.failed) {
+      log(kleur.red(`    - ${file}`))
+      log(kleur.gray(`      ${error}`))
+    }
+  }
+
+  if (uploadResults.failed.length > 0) {
+    onError(
+      `\nPublish completed with ${uploadResults.failed.length} failed upload(s)`,
+    )
+    return onExit(1)
   }
 
   await ky.post("package_releases/update", {
