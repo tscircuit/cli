@@ -318,7 +318,7 @@ export const pushSnippet = async ({
 
   log("\n")
 
-  const filePaths = getPackageFilePaths(projectDir)
+  const filePaths = getPackageFilePaths(projectDir, ["dist"])
 
   for (const fullFilePath of filePaths) {
     const relativeFilePath = path.relative(projectDir, fullFilePath)
