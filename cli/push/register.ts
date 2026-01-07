@@ -11,15 +11,21 @@ export const registerPush = (program: Command) => {
       "--version-tag <tag>",
       "Publish as a non-latest version using the provided tag",
     )
+    .option("--include-dist", "Include the dist directory in the push")
     .action(
       async (
         filePath?: string,
-        options: { private?: boolean; versionTag?: string } = {},
+        options: {
+          private?: boolean
+          versionTag?: string
+          includeDist?: boolean
+        } = {},
       ) => {
         await pushSnippet({
           filePath,
           isPrivate: options.private ?? false,
           versionTag: options.versionTag,
+          includeDist: options.includeDist ?? false,
           onExit: (code) => process.exit(code),
           onError: (message) => console.error(message),
           onSuccess: (message) => console.log(message),

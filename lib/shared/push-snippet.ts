@@ -19,6 +19,7 @@ type PushOptions = {
   filePath?: string
   isPrivate?: boolean
   versionTag?: string
+  includeDist?: boolean
   log?: (message: string) => void
   onExit?: (code: number) => void
   onError?: (message: string) => void
@@ -31,6 +32,7 @@ export const pushSnippet = async ({
   filePath,
   isPrivate,
   versionTag,
+  includeDist = false,
   log = console.log,
   onExit = (code) => process.exit(code),
   onError = (message) => console.error(message),
@@ -318,7 +320,10 @@ export const pushSnippet = async ({
 
   log("\n")
 
-  const filePaths = getPackageFilePaths(projectDir)
+  const filePaths = getPackageFilePaths(
+    projectDir,
+    includeDist ? [] : ["**/dist/**"],
+  )
 
   for (const fullFilePath of filePaths) {
     const relativeFilePath = path.relative(projectDir, fullFilePath)
