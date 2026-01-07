@@ -26,14 +26,13 @@ test("should bump version if release already exists", async () => {
       "stderr": "",
       "stdout": 
     "Package created
-
-
     ⬆︎ package.json
     ⬆︎ snippet.tsx
 
 
     Upload Summary
       Succeeded: 2 files
+
 
     "@tsci/test-user.test-package@1.0.0" published!
     https://tscircuit.com/test-user/test-package
@@ -51,14 +50,13 @@ test("should bump version if release already exists", async () => {
       "stderr": "",
       "stdout": 
     "Incrementing Package Version 1.0.0 -> 1.0.1
-
-
     ⬆︎ package.json
     ⬆︎ snippet.tsx
 
 
     Upload Summary
       Succeeded: 2 files
+
 
     "@tsci/test-user.test-package@1.0.1" published!
     https://tscircuit.com/test-user/test-package
