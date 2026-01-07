@@ -318,12 +318,14 @@ export const pushSnippet = async ({
       return onExit(1)
     })
 
-  log("\n")
-
   const filePaths = getPackageFilePaths(
     projectDir,
     includeDist ? [] : ["**/dist/**"],
   )
+  const uploadResults: {
+    succeeded: string[]
+    failed: { file: string; error: string }[]
+  } = { succeeded: [], failed: [] }
 
   for (const fullFilePath of filePaths) {
     const relativeFilePath = path.relative(projectDir, fullFilePath)
@@ -354,30 +356,44 @@ export const pushSnippet = async ({
       .post("package_files/create", {
         json: payload,
       })
-      .json()
-      .then((response) => {
+      .then(() => {
         const icon = isBinary ? "📦" : "⬆︎"
         console.log(kleur.gray(`${icon} ${relativeFilePath}`))
+        uploadResults.succeeded.push(relativeFilePath)
       })
       .catch(async (error) => {
-        // Try to get more details from the error response
-        let errorDetails = ""
-        try {
-          const errorResponse = await error.response?.json()
-          if (errorResponse?.error?.message) {
-            errorDetails = `: ${errorResponse.error.message}`
-          }
-        } catch {
-          // Ignore JSON parsing errors
-        }
-        onError(
-          `Error uploading file "${relativeFilePath}"${errorDetails}\n` +
-            `  Full path: ${fullFilePath}`,
-        )
-        return onExit(1)
+        const errorDetails = String(error)?.split(`\n\nRequest Body:`)?.[0]
+        console.log(kleur.red(`  ${relativeFilePath} - failed`))
+        uploadResults.failed.push({
+          file: relativeFilePath,
+          error: errorDetails,
+        })
       })
   }
 
+  log("\n")
+  log(kleur.bold("Upload Summary"))
+  log(kleur.green(`  Succeeded: ${uploadResults.succeeded.length} files`))
+  if (uploadResults.failed.length > 0) {
+    log(kleur.red(`  Failed: ${uploadResults.failed.length} files`))
+    for (const { file, error } of uploadResults.failed) {
+      log(kleur.red(`    - ${file}`))
+      log(kleur.gray(`      ${error}`))
+    }
+  }
+  if (uploadResults.failed.length > 0 && uploadResults.succeeded.length === 0) {
+    onError(
+      `\nPublish completed with ${uploadResults.failed.length} failed upload(s)`,
+    )
+    return onExit(1)
+  }
+
+  if (uploadResults.failed.length > 0 && uploadResults.succeeded.length > 0) {
+    onSuccess(
+      `\nPublish completed with ${uploadResults.succeeded.length} files uploaded and ${uploadResults.failed.length} failed upload(s)`,
+    )
+    return onExit(1)
+  }
   await ky.post("package_releases/update", {
     json: {
       package_name_with_version: `${scopedPackageName}@${releaseVersion}`,

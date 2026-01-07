@@ -26,10 +26,12 @@ test("should publish a tagged release and increment when needed", async () => {
       "stderr": "",
       "stdout": 
     "Package created
-
-
     ⬆︎ package.json
     ⬆︎ snippet.tsx
+
+
+    Upload Summary
+      Succeeded: 2 files
 
 
     "@tsci/test-user.test-package@1.0.0-bugreport1" published!
@@ -48,10 +50,12 @@ test("should publish a tagged release and increment when needed", async () => {
       "stderr": "",
       "stdout": 
     "Incrementing Package Version 1.0.0 -> 1.0.1
-
-
     ⬆︎ package.json
     ⬆︎ snippet.tsx
+
+
+    Upload Summary
+      Succeeded: 2 files
 
 
     "@tsci/test-user.test-package@1.0.1-bugreport1" published!
