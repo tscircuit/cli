@@ -34,10 +34,13 @@ function printManualInstructions(sessionToken: string) {
   console.log(kleur.cyan(`   ${path.join(os.homedir(), ".npmrc")}`))
   console.log("\n2. Add the following line:")
   console.log(kleur.cyan(`   //${REGISTRY_URL}/:_authToken=${sessionToken}`))
+  console.log("\n3. Ensure the following line is also present:")
+  console.log(kleur.cyan(`   @tsci:registry=https://${REGISTRY_URL}/`))
 }
 
 export function setupNpmrc(sessionToken: string): boolean {
   const authLine = `//${REGISTRY_URL}/:_authToken=${sessionToken}`
+  const registryLine = `@tsci:registry=https://${REGISTRY_URL}/`
   const npmrcPath = findGlobalNpmrc()
 
   if (!npmrcPath) {
@@ -51,20 +54,46 @@ export function setupNpmrc(sessionToken: string): boolean {
 
     if (fs.existsSync(npmrcPath)) {
       existingContent = fs.readFileSync(npmrcPath, "utf-8")
+    }
 
-      // Check if the auth line already exists (with any token)
-      const authLineRegex = new RegExp(
-        `^//${REGISTRY_URL.replace(/\./g, "\\.")}/:_authToken=.+$`,
-        "m",
-      )
+    // Ensure registryLine is present
+    let registryAdded = false
+    const registryRegex = new RegExp(
+      `^${registryLine.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}`,
+      "m",
+    )
 
-      if (authLineRegex.test(existingContent)) {
-        // Update existing auth line
-        const updatedContent = existingContent.replace(authLineRegex, authLine)
-        fs.writeFileSync(npmrcPath, updatedContent, "utf-8")
-        console.log(kleur.green(`Updated authentication token in ${npmrcPath}`))
-        return true
+    if (!registryRegex.test(existingContent)) {
+      // Add registryLine either at the end or on a new line if file isn't empty
+      if (existingContent) {
+        if (existingContent.endsWith("\n")) {
+          existingContent += `${registryLine}\n`
+        } else {
+          existingContent += `\n${registryLine}\n`
+        }
+      } else {
+        existingContent = `${registryLine}\n`
       }
+      registryAdded = true
+    }
+
+    // Check if the auth line already exists (with any token)
+    const authLineRegex = new RegExp(
+      `^//${REGISTRY_URL.replace(/\./g, "\\.")}/:_authToken=.+$`,
+      "m",
+    )
+
+    if (authLineRegex.test(existingContent)) {
+      // Update existing auth line
+      const updatedContent = existingContent.replace(authLineRegex, authLine)
+      fs.writeFileSync(npmrcPath, updatedContent, "utf-8")
+      console.log(
+        kleur.green(`Updated authentication token in ${npmrcPath}`) +
+          (registryAdded
+            ? `\n${kleur.green(`Added registry setting to ${npmrcPath}`)}`
+            : ""),
+      )
+      return true
     }
 
     // Add new auth line
@@ -75,7 +104,15 @@ export function setupNpmrc(sessionToken: string): boolean {
       : `${authLine}\n`
 
     fs.writeFileSync(npmrcPath, newContent, "utf-8")
-    console.log(kleur.green(`Added authentication token to ${npmrcPath}`))
+    if (registryAdded) {
+      console.log(
+        kleur.green(
+          `Added authentication token and registry setting to ${npmrcPath}`,
+        ),
+      )
+    } else {
+      console.log(kleur.green(`Added authentication token to ${npmrcPath}`))
+    }
     return true
   } catch (error) {
     console.log(
