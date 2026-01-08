@@ -36,6 +36,10 @@
       "type": "string",
       "description": "Directory path for storing snapshots."
     },
+    "prebuildCommand": {
+      "type": "string",
+      "description": "Command to run before builds."
+    },
     "buildCommand": {
       "type": "string",
       "description": "Override command used for cloud builds."
