@@ -36,6 +36,10 @@
       "type": "string",
       "description": "Directory path for storing snapshots."
     },
+    "buildCommand": {
+      "type": "string",
+      "description": "Override command used for cloud builds."
+    },
     "build": {
       "type": "object",
       "additionalProperties": false,
