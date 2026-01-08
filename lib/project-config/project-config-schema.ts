@@ -6,6 +6,7 @@ export const projectConfigSchema = z.object({
   ignoredFiles: z.array(z.string()).optional(),
   includeBoardFiles: z.array(z.string()).optional(),
   snapshotsDir: z.string().optional(),
+  prebuildCommand: z.string().optional(),
   buildCommand: z.string().optional(),
   build: z
     .object({
