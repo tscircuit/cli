@@ -154,7 +154,7 @@ export const pushSnippet = async ({
       onError(
         `You don't have access to the org "${packageJsonAuthor}". Either:\n` +
           `  1. Get added as a member of the "${packageJsonAuthor}" org, or\n` +
-          `  2. Change the package name in package.json to use your username: "${currentUsername}/${unscopedPackageName}"`,
+          `  2. Change the package name in package.json to use your username: "@tsci/${currentUsername}.${unscopedPackageName}"`,
       )
       return onExit(1)
     }
