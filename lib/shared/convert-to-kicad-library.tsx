@@ -31,7 +31,7 @@ export async function convertToKicadLibrary({
   const userLandTscircuit = await importFromUserLand("tscircuit")
 
   const converter = new KicadLibraryConverter({
-    libraryName,
+    kicadLibraryName: libraryName,
     entrypoint: absoluteFilePath,
 
     buildFileToCircuitJson: async (filePath: string, componentName: string) => {
