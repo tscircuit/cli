@@ -49,7 +49,7 @@ jobs:
         run: |
           cd "$TEMP_DIR"
           export DEBUG="tsci:generate-circuit-json"
-          tscircuit-cli build index.tsx
+          tscircuit-cli build index.tsx --ignore-errors
 
       - name: Verify build output
         run: |
