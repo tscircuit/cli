@@ -34,14 +34,11 @@ export async function convertToKicadLibrary({
     libraryName,
     entrypoint: absoluteFilePath,
 
-    buildFileToCircuitJson: async (
-      tscircuitFilePath: string,
-      tscircuitComponentName: string,
-    ) => {
+    buildFileToCircuitJson: async (filePath: string, componentName: string) => {
       try {
         // Import the tscircuit component module
-        const module = await import(pathToFileURL(tscircuitFilePath).href)
-        const Component = module[tscircuitComponentName]
+        const module = await import(pathToFileURL(filePath).href)
+        const Component = module[componentName]
 
         if (!Component || typeof Component !== "function") {
           return null
@@ -49,21 +46,19 @@ export async function convertToKicadLibrary({
 
         // Create a circuit and render the component
         const runner = new userLandTscircuit.RootCircuit()
-        runner.add(<Component name={tscircuitComponentName} />)
+        runner.add(<Component name={componentName} />)
         await runner.renderUntilSettled()
         return await runner.getCircuitJson()
       } catch (error) {
         console.warn(
-          `Failed to build ${tscircuitComponentName}: ${error instanceof Error ? error.message : error}`,
+          `Failed to build ${componentName}: ${error instanceof Error ? error.message : error}`,
         )
         return null
       }
     },
 
-    getExportsFromTsxFile: async (
-      tscircuitFilePath: string,
-    ): Promise<string[]> => {
-      const module = await import(pathToFileURL(tscircuitFilePath).href)
+    getExportsFromTsxFile: async (filePath: string): Promise<string[]> => {
+      const module = await import(pathToFileURL(filePath).href)
       return Object.keys(module)
     },
 
@@ -93,10 +88,7 @@ export async function convertToKicadLibrary({
 
   // Copy 3D model files to .3dshapes folder
   if (kicadLibOutput.model3dSourcePaths.length > 0) {
-    const shapesDir = path.join(
-      outputDir,
-      `3dmodels/${libraryName}.3dshapes`,
-    )
+    const shapesDir = path.join(outputDir, `3dmodels/${libraryName}.3dshapes`)
     fs.mkdirSync(shapesDir, { recursive: true })
     for (const modelPath of kicadLibOutput.model3dSourcePaths) {
       if (fs.existsSync(modelPath)) {
