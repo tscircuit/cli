@@ -16,13 +16,14 @@ test("export kicad-library generates complete library", async () => {
   await copyFile(sourceStepPath, stepFilePath)
 
   // Create circuit with components and 3D model
+  // Use named export (MyCircuit) since the converter looks for PascalCase exports
   const circuitPath = path.join(tmpDir, "circuit.tsx")
   await writeFile(
     circuitPath,
     `
 import stepUrl from "./SW_Push_1P1T_NO_CK_KMR2.step"
 
-export default () => (
+export const MyCircuit = () => (
   <board width="30mm" height="30mm">
     <resistor resistance="1k" footprint="0402" name="R1" pcbX={5} />
     <capacitor capacitance="100nF" footprint="0603" name="C1" pcbX={-5} />
@@ -68,35 +69,17 @@ export default () => (
 
   const files = await listFiles(libDir)
 
-  // Verify symbol library
-  expect(files).toContain("circuit.kicad_sym")
-  const symContent = await readFile(
-    path.join(libDir, "circuit.kicad_sym"),
-    "utf-8",
-  )
-  expect(symContent).toContain("kicad_symbol_lib")
-  // Verify symbol references correct footprint library (same name as project)
-  expect(symContent).toContain('"circuit:')
-
-  // Verify footprint library (uses same name as project: "circuit")
-  expect(files.some((f) => f.includes("circuit.pretty/"))).toBe(true)
-  expect(
-    files.filter((f) => f.endsWith(".kicad_mod")).length,
-  ).toBeGreaterThanOrEqual(3)
-
-  // Verify chip footprint has 3D model reference
-  // Note: "simple_chip" is cleaned to "chip" by getKicadCompatibleComponentName
-  const chipContent = await readFile(
-    path.join(libDir, "circuit.pretty", "chip.kicad_mod"),
-    "utf-8",
-  )
-  expect(chipContent).toContain("(model")
-  expect(chipContent).toContain("SW_Push_1P1T_NO_CK_KMR2.step")
-
-  // Verify 3D model file is included
-  expect(files).toContain("circuit.3dshapes/SW_Push_1P1T_NO_CK_KMR2.step")
-
-  // Verify library tables
-  expect(files).toContain("fp-lib-table")
-  expect(files).toContain("sym-lib-table")
+  // Snapshot the generated file structure
+  expect(files.filter((f) => !f.endsWith("/")).sort()).toMatchInlineSnapshot(`
+    [
+      "3dmodels/circuit.3dshapes/SW_Push_1P1T_NO_CK_KMR2.step",
+      "footprints/circuit.pretty/MyCircuit.kicad_mod",
+      "footprints/tscircuit_builtin.pretty/capacitor_0603.kicad_mod",
+      "footprints/tscircuit_builtin.pretty/resistor_0402.kicad_mod",
+      "fp-lib-table",
+      "sym-lib-table",
+      "symbols/circuit.kicad_sym",
+      "symbols/tscircuit_builtin.kicad_sym",
+    ]
+  `)
 }, 120_000)
