@@ -35,7 +35,7 @@
     "debug": "^4.4.0",
     "delay": "^6.0.0",
     "dsn-converter": "^0.0.63",
-    "easyeda": "^0.0.227",
+    "easyeda": "^0.0.240",
     "fuse.js": "^7.1.0",
     "get-port": "^7.1.0",
     "globby": "^14.1.0",
@@ -58,7 +58,7 @@
     "semver": "^7.6.3",
     "sharp": "0.32.6",
     "tempy": "^3.1.0",
-    "tscircuit": "^0.0.1014-libonly", 
+    "tscircuit": "^0.0.1136-libonly",
     "tsx": "^4.7.1",
     "typed-ky": "^0.0.4",
     "zod": "^3.23.8"
