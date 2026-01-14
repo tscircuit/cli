@@ -68,7 +68,7 @@ export const buildFile = async (
       }
     }
   } catch (err) {
-    console.error(`Build failed: ${err}`)
+    console.error(err)
     if (err instanceof Error) {
       logTsxExtensionHint(err, input)
       logTypeReexportHint(err, input)
@@ -106,7 +106,7 @@ const logTypeReexportHint = (error: Error, entryFilePath: string) => {
   console.error(
     [
       "",
-      `It looks like "${entryFileName}" re-exports the type-only symbol "${exportName}" from "${fromSpecifier}" without the \"type\" modifier.`,
+      `It looks like "${entryFileName}" re-exports the type-only symbol "${exportName}" from "${fromSpecifier}" without the "type" modifier.`,
       "Type-only exports must be re-exported with `export type { ... }`.",
       "Try rewriting the statement as:",
       `  export type { ${exportName} } from "${fromSpecifier}"`,
