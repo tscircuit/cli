@@ -10,21 +10,36 @@ export default () => (
   </board>
 )`
 
+async function setupProjectWithReact(
+  tmpDir: string,
+  runCommand: (cmd: string) => Promise<{ stdout: string; stderr: string }>,
+  options: { main?: string } = {},
+) {
+  await writeFile(
+    path.join(tmpDir, "package.json"),
+    JSON.stringify({
+      type: "module",
+      main: options.main || "dist/index.js",
+      dependencies: {
+        react: "^19.1.0",
+      },
+    }),
+  )
+  await runCommand("tsci install")
+}
+
 test("build with --transpile generates ESM, CommonJS, and type declarations", async () => {
   const { tmpDir, runCommand } = await getCliTestFixture()
-  const circuitPath = path.join(tmpDir, "test-circuit.tsx")
+  const indexPath = path.join(tmpDir, "index.tsx")
+  const circuitPath = path.join(tmpDir, "test.circuit.tsx")
+  await writeFile(indexPath, circuitCode)
   await writeFile(circuitPath, circuitCode)
-  await writeFile(path.join(tmpDir, "package.json"), "{}")
+  await setupProjectWithReact(tmpDir, runCommand)
 
-  await runCommand(`tsci build ${circuitPath} --transpile --ignore-errors`)
+  await runCommand(`tsci build --transpile --ignore-errors`)
 
   // Check that circuit.json was created
-  const circuitJsonPath = path.join(
-    tmpDir,
-    "dist",
-    "test-circuit",
-    "circuit.json",
-  )
+  const circuitJsonPath = path.join(tmpDir, "dist", "test", "circuit.json")
   const circuitJsonStat = await stat(circuitJsonPath)
   expect(circuitJsonStat.isFile()).toBe(true)
 
@@ -84,10 +99,7 @@ test("build with --transpile warns when main is outside dist", async () => {
   const mainPath = path.join(tmpDir, "index.tsx")
 
   await writeFile(mainPath, circuitCode)
-  await writeFile(
-    path.join(tmpDir, "package.json"),
-    JSON.stringify({ main: "index.tsx" }),
-  )
+  await setupProjectWithReact(tmpDir, runCommand, { main: "index.tsx" })
 
   const { stderr } = await runCommand(`tsci build --transpile`)
 
@@ -98,11 +110,13 @@ test("build with --transpile warns when main is outside dist", async () => {
 
 test("build with --transpile transforms JSX correctly", async () => {
   const { tmpDir, runCommand } = await getCliTestFixture()
-  const circuitPath = path.join(tmpDir, "jsx-test.tsx")
+  const indexPath = path.join(tmpDir, "index.tsx")
+  const circuitPath = path.join(tmpDir, "test.circuit.tsx")
+  await writeFile(indexPath, circuitCode)
   await writeFile(circuitPath, circuitCode)
-  await writeFile(path.join(tmpDir, "package.json"), "{}")
+  await setupProjectWithReact(tmpDir, runCommand)
 
-  await runCommand(`tsci build ${circuitPath} --transpile --ignore-errors`)
+  await runCommand(`tsci build --transpile --ignore-errors`)
 
   // Check that JSX is transformed to jsx() calls from react/jsx-runtime
   const esmPath = path.join(tmpDir, "dist", "index.js")
@@ -122,7 +136,8 @@ test("build with --transpile transforms JSX correctly", async () => {
 
 test("build with --transpile JSX with import from other files", async () => {
   const { tmpDir, runCommand } = await getCliTestFixture()
-  const circuitPath = path.join(tmpDir, "jsx-test.tsx")
+  const indexPath = path.join(tmpDir, "index.tsx")
+  const circuitPath = path.join(tmpDir, "test.circuit.tsx")
   const pinLabelsPath = path.join(tmpDir, "pinLabels.json")
   await writeFile(
     pinLabelsPath,
@@ -132,20 +147,19 @@ test("build with --transpile JSX with import from other files", async () => {
     "pin3": "C1"
   }`,
   )
-  await writeFile(
-    circuitPath,
-    `
-    import pinLabels from "${pinLabelsPath}"
+  const codeWithImport = `
+    import pinLabels from "./pinLabels.json"
     export default () => (
       <board width="10mm" height="10mm">
         <chip name="U1" pins={pinLabels} />
       </board>
     )
-  `,
-  )
-  await writeFile(path.join(tmpDir, "package.json"), "{}")
+  `
+  await writeFile(indexPath, codeWithImport)
+  await writeFile(circuitPath, codeWithImport)
+  await setupProjectWithReact(tmpDir, runCommand)
 
-  await runCommand(`tsci build ${circuitPath} --transpile --ignore-errors`)
+  await runCommand(`tsci build --transpile --ignore-errors`)
 
   // Check that JSX is transformed to jsx() calls from react/jsx-runtime
   const esmPath = path.join(tmpDir, "dist", "index.js")
