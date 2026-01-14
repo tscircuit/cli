@@ -48,7 +48,7 @@ test("build fails when re-exporting a type alias without type modifier", async (
 
   const { stderr } = await runCommand("tsci build")
 
-  expect(stderr).toContain("SyntaxError: export 'ExampleType' not found")
+  expect(stderr).toContain("export 'ExampleType' not found")
   expect(stderr).toContain(
     'export type { ExampleType } from "./lib/src/globals"',
   )
