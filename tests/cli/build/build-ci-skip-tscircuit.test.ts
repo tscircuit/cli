@@ -29,7 +29,7 @@ test("build --ci with alwaysUseLatestTscircuitOnCloud removes tscircuit from pac
   const { stdout } = await runCommand("tsci build --ci")
 
   expect(stdout).toContain(
-    "Skipping tscircuit packages installation (using cloud container versions)",
+    "\nSkipping tscircuit package installation (using cloud container version).",
   )
 
   // Verify package.json was modified to remove tscircuit
