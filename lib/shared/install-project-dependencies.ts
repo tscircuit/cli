@@ -8,10 +8,12 @@ import { handleRegistryAuthError } from "./handle-registry-auth-error"
 
 export interface InstallProjectDependenciesOptions {
   cwd?: string
+  skipTscircuitPackage?: boolean
 }
 
 export async function installProjectDependencies({
   cwd = process.cwd(),
+  skipTscircuitPackage = false,
 }: InstallProjectDependenciesOptions = {}) {
   const projectRoot = path.resolve(cwd)
   const packageJsonPath = path.join(projectRoot, "package.json")
@@ -41,6 +43,30 @@ export async function installProjectDependencies({
   const packageJson = JSON.parse(
     fs.readFileSync(packageJsonPath, "utf-8"),
   ) as Record<string, any>
+
+  // Remove tscircuit packages if skipTscircuitPackage is true
+  // This allows the cloud container's pre-installed version to be used
+  if (skipTscircuitPackage) {
+    const isTscircuitPackage = (name: string) => name === "tscircuit"
+
+    if (packageJson.dependencies) {
+      for (const dep of Object.keys(packageJson.dependencies)) {
+        if (isTscircuitPackage(dep)) {
+          delete packageJson.dependencies[dep]
+        }
+      }
+    }
+    if (packageJson.devDependencies) {
+      for (const dep of Object.keys(packageJson.devDependencies)) {
+        if (isTscircuitPackage(dep)) {
+          delete packageJson.devDependencies[dep]
+        }
+      }
+    }
+    console.log(
+      "Skipping tscircuit package installation (using cloud container version).",
+    )
+  }
 
   if (packageJsonCreated) {
     const tsciDependencies = collectTsciDependencies({ cwd: projectRoot })
