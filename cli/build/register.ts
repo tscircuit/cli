@@ -170,7 +170,10 @@ export const registerBuild = (program: Command) => {
           }
         }
 
-        if (hasErrors && !resolvedOptions?.ignoreErrors) {
+        const allFailed =
+          builtFiles.length > 0 && builtFiles.every((f) => !f.ok)
+        if (allFailed && !resolvedOptions?.ignoreErrors) {
+          console.error("All circuits failed to build")
           process.exit(1)
         }
 
