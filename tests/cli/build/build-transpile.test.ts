@@ -18,6 +18,16 @@ test("build with --transpile generates ESM, CommonJS, and type declarations", as
 
   await runCommand(`tsci build ${circuitPath} --transpile --ignore-errors`)
 
+  // Check that circuit.json was created
+  const circuitJsonPath = path.join(
+    tmpDir,
+    "dist",
+    "test-circuit",
+    "circuit.json",
+  )
+  const circuitJsonStat = await stat(circuitJsonPath)
+  expect(circuitJsonStat.isFile()).toBe(true)
+
   // Check that index.js (ESM) was created
   const esmPath = path.join(tmpDir, "dist", "index.js")
   const esmContent = await readFile(esmPath, "utf-8")
@@ -79,7 +89,7 @@ test("build with --transpile warns when main is outside dist", async () => {
     JSON.stringify({ main: "index.tsx" }),
   )
 
-  const { stderr } = await runCommand(`tsci build --transpile --ignore-errors`)
+  const { stderr } = await runCommand(`tsci build --transpile`)
 
   expect(stderr).toContain(
     'When using transpilation, your package\'s "main" field should point inside the `dist/*` directory, usually to "dist/index.js"',
