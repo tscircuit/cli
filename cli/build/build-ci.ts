@@ -42,7 +42,7 @@ export const applyCiBuildOptions = async ({
 
   await installProjectDependencies({
     cwd: projectDir,
-    skipTscircuitPackages: projectConfig?.alwaysUseLatestTscircuitOnCloud,
+    skipTscircuitPackage: projectConfig?.alwaysUseLatestTscircuitOnCloud,
   })
   const prebuildCommand = projectConfig?.prebuildCommand?.trim()
   const buildCommand = projectConfig?.buildCommand?.trim()
