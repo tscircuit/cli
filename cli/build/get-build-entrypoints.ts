@@ -135,6 +135,7 @@ export async function getBuildEntrypoints({
       : undefined
     return {
       projectDir,
+      mainEntrypoint: resolved,
       previewComponentPath: resolvedPreviewComponentPath,
       circuitFiles: [resolved],
     }
