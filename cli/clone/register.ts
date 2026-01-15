@@ -110,7 +110,7 @@ export const registerClone = (program: Command) => {
         fs.mkdirSync(dirPath, { recursive: true })
 
         for (const fileInfo of packageFileList.package_files) {
-          const filePath = fileInfo.file_path.replace(/^\/|dist\//g, "")
+          const filePath = fileInfo.file_path.replace(/^\/+/, "")
           if (!filePath) continue
 
           const fullPath = path.join(dirPath, filePath)

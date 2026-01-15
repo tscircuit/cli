@@ -8,19 +8,21 @@ test("clone command fetches and creates package files correctly", async () => {
   const { stdout } = await runCommand("tsci clone testuser/my-test-board")
 
   const projectDir = join(tmpDir, "my-test-board")
-  const dirFiles = readdirSync(projectDir)
+  const dirFiles = readdirSync(projectDir).sort()
 
-  expect(dirFiles).toContainValues([
-    "index.tsx",
-    "node_modules",
-    ".npmrc",
-    "bun.lock",
-    "README.md",
-    ".gitignore",
-    "package.json",
-    "tsconfig.json",
-    "circuit.json",
-  ])
+  expect(dirFiles).toMatchInlineSnapshot(`
+    [
+      ".gitignore",
+      ".npmrc",
+      "README.md",
+      "bun.lock",
+      "dist",
+      "index.tsx",
+      "node_modules",
+      "package.json",
+      "tsconfig.json",
+    ]
+  `)
 
   const packageJson = JSON.parse(
     readFileSync(join(projectDir, "package.json"), "utf-8"),
