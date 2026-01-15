@@ -29,10 +29,13 @@ import { registerConvert } from "./convert/register"
 import { registerSimulate } from "./simulate/register"
 import { registerInstall } from "./install/register"
 import { registerTranspile } from "./transpile/register"
+import { registerStaticAssetLoaders } from "lib/shared/register-static-asset-loaders"
 
 export const program = new Command()
 
 program.name("tsci").description("CLI for developing tscircuit packages")
+
+registerStaticAssetLoaders()
 
 registerInit(program)
 
