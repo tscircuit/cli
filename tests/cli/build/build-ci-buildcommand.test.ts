@@ -108,3 +108,46 @@ export default () => (
 
   expect(stdout).toContain("Building")
 }, 60_000)
+
+test("build --ci overrides package.json version when env var set", async () => {
+  const { tmpDir, runCommand } = await getCliTestFixture()
+
+  const buildCommand = `node -e "console.log('build complete')"`
+
+  await writeFile(
+    path.join(tmpDir, "tscircuit.config.json"),
+    JSON.stringify({
+      buildCommand,
+    }),
+  )
+
+  await writeFile(
+    path.join(tmpDir, "package.json"),
+    JSON.stringify({
+      name: "test-build-ci-version",
+      version: "1.0.0",
+    }),
+  )
+
+  const previousOverride = process.env.TSCIRCUIT_PACKAGE_VERSION_OVERRIDE
+  process.env.TSCIRCUIT_PACKAGE_VERSION_OVERRIDE = "9.9.9"
+
+  try {
+    const { stdout } = await runCommand("tsci build --ci")
+
+    const updatedPackageJson = JSON.parse(
+      await readFile(path.join(tmpDir, "package.json"), "utf-8"),
+    )
+
+    expect(updatedPackageJson.version).toBe("9.9.9")
+    expect(stdout).toContain(
+      "Updated package.json version to 9.9.9 from TSCIRCUIT_PACKAGE_VERSION_OVERRIDE.",
+    )
+  } finally {
+    if (previousOverride === undefined) {
+      delete process.env.TSCIRCUIT_PACKAGE_VERSION_OVERRIDE
+    } else {
+      process.env.TSCIRCUIT_PACKAGE_VERSION_OVERRIDE = previousOverride
+    }
+  }
+}, 60_000)

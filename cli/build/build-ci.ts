@@ -1,4 +1,6 @@
 import { execSync } from "node:child_process"
+import { readFile, writeFile } from "node:fs/promises"
+import path from "node:path"
 import kleur from "kleur"
 import { loadProjectConfig } from "lib/project-config"
 import { installProjectDependencies } from "lib/shared/install-project-dependencies"
@@ -36,6 +38,23 @@ export const applyCiBuildOptions = async ({
 }> => {
   if (!options?.ci) {
     return { resolvedOptions: options, handled: false }
+  }
+
+  const versionOverride = process.env.TSCIRCUIT_PACKAGE_VERSION_OVERRIDE?.trim()
+  if (versionOverride) {
+    const packageJsonPath = path.join(projectDir, "package.json")
+    const packageJsonRaw = await readFile(packageJsonPath, "utf-8")
+    const packageJson = JSON.parse(packageJsonRaw)
+    packageJson.version = versionOverride
+    await writeFile(
+      packageJsonPath,
+      `${JSON.stringify(packageJson, null, 2)}\n`,
+    )
+    console.log(
+      kleur.cyan(
+        `Updated package.json version to ${versionOverride} from TSCIRCUIT_PACKAGE_VERSION_OVERRIDE.`,
+      ),
+    )
   }
 
   const projectConfig = loadProjectConfig(projectDir)
