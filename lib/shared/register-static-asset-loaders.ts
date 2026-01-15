@@ -1,13 +1,5 @@
-const STATIC_ASSET_EXTENSIONS = [
-  ".glb",
+const TEXT_STATIC_ASSET_EXTENSIONS = [
   ".gltf",
-  ".png",
-  ".jpg",
-  ".jpeg",
-  ".svg",
-  ".webp",
-  ".gif",
-  ".bmp",
   ".step",
   ".kicad_mod",
   ".kicad_pcb",
@@ -16,7 +8,7 @@ const STATIC_ASSET_EXTENSIONS = [
 ]
 
 const staticAssetFilter = new RegExp(
-  `(${STATIC_ASSET_EXTENSIONS.map((ext) => ext.replace(".", "\\.")).join(
+  `(${TEXT_STATIC_ASSET_EXTENSIONS.map((ext) => ext.replace(".", "\\.")).join(
     "|",
   )})$`,
   "i",
