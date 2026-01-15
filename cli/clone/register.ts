@@ -118,19 +118,38 @@ export const registerClone = (program: Command) => {
 
           try {
             const fileContent = await ky
-              .get<{ package_file: { content_text: string } }>(
-                "package_files/get",
-                {
-                  searchParams: {
-                    package_name: `${author}/${packageName}`,
-                    use_latest_version: true,
-                    file_path: fileInfo.file_path,
-                  },
+              .get<{
+                package_file: {
+                  package_file_id: string
+                  is_text: boolean
+                  content_text: string | null
+                }
+              }>("package_files/get", {
+                searchParams: {
+                  package_name: `${author}/${packageName}`,
+                  use_latest_version: true,
+                  file_path: fileInfo.file_path,
                 },
-              )
+              })
               .json()
 
-            fs.writeFileSync(fullPath, fileContent.package_file.content_text)
+            const { is_text: isText, content_text: contentText } =
+              fileContent.package_file
+
+            if (isText && typeof contentText === "string") {
+              fs.writeFileSync(fullPath, contentText)
+            } else if (!isText) {
+              const fileBuffer = await ky
+                .get("package_files/download", {
+                  searchParams: {
+                    package_file_id: fileContent.package_file.package_file_id,
+                  },
+                })
+                .arrayBuffer()
+              fs.writeFileSync(fullPath, Buffer.from(fileBuffer))
+            } else {
+              console.warn(`Skipping ${filePath} due to empty content.`)
+            }
           } catch (error) {
             console.warn(
               `Skipping ${filePath} due to error:`,
