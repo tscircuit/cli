@@ -30,6 +30,10 @@ import { registerSimulate } from "./simulate/register"
 import { registerInstall } from "./install/register"
 import { registerTranspile } from "./transpile/register"
 
+// Register static asset loader plugin to handle .glb, .step, etc. imports
+// from node_modules packages that contain binary asset imports
+import "../lib/shared/static-asset-loader"
+
 export const program = new Command()
 
 program.name("tsci").description("CLI for developing tscircuit packages")
