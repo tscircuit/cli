@@ -38,6 +38,7 @@ export async function getBuildEntrypoints({
   projectDir: string
   mainEntrypoint?: string
   previewComponentPath?: string
+  siteDefaultComponentPath?: string
   circuitFiles: string[]
 }> {
   const resolvedRoot = path.resolve(rootDir)
@@ -50,6 +51,10 @@ export async function getBuildEntrypoints({
     const resolvedPreviewComponentPath = projectConfig?.previewComponentPath
       ? path.resolve(resolvedRoot, projectConfig.previewComponentPath)
       : undefined
+    const resolvedSiteDefaultComponentPath =
+      projectConfig?.siteDefaultComponentPath
+        ? path.resolve(resolvedRoot, projectConfig.siteDefaultComponentPath)
+        : undefined
 
     if (includeBoardFiles) {
       const files = findBoardFiles({ projectDir: resolvedRoot })
@@ -58,6 +63,7 @@ export async function getBuildEntrypoints({
         return {
           projectDir: resolvedRoot,
           previewComponentPath: resolvedPreviewComponentPath,
+          siteDefaultComponentPath: resolvedSiteDefaultComponentPath,
           circuitFiles: files,
         }
       }
@@ -74,6 +80,7 @@ export async function getBuildEntrypoints({
         projectDir: resolvedRoot,
         mainEntrypoint,
         previewComponentPath: resolvedPreviewComponentPath,
+        siteDefaultComponentPath: resolvedSiteDefaultComponentPath,
         circuitFiles: [mainEntrypoint],
       }
     }
@@ -81,6 +88,7 @@ export async function getBuildEntrypoints({
     return {
       projectDir: resolvedRoot,
       previewComponentPath: resolvedPreviewComponentPath,
+      siteDefaultComponentPath: resolvedSiteDefaultComponentPath,
       circuitFiles: [],
     }
   }
@@ -92,6 +100,10 @@ export async function getBuildEntrypoints({
       const resolvedPreviewComponentPath = projectConfig?.previewComponentPath
         ? path.resolve(resolvedRoot, projectConfig.previewComponentPath)
         : undefined
+      const resolvedSiteDefaultComponentPath =
+        projectConfig?.siteDefaultComponentPath
+          ? path.resolve(resolvedRoot, projectConfig.siteDefaultComponentPath)
+          : undefined
 
       if (includeBoardFiles) {
         const circuitFiles = findBoardFiles({
@@ -108,6 +120,7 @@ export async function getBuildEntrypoints({
         return {
           projectDir: resolvedRoot,
           previewComponentPath: resolvedPreviewComponentPath,
+          siteDefaultComponentPath: resolvedSiteDefaultComponentPath,
           circuitFiles,
         }
       }
@@ -123,6 +136,7 @@ export async function getBuildEntrypoints({
         projectDir,
         mainEntrypoint: mainEntrypoint || undefined,
         previewComponentPath: resolvedPreviewComponentPath,
+        siteDefaultComponentPath: resolvedSiteDefaultComponentPath,
         circuitFiles: mainEntrypoint ? [mainEntrypoint] : [],
       }
     }
@@ -133,9 +147,14 @@ export async function getBuildEntrypoints({
     const resolvedPreviewComponentPath = projectConfig?.previewComponentPath
       ? path.resolve(projectDir, projectConfig.previewComponentPath)
       : undefined
+    const resolvedSiteDefaultComponentPath =
+      projectConfig?.siteDefaultComponentPath
+        ? path.resolve(projectDir, projectConfig.siteDefaultComponentPath)
+        : undefined
     return {
       projectDir,
       previewComponentPath: resolvedPreviewComponentPath,
+      siteDefaultComponentPath: resolvedSiteDefaultComponentPath,
       circuitFiles: [resolved],
     }
   }

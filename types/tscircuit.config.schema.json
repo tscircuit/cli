@@ -18,6 +18,10 @@
       "type": "string",
       "description": "Optional component path used for previews."
     },
+    "siteDefaultComponentPath": {
+      "type": "string",
+      "description": "Default component path to show in generated static sites."
+    },
     "ignoredFiles": {
       "type": "array",
       "items": {
