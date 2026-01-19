@@ -1,11 +1,11 @@
 import { getVirtualFileSystemFromDirPath } from "make-vfs"
 import path from "node:path"
 import fs from "node:fs"
-import { pathToFileURL } from "node:url"
 import Debug from "debug"
 import type { PlatformConfig } from "@tscircuit/props"
 import { abbreviateStringifyObject } from "lib/utils/abbreviate-stringify-object"
 import { importFromUserLand } from "./importFromUserLand"
+import { CircuitRunner } from "@tscircuit/eval"
 
 const debug = Debug("tsci:generate-circuit-json")
 
@@ -47,11 +47,11 @@ export async function generateCircuitJson({
   // Import React and make it globally available for packages referencing it
   const React = await importFromUserLand("react")
   ;(globalThis as any).React = React
-  const userLandTscircuit = await importFromUserLand("tscircuit")
 
-  const runner = new userLandTscircuit.RootCircuit({
+  const runner = new CircuitRunner({
     platform: platformConfig,
   })
+
   const absoluteFilePath = path.isAbsolute(filePath)
     ? filePath
     : path.resolve(process.cwd(), filePath)
@@ -98,34 +98,11 @@ export async function generateCircuitJson({
   }
 
   debug(`fsMap: ${abbreviateStringifyObject(fsMap)}`)
-
-  // Execute the circuit runner with the virtual file system
-  const MainComponent = await import(pathToFileURL(absoluteFilePath).href)
-
-  // Handle both default export and named exports
-  const Component =
-    MainComponent.default ||
-    (Object.keys(MainComponent).find((k) => k[0] === k[0].toUpperCase()) !==
-    undefined
-      ? MainComponent[
-          Object.keys(MainComponent).find(
-            (k) => k[0] === k[0].toUpperCase(),
-          ) as keyof typeof MainComponent
-        ]
-      : undefined)
-
-  if (!Component) {
-    throw new Error(
-      `No component found in "${absoluteFilePath}". Make sure you export a component.`,
-    )
-  }
-
-  runner.add(<Component />)
-
-  // Wait for the circuit to be fully rendered
+  await runner.executeWithFsMap({
+    fsMap: fsMap,
+    mainComponentPath: path.relative(projectDir, absoluteFilePath),
+  })
   await runner.renderUntilSettled()
-
-  // Get the circuit JSON
   const circuitJson = await runner.getCircuitJson()
 
   // Save the circuit JSON to a file if requested
