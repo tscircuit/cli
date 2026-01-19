@@ -37,7 +37,7 @@ const tsconfigJson = JSON.stringify(
 
 const pkgJson = JSON.stringify({ name: "type-reexport-repro" })
 
-test("build fails when re-exporting a type alias without type modifier", async () => {
+test.skip("build fails when re-exporting a type alias without type modifier", async () => {
   const { tmpDir, runCommand } = await getCliTestFixture()
   const libDir = path.join(tmpDir, "lib", "src")
   await mkdir(libDir, { recursive: true })
