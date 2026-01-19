@@ -68,7 +68,7 @@ export const registerBuild = (program: Command) => {
       "Use CDN-hosted JavaScript instead of bundled standalone file for --site",
     )
     .option(
-      "-c, --concurrency <number>",
+      "--concurrency <number>",
       "Number of circuit files to build in parallel (default: 1)",
       "1",
     )
