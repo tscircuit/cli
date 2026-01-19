@@ -17,6 +17,7 @@ const availableGlobalConfigKeys = [
 const availableProjectConfigKeys = [
   "mainEntrypoint",
   "previewComponentPath",
+  "siteDefaultComponentPath",
   "prebuildCommand",
   "buildCommand",
 ] satisfies (keyof TscircuitProjectConfig)[]
@@ -29,7 +30,7 @@ export const registerConfigSet = (program: Command) => {
     .description("Set a configuration value (global or project-specific)")
     .argument(
       "<key>",
-      "Configuration key (e.g., alwaysCloneWithAuthorName, mainEntrypoint, previewComponentPath, prebuildCommand, buildCommand)",
+      "Configuration key (e.g., alwaysCloneWithAuthorName, mainEntrypoint, previewComponentPath, siteDefaultComponentPath, prebuildCommand, buildCommand)",
     )
     .argument("<value>", "Value to set")
     .action((key: string, value: string) => {
@@ -48,6 +49,7 @@ export const registerConfigSet = (program: Command) => {
         if (
           key === "mainEntrypoint" ||
           key === "previewComponentPath" ||
+          key === "siteDefaultComponentPath" ||
           key === "prebuildCommand" ||
           key === "buildCommand"
         ) {

@@ -24,6 +24,9 @@ import runFrameStandaloneBundleContent from "@tscircuit/runframe/standalone" wit
   type: "text",
 }
 
+const normalizeRelativePath = (projectDir: string, targetPath: string) =>
+  path.relative(projectDir, targetPath).split(path.sep).join("/")
+
 export const registerBuild = (program: Command) => {
   program
     .command("build")
@@ -63,6 +66,7 @@ export const registerBuild = (program: Command) => {
           circuitFiles,
           mainEntrypoint,
           previewComponentPath,
+          siteDefaultComponentPath,
         } = await getBuildEntrypoints({
           fileOrDir: file,
         })
@@ -244,6 +248,9 @@ export const registerBuild = (program: Command) => {
           const indexHtml = getStaticIndexHtmlFile({
             files: staticFileReferences,
             standaloneScriptSrc,
+            defaultMainComponentPath: siteDefaultComponentPath
+              ? normalizeRelativePath(projectDir, siteDefaultComponentPath)
+              : undefined,
           })
           fs.writeFileSync(path.join(distDir, "index.html"), indexHtml)
         }
