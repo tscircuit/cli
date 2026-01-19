@@ -1,7 +1,7 @@
 import type { Command } from "commander"
 import path from "node:path"
 import fs from "node:fs"
-import { buildFile } from "./build-file"
+import { buildFile, type BuildFileOutcome } from "./build-file"
 import { applyCiBuildOptions, type BuildCommandOptions } from "./build-ci"
 import { getBuildEntrypoints } from "./get-build-entrypoints"
 import {
@@ -23,6 +23,13 @@ import kleur from "kleur"
 // @ts-ignore
 import runFrameStandaloneBundleContent from "@tscircuit/runframe/standalone" with {
   type: "text",
+}
+type FileBuildResult = {
+  filePath: string
+  relative: string
+  outputDirName: string
+  outputPath: string
+  buildOutcome: BuildFileOutcome
 }
 
 const normalizeRelativePath = (projectDir: string, targetPath: string) =>
@@ -59,6 +66,11 @@ export const registerBuild = (program: Command) => {
     .option(
       "--use-cdn-javascript",
       "Use CDN-hosted JavaScript instead of bundled standalone file for --site",
+    )
+    .option(
+      "-c, --concurrency <number>",
+      "Number of circuit files to build in parallel (default: 1)",
+      "1",
     )
     .action(async (file?: string, options?: BuildCommandOptions) => {
       try {
@@ -105,7 +117,14 @@ export const registerBuild = (program: Command) => {
         const distDir = path.join(projectDir, "dist")
         fs.mkdirSync(distDir, { recursive: true })
 
-        console.log(`Building ${circuitFiles.length} file(s)...`)
+        const concurrency = Math.max(
+          1,
+          parseInt(resolvedOptions?.concurrency?.toString() ?? "1", 10),
+        )
+
+        console.log(
+          `Building ${circuitFiles.length} file(s)${concurrency > 1 ? ` with concurrency ${concurrency}` : ""}...`,
+        )
 
         let hasErrors = false
         const staticFileReferences: StaticBuildFileReference[] = []
@@ -118,14 +137,16 @@ export const registerBuild = (program: Command) => {
         const shouldGenerateKicad =
           resolvedOptions?.kicad || resolvedOptions?.kicadFootprintLibrary
 
-        for (const filePath of circuitFiles) {
+        const buildTasks = circuitFiles.map((filePath) => async () => {
           const relative = path.relative(projectDir, filePath)
           console.log(`Building ${relative}...`)
+
           const outputDirName = relative.replace(
             /(\.board|\.circuit)?\.tsx$/,
             "",
           )
           const outputPath = path.join(distDir, outputDirName, "circuit.json")
+
           const buildOutcome = await buildFile(
             filePath,
             outputPath,
@@ -136,11 +157,34 @@ export const registerBuild = (program: Command) => {
               platformConfig,
             },
           )
+
+          return { filePath, relative, outputDirName, outputPath, buildOutcome }
+        })
+
+        // Execute with concurrency limit using batched processing
+        const buildResults: FileBuildResult[] = []
+        for (let i = 0; i < buildTasks.length; i += concurrency) {
+          const batch = buildTasks.slice(i, i + concurrency)
+          const batchResults = await Promise.all(batch.map((task) => task()))
+          buildResults.push(...batchResults)
+        }
+
+        // Process results in original order
+        for (const result of buildResults) {
+          const {
+            filePath,
+            relative,
+            outputDirName,
+            outputPath,
+            buildOutcome,
+          } = result
+
           builtFiles.push({
             sourcePath: filePath,
             outputPath,
             ok: buildOutcome.ok,
           })
+
           if (!buildOutcome.ok) {
             hasErrors = true
           } else if (resolvedOptions?.site) {
