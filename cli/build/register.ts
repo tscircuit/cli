@@ -14,6 +14,7 @@ import { buildPreviewImages } from "./build-preview-images"
 import { buildPreviewGltf } from "./build-preview-gltf"
 import { generateKicadProject } from "./generate-kicad-project"
 import type { GeneratedKicadProject } from "./generate-kicad-project"
+import { convertToKicadLibrary } from "lib/shared/convert-to-kicad-library"
 import { transpileFile } from "./transpile"
 import { validateMainInDist } from "../utils/validate-main-in-dist"
 import { getLatestTscircuitCdnUrl } from "../utils/get-latest-tscircuit-cdn-url"
@@ -255,6 +256,46 @@ export const registerBuild = (program: Command) => {
           fs.writeFileSync(path.join(distDir, "index.html"), indexHtml)
         }
 
+        if (resolvedOptions?.kicadFootprintLibrary) {
+          console.log("Generating KiCad footprint library...")
+          // Find the main library entrypoint for KiCad library generation
+          const { mainEntrypoint: kicadEntrypoint } = await getBuildEntrypoints(
+            {
+              fileOrDir: file,
+              includeBoardFiles: false,
+            },
+          )
+          const entryFile = kicadEntrypoint
+          if (!entryFile) {
+            console.error(
+              "No entry file found for KiCad library generation. Make sure you have a lib/index.ts or set mainEntrypoint in tscircuit.config.json",
+            )
+            if (!resolvedOptions?.ignoreErrors) {
+              process.exit(1)
+            }
+          } else {
+            const libraryName = path.basename(projectDir)
+            const kicadLibOutputDir = path.join(distDir, "kicad-library")
+            try {
+              await convertToKicadLibrary({
+                filePath: entryFile,
+                libraryName,
+                outputDir: kicadLibOutputDir,
+              })
+              console.log(
+                `  KiCad library generated at ${kleur.dim(path.relative(process.cwd(), kicadLibOutputDir))}`,
+              )
+            } catch (err) {
+              console.error(
+                `Error generating KiCad library: ${err instanceof Error ? err.message : err}`,
+              )
+              if (!resolvedOptions?.ignoreErrors) {
+                process.exit(1)
+              }
+            }
+          }
+        }
+
         const successCount = builtFiles.filter((f) => f.ok).length
         const failCount = builtFiles.length - successCount
         const enabledOpts = [
@@ -263,6 +304,7 @@ export const registerBuild = (program: Command) => {
           resolvedOptions?.previewImages && "preview-images",
           resolvedOptions?.allImages && "all-images",
           resolvedOptions?.kicad && "kicad",
+          resolvedOptions?.kicadFootprintLibrary && "kicad-footprint-library",
           resolvedOptions?.previewGltf && "preview-gltf",
         ].filter(Boolean) as string[]
 

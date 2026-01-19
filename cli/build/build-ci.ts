@@ -64,6 +64,10 @@ export const applyCiBuildOptions = async ({
       site: options?.site ?? true,
       useCdnJavascript: options?.useCdnJavascript ?? true,
       ignoreErrors: options?.ignoreErrors ?? true,
+      kicadFootprintLibrary:
+        options?.kicadFootprintLibrary ??
+        projectConfig?.build?.kicadLibrary ??
+        false,
     },
     handled: false,
   }
