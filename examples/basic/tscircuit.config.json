@@ -1,3 +1,7 @@
 {
-  "mainEntrypoint": "index.tsx"
+  "mainEntrypoint": "index.tsx",
+  "kicadLibraryEntrypointPath": "index.tsx",
+  "build": {
+    "kicadPcm": true
+  }
 }

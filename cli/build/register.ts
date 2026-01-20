@@ -4,6 +4,8 @@ import fs from "node:fs"
 import { buildFile } from "./build-file"
 import { applyCiBuildOptions, type BuildCommandOptions } from "./build-ci"
 import { getBuildEntrypoints } from "./get-build-entrypoints"
+import { loadProjectConfig } from "lib/project-config"
+import { getEntrypoint } from "lib/shared/get-entrypoint"
 import {
   getStaticIndexHtmlFile,
   type StaticBuildFileReference,
@@ -402,10 +404,17 @@ export const registerBuild = (program: Command) => {
               includeBoardFiles: false,
             },
           )
-          const entryFile = kicadEntrypoint
+          const projectConfig = loadProjectConfig(projectDir)
+          const entryFile =
+            projectConfig?.kicadLibraryEntrypointPath != null
+              ? await getEntrypoint({
+                  filePath: projectConfig.kicadLibraryEntrypointPath,
+                  projectDir,
+                })
+              : kicadEntrypoint
           if (!entryFile) {
             console.error(
-              "No entry file found for KiCad library generation. Make sure you have a lib/index.ts or set mainEntrypoint in tscircuit.config.json",
+              "No entry file found for KiCad library generation. Make sure you have a lib/index.ts or set mainEntrypoint/kicadLibraryEntrypointPath in tscircuit.config.json",
             )
             if (!resolvedOptions?.ignoreErrors) {
               process.exit(1)
@@ -442,9 +451,18 @@ export const registerBuild = (program: Command) => {
             },
           )
 
-          if (!kicadEntrypoint) {
+          const projectConfig = loadProjectConfig(projectDir)
+          const entryFile =
+            projectConfig?.kicadLibraryEntrypointPath != null
+              ? await getEntrypoint({
+                  filePath: projectConfig.kicadLibraryEntrypointPath,
+                  projectDir,
+                })
+              : kicadEntrypoint
+
+          if (!entryFile) {
             console.error(
-              "No entry file found for KiCad PCM generation. Make sure you have a lib/index.ts or set mainEntrypoint in tscircuit.config.json",
+              "No entry file found for KiCad PCM generation. Make sure you have a lib/index.ts or set mainEntrypoint/kicadLibraryEntrypointPath in tscircuit.config.json",
             )
             if (!resolvedOptions?.ignoreErrors) {
               process.exit(1)
@@ -452,7 +470,7 @@ export const registerBuild = (program: Command) => {
           } else {
             try {
               await buildKicadPcm({
-                entryFile: kicadEntrypoint,
+                entryFile,
                 projectDir,
                 distDir,
               })

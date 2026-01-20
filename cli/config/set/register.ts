@@ -16,6 +16,7 @@ const availableGlobalConfigKeys = [
 // Keys for project-specific tscircuit.config.json
 const availableProjectConfigKeys = [
   "mainEntrypoint",
+  "kicadLibraryEntrypointPath",
   "previewComponentPath",
   "siteDefaultComponentPath",
   "prebuildCommand",
@@ -30,7 +31,7 @@ export const registerConfigSet = (program: Command) => {
     .description("Set a configuration value (global or project-specific)")
     .argument(
       "<key>",
-      "Configuration key (e.g., alwaysCloneWithAuthorName, mainEntrypoint, previewComponentPath, siteDefaultComponentPath, prebuildCommand, buildCommand)",
+      "Configuration key (e.g., alwaysCloneWithAuthorName, mainEntrypoint, kicadLibraryEntrypointPath, previewComponentPath, siteDefaultComponentPath, prebuildCommand, buildCommand)",
     )
     .argument("<value>", "Value to set")
     .action((key: string, value: string) => {
@@ -48,6 +49,7 @@ export const registerConfigSet = (program: Command) => {
         const projectDir = process.cwd()
         if (
           key === "mainEntrypoint" ||
+          key === "kicadLibraryEntrypointPath" ||
           key === "previewComponentPath" ||
           key === "siteDefaultComponentPath" ||
           key === "prebuildCommand" ||
