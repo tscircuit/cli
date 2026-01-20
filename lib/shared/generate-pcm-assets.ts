@@ -185,7 +185,12 @@ export async function generatePcmAssets(
 /**
  * Recursively adds all files from a directory to a JSZip instance.
  */
-function addDirectoryToZip(zip: JSZip, dirPath: string, zipPath: string): void {
+function addDirectoryToZip(opts: {
+  zip: JSZip
+  dirPath: string
+  zipPath: string
+}): void {
+  const { zip, dirPath, zipPath } = opts
   const entries = fs.readdirSync(dirPath, { withFileTypes: true })
 
   for (const entry of entries) {
@@ -193,7 +198,7 @@ function addDirectoryToZip(zip: JSZip, dirPath: string, zipPath: string): void {
     const entryZipPath = zipPath ? `${zipPath}/${entry.name}` : entry.name
 
     if (entry.isDirectory()) {
-      addDirectoryToZip(zip, fullPath, entryZipPath)
+      addDirectoryToZip({ zip, dirPath: fullPath, zipPath: entryZipPath })
     } else {
       const content = fs.readFileSync(fullPath)
       zip.file(entryZipPath, content)
@@ -219,19 +224,19 @@ async function createPcmZip(options: {
   // Add footprints directory if it exists
   const footprintsDir = path.join(kicadLibraryPath, "footprints")
   if (fs.existsSync(footprintsDir)) {
-    addDirectoryToZip(zip, footprintsDir, "footprints")
+    addDirectoryToZip({ zip, dirPath: footprintsDir, zipPath: "footprints" })
   }
 
   // Add symbols directory if it exists
   const symbolsDir = path.join(kicadLibraryPath, "symbols")
   if (fs.existsSync(symbolsDir)) {
-    addDirectoryToZip(zip, symbolsDir, "symbols")
+    addDirectoryToZip({ zip, dirPath: symbolsDir, zipPath: "symbols" })
   }
 
   // Add 3dmodels directory if it exists
   const modelsDir = path.join(kicadLibraryPath, "3dmodels")
   if (fs.existsSync(modelsDir)) {
-    addDirectoryToZip(zip, modelsDir, "3dmodels")
+    addDirectoryToZip({ zip, dirPath: modelsDir, zipPath: "3dmodels" })
   }
 
   // Generate ZIP and write to file
