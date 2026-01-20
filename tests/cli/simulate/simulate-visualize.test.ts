@@ -70,7 +70,7 @@ test(
     await writeFile(circuitPath, circuitCode)
 
     const { stdout, stderr } = await runCommand(
-      `tsci simulate visualize ${circuitPath}`,
+      `tsci simulate ${circuitPath} --visualize`,
     )
 
     // Check that the command executed successfully
@@ -103,7 +103,7 @@ test(
     await writeFile(circuitPath, circuitCode)
 
     const { stdout } = await runCommand(
-      `tsci simulate visualize ${circuitPath} -o ${outputPath}`,
+      `tsci simulate ${circuitPath} --visualize -o ${outputPath}`,
     )
 
     // Verify the custom output file was created
