@@ -101,8 +101,10 @@ export async function generatePcmAssets(
   const sha256 = crypto.createHash("sha256").update(zipBuffer).digest("hex")
   const zipSize = zipBuffer.length
 
-  // Determine download URL
-  const downloadUrl = baseUrl ? `${baseUrl}/${zipFileName}` : `./${zipFileName}`
+  // Determine download URL (baseUrl + /pcm/ path + filename)
+  const downloadUrl = baseUrl
+    ? `${baseUrl}/pcm/${zipFileName}`
+    : `./${zipFileName}`
 
   // Create packages.json
   const packagesJson = {
@@ -148,7 +150,7 @@ export async function generatePcmAssets(
 
   // Create repository.json
   const packagesJsonUrl = baseUrl
-    ? `${baseUrl}/packages.json`
+    ? `${baseUrl}/pcm/packages.json`
     : "./packages.json"
 
   const repositoryJson = {

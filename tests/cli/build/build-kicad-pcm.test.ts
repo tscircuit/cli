@@ -55,7 +55,7 @@ export const MyResistor = () => (
     await readFile(path.join(pcmDir, "repository.json"), "utf-8"),
   )
   expect(repositoryJson.packages.url).toContain(
-    "testuser--my-resistor.tscircuit.app",
+    "testuser--my-resistor.tscircuit.app/pcm/packages.json",
   )
 
   // Verify ZIP exists in pcm folder

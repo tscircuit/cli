@@ -44,8 +44,8 @@ export async function buildKicadPcm({
 
   // Generate PCM assets
   const pcmOutputDir = path.join(distDir, "pcm")
-  // URL format: https://{author}--{packageName}.tscircuit.app/pcm
-  const baseUrl = `https://${author}--${packageName}.tscircuit.app/pcm`
+  // Base URL format: https://{author}--{packageName}.tscircuit.app
+  const baseUrl = `https://${author}--${packageName}.tscircuit.app`
 
   await generatePcmAssets({
     packageName,
@@ -60,5 +60,7 @@ export async function buildKicadPcm({
   console.log(
     `  KiCad PCM assets generated at ${kleur.dim(path.relative(process.cwd(), pcmOutputDir))}`,
   )
-  console.log(`  Repository URL: ${kleur.cyan(`${baseUrl}/repository.json`)}`)
+  console.log(
+    `  Repository URL: ${kleur.cyan(`${baseUrl}/pcm/repository.json`)}`,
+  )
 }
