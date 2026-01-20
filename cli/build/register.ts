@@ -15,6 +15,7 @@ import { buildPreviewGltf } from "./build-preview-gltf"
 import { generateKicadProject } from "./generate-kicad-project"
 import type { GeneratedKicadProject } from "./generate-kicad-project"
 import { convertToKicadLibrary } from "lib/shared/convert-to-kicad-library"
+import { buildKicadPcm } from "./build-kicad-pcm"
 import { transpileFile } from "./transpile"
 import { validateMainInDist } from "../utils/validate-main-in-dist"
 import { getLatestTscircuitCdnUrl } from "../utils/get-latest-tscircuit-cdn-url"
@@ -55,6 +56,10 @@ export const registerBuild = (program: Command) => {
     .option(
       "--preview-gltf",
       "Generate a GLTF file from the preview entrypoint",
+    )
+    .option(
+      "--kicad-pcm",
+      "Generate KiCad PCM (Plugin and Content Manager) assets in dist/pcm",
     )
     .option(
       "--use-cdn-javascript",
@@ -296,6 +301,40 @@ export const registerBuild = (program: Command) => {
           }
         }
 
+        if (resolvedOptions?.kicadPcm) {
+          console.log("Generating KiCad PCM assets...")
+          const { mainEntrypoint: kicadEntrypoint } = await getBuildEntrypoints(
+            {
+              fileOrDir: file,
+              includeBoardFiles: false,
+            },
+          )
+
+          if (!kicadEntrypoint) {
+            console.error(
+              "No entry file found for KiCad PCM generation. Make sure you have a lib/index.ts or set mainEntrypoint in tscircuit.config.json",
+            )
+            if (!resolvedOptions?.ignoreErrors) {
+              process.exit(1)
+            }
+          } else {
+            try {
+              await buildKicadPcm({
+                entryFile: kicadEntrypoint,
+                projectDir,
+                distDir,
+              })
+            } catch (err) {
+              console.error(
+                `Error generating KiCad PCM assets: ${err instanceof Error ? err.message : err}`,
+              )
+              if (!resolvedOptions?.ignoreErrors) {
+                process.exit(1)
+              }
+            }
+          }
+        }
+
         const successCount = builtFiles.filter((f) => f.ok).length
         const failCount = builtFiles.length - successCount
         const enabledOpts = [
@@ -305,6 +344,7 @@ export const registerBuild = (program: Command) => {
           resolvedOptions?.allImages && "all-images",
           resolvedOptions?.kicad && "kicad",
           resolvedOptions?.kicadFootprintLibrary && "kicad-footprint-library",
+          resolvedOptions?.kicadPcm && "kicad-pcm",
           resolvedOptions?.previewGltf && "preview-gltf",
         ].filter(Boolean) as string[]
 
