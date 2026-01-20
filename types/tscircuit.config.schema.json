@@ -60,6 +60,10 @@
           "type": "boolean",
           "description": "Enable KiCad library output in build."
         },
+        "kicadPcm": {
+          "type": "boolean",
+          "description": "Enable KiCad PCM (Plugin and Content Manager) assets output in build."
+        },
         "previewImages": {
           "type": "boolean",
           "description": "Enable preview image outputs in build."
