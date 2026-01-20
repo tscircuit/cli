@@ -14,6 +14,7 @@ export const projectConfigSchema = z.object({
     .object({
       circuitJson: z.boolean().optional(),
       kicadLibrary: z.boolean().optional(),
+      kicadPcm: z.boolean().optional(),
       previewImages: z.boolean().optional(),
       typescriptLibrary: z.boolean().optional(),
     })
