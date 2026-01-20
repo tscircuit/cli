@@ -54,7 +54,9 @@ export const MyResistor = () => (
   const repositoryJson = JSON.parse(
     await readFile(path.join(pcmDir, "repository.json"), "utf-8"),
   )
-  expect(repositoryJson.packages.url).toContain("testuser--my-resistor.tscircuit.app")
+  expect(repositoryJson.packages.url).toContain(
+    "testuser--my-resistor.tscircuit.app",
+  )
 
   // Verify ZIP exists in packages folder
   const packagesDir = path.join(pcmDir, "packages")
