@@ -150,7 +150,9 @@ export async function generatePcmAssets(
     .digest("hex")
 
   // Create repository.json
-  const packagesJsonUrl = baseUrl ? `${baseUrl}/packages.json` : "./packages.json"
+  const packagesJsonUrl = baseUrl
+    ? `${baseUrl}/packages.json`
+    : "./packages.json"
 
   const repositoryJson = {
     $schema: "https://go.kicad.org/pcm/schemas/v1",
@@ -184,11 +186,7 @@ export async function generatePcmAssets(
 /**
  * Recursively adds all files from a directory to a JSZip instance.
  */
-function addDirectoryToZip(
-  zip: JSZip,
-  dirPath: string,
-  zipPath: string,
-): void {
+function addDirectoryToZip(zip: JSZip, dirPath: string, zipPath: string): void {
   const entries = fs.readdirSync(dirPath, { withFileTypes: true })
 
   for (const entry of entries) {

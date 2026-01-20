@@ -336,7 +336,8 @@ export const registerBuild = (program: Command) => {
                   packageJson.name?.split("/").pop()?.split(".").pop() ||
                   path.basename(projectDir)
                 const version = packageJson.version || "1.0.0"
-                const author = getPackageAuthor(packageJson.name || "") || "tscircuit"
+                const author =
+                  getPackageAuthor(packageJson.name || "") || "tscircuit"
                 const description = packageJson.description || ""
 
                 const libraryName = path.basename(projectDir)

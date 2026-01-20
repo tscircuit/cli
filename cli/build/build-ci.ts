@@ -69,10 +69,7 @@ export const applyCiBuildOptions = async ({
         options?.kicadFootprintLibrary ??
         projectConfig?.build?.kicadLibrary ??
         false,
-      kicadPcm:
-        options?.kicadPcm ??
-        projectConfig?.build?.kicadPcm ??
-        false,
+      kicadPcm: options?.kicadPcm ?? projectConfig?.build?.kicadPcm ?? false,
     },
     handled: false,
   }
