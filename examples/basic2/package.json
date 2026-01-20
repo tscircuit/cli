@@ -2,7 +2,6 @@
   "name": "@tsci/unknown.basic2",
   "version": "1.0.0",
   "description": "A tscircuit component package",
-  "type": "module",
   "main": "index.tsx",
   "license": "MIT",
   "keywords": [

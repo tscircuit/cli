@@ -15,7 +15,6 @@ export const generatePackageJson = (
     name,
     version: "1.0.0",
     description: "A tscircuit component package",
-    type: "module",
     main: "index.tsx",
     license: "MIT",
     keywords: ["tscircuit", "circuit", "pcb", "electronics"],
