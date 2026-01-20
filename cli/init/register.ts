@@ -6,15 +6,14 @@ import { generateTsConfig } from "lib/shared/generate-ts-config"
 import { writeFileIfNotExists } from "lib/shared/write-file-if-not-exists"
 import { generateGitIgnoreFile } from "lib/shared/generate-gitignore-file"
 import { generatePackageJson } from "lib/shared/generate-package-json"
-import { generateClaudeMd } from "lib/shared/generate-claude-md"
-import { setupGithubActions } from "lib/shared/setup-github-actions"
-import { generateReadmeMd } from "lib/shared/generate-readme-md"
+import { setupTscircuitSkill } from "lib/shared/setup-tscircuit-skill"
 import { cliConfig, getSessionToken } from "lib/cli-config"
 import { jwtDecode } from "jwt-decode"
 import { loadProjectConfig, saveProjectConfig } from "lib/project-config"
 import { checkForTsciUpdates } from "lib/shared/check-for-cli-update"
 import { prompts } from "lib/utils/prompts"
 import { fetchAccount } from "lib/registry-api/fetch-account"
+import kleur from "kleur"
 
 export const registerInit = (program: Command) => {
   program
@@ -121,7 +120,7 @@ export default () => (
 
         const projectConfig = loadProjectConfig(projectDir) ?? {}
         projectConfig.mainEntrypoint = "index.tsx"
-        if (saveProjectConfig(projectConfig, projectDir)) {
+        if (saveProjectConfig(null, projectDir)) {
           console.log(
             "Updated tscircuit.config.json with mainEntrypoint: 'index.tsx'",
           )
@@ -141,17 +140,23 @@ export default () => (
         generateTsConfig(projectDir)
         // Create .gitignore file
         generateGitIgnoreFile(projectDir)
-        // Generate CLAUDE.md for AI assistance
-        generateClaudeMd(projectDir)
-        // Setup GitHub Actions workflows
-        setupGithubActions(projectDir, true)
-        // Generate README.md
-        generateReadmeMd(projectDir, { packageName })
+        // Setup tscircuit claude skill
+        await setupTscircuitSkill(projectDir, options?.yes)
         // Setup project dependencies
         setupTsciProject(projectDir, options?.install ? undefined : [])
 
         console.info(
-          `🎉 Initialization complete! Run ${directory ? `"cd ${directory}" & ` : ""}"tsci dev" to start developing.`,
+          "\n",
+          kleur.green("🎉 Initialization complete!"),
+          "Run ",
+          kleur.bold(
+            kleur.blue(
+              `${
+                directory ? `${kleur.bold(`cd ${directory}`)} & ` : ""
+              }${kleur.bold("tsci dev")}`,
+            ),
+          ),
+          " to start developing.",
         )
         process.exit(0)
       },
