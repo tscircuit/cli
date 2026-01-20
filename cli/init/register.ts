@@ -9,7 +9,7 @@ import { generatePackageJson } from "lib/shared/generate-package-json"
 import { setupTscircuitSkill } from "lib/shared/setup-tscircuit-skill"
 import { cliConfig, getSessionToken } from "lib/cli-config"
 import { jwtDecode } from "jwt-decode"
-import { loadProjectConfig, saveProjectConfig } from "lib/project-config"
+import { saveProjectConfig } from "lib/project-config"
 import { checkForTsciUpdates } from "lib/shared/check-for-cli-update"
 import { prompts } from "lib/utils/prompts"
 import { fetchAccount } from "lib/registry-api/fetch-account"
@@ -100,7 +100,7 @@ export const registerInit = (program: Command) => {
 
         // Create essential project files
         writeFileIfNotExists(
-          path.join(projectDir, "index.tsx"),
+          path.join(projectDir, "index.circuit.tsx"),
           `
 export default () => (
   <board>
@@ -118,11 +118,9 @@ export default () => (
 `,
         )
 
-        const projectConfig = loadProjectConfig(projectDir) ?? {}
-        projectConfig.mainEntrypoint = "index.tsx"
         if (saveProjectConfig(null, projectDir)) {
           console.log(
-            "Updated tscircuit.config.json with mainEntrypoint: 'index.tsx'",
+            "Updated tscircuit.config.json with mainEntrypoint: 'index.circuit.tsx'",
           )
         }
 
