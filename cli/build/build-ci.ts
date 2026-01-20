@@ -23,7 +23,11 @@ export interface BuildCommandOptions {
 
 const runCommand = (command: string, cwd: string) => {
   console.log(kleur.cyan(`Running: ${command}`))
-  execSync(command, { stdio: "inherit", cwd })
+  execSync(command, {
+    stdio: "inherit",
+    cwd,
+    env: { ...process.env, TSCIRCUIT_INSIDE_BUILD_COMMAND: "1" },
+  })
 }
 
 export const applyCiBuildOptions = async ({
@@ -42,6 +46,9 @@ export const applyCiBuildOptions = async ({
 
   const projectConfig = loadProjectConfig(projectDir)
 
+  // Check if we're already inside a buildCommand execution to prevent infinite recursion
+  const insideBuildCommand = process.env.TSCIRCUIT_INSIDE_BUILD_COMMAND === "1"
+
   await installProjectDependencies({
     cwd: projectDir,
     skipTscircuitPackage: projectConfig?.alwaysUseLatestTscircuitOnCloud,
@@ -49,13 +56,16 @@ export const applyCiBuildOptions = async ({
   const prebuildCommand = projectConfig?.prebuildCommand?.trim()
   const buildCommand = projectConfig?.buildCommand?.trim()
 
-  if (prebuildCommand) {
-    runCommand(prebuildCommand, projectDir)
-  }
+  // Only run prebuildCommand and buildCommand if we're not already inside a buildCommand
+  if (!insideBuildCommand) {
+    if (prebuildCommand) {
+      runCommand(prebuildCommand, projectDir)
+    }
 
-  if (buildCommand) {
-    runCommand(buildCommand, projectDir)
-    return { resolvedOptions: options, handled: true }
+    if (buildCommand) {
+      runCommand(buildCommand, projectDir)
+      return { resolvedOptions: options, handled: true }
+    }
   }
 
   return {
