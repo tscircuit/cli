@@ -55,4 +55,4 @@ jobs:
         run: |
           cd "$TEMP_DIR"
           ls -la
-          test -f index.tsx || (echo "index.tsx not found" && exit 1)
+          test -f index.circuit.tsx || (echo "index.circuit.tsx not found" && exit 1)
