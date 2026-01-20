@@ -17,6 +17,7 @@ export interface BuildCommandOptions {
   kicadFootprintLibrary?: boolean
   previewGltf?: boolean
   useCdnJavascript?: boolean
+  concurrency?: string
 }
 
 const runCommand = (command: string, cwd: string) => {
