@@ -3,6 +3,7 @@ import { generateCircuitJson } from "lib/shared/generate-circuit-json"
 import { runSimulation } from "lib/eecircuit-engine/run-simulation"
 import { resultToTable } from "lib/shared/result-to-table"
 import { getSpiceWithPaddedSim } from "lib/shared/get-spice-with-sim"
+import { registerSimulateVisualize } from "./visualize"
 import type { PlatformConfig } from "@tscircuit/props"
 
 export const registerSimulate = (program: Command) => {
@@ -47,4 +48,7 @@ export const registerSimulate = (program: Command) => {
       console.log(tableContent)
       process.exit(0)
     })
+
+  // Register the visualize subcommand
+  registerSimulateVisualize(simulateCommand)
 }

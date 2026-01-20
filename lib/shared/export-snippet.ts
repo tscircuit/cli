@@ -5,6 +5,7 @@ import { convertCircuitJsonToReadableNetlist } from "circuit-json-to-readable-ne
 import {
   convertCircuitJsonToPcbSvg,
   convertCircuitJsonToSchematicSvg,
+  convertCircuitJsonToSchematicSimulationSvg,
 } from "circuit-to-svg"
 import { convertCircuitJsonToGltf } from "circuit-json-to-gltf"
 import { convertCircuitJsonToDsnString } from "dsn-converter"
@@ -15,6 +16,8 @@ import {
 import { convertToKicadLibrary } from "./convert-to-kicad-library"
 import JSZip from "jszip"
 import { generateCircuitJson } from "lib/shared/generate-circuit-json"
+import { getSpiceWithPaddedSim } from "lib/shared/get-spice-with-sim"
+import { runSimulation } from "lib/eecircuit-engine/run-simulation"
 import type { PlatformConfig } from "@tscircuit/props"
 
 const writeFileAsync = promisify(fs.writeFile)
@@ -24,6 +27,7 @@ export const ALLOWED_EXPORT_FORMATS = [
   "circuit-json",
   "schematic-svg",
   "pcb-svg",
+  "schematic-simulation-svg",
   "gerbers",
   "readable-netlist",
   "gltf",
@@ -42,6 +46,7 @@ const OUTPUT_EXTENSIONS: Record<ExportFormat, string> = {
   "circuit-json": ".circuit.json",
   "schematic-svg": "-schematic.svg",
   "pcb-svg": "-pcb.svg",
+  "schematic-simulation-svg": "-schematic-simulation.svg",
   gerbers: "-gerbers.zip",
   "readable-netlist": "-readable.netlist",
   gltf: ".gltf",
@@ -125,6 +130,15 @@ export const exportSnippet = async ({
     case "pcb-svg":
       outputContent = convertCircuitJsonToPcbSvg(circuitData.circuitJson)
       break
+    case "schematic-simulation-svg": {
+      const spiceString = getSpiceWithPaddedSim(circuitData.circuitJson)
+      const { result } = await runSimulation(spiceString)
+      outputContent = convertCircuitJsonToSchematicSimulationSvg(
+        circuitData.circuitJson,
+        result,
+      )
+      break
+    }
     case "specctra-dsn":
       outputContent = convertCircuitJsonToDsnString(circuitData.circuitJson)
       break
