@@ -17,7 +17,7 @@ A tscircuit component package.
 ### Prerequisites
 
 - [Bun](https://bun.sh/) or Node.js 20+
-- TSCircuit CLI (\`npm install -g @tscircuit/cli\`)
+- TSCircuit CLI (\`bun install -g @tscircuit/cli\`)
 
 ### Installation
 

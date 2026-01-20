@@ -2,7 +2,10 @@ import fs from "node:fs"
 import path from "node:path"
 import { writeFileIfNotExists } from "./write-file-if-not-exists"
 
-export const setupGithubActions = (projectDir: string = process.cwd()) => {
+export const setupGithubActions = (
+  projectDir: string = process.cwd(),
+  skipFindingGitRoot = false,
+) => {
   const findGitRoot = (startDir: string): string | null => {
     let dir = path.resolve(startDir)
     while (dir !== path.parse(dir).root) {
@@ -14,7 +17,9 @@ export const setupGithubActions = (projectDir: string = process.cwd()) => {
     return null
   }
 
-  const gitRoot = findGitRoot(projectDir) ?? projectDir
+  const gitRoot = skipFindingGitRoot
+    ? projectDir
+    : (findGitRoot(projectDir) ?? projectDir)
   const workflowsDir = path.join(gitRoot, ".github", "workflows")
   fs.mkdirSync(workflowsDir, { recursive: true })
 
@@ -30,12 +35,9 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - uses: actions/setup-node@v3
-        with:
-          node-version: 22
       - uses: oven-sh/setup-bun@v2
       - run: bun install
-      - run: bunx tsci build
+      - run: bun x tsci build
 `
 
   const snapshotWorkflow = `name: tscircuit Snapshot
@@ -50,12 +52,9 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - uses: actions/setup-node@v3
-        with:
-          node-version: 22
       - uses: oven-sh/setup-bun@v2
       - run: bun install
-      - run: bunx tsci snapshot
+      - run: bun x tsci snapshot
 `
 
   writeFileIfNotExists(
