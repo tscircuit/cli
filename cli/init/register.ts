@@ -6,6 +6,9 @@ import { generateTsConfig } from "lib/shared/generate-ts-config"
 import { writeFileIfNotExists } from "lib/shared/write-file-if-not-exists"
 import { generateGitIgnoreFile } from "lib/shared/generate-gitignore-file"
 import { generatePackageJson } from "lib/shared/generate-package-json"
+import { generateClaudeMd } from "lib/shared/generate-claude-md"
+import { setupGithubActions } from "lib/shared/setup-github-actions"
+import { generateReadmeMd } from "lib/shared/generate-readme-md"
 import { cliConfig, getSessionToken } from "lib/cli-config"
 import { jwtDecode } from "jwt-decode"
 import { loadProjectConfig, saveProjectConfig } from "lib/project-config"
@@ -132,6 +135,12 @@ export default () => (
         generateTsConfig(projectDir)
         // Create .gitignore file
         generateGitIgnoreFile(projectDir)
+        // Generate CLAUDE.md for AI assistance
+        generateClaudeMd(projectDir)
+        // Setup GitHub Actions workflows
+        setupGithubActions(projectDir)
+        // Generate README.md
+        generateReadmeMd(projectDir, { packageName })
         // Setup project dependencies
         setupTsciProject(projectDir, options?.install ? undefined : [])
 

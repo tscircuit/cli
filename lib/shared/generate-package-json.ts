@@ -11,21 +11,30 @@ export const generatePackageJson = (
     opts.packageName ||
     (opts.authorName ? `@tsci/${opts.authorName}.${baseName}` : baseName)
 
-  const packageJsonContent = {
+  const packageJsonContent: Record<string, unknown> = {
     name,
     version: "1.0.0",
+    description: "A tscircuit component package",
+    type: "module",
     main: "index.tsx",
-    keywords: ["tscircuit"],
+    license: "MIT",
+    keywords: ["tscircuit", "circuit", "pcb", "electronics"],
     scripts: {
       dev: "tsci dev",
       build: "tsci build",
       snapshot: "tsci snapshot",
       "snapshot:update": "tsci snapshot --update",
       start: "tsci dev",
+      typecheck: "tsc --noEmit",
     },
     devDependencies: {
       tscircuit: "latest",
+      typescript: "^5.0.0",
     },
+  }
+
+  if (opts.authorName) {
+    packageJsonContent.author = opts.authorName
   }
 
   writeFileIfNotExists(
