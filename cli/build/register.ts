@@ -15,8 +15,7 @@ import { buildPreviewGltf } from "./build-preview-gltf"
 import { generateKicadProject } from "./generate-kicad-project"
 import type { GeneratedKicadProject } from "./generate-kicad-project"
 import { convertToKicadLibrary } from "lib/shared/convert-to-kicad-library"
-import { generatePcmAssets } from "lib/shared/generate-pcm-assets"
-import { getPackageAuthor } from "lib/utils/get-package-author"
+import { buildKicadPcm } from "./build-kicad-pcm"
 import { transpileFile } from "./transpile"
 import { validateMainInDist } from "../utils/validate-main-in-dist"
 import { getLatestTscircuitCdnUrl } from "../utils/get-latest-tscircuit-cdn-url"
@@ -304,15 +303,14 @@ export const registerBuild = (program: Command) => {
 
         if (resolvedOptions?.kicadPcm) {
           console.log("Generating KiCad PCM assets...")
-          // Find the main library entrypoint for KiCad library generation
           const { mainEntrypoint: kicadEntrypoint } = await getBuildEntrypoints(
             {
               fileOrDir: file,
               includeBoardFiles: false,
             },
           )
-          const entryFile = kicadEntrypoint
-          if (!entryFile) {
+
+          if (!kicadEntrypoint) {
             console.error(
               "No entry file found for KiCad PCM generation. Make sure you have a lib/index.ts or set mainEntrypoint in tscircuit.config.json",
             )
@@ -320,66 +318,18 @@ export const registerBuild = (program: Command) => {
               process.exit(1)
             }
           } else {
-            // Read package.json for metadata
-            const packageJsonPath = path.join(projectDir, "package.json")
-            if (!fs.existsSync(packageJsonPath)) {
-              console.error("No package.json found for KiCad PCM generation")
+            try {
+              await buildKicadPcm({
+                entryFile: kicadEntrypoint,
+                projectDir,
+                distDir,
+              })
+            } catch (err) {
+              console.error(
+                `Error generating KiCad PCM assets: ${err instanceof Error ? err.message : err}`,
+              )
               if (!resolvedOptions?.ignoreErrors) {
                 process.exit(1)
-              }
-            } else {
-              try {
-                const packageJson = JSON.parse(
-                  fs.readFileSync(packageJsonPath, "utf-8"),
-                )
-                const packageName =
-                  packageJson.name?.split("/").pop()?.split(".").pop() ||
-                  path.basename(projectDir)
-                const version = packageJson.version || "1.0.0"
-                const author =
-                  getPackageAuthor(packageJson.name || "") || "tscircuit"
-                const description = packageJson.description || ""
-
-                const libraryName = path.basename(projectDir)
-                const kicadLibOutputDir = path.join(distDir, "kicad-library")
-
-                // First generate kicad-library if not already done
-                if (!fs.existsSync(kicadLibOutputDir)) {
-                  await convertToKicadLibrary({
-                    filePath: entryFile,
-                    libraryName,
-                    outputDir: kicadLibOutputDir,
-                  })
-                }
-
-                // Then generate PCM assets
-                const pcmOutputDir = path.join(distDir, "pcm")
-                // Compute the base URL where PCM will be hosted on tscircuit.app
-                // URL format: https://{author}--{packageName}.tscircuit.app/pcm
-                const baseUrl = `https://${author}--${packageName}.tscircuit.app/pcm`
-                const result = await generatePcmAssets({
-                  packageName,
-                  version,
-                  author,
-                  description,
-                  kicadLibraryPath: kicadLibOutputDir,
-                  outputDir: pcmOutputDir,
-                  baseUrl,
-                })
-
-                console.log(
-                  `  KiCad PCM assets generated at ${kleur.dim(path.relative(process.cwd(), pcmOutputDir))}`,
-                )
-                console.log(
-                  `  Repository URL: ${kleur.cyan(`${baseUrl}/repository.json`)}`,
-                )
-              } catch (err) {
-                console.error(
-                  `Error generating KiCad PCM assets: ${err instanceof Error ? err.message : err}`,
-                )
-                if (!resolvedOptions?.ignoreErrors) {
-                  process.exit(1)
-                }
               }
             }
           }
