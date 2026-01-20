@@ -101,13 +101,13 @@ export async function setupTscircuitSkill(
 
   try {
     await downloadSkillRepo(skillDir)
-    console.info(`✓ tscircuit skill installed at ${SKILL_DIR_NAME}`)
+    console.info(`tscircuit skill installed at ${SKILL_DIR_NAME}`)
     return true
   } catch (error) {
     const errorMessage =
       error instanceof Error ? error.message : "Unknown error"
     console.warn(
-      kleur.yellow(`⚠ Failed to set up tscircuit skill: ${errorMessage}`),
+      kleur.yellow(`Failed to set up tscircuit skill: ${errorMessage}`),
     )
     console.warn("Continuing with initialization...")
     return false
