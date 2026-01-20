@@ -134,10 +134,15 @@ export const exportSnippet = async ({
     case "schematic-simulation-svg": {
       const spiceString = getSpiceWithPaddedSim(circuitData.circuitJson)
       const { result } = await runSimulation(spiceString)
-      const { circuitJson: circuitJsonWithSim, simulation_experiment_id, simulation_transient_voltage_graph_ids } = await embedSimulationInCircuitJson(
-        circuitData.circuitJson,
-        { result, errors: [], info: "" },
-      )
+      const {
+        circuitJson: circuitJsonWithSim,
+        simulation_experiment_id,
+        simulation_transient_voltage_graph_ids,
+      } = await embedSimulationInCircuitJson(circuitData.circuitJson, {
+        result,
+        errors: [],
+        info: "",
+      })
       outputContent = convertCircuitJsonToSchematicSimulationSvg({
         circuitJson: circuitJsonWithSim,
         simulation_experiment_id,
