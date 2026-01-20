@@ -355,7 +355,8 @@ export const registerBuild = (program: Command) => {
                 // Then generate PCM assets
                 const pcmOutputDir = path.join(distDir, "pcm")
                 // Compute the base URL where PCM will be hosted on tscircuit.app
-                const baseUrl = `https://${author}.tscircuit.app/${packageName}/dist/pcm`
+                // URL format: https://{author}--{packageName}.tscircuit.app/pcm
+                const baseUrl = `https://${author}--${packageName}.tscircuit.app/pcm`
                 const result = await generatePcmAssets({
                   packageName,
                   version,
