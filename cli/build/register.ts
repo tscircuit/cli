@@ -20,6 +20,7 @@ import { transpileFile } from "./transpile"
 import { validateMainInDist } from "../utils/validate-main-in-dist"
 import { getLatestTscircuitCdnUrl } from "../utils/get-latest-tscircuit-cdn-url"
 import kleur from "kleur"
+import { spawn, move } from "multithreading"
 
 // @ts-ignore
 import runFrameStandaloneBundleContent from "@tscircuit/runframe/standalone" with {
@@ -64,6 +65,11 @@ export const registerBuild = (program: Command) => {
     .option(
       "--use-cdn-javascript",
       "Use CDN-hosted JavaScript instead of bundled standalone file for --site",
+    )
+    .option(
+      "--concurrency <number>",
+      "Number of files to build in parallel (default: 1)",
+      "1",
     )
     .action(async (file?: string, options?: BuildCommandOptions) => {
       try {
@@ -110,7 +116,19 @@ export const registerBuild = (program: Command) => {
         const distDir = path.join(projectDir, "dist")
         fs.mkdirSync(distDir, { recursive: true })
 
-        console.log(`Building ${circuitFiles.length} file(s)...`)
+        // Parse concurrency option
+        const concurrencyValue = Math.max(
+          1,
+          Number.parseInt(resolvedOptions?.concurrency || "1", 10),
+        )
+
+        if (concurrencyValue > 1) {
+          console.log(
+            `Building ${circuitFiles.length} file(s) with concurrency ${concurrencyValue}...`,
+          )
+        } else {
+          console.log(`Building ${circuitFiles.length} file(s)...`)
+        }
 
         let hasErrors = false
         const staticFileReferences: StaticBuildFileReference[] = []
@@ -123,29 +141,31 @@ export const registerBuild = (program: Command) => {
         const shouldGenerateKicad =
           resolvedOptions?.kicad || resolvedOptions?.kicadFootprintLibrary
 
-        for (const filePath of circuitFiles) {
+        // Prepare build options for reuse
+        const buildOptions = {
+          ignoreErrors: resolvedOptions?.ignoreErrors,
+          ignoreWarnings: resolvedOptions?.ignoreWarnings,
+          platformConfig,
+        }
+
+        // Helper function to process a single build result
+        const processBuildResult = async (
+          filePath: string,
+          outputPath: string,
+          buildOutcome: { ok: boolean; circuitJson?: unknown[] },
+        ) => {
           const relative = path.relative(projectDir, filePath)
-          console.log(`Building ${relative}...`)
           const outputDirName = relative.replace(
             /(\.board|\.circuit)?\.tsx$/,
             "",
           )
-          const outputPath = path.join(distDir, outputDirName, "circuit.json")
-          const buildOutcome = await buildFile(
-            filePath,
-            outputPath,
-            projectDir,
-            {
-              ignoreErrors: resolvedOptions?.ignoreErrors,
-              ignoreWarnings: resolvedOptions?.ignoreWarnings,
-              platformConfig,
-            },
-          )
+
           builtFiles.push({
             sourcePath: filePath,
             outputPath,
             ok: buildOutcome.ok,
           })
+
           if (!buildOutcome.ok) {
             hasErrors = true
           } else if (resolvedOptions?.site) {
@@ -178,6 +198,118 @@ export const registerBuild = (program: Command) => {
               sourcePath: filePath,
             })
           }
+        }
+
+        // Sequential build function (used for fallback and when concurrency is 1)
+        const buildSequentially = async () => {
+          for (const filePath of circuitFiles) {
+            const relative = path.relative(projectDir, filePath)
+            console.log(`Building ${relative}...`)
+            const outputDirName = relative.replace(
+              /(\.board|\.circuit)?\.tsx$/,
+              "",
+            )
+            const outputPath = path.join(distDir, outputDirName, "circuit.json")
+            const buildOutcome = await buildFile(
+              filePath,
+              outputPath,
+              projectDir,
+              buildOptions,
+            )
+            await processBuildResult(filePath, outputPath, buildOutcome)
+          }
+        }
+
+        // Parallel build function using multithreading library
+        const buildWithMultithreading = async () => {
+          // Prepare build tasks
+          const buildTasks = circuitFiles.map((filePath) => {
+            const relative = path.relative(projectDir, filePath)
+            const outputDirName = relative.replace(
+              /(\.board|\.circuit)?\.tsx$/,
+              "",
+            )
+            const outputPath = path.join(distDir, outputDirName, "circuit.json")
+
+            return {
+              filePath,
+              outputPath,
+              projectDir,
+              options: buildOptions,
+            }
+          })
+
+          const handles = buildTasks.map((task) =>
+            spawn(move(task), async (i: typeof task) => {
+              const { registerStaticAssetLoaders } = await import(
+                "../../lib/shared/register-static-asset-loaders"
+              )
+              registerStaticAssetLoaders()
+
+              const { buildFile: b } = await import("./build-file")
+              const r = await b(
+                i.filePath,
+                i.outputPath,
+                i.projectDir,
+                i.options,
+              )
+              return {
+                filePath: i.filePath,
+                outputPath: i.outputPath,
+                ok: r.ok,
+                circuitJson: r.circuitJson,
+                logs: [],
+                errors: [],
+              }
+            }),
+          )
+
+          // Wait for all builds to complete
+          const results = await Promise.all(handles.map((h) => h.join()))
+
+          // Process results in order
+          for (let i = 0; i < results.length; i++) {
+            const result = results[i]
+            const task = buildTasks[i]
+            const relative = path.relative(projectDir, task.filePath)
+
+            if (!result.ok) {
+              console.error(
+                kleur.red(`Failed to build ${relative}: ${result.error}`),
+              )
+              await processBuildResult(task.filePath, task.outputPath, {
+                ok: false,
+              })
+              continue
+            }
+
+            const buildResult = result.value
+
+            // Print buffered logs
+            console.log(`[${relative}]`)
+            if (buildResult.logs.length > 0) {
+              for (const log of buildResult.logs) {
+                console.log(`  ${log}`)
+              }
+            }
+            if (buildResult.errors.length > 0) {
+              for (const err of buildResult.errors) {
+                console.error(kleur.red(`  ${err}`))
+              }
+            }
+
+            await processBuildResult(task.filePath, task.outputPath, {
+              ok: buildResult.ok,
+              circuitJson: buildResult.circuitJson,
+            })
+          }
+        }
+
+        // Execute builds based on concurrency setting
+        if (concurrencyValue > 1) {
+          await buildWithMultithreading()
+        } else {
+          await buildSequentially()
         }
 
         if (hasErrors && !resolvedOptions?.ignoreErrors) {

@@ -18,6 +18,7 @@ export interface BuildCommandOptions {
   kicadPcm?: boolean
   previewGltf?: boolean
   useCdnJavascript?: boolean
+  concurrency?: string
 }
 
 const runCommand = (command: string, cwd: string) => {
