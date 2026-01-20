@@ -25,7 +25,7 @@ export const generateTsConfig = (dir: string) => {
         types: ["tscircuit"],
       },
       include: ["**/*.ts", "**/*.tsx"],
-      exclude: ["node_modules", "dist"],
+      exclude: ["node_modules", "dist", ".claude"],
     },
     null,
     2,
