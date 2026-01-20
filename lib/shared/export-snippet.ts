@@ -18,6 +18,7 @@ import JSZip from "jszip"
 import { generateCircuitJson } from "lib/shared/generate-circuit-json"
 import { getSpiceWithPaddedSim } from "lib/shared/get-spice-with-sim"
 import { runSimulation } from "lib/eecircuit-engine/run-simulation"
+import { embedSimulationInCircuitJson } from "lib/shared/embed-simulation-in-circuit-json"
 import type { PlatformConfig } from "@tscircuit/props"
 
 const writeFileAsync = promisify(fs.writeFile)
@@ -133,10 +134,15 @@ export const exportSnippet = async ({
     case "schematic-simulation-svg": {
       const spiceString = getSpiceWithPaddedSim(circuitData.circuitJson)
       const { result } = await runSimulation(spiceString)
-      outputContent = convertCircuitJsonToSchematicSimulationSvg(
+      const { circuitJson: circuitJsonWithSim, simulation_experiment_id, simulation_transient_voltage_graph_ids } = await embedSimulationInCircuitJson(
         circuitData.circuitJson,
-        result,
+        { result, errors: [], info: "" },
       )
+      outputContent = convertCircuitJsonToSchematicSimulationSvg({
+        circuitJson: circuitJsonWithSim,
+        simulation_experiment_id,
+        simulation_transient_voltage_graph_ids,
+      })
       break
     }
     case "specctra-dsn":
