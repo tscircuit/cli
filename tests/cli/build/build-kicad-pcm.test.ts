@@ -58,8 +58,7 @@ export const MyResistor = () => (
     "testuser--my-resistor.tscircuit.app",
   )
 
-  // Verify ZIP exists in packages folder
-  const packagesDir = path.join(pcmDir, "packages")
-  const files = await readdir(packagesDir)
+  // Verify ZIP exists in pcm folder
+  const files = await readdir(pcmDir)
   expect(files.some((f) => f.endsWith(".zip"))).toBe(true)
 }, 120_000)

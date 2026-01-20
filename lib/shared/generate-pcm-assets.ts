@@ -58,9 +58,8 @@ export async function generatePcmAssets(
     .replace(/[^a-z0-9.-]/g, "-")
     .slice(0, 50)
 
-  // Create output directories
-  const packagesDir = path.join(outputDir, "packages")
-  fs.mkdirSync(packagesDir, { recursive: true })
+  // Create output directory
+  fs.mkdirSync(outputDir, { recursive: true })
 
   // Create metadata.json for inside the ZIP
   const metadata = {
@@ -89,7 +88,7 @@ export async function generatePcmAssets(
 
   // Create the ZIP file
   const zipFileName = `${identifier}-${version}.zip`
-  const zipFilePath = path.join(packagesDir, zipFileName)
+  const zipFilePath = path.join(outputDir, zipFileName)
 
   await createPcmZip({
     kicadLibraryPath,
@@ -103,9 +102,7 @@ export async function generatePcmAssets(
   const zipSize = zipBuffer.length
 
   // Determine download URL
-  const downloadUrl = baseUrl
-    ? `${baseUrl}/packages/${zipFileName}`
-    : `./packages/${zipFileName}`
+  const downloadUrl = baseUrl ? `${baseUrl}/${zipFileName}` : `./${zipFileName}`
 
   // Create packages.json
   const packagesJson = {
