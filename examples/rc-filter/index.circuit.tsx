@@ -1,17 +1,17 @@
 /**
  * RC Low-Pass Filter Circuit
- * 
+ *
  * This circuit demonstrates a classic RC low-pass filter with:
  * - AC voltage source (1V, 1kHz square wave)
  * - 1kΩ resistor
  * - 100nF capacitor
- * 
+ *
  * Perfect for visualizing:
  * - Input voltage step response
  * - Capacitor charging/discharging behavior
  * - Filtered output voltage
  * - Time-domain simulation results
- * 
+ *
  * Usage:
  *   bun cli/main.ts simulate visualize examples/rc-filter/index.circuit.tsx
  *   bun cli/main.ts simulate visualize examples/rc-filter/index.circuit.tsx -o filter-sim.svg
@@ -32,13 +32,7 @@ export default () => (
     />
 
     {/* Series Resistor - 1kΩ */}
-    <resistor
-      name="R1"
-      resistance="1k"
-      footprint="0603"
-      schX={0}
-      schY={0}
-    />
+    <resistor name="R1" resistance="1k" footprint="0603" schX={0} schY={0} />
 
     {/* Shunt Capacitor - 100nF (creates low-pass filter) */}
     <capacitor
@@ -61,7 +55,7 @@ export default () => (
     />
 
     {/* Traces - wiring connections */}
-    
+
     {/* V_in pin 1 to R1 pin 1 */}
     <trace from=".V_in > .pin1" to=".R1 > .pin1" />
 

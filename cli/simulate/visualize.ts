@@ -18,10 +18,7 @@ export const registerSimulateVisualize = (simulateCommand: Command) => {
     .description(
       "Generate an SVG visualization of analog simulation with schematic overlay",
     )
-    .argument(
-      "<file>",
-      "Path to tscircuit tsx or circuit json file",
-    )
+    .argument("<file>", "Path to tscircuit tsx or circuit json file")
     .option("-o, --output <path>", "Output SVG file path")
     .option("--disable-parts-engine", "Disable the parts engine")
     .action(
@@ -39,9 +36,7 @@ export const registerSimulateVisualize = (simulateCommand: Command) => {
               : undefined
 
           // Step 1: Generate circuit JSON
-          console.log(
-            kleur.cyan("📋 Generating circuit JSON from source..."),
-          )
+          console.log(kleur.cyan("Generating circuit JSON from source..."))
           const { circuitJson } = await generateCircuitJson({
             filePath: file,
             saveToFile: false,
@@ -49,72 +44,55 @@ export const registerSimulateVisualize = (simulateCommand: Command) => {
           })
 
           if (!circuitJson) {
-            console.error(
-              kleur.red("❌ Failed to generate circuit JSON"),
-            )
+            console.error(kleur.red("[ERROR] Failed to generate circuit JSON"))
             process.exit(1)
           }
 
           // Step 2: Generate SPICE netlist with simulation parameters
           console.log(
             kleur.cyan(
-              "⚡ Generating SPICE netlist with simulation parameters...",
+              "Generating SPICE netlist with simulation parameters...",
             ),
           )
           const spiceString = getSpiceWithPaddedSim(circuitJson)
 
           // Step 3: Run simulation
-          console.log(
-            kleur.cyan("🔬 Running analog simulation..."),
-          )
+          console.log(kleur.cyan("Running analog simulation..."))
           const simulationOutput = await runSimulation(spiceString)
 
           // Check for simulation errors
           if (simulationOutput.errors && simulationOutput.errors.length > 0) {
-            console.error(
-              kleur.yellow(
-                "⚠️  Simulation produced warnings/errors:",
-              ),
-            )
+            console.error(kleur.yellow("Simulation produced warnings/errors:"))
             simulationOutput.errors.forEach((err) =>
               console.error(kleur.yellow(`   ${err}`)),
             )
           }
 
           // Step 4: Validate simulation results
-          const validation = validateSimulationResults(
-            simulationOutput.result,
-          )
+          const validation = validateSimulationResults(simulationOutput.result)
           if (!validation.valid) {
             console.error(
-              kleur.red(`❌ Invalid simulation results: ${validation.message}`),
+              kleur.red(`Invalid simulation results: ${validation.message}`),
             )
             process.exit(1)
           }
 
-          console.log(
-            kleur.green(`✓ ${validation.message}`),
-          )
+          console.log(kleur.green(`[OK] ${validation.message}`))
 
           // Step 5: Embed simulation data into circuit JSON
           console.log(
             kleur.cyan(
-              "🔗 Embedding simulation data into circuit visualization...",
+              "Embedding simulation data into circuit visualization...",
             ),
           )
           const {
             circuitJson: circuitJsonWithSim,
             simulation_experiment_id,
             simulation_transient_voltage_graph_ids,
-          } = await embedSimulationInCircuitJson(
-            circuitJson,
-            simulationOutput,
-          )
+          } = await embedSimulationInCircuitJson(circuitJson, simulationOutput)
 
           // Step 6: Generate SVG visualization
-          console.log(
-            kleur.cyan("🎨 Generating simulation visualization SVG..."),
-          )
+          console.log(kleur.cyan("Generating simulation visualization SVG..."))
           const svgContent = convertCircuitJsonToSchematicSimulationSvg({
             circuitJson: circuitJsonWithSim,
             simulation_experiment_id,
@@ -133,13 +111,11 @@ export const registerSimulateVisualize = (simulateCommand: Command) => {
 
           console.log(
             kleur.green(
-              `✅ Simulation visualization exported to ${kleur.bold(outputPath)}`,
+              `[SUCCESS] Simulation visualization exported to ${kleur.bold(outputPath)}`,
             ),
           )
           console.log(
-            kleur.gray(
-              `   Experiment ID: ${simulation_experiment_id}`,
-            ),
+            kleur.gray(`   Experiment ID: ${simulation_experiment_id}`),
           )
           console.log(
             kleur.gray(
@@ -149,9 +125,8 @@ export const registerSimulateVisualize = (simulateCommand: Command) => {
 
           process.exit(0)
         } catch (error) {
-          const message =
-            error instanceof Error ? error.message : String(error)
-          console.error(kleur.red(`❌ Error: ${message}`))
+          const message = error instanceof Error ? error.message : String(error)
+          console.error(kleur.red(`[ERROR] ${message}`))
           process.exit(1)
         }
       },

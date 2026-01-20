@@ -79,10 +79,7 @@ test(
     expect(stdout).toContain("Simulation visualization exported")
 
     // Verify the SVG file was created
-    const svgPath = path.join(
-      tmpDir,
-      "test-circuit-simulation.svg",
-    )
+    const svgPath = path.join(tmpDir, "test-circuit-simulation.svg")
     const svgContent = await readFile(svgPath, "utf-8")
 
     // Validate SVG structure
