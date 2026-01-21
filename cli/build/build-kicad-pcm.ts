@@ -45,7 +45,12 @@ export async function buildKicadPcm({
   // Generate PCM assets
   const pcmOutputDir = path.join(distDir, "pcm")
   // Base URL format: https://{author}--{packageName}.tscircuit.app
-  const baseUrl = `https://${author}--${packageName}.tscircuit.app`
+  const envDeploymentUrl = process.env.TSCIRCUIT_DEPLOYMENT_URL?.replace(
+    /\/+$/,
+    "",
+  )
+  const baseUrl =
+    envDeploymentUrl ?? `https://${author}--${packageName}.tscircuit.app`
 
   await generatePcmAssets({
     packageName,
