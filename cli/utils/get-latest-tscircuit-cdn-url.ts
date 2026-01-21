@@ -1,8 +1,7 @@
-const TSCIRCUIT_CDNJS_API_URL =
-  "https://api.cdnjs.com/libraries/tscircuit?fields=version"
+const TSCIRCUIT_NPMJS_API_URL = "https://registry.npmjs.org/tscircuit/latest"
 
 export async function getLatestTscircuitCdnVersion(): Promise<string> {
-  const response = await fetch(TSCIRCUIT_CDNJS_API_URL)
+  const response = await fetch(TSCIRCUIT_NPMJS_API_URL)
   if (!response.ok) {
     throw new Error(
       `Failed to fetch tscircuit version from CDN: ${response.statusText}`,
