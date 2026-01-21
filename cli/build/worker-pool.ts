@@ -1,12 +1,12 @@
 import path from "node:path"
-import type { Subprocess, FileSink } from "bun"
+import { Worker } from "node:worker_threads"
 import type { PlatformConfig } from "@tscircuit/props"
 import type {
   BuildFileMessage,
   BuildCompletedMessage,
-  WorkerOutputMessage,
   BuildJobResult,
   WorkerLogMessage,
+  WorkerOutputMessage,
 } from "./worker-types"
 
 export type BuildJob = {
@@ -25,12 +25,10 @@ type QueuedJob = BuildJob & {
   reject: (error: Error) => void
 }
 
-type PersistentWorker = {
-  process: Subprocess
+type ThreadWorker = {
+  worker: Worker
   busy: boolean
   currentJob: QueuedJob | null
-  outputBuffer: string
-  ready: boolean
 }
 
 const getWorkerEntrypointPath = (): string => {
@@ -38,7 +36,7 @@ const getWorkerEntrypointPath = (): string => {
 }
 
 export class WorkerPool {
-  private workers: PersistentWorker[] = []
+  private workers: ThreadWorker[] = []
   private jobQueue: QueuedJob[] = []
   private concurrency: number
   private onLog?: (lines: string[]) => void
@@ -57,159 +55,78 @@ export class WorkerPool {
   private async initWorkers(): Promise<void> {
     if (this.initialized) return
 
-    const workerReadyPromises: Promise<void>[] = []
-
     for (let i = 0; i < this.concurrency; i++) {
-      const proc = Bun.spawn(["bun", "run", this.workerEntrypointPath], {
-        stdin: "pipe",
-        stdout: "pipe",
-        stderr: "pipe",
-      })
+      const worker = new Worker(this.workerEntrypointPath)
 
-      const worker: PersistentWorker = {
-        process: proc,
+      const threadWorker: ThreadWorker = {
+        worker,
         busy: false,
         currentJob: null,
-        outputBuffer: "",
-        ready: false,
       }
 
-      this.workers.push(worker)
+      this.setupWorkerMessageHandling(threadWorker)
+      this.setupWorkerErrorHandling(threadWorker)
 
-      const readyPromise = this.setupWorkerOutputHandling(worker)
-      workerReadyPromises.push(readyPromise)
-      this.setupWorkerStderrHandling(worker)
+      this.workers.push(threadWorker)
     }
 
-    // Wait for all workers to signal ready
-    await Promise.all(workerReadyPromises)
     this.initialized = true
   }
 
-  private setupWorkerOutputHandling(worker: PersistentWorker): Promise<void> {
-    return new Promise((resolveReady) => {
-      const stdout = worker.process.stdout
-      if (typeof stdout === "number" || !stdout) {
-        resolveReady()
-        return
-      }
-      const reader = stdout.getReader()
-      const decoder = new TextDecoder()
+  private setupWorkerMessageHandling(threadWorker: ThreadWorker): void {
+    threadWorker.worker.on("message", (message: WorkerOutputMessage) => {
+      if (message.message_type === "worker_log") {
+        const logMsg = message as WorkerLogMessage
+        if (this.onLog) {
+          this.onLog(logMsg.log_lines)
+        }
+      } else if (message.message_type === "build_completed") {
+        const completedMsg = message as BuildCompletedMessage
+        const job = threadWorker.currentJob
 
-      const readOutput = async () => {
-        try {
-          while (true) {
-            const { done, value } = await reader.read()
-            if (done) break
-
-            worker.outputBuffer += decoder.decode(value, { stream: true })
-
-            // Check for ready signal
-            if (
-              !worker.ready &&
-              worker.outputBuffer.includes("__WORKER_READY__")
-            ) {
-              worker.ready = true
-              worker.outputBuffer = worker.outputBuffer.replace(
-                "__WORKER_READY__\n",
-                "",
-              )
-              resolveReady()
-            }
-
-            // Process any complete messages
-            this.processWorkerOutput(worker)
-          }
-        } catch {
-          if (worker.currentJob) {
-            worker.currentJob.reject(
-              new Error("Worker process ended unexpectedly"),
-            )
-            worker.currentJob = null
-            worker.busy = false
-          }
+        if (job) {
+          job.resolve({
+            filePath: completedMsg.file_path,
+            outputPath: completedMsg.output_path,
+            ok: completedMsg.ok,
+            errors: completedMsg.errors,
+            warnings: completedMsg.warnings,
+          })
+          threadWorker.currentJob = null
+          threadWorker.busy = false
+          this.processQueue()
         }
       }
-
-      readOutput()
     })
   }
 
-  private setupWorkerStderrHandling(worker: PersistentWorker): void {
-    const stderr = worker.process.stderr
-    if (typeof stderr === "number" || !stderr) {
-      return
-    }
-    const reader = stderr.getReader()
-    const decoder = new TextDecoder()
-
-    const readStderr = async () => {
-      try {
-        while (true) {
-          const { done, value } = await reader.read()
-          if (done) break
-
-          const text = decoder.decode(value, { stream: true })
-          if (text.trim() && this.onLog) {
-            this.onLog(text.split("\n").filter((line) => line.trim()))
-          }
-        }
-      } catch {
-        // Ignore stderr read errors
+  private setupWorkerErrorHandling(threadWorker: ThreadWorker): void {
+    threadWorker.worker.on("error", (error) => {
+      if (threadWorker.currentJob) {
+        threadWorker.currentJob.reject(error)
+        threadWorker.currentJob = null
+        threadWorker.busy = false
       }
-    }
-
-    readStderr()
-  }
-
-  private processWorkerOutput(worker: PersistentWorker): void {
-    // Split by message delimiter
-    const parts = worker.outputBuffer.split("__MSG_END__\n")
-    worker.outputBuffer = parts.pop() || ""
-
-    for (const part of parts) {
-      const lines = part.split("\n").filter((line) => line.trim())
-
-      for (const line of lines) {
-        try {
-          const parsed = JSON.parse(line) as WorkerOutputMessage
-
-          if (parsed.message_type === "worker_log") {
-            const logMsg = parsed as WorkerLogMessage
-            if (this.onLog) {
-              this.onLog(logMsg.log_lines)
-            }
-          } else if (parsed.message_type === "build_completed") {
-            const completedMsg = parsed as BuildCompletedMessage
-            const job = worker.currentJob
-
-            if (job) {
-              job.resolve({
-                filePath: completedMsg.file_path,
-                outputPath: completedMsg.output_path,
-                ok: completedMsg.ok,
-                errors: completedMsg.errors,
-                warnings: completedMsg.warnings,
-              })
-              worker.currentJob = null
-              worker.busy = false
-              this.processQueue()
-            }
-          }
-        } catch {
-          // Not JSON, treat as log output
-          if (line.trim() && this.onLog) {
-            this.onLog([line])
-          }
-        }
+      if (this.onLog) {
+        this.onLog([`Worker error: ${error.message}`])
       }
-    }
+    })
+
+    threadWorker.worker.on("exit", (code) => {
+      if (code !== 0 && threadWorker.currentJob) {
+        threadWorker.currentJob.reject(
+          new Error(`Worker exited with code ${code}`),
+        )
+        threadWorker.currentJob = null
+        threadWorker.busy = false
+      }
+    })
   }
 
   private processQueue(): void {
     if (this.jobQueue.length === 0) return
 
-    const availableWorker = this.workers.find((w) => w.ready && !w.busy)
+    const availableWorker = this.workers.find((w) => !w.busy)
     if (!availableWorker) return
 
     const job = this.jobQueue.shift()
@@ -226,12 +143,7 @@ export class WorkerPool {
       options: job.options,
     }
 
-    // Send job to worker via stdin
-    const stdin = availableWorker.process.stdin
-    if (typeof stdin === "number" || !stdin) {
-      throw new Error("Worker stdin is not a FileSink")
-    }
-    stdin.write(`${JSON.stringify(message)}\n`)
+    availableWorker.worker.postMessage(message)
   }
 
   async queueJob(job: BuildJob): Promise<BuildJobResult> {
@@ -266,16 +178,15 @@ export class WorkerPool {
   }
 
   async terminate(): Promise<void> {
-    for (const worker of this.workers) {
-      worker.process.kill()
-    }
+    const terminatePromises = this.workers.map((w) => w.worker.terminate())
+    await Promise.all(terminatePromises)
     this.workers = []
     this.initialized = false
   }
 }
 
 /**
- * Build multiple files in parallel using persistent worker processes.
+ * Build multiple files in parallel using worker threads.
  * Workers are spawned once and reused for multiple files.
  * Circuit JSON is written to disk, not passed through IPC.
  */

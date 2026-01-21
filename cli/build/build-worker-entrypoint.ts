@@ -1,5 +1,6 @@
 import path from "node:path"
 import fs from "node:fs"
+import { parentPort } from "node:worker_threads"
 import { generateCircuitJson } from "../../lib/shared/generate-circuit-json"
 import { analyzeCircuitJson } from "../../lib/shared/circuit-json-diagnostics"
 import { getCompletePlatformConfig } from "../../lib/shared/get-complete-platform-config"
@@ -11,9 +12,12 @@ import type {
 } from "./worker-types"
 import type { PlatformConfig } from "@tscircuit/props"
 
+if (!parentPort) {
+  throw new Error("This file must be run as a worker thread")
+}
+
 const sendMessage = (message: BuildCompletedMessage | WorkerLogMessage) => {
-  // Use delimiter for reliable message parsing in persistent mode
-  process.stdout.write(`${JSON.stringify(message)}\n__MSG_END__\n`)
+  parentPort!.postMessage(message)
 }
 
 const workerLog = (...args: unknown[]) => {
@@ -114,37 +118,15 @@ const handleBuildFile = async (
   }
 }
 
-// Persistent process mode - stays alive and processes multiple jobs via stdin
-const runPersistentWorker = async () => {
-  const decoder = new TextDecoder()
-
-  // Signal that worker is ready to receive jobs
-  process.stdout.write("__WORKER_READY__\n")
-
-  const reader = Bun.stdin.stream().getReader()
-  while (true) {
-    const { done, value } = await reader.read()
-    if (done) break
-    const chunk = value
-    const text = decoder.decode(chunk, { stream: true })
-    if (text.trim()) {
-      try {
-        const msg: WorkerInputMessage = JSON.parse(text)
-
-        if (msg.message_type === "build_file") {
-          const result = await handleBuildFile(
-            msg.file_path,
-            msg.output_path,
-            msg.project_dir,
-            msg.options,
-          )
-          sendMessage(result)
-        }
-      } catch (err) {
-        process.stderr.write(`Worker parse error: ${err}\n`)
-      }
-    }
+// Listen for messages from the main thread
+parentPort.on("message", async (msg: WorkerInputMessage) => {
+  if (msg.message_type === "build_file") {
+    const result = await handleBuildFile(
+      msg.file_path,
+      msg.output_path,
+      msg.project_dir,
+      msg.options,
+    )
+    sendMessage(result)
   }
-}
-
-runPersistentWorker()
+})
