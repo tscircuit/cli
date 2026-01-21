@@ -1,4 +1,5 @@
 import path from "node:path"
+import fs from "node:fs"
 import { Worker } from "node:worker_threads"
 import type { PlatformConfig } from "@tscircuit/props"
 import type {
@@ -32,7 +33,22 @@ type ThreadWorker = {
 }
 
 const getWorkerEntrypointPath = (): string => {
-  return path.join(import.meta.dir, "build-worker-entrypoint.ts")
+  // Check for .ts file first (development), then .js (published/dist)
+  const tsPath = path.join(import.meta.dir, "build-worker-entrypoint.ts")
+  if (fs.existsSync(tsPath)) {
+    return tsPath
+  }
+  // When bundled, main.js is in dist/ and worker is in dist/build/
+  const jsBundledPath = path.join(
+    import.meta.dir,
+    "build",
+    "build-worker-entrypoint.js",
+  )
+  if (fs.existsSync(jsBundledPath)) {
+    return jsBundledPath
+  }
+  // Fallback: same directory
+  return path.join(import.meta.dir, "build-worker-entrypoint.js")
 }
 
 export class WorkerPool {
