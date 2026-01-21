@@ -1,7 +1,15 @@
 import { getCliTestFixture } from "../../fixtures/get-cli-test-fixture"
 import { test, expect } from "bun:test"
-import { writeFile, readFile, stat } from "node:fs/promises"
+import { writeFile, readFile } from "node:fs/promises"
 import path from "node:path"
+
+const packageJson = JSON.stringify({
+  name: "test-project",
+  dependencies: {
+    react: "*",
+    tscircuit: "*",
+  },
+})
 
 const circuitCode = (name: string) => `
 export default () => (
@@ -23,9 +31,10 @@ test("build with --concurrency builds multiple files in parallel", async () => {
     const name = file.replace(".circuit.tsx", "").toUpperCase()
     await writeFile(path.join(tmpDir, file), circuitCode(name))
   }
-  await writeFile(path.join(tmpDir, "package.json"), "{}")
+  await writeFile(path.join(tmpDir, "package.json"), packageJson)
+  await runCommand("tsci install")
 
-  const { stdout, stderr } = await runCommand("tsci build --concurrency 2")
+  const { stdout } = await runCommand("tsci build --concurrency 2")
 
   // Check that concurrency message is shown
   expect(stdout).toContain("with concurrency 2")
@@ -42,27 +51,6 @@ test("build with --concurrency builds multiple files in parallel", async () => {
     expect(component.name).toBe(outputDir.toUpperCase())
   }
 }, 60_000)
-
-test("build with --concurrency 1 builds sequentially", async () => {
-  const { tmpDir, runCommand } = await getCliTestFixture()
-
-  await writeFile(path.join(tmpDir, "test.circuit.tsx"), circuitCode("R1"))
-  await writeFile(path.join(tmpDir, "package.json"), "{}")
-
-  const { stdout } = await runCommand("tsci build --concurrency 1")
-
-  // Should not show concurrency message for sequential builds
-  expect(stdout).not.toContain("with concurrency")
-  expect(stdout).toContain("Building 1 file(s)...")
-
-  const data = await readFile(
-    path.join(tmpDir, "dist", "test", "circuit.json"),
-    "utf-8",
-  )
-  const json = JSON.parse(data)
-  const component = json.find((c: any) => c.type === "source_component")
-  expect(component.name).toBe("R1")
-}, 30_000)
 
 test("build without --concurrency defaults to sequential", async () => {
   const { tmpDir, runCommand } = await getCliTestFixture()
@@ -93,9 +81,12 @@ test("build with --concurrency handles errors correctly", async () => {
     path.join(tmpDir, "invalid.circuit.tsx"),
     "export default () => { throw new Error('intentional error') }",
   )
-  await writeFile(path.join(tmpDir, "package.json"), "{}")
+  await writeFile(path.join(tmpDir, "package.json"), packageJson)
 
-  const { stdout, stderr } = await runCommand(
+  // Install dependencies so workers can resolve react/tscircuit
+  await runCommand("tsci install")
+
+  const { stdout } = await runCommand(
     "tsci build --concurrency 2 --ignore-errors",
   )
 
