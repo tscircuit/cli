@@ -35,6 +35,7 @@ export async function buildKicadPcm({
 
   // First generate kicad-library if not already done
   if (!fs.existsSync(kicadLibOutputDir)) {
+    console.log("Converting to KiCad library...")
     await convertToKicadLibrary({
       filePath: entryFile,
       libraryName,
@@ -47,6 +48,7 @@ export async function buildKicadPcm({
   // Base URL format: https://{author}--{packageName}.tscircuit.app
   const baseUrl = `https://${author}--${packageName}.tscircuit.app`
 
+  console.log("Generating PCM assets...")
   await generatePcmAssets({
     packageName,
     version,

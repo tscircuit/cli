@@ -61,6 +61,7 @@ export async function generatePcmAssets(
   // Create output directory
   fs.mkdirSync(outputDir, { recursive: true })
 
+  console.log("Creating metadata.json...")
   // Create metadata.json for inside the ZIP
   const metadata = {
     $schema: "https://go.kicad.org/pcm/schemas/v1",
@@ -224,22 +225,26 @@ async function createPcmZip(options: {
   // Add footprints directory if it exists
   const footprintsDir = path.join(kicadLibraryPath, "footprints")
   if (fs.existsSync(footprintsDir)) {
+    console.log("Adding footprints directory...")
     addDirectoryToZip({ zip, dirPath: footprintsDir, zipPath: "footprints" })
   }
 
   // Add symbols directory if it exists
   const symbolsDir = path.join(kicadLibraryPath, "symbols")
   if (fs.existsSync(symbolsDir)) {
+    console.log("Adding symbols directory...")
     addDirectoryToZip({ zip, dirPath: symbolsDir, zipPath: "symbols" })
   }
 
   // Add 3dmodels directory if it exists
   const modelsDir = path.join(kicadLibraryPath, "3dmodels")
   if (fs.existsSync(modelsDir)) {
+    console.log("Adding 3dmodels directory...")
     addDirectoryToZip({ zip, dirPath: modelsDir, zipPath: "3dmodels" })
   }
 
   // Generate ZIP and write to file
+  console.log("Generating ZIP...")
   const zipBuffer = await zip.generateAsync({
     type: "nodebuffer",
     compression: "DEFLATE",
