@@ -52,6 +52,10 @@
       "type": "string",
       "description": "Entry file for KiCad footprint library generation."
     },
+    "kicadLibraryName": {
+      "type": "string",
+      "description": "Name for the generated KiCad library."
+    },
     "build": {
       "type": "object",
       "additionalProperties": false,

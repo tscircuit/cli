@@ -384,7 +384,8 @@ export const registerBuild = (program: Command) => {
               process.exit(1)
             }
           } else {
-            const libraryName = path.basename(projectDir)
+            const libraryName =
+              projectConfig?.kicadLibraryName ?? path.basename(projectDir)
             const kicadLibOutputDir = path.join(distDir, "kicad-library")
             try {
               await convertToKicadLibrary({

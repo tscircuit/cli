@@ -17,6 +17,7 @@ const availableGlobalConfigKeys = [
 const availableProjectConfigKeys = [
   "mainEntrypoint",
   "kicadLibraryEntrypointPath",
+  "kicadLibraryName",
   "previewComponentPath",
   "siteDefaultComponentPath",
   "prebuildCommand",
@@ -31,7 +32,7 @@ export const registerConfigSet = (program: Command) => {
     .description("Set a configuration value (global or project-specific)")
     .argument(
       "<key>",
-      "Configuration key (e.g., alwaysCloneWithAuthorName, mainEntrypoint, kicadLibraryEntrypointPath, previewComponentPath, siteDefaultComponentPath, prebuildCommand, buildCommand)",
+      "Configuration key (e.g., alwaysCloneWithAuthorName, mainEntrypoint, kicadLibraryEntrypointPath, kicadLibraryName, previewComponentPath, siteDefaultComponentPath, prebuildCommand, buildCommand)",
     )
     .argument("<value>", "Value to set")
     .action((key: string, value: string) => {
@@ -50,6 +51,7 @@ export const registerConfigSet = (program: Command) => {
         if (
           key === "mainEntrypoint" ||
           key === "kicadLibraryEntrypointPath" ||
+          key === "kicadLibraryName" ||
           key === "previewComponentPath" ||
           key === "siteDefaultComponentPath" ||
           key === "prebuildCommand" ||
