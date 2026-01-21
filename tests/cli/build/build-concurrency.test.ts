@@ -95,7 +95,7 @@ test("build with --concurrency handles errors correctly", async () => {
   )
   await writeFile(path.join(tmpDir, "package.json"), "{}")
 
-  const { stdout, stderr, exitCode } = await runCommand(
+  const { stdout, stderr } = await runCommand(
     "tsci build --concurrency 2 --ignore-errors",
   )
 
