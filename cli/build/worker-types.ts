@@ -16,14 +16,13 @@ export type BuildFileMessage = {
 }
 
 /**
- * Message sent from worker to main thread when build completes
+ * Message sent from worker to main thread when build completes.
  */
 export type BuildCompletedMessage = {
   message_type: "build_completed"
   file_path: string
   output_path: string
   circuit_json_path: string
-  circuit_json: unknown[] | null
   ok: boolean
   errors: string[]
   warnings: string[]
@@ -48,13 +47,12 @@ export type WorkerInputMessage = BuildFileMessage
 export type WorkerOutputMessage = BuildCompletedMessage | WorkerLogMessage
 
 /**
- * Result type for a build job in the worker pool
+ * Result type for a build job in the worker pool.
  */
 export type BuildJobResult = {
   filePath: string
   outputPath: string
   ok: boolean
-  circuitJson: unknown[] | null
   errors: string[]
   warnings: string[]
 }

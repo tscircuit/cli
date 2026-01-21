@@ -183,23 +183,31 @@ export const registerBuild = (program: Command) => {
             })
           }
 
-          if (
-            buildOutcome.ok &&
-            shouldGenerateKicad &&
-            buildOutcome.circuitJson
-          ) {
-            const projectOutputDir = path.join(distDir, outputDirName, "kicad")
-            const projectName = path.basename(outputDirName)
-            const project = await generateKicadProject({
-              circuitJson: buildOutcome.circuitJson,
-              outputDir: projectOutputDir,
-              projectName,
-              writeFiles: Boolean(resolvedOptions?.kicad),
-            })
-            kicadProjects.push({
-              ...project,
-              sourcePath: filePath,
-            })
+          if (buildOutcome.ok && shouldGenerateKicad) {
+            // Read circuit JSON from file if not provided (worker mode doesn't pass it through IPC)
+            let circuitJson = buildOutcome.circuitJson
+            if (!circuitJson && fs.existsSync(outputPath)) {
+              circuitJson = JSON.parse(fs.readFileSync(outputPath, "utf-8"))
+            }
+
+            if (circuitJson) {
+              const projectOutputDir = path.join(
+                distDir,
+                outputDirName,
+                "kicad",
+              )
+              const projectName = path.basename(outputDirName)
+              const project = await generateKicadProject({
+                circuitJson,
+                outputDir: projectOutputDir,
+                projectName,
+                writeFiles: Boolean(resolvedOptions?.kicad),
+              })
+              kicadProjects.push({
+                ...project,
+                sourcePath: filePath,
+              })
+            }
           }
         }
 
@@ -256,9 +264,9 @@ export const registerBuild = (program: Command) => {
                 }
               }
 
+              // circuitJson is not passed through IPC - processBuildResult reads from file if needed
               await processBuildResult(result.filePath, result.outputPath, {
                 ok: result.ok,
-                circuitJson: result.circuitJson ?? undefined,
               })
             },
           })

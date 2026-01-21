@@ -12,14 +12,13 @@ import type {
 import type { PlatformConfig } from "@tscircuit/props"
 
 const sendMessage = (message: BuildCompletedMessage | WorkerLogMessage) => {
-  console.log(JSON.stringify(message))
+  // Use delimiter for reliable message parsing in persistent mode
+  process.stdout.write(`${JSON.stringify(message)}\n__MSG_END__\n`)
 }
 
 const workerLog = (...args: unknown[]) => {
   const line = args
-    .map((arg) =>
-      typeof arg === "object" ? JSON.stringify(arg) : String(arg),
-    )
+    .map((arg) => (typeof arg === "object" ? JSON.stringify(arg) : String(arg)))
     .join(" ")
   const message: WorkerLogMessage = {
     message_type: "worker_log",
@@ -60,6 +59,7 @@ const handleBuildFile = async (
       platformConfig: completePlatformConfig,
     })
 
+    // Write circuit JSON to disk (not sent through IPC to avoid memory issues)
     fs.mkdirSync(path.dirname(outputPath), { recursive: true })
     fs.writeFileSync(outputPath, JSON.stringify(result.circuitJson, null, 2))
 
@@ -87,12 +87,12 @@ const handleBuildFile = async (
 
     const hasErrors = diagnostics.errors.length > 0 && !options?.ignoreErrors
 
+    // Don't include circuit_json in response - it's already on disk
     return {
       message_type: "build_completed",
       file_path: filePath,
       output_path: outputPath,
       circuit_json_path: outputPath,
-      circuit_json: hasErrors ? null : result.circuitJson,
       ok: !hasErrors,
       errors,
       warnings,
@@ -107,7 +107,6 @@ const handleBuildFile = async (
       file_path: filePath,
       output_path: outputPath,
       circuit_json_path: outputPath,
-      circuit_json: null,
       ok: false,
       errors,
       warnings,
@@ -115,30 +114,37 @@ const handleBuildFile = async (
   }
 }
 
-// Read input message from command line arguments
-const main = async () => {
-  const inputArg = process.argv[2]
-  if (!inputArg) {
-    console.error("Missing input argument")
-    process.exit(1)
-  }
+// Persistent process mode - stays alive and processes multiple jobs via stdin
+const runPersistentWorker = async () => {
+  const decoder = new TextDecoder()
 
-  try {
-    const msg: WorkerInputMessage = JSON.parse(inputArg)
+  // Signal that worker is ready to receive jobs
+  process.stdout.write("__WORKER_READY__\n")
 
-    if (msg.message_type === "build_file") {
-      const result = await handleBuildFile(
-        msg.file_path,
-        msg.output_path,
-        msg.project_dir,
-        msg.options,
-      )
-      sendMessage(result)
+  const reader = Bun.stdin.stream().getReader()
+  while (true) {
+    const { done, value } = await reader.read()
+    if (done) break
+    const chunk = value
+    const text = decoder.decode(chunk, { stream: true })
+    if (text.trim()) {
+      try {
+        const msg: WorkerInputMessage = JSON.parse(text)
+
+        if (msg.message_type === "build_file") {
+          const result = await handleBuildFile(
+            msg.file_path,
+            msg.output_path,
+            msg.project_dir,
+            msg.options,
+          )
+          sendMessage(result)
+        }
+      } catch (err) {
+        process.stderr.write(`Worker parse error: ${err}\n`)
+      }
     }
-  } catch (err) {
-    console.error("Failed to parse input:", err)
-    process.exit(1)
   }
 }
 
-main()
+runPersistentWorker()
