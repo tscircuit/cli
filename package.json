@@ -50,7 +50,6 @@
     "looks-same": "^9.0.1",
     "make-vfs": "^1.0.15",
     "md5": "^2.3.0",
-    "multithreading": "^0.3.45",
     "perfect-cli": "^1.0.21",
     "playwright": "^1.57.0",
     "poppygl": "^0.0.12",

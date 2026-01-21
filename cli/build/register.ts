@@ -21,8 +21,9 @@ import { buildKicadPcm } from "./build-kicad-pcm"
 import { transpileFile } from "./transpile"
 import { validateMainInDist } from "../utils/validate-main-in-dist"
 import { getLatestTscircuitCdnUrl } from "../utils/get-latest-tscircuit-cdn-url"
+import { buildFilesWithWorkerPool } from "./worker-pool"
+import type { BuildJobResult } from "./worker-types"
 import kleur from "kleur"
-import { spawn, move } from "multithreading"
 
 // @ts-ignore
 import runFrameStandaloneBundleContent from "@tscircuit/runframe/standalone" with {
@@ -182,27 +183,35 @@ export const registerBuild = (program: Command) => {
             })
           }
 
-          if (
-            buildOutcome.ok &&
-            shouldGenerateKicad &&
-            buildOutcome.circuitJson
-          ) {
-            const projectOutputDir = path.join(distDir, outputDirName, "kicad")
-            const projectName = path.basename(outputDirName)
-            const project = await generateKicadProject({
-              circuitJson: buildOutcome.circuitJson,
-              outputDir: projectOutputDir,
-              projectName,
-              writeFiles: Boolean(resolvedOptions?.kicad),
-            })
-            kicadProjects.push({
-              ...project,
-              sourcePath: filePath,
-            })
+          if (buildOutcome.ok && shouldGenerateKicad) {
+            // Read circuit JSON from file if not provided (worker mode doesn't pass it through IPC)
+            let circuitJson = buildOutcome.circuitJson
+            if (!circuitJson && fs.existsSync(outputPath)) {
+              circuitJson = JSON.parse(fs.readFileSync(outputPath, "utf-8"))
+            }
+
+            if (circuitJson) {
+              const projectOutputDir = path.join(
+                distDir,
+                outputDirName,
+                "kicad",
+              )
+              const projectName = path.basename(outputDirName)
+              const project = await generateKicadProject({
+                circuitJson,
+                outputDir: projectOutputDir,
+                projectName,
+                writeFiles: Boolean(resolvedOptions?.kicad),
+              })
+              kicadProjects.push({
+                ...project,
+                sourcePath: filePath,
+              })
+            }
           }
         }
 
-        // Sequential build function (used for fallback and when concurrency is 1)
+        // Sequential build function (used when concurrency is 1)
         const buildSequentially = async () => {
           for (const filePath of circuitFiles) {
             const relative = path.relative(projectDir, filePath)
@@ -222,94 +231,49 @@ export const registerBuild = (program: Command) => {
           }
         }
 
-        // Parallel build function using multithreading library
-        const buildWithMultithreading = async () => {
-          // Prepare build tasks
-          const buildTasks = circuitFiles.map((filePath) => {
+        // Parallel build function (used when concurrency > 1)
+        const buildWithWorkers = async () => {
+          const filesToBuild = circuitFiles.map((filePath) => {
             const relative = path.relative(projectDir, filePath)
             const outputDirName = relative.replace(
               /(\.board|\.circuit)?\.tsx$/,
               "",
             )
             const outputPath = path.join(distDir, outputDirName, "circuit.json")
-
-            return {
-              filePath,
-              outputPath,
-              projectDir,
-              options: buildOptions,
-            }
+            return { filePath, outputPath }
           })
 
-          const handles = buildTasks.map((task) =>
-            spawn(move(task), async (i: typeof task) => {
-              const { registerStaticAssetLoaders } = await import(
-                "../../lib/shared/register-static-asset-loaders"
-              )
-              registerStaticAssetLoaders()
-
-              const { buildFile: b } = await import("./build-file")
-              const r = await b(
-                i.filePath,
-                i.outputPath,
-                i.projectDir,
-                i.options,
-              )
-              return {
-                filePath: i.filePath,
-                outputPath: i.outputPath,
-                ok: r.ok,
-                circuitJson: r.circuitJson,
-                logs: [],
-                errors: [],
+          await buildFilesWithWorkerPool({
+            files: filesToBuild,
+            projectDir,
+            concurrency: concurrencyValue,
+            buildOptions,
+            onLog: (lines) => {
+              for (const line of lines) {
+                console.log(line)
               }
-            }),
-          )
+            },
+            onJobComplete: async (result: BuildJobResult) => {
+              const relative = path.relative(projectDir, result.filePath)
+              if (result.ok) {
+                console.log(kleur.green(`✓ ${relative}`))
+              } else {
+                console.log(kleur.red(`✗ ${relative}`))
+                for (const error of result.errors) {
+                  console.error(kleur.red(`  ${error}`))
+                }
+              }
 
-          // Wait for all builds to complete
-          const results = await Promise.all(handles.map((h) => h.join()))
-
-          // Process results in order
-          for (let i = 0; i < results.length; i++) {
-            const result = results[i]
-            const task = buildTasks[i]
-            const relative = path.relative(projectDir, task.filePath)
-
-            if (!result.ok) {
-              console.error(
-                kleur.red(`Failed to build ${relative}: ${result.error}`),
-              )
-              await processBuildResult(task.filePath, task.outputPath, {
-                ok: false,
+              // circuitJson is not passed through IPC - processBuildResult reads from file if needed
+              await processBuildResult(result.filePath, result.outputPath, {
+                ok: result.ok,
               })
-              continue
-            }
-
-            const buildResult = result.value
-
-            // Print buffered logs
-            console.log(`[${relative}]`)
-            if (buildResult.logs.length > 0) {
-              for (const log of buildResult.logs) {
-                console.log(`  ${log}`)
-              }
-            }
-            if (buildResult.errors.length > 0) {
-              for (const err of buildResult.errors) {
-                console.error(kleur.red(`  ${err}`))
-              }
-            }
-
-            await processBuildResult(task.filePath, task.outputPath, {
-              ok: buildResult.ok,
-              circuitJson: buildResult.circuitJson,
-            })
-          }
+            },
+          })
         }
 
-        // Execute builds based on concurrency setting
         if (concurrencyValue > 1) {
-          await buildWithMultithreading()
+          await buildWithWorkers()
         } else {
           await buildSequentially()
         }
