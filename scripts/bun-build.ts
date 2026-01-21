@@ -7,7 +7,7 @@ const tscircuitPackageJsonDeps = Object.keys(tscircuitPackageJson.dependencies)
 const ALLOW_BUNDLING = ["@tscircuit/runframe"]
 
 const result = await Bun.build({
-  entrypoints: ["./cli/main.ts"],
+  entrypoints: ["./cli/main.ts", "./cli/build/build-worker-entrypoint.ts"],
   target: "node",
   outdir: "./dist",
   external: [
