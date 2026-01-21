@@ -11,6 +11,7 @@ export const projectConfigSchema = z.object({
   buildCommand: z.string().optional(),
   kicadLibraryEntrypointPath: z.string().optional(),
   alwaysUseLatestTscircuitOnCloud: z.boolean().optional(),
+  partsEngineDisabled: z.boolean().optional(),
   build: z
     .object({
       circuitJson: z.boolean().optional(),

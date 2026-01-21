@@ -52,6 +52,10 @@
       "type": "string",
       "description": "Entry file for KiCad footprint library generation."
     },
+    "partsEngineDisabled": {
+      "type": "boolean",
+      "description": "Disable the parts engine for builds. When true, supplier_part_numbers will not be populated on source_component elements."
+    },
     "build": {
       "type": "object",
       "additionalProperties": false,

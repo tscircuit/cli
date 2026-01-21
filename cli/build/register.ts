@@ -95,11 +95,14 @@ export const registerBuild = (program: Command) => {
           return
         }
 
+        const projectConfig = loadProjectConfig(projectDir)
+
         const platformConfig: PlatformConfig | undefined = (() => {
-          if (
-            !resolvedOptions?.disablePcb &&
-            !resolvedOptions?.disablePartsEngine
-          ) {
+          const partsEngineDisabled =
+            resolvedOptions?.disablePartsEngine ||
+            projectConfig?.partsEngineDisabled
+
+          if (!resolvedOptions?.disablePcb && !partsEngineDisabled) {
             return
           }
 
@@ -109,7 +112,7 @@ export const registerBuild = (program: Command) => {
             config.pcbDisabled = true
           }
 
-          if (resolvedOptions?.disablePartsEngine) {
+          if (partsEngineDisabled) {
             config.partsEngineDisabled = true
           }
 

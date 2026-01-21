@@ -6,6 +6,7 @@ import { generateCircuitJson } from "lib/shared/generate-circuit-json"
 import { getSpiceWithPaddedSim } from "lib/shared/get-spice-with-sim"
 import { runSimulation } from "lib/eecircuit-engine/run-simulation"
 import { resultToCsv } from "lib/shared/result-to-csv"
+import { loadProjectConfig } from "lib/project-config"
 import path from "node:path"
 import { promises as fs } from "node:fs"
 import type { PlatformConfig } from "@tscircuit/props"
@@ -32,10 +33,16 @@ export const registerExport = (program: Command) => {
       ) => {
         const formatOption = options.format ?? "json"
 
-        const platformConfig: PlatformConfig | undefined =
-          options.disablePartsEngine === true
-            ? { partsEngineDisabled: true }
-            : undefined
+        const projectDir = path.dirname(path.resolve(file))
+        const projectConfig = loadProjectConfig(projectDir)
+
+        const partsEngineDisabled =
+          options.disablePartsEngine === true ||
+          projectConfig?.partsEngineDisabled === true
+
+        const platformConfig: PlatformConfig | undefined = partsEngineDisabled
+          ? { partsEngineDisabled: true }
+          : undefined
 
         if (formatOption === "spice") {
           const { circuitJson } = await generateCircuitJson({
