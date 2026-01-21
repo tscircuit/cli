@@ -3,6 +3,7 @@ import { test, expect } from "bun:test"
 import { writeFile, readdir, mkdir, readFile } from "node:fs/promises"
 import path from "node:path"
 import fs from "node:fs"
+import JSZip from "jszip"
 
 test("build --kicad-pcm generates KiCad PCM assets", async () => {
   const { tmpDir, runCommand } = await getCliTestFixture()
@@ -58,7 +59,22 @@ export const MyResistor = () => (
     "testuser--my-resistor.tscircuit.app/pcm/packages.json",
   )
 
-  // Verify ZIP exists in pcm folder
+  // Verify ZIP exists in pcm folder and check its contents
   const files = await readdir(pcmDir)
-  expect(files.some((f) => f.endsWith(".zip"))).toBe(true)
+  const zipFile = files.find((f) => f.endsWith(".zip"))
+  expect(zipFile).toBeDefined()
+
+  const zipBuffer = await readFile(path.join(pcmDir, zipFile!))
+  const zip = await JSZip.loadAsync(zipBuffer)
+  const zipPaths = Object.keys(zip.files).sort()
+  expect(zipPaths).toMatchInlineSnapshot(`
+    [
+      "footprints/",
+      "footprints/tscircuit_builtin.pretty/",
+      "footprints/tscircuit_builtin.pretty/resistor_0402.kicad_mod",
+      "metadata.json",
+      "symbols/",
+      "symbols/tscircuit_builtin.kicad_sym",
+    ]
+  `)
 }, 120_000)
