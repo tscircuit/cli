@@ -46,7 +46,7 @@ export async function convertToKicadLibrary({
 
         // Create a circuit and render the component
         const runner = new userLandTscircuit.RootCircuit()
-        runner.add(<Component name={componentName} />)
+        runner.add(<Component name="REF**" />)
         await runner.renderUntilSettled()
         return await runner.getCircuitJson()
       } catch (error) {
