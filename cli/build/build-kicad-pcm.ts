@@ -9,12 +9,14 @@ export interface BuildKicadPcmOptions {
   entryFile: string
   projectDir: string
   distDir: string
+  libraryName?: string
 }
 
 export async function buildKicadPcm({
   entryFile,
   projectDir,
   distDir,
+  libraryName,
 }: BuildKicadPcmOptions): Promise<void> {
   const packageJsonPath = path.join(projectDir, "package.json")
   if (!fs.existsSync(packageJsonPath)) {
@@ -30,7 +32,7 @@ export async function buildKicadPcm({
   const author = getPackageAuthor(packageJson.name || "") || "tscircuit"
   const description = packageJson.description || ""
 
-  const libraryName = path.basename(projectDir)
+  const resolvedLibraryName = libraryName ?? path.basename(projectDir)
   const kicadLibOutputDir = path.join(distDir, "kicad-library")
 
   // First generate kicad-library if not already done
@@ -38,7 +40,7 @@ export async function buildKicadPcm({
     console.log("Converting to KiCad library...")
     await convertToKicadLibrary({
       filePath: entryFile,
-      libraryName,
+      libraryName: resolvedLibraryName,
       outputDir: kicadLibOutputDir,
     })
   }

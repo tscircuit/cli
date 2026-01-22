@@ -58,6 +58,10 @@ export const registerBuild = (program: Command) => {
       "Generate KiCad project directories for each successful build output",
     )
     .option(
+      "--kicad-library",
+      "Generate KiCad footprint library in dist/kicad-library",
+    )
+    .option(
       "--preview-gltf",
       "Generate a GLTF file from the preview entrypoint",
     )
@@ -142,7 +146,9 @@ export const registerBuild = (program: Command) => {
         > = []
 
         const shouldGenerateKicad =
-          resolvedOptions?.kicad || resolvedOptions?.kicadFootprintLibrary
+          resolvedOptions?.kicad ||
+          resolvedOptions?.kicadLibrary ||
+          resolvedOptions?.kicadFootprintLibrary
 
         // Prepare build options for reuse
         const buildOptions = {
@@ -359,7 +365,10 @@ export const registerBuild = (program: Command) => {
           fs.writeFileSync(path.join(distDir, "index.html"), indexHtml)
         }
 
-        if (resolvedOptions?.kicadFootprintLibrary) {
+        if (
+          resolvedOptions?.kicadLibrary ||
+          resolvedOptions?.kicadFootprintLibrary
+        ) {
           console.log("Generating KiCad footprint library...")
           // Find the main library entrypoint for KiCad library generation
           const { mainEntrypoint: kicadEntrypoint } = await getBuildEntrypoints(
@@ -384,7 +393,8 @@ export const registerBuild = (program: Command) => {
               process.exit(1)
             }
           } else {
-            const libraryName = path.basename(projectDir)
+            const libraryName =
+              projectConfig?.kicadLibraryName ?? path.basename(projectDir)
             const kicadLibOutputDir = path.join(distDir, "kicad-library")
             try {
               await convertToKicadLibrary({
@@ -437,6 +447,8 @@ export const registerBuild = (program: Command) => {
                 entryFile,
                 projectDir,
                 distDir,
+                libraryName:
+                  projectConfig?.kicadLibraryName ?? path.basename(projectDir),
               })
             } catch (err) {
               console.error(
@@ -457,7 +469,9 @@ export const registerBuild = (program: Command) => {
           resolvedOptions?.previewImages && "preview-images",
           resolvedOptions?.allImages && "all-images",
           resolvedOptions?.kicad && "kicad",
-          resolvedOptions?.kicadFootprintLibrary && "kicad-footprint-library",
+          (resolvedOptions?.kicadLibrary ||
+            resolvedOptions?.kicadFootprintLibrary) &&
+            "kicad-library",
           resolvedOptions?.kicadPcm && "kicad-pcm",
           resolvedOptions?.previewGltf && "preview-gltf",
         ].filter(Boolean) as string[]

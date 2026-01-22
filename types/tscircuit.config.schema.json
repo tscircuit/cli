@@ -52,6 +52,10 @@
       "type": "string",
       "description": "Entry file for KiCad footprint library generation."
     },
+    "kicadLibraryName": {
+      "type": "string",
+      "description": "Name to use for generated KiCad library outputs."
+    },
     "alwaysUseLatestTscircuitOnCloud": {
       "type": "boolean",
       "description": "Always use the latest TSCircuit version when building on the cloud."
