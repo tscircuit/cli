@@ -3,6 +3,7 @@ import path from "node:path"
 import { pathToFileURL } from "node:url"
 import { KicadLibraryConverter } from "circuit-json-to-kicad"
 import { importFromUserLand } from "./importFromUserLand"
+import { extractKicadFootprintMetadata } from "./extract-kicad-footprint-metadata"
 
 type ConvertToKicadLibraryOptions = {
   /** Path to the tscircuit library entrypoint file */
@@ -60,6 +61,25 @@ export async function convertToKicadLibrary({
     getExportsFromTsxFile: async (filePath: string): Promise<string[]> => {
       const module = await import(pathToFileURL(filePath).href)
       return Object.keys(module)
+    },
+
+    getComponentKicadMetadata: async (
+      filePath: string,
+      componentName: string,
+    ) => {
+      try {
+        const module = await import(pathToFileURL(filePath).href)
+        const Component = module[componentName]
+
+        if (!Component || typeof Component !== "function") {
+          return null
+        }
+
+        return extractKicadFootprintMetadata(Component)
+      } catch (error) {
+        // Silently return null if we can't extract metadata
+        return null
+      }
     },
 
     includeBuiltins: true,
