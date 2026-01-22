@@ -1,0 +1,50 @@
+import { getCliTestFixture } from "../../fixtures/get-cli-test-fixture"
+import { test, expect } from "bun:test"
+import { writeFile, readFile } from "node:fs/promises"
+import path from "node:path"
+
+const packageJson = JSON.stringify({
+  name: "test-project",
+  dependencies: {
+    react: "*",
+    tscircuit: "*",
+  },
+})
+
+const circuitCode = (name: string) => `
+export default () => (
+  <board width="10mm" height="10mm">
+    <resistor resistance="1k" footprint="0402" name="${name}" schX={3} pcbX={3} />
+  </board>
+)`
+
+test.skip("build with --concurrency handles errors correctly", async () => {
+  const { tmpDir, runCommand } = await getCliTestFixture()
+
+  // Create one valid and one invalid circuit file
+  await writeFile(path.join(tmpDir, "valid.circuit.tsx"), circuitCode("R1"))
+  await writeFile(
+    path.join(tmpDir, "invalid.circuit.tsx"),
+    "export default () => { throw new Error('intentional error') }",
+  )
+  await writeFile(path.join(tmpDir, "package.json"), packageJson)
+
+  // Install dependencies so workers can resolve react/tscircuit
+  await runCommand("tsci install")
+
+  const { stdout } = await runCommand(
+    "tsci build --concurrency 2 --ignore-errors",
+  )
+
+  // Valid file should still be built
+  const data = await readFile(
+    path.join(tmpDir, "dist", "valid", "circuit.json"),
+    "utf-8",
+  )
+  const json = JSON.parse(data)
+  const component = json.find((c: any) => c.type === "source_component")
+  expect(component.name).toBe("R1")
+
+  // Build should complete (with --ignore-errors)
+  expect(stdout).toContain("Build complete")
+}, 60_000)
