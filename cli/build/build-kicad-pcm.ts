@@ -37,7 +37,10 @@ export async function buildKicadPcm({
   const kicadLibOutputDir = path.join(distDir, "kicad-library")
 
   // Generate PCM package identifier (e.g., "com_tscircuit_author_package-name")
-  const kicadPcmPackageId = `com_tscircuit_${author}_${packageName}`.replace(/\./g, "_")
+  const kicadPcmPackageId = `com_tscircuit_${author}_${packageName}`.replace(
+    /\./g,
+    "_",
+  )
 
   // Always regenerate kicad-library for PCM with correct paths
   // (PCM requires PCM_ prefixes and ${KICAD_3RD_PARTY} 3D model paths)
