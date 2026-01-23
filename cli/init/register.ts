@@ -6,12 +6,14 @@ import { generateTsConfig } from "lib/shared/generate-ts-config"
 import { writeFileIfNotExists } from "lib/shared/write-file-if-not-exists"
 import { generateGitIgnoreFile } from "lib/shared/generate-gitignore-file"
 import { generatePackageJson } from "lib/shared/generate-package-json"
+import { setupTscircuitSkill } from "lib/shared/setup-tscircuit-skill"
 import { cliConfig, getSessionToken } from "lib/cli-config"
 import { jwtDecode } from "jwt-decode"
-import { loadProjectConfig, saveProjectConfig } from "lib/project-config"
+import { saveProjectConfig } from "lib/project-config"
 import { checkForTsciUpdates } from "lib/shared/check-for-cli-update"
 import { prompts } from "lib/utils/prompts"
 import { fetchAccount } from "lib/registry-api/fetch-account"
+import kleur from "kleur"
 
 export const registerInit = (program: Command) => {
   program
@@ -98,23 +100,21 @@ export const registerInit = (program: Command) => {
 
         // Create essential project files
         writeFileIfNotExists(
-          path.join(projectDir, "index.tsx"),
+          path.join(projectDir, "index.circuit.tsx"),
           `
 export default () => (
   <board>
-    <resistor resistance="1k" footprint="0402" name="R1" schX={3} pcbX={3} />
-    <capacitor capacitance="1000pF" footprint="0402" name="C1" schX={-3} pcbX={-3} />
+    <resistor resistance="1k" footprint="0402" name="R1" />
+    <capacitor capacitance="1000pF" footprint="0402" name="C1" />
     <trace from=".R1 > .pin1" to=".C1 > .pin1" />
   </board>
 )
 `,
         )
 
-        const projectConfig = loadProjectConfig(projectDir) ?? {}
-        projectConfig.mainEntrypoint = "index.tsx"
-        if (saveProjectConfig(projectConfig, projectDir)) {
+        if (saveProjectConfig(null, projectDir)) {
           console.log(
-            "Updated tscircuit.config.json with mainEntrypoint: 'index.tsx'",
+            "Updated tscircuit.config.json with mainEntrypoint: 'index.circuit.tsx'",
           )
         }
 
@@ -132,11 +132,23 @@ export default () => (
         generateTsConfig(projectDir)
         // Create .gitignore file
         generateGitIgnoreFile(projectDir)
+        // Setup tscircuit claude skill
+        await setupTscircuitSkill(projectDir, options?.yes)
         // Setup project dependencies
         setupTsciProject(projectDir, options?.install ? undefined : [])
 
         console.info(
-          `🎉 Initialization complete! Run ${directory ? `"cd ${directory}" & ` : ""}"tsci dev" to start developing.`,
+          "\n",
+          kleur.green("🎉 Initialization complete!"),
+          "Run ",
+          kleur.bold(
+            kleur.blue(
+              `${
+                directory ? `${kleur.bold(`cd ${directory}`)} & ` : ""
+              }${kleur.bold("tsci dev")}`,
+            ),
+          ),
+          " to start developing.",
         )
         process.exit(0)
       },

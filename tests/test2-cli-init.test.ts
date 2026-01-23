@@ -14,7 +14,7 @@ test("basic init", async () => {
   const expectedFiles = [
     ".gitignore",
     ".npmrc",
-    "index.tsx",
+    "index.circuit.tsx",
     "package.json",
     "tsconfig.json",
   ]

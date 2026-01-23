@@ -7,10 +7,12 @@ export const generateTsConfig = (dir: string) => {
   const tsconfigContent = JSON.stringify(
     {
       compilerOptions: {
-        target: "ES6",
+        target: "ES2020",
         module: "ESNext",
         jsx: "react-jsx",
         outDir: "dist",
+        rootDir: ".",
+        baseUrl: ".",
         strict: true,
         esModuleInterop: true,
         moduleResolution: "node",
@@ -22,6 +24,8 @@ export const generateTsConfig = (dir: string) => {
         experimentalDecorators: true,
         types: ["tscircuit"],
       },
+      include: ["**/*.ts", "**/*.tsx"],
+      exclude: ["node_modules", "dist", ".claude"],
     },
     null,
     2,

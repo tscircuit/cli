@@ -72,7 +72,7 @@ export const getSnapshotsDir = (
  * Save the tscircuit project configuration to the file system
  */
 export const saveProjectConfig = (
-  config: TscircuitProjectConfig,
+  config: TscircuitProjectConfig | null,
   projectDir: string = process.cwd(),
 ): boolean => {
   const configPath = path.join(projectDir, CONFIG_FILENAME)
@@ -80,7 +80,7 @@ export const saveProjectConfig = (
   try {
     const configWithSchema = {
       $schema: CONFIG_SCHEMA_URL,
-      ...config,
+      ...(config ?? {}),
     }
     fs.writeFileSync(configPath, JSON.stringify(configWithSchema, null, 2))
     return true
