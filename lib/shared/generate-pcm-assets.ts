@@ -22,6 +22,8 @@ export interface GeneratePcmAssetsOptions {
   outputDir: string
   /** Base URL where PCM will be hosted (e.g., "https://author.tscircuit.app/package/dist/pcm") */
   baseUrl?: string
+  /** Display name for the library in KiCad PCM (defaults to "tscircuit {packageName}") */
+  displayName?: string
 }
 
 export interface GeneratePcmAssetsResult {
@@ -44,12 +46,13 @@ export async function generatePcmAssets(
     packageName,
     version,
     author,
-    description = `${packageName} - tscircuit component`,
-    descriptionFull = `A tscircuit component exported for use in KiCad. Visit https://tscircuit.com/${author}/${packageName} for more information.`,
+    description = "",
+    descriptionFull = `Visit https://tscircuit.com/${author}/${packageName} for more information.`,
     license = "MIT",
     kicadLibraryPath,
     outputDir,
     baseUrl,
+    displayName = `${author}/${packageName}`,
   } = options
 
   // Create PCM identifier (must be alphanumeric with dots/dashes, 2-50 chars)
@@ -65,7 +68,7 @@ export async function generatePcmAssets(
   // Create metadata.json for inside the ZIP
   const metadata = {
     $schema: "https://go.kicad.org/pcm/schemas/v1",
-    name: `tscircuit ${packageName}`,
+    name: displayName,
     description: description.slice(0, 500),
     description_full: descriptionFull.slice(0, 5000),
     identifier,
@@ -112,7 +115,7 @@ export async function generatePcmAssets(
     packages: [
       {
         identifier,
-        name: `tscircuit ${packageName}`,
+        name: displayName,
         description: description.slice(0, 500),
         description_full: descriptionFull.slice(0, 5000),
         type: "library",
@@ -156,7 +159,7 @@ export async function generatePcmAssets(
 
   const repositoryJson = {
     $schema: "https://go.kicad.org/pcm/schemas/v1",
-    name: `tscircuit ${author}/${packageName}`,
+    name: displayName,
     maintainer: {
       name: author,
       contact: {

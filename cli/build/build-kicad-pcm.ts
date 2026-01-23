@@ -4,6 +4,8 @@ import kleur from "kleur"
 import { convertToKicadLibrary } from "lib/shared/convert-to-kicad-library"
 import { generatePcmAssets } from "lib/shared/generate-pcm-assets"
 import { getPackageAuthor } from "lib/utils/get-package-author"
+import { loadProjectConfig } from "lib/project-config"
+import { resolveKicadLibraryName } from "lib/utils/resolve-kicad-library-name"
 
 export interface BuildKicadPcmOptions {
   entryFile: string
@@ -22,6 +24,7 @@ export async function buildKicadPcm({
   }
 
   const packageJson = JSON.parse(fs.readFileSync(packageJsonPath, "utf-8"))
+  const projectConfig = loadProjectConfig(projectDir)
 
   const packageName =
     packageJson.name?.split("/").pop()?.split(".").pop() ||
@@ -30,7 +33,7 @@ export async function buildKicadPcm({
   const author = getPackageAuthor(packageJson.name || "") || "tscircuit"
   const description = packageJson.description || ""
 
-  const libraryName = path.basename(projectDir)
+  const libraryName = resolveKicadLibraryName({ projectDir })
   const kicadLibOutputDir = path.join(distDir, "kicad-library")
 
   // First generate kicad-library if not already done
@@ -62,6 +65,8 @@ export async function buildKicadPcm({
     kicadLibraryPath: kicadLibOutputDir,
     outputDir: pcmOutputDir,
     baseUrl,
+    // Use custom display name if kicadLibraryName is configured
+    displayName: projectConfig?.kicadLibraryName || undefined,
   })
 
   console.log(

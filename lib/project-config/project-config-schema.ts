@@ -10,6 +10,7 @@ export const projectConfigSchema = z.object({
   prebuildCommand: z.string().optional(),
   buildCommand: z.string().optional(),
   kicadLibraryEntrypointPath: z.string().optional(),
+  kicadLibraryName: z.string().optional(),
   alwaysUseLatestTscircuitOnCloud: z.boolean().optional(),
   build: z
     .object({

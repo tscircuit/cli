@@ -20,6 +20,7 @@ import { convertToKicadLibrary } from "lib/shared/convert-to-kicad-library"
 import { buildKicadPcm } from "./build-kicad-pcm"
 import { transpileFile } from "./transpile"
 import { validateMainInDist } from "../utils/validate-main-in-dist"
+import { resolveKicadLibraryName } from "lib/utils/resolve-kicad-library-name"
 import { getLatestTscircuitCdnUrl } from "../utils/get-latest-tscircuit-cdn-url"
 import { buildFilesWithWorkerPool } from "./worker-pool"
 import type { BuildJobResult } from "./worker-types"
@@ -384,7 +385,7 @@ export const registerBuild = (program: Command) => {
               process.exit(1)
             }
           } else {
-            const libraryName = path.basename(projectDir)
+            const libraryName = resolveKicadLibraryName({ projectDir })
             const kicadLibOutputDir = path.join(distDir, "kicad-library")
             try {
               await convertToKicadLibrary({
