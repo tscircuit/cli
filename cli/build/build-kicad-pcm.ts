@@ -36,15 +36,19 @@ export async function buildKicadPcm({
   const libraryName = resolveKicadLibraryName({ projectDir })
   const kicadLibOutputDir = path.join(distDir, "kicad-library")
 
-  // First generate kicad-library if not already done
-  if (!fs.existsSync(kicadLibOutputDir)) {
-    console.log("Converting to KiCad library...")
-    await convertToKicadLibrary({
-      filePath: entryFile,
-      libraryName,
-      outputDir: kicadLibOutputDir,
-    })
-  }
+  // Generate PCM package identifier (e.g., "com_tscircuit_author_package-name")
+  const kicadPcmPackageId = `com_tscircuit_${author}_${packageName}`.replace(/\./g, "_")
+
+  // Always regenerate kicad-library for PCM with correct paths
+  // (PCM requires PCM_ prefixes and ${KICAD_3RD_PARTY} 3D model paths)
+  console.log("Converting to KiCad library for PCM...")
+  await convertToKicadLibrary({
+    filePath: entryFile,
+    libraryName,
+    outputDir: kicadLibOutputDir,
+    isPcm: true,
+    kicadPcmPackageId,
+  })
 
   // Generate PCM assets
   const pcmOutputDir = path.join(distDir, "pcm")

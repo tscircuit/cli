@@ -12,6 +12,10 @@ type ConvertToKicadLibraryOptions = {
   libraryName: string
   /** Output directory for the KiCad library files */
   outputDir: string
+  /** Whether generating for KiCad PCM (prefixes footprint refs with PCM_, uses absolute 3D model paths) */
+  isPcm?: boolean
+  /** The KiCad PCM package identifier (e.g., "com_tscircuit_author_package") */
+  kicadPcmPackageId?: string
 }
 
 /**
@@ -21,6 +25,8 @@ export async function convertToKicadLibrary({
   filePath,
   libraryName,
   outputDir,
+  isPcm,
+  kicadPcmPackageId,
 }: ConvertToKicadLibraryOptions) {
   const absoluteFilePath = path.isAbsolute(filePath)
     ? filePath
@@ -83,6 +89,8 @@ export async function convertToKicadLibrary({
     },
 
     includeBuiltins: true,
+    isPcm,
+    kicadPcmPackageId,
   })
 
   await converter.run()
