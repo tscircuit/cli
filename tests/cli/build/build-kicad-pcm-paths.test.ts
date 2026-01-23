@@ -104,7 +104,7 @@ export const MySwitch = () => (
 
   // Verify symbol has PCM_ prefix in footprint reference
   expect(userSymbolContent).toContain("PCM_my-switch-lib:MySwitch")
-  
+
   const userFootprintContent = await readFile(
     path.join(
       kicadLibDir,
@@ -117,7 +117,9 @@ export const MySwitch = () => (
 
   // Verify 3D model path uses ${KICAD_3RD_PARTY} variable for PCM
   // Format: ${KICAD_3RD_PARTY}/3dmodels/<kicadPcmPackageId>/<library>.3dshapes/<model>.step
-  expect(userFootprintContent).toContain("${KICAD_3RD_PARTY}/3dmodels/com_tscircuit_testauthor_my-switch-lib/my-switch-lib.3dshapes/test_model.step")
+  expect(userFootprintContent).toContain(
+    "${KICAD_3RD_PARTY}/3dmodels/com_tscircuit_testauthor_my-switch-lib/my-switch-lib.3dshapes/test_model.step",
+  )
 
   // Verify the ZIP package contains correct content
   const pcmDir = path.join(tmpDir, "dist", "pcm")
@@ -131,11 +133,15 @@ export const MySwitch = () => (
   const zip = await JSZip.loadAsync(zipBuffer)
 
   // Verify ZIP contains the symbol with PCM_ prefix
-  const zipSymbolContent = await zip.files["symbols/my-switch-lib.kicad_sym"].async("string")
+  const zipSymbolContent =
+    await zip.files["symbols/my-switch-lib.kicad_sym"].async("string")
   expect(zipSymbolContent).toContain("PCM_my-switch-lib:MySwitch")
 
   // Verify ZIP contains the footprint with ${KICAD_3RD_PARTY} path
-  const zipFootprintContent = await zip.files["footprints/my-switch-lib.pretty/MySwitch.kicad_mod"].async("string")
+  const zipFootprintContent =
+    await zip.files["footprints/my-switch-lib.pretty/MySwitch.kicad_mod"].async(
+      "string",
+    )
   expect(zipFootprintContent).toMatchInlineSnapshot(`
     "(footprint
       "MySwitch"
