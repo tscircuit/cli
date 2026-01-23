@@ -5,6 +5,28 @@ import path from "node:path"
 import fs from "node:fs"
 import JSZip from "jszip"
 
+async function getDirectoryStructure(dir: string, baseDir?: string): Promise<string[]> {
+  const base = baseDir ?? dir
+  const entries = await readdir(dir, { withFileTypes: true })
+  const paths: string[] = []
+
+  for (const entry of entries.sort((a, b) => a.name.localeCompare(b.name))) {
+    const fullPath = path.join(dir, entry.name)
+    const relativePath = path.relative(base, fullPath)
+
+    if (entry.isDirectory()) {
+      paths.push(relativePath + "/")
+      paths.push(...(await getDirectoryStructure(fullPath, base)))
+    } else {
+      // Replace version-specific zip filename with placeholder
+      const displayPath = relativePath.replace(/_\d+\.\d+\.\d+\.zip$/, "_VERSION.zip")
+      paths.push(displayPath)
+    }
+  }
+
+  return paths
+}
+
 test("build --kicad-pcm generates KiCad PCM assets", async () => {
   const { tmpDir, runCommand } = await getCliTestFixture()
 
@@ -44,6 +66,29 @@ export const MyResistor = () => (
 
   expect(stdout).toContain("Generating KiCad PCM assets")
   expect(stdout).toContain("KiCad PCM assets generated")
+
+  // Check dist directory structure
+  const distDir = path.join(tmpDir, "dist")
+  const distStructure = await getDirectoryStructure(distDir)
+  expect(distStructure).toMatchInlineSnapshot(`
+    [
+      "kicad-library/",
+      "kicad-library/footprints/",
+      "kicad-library/footprints/tscircuit_builtin.pretty/",
+      "kicad-library/footprints/tscircuit_builtin.pretty/resistor_0402.kicad_mod",
+      "kicad-library/fp-lib-table",
+      "kicad-library/sym-lib-table",
+      "kicad-library/symbols/",
+      "kicad-library/symbols/tscircuit_builtin.kicad_sym",
+      "lib/",
+      "lib/index/",
+      "lib/index/circuit.json",
+      "pcm/",
+      "pcm/com.tscircuit.testuser.my-resistor-1.0.0.zip",
+      "pcm/packages.json",
+      "pcm/repository.json",
+    ]
+  `)
 
   // Check PCM files exist
   const pcmDir = path.join(tmpDir, "dist", "pcm")
