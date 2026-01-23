@@ -5,7 +5,10 @@ import path from "node:path"
 import fs from "node:fs"
 import JSZip from "jszip"
 
-async function getDirectoryStructure(dir: string, baseDir?: string): Promise<string[]> {
+async function getDirectoryStructure(
+  dir: string,
+  baseDir?: string,
+): Promise<string[]> {
   const base = baseDir ?? dir
   const entries = await readdir(dir, { withFileTypes: true })
   const paths: string[] = []
@@ -19,7 +22,10 @@ async function getDirectoryStructure(dir: string, baseDir?: string): Promise<str
       paths.push(...(await getDirectoryStructure(fullPath, base)))
     } else {
       // Replace version-specific zip filename with placeholder
-      const displayPath = relativePath.replace(/_\d+\.\d+\.\d+\.zip$/, "_VERSION.zip")
+      const displayPath = relativePath.replace(
+        /_\d+\.\d+\.\d+\.zip$/,
+        "_VERSION.zip",
+      )
       paths.push(displayPath)
     }
   }
