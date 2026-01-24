@@ -143,7 +143,7 @@ export const registerBuild = (program: Command) => {
         > = []
 
         const shouldGenerateKicad =
-          resolvedOptions?.kicad || resolvedOptions?.kicadFootprintLibrary
+          resolvedOptions?.kicad || resolvedOptions?.kicadLibrary
 
         // Prepare build options for reuse
         const buildOptions = {
@@ -360,8 +360,8 @@ export const registerBuild = (program: Command) => {
           fs.writeFileSync(path.join(distDir, "index.html"), indexHtml)
         }
 
-        if (resolvedOptions?.kicadFootprintLibrary) {
-          console.log("Generating KiCad footprint library...")
+        if (resolvedOptions?.kicadLibrary) {
+          console.log("Generating KiCad library...")
           // Find the main library entrypoint for KiCad library generation
           const { mainEntrypoint: kicadEntrypoint } = await getBuildEntrypoints(
             {
@@ -458,7 +458,7 @@ export const registerBuild = (program: Command) => {
           resolvedOptions?.previewImages && "preview-images",
           resolvedOptions?.allImages && "all-images",
           resolvedOptions?.kicad && "kicad",
-          resolvedOptions?.kicadFootprintLibrary && "kicad-footprint-library",
+          resolvedOptions?.kicadLibrary && "kicad-library",
           resolvedOptions?.kicadPcm && "kicad-pcm",
           resolvedOptions?.previewGltf && "preview-gltf",
         ].filter(Boolean) as string[]
