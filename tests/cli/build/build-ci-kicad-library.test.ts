@@ -45,8 +45,8 @@ export const MyResistor = () => (
 
   const { stdout, stderr } = await runCommand("tsci build --ci")
 
-  expect(stdout).toContain("Generating KiCad footprint library")
-  expect(stdout).toContain("kicad-footprint-library")
+  expect(stdout).toContain("Generating KiCad library")
+  expect(stdout).toContain("kicad-library")
 
   // Check that the kicad-library directory was created
   const kicadLibDir = path.join(tmpDir, "dist", "kicad-library")

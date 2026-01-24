@@ -14,7 +14,7 @@ export interface BuildCommandOptions {
   previewImages?: boolean
   allImages?: boolean
   kicad?: boolean
-  kicadFootprintLibrary?: boolean
+  kicadLibrary?: boolean
   kicadPcm?: boolean
   previewGltf?: boolean
   useCdnJavascript?: boolean
@@ -76,10 +76,8 @@ export const applyCiBuildOptions = async ({
       site: options?.site ?? true,
       useCdnJavascript: options?.useCdnJavascript ?? true,
       ignoreErrors: options?.ignoreErrors ?? true,
-      kicadFootprintLibrary:
-        options?.kicadFootprintLibrary ??
-        projectConfig?.build?.kicadLibrary ??
-        false,
+      kicadLibrary:
+        options?.kicadLibrary ?? projectConfig?.build?.kicadLibrary ?? false,
       kicadPcm: options?.kicadPcm ?? projectConfig?.build?.kicadPcm ?? false,
     },
     handled: false,
