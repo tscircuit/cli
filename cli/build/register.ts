@@ -17,6 +17,7 @@ import { buildPreviewGltf } from "./build-preview-gltf"
 import { generateKicadProject } from "./generate-kicad-project"
 import type { GeneratedKicadProject } from "./generate-kicad-project"
 import { convertToKicadLibrary } from "lib/shared/convert-to-kicad-library"
+import { generateKicadFootprintLibrary } from "./generate-kicad-footprint-library"
 import { buildKicadPcm } from "./build-kicad-pcm"
 import { transpileFile } from "./transpile"
 import { validateMainInDist } from "../utils/validate-main-in-dist"
@@ -277,6 +278,14 @@ export const registerBuild = (program: Command) => {
           await buildWithWorkers()
         } else {
           await buildSequentially()
+        }
+
+        if (kicadProjects.length > 0) {
+          console.log("Generating centralized KiCad footprint library...")
+          await generateKicadFootprintLibrary({
+            projects: kicadProjects,
+            distDir,
+          })
         }
 
         if (hasErrors && !resolvedOptions?.ignoreErrors) {
