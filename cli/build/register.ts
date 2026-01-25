@@ -87,9 +87,38 @@ export const registerBuild = (program: Command) => {
           fileOrDir: file,
         })
 
+        const projectConfig = loadProjectConfig(projectDir)
+        const configBuild = projectConfig?.build
+
+        const configAppliedOpts: string[] = []
+        if (!options?.kicad && configBuild?.kicadLibrary) {
+          configAppliedOpts.push("kicad")
+        }
+        if (!options?.kicadLibrary && configBuild?.kicadLibrary) {
+          configAppliedOpts.push("kicad-library")
+        }
+        if (!options?.kicadPcm && configBuild?.kicadPcm) {
+          configAppliedOpts.push("kicad-pcm")
+        }
+        if (!options?.previewImages && configBuild?.previewImages) {
+          configAppliedOpts.push("preview-images")
+        }
+        if (!options?.transpile && configBuild?.typescriptLibrary) {
+          configAppliedOpts.push("transpile")
+        }
+
+        const optionsWithConfig: BuildCommandOptions = {
+          ...options,
+          kicad: options?.kicad ?? configBuild?.kicadLibrary,
+          kicadLibrary: options?.kicadLibrary ?? configBuild?.kicadLibrary,
+          kicadPcm: options?.kicadPcm ?? configBuild?.kicadPcm,
+          previewImages: options?.previewImages ?? configBuild?.previewImages,
+          transpile: options?.transpile ?? configBuild?.typescriptLibrary,
+        }
+
         const { resolvedOptions, handled } = await applyCiBuildOptions({
           projectDir,
-          options,
+          options: optionsWithConfig,
         })
 
         if (handled) {
@@ -470,6 +499,11 @@ export const registerBuild = (program: Command) => {
         )
         if (enabledOpts.length > 0) {
           console.log(`  Options   ${kleur.cyan(enabledOpts.join(", "))}`)
+        }
+        if (configAppliedOpts.length > 0) {
+          console.log(
+            `  Config    ${kleur.magenta(configAppliedOpts.join(", "))} ${kleur.dim("(from tscircuit.config.json)")}`,
+          )
         }
         console.log(
           `  Output    ${kleur.dim(path.relative(process.cwd(), distDir) || "dist")}`,
