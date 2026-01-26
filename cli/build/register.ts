@@ -78,15 +78,28 @@ export const registerBuild = (program: Command) => {
     )
     .action(async (file?: string, options?: BuildCommandOptions) => {
       try {
-        const {
-          projectDir,
-          circuitFiles,
-          mainEntrypoint,
-          previewComponentPath,
-          siteDefaultComponentPath,
-        } = await getBuildEntrypoints({
-          fileOrDir: file,
-        })
+        // First, determine projectDir so we can run prebuild commands BEFORE scanning for files
+        // This allows prebuild commands to generate files that will be included in the build
+        const resolvedRoot = path.resolve(process.cwd())
+        let projectDir: string
+        if (file) {
+          const resolved = path.resolve(resolvedRoot, file)
+          if (fs.existsSync(resolved) && fs.statSync(resolved).isDirectory()) {
+            projectDir = resolvedRoot
+          } else {
+            // Find project root by looking for package.json
+            let currentDir = path.dirname(resolved)
+            while (currentDir !== path.dirname(currentDir)) {
+              if (fs.existsSync(path.join(currentDir, "package.json"))) {
+                break
+              }
+              currentDir = path.dirname(currentDir)
+            }
+            projectDir = currentDir
+          }
+        } else {
+          projectDir = resolvedRoot
+        }
 
         const projectConfig = loadProjectConfig(projectDir)
 
@@ -104,6 +117,15 @@ export const registerBuild = (program: Command) => {
         if (handled) {
           return
         }
+
+        const {
+          circuitFiles,
+          mainEntrypoint,
+          previewComponentPath,
+          siteDefaultComponentPath,
+        } = await getBuildEntrypoints({
+          fileOrDir: file,
+        })
 
         const platformConfig: PlatformConfig | undefined = (() => {
           if (
