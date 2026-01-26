@@ -3,6 +3,7 @@ import path from "node:path"
 import fs from "node:fs"
 import { buildFile } from "./build-file"
 import { applyCiBuildOptions, type BuildCommandOptions } from "./build-ci"
+import { resolveBuildOptions } from "./resolve-build-options"
 import { getBuildEntrypoints } from "./get-build-entrypoints"
 import { loadProjectConfig } from "lib/project-config"
 import { getEntrypoint } from "lib/shared/get-entrypoint"
@@ -87,9 +88,17 @@ export const registerBuild = (program: Command) => {
           fileOrDir: file,
         })
 
+        const projectConfig = loadProjectConfig(projectDir)
+
+        const { options: optionsWithConfig, configAppliedOpts } =
+          resolveBuildOptions({
+            cliOptions: options,
+            projectConfig,
+          })
+
         const { resolvedOptions, handled } = await applyCiBuildOptions({
           projectDir,
-          options,
+          options: optionsWithConfig,
         })
 
         if (handled) {
@@ -470,6 +479,11 @@ export const registerBuild = (program: Command) => {
         )
         if (enabledOpts.length > 0) {
           console.log(`  Options   ${kleur.cyan(enabledOpts.join(", "))}`)
+        }
+        if (configAppliedOpts.length > 0) {
+          console.log(
+            `  Config    ${kleur.magenta(configAppliedOpts.join(", "))} ${kleur.dim("(from tscircuit.config.json)")}`,
+          )
         }
         console.log(
           `  Output    ${kleur.dim(path.relative(process.cwd(), distDir) || "dist")}`,
