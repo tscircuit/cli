@@ -24,6 +24,7 @@ import { resolveKicadLibraryName } from "lib/utils/resolve-kicad-library-name"
 import { getLatestTscircuitCdnUrl } from "../utils/get-latest-tscircuit-cdn-url"
 import { buildFilesWithWorkerPool } from "./worker-pool"
 import type { BuildJobResult } from "./worker-types"
+import { rewriteModelUrlsForSite } from "./rewrite-model-urls-for-site"
 import kleur from "kleur"
 
 // @ts-ignore
@@ -344,6 +345,19 @@ export const registerBuild = (program: Command) => {
           let standaloneScriptSrc = "./standalone.min.js"
           if (resolvedOptions?.useCdnJavascript) {
             standaloneScriptSrc = await getLatestTscircuitCdnUrl()
+            // Rewrite model URLs for CDN-hosted site builds
+            const circuitJsonPath = path.join(distDir, "index", "circuit.json")
+            const circuitJsonForRewrite = JSON.parse(
+              fs.readFileSync(circuitJsonPath, "utf-8"),
+            )
+            const rewrittenCircuitJson = rewriteModelUrlsForSite(
+              circuitJsonForRewrite,
+              distDir,
+            )
+            fs.writeFileSync(
+              circuitJsonPath,
+              JSON.stringify(rewrittenCircuitJson, null, 2),
+            )
           } else {
             fs.writeFileSync(
               path.join(distDir, "standalone.min.js"),
