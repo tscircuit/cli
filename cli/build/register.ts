@@ -346,18 +346,25 @@ export const registerBuild = (program: Command) => {
           if (resolvedOptions?.useCdnJavascript) {
             standaloneScriptSrc = await getLatestTscircuitCdnUrl()
             // Rewrite model URLs for CDN-hosted site builds
-            const circuitJsonPath = path.join(distDir, "index", "circuit.json")
-            const circuitJsonForRewrite = JSON.parse(
-              fs.readFileSync(circuitJsonPath, "utf-8"),
-            )
-            const rewrittenCircuitJson = rewriteModelUrlsForSite(
-              circuitJsonForRewrite,
-              distDir,
-            )
-            fs.writeFileSync(
-              circuitJsonPath,
-              JSON.stringify(rewrittenCircuitJson, null, 2),
-            )
+            for (const fileRef of staticFileReferences) {
+              const circuitJsonPath = path.join(
+                distDir,
+                fileRef.fileStaticAssetUrl.replace(/^\.\//, ""),
+              )
+              if (fs.existsSync(circuitJsonPath)) {
+                const circuitJsonForRewrite = JSON.parse(
+                  fs.readFileSync(circuitJsonPath, "utf-8"),
+                )
+                const rewrittenCircuitJson = rewriteModelUrlsForSite(
+                  circuitJsonForRewrite,
+                  distDir,
+                )
+                fs.writeFileSync(
+                  circuitJsonPath,
+                  JSON.stringify(rewrittenCircuitJson, null, 2),
+                )
+              }
+            }
           } else {
             fs.writeFileSync(
               path.join(distDir, "standalone.min.js"),

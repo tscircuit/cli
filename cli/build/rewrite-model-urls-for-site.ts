@@ -1,21 +1,20 @@
 import fs from "node:fs"
 import path from "node:path"
 import { createHash } from "node:crypto"
+import type { AnyCircuitElement, CadComponent } from "circuit-json"
 
 /**
- * All model URL keys that may contain local file paths
+ * Model URL keys on CadComponent that may contain local file paths
  */
-const MODEL_URL_KEYS = [
-  "model_glb_url",
-  "glb_model_url",
-  "model_stl_url",
-  "stl_model_url",
+const MODEL_URL_KEYS: Array<keyof CadComponent> = [
   "model_obj_url",
-  "obj_model_url",
+  "model_stl_url",
+  "model_3mf_url",
   "model_gltf_url",
-  "gltf_model_url",
+  "model_glb_url",
   "model_step_url",
-  "step_model_url",
+  "model_wrl_url",
+  "model_jscad",
 ]
 
 /**
@@ -88,16 +87,22 @@ const escapeRegExp = (s: string): string =>
  * @returns Updated circuit.json with relative asset URLs
  */
 export const rewriteModelUrlsForSite = (
-  circuitJson: any[],
+  circuitJson: AnyCircuitElement[],
   distDir: string,
-): any[] => {
+): AnyCircuitElement[] => {
   const assetsDir = path.join(distDir, "assets")
   const processedAssets = new Map<string, string>() // originalPath -> relative URL
 
-  return circuitJson.map((element) => {
+  return circuitJson.map((element): AnyCircuitElement => {
     if (!element || typeof element !== "object") return element
+    if (element.type !== "cad_component") return element
 
     const updated = { ...element }
+
+    const rewriteUrl = (key: keyof CadComponent, relativeUrl: string) => {
+      updated[key] = relativeUrl
+    }
+
     for (const key of MODEL_URL_KEYS) {
       const value = updated[key]
       if (
@@ -107,7 +112,7 @@ export const rewriteModelUrlsForSite = (
       ) {
         // Check if we've already processed this asset
         if (processedAssets.has(value)) {
-          updated[key] = processedAssets.get(value)!
+          rewriteUrl(key, processedAssets.get(value)!)
           continue
         }
 
@@ -140,7 +145,7 @@ export const rewriteModelUrlsForSite = (
         // URL relative to dist root (where index.html lives)
         const relativeUrl = `./${path.relative(distDir, destPath).split(path.sep).join("/")}`
         processedAssets.set(value, relativeUrl)
-        updated[key] = relativeUrl
+        rewriteUrl(key, relativeUrl)
       }
     }
     return updated
