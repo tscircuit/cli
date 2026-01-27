@@ -61,7 +61,7 @@ export const registerBuild = (program: Command) => {
     )
     .option(
       "--kicad-library",
-      "Generate KiCad library (footprints, symbols, 3D models) in dist/kicad-library",
+      "Generate KiCad library in dist/kicad-library",
     )
     .option(
       "--preview-gltf",
