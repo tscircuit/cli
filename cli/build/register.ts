@@ -59,10 +59,7 @@ export const registerBuild = (program: Command) => {
       "--kicad",
       "Generate KiCad project directories for each successful build output",
     )
-    .option(
-      "--kicad-library",
-      "Generate KiCad library in dist/kicad-library",
-    )
+    .option("--kicad-library", "Generate KiCad library in dist/kicad-library")
     .option(
       "--preview-gltf",
       "Generate a GLTF file from the preview entrypoint",
