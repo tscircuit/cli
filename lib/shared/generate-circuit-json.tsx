@@ -99,31 +99,54 @@ export async function generateCircuitJson({
 
   debug(`fsMap: ${abbreviateStringifyObject(fsMap)}`)
 
-  // Execute the circuit runner with the virtual file system
-  const MainComponent = await import(pathToFileURL(absoluteFilePath).href)
-
-  // Handle both default export and named exports
-  const Component =
-    MainComponent.default ||
-    (Object.keys(MainComponent).find((k) => k[0] === k[0].toUpperCase()) !==
-    undefined
-      ? MainComponent[
-          Object.keys(MainComponent).find(
-            (k) => k[0] === k[0].toUpperCase(),
-          ) as keyof typeof MainComponent
-        ]
-      : undefined)
-
-  if (!Component) {
-    throw new Error(
-      `No component found in "${absoluteFilePath}". Make sure you export a component.`,
-    )
+  // Suppress console output from user code during build
+  const originalConsole = {
+    log: console.log,
+    warn: console.warn,
+    error: console.error,
+    info: console.info,
+    debug: console.debug,
   }
+  const noop = () => {}
+  console.log = noop
+  console.warn = noop
+  console.error = noop
+  console.info = noop
+  console.debug = noop
 
-  runner.add(<Component />)
+  let Component: any
+  try {
+    // Execute the circuit runner with the virtual file system
+    const MainComponent = await import(pathToFileURL(absoluteFilePath).href)
 
-  // Wait for the circuit to be fully rendered
-  await runner.renderUntilSettled()
+    // Handle both default export and named exports
+    Component =
+      MainComponent.default ||
+      (Object.keys(MainComponent).find((k) => k[0] === k[0].toUpperCase()) !==
+      undefined
+        ? MainComponent[
+            Object.keys(MainComponent).find(
+              (k) => k[0] === k[0].toUpperCase(),
+            ) as keyof typeof MainComponent
+          ]
+        : undefined)
+
+    if (!Component) {
+      // Restore console before throwing
+      Object.assign(console, originalConsole)
+      throw new Error(
+        `No component found in "${absoluteFilePath}". Make sure you export a component.`,
+      )
+    }
+
+    runner.add(<Component />)
+
+    // Wait for the circuit to be fully rendered
+    await runner.renderUntilSettled()
+  } finally {
+    // Restore original console methods
+    Object.assign(console, originalConsole)
+  }
 
   // Get the circuit JSON
   const circuitJson = await runner.getCircuitJson()
