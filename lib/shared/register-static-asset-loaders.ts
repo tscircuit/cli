@@ -1,3 +1,5 @@
+import path from "node:path"
+
 const TEXT_STATIC_ASSET_EXTENSIONS = [
   ".gltf",
   ".step",
@@ -25,8 +27,12 @@ export const registerStaticAssetLoaders = () => {
       name: "tsci-static-assets",
       setup(build) {
         build.onLoad({ filter: staticAssetFilter }, (args) => {
+          const relativePath = path
+            .relative(process.cwd(), args.path)
+            .split(path.sep)
+            .join("/")
           return {
-            contents: `export default ${JSON.stringify(args.path)};`,
+            contents: `export default ${JSON.stringify(relativePath)};`,
             loader: "js",
           }
         })
