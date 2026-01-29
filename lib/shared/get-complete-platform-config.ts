@@ -1,28 +1,94 @@
 import type { PlatformConfig } from "@tscircuit/props"
-import { getPlatformConfig } from "@tscircuit/eval/platform-config"
+import { getPlatformConfig, type FilesystemCacheEngine, type PartsEngineCacheKey } from "@tscircuit/eval"
+import fs from "node:fs"
+import path from "node:path"
+
+const CACHE_DIR = ".tscircuit/cache/parts-engine"
 
 /**
- * Get a complete platform config with KiCad parsing support and any user overrides.
- * This handles the conversion of absolute file paths to file:// URLs for Bun's fetch.
- * When Bun imports a .kicad_mod file, it returns an absolute path like "/path/to/file.kicad_mod".
- * The default loadFromUrl expects a URL, so we wrap it to convert paths to file:// URLs.
- * This should be used by command handlers before passing config to generateCircuitJson.
+ * Parses the cache key and extracts ftype and the normalized JSON key.
+ */
+function parseKey(key: string): { ftype: string | null; jsonKey: string } {
+  const prefix = "parts-engine:"
+  const jsonPart = key.startsWith(prefix) ? key.slice(prefix.length) : key
+
+  try {
+    const parsed = JSON.parse(jsonPart)
+    return { ftype: parsed.ftype || null, jsonKey: jsonPart }
+  } catch {
+    return { ftype: null, jsonKey: key }
+  }
+}
+
+/**
+ * Creates a filesystem cache engine that persists to .tscircuit/cache/
+ * Each ftype has a single JSON file containing a map of all cache entries for that type.
+ */
+function createFilesystemCacheEngine(projectDir: string): FilesystemCacheEngine {
+  const cacheDir = path.join(projectDir, CACHE_DIR)
+
+  return {
+    get: (key: string) => {
+      const { ftype, jsonKey } = parseKey(key)
+      if (!ftype) return null
+
+      const filePath = path.join(cacheDir, `${ftype}.json`)
+      try {
+        const fileContent = fs.readFileSync(filePath, "utf-8")
+        const cacheMap = JSON.parse(fileContent) as Record<string, unknown>
+        const entry = cacheMap[jsonKey]
+        if (entry === undefined) return null
+        // Return as string since the interface expects string
+        return JSON.stringify(entry)
+      } catch {
+        return null
+      }
+    },
+    set: (key: string, value: string) => {
+      const { ftype, jsonKey } = parseKey(key)
+      if (!ftype) return
+
+      const filePath = path.join(cacheDir, `${ftype}.json`)
+      fs.mkdirSync(path.dirname(filePath), { recursive: true })
+
+      let cacheMap: Record<string, unknown> = {}
+      try {
+        const fileContent = fs.readFileSync(filePath, "utf-8")
+        cacheMap = JSON.parse(fileContent)
+      } catch {
+        // File doesn't exist or is invalid, start fresh
+      }
+
+      // Parse the value so we store proper JSON, not double-stringified
+      try {
+        cacheMap[jsonKey] = JSON.parse(value)
+      } catch {
+        cacheMap[jsonKey] = value
+      }
+      fs.writeFileSync(filePath, JSON.stringify(cacheMap, null, 2))
+    },
+  }
+}
+
+/**
+ * Get a complete platform config with KiCad parsing support, filesystem caching, and any user overrides.
  */
 export function getCompletePlatformConfig(
   userConfig?: PlatformConfig,
+  options?: { projectDir?: string }
 ): PlatformConfig {
-  const basePlatformConfig = getPlatformConfig()
+  const projectDir = options?.projectDir ?? process.cwd()
+  const filesystemCache = createFilesystemCacheEngine(projectDir)
+  
+  const basePlatformConfig = getPlatformConfig({ filesystemCache })
 
   const defaultConfig: PlatformConfig = {
     ...basePlatformConfig,
-    // Override footprintFileParserMap to handle absolute file paths from native imports
     footprintFileParserMap: {
       ...basePlatformConfig.footprintFileParserMap,
       kicad_mod: {
         loadFromUrl: async (url: string) => {
-          // Convert absolute file paths to file:// URLs for Bun's fetch
           const fetchUrl = url.startsWith("/") ? `file://${url}` : url
-          // Delegate to the original loadFromUrl from eval
           return basePlatformConfig.footprintFileParserMap!.kicad_mod.loadFromUrl(
             fetchUrl,
           )
@@ -35,11 +101,9 @@ export function getCompletePlatformConfig(
     return defaultConfig
   }
 
-  // Merge user config with defaults, ensuring nested objects are properly merged
   return {
     ...defaultConfig,
     ...userConfig,
-    // If user provides footprintFileParserMap, merge it with our defaults
     footprintFileParserMap: {
       ...defaultConfig.footprintFileParserMap,
       ...userConfig.footprintFileParserMap,
