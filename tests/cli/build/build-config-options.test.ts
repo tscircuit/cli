@@ -224,3 +224,39 @@ test("build with multiple config build options", async () => {
     .catch(() => false)
   expect(schematicSvgExists).toBe(true)
 }, 60_000)
+
+test("CLI build output option ignores config build options entirely", async () => {
+  const { tmpDir, runCommand } = await getCliTestFixture()
+  await mkdir(path.join(tmpDir, "lib"), { recursive: true })
+  await writeFile(path.join(tmpDir, "lib", "index.tsx"), libraryCode)
+  await writeFile(
+    path.join(tmpDir, "package.json"),
+    JSON.stringify({ name: "test-cli-override" }),
+  )
+  // Config has kicadPcm enabled, but we only pass --kicad-library via CLI
+  await writeFile(
+    path.join(tmpDir, "tscircuit.config.json"),
+    JSON.stringify({
+      mainEntrypoint: "./lib/index.tsx",
+      build: {
+        kicadLibrary: true,
+        kicadPcm: true,
+      },
+    }),
+  )
+
+  const { stderr, stdout } = await runCommand(`tsci build --kicad-library`)
+  expect(stderr).toBe("")
+
+  // Should generate kicad-library (from CLI)
+  expect(stdout).toContain("Generating KiCad library")
+  const kicadLibDir = path.join(tmpDir, "dist", "kicad-library")
+  expect((await stat(kicadLibDir)).isDirectory()).toBe(true)
+
+  // Should NOT generate kicad-pcm (config should be ignored when CLI options are passed)
+  expect(stdout).not.toContain("Generating KiCad PCM")
+  const pcmDirExists = await stat(path.join(tmpDir, "dist", "pcm"))
+    .then(() => true)
+    .catch(() => false)
+  expect(pcmDirExists).toBe(false)
+}, 60_000)

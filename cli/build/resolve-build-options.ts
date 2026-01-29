@@ -17,29 +17,53 @@ export const resolveBuildOptions = ({
 
   const configAppliedOpts: string[] = []
 
-  if (!cliOptions?.kicad && configBuild?.kicadLibrary) {
-    configAppliedOpts.push("kicad")
-  }
-  if (!cliOptions?.kicadLibrary && configBuild?.kicadLibrary) {
-    configAppliedOpts.push("kicad-library")
-  }
-  if (!cliOptions?.kicadPcm && configBuild?.kicadPcm) {
-    configAppliedOpts.push("kicad-pcm")
-  }
-  if (!cliOptions?.previewImages && configBuild?.previewImages) {
-    configAppliedOpts.push("preview-images")
-  }
-  if (!cliOptions?.transpile && configBuild?.typescriptLibrary) {
-    configAppliedOpts.push("transpile")
+  // Check if any build output option was explicitly passed via CLI
+  // If so, we should NOT merge with config options - CLI takes full control
+  const hasExplicitBuildOutputOption =
+    cliOptions?.kicad ||
+    cliOptions?.kicadLibrary ||
+    cliOptions?.kicadPcm ||
+    cliOptions?.previewImages ||
+    cliOptions?.allImages ||
+    cliOptions?.transpile ||
+    cliOptions?.site ||
+    cliOptions?.previewGltf
+
+  // Only apply config options if no explicit CLI build output options were passed
+  if (!hasExplicitBuildOutputOption) {
+    if (configBuild?.kicadLibrary) {
+      configAppliedOpts.push("kicad")
+      configAppliedOpts.push("kicad-library")
+    }
+    if (configBuild?.kicadPcm) {
+      configAppliedOpts.push("kicad-pcm")
+    }
+    if (configBuild?.previewImages) {
+      configAppliedOpts.push("preview-images")
+    }
+    if (configBuild?.typescriptLibrary) {
+      configAppliedOpts.push("transpile")
+    }
   }
 
   const options: BuildCommandOptions = {
     ...cliOptions,
-    kicad: cliOptions?.kicad ?? configBuild?.kicadLibrary,
-    kicadLibrary: cliOptions?.kicadLibrary ?? configBuild?.kicadLibrary,
-    kicadPcm: cliOptions?.kicadPcm ?? configBuild?.kicadPcm,
-    previewImages: cliOptions?.previewImages ?? configBuild?.previewImages,
-    transpile: cliOptions?.transpile ?? configBuild?.typescriptLibrary,
+    // Only fall back to config if no explicit CLI build output options were passed
+    kicad: hasExplicitBuildOutputOption
+      ? cliOptions?.kicad
+      : (cliOptions?.kicad ?? configBuild?.kicadLibrary),
+    kicadLibrary: hasExplicitBuildOutputOption
+      ? cliOptions?.kicadLibrary
+      : (cliOptions?.kicadLibrary ?? configBuild?.kicadLibrary),
+    kicadPcm: hasExplicitBuildOutputOption
+      ? cliOptions?.kicadPcm
+      : (cliOptions?.kicadPcm ?? configBuild?.kicadPcm),
+    previewImages: hasExplicitBuildOutputOption
+      ? cliOptions?.previewImages
+      : (cliOptions?.previewImages ?? configBuild?.previewImages),
+    transpile: hasExplicitBuildOutputOption
+      ? cliOptions?.transpile
+      : (cliOptions?.transpile ?? configBuild?.typescriptLibrary),
   }
 
   return { options, configAppliedOpts }
