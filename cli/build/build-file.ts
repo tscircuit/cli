@@ -50,7 +50,9 @@ export const buildFile = async (
       for (const err of errors) {
         const msg = err.message || JSON.stringify(err)
         console.error(kleur.red(msg))
-        console.log(err.stack)
+        if (err.stack) {
+          console.log(err.stack)
+        }
       }
     }
 

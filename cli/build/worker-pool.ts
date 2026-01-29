@@ -119,12 +119,14 @@ export class WorkerPool {
   private setupWorkerErrorHandling(threadWorker: ThreadWorker): void {
     threadWorker.worker.on("error", (error) => {
       if (threadWorker.currentJob) {
-        threadWorker.currentJob.reject(error)
+        threadWorker.currentJob.reject(error as Error)
         threadWorker.currentJob = null
         threadWorker.busy = false
       }
       if (this.onLog) {
-        this.onLog([`Worker error: ${error.message}`])
+        this.onLog([
+          `Worker error: ${error instanceof Error ? error.message : String(error)}`,
+        ])
       }
     })
 
