@@ -1,5 +1,7 @@
 import type { PlatformConfig } from "@tscircuit/props"
 import { getPlatformConfig } from "@tscircuit/eval/platform-config"
+import path from "node:path"
+import fs from "node:fs"
 
 /**
  * Get a complete platform config with KiCad parsing support and any user overrides.
@@ -15,13 +17,33 @@ export function getCompletePlatformConfig(
 
   const defaultConfig: PlatformConfig = {
     ...basePlatformConfig,
-    // Override footprintFileParserMap to handle absolute file paths from native imports
+    // Override footprintFileParserMap to handle file paths from native imports
     footprintFileParserMap: {
       ...basePlatformConfig.footprintFileParserMap,
       kicad_mod: {
         loadFromUrl: async (url: string) => {
-          // Convert absolute file paths to file:// URLs for Bun's fetch
-          const fetchUrl = url.startsWith("/") ? `file://${url}` : url
+          // Convert file paths to file:// URLs for Bun's fetch
+          let fetchUrl = url
+          if (url.startsWith("./") || url.startsWith("../")) {
+            // Relative path - resolve to absolute first
+            const absolutePath = path.resolve(process.cwd(), url)
+            fetchUrl = `file://${absolutePath}`
+          } else if (url.startsWith("/")) {
+            // Absolute path - check if it exists, otherwise try resolving as relative
+            if (fs.existsSync(url)) {
+              fetchUrl = `file://${url}`
+            } else {
+              // Try treating it as a relative path (strip leading / and resolve from cwd)
+              const relativePath = `.${url}`
+              const absolutePath = path.resolve(process.cwd(), relativePath)
+              if (fs.existsSync(absolutePath)) {
+                fetchUrl = `file://${absolutePath}`
+              } else {
+                // Fall back to original path
+                fetchUrl = `file://${url}`
+              }
+            }
+          }
           // Delegate to the original loadFromUrl from eval
           return basePlatformConfig.footprintFileParserMap!.kicad_mod.loadFromUrl(
             fetchUrl,
