@@ -11,12 +11,15 @@ export interface BuildKicadPcmOptions {
   entryFile: string
   projectDir: string
   distDir: string
+  /** Base URL for PCM assets (defaults to env TSCIRCUIT_DEPLOYMENT_URL or remote URL) */
+  baseUrl?: string
 }
 
 export async function buildKicadPcm({
   entryFile,
   projectDir,
   distDir,
+  baseUrl: baseUrlOption,
 }: BuildKicadPcmOptions): Promise<void> {
   const packageJsonPath = path.join(projectDir, "package.json")
   if (!fs.existsSync(packageJsonPath)) {
@@ -62,7 +65,9 @@ export async function buildKicadPcm({
     "",
   )
   const baseUrl =
-    envDeploymentUrl ?? `https://${author}--${packageName}.tscircuit.app`
+    baseUrlOption ??
+    envDeploymentUrl ??
+    `https://${author}--${packageName}.tscircuit.app`
 
   console.log("Generating PCM assets...")
   await generatePcmAssets({

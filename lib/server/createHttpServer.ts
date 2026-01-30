@@ -30,7 +30,7 @@ export const createHttpServer = async ({
   // Create PCM proxy if enabled
   const pcmProxy =
     kicadPcm && projectDir && entryFile
-      ? createKicadPcmProxy({ projectDir, entryFile })
+      ? createKicadPcmProxy({ projectDir, entryFile, port })
       : null
 
   const server = http.createServer(async (req, res) => {
