@@ -1,10 +1,10 @@
 import fs from "node:fs"
 import path from "node:path"
 import { pathToFileURL } from "node:url"
-import {
-  KicadLibraryConverter as DefaultKicadLibraryConverter,
-  type KicadLibraryConverterOptions,
-  type KicadLibraryConverterOutput,
+import * as defaultCircuitJsonToKicadModule from "circuit-json-to-kicad"
+import type {
+  KicadLibraryConverterOptions,
+  KicadLibraryConverterOutput,
 } from "circuit-json-to-kicad"
 import { importFromUserLand } from "./importFromUserLand"
 import { extractKicadFootprintMetadata } from "./extract-kicad-footprint-metadata"
@@ -62,9 +62,8 @@ export async function convertToKicadLibrary({
   const userLandTscircuit = await importFromUserLand("tscircuit")
 
   // Use provided module or default
-  const KicadLibraryConverter =
-    circuitJsonToKicadModule?.KicadLibraryConverter ??
-    DefaultKicadLibraryConverter
+  const { KicadLibraryConverter } =
+    circuitJsonToKicadModule ?? defaultCircuitJsonToKicadModule
 
   const converter = new KicadLibraryConverter({
     kicadLibraryName: libraryName,
