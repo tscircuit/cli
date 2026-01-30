@@ -49,8 +49,9 @@ declare module "*.step" {
 }
 
 declare module "*.kicad_mod" {
-  const src: string
-  export default src
+  import type { AnyCircuitElement } from "circuit-json"
+  const circuitJson: AnyCircuitElement[]
+  export default circuitJson
 }
 
 declare module "*.kicad_pcb" {
