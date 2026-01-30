@@ -34,11 +34,13 @@ const getSourceFilesChecksum = (projectDir: string): string => {
 export interface KicadPcmProxyOptions {
   projectDir: string
   entryFile: string
+  port: number
 }
 
 export const createKicadPcmProxy = ({
   projectDir,
   entryFile,
+  port,
 }: KicadPcmProxyOptions) => {
   const pcmState: PcmProxyState = {
     lastBuildTime: 0,
@@ -84,6 +86,7 @@ export const createKicadPcmProxy = ({
           entryFile,
           projectDir,
           distDir,
+          baseUrl: `http://localhost:${port}`,
         })
           .then(() => {
             pcmState.lastFileChecksum = currentChecksum
