@@ -14,7 +14,7 @@ export interface GeneratePcmAssetsOptions {
   description?: string
   /** Full description of the package */
   descriptionFull?: string
-  /** License (default: "MIT") */
+  /** License (default: "Unknown") */
   license?: string
   /** Path to the kicad-library output directory */
   kicadLibraryPath: string
@@ -48,7 +48,7 @@ export async function generatePcmAssets(
     author,
     description = "",
     descriptionFull = `Visit https://tscircuit.com/${author}/${packageName} for more information.`,
-    license = "MIT",
+    license = "Unknown",
     kicadLibraryPath,
     outputDir,
     baseUrl,
