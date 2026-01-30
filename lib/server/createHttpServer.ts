@@ -10,15 +10,28 @@ import runFrameStandaloneBundleContent from "@tscircuit/runframe/standalone" wit
 // @ts-ignore
 import winterspecBundle from "@tscircuit/file-server/dist/bundle.js"
 import { getIndex } from "../site/getIndex"
+import { createKicadPcmProxy } from "./kicad-pcm-proxy"
 
 export const createHttpServer = async ({
   port = 3020,
   defaultMainComponentPath,
+  kicadPcm,
+  projectDir,
+  entryFile,
 }: {
   port?: number
   defaultMainComponentPath?: string
+  kicadPcm?: boolean
+  projectDir?: string
+  entryFile?: string
 }) => {
   const fileServerHandler = getNodeHandler(winterspecBundle as any, {})
+
+  // Create PCM proxy if enabled
+  const pcmProxy =
+    kicadPcm && projectDir && entryFile
+      ? createKicadPcmProxy({ projectDir, entryFile })
+      : null
 
   const server = http.createServer(async (req, res) => {
     const url = new URL(req.url!, `http://${req.headers.host}`)
@@ -62,6 +75,12 @@ export const createHttpServer = async ({
       )
       res.writeHead(200, { "Content-Type": "text/html" })
       res.end(html)
+      return
+    }
+
+    // Handle PCM proxy requests
+    if (pcmProxy && url.pathname.startsWith("/pcm")) {
+      await pcmProxy.handleRequest(url, res)
       return
     }
 
