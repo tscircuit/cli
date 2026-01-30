@@ -82,6 +82,7 @@
   "scripts": {
     "start": "bun run dev",
     "dev": "bun --hot ./cli/main.ts dev ./examples/basic/index.circuit.tsx",
+    "dev:kicad-pcm": "bun --hot ./cli/main.ts dev ./examples/scaffold --kicad-pcm",
     "setup": "bun run build && npm install -g .",
     "build": "bun run build:bun",
     "build:bun": "bun run scripts/bun-build.ts",

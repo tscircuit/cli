@@ -45,44 +45,54 @@ export const registerDev = (program: Command) => {
     .description("Start development server for a package")
     .argument("[file]", "Path to the package file or directory")
     .option("-p, --port <number>", "Port to run server on", "3020")
-    .action(async (file: string, options: { port: string }) => {
-      let port = parseInt(options.port)
-      const startTime = Date.now()
+    .option("--kicad-pcm", "Enable KiCad PCM proxy server at /pcm/*")
+    .action(
+      async (file: string, options: { port: string; kicadPcm?: boolean }) => {
+        let port = parseInt(options.port)
+        const startTime = Date.now()
 
-      while (!(await isPortAvailable(port))) {
+        while (!(await isPortAvailable(port))) {
+          console.log(
+            kleur.gray(`Port ${port} is in use, trying port ${port + 1}...`),
+          )
+          port += 1
+        }
+
+        const target = await resolveDevTarget(file)
+        if (!target) return
+
+        const { absolutePath, projectDir } = target
+
+        warnIfTsconfigMissingTscircuitType(projectDir)
+
+        const server = new DevServer({
+          port,
+          componentFilePath: absolutePath,
+          projectDir,
+          kicadPcm: options.kicadPcm,
+        })
+
+        await server.start()
+
+        const timeToStart = Date.now() - startTime
+
         console.log(
-          kleur.gray(`Port ${port} is in use, trying port ${port + 1}...`),
+          `\n\n  ${kleur.green(`@tscircuit/cli@${getVersion()}`)} ${kleur.gray("ready in")} ${kleur.white(`${Math.round(timeToStart)}ms`)}`,
         )
-        port += 1
-      }
+        console.log(
+          `\n  ${kleur.bold("➜ Local:")}   ${kleur.underline(kleur.cyan(`http://localhost:${port}`))}${server.componentFilePath ? kleur.underline(kleur.cyan(`/#file=${encodeURIComponent(path.relative(process.cwd(), server.componentFilePath).replaceAll("\\", "/"))}`)) : ""}\n\n`,
+        )
+        console.log(
+          kleur.gray(
+            `Watching ${kleur.underline(server.projectDir.split("/").slice(-2).join("/")!)} for changes...`,
+          ),
+        )
 
-      const target = await resolveDevTarget(file)
-      if (!target) return
-
-      const { absolutePath, projectDir } = target
-
-      warnIfTsconfigMissingTscircuitType(projectDir)
-
-      const server = new DevServer({
-        port,
-        componentFilePath: absolutePath,
-        projectDir,
-      })
-
-      await server.start()
-
-      const timeToStart = Date.now() - startTime
-
-      console.log(
-        `\n\n  ${kleur.green(`@tscircuit/cli@${getVersion()}`)} ${kleur.gray("ready in")} ${kleur.white(`${Math.round(timeToStart)}ms`)}`,
-      )
-      console.log(
-        `\n  ${kleur.bold("➜ Local:")}   ${kleur.underline(kleur.cyan(`http://localhost:${port}`))}${server.componentFilePath ? kleur.underline(kleur.cyan(`/#file=${encodeURIComponent(path.relative(process.cwd(), server.componentFilePath).replaceAll("\\", "/"))}`)) : ""}\n\n`,
-      )
-      console.log(
-        kleur.gray(
-          `Watching ${kleur.underline(server.projectDir.split("/").slice(-2).join("/")!)} for changes...`,
-        ),
-      )
-    })
+        if (options.kicadPcm) {
+          console.log(
+            `\n  ${kleur.bold("➜ Auto-updating KiCad PCM Server:")} ${kleur.underline(kleur.cyan(`http://localhost:${port}/pcm/repository.json`))}\n`,
+          )
+        }
+      },
+    )
 }

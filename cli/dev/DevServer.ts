@@ -47,6 +47,9 @@ export class DevServer {
   /** Paths or directory names to ignore when syncing files */
   ignoredFiles: string[]
 
+  /** Whether to enable the KiCad PCM proxy server */
+  kicadPcm: boolean
+
   /**
    * The HTTP server that hosts the file server and event bus. You can use
    * fsKy to communicate with the file server/event bus
@@ -75,14 +78,17 @@ export class DevServer {
     port,
     componentFilePath,
     projectDir,
+    kicadPcm,
   }: {
     port: number
     componentFilePath: string
     projectDir?: string
+    kicadPcm?: boolean
   }) {
     this.port = port
     this.componentFilePath = componentFilePath
     this.projectDir = projectDir ?? path.dirname(componentFilePath)
+    this.kicadPcm = kicadPcm ?? false
     const projectConfig = loadProjectConfig(this.projectDir)
     this.ignoredFiles = projectConfig?.ignoredFiles ?? []
     this.fsKy = ky.create({
@@ -97,6 +103,9 @@ export class DevServer {
         this.projectDir,
         this.componentFilePath,
       ),
+      kicadPcm: this.kicadPcm,
+      projectDir: this.projectDir,
+      entryFile: this.componentFilePath,
     })
     this.httpServer = server
 
