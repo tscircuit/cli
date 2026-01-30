@@ -1,5 +1,6 @@
-import { getRegistryApiUrl } from "lib/cli-config"
+import { getRegistryApiUrl, getSessionToken } from "lib/cli-config"
 import ky, { type AfterResponseHook, type KyResponse } from "ky"
+import { getSessionTokenFromNpmrc } from "lib/cli-config"
 
 class PrettyHttpError extends Error {
   constructor(
@@ -69,10 +70,12 @@ export const getRegistryApiKy = ({
 }: {
   sessionToken?: string
 } = {}) => {
+  const resolvedToken =
+    sessionToken ?? getSessionToken() ?? getSessionTokenFromNpmrc()
   return ky.create({
     prefixUrl: getRegistryApiUrl(),
     headers: {
-      ...(sessionToken ? { Authorization: `Bearer ${sessionToken}` } : {}),
+      ...(resolvedToken ? { Authorization: `Bearer ${resolvedToken}` } : {}),
     },
     hooks: {
       afterResponse: [prettyResponseErrorHook],
