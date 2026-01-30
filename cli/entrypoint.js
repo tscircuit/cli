@@ -25,7 +25,7 @@ const globalPackageJson = require("../package.json")
 const useGlobal = process.argv.includes("--use-global")
 const args = process.argv.slice(2).filter((arg) => arg !== "--use-global")
 
-let mainPath = join(packageRoot, "dist/main.js")
+let mainPath = join(packageRoot, "dist/cli/main.js")
 
 if (!useGlobal) {
   try {
@@ -35,7 +35,7 @@ if (!useGlobal) {
     )
     const localPackageJson = localRequire(localPackageJsonPath)
     const localPackageRoot = dirname(localPackageJsonPath)
-    const localMainPath = join(localPackageRoot, "dist/main.js")
+    const localMainPath = join(localPackageRoot, "dist/cli/main.js")
 
     if (localPackageRoot !== packageRoot && existsSync(localMainPath)) {
       console.warn(
