@@ -1,7 +1,10 @@
 import path from "node:path"
 import fs from "node:fs"
 import kleur from "kleur"
-import { convertToKicadLibrary } from "lib/shared/convert-to-kicad-library"
+import {
+  convertToKicadLibrary,
+  type CircuitJsonToKicadModule,
+} from "lib/shared/convert-to-kicad-library"
 import { generatePcmAssets } from "lib/shared/generate-pcm-assets"
 import { getPackageAuthor } from "lib/utils/get-package-author"
 import { loadProjectConfig } from "lib/project-config"
@@ -13,6 +16,11 @@ export interface BuildKicadPcmOptions {
   distDir: string
   /** Base URL for PCM assets (defaults to env TSCIRCUIT_DEPLOYMENT_URL or remote URL) */
   baseUrl?: string
+  /**
+   * Optional custom circuit-json-to-kicad module to use instead of the default.
+   * This is useful for testing upstream changes to the circuit-json-to-kicad package.
+   */
+  circuitJsonToKicadModule?: CircuitJsonToKicadModule
 }
 
 export async function buildKicadPcm({
@@ -20,6 +28,7 @@ export async function buildKicadPcm({
   projectDir,
   distDir,
   baseUrl: baseUrlOption,
+  circuitJsonToKicadModule,
 }: BuildKicadPcmOptions): Promise<void> {
   const packageJsonPath = path.join(projectDir, "package.json")
   if (!fs.existsSync(packageJsonPath)) {
@@ -55,6 +64,7 @@ export async function buildKicadPcm({
     outputDir: kicadLibOutputDir,
     isPcm: true,
     kicadPcmPackageId,
+    circuitJsonToKicadModule,
   })
 
   // Generate PCM assets

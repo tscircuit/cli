@@ -1,12 +1,29 @@
 import fs from "node:fs"
 import path from "node:path"
 import { pathToFileURL } from "node:url"
-import { KicadLibraryConverter } from "circuit-json-to-kicad"
+import * as defaultCircuitJsonToKicadModule from "circuit-json-to-kicad"
+import type {
+  KicadLibraryConverterOptions,
+  KicadLibraryConverterOutput,
+} from "circuit-json-to-kicad"
 import { importFromUserLand } from "./importFromUserLand"
 import { extractKicadFootprintMetadata } from "./extract-kicad-footprint-metadata"
 import { extractKicadSymbolMetadata } from "./extract-kicad-symbol-metadata"
 
-type ConvertToKicadLibraryOptions = {
+/**
+ * Interface for a circuit-json-to-kicad module that provides the KicadLibraryConverter.
+ * This allows upstream packages to provide their own implementation for testing.
+ */
+export interface CircuitJsonToKicadModule {
+  KicadLibraryConverter: new (
+    options: KicadLibraryConverterOptions,
+  ) => {
+    run(): Promise<void>
+    getOutput(): KicadLibraryConverterOutput
+  }
+}
+
+export type ConvertToKicadLibraryOptions = {
   /** Path to the tscircuit library entrypoint file */
   filePath: string
   /** Name for the generated KiCad library */
@@ -17,6 +34,11 @@ type ConvertToKicadLibraryOptions = {
   isPcm?: boolean
   /** The KiCad PCM package identifier (e.g., "com_tscircuit_author_package") */
   kicadPcmPackageId?: string
+  /**
+   * Optional custom circuit-json-to-kicad module to use instead of the default.
+   * This is useful for testing upstream changes to the circuit-json-to-kicad package.
+   */
+  circuitJsonToKicadModule?: CircuitJsonToKicadModule
 }
 
 /**
@@ -28,6 +50,7 @@ export async function convertToKicadLibrary({
   outputDir,
   isPcm,
   kicadPcmPackageId,
+  circuitJsonToKicadModule,
 }: ConvertToKicadLibraryOptions) {
   const absoluteFilePath = path.isAbsolute(filePath)
     ? filePath
@@ -37,6 +60,10 @@ export async function convertToKicadLibrary({
   const React = await importFromUserLand("react")
   ;(globalThis as any).React = React
   const userLandTscircuit = await importFromUserLand("tscircuit")
+
+  // Use provided module or default
+  const { KicadLibraryConverter } =
+    circuitJsonToKicadModule ?? defaultCircuitJsonToKicadModule
 
   const converter = new KicadLibraryConverter({
     kicadLibraryName: libraryName,
