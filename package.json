@@ -9,7 +9,7 @@
     "@tscircuit/fake-snippets": "^0.0.182",
     "@tscircuit/file-server": "^0.0.32",
     "@tscircuit/math-utils": "0.0.29",
-    "@tscircuit/props": "^0.0.448",
+    "@tscircuit/props": "^0.0.458",
     "@tscircuit/runframe": "^0.0.1555",
     "@tscircuit/schematic-match-adapt": "^0.0.22",
     "@types/bun": "^1.2.2",

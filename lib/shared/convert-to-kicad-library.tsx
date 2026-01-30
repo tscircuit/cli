@@ -4,6 +4,7 @@ import { pathToFileURL } from "node:url"
 import { KicadLibraryConverter } from "circuit-json-to-kicad"
 import { importFromUserLand } from "./importFromUserLand"
 import { extractKicadFootprintMetadata } from "./extract-kicad-footprint-metadata"
+import { extractKicadSymbolMetadata } from "./extract-kicad-symbol-metadata"
 
 type ConvertToKicadLibraryOptions = {
   /** Path to the tscircuit library entrypoint file */
@@ -82,6 +83,25 @@ export async function convertToKicadLibrary({
         }
 
         return extractKicadFootprintMetadata(Component)
+      } catch (error) {
+        // Silently return null if we can't extract metadata
+        return null
+      }
+    },
+
+    getComponentKicadSymbolMetadata: async (
+      filePath: string,
+      componentName: string,
+    ) => {
+      try {
+        const module = await import(pathToFileURL(filePath).href)
+        const Component = module[componentName]
+
+        if (!Component || typeof Component !== "function") {
+          return null
+        }
+
+        return extractKicadSymbolMetadata(Component)
       } catch (error) {
         // Silently return null if we can't extract metadata
         return null
