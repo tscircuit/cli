@@ -8,6 +8,7 @@ export interface BuildCommandOptions {
   ignoreWarnings?: boolean
   disablePcb?: boolean
   disablePartsEngine?: boolean
+  ignoreConfig?: boolean
   ci?: boolean
   site?: boolean
   transpile?: boolean
