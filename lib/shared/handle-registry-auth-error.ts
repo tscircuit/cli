@@ -3,7 +3,7 @@ import os from "node:os"
 import path from "node:path"
 import kleur from "kleur"
 
-const AUTH_TOKEN_REGEX = /^\/\/npm\.tscircuit\.com\/:_authToken=.+$/m
+export const AUTH_TOKEN_REGEX = /^\/\/npm\.tscircuit\.com\/:_authToken=.+$/m
 
 function isUnauthorizedError(error: unknown): boolean {
   const output = [

@@ -1,5 +1,9 @@
 import Conf from "conf"
 import { jwtDecode } from "jwt-decode"
+import fs from "node:fs"
+import os from "node:os"
+import path from "node:path"
+import { AUTH_TOKEN_REGEX } from "lib/shared/handle-registry-auth-error"
 
 export interface CliConfig {
   sessionToken?: string
@@ -24,6 +28,24 @@ export const cliConfig = getCliConfig()
 
 export const getSessionToken = (): string | undefined => {
   return cliConfig.get("sessionToken")
+}
+
+export const getSessionTokenFromNpmrc = (): string | undefined => {
+  const npmrcPaths = [
+    path.join(process.cwd(), ".npmrc"),
+    path.join(os.homedir(), ".npmrc"),
+  ]
+
+  for (const npmrcPath of npmrcPaths) {
+    if (!fs.existsSync(npmrcPath)) continue
+    const content = fs.readFileSync(npmrcPath, "utf-8")
+    const match = content.match(AUTH_TOKEN_REGEX)
+    if (match?.[1]) {
+      return match[1].trim()
+    }
+  }
+
+  return undefined
 }
 
 export const setSessionToken = (token: string) => {
