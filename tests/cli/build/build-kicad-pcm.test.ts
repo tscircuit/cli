@@ -78,14 +78,14 @@ export const MyResistor = () => (
   const distStructure = await getDirectoryStructure(distDir)
   expect(distStructure).toMatchInlineSnapshot(`
     [
-      "kicad-library/",
-      "kicad-library/footprints/",
-      "kicad-library/footprints/tscircuit_builtin.pretty/",
-      "kicad-library/footprints/tscircuit_builtin.pretty/resistor_0402.kicad_mod",
-      "kicad-library/fp-lib-table",
-      "kicad-library/sym-lib-table",
-      "kicad-library/symbols/",
-      "kicad-library/symbols/tscircuit_builtin.kicad_sym",
+      "kicad-library-pcm/",
+      "kicad-library-pcm/footprints/",
+      "kicad-library-pcm/footprints/tscircuit_builtin.pretty/",
+      "kicad-library-pcm/footprints/tscircuit_builtin.pretty/resistor_0402.kicad_mod",
+      "kicad-library-pcm/fp-lib-table",
+      "kicad-library-pcm/sym-lib-table",
+      "kicad-library-pcm/symbols/",
+      "kicad-library-pcm/symbols/tscircuit_builtin.kicad_sym",
       "lib/",
       "lib/index/",
       "lib/index/circuit.json",

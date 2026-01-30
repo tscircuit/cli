@@ -94,7 +94,7 @@ export const MySwitch = () => (
   expect(stdout).toContain("Converting to KiCad library for PCM")
   expect(stdout).toContain("KiCad PCM assets generated")
 
-  const kicadLibDir = path.join(tmpDir, "dist", "kicad-library")
+  const kicadLibDir = path.join(tmpDir, "dist", "kicad-library-pcm")
 
   // Read the user symbol library content
   const userSymbolContent = await readFile(
