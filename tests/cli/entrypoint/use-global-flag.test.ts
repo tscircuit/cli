@@ -9,7 +9,7 @@ test("entrypoint uses local version by default when available", async () => {
   const localCliPath = join(tmpDir, "node_modules", "@tscircuit", "cli")
 
   mkdirSync(localCliPath, { recursive: true })
-  mkdirSync(join(localCliPath, "dist"), { recursive: true })
+  mkdirSync(join(localCliPath, "dist", "cli"), { recursive: true })
 
   writeFileSync(
     join(tmpDir, "package.json"),
@@ -22,7 +22,7 @@ test("entrypoint uses local version by default when available", async () => {
   )
 
   writeFileSync(
-    join(localCliPath, "dist", "main.js"),
+    join(localCliPath, "dist", "cli", "main.js"),
     'console.log("LOCAL_CLI_EXECUTED")',
   )
 
@@ -45,7 +45,7 @@ test("entrypoint skips local version when --use-global flag is passed", async ()
   const localCliPath = join(tmpDir, "node_modules", "@tscircuit", "cli")
 
   mkdirSync(localCliPath, { recursive: true })
-  mkdirSync(join(localCliPath, "dist"), { recursive: true })
+  mkdirSync(join(localCliPath, "dist", "cli"), { recursive: true })
 
   writeFileSync(
     join(tmpDir, "package.json"),
@@ -58,7 +58,7 @@ test("entrypoint skips local version when --use-global flag is passed", async ()
   )
 
   writeFileSync(
-    join(localCliPath, "dist", "main.js"),
+    join(localCliPath, "dist", "cli", "main.js"),
     'console.log("LOCAL_CLI_EXECUTED")',
   )
 

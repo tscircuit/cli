@@ -1,7 +1,11 @@
 {
   "name": "@tscircuit/cli",
+  "main": "dist/cli/main.js",
+  "exports": {
+    ".": "./dist/cli/main.js",
+    "./lib": "./dist/lib/index.js"
+  },
   "version": "0.1.860",
-  "main": "dist/main.js",
   "devDependencies": {
     "@babel/standalone": "^7.26.9",
     "@biomejs/biome": "^1.9.4",

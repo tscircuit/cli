@@ -27,7 +27,7 @@ RUN bun pm pack
 # Create a temporary directory for testing
 RUN mkdir /tmp/testdir
 
-RUN ./dist/main.js --version
+RUN ./dist/cli/main.js --version
 
 # Install the packed package globally
 RUN npm install -g $(ls *.tgz)
