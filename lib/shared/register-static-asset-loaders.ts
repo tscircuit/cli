@@ -1,21 +1,29 @@
 import fs from "node:fs"
 import path from "node:path"
+import { parseKicadModToCircuitJson } from "kicad-component-converter"
 
-const TEXT_STATIC_ASSET_EXTENSIONS = [
+/**
+ * Static asset extensions that export file paths (not parsed)
+ */
+const PATH_STATIC_ASSET_EXTENSIONS = [
   ".gltf",
   ".step",
-  ".kicad_mod",
   ".kicad_pcb",
   ".kicad_pro",
   ".kicad_sch",
 ]
 
-const staticAssetFilter = new RegExp(
-  `(${TEXT_STATIC_ASSET_EXTENSIONS.map((ext) => ext.replace(".", "\\.")).join(
+const pathAssetFilter = new RegExp(
+  `(${PATH_STATIC_ASSET_EXTENSIONS.map((ext) => ext.replace(".", "\\.")).join(
     "|",
   )})$`,
   "i",
 )
+
+/**
+ * Filter for .kicad_mod files that get parsed to circuit JSON
+ */
+const kicadModFilter = /\.kicad_mod$/i
 
 let registered = false
 
@@ -54,7 +62,19 @@ export const registerStaticAssetLoaders = () => {
     Bun.plugin({
       name: "tsci-static-assets",
       setup(build) {
-        build.onLoad({ filter: staticAssetFilter }, (args) => {
+        // Handle .kicad_mod files - parse and export circuit JSON
+        build.onLoad({ filter: kicadModFilter }, async (args) => {
+          const content = await Bun.file(args.path).text()
+          const circuitJson = await parseKicadModToCircuitJson(content)
+
+          return {
+            contents: `export default ${JSON.stringify(circuitJson)};`,
+            loader: "js",
+          }
+        })
+
+        // Handle other static assets - export file paths
+        build.onLoad({ filter: pathAssetFilter }, (args) => {
           const baseDir = baseUrl
             ? path.resolve(process.cwd(), baseUrl)
             : process.cwd()
