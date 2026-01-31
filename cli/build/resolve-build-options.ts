@@ -13,6 +13,10 @@ export const resolveBuildOptions = ({
   cliOptions?: BuildCommandOptions
   projectConfig?: TscircuitProjectConfig | null
 }): ResolvedBuildOptions => {
+  if (cliOptions?.ignoreConfig) {
+    return { options: cliOptions, configAppliedOpts: [] }
+  }
+
   const configBuild = projectConfig?.build
 
   const configAppliedOpts: string[] = []

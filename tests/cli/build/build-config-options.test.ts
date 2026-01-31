@@ -224,3 +224,32 @@ test("build with multiple config build options", async () => {
     .catch(() => false)
   expect(schematicSvgExists).toBe(true)
 }, 60_000)
+
+test("build with --ignore-config skips config options", async () => {
+  const { tmpDir, runCommand } = await getCliTestFixture()
+  const circuitPath = path.join(tmpDir, "ignore-config.circuit.tsx")
+  await writeFile(circuitPath, circuitCode)
+  await writeFile(path.join(tmpDir, "package.json"), "{}")
+  await writeFile(
+    path.join(tmpDir, "tscircuit.config.json"),
+    JSON.stringify({
+      build: {
+        previewImages: true,
+      },
+    }),
+  )
+
+  const { stdout } = await runCommand(
+    `tsci build ${circuitPath} --ignore-config --kicad-library`,
+  )
+  expect(stdout).toContain("Generating KiCad library")
+  expect(stdout).not.toContain("Generating preview images")
+  expect(stdout).not.toContain("(from tscircuit.config.json)")
+
+  const schematicSvgExists = await stat(
+    path.join(tmpDir, "dist", "schematic.svg"),
+  )
+    .then(() => true)
+    .catch(() => false)
+  expect(schematicSvgExists).toBe(false)
+})
