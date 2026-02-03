@@ -97,7 +97,10 @@ export const registerBuild = (program: Command) => {
               }
               currentDir = path.dirname(currentDir)
             }
-            projectDir = currentDir
+            // If no package.json found (we reached root), fall back to cwd
+            projectDir = fs.existsSync(path.join(currentDir, "package.json"))
+              ? currentDir
+              : resolvedRoot
           }
         } else {
           projectDir = resolvedRoot
