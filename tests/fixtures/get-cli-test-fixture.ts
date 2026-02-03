@@ -11,7 +11,9 @@ import * as path from "node:path"
 
 export interface CliTestFixture {
   tmpDir: string
-  runCommand: (command: string) => Promise<{ stdout: string; stderr: string; exitCode: number }>
+  runCommand: (
+    command: string,
+  ) => Promise<{ stdout: string; stderr: string; exitCode: number }>
   registryServer: any
   registryDb: DbClient
   registryApiUrl: string

@@ -212,6 +212,11 @@ export const registerBuild = (program: Command) => {
             hasErrors = true
             if (buildOutcome.isFatalError) {
               hasFatalErrors = true
+              console.error(
+                kleur.red(
+                  `Fatal error [${buildOutcome.isFatalError.errorType}]: ${buildOutcome.isFatalError.message}`,
+                ),
+              )
             }
           } else if (resolvedOptions?.site) {
             const normalizedSourcePath = relative.split(path.sep).join("/")

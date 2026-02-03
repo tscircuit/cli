@@ -22,5 +22,5 @@ test("build with --ignore-errors fails for fatal errors (circuit_generation_fail
   // even when --ignore-errors is passed
   const { exitCode, stderr } = await runCommand(`tsci build --ignore-errors`)
   expect(exitCode).toBe(1)
-  expect(stderr).toContain("error")
+  expect(stderr).toContain("circuit_generation_failed")
 }, 30_000)
