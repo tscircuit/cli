@@ -30,6 +30,7 @@ import { registerSimulate } from "./simulate/register"
 import { registerInstall } from "./install/register"
 import { registerTranspile } from "./transpile/register"
 import { registerStaticAssetLoaders } from "lib/shared/register-static-asset-loaders"
+import { registerDoctor } from "./doctor/register"
 
 export const program = new Command()
 
@@ -64,6 +65,7 @@ registerSnapshot(program)
 registerSetup(program)
 registerInstall(program)
 registerUpgradeCommand(program)
+registerDoctor(program)
 
 registerSearch(program)
 registerImport(program)
