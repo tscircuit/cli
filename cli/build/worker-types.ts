@@ -24,6 +24,8 @@ export type BuildCompletedMessage = {
   output_path: string
   circuit_json_path: string
   ok: boolean
+  /** Fatal error that should always cause exit code 1, even with --ignore-errors */
+  isFatalError?: { errorType: string; message: string }
   errors: string[]
   warnings: string[]
 }
@@ -53,6 +55,8 @@ export type BuildJobResult = {
   filePath: string
   outputPath: string
   ok: boolean
+  /** Fatal error that should always cause exit code 1, even with --ignore-errors */
+  isFatalError?: { errorType: string; message: string }
   errors: string[]
   warnings: string[]
 }

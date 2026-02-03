@@ -105,6 +105,7 @@ export class WorkerPool {
             filePath: completedMsg.file_path,
             outputPath: completedMsg.output_path,
             ok: completedMsg.ok,
+            isFatalError: completedMsg.isFatalError,
             errors: completedMsg.errors,
             warnings: completedMsg.warnings,
           })
