@@ -106,12 +106,17 @@ const handleBuildFile = async (
     errors.push(errorMsg)
     workerLog(`Build error: ${errorMsg}`)
 
+    // Fatal error: circuit generation itself failed (not just analysis errors)
     return {
       message_type: "build_completed",
       file_path: filePath,
       output_path: outputPath,
       circuit_json_path: outputPath,
       ok: false,
+      isFatalError: {
+        errorType: "circuit_generation_failed",
+        message: errorMsg,
+      },
       errors,
       warnings,
     }

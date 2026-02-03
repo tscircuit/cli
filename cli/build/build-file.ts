@@ -9,6 +9,8 @@ import { getCompletePlatformConfig } from "lib/shared/get-complete-platform-conf
 export type BuildFileOutcome = {
   ok: boolean
   circuitJson?: unknown[]
+  /** Fatal error that should always cause exit code 1, even with --ignore-errors */
+  isFatalError?: { errorType: string; message: string }
 }
 
 export const buildFile = async (
@@ -75,7 +77,14 @@ export const buildFile = async (
       logTsxExtensionHint(err, input)
       logTypeReexportHint(err, input)
     }
-    return { ok: false }
+    // Fatal error: circuit generation itself failed (not just analysis errors)
+    return {
+      ok: false,
+      isFatalError: {
+        errorType: "circuit_generation_failed",
+        message: err instanceof Error ? err.message : String(err),
+      },
+    }
   }
 }
 

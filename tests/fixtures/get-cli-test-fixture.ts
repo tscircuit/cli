@@ -11,7 +11,9 @@ import * as path from "node:path"
 
 export interface CliTestFixture {
   tmpDir: string
-  runCommand: (command: string) => Promise<{ stdout: string; stderr: string }>
+  runCommand: (
+    command: string,
+  ) => Promise<{ stdout: string; stderr: string; exitCode: number }>
   registryServer: any
   registryDb: DbClient
   registryApiUrl: string
@@ -124,7 +126,7 @@ export async function getCliTestFixture(
       }
     }
 
-    await Promise.all([
+    const [, , exitCode] = await Promise.all([
       readStream(
         stdoutReader,
         (chunk) => process.stdout.write(chunk),
@@ -142,7 +144,7 @@ export async function getCliTestFixture(
       task.exited,
     ])
 
-    return { stdout, stderr }
+    return { stdout, stderr, exitCode }
   }
 
   // Setup cleanup

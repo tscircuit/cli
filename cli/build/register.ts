@@ -168,6 +168,7 @@ export const registerBuild = (program: Command) => {
         }
 
         let hasErrors = false
+        let hasFatalErrors = false
         const staticFileReferences: StaticBuildFileReference[] = []
 
         const builtFiles: BuildFileResult[] = []
@@ -189,7 +190,11 @@ export const registerBuild = (program: Command) => {
         const processBuildResult = async (
           filePath: string,
           outputPath: string,
-          buildOutcome: { ok: boolean; circuitJson?: unknown[] },
+          buildOutcome: {
+            ok: boolean
+            circuitJson?: unknown[]
+            isFatalError?: { errorType: string; message: string }
+          },
         ) => {
           const relative = path.relative(projectDir, filePath)
           const outputDirName = relative.replace(
@@ -205,6 +210,14 @@ export const registerBuild = (program: Command) => {
 
           if (!buildOutcome.ok) {
             hasErrors = true
+            if (buildOutcome.isFatalError) {
+              hasFatalErrors = true
+              console.error(
+                kleur.red(
+                  `Fatal error [${buildOutcome.isFatalError.errorType}]: ${buildOutcome.isFatalError.message}`,
+                ),
+              )
+            }
           } else if (resolvedOptions?.site) {
             const normalizedSourcePath = relative.split(path.sep).join("/")
             const relativeOutputPath = path.join(outputDirName, "circuit.json")
@@ -301,6 +314,7 @@ export const registerBuild = (program: Command) => {
               // circuitJson is not passed through IPC - processBuildResult reads from file if needed
               await processBuildResult(result.filePath, result.outputPath, {
                 ok: result.ok,
+                isFatalError: result.isFatalError,
               })
             },
           })
@@ -312,7 +326,9 @@ export const registerBuild = (program: Command) => {
           await buildSequentially()
         }
 
-        if (hasErrors && !resolvedOptions?.ignoreErrors) {
+        // Fatal errors (e.g., circuit generation exceptions) always cause exit code 1
+        // Non-fatal errors can be suppressed with --ignore-errors
+        if (hasFatalErrors || (hasErrors && !resolvedOptions?.ignoreErrors)) {
           process.exit(1)
         }
 
