@@ -55,6 +55,7 @@ Commands:
                               specific package (e.g., tsci install
                               https://github.com/espressif/kicad-libraries)
   upgrade                     Upgrade CLI to the latest version
+  doctor                      Run diagnostic checks for your tscircuit setup
   search [options] <query>    Search for footprints, CAD models or packages in
                               the tscircuit ecosystem
   import <query>              Search JLCPCB or the tscircuit registry and import
