@@ -1,4 +1,4 @@
-import ky from "ky"
+import ky, { TimeoutError } from "ky"
 import type { FileServerRoutes } from "lib/file-server/FileServerRoutes"
 import { createHttpServer } from "lib/server/createHttpServer"
 import { EventsWatcher } from "lib/server/EventsWatcher"
@@ -208,15 +208,11 @@ export class DevServer {
     )
 
     console.log(kleur.green(`Saving: ${relativeFilePath}`))
-    await this.fsKy
-      .post("api/files/upsert", {
-        json: {
-          file_path: relativeFilePath,
-          initiator: "filesystem_change",
-          ...filePayload,
-        },
-      })
-      .json()
+    await this.postFileUpsert({
+      filePath: relativeFilePath,
+      initiator: "filesystem_change",
+      filePayload,
+    })
 
     // Check if this file has new node_modules dependencies
     await this.checkAndUploadNewNodeModules(absoluteFilePath)
@@ -331,12 +327,10 @@ export class DevServer {
 
     // Then upsert the new file
     const filePayload = this.createFileUploadPayload(newPath, newRelativePath)
-    await this.fsKy.post("api/files/upsert", {
-      json: {
-        file_path: newRelativePath,
-        initiator: "filesystem_change",
-        ...filePayload,
-      },
+    await this.postFileUpsert({
+      filePath: newRelativePath,
+      initiator: "filesystem_change",
+      filePayload,
     })
 
     debug(`File renamed from ${oldRelativePath} to ${newRelativePath}`)
@@ -355,12 +349,10 @@ export class DevServer {
         filePath,
         relativeFilePath,
       )
-      await this.fsKy.post("api/files/upsert", {
-        json: {
-          file_path: relativeFilePath,
-          initiator: "filesystem_change",
-          ...filePayload,
-        },
+      await this.postFileUpsert({
+        filePath: relativeFilePath,
+        initiator: "filesystem_change",
+        filePayload,
       })
     }
 
@@ -419,14 +411,51 @@ export class DevServer {
         relativeFilePath,
       )
 
+      await this.postFileUpsert({
+        filePath: relativeFilePath,
+        initiator: "filesystem_change",
+        filePayload,
+      })
+    }
+  }
+
+  private async postFileUpsert({
+    filePath,
+    initiator,
+    filePayload,
+  }: {
+    filePath: string
+    initiator: "filesystem_change"
+    filePayload: FileUploadPayload
+  }) {
+    try {
       await this.fsKy.post("api/files/upsert", {
         json: {
-          file_path: relativeFilePath,
-          initiator: "filesystem_change",
+          file_path: filePath,
+          initiator,
           ...filePayload,
         },
       })
+    } catch (error) {
+      this.logFileUpsertTimeout(error, filePath)
+      throw error
     }
+  }
+
+  private logFileUpsertTimeout(error: unknown, filePath: string) {
+    if (!(error instanceof TimeoutError)) return
+
+    console.error(
+      kleur.red(
+        `Timeout while uploading "${filePath}" to the local file server.`,
+      ),
+    )
+    console.error(
+      kleur.yellow(
+        `Additional info: the file server at http://localhost:${this.port}/api/files/upsert did not respond in time. ` +
+          "Make sure the dev server started successfully, the port is not blocked, and try again.",
+      ),
+    )
   }
 
   private async saveSnippet() {
