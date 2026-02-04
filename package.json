@@ -14,7 +14,7 @@
     "@tscircuit/file-server": "^0.0.32",
     "@tscircuit/math-utils": "0.0.29",
     "@tscircuit/props": "^0.0.458",
-    "@tscircuit/runframe": "^0.0.1572",
+    "@tscircuit/runframe": "^0.0.1573",
     "@tscircuit/schematic-match-adapt": "^0.0.22",
     "@types/bun": "^1.2.2",
     "@types/configstore": "^6.0.2",
