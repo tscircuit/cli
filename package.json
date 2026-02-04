@@ -5,7 +5,7 @@
     ".": "./dist/cli/main.js",
     "./lib": "./dist/lib/index.js"
   },
-  "version": "0.1.876",
+  "version": "0.1.877",
   "devDependencies": {
     "@babel/standalone": "^7.26.9",
     "@biomejs/biome": "^1.9.4",
