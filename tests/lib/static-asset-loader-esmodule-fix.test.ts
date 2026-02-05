@@ -24,6 +24,12 @@ describe("static asset loader __esModule fix", () => {
     const tmpDir = temporaryDirectory()
 
     try {
+      // Create a package.json to establish tmpDir as a project root
+      await writeFile(
+        path.join(tmpDir, "package.json"),
+        JSON.stringify({ name: "test-project", type: "module" }),
+      )
+
       // Copy the bundled fixture library to node_modules in temp dir
       const nodeModulesDir = path.join(tmpDir, "node_modules", "@test")
       await mkdir(nodeModulesDir, { recursive: true })
@@ -46,13 +52,6 @@ describe("static asset loader __esModule fix", () => {
         const stepPath = lib.PartConfig.TestPart.stepPath;
         const directStepUrl = lib.directStepUrl;
 
-        console.log(JSON.stringify({
-          stepPathType: typeof stepPath,
-          stepPathIsString: typeof stepPath === 'string',
-          directStepUrlType: typeof directStepUrl,
-          directStepUrlIsString: typeof directStepUrl === 'string',
-          allStrings: typeof stepPath === 'string' && typeof directStepUrl === 'string',
-        }));
       `
 
       const testFilePath = path.join(tmpDir, "test-loader.mjs")
@@ -76,7 +75,6 @@ describe("static asset loader __esModule fix", () => {
       expect(exitCode).toBe(0)
 
       const result = JSON.parse(stdout.trim())
-      console.log("Actual implementation result (bundled fixture):", result)
 
       // The implementation must return strings
       expect(result.stepPathType).toBe("string")
