@@ -64,9 +64,18 @@ export const registerStaticAssetLoaders = () => {
             .split(path.sep)
             .join("/")
 
+          const pathStr = `./${relativePath}`
+
+          // Return exports object with __esModule flag for proper ESM/CJS interop.
+          // This fixes the issue where pre-built libraries that import .step files
+          // would receive a Module object { default: "path" } instead of just the string.
+          // The __esModule flag ensures proper default export resolution.
           return {
-            contents: `export default ${JSON.stringify(`./${relativePath}`)};`,
-            loader: "js",
+            exports: {
+              __esModule: true,
+              default: pathStr,
+            },
+            loader: "object",
           }
         })
       },

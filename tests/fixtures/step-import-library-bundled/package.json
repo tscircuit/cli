@@ -1,0 +1,7 @@
+{
+  "name": "@test/step-import-library-bundled",
+  "version": "1.0.0",
+  "main": "dist/index.cjs",
+  "module": "dist/index.js",
+  "types": "dist/index.d.ts"
+}
