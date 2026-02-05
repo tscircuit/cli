@@ -1,5 +1,5 @@
 import { test, expect, describe } from "bun:test"
-import { mkdir, rm, cp } from "node:fs/promises"
+import { mkdir, rm, cp, writeFile } from "node:fs/promises"
 import path from "node:path"
 import { temporaryDirectory } from "tempy"
 
@@ -13,6 +13,12 @@ describe("static asset loader __esModule fix", () => {
   /**
    * This test verifies the actual register-static-asset-loaders.ts implementation
    * works correctly with the bundled fixture library.
+   *
+   * The bundled fixture mimics a rollup-bundled library with dual package structure
+   * (main: index.cjs, module: index.js) which triggers ESM/CJS interop issues.
+   *
+   * Without the __esModule fix, .step imports return Module { default: "path" }
+   * instead of just the string, breaking cadmodel components.
    */
   test("actual implementation returns string with bundled fixture", async () => {
     const tmpDir = temporaryDirectory()
@@ -49,7 +55,10 @@ describe("static asset loader __esModule fix", () => {
         }));
       `
 
-      const proc = Bun.spawn(["bun", "-e", testCode], {
+      const testFilePath = path.join(tmpDir, "test-loader.mjs")
+      await writeFile(testFilePath, testCode)
+
+      const proc = Bun.spawn(["bun", testFilePath], {
         cwd: tmpDir,
         stdout: "pipe",
         stderr: "pipe",
