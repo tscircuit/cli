@@ -1,7 +1,7 @@
 import fs from "node:fs"
 import path from "node:path"
 
-const TEXT_STATIC_ASSET_EXTENSIONS = [
+const STATIC_ASSET_EXTENSIONS = [
   ".glb",
   ".gltf",
   ".step",
@@ -12,7 +12,7 @@ const TEXT_STATIC_ASSET_EXTENSIONS = [
 ]
 
 const staticAssetFilter = new RegExp(
-  `(${TEXT_STATIC_ASSET_EXTENSIONS.map((ext) => ext.replace(".", "\\.")).join(
+  `(${STATIC_ASSET_EXTENSIONS.map((ext) => ext.replace(".", "\\.")).join(
     "|",
   )})$`,
   "i",
