@@ -2,6 +2,7 @@ import fs from "node:fs"
 import path from "node:path"
 
 const TEXT_STATIC_ASSET_EXTENSIONS = [
+  ".glb",
   ".gltf",
   ".step",
   ".kicad_mod",
