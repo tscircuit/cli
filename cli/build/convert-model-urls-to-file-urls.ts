@@ -1,3 +1,4 @@
+import path from "node:path"
 import { pathToFileURL } from "node:url"
 
 /**
@@ -24,13 +25,15 @@ export const convertModelUrlsToFileUrls = (circuitJson: any[]): any[] => {
     for (const key of modelUrlKeys) {
       const value = updated[key]
       if (typeof value === "string" && value.length > 0) {
-        // Check if it's a local file path (starts with / or drive letter on Windows)
-        // and not already a URL (http://, https://, file://, etc.)
-        if (
-          !value.match(/^[a-zA-Z]+:\/\//) &&
-          (value.startsWith("/") || value.match(/^[a-zA-Z]:\\/))
-        ) {
+        // Skip values that are already URLs (http://, https://, file://, etc.)
+        if (value.match(/^[a-zA-Z]+:\/\//)) continue
+
+        if (value.startsWith("/") || value.match(/^[a-zA-Z]:\\/)) {
+          // Absolute path (Unix or Windows)
           updated[key] = pathToFileURL(value).href
+        } else if (value.startsWith(".")) {
+          // Relative path (e.g. ./chip.glb) — resolve against cwd
+          updated[key] = pathToFileURL(path.resolve(process.cwd(), value)).href
         }
       }
     }

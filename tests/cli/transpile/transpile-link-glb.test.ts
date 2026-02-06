@@ -184,6 +184,6 @@ export default () => <AliasedBoard />
     .replace(/\\/g, "/")
 
   expect(normalizedModelGlbUrl).toMatchInlineSnapshot(
-    `"<tmp>/aliased-glb-lib/dist/assets/chip-e043b555.glb"`,
+    `"./aliased-glb-lib/dist/assets/chip-e043b555.glb"`,
   )
 }, 60_000)
