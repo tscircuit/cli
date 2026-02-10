@@ -143,12 +143,9 @@ export const exportSnippet = async ({
       const bomRows = await convertCircuitJsonToBomRows({
         circuitJson: circuitData.circuitJson,
         resolvePart: async ({ pcb_component, source_component }) => {
-          // Try to get footprint from multiple sources
-          const footprint =
-            pcb_component.footprint || (source_component as any).footprint || ""
-          return {
-            footprint,
-          }
+          // Footprint values are not currently preserved in circuit JSON
+          // Return empty object to use default BOM row values
+          return {}
         },
       })
       outputContent = convertBomRowsToCsv(bomRows)
