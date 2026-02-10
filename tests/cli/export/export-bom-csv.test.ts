@@ -46,8 +46,8 @@ test("export bom-csv", async () => {
   )
 
   // Verify CSV has headers
-  expect(bomCsv).toContain("designator")
-  expect(bomCsv).toContain("footprint")
+  expect(bomCsv).toContain("Designator")
+  expect(bomCsv).toContain("Footprint")
 
   // Verify components are in the BOM
   expect(bomCsv).toContain("R1")
@@ -75,7 +75,7 @@ test("export bom-csv with custom output path", async () => {
 
   const bomCsv = await readFile(path.join(tmpDir, customOutputPath), "utf-8")
 
-  expect(bomCsv).toContain("designator")
+  expect(bomCsv).toContain("Designator")
   expect(bomCsv).toContain("R1")
   expect(bomCsv).toContain("C1")
   expect(stdout).toContain("custom-bom.csv")
