@@ -16,7 +16,10 @@ import { convertToKicadLibrary } from "./convert-to-kicad-library"
 import JSZip from "jszip"
 import { generateCircuitJson } from "lib/shared/generate-circuit-json"
 import type { PlatformConfig } from "@tscircuit/props"
-import { convertCircuitJsonToBomRows, convertBomRowsToCsv } from "circuit-json-to-bom-csv"
+import {
+  convertCircuitJsonToBomRows,
+  convertBomRowsToCsv,
+} from "circuit-json-to-bom-csv"
 
 const writeFileAsync = promisify(fs.writeFile)
 

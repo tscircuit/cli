@@ -73,10 +73,7 @@ test("export bom-csv with custom output path", async () => {
     `tsci export ${circuitPath} -f bom-csv -o ${customOutputPath}`,
   )
 
-  const bomCsv = await readFile(
-    path.join(tmpDir, customOutputPath),
-    "utf-8",
-  )
+  const bomCsv = await readFile(path.join(tmpDir, customOutputPath), "utf-8")
 
   expect(bomCsv).toContain("designator")
   expect(bomCsv).toContain("R1")
