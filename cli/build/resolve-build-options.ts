@@ -33,6 +33,9 @@ export const resolveBuildOptions = ({
   if (!cliOptions?.previewImages && configBuild?.previewImages) {
     configAppliedOpts.push("preview-images")
   }
+  if (!cliOptions?.glbs && configBuild?.glbs) {
+    configAppliedOpts.push("glbs")
+  }
   if (!cliOptions?.transpile && configBuild?.typescriptLibrary) {
     configAppliedOpts.push("transpile")
   }
@@ -43,6 +46,7 @@ export const resolveBuildOptions = ({
     kicadLibrary: cliOptions?.kicadLibrary ?? configBuild?.kicadLibrary,
     kicadPcm: cliOptions?.kicadPcm ?? configBuild?.kicadPcm,
     previewImages: cliOptions?.previewImages ?? configBuild?.previewImages,
+    glbs: cliOptions?.glbs ?? configBuild?.glbs,
     transpile: cliOptions?.transpile ?? configBuild?.typescriptLibrary,
   }
 
