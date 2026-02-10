@@ -16,6 +16,7 @@ import { convertToKicadLibrary } from "./convert-to-kicad-library"
 import JSZip from "jszip"
 import { generateCircuitJson } from "lib/shared/generate-circuit-json"
 import type { PlatformConfig } from "@tscircuit/props"
+import { convertCircuitJsonToBomRows, convertBomRowsToCsv } from "circuit-json-to-bom-csv"
 
 const writeFileAsync = promisify(fs.writeFile)
 
@@ -26,6 +27,7 @@ export const ALLOWED_EXPORT_FORMATS = [
   "pcb-svg",
   "gerbers",
   "readable-netlist",
+  "bom-csv",
   "gltf",
   "glb",
   "specctra-dsn",
@@ -44,6 +46,7 @@ const OUTPUT_EXTENSIONS: Record<ExportFormat, string> = {
   "pcb-svg": "-pcb.svg",
   gerbers: "-gerbers.zip",
   "readable-netlist": "-readable.netlist",
+  "bom-csv": ".bom.csv",
   gltf: ".gltf",
   glb: ".glb",
   "specctra-dsn": ".dsn",
@@ -133,6 +136,13 @@ export const exportSnippet = async ({
         circuitData.circuitJson,
       )
       break
+    case "bom-csv": {
+      const bomRows = await convertCircuitJsonToBomRows({
+        circuitJson: circuitData.circuitJson,
+      })
+      outputContent = convertBomRowsToCsv(bomRows)
+      break
+    }
     case "gltf":
       outputContent = JSON.stringify(
         await convertCircuitJsonToGltf(circuitData.circuitJson, {
