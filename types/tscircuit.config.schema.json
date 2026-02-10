@@ -80,6 +80,10 @@
           "type": "boolean",
           "description": "Enable preview image outputs in build."
         },
+        "glbs": {
+          "type": "boolean",
+          "description": "Enable GLB 3D model outputs for each circuit in build."
+        },
         "typescriptLibrary": {
           "type": "boolean",
           "description": "Enable TypeScript library output in build."

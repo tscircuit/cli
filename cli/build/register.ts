@@ -15,6 +15,7 @@ import type { PlatformConfig } from "@tscircuit/props"
 import type { BuildFileResult } from "./build-preview-images"
 import { buildPreviewImages } from "./build-preview-images"
 import { buildPreviewGltf } from "./build-preview-gltf"
+import { buildGlbs } from "./build-glbs"
 import { generateKicadProject } from "./generate-kicad-project"
 import type { GeneratedKicadProject } from "./generate-kicad-project"
 import { convertToKicadLibrary } from "lib/shared/convert-to-kicad-library"
@@ -65,6 +66,7 @@ export const registerBuild = (program: Command) => {
       "--preview-gltf",
       "Generate a GLTF file from the preview entrypoint",
     )
+    .option("--glbs", "Generate GLB 3D model files for every successful build")
     .option(
       "--kicad-pcm",
       "Generate KiCad PCM (Plugin and Content Manager) assets in dist/pcm",
@@ -363,6 +365,14 @@ export const registerBuild = (program: Command) => {
           })
         }
 
+        if (resolvedOptions?.glbs) {
+          console.log("Generating GLB models for all builds...")
+          await buildGlbs({
+            builtFiles,
+            distDir,
+          })
+        }
+
         if (resolvedOptions?.transpile) {
           validateMainInDist(projectDir, distDir)
 
@@ -509,6 +519,7 @@ export const registerBuild = (program: Command) => {
           resolvedOptions?.transpile && "transpile",
           resolvedOptions?.previewImages && "preview-images",
           resolvedOptions?.allImages && "all-images",
+          resolvedOptions?.glbs && "glbs",
           resolvedOptions?.kicad && "kicad",
           resolvedOptions?.kicadLibrary && "kicad-library",
           resolvedOptions?.kicadPcm && "kicad-pcm",

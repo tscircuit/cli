@@ -18,6 +18,7 @@ export const projectConfigSchema = z.object({
       kicadLibrary: z.boolean().optional(),
       kicadPcm: z.boolean().optional(),
       previewImages: z.boolean().optional(),
+      glbs: z.boolean().optional(),
       typescriptLibrary: z.boolean().optional(),
     })
     .optional(),

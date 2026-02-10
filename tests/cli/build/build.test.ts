@@ -337,3 +337,29 @@ test("build with --preview-images generates preview assets with GLB cad_model", 
   expect(preview3d[2]).toBe(0x4e)
   expect(preview3d[3]).toBe(0x47)
 }, 60_000)
+
+test("build with --glbs generates GLB files for each build", async () => {
+  const { tmpDir, runCommand } = await getCliTestFixture()
+  const firstCircuit = path.join(tmpDir, "first.circuit.tsx")
+  const secondCircuit = path.join(tmpDir, "second.circuit.tsx")
+  await writeFile(firstCircuit, circuitCode)
+  await writeFile(secondCircuit, circuitCode)
+  await writeFile(path.join(tmpDir, "package.json"), "{}")
+
+  await runCommand(`tsci build --glbs`)
+
+  const readGlbFile = async (name: string) => {
+    const glbPath = path.join(tmpDir, "dist", name, "3d.glb")
+    const glbContent = await readFile(glbPath)
+
+    expect(glbContent.byteLength).toBeGreaterThan(0)
+    // GLB magic bytes: "glTF" (0x67, 0x6C, 0x54, 0x46)
+    expect(glbContent[0]).toBe(0x67)
+    expect(glbContent[1]).toBe(0x6c)
+    expect(glbContent[2]).toBe(0x54)
+    expect(glbContent[3]).toBe(0x46)
+  }
+
+  await readGlbFile("first")
+  await readGlbFile("second")
+}, 60_000)
