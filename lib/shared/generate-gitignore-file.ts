@@ -29,6 +29,9 @@ Thumbs.db
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
+
+# tscircuit cache
+.tscircuit/
 `
 
   writeFileIfNotExists(gitignorePath, gitignoreContent)
