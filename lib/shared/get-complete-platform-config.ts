@@ -1,7 +1,34 @@
 import type { PlatformConfig } from "@tscircuit/props"
 import { getPlatformConfig } from "@tscircuit/eval/platform-config"
+import { createHash } from "node:crypto"
 import path from "node:path"
 import fs from "node:fs"
+
+export function createFilesystemCache(
+  cacheDir = path.join(process.cwd(), ".tscircuit", "cache", "parts-engine"),
+) {
+  return {
+    get: (key: string): string | null => {
+      try {
+        const hash = createHash("sha256").update(key).digest("hex")
+        const filePath = path.join(cacheDir, `${hash}.json`)
+        return fs.readFileSync(filePath, "utf-8")
+      } catch {
+        return null
+      }
+    },
+    set: (key: string, value: string): void => {
+      try {
+        fs.mkdirSync(cacheDir, { recursive: true })
+        const hash = createHash("sha256").update(key).digest("hex")
+        const filePath = path.join(cacheDir, `${hash}.json`)
+        fs.writeFileSync(filePath, value)
+      } catch {
+        // Silently ignore write errors
+      }
+    },
+  }
+}
 
 /**
  * Get a complete platform config with KiCad parsing support and any user overrides.
@@ -13,7 +40,9 @@ import fs from "node:fs"
 export function getCompletePlatformConfig(
   userConfig?: PlatformConfig,
 ): PlatformConfig {
-  const basePlatformConfig = getPlatformConfig()
+  const basePlatformConfig = getPlatformConfig({
+    filesystemCache: createFilesystemCache(),
+  })
 
   const defaultConfig: PlatformConfig = {
     ...basePlatformConfig,
