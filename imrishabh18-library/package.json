@@ -1,0 +1,25 @@
+{
+  "name": "@tsci/imrishabh18.library",
+  "version": "1.1.1",
+  "main": "dist/index.js",
+  "keywords": [
+    "tscircuit"
+  ],
+  "scripts": {
+    "dev": "tsci dev",
+    "build": "tsci build",
+    "snapshot": "tsci snapshot",
+    "snapshot:update": "tsci snapshot --update",
+    "start": "tsci dev -p 3021",
+    "generate:machinePinsContacts": "bun run lib/src/MachinePinContactGenerator.ts"
+  },
+  "devDependencies": {
+    "@types/bun": "^1.3.5",
+    "@types/react": "^19.2.8",
+    "tscircuit": "^0.0.1137"
+  },
+  "dependencies": {
+    "@rollup/plugin-typescript": "^12.3.0",
+    "@tscircuit/mm": "^0.0.8"
+  }
+}

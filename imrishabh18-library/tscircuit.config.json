@@ -1,0 +1,6 @@
+{
+  "mainEntrypoint": "lib/index.ts",
+  "previewComponentPath": "MachinePinContactExamples.tsx",
+  "includeBoardFiles": ["*.tsx", "lib/generated/*.tsx"],
+  "siteDefaultComponentPath": "MachinePinContactExamples.tsx"
+}
