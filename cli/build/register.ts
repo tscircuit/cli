@@ -386,19 +386,26 @@ export const registerBuild = (program: Command) => {
             })
           const entryFile = transpileEntrypoint
           if (!entryFile) {
+            hasFatalErrors = true
             console.error(
-              "No entry file found for transpilation. Make sure you have a lib/index.ts or set mainEntrypoint in tscircuit.config.json",
+              kleur.red(
+                "Fatal error [transpilation_failed]: No entry file found for transpilation. Make sure you have a lib/index.ts or set mainEntrypoint in tscircuit.config.json",
+              ),
             )
-            process.exit(1)
-          }
-          const transpileSuccess = await transpileFile({
-            input: entryFile,
-            outputDir: distDir,
-            projectDir,
-          })
-          if (!transpileSuccess) {
-            console.error("Transpilation failed")
-            process.exit(1)
+          } else {
+            const transpileSuccess = await transpileFile({
+              input: entryFile,
+              outputDir: distDir,
+              projectDir,
+            })
+            if (!transpileSuccess) {
+              hasFatalErrors = true
+              console.error(
+                kleur.red(
+                  "Fatal error [transpilation_failed]: Transpilation failed",
+                ),
+              )
+            }
           }
         }
 
@@ -543,11 +550,13 @@ export const registerBuild = (program: Command) => {
           `  Output    ${kleur.dim(path.relative(process.cwd(), distDir) || "dist")}`,
         )
         console.log(
-          hasErrors
-            ? kleur.yellow("\n⚠ Build completed with errors")
-            : kleur.green("\n✓ Done"),
+          hasFatalErrors
+            ? kleur.red("\n✗ Build failed with fatal errors")
+            : hasErrors
+              ? kleur.yellow("\n⚠ Build completed with errors")
+              : kleur.green("\n✓ Done"),
         )
-        process.exit(0)
+        process.exit(hasFatalErrors ? 1 : 0)
       } catch (error) {
         const message = error instanceof Error ? error.message : String(error)
         console.error(message)
