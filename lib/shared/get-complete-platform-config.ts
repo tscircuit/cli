@@ -4,7 +4,7 @@ import { createHash } from "node:crypto"
 import path from "node:path"
 import fs from "node:fs"
 
-export function createFilesystemCache(
+export function createLocalCacheEngine(
   cacheDir = path.join(process.cwd(), ".tscircuit", "cache"),
 ) {
   return {
@@ -54,7 +54,7 @@ export function getCompletePlatformConfig(
 
   const defaultConfig: PlatformConfig = {
     ...basePlatformConfig,
-    localCacheEngine: createFilesystemCache(),
+    localCacheEngine: createLocalCacheEngine(),
     // Override footprintFileParserMap to handle file paths from native imports
     footprintFileParserMap: {
       ...basePlatformConfig.footprintFileParserMap,
