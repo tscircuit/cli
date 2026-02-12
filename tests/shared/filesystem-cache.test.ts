@@ -1,5 +1,5 @@
 import { test, expect } from "bun:test"
-import { createFilesystemCache } from "lib/shared/get-complete-platform-config"
+import { createLocalCacheEngine } from "lib/shared/get-complete-platform-config"
 import { createHash } from "node:crypto"
 import { temporaryDirectory } from "tempy"
 import fs from "node:fs"
@@ -7,14 +7,14 @@ import path from "node:path"
 
 test("filesystem cache get returns null for missing key", () => {
   const cacheDir = temporaryDirectory()
-  const cache = createFilesystemCache(cacheDir)
+  const cache = createLocalCacheEngine(cacheDir)
 
   expect(cache.getItem("nonexistent-key")).toBeNull()
 })
 
 test("filesystem cache set then get returns cached value", () => {
   const cacheDir = temporaryDirectory()
-  const cache = createFilesystemCache(cacheDir)
+  const cache = createLocalCacheEngine(cacheDir)
 
   const key = JSON.stringify({ type: "resistor", resistance: "10k" })
   const value = JSON.stringify({ jlcpcb: ["C12345"] })
@@ -27,7 +27,7 @@ test("filesystem cache set then get returns cached value", () => {
 
 test("filesystem cache creates directory and writes hashed file", () => {
   const cacheDir = path.join(temporaryDirectory(), "nested", "cache")
-  const cache = createFilesystemCache(cacheDir)
+  const cache = createLocalCacheEngine(cacheDir)
 
   const key = "test-key"
   const value = '{"data":"hello"}'
@@ -46,7 +46,7 @@ test("filesystem cache creates directory and writes hashed file", () => {
 
 test("filesystem cache uses deterministic hashing", () => {
   const cacheDir = temporaryDirectory()
-  const cache = createFilesystemCache(cacheDir)
+  const cache = createLocalCacheEngine(cacheDir)
 
   const key = JSON.stringify({ type: "capacitor", capacitance: "100nF" })
   const value = JSON.stringify({ jlcpcb: ["C99999"] })
@@ -54,18 +54,18 @@ test("filesystem cache uses deterministic hashing", () => {
   cache.setItem(key, value)
 
   // A second cache instance with the same dir should read the same data
-  const cache2 = createFilesystemCache(cacheDir)
+  const cache2 = createLocalCacheEngine(cacheDir)
   expect(cache2.getItem(key)).toBe(value)
 })
 
 test("filesystem cache returns null after reading nonexistent dir", () => {
-  const cache = createFilesystemCache("/tmp/nonexistent-dir-abc123xyz")
+  const cache = createLocalCacheEngine("/tmp/nonexistent-dir-abc123xyz")
   expect(cache.getItem("any-key")).toBeNull()
 })
 
 test("filesystem cache different keys produce different files", () => {
   const cacheDir = temporaryDirectory()
-  const cache = createFilesystemCache(cacheDir)
+  const cache = createLocalCacheEngine(cacheDir)
 
   cache.setItem("key-a", '{"a":1}')
   cache.setItem("key-b", '{"b":2}')
