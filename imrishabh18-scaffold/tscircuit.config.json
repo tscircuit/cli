@@ -1,6 +1,0 @@
-{
-  "mainEntrypoint": "lib/index.ts",
-  "previewComponentPath": "lib/scaffolds/MedMed/generated/Scaffold_MedMed_8x8.tsx",
-  "includeBoardFiles": ["lib/scaffolds/**/generated/*.tsx"],
-  "prebuildCommand": "bun run lib/scaffolds/generator.ts"
-}

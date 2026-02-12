@@ -1,6 +1,0 @@
-{
-  "mainEntrypoint": "lib/index.ts",
-  "previewComponentPath": "MoleculeExample.tsx",
-  "siteDefaultComponentPath": "MoleculeExample.tsx",
-  "includeBoardFiles": ["*.tsx", "lib/generated/*.tsx"]
-}

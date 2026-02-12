@@ -1,4 +1,0 @@
-{
-  "mainEntrypoint": "lib/index.ts",
-  "includeBoardFiles": ["*.tsx", "lib/generated/*.tsx"]
-}
