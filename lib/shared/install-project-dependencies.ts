@@ -2,6 +2,7 @@ import fs from "node:fs"
 import path from "node:path"
 import kleur from "kleur"
 import { generatePackageJson } from "./generate-package-json"
+import { generateTsConfig } from "./generate-ts-config"
 import { getPackageManager } from "./get-package-manager"
 import { collectTsciDependencies } from "./collect-tsci-dependencies"
 import { handleRegistryAuthError } from "./handle-registry-auth-error"
@@ -32,6 +33,13 @@ export async function installProjectDependencies({
     packageJsonCreated = true
   } else {
     console.log("Found existing package.json.")
+  }
+
+  // Generate tsconfig.json if it doesn't exist (uses writeFileIfNotExists internally)
+  const tsconfigPath = path.join(projectRoot, "tsconfig.json")
+  if (!fs.existsSync(tsconfigPath)) {
+    console.log("No tsconfig.json found. Generating a new one.")
+    generateTsConfig(projectRoot)
   }
 
   // Create .npmrc if it doesn't exist
