@@ -8,7 +8,8 @@ export function createFilesystemCache(
   cacheDir = path.join(process.cwd(), ".tscircuit", "cache"),
 ) {
   return {
-    get: (key: string): string | null => {
+    getItem: (key: string): string | null => {
+      console.log("getItem", key)
       try {
         const hash = createHash("md5").update(key).digest("hex")
         const keyWithSafeCharacters = key.replace(/[^a-zA-Z0-9]/g, "_")
@@ -21,7 +22,8 @@ export function createFilesystemCache(
         return null
       }
     },
-    set: (key: string, value: string): void => {
+    setItem: (key: string, value: string): void => {
+      console.log("setItem", key)
       try {
         fs.mkdirSync(cacheDir, { recursive: true })
         const hash = createHash("md5").update(key).digest("hex")
@@ -50,13 +52,9 @@ export function getCompletePlatformConfig(
 ): PlatformConfig {
   const basePlatformConfig = getPlatformConfig()
 
-  const platformConfigWithFilesystemCache = getPlatformConfig({
-    filesystemCache: createFilesystemCache(),
-  })
-
   const defaultConfig: PlatformConfig = {
     ...basePlatformConfig,
-    ...platformConfigWithFilesystemCache,
+    localCacheEngine: createFilesystemCache(),
     // Override footprintFileParserMap to handle file paths from native imports
     footprintFileParserMap: {
       ...basePlatformConfig.footprintFileParserMap,
