@@ -1,23 +1,11 @@
 import { getCliTestFixture } from "../../fixtures/get-cli-test-fixture"
 import { test, expect } from "bun:test"
-import { writeFile, readFile, stat } from "node:fs/promises"
+import { readFile, stat } from "node:fs/promises"
 import path from "node:path"
-
-const circuitCode = `
-export default () => (
-  <board>
-    <resistor resistance="1k" footprint="0402" name="R1" />
-    <capacitor capacitance="1000pF" footprint="0402" name="C1" />
-  </board>
-)
-`
 
 test("build without tsconfig.json auto-generates it and has no type errors", async () => {
   const { tmpDir, runCommand } = await getCliTestFixture()
-  const circuitPath = path.join(tmpDir, "index.tsx")
-  await writeFile(circuitPath, circuitCode)
-  await writeFile(path.join(tmpDir, "package.json"), "{}")
-
+  await runCommand(`tsci init -y`)
   const { stdout, stderr } = await runCommand(`tsci build --ci`)
 
   expect(stderr).not.toContain("TS2339")
