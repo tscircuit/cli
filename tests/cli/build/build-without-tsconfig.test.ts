@@ -6,9 +6,8 @@ import path from "node:path"
 const circuitCode = `
 export default () => (
   <board>
-    <resistor resistance="1k" footprint="0402" name="R1" schX={3} pcbX={3} />
-    <capacitor capacitance="1000pF" footprint="0402" name="C1" schX={-3} pcbX={-3} />
-    <trace from=".R1 > .pin1" to=".C1 > .pin1" />
+    <resistor resistance="1k" footprint="0402" name="R1" />
+    <capacitor capacitance="1000pF" footprint="0402" name="C1" />
   </board>
 )
 `
@@ -17,8 +16,9 @@ test("build without tsconfig.json auto-generates it and has no type errors", asy
   const { tmpDir, runCommand } = await getCliTestFixture()
   const circuitPath = path.join(tmpDir, "index.tsx")
   await writeFile(circuitPath, circuitCode)
+  await writeFile(path.join(tmpDir, "package.json"), "{}")
 
-  const { stderr } = await runCommand(`tsci build --ci`)
+  const { stdout, stderr } = await runCommand(`tsci build --ci`)
 
   expect(stderr).not.toContain("TS2339")
   expect(stderr).not.toContain("does not exist on type 'JSX.IntrinsicElements'")
