@@ -16,12 +16,28 @@ test("build without tsconfig.json auto-generates it and has no type errors", asy
   const { tmpDir, runCommand } = await getCliTestFixture()
   const circuitPath = path.join(tmpDir, "index.tsx")
   await writeFile(circuitPath, circuitCode)
-  await writeFile(path.join(tmpDir, "package.json"), "{}")
 
+  // Adding tscircuit to package.json to avoid's `TS2688` type error
+  await writeFile(
+    path.join(tmpDir, "package.json"),
+    `{
+    "name": "test-build-without-tsconfig",
+    "version": "1.0.0",
+    "dependencies": {
+      "tscircuit": "latest"
+    }
+  }`,
+  )
+
+  await runCommand(`tsci install`)
   const { stdout, stderr } = await runCommand(`tsci build --ci`)
 
   expect(stderr).not.toContain("TS2339")
   expect(stderr).not.toContain("does not exist on type 'JSX.IntrinsicElements'")
+  expect(stderr).not.toContain("TS2688")
+  expect(stderr).not.toContain(
+    "Cannot find type definition file for 'tscircuit'",
+  )
 
   // Verify transpilation outputs were created
   const esmPath = path.join(tmpDir, "dist", "index.js")
