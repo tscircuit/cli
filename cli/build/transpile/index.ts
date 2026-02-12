@@ -144,8 +144,6 @@ export const transpileFile = async ({
               noEmit: false,
               emitDeclarationOnly: false,
               allowImportingTsExtensions: false,
-              types: [],
-              noCheck: true,
             }
           : {
               target: "ES2020",
@@ -158,7 +156,6 @@ export const transpileFile = async ({
               allowSyntheticDefaultImports: true,
               allowArbitraryExtensions: true,
               baseUrl: projectDir,
-              noCheck: true,
             },
       }),
     ]
