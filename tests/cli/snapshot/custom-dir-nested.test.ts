@@ -54,8 +54,7 @@ test("snapshot with custom snapshotsDir in nested directories", async () => {
     [
       ".tscircuit/",
       ".tscircuit/cache/",
-      ".tscircuit/cache/parts-engine/",
-      ".tscircuit/cache/parts-engine/d2c0f2a0d7fcec39ad2b1557390ecef347dabb88ec7f236eeed780580a68f386.json",
+      ".tscircuit/cache/___soic8__-d2c0f2a0d7fcec39ad2b1557390ecef347dabb88ec7f236eeed780580a68f386.json",
       "circuits/",
       "circuits/led.circuit.tsx",
       "pcb/",

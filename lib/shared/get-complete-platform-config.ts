@@ -5,13 +5,17 @@ import path from "node:path"
 import fs from "node:fs"
 
 export function createFilesystemCache(
-  cacheDir = path.join(process.cwd(), ".tscircuit", "cache", "parts-engine"),
+  cacheDir = path.join(process.cwd(), ".tscircuit", "cache"),
 ) {
   return {
     get: (key: string): string | null => {
       try {
         const hash = createHash("sha256").update(key).digest("hex")
-        const filePath = path.join(cacheDir, `${hash}.json`)
+        const keyWithSafeCharacters = key.replace(/[^a-zA-Z0-9]/g, "_")
+        const filePath = path.join(
+          cacheDir,
+          `${keyWithSafeCharacters.slice(keyWithSafeCharacters.length - 10, keyWithSafeCharacters.length)}-${hash}.json`,
+        )
         return fs.readFileSync(filePath, "utf-8")
       } catch {
         return null
@@ -21,7 +25,11 @@ export function createFilesystemCache(
       try {
         fs.mkdirSync(cacheDir, { recursive: true })
         const hash = createHash("sha256").update(key).digest("hex")
-        const filePath = path.join(cacheDir, `${hash}.json`)
+        const keyWithSafeCharacters = key.replace(/[^a-zA-Z0-9]/g, "_")
+        const filePath = path.join(
+          cacheDir,
+          `${keyWithSafeCharacters.slice(keyWithSafeCharacters.length - 10, keyWithSafeCharacters.length)}-${hash}.json`,
+        )
         fs.writeFileSync(filePath, value)
       } catch {
         // Silently ignore write errors
@@ -40,12 +48,15 @@ export function createFilesystemCache(
 export function getCompletePlatformConfig(
   userConfig?: PlatformConfig,
 ): PlatformConfig {
-  const basePlatformConfig = getPlatformConfig({
+  const basePlatformConfig = getPlatformConfig()
+
+  const platformConfigWithFilesystemCache = getPlatformConfig({
     filesystemCache: createFilesystemCache(),
   })
 
   const defaultConfig: PlatformConfig = {
     ...basePlatformConfig,
+    ...platformConfigWithFilesystemCache,
     // Override footprintFileParserMap to handle file paths from native imports
     footprintFileParserMap: {
       ...basePlatformConfig.footprintFileParserMap,

@@ -30,8 +30,7 @@ test("snapshot defaults to __snapshots__ when no config", async () => {
     [
       ".tscircuit/",
       ".tscircuit/cache/",
-      ".tscircuit/cache/parts-engine/",
-      ".tscircuit/cache/parts-engine/d2c0f2a0d7fcec39ad2b1557390ecef347dabb88ec7f236eeed780580a68f386.json",
+      ".tscircuit/cache/___soic8__-d2c0f2a0d7fcec39ad2b1557390ecef347dabb88ec7f236eeed780580a68f386.json",
       "__snapshots__/",
       "__snapshots__/default.board-pcb.snap.svg",
       "__snapshots__/default.board-schematic.snap.svg",

@@ -32,10 +32,12 @@ test("filesystem cache creates directory and writes hashed file", () => {
   const key = "test-key"
   const value = '{"data":"hello"}'
   const expectedHash = createHash("sha256").update(key).digest("hex")
+  const keyWithSafeCharacters = key.replace(/[^a-zA-Z0-9]/g, "_")
+  const keySuffix = keyWithSafeCharacters.slice(keyWithSafeCharacters.length - 10)
 
   cache.set(key, value)
 
-  const filePath = path.join(cacheDir, `${expectedHash}.json`)
+  const filePath = path.join(cacheDir, `${keySuffix}-${expectedHash}.json`)
   expect(fs.existsSync(filePath)).toBe(true)
   expect(fs.readFileSync(filePath, "utf-8")).toBe(value)
 })
