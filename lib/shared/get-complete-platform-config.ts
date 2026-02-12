@@ -9,7 +9,6 @@ export function createLocalCacheEngine(
 ) {
   return {
     getItem: (key: string): string | null => {
-      console.log("getItem", key)
       try {
         const hash = createHash("md5").update(key).digest("hex")
         const keyWithSafeCharacters = key.replace(/[^a-zA-Z0-9]/g, "_")
@@ -23,7 +22,6 @@ export function createLocalCacheEngine(
       }
     },
     setItem: (key: string, value: string): void => {
-      console.log("setItem", key)
       try {
         fs.mkdirSync(cacheDir, { recursive: true })
         const hash = createHash("md5").update(key).digest("hex")
