@@ -31,9 +31,11 @@ test("filesystem cache creates directory and writes hashed file", () => {
 
   const key = "test-key"
   const value = '{"data":"hello"}'
-  const expectedHash = createHash("sha256").update(key).digest("hex")
+  const expectedHash = createHash("md5").update(key).digest("hex")
   const keyWithSafeCharacters = key.replace(/[^a-zA-Z0-9]/g, "_")
-  const keySuffix = keyWithSafeCharacters.slice(keyWithSafeCharacters.length - 10)
+  const keySuffix = keyWithSafeCharacters.slice(
+    keyWithSafeCharacters.length - 10,
+  )
 
   cache.set(key, value)
 

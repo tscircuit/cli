@@ -10,7 +10,7 @@ export function createFilesystemCache(
   return {
     get: (key: string): string | null => {
       try {
-        const hash = createHash("sha256").update(key).digest("hex")
+        const hash = createHash("md5").update(key).digest("hex")
         const keyWithSafeCharacters = key.replace(/[^a-zA-Z0-9]/g, "_")
         const filePath = path.join(
           cacheDir,
@@ -24,7 +24,7 @@ export function createFilesystemCache(
     set: (key: string, value: string): void => {
       try {
         fs.mkdirSync(cacheDir, { recursive: true })
-        const hash = createHash("sha256").update(key).digest("hex")
+        const hash = createHash("md5").update(key).digest("hex")
         const keyWithSafeCharacters = key.replace(/[^a-zA-Z0-9]/g, "_")
         const filePath = path.join(
           cacheDir,

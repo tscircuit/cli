@@ -39,7 +39,7 @@ test("snapshot does not create __snapshots__ when custom dir is configured", asy
     [
       ".tscircuit/",
       ".tscircuit/cache/",
-      ".tscircuit/cache/___soic8__-d2c0f2a0d7fcec39ad2b1557390ecef347dabb88ec7f236eeed780580a68f386.json",
+      ".tscircuit/cache/___soic8__-bd324d58a4d473e4c0850e839cce3e6b.json",
       "board.circuit.tsx",
       "my-custom-snaps/",
       "my-custom-snaps/board.circuit-pcb.snap.svg",
