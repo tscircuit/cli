@@ -22,4 +22,10 @@ test("basic init", async () => {
   for (const file of expectedFiles) {
     expect(dirContents).toContain(file)
   }
+
+  const gitignoreContent = fs.readFileSync(
+    path.join(tmpDir, "project", ".gitignore"),
+    "utf-8",
+  )
+  expect(gitignoreContent).toContain(".tscircuit/")
 }, 15_000)

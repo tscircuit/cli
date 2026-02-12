@@ -27,11 +27,14 @@ test("snapshot defaults to __snapshots__ when no config", async () => {
   )
 
   expect(structure).toMatchInlineSnapshot(`
-[
-  "__snapshots__/",
-  "__snapshots__/default.board-pcb.snap.svg",
-  "__snapshots__/default.board-schematic.snap.svg",
-  "default.board.tsx",
-]
-`)
+    [
+      ".tscircuit/",
+      ".tscircuit/cache/",
+      ".tscircuit/cache/___soic8__-716387b643045a05273bbfc4ba8420a9.json",
+      "__snapshots__/",
+      "__snapshots__/default.board-pcb.snap.svg",
+      "__snapshots__/default.board-schematic.snap.svg",
+      "default.board.tsx",
+    ]
+  `)
 }, 30_000)

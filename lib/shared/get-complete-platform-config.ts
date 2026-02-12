@@ -1,7 +1,42 @@
 import type { PlatformConfig } from "@tscircuit/props"
 import { getPlatformConfig } from "@tscircuit/eval/platform-config"
+import { createHash } from "node:crypto"
 import path from "node:path"
 import fs from "node:fs"
+
+export function createLocalCacheEngine(
+  cacheDir = path.join(process.cwd(), ".tscircuit", "cache"),
+) {
+  return {
+    getItem: (key: string): string | null => {
+      try {
+        const hash = createHash("md5").update(key).digest("hex")
+        const keyWithSafeCharacters = key.replace(/[^a-zA-Z0-9]/g, "_")
+        const filePath = path.join(
+          cacheDir,
+          `${keyWithSafeCharacters.slice(keyWithSafeCharacters.length - 10, keyWithSafeCharacters.length)}-${hash}.json`,
+        )
+        return fs.readFileSync(filePath, "utf-8")
+      } catch {
+        return null
+      }
+    },
+    setItem: (key: string, value: string): void => {
+      try {
+        fs.mkdirSync(cacheDir, { recursive: true })
+        const hash = createHash("md5").update(key).digest("hex")
+        const keyWithSafeCharacters = key.replace(/[^a-zA-Z0-9]/g, "_")
+        const filePath = path.join(
+          cacheDir,
+          `${keyWithSafeCharacters.slice(keyWithSafeCharacters.length - 10, keyWithSafeCharacters.length)}-${hash}.json`,
+        )
+        fs.writeFileSync(filePath, value)
+      } catch {
+        // Silently ignore write errors
+      }
+    },
+  }
+}
 
 /**
  * Get a complete platform config with KiCad parsing support and any user overrides.
@@ -17,6 +52,7 @@ export function getCompletePlatformConfig(
 
   const defaultConfig: PlatformConfig = {
     ...basePlatformConfig,
+    localCacheEngine: createLocalCacheEngine(),
     // Override footprintFileParserMap to handle file paths from native imports
     footprintFileParserMap: {
       ...basePlatformConfig.footprintFileParserMap,

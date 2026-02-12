@@ -36,12 +36,15 @@ test("snapshot does not create __snapshots__ when custom dir is configured", asy
   expect(structure).toContain("my-custom-snaps/")
 
   expect(structure).toMatchInlineSnapshot(`
-[
-  "board.circuit.tsx",
-  "my-custom-snaps/",
-  "my-custom-snaps/board.circuit-pcb.snap.svg",
-  "my-custom-snaps/board.circuit-schematic.snap.svg",
-  "tscircuit.config.json",
-]
-`)
+    [
+      ".tscircuit/",
+      ".tscircuit/cache/",
+      ".tscircuit/cache/___soic8__-716387b643045a05273bbfc4ba8420a9.json",
+      "board.circuit.tsx",
+      "my-custom-snaps/",
+      "my-custom-snaps/board.circuit-pcb.snap.svg",
+      "my-custom-snaps/board.circuit-schematic.snap.svg",
+      "tscircuit.config.json",
+    ]
+  `)
 }, 30_000)

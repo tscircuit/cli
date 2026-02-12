@@ -51,19 +51,22 @@ test("snapshot with custom snapshotsDir in nested directories", async () => {
   )
 
   expect(structure).toMatchInlineSnapshot(`
-[
-  "circuits/",
-  "circuits/led.circuit.tsx",
-  "pcb/",
-  "pcb/main.board.tsx",
-  "snapshots/",
-  "snapshots/circuits/",
-  "snapshots/circuits/led.circuit-pcb.snap.svg",
-  "snapshots/circuits/led.circuit-schematic.snap.svg",
-  "snapshots/pcb/",
-  "snapshots/pcb/main.board-pcb.snap.svg",
-  "snapshots/pcb/main.board-schematic.snap.svg",
-  "tscircuit.config.json",
-]
-`)
+    [
+      ".tscircuit/",
+      ".tscircuit/cache/",
+      ".tscircuit/cache/___soic8__-716387b643045a05273bbfc4ba8420a9.json",
+      "circuits/",
+      "circuits/led.circuit.tsx",
+      "pcb/",
+      "pcb/main.board.tsx",
+      "snapshots/",
+      "snapshots/circuits/",
+      "snapshots/circuits/led.circuit-pcb.snap.svg",
+      "snapshots/circuits/led.circuit-schematic.snap.svg",
+      "snapshots/pcb/",
+      "snapshots/pcb/main.board-pcb.snap.svg",
+      "snapshots/pcb/main.board-schematic.snap.svg",
+      "tscircuit.config.json",
+    ]
+  `)
 }, 30_000)
