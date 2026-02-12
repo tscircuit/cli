@@ -139,15 +139,15 @@ export const transpileFile = async ({
         tsconfig: hasTsConfig ? tsconfigPath : false,
         compilerOptions: hasTsConfig
           ? {
-              // Override options that conflict with transpilation
               declaration: false,
               sourceMap: false,
               noEmit: false,
               emitDeclarationOnly: false,
               allowImportingTsExtensions: false,
+              types: [],
+              noCheck: true,
             }
           : {
-              // Fallback defaults when no tsconfig exists
               target: "ES2020",
               module: "ESNext",
               jsx: "react-jsx",
@@ -158,6 +158,7 @@ export const transpileFile = async ({
               allowSyntheticDefaultImports: true,
               allowArbitraryExtensions: true,
               baseUrl: projectDir,
+              noCheck: true,
             },
       }),
     ]

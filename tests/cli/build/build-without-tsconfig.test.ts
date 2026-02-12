@@ -22,6 +22,10 @@ test("build without tsconfig.json auto-generates it and has no type errors", asy
 
   expect(stderr).not.toContain("TS2339")
   expect(stderr).not.toContain("does not exist on type 'JSX.IntrinsicElements'")
+  expect(stderr).not.toContain("TS2688")
+  expect(stderr).not.toContain(
+    "Cannot find type definition file for 'tscircuit'",
+  )
 
   // Verify transpilation outputs were created
   const esmPath = path.join(tmpDir, "dist", "index.js")
