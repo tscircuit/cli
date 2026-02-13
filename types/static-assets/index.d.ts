@@ -48,6 +48,11 @@ declare module "*.step" {
   export default src
 }
 
+declare module "*.stp" {
+  const src: string
+  export default src
+}
+
 declare module "*.kicad_mod" {
   const src: string
   export default src
