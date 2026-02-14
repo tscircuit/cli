@@ -29,6 +29,7 @@ const BINARY_FILE_EXTENSIONS = new Set([
   ".jpeg",
   ".jpg",
   ".step",
+  ".stp",
 ])
 
 type FileUploadPayload = Pick<

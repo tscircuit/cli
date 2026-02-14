@@ -11,6 +11,7 @@ export const BINARY_FILE_EXTENSIONS = new Set([
   ".obj",
   ".stl",
   ".step",
+  ".stp",
   // Image formats
   ".png",
   ".jpg",
