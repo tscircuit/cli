@@ -412,12 +412,17 @@ export const registerBuild = (program: Command) => {
               runFrameStandaloneBundleContent,
             )
           }
+          const pkgJsonPath = path.join(projectDir, "package.json")
+          const packageName = fs.existsSync(pkgJsonPath)
+            ? JSON.parse(fs.readFileSync(pkgJsonPath, "utf-8")).name
+            : undefined
           const indexHtml = getStaticIndexHtmlFile({
             files: staticFileReferences,
             standaloneScriptSrc,
             defaultMainComponentPath: siteDefaultComponentPath
               ? normalizeRelativePath(projectDir, siteDefaultComponentPath)
               : undefined,
+            packageName: packageName || path.basename(projectDir),
           })
           fs.writeFileSync(path.join(distDir, "index.html"), indexHtml)
         }
