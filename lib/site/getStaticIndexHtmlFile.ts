@@ -25,7 +25,7 @@ export const getStaticIndexHtmlFile = ({
         ]
       : []),
     ...(pkgName
-      ? [`window.TSCIRCUIT_PKG_NAME = ${JSON.stringify(pkgName)};`]
+      ? [`window.TSCIRCUIT_PACKAGE_NAME = ${JSON.stringify(pkgName)};`]
       : []),
   ]
 
