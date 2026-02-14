@@ -1,15 +1,23 @@
 import fs from "node:fs"
 import path from "node:path"
 import kleur from "kleur"
+import { collectTsciDependencies } from "./collect-tsci-dependencies"
 import { generatePackageJson } from "./generate-package-json"
 import { generateTsConfig } from "./generate-ts-config"
 import { getPackageManager } from "./get-package-manager"
-import { collectTsciDependencies } from "./collect-tsci-dependencies"
 import { handleRegistryAuthError } from "./handle-registry-auth-error"
 
 export interface InstallProjectDependenciesOptions {
   cwd?: string
   skipTscircuitPackage?: boolean
+}
+
+const removeTscircuitPackage = (
+  deps: Record<string, string> | undefined,
+): Record<string, string> | undefined => {
+  if (!deps || !Object.hasOwn(deps, "tscircuit")) return deps
+  const { tscircuit: _removedTscircuit, ...remainingDeps } = deps
+  return remainingDeps
 }
 
 export async function installProjectDependencies({
@@ -35,8 +43,8 @@ export async function installProjectDependencies({
     console.log("Found existing package.json.")
   }
 
-  // Generate tsconfig.json if it doesn't exist (uses writeFileIfNotExists internally)
   const tsconfigPath = path.join(projectRoot, "tsconfig.json")
+  // Generate tsconfig.json if it doesn't exist (uses writeFileIfNotExists internally)
   if (!fs.existsSync(tsconfigPath)) {
     console.log("No tsconfig.json found. Generating a new one.")
     generateTsConfig(projectRoot)
@@ -55,24 +63,9 @@ export async function installProjectDependencies({
   // Remove tscircuit packages if skipTscircuitPackage is true
   // This allows the cloud container's pre-installed version to be used
   if (skipTscircuitPackage) {
-    const isTscircuitPackage = (name: string) => name === "tscircuit"
-
-    if (packageJson.dependencies) {
-      for (const dep of Object.keys(packageJson.dependencies)) {
-        if (isTscircuitPackage(dep)) {
-          delete packageJson.dependencies[dep]
-        }
-      }
-    }
-    if (packageJson.devDependencies) {
-      for (const dep of Object.keys(packageJson.devDependencies)) {
-        if (isTscircuitPackage(dep)) {
-          delete packageJson.devDependencies[dep]
-        }
-      }
-    }
+    packageJson.dependencies = removeTscircuitPackage(packageJson.dependencies)
     console.log(
-      "Skipping tscircuit package installation (using cloud container version).",
+      "Skipping tscircuit package installation from dependencies (using cloud container version).",
     )
   }
 
