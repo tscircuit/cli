@@ -44,14 +44,14 @@ export const buildFile = async (
     if (!options?.ignoreWarnings) {
       for (const warn of warnings) {
         const msg = warn.message || JSON.stringify(warn)
-        console.log(kleur.yellow(msg))
+        console.log(kleur.yellow(`Warning: ${msg}`))
       }
     }
 
     if (!options?.ignoreErrors) {
       for (const err of errors) {
         const msg = err.message || JSON.stringify(err)
-        console.error(kleur.red(msg))
+        console.error(kleur.red(`Error: ${msg}`))
         if (err.stack) {
           console.log(err.stack)
         }
