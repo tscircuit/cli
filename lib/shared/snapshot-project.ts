@@ -129,7 +129,7 @@ export const snapshotProject = async ({
     let png3d: Buffer | null = null
     if (threeD) {
       try {
-        const glbBuffer = await convertCircuithglJsonToGltf(circuitJson, {
+        const glbBuffer = await convertCircuitJsonToGltf(circuitJson, {
           format: "glb",
           platformConfig: completePlatformConfig,
         })
