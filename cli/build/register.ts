@@ -352,6 +352,7 @@ export const registerBuild = (program: Command) => {
             mainEntrypoint,
             previewComponentPath,
             allImages: resolvedOptions?.allImages,
+            platformConfig,
           })
         }
 
@@ -362,6 +363,7 @@ export const registerBuild = (program: Command) => {
             distDir,
             mainEntrypoint,
             previewComponentPath,
+            platformConfig,
           })
         }
 
@@ -370,6 +372,7 @@ export const registerBuild = (program: Command) => {
           await buildGlbs({
             builtFiles,
             distDir,
+            platformConfig,
           })
         }
 

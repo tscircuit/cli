@@ -1,23 +1,23 @@
 import fs from "node:fs"
 import path from "node:path"
-import kleur from "kleur"
-import looksSame from "looks-same"
+import type { PlatformConfig } from "@tscircuit/props"
+import { convertCircuitJsonToGltf } from "circuit-json-to-gltf"
 import {
   convertCircuitJsonToPcbSvg,
   convertCircuitJsonToSchematicSvg,
 } from "circuit-to-svg"
-import { convertCircuitJsonToGltf } from "circuit-json-to-gltf"
-import { renderGLTFToPNGBufferFromGLBBuffer } from "poppygl"
-import { generateCircuitJson } from "lib/shared/generate-circuit-json"
-import type { PlatformConfig } from "@tscircuit/props"
-import { getCompletePlatformConfig } from "lib/shared/get-complete-platform-config"
+import kleur from "kleur"
+import { getSnapshotsDir } from "lib/project-config"
 import { findBoardFiles } from "lib/shared/find-board-files"
+import { generateCircuitJson } from "lib/shared/generate-circuit-json"
+import { getCompletePlatformConfig } from "lib/shared/get-complete-platform-config"
 import {
   DEFAULT_IGNORED_PATTERNS,
   normalizeIgnorePattern,
 } from "lib/shared/should-ignore-path"
+import looksSame from "looks-same"
+import { renderGLTFToPNGBufferFromGLBBuffer } from "poppygl"
 import { compareAndCreateDiff } from "./compare-images"
-import { getSnapshotsDir } from "lib/project-config"
 
 type SnapshotOptions = {
   update?: boolean
@@ -47,10 +47,10 @@ export const snapshotProject = async ({
   schematicOnly = false,
   filePaths = [],
   forceUpdate = false,
+  platformConfig,
   onExit = (code) => process.exit(code),
   onError = (msg) => console.error(msg),
   onSuccess = (msg) => console.log(msg),
-  platformConfig,
 }: SnapshotOptions = {}) => {
   const projectDir = process.cwd()
   const ignore = [
@@ -78,15 +78,13 @@ export const snapshotProject = async ({
 
   for (const file of boardFiles) {
     const relativeFilePath = path.relative(projectDir, file)
+    const completePlatformConfig = getCompletePlatformConfig(platformConfig)
 
     let circuitJson: any
     let pcbSvg: string
     let schSvg: string
 
     try {
-      // Get complete platform config with kicad_mod support
-      const completePlatformConfig = getCompletePlatformConfig(platformConfig)
-
       const result = await generateCircuitJson({
         filePath: file,
         platformConfig: completePlatformConfig,
@@ -131,8 +129,9 @@ export const snapshotProject = async ({
     let png3d: Buffer | null = null
     if (threeD) {
       try {
-        const glbBuffer = await convertCircuitJsonToGltf(circuitJson, {
+        const glbBuffer = await convertCircuithglJsonToGltf(circuitJson, {
           format: "glb",
+          platformConfig: completePlatformConfig,
         })
         if (!(glbBuffer instanceof ArrayBuffer)) {
           throw new Error(

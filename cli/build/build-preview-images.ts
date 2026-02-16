@@ -1,12 +1,14 @@
 import fs from "node:fs"
 import path from "node:path"
+import type { PlatformConfig } from "@tscircuit/props"
+import type { AnyCircuitElement } from "circuit-json"
+import { convertCircuitJsonToGltf } from "circuit-json-to-gltf"
 import {
   convertCircuitJsonToPcbSvg,
   convertCircuitJsonToSchematicSvg,
 } from "circuit-to-svg"
+import { getCompletePlatformConfig } from "lib/shared/get-complete-platform-config"
 import { renderGLTFToPNGBufferFromGLBBuffer } from "poppygl"
-import { convertCircuitJsonToGltf } from "circuit-json-to-gltf"
-import type { AnyCircuitElement } from "circuit-json"
 import { convertModelUrlsToFileUrls } from "./convert-model-urls-to-file-urls"
 
 export interface BuildFileResult {
@@ -67,10 +69,12 @@ const generatePreviewAssets = async ({
   build,
   outputDir,
   distDir,
+  platformConfig,
 }: {
   build: BuildFileResult
   outputDir: string
   distDir: string
+  platformConfig?: PlatformConfig
 }) => {
   const prefixRelative = path.relative(distDir, outputDir) || "."
   const prefix = prefixRelative === "." ? "" : `[${prefixRelative}] `
@@ -114,8 +118,10 @@ const generatePreviewAssets = async ({
   try {
     console.log(`${prefix}Converting circuit to GLB...`)
     const circuitJsonWithFileUrls = convertModelUrlsToFileUrls(circuitJson)
+    const completePlatformConfig = getCompletePlatformConfig(platformConfig)
     const glbBuffer = await convertCircuitJsonToGltf(circuitJsonWithFileUrls, {
       format: "glb",
+      platformConfig: completePlatformConfig,
     })
     console.log(`${prefix}Rendering GLB to PNG buffer...`)
     const glbArrayBuffer = await normalizeToArrayBuffer(glbBuffer)
@@ -139,12 +145,14 @@ export const buildPreviewImages = async ({
   mainEntrypoint,
   previewComponentPath,
   allImages,
+  platformConfig,
 }: {
   builtFiles: BuildFileResult[]
   distDir: string
   mainEntrypoint?: string
   previewComponentPath?: string
   allImages?: boolean
+  platformConfig?: PlatformConfig
 }) => {
   const successfulBuilds = builtFiles.filter((file) => file.ok)
   // previewComponentPath takes precedence over mainEntrypoint for preview images
@@ -167,6 +175,7 @@ export const buildPreviewImages = async ({
         build,
         outputDir,
         distDir,
+        platformConfig,
       })
     }
     return
@@ -193,5 +202,6 @@ export const buildPreviewImages = async ({
     build: previewBuild,
     outputDir: distDir,
     distDir,
+    platformConfig,
   })
 }

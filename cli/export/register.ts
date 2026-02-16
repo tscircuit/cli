@@ -9,6 +9,7 @@ import { resultToCsv } from "lib/shared/result-to-csv"
 import path from "node:path"
 import { promises as fs } from "node:fs"
 import type { PlatformConfig } from "@tscircuit/props"
+import { getCompletePlatformConfig } from "lib/shared/get-complete-platform-config"
 
 export const registerExport = (program: Command) => {
   program
@@ -38,9 +39,11 @@ export const registerExport = (program: Command) => {
             : undefined
 
         if (formatOption === "spice") {
+          const completePlatformConfig =
+            getCompletePlatformConfig(platformConfig)
           const { circuitJson } = await generateCircuitJson({
             filePath: file,
-            platformConfig,
+            platformConfig: completePlatformConfig,
           })
           if (circuitJson) {
             const spiceString = getSpiceWithPaddedSim(circuitJson as any)

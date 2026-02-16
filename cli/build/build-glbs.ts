@@ -1,7 +1,9 @@
 import fs from "node:fs"
 import path from "node:path"
-import { convertCircuitJsonToGltf } from "circuit-json-to-gltf"
+import type { PlatformConfig } from "@tscircuit/props"
 import type { AnyCircuitElement } from "circuit-json"
+import { convertCircuitJsonToGltf } from "circuit-json-to-gltf"
+import { getCompletePlatformConfig } from "lib/shared/get-complete-platform-config"
 import type { BuildFileResult } from "./build-preview-images"
 import { convertModelUrlsToFileUrls } from "./convert-model-urls-to-file-urls"
 
@@ -32,9 +34,11 @@ const normalizeToUint8Array = (value: unknown): Uint8Array => {
 export const buildGlbs = async ({
   builtFiles,
   distDir,
+  platformConfig,
 }: {
   builtFiles: BuildFileResult[]
   distDir: string
+  platformConfig?: PlatformConfig
 }) => {
   const successfulBuilds = builtFiles.filter((file) => file.ok)
 
@@ -60,10 +64,12 @@ export const buildGlbs = async ({
     try {
       console.log(`${prefix}Converting circuit to GLB...`)
       const circuitJsonWithFileUrls = convertModelUrlsToFileUrls(circuitJson)
+      const completePlatformConfig = getCompletePlatformConfig(platformConfig)
       const glbBuffer = await convertCircuitJsonToGltf(
         circuitJsonWithFileUrls,
         {
           format: "glb",
+          platformConfig: completePlatformConfig,
         },
       )
       const glbData = normalizeToUint8Array(glbBuffer)

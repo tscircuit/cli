@@ -1,21 +1,22 @@
 import fs from "node:fs"
 import path from "node:path"
 import { promisify } from "node:util"
+import type { PlatformConfig } from "@tscircuit/props"
+import { convertCircuitJsonToGltf } from "circuit-json-to-gltf"
+import {
+  CircuitJsonToKicadPcbConverter,
+  CircuitJsonToKicadSchConverter,
+} from "circuit-json-to-kicad"
 import { convertCircuitJsonToReadableNetlist } from "circuit-json-to-readable-netlist"
 import {
   convertCircuitJsonToPcbSvg,
   convertCircuitJsonToSchematicSvg,
 } from "circuit-to-svg"
-import { convertCircuitJsonToGltf } from "circuit-json-to-gltf"
 import { convertCircuitJsonToDsnString } from "dsn-converter"
-import {
-  CircuitJsonToKicadPcbConverter,
-  CircuitJsonToKicadSchConverter,
-} from "circuit-json-to-kicad"
-import { convertToKicadLibrary } from "./convert-to-kicad-library"
 import JSZip from "jszip"
 import { generateCircuitJson } from "lib/shared/generate-circuit-json"
-import type { PlatformConfig } from "@tscircuit/props"
+import { getCompletePlatformConfig } from "lib/shared/get-complete-platform-config"
+import { convertToKicadLibrary } from "./convert-to-kicad-library"
 
 const writeFileAsync = promisify(fs.writeFile)
 
@@ -82,6 +83,8 @@ export const exportSnippet = async ({
     return onExit(1)
   }
 
+  const completePlatformConfig = getCompletePlatformConfig(platformConfig)
+
   const projectDir = path.dirname(filePath)
   const outputBaseName = path.basename(filePath).replace(/\.[^.]+$/, "")
   const outputFileName = `${outputBaseName}${OUTPUT_EXTENSIONS[format]}`
@@ -108,7 +111,7 @@ export const exportSnippet = async ({
   const circuitData = await generateCircuitJson({
     filePath,
     saveToFile: format === "circuit-json",
-    platformConfig,
+    platformConfig: completePlatformConfig,
   }).catch((err) => {
     onError(`Error generating circuit JSON: ${err}`)
     return null
@@ -137,6 +140,7 @@ export const exportSnippet = async ({
       outputContent = JSON.stringify(
         await convertCircuitJsonToGltf(circuitData.circuitJson, {
           format: "gltf",
+          platformConfig: completePlatformConfig,
         }),
         null,
         2,
@@ -146,6 +150,7 @@ export const exportSnippet = async ({
       outputContent = Buffer.from(
         (await convertCircuitJsonToGltf(circuitData.circuitJson, {
           format: "glb",
+          platformConfig: completePlatformConfig,
         })) as ArrayBuffer,
       )
       break

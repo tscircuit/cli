@@ -1,8 +1,9 @@
-import type { PlatformConfig } from "@tscircuit/props"
-import { getPlatformConfig } from "@tscircuit/eval/platform-config"
 import { createHash } from "node:crypto"
-import path from "node:path"
 import fs from "node:fs"
+import path from "node:path"
+import { getPlatformConfig } from "@tscircuit/eval/platform-config"
+import type { PlatformConfig } from "@tscircuit/props"
+import { getRegistryApiUrl } from "lib/cli-config"
 
 export function createLocalCacheEngine(
   cacheDir = path.join(process.cwd(), ".tscircuit", "cache"),
@@ -52,6 +53,7 @@ export function getCompletePlatformConfig(
 
   const defaultConfig: PlatformConfig = {
     ...basePlatformConfig,
+    projectBaseUrl: basePlatformConfig.projectBaseUrl ?? getRegistryApiUrl(),
     localCacheEngine: createLocalCacheEngine(),
     // Override footprintFileParserMap to handle file paths from native imports
     footprintFileParserMap: {
