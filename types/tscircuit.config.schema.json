@@ -48,6 +48,10 @@
       "type": "string",
       "description": "Override command used for cloud builds."
     },
+    "kicadProjectEntrypointPath": {
+      "type": "string",
+      "description": "Entry file for KiCad project generation (.kicad_pro, .kicad_sch, .kicad_pcb)."
+    },
     "kicadLibraryEntrypointPath": {
       "type": "string",
       "description": "Entry file for KiCad footprint library generation."
