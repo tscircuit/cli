@@ -48,6 +48,10 @@
       "type": "string",
       "description": "Override command used for cloud builds."
     },
+    "kicadProjectEntrypointPath": {
+      "type": "string",
+      "description": "Entry file for KiCad project generation (.kicad_pro, .kicad_sch, .kicad_pcb)."
+    },
     "kicadLibraryEntrypointPath": {
       "type": "string",
       "description": "Entry file for KiCad footprint library generation."
@@ -67,6 +71,10 @@
         "circuitJson": {
           "type": "boolean",
           "description": "Enable circuit JSON output in build."
+        },
+        "kicadProject": {
+          "type": "boolean",
+          "description": "Enable KiCad project output (.kicad_pro, .kicad_sch, .kicad_pcb) in build."
         },
         "kicadLibrary": {
           "type": "boolean",

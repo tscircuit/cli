@@ -58,7 +58,7 @@ export const registerBuild = (program: Command) => {
       "Generate preview images for every successful build output",
     )
     .option(
-      "--kicad",
+      "--kicad-project",
       "Generate KiCad project directories for each successful build output",
     )
     .option("--kicad-library", "Generate KiCad library in dist/kicad-library")
@@ -125,13 +125,24 @@ export const registerBuild = (program: Command) => {
           return
         }
 
+        // When --kicad-project is used without a file argument and kicadProjectEntrypointPath is set,
+        // use that as the file to build
+        let fileOrDirForBuild = file
+        if (
+          !file &&
+          resolvedOptions?.kicadProject &&
+          projectConfig?.kicadProjectEntrypointPath
+        ) {
+          fileOrDirForBuild = projectConfig.kicadProjectEntrypointPath
+        }
+
         const {
           circuitFiles,
           mainEntrypoint,
           previewComponentPath,
           siteDefaultComponentPath,
         } = await getBuildEntrypoints({
-          fileOrDir: file,
+          fileOrDir: fileOrDirForBuild,
         })
 
         const platformConfig: PlatformConfig | undefined = (() => {
@@ -181,8 +192,8 @@ export const registerBuild = (program: Command) => {
           GeneratedKicadProject & { sourcePath: string }
         > = []
 
-        const shouldGenerateKicad =
-          resolvedOptions?.kicad || resolvedOptions?.kicadLibrary
+        const shouldGenerateKicadProject =
+          resolvedOptions?.kicadProject || resolvedOptions?.kicadLibrary
 
         // Prepare build options for reuse
         const buildOptions = {
@@ -235,7 +246,7 @@ export const registerBuild = (program: Command) => {
             })
           }
 
-          if (buildOutcome.ok && shouldGenerateKicad) {
+          if (buildOutcome.ok && shouldGenerateKicadProject) {
             // Read circuit JSON from file if not provided (worker mode doesn't pass it through IPC)
             let circuitJson = buildOutcome.circuitJson
             if (!circuitJson && fs.existsSync(outputPath)) {
@@ -253,7 +264,7 @@ export const registerBuild = (program: Command) => {
                 circuitJson,
                 outputDir: projectOutputDir,
                 projectName,
-                writeFiles: Boolean(resolvedOptions?.kicad),
+                writeFiles: Boolean(resolvedOptions?.kicadProject),
               })
               kicadProjects.push({
                 ...project,
@@ -525,7 +536,7 @@ export const registerBuild = (program: Command) => {
           resolvedOptions?.previewImages && "preview-images",
           resolvedOptions?.allImages && "all-images",
           resolvedOptions?.glbs && "glbs",
-          resolvedOptions?.kicad && "kicad",
+          resolvedOptions?.kicadProject && "kicad-project",
           resolvedOptions?.kicadLibrary && "kicad-library",
           resolvedOptions?.kicadPcm && "kicad-pcm",
           resolvedOptions?.previewGltf && "preview-gltf",

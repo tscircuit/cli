@@ -207,15 +207,15 @@ test("build with multiple config build options", async () => {
     JSON.stringify({
       mainEntrypoint: "./lib/index.tsx",
       build: {
-        kicadLibrary: true,
+        kicadProject: true,
         previewImages: true,
       },
     }),
   )
 
   await runCommand(`tsci build ${circuitPath} --ignore-errors`)
-  const kicadLibDir = path.join(tmpDir, "dist", "multi", "kicad")
-  expect((await stat(kicadLibDir)).isDirectory()).toBe(true)
+  const kicadDir = path.join(tmpDir, "dist", "multi", "kicad")
+  expect((await stat(kicadDir)).isDirectory()).toBe(true)
 
   const schematicSvgExists = await stat(
     path.join(tmpDir, "dist", "schematic.svg"),
@@ -253,3 +253,61 @@ test("build with --ignore-config skips config options", async () => {
     .catch(() => false)
   expect(schematicSvgExists).toBe(false)
 })
+
+test("build uses config build.kicadProject setting", async () => {
+  const { tmpDir, runCommand } = await getCliTestFixture()
+
+  const circuitPath = path.join(tmpDir, "my-board.circuit.tsx")
+  await writeFile(circuitPath, circuitCode)
+  await writeFile(path.join(tmpDir, "package.json"), "{}")
+  await writeFile(
+    path.join(tmpDir, "tscircuit.config.json"),
+    JSON.stringify({
+      build: {
+        kicadProject: true,
+      },
+    }),
+  )
+
+  const { stderr, stdout } = await runCommand(`tsci build`)
+  expect(stderr).toBe("")
+  expect(stdout).toContain("kicad-project")
+
+  const kicadDir = path.join(tmpDir, "dist", "my-board", "kicad")
+  expect((await stat(kicadDir)).isDirectory()).toBe(true)
+
+  const files = await readdir(kicadDir)
+  expect(files.some((f) => f.endsWith(".kicad_pro"))).toBe(true)
+  expect(files.some((f) => f.endsWith(".kicad_sch"))).toBe(true)
+  expect(files.some((f) => f.endsWith(".kicad_pcb"))).toBe(true)
+}, 60_000)
+
+test("build uses kicadProjectEntrypointPath for --kicad-project when no file specified", async () => {
+  const { tmpDir, runCommand } = await getCliTestFixture()
+
+  await mkdir(path.join(tmpDir, "lib"), { recursive: true })
+  await writeFile(path.join(tmpDir, "lib", "my-library.tsx"), circuitCode)
+  await writeFile(path.join(tmpDir, "package.json"), "{}")
+  await writeFile(
+    path.join(tmpDir, "tscircuit.config.json"),
+    JSON.stringify({
+      kicadProjectEntrypointPath: "lib/my-library.tsx",
+      build: {
+        kicadProject: true,
+      },
+    }),
+  )
+
+  const { stderr, stdout } = await runCommand(`tsci build`)
+  expect(stderr).toBe("")
+  expect(stdout).toContain("kicad-project")
+
+  // Should build the file from kicadProjectEntrypointPath
+  const kicadDir = path.join(tmpDir, "dist", "lib", "my-library", "kicad")
+  expect((await stat(kicadDir)).isDirectory()).toBe(true)
+
+  const files = await readdir(kicadDir)
+  expect(files.some((f) => f.endsWith(".kicad_pro"))).toBe(true)
+  expect(files.some((f) => f.endsWith(".kicad_sch"))).toBe(true)
+  expect(files.some((f) => f.endsWith(".kicad_pcb"))).toBe(true)
+}, 60_000)

@@ -245,13 +245,15 @@ test("build with --all-images generates preview assets for each build", async ()
   await readImageSet("second")
 }, 60_000)
 
-test("build with --kicad generates KiCad project files", async () => {
+test("build with --kicad-project generates KiCad project files", async () => {
   const { tmpDir, runCommand } = await getCliTestFixture()
   const circuitPath = path.join(tmpDir, "kicad-board.tsx")
   await writeFile(circuitPath, circuitCode)
   await writeFile(path.join(tmpDir, "package.json"), "{}")
 
-  const { stderr } = await runCommand(`tsci build --kicad ${circuitPath}`)
+  const { stderr } = await runCommand(
+    `tsci build --kicad-project ${circuitPath}`,
+  )
   expect(stderr).toBe("")
 
   const projectDir = path.join(tmpDir, "dist", "kicad-board", "kicad")

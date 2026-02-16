@@ -14,7 +14,7 @@ export interface BuildCommandOptions {
   transpile?: boolean
   previewImages?: boolean
   allImages?: boolean
-  kicad?: boolean
+  kicadProject?: boolean
   kicadLibrary?: boolean
   kicadPcm?: boolean
   previewGltf?: boolean

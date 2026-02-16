@@ -9,12 +9,14 @@ export const projectConfigSchema = z.object({
   snapshotsDir: z.string().optional(),
   prebuildCommand: z.string().optional(),
   buildCommand: z.string().optional(),
+  kicadProjectEntrypointPath: z.string().optional(),
   kicadLibraryEntrypointPath: z.string().optional(),
   kicadLibraryName: z.string().optional(),
   alwaysUseLatestTscircuitOnCloud: z.boolean().optional(),
   build: z
     .object({
       circuitJson: z.boolean().optional(),
+      kicadProject: z.boolean().optional(),
       kicadLibrary: z.boolean().optional(),
       kicadPcm: z.boolean().optional(),
       previewImages: z.boolean().optional(),

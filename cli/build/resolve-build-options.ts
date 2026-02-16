@@ -21,8 +21,8 @@ export const resolveBuildOptions = ({
 
   const configAppliedOpts: string[] = []
 
-  if (!cliOptions?.kicad && configBuild?.kicadLibrary) {
-    configAppliedOpts.push("kicad")
+  if (!cliOptions?.kicadProject && configBuild?.kicadProject) {
+    configAppliedOpts.push("kicad-project")
   }
   if (!cliOptions?.kicadLibrary && configBuild?.kicadLibrary) {
     configAppliedOpts.push("kicad-library")
@@ -42,7 +42,7 @@ export const resolveBuildOptions = ({
 
   const options: BuildCommandOptions = {
     ...cliOptions,
-    kicad: cliOptions?.kicad ?? configBuild?.kicadLibrary,
+    kicadProject: cliOptions?.kicadProject ?? configBuild?.kicadProject,
     kicadLibrary: cliOptions?.kicadLibrary ?? configBuild?.kicadLibrary,
     kicadPcm: cliOptions?.kicadPcm ?? configBuild?.kicadPcm,
     previewImages: cliOptions?.previewImages ?? configBuild?.previewImages,
