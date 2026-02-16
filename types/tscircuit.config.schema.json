@@ -68,6 +68,10 @@
           "type": "boolean",
           "description": "Enable circuit JSON output in build."
         },
+        "kicadProject": {
+          "type": "boolean",
+          "description": "Enable KiCad project output (.kicad_pro, .kicad_sch, .kicad_pcb) in build."
+        },
         "kicadLibrary": {
           "type": "boolean",
           "description": "Enable KiCad library output in build."

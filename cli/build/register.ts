@@ -125,13 +125,24 @@ export const registerBuild = (program: Command) => {
           return
         }
 
+        // When --kicad is used without a file argument and kicadLibraryEntrypointPath is set,
+        // use that as the file to build
+        let fileOrDirForBuild = file
+        if (
+          !file &&
+          resolvedOptions?.kicad &&
+          projectConfig?.kicadLibraryEntrypointPath
+        ) {
+          fileOrDirForBuild = projectConfig.kicadLibraryEntrypointPath
+        }
+
         const {
           circuitFiles,
           mainEntrypoint,
           previewComponentPath,
           siteDefaultComponentPath,
         } = await getBuildEntrypoints({
-          fileOrDir: file,
+          fileOrDir: fileOrDirForBuild,
         })
 
         const platformConfig: PlatformConfig | undefined = (() => {

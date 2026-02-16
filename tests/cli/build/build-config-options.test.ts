@@ -253,3 +253,61 @@ test("build with --ignore-config skips config options", async () => {
     .catch(() => false)
   expect(schematicSvgExists).toBe(false)
 })
+
+test("build uses config build.kicadProject setting", async () => {
+  const { tmpDir, runCommand } = await getCliTestFixture()
+
+  const circuitPath = path.join(tmpDir, "my-board.circuit.tsx")
+  await writeFile(circuitPath, circuitCode)
+  await writeFile(path.join(tmpDir, "package.json"), "{}")
+  await writeFile(
+    path.join(tmpDir, "tscircuit.config.json"),
+    JSON.stringify({
+      build: {
+        kicadProject: true,
+      },
+    }),
+  )
+
+  const { stderr, stdout } = await runCommand(`tsci build`)
+  expect(stderr).toBe("")
+  expect(stdout).toContain("kicad")
+
+  const kicadDir = path.join(tmpDir, "dist", "my-board", "kicad")
+  expect((await stat(kicadDir)).isDirectory()).toBe(true)
+
+  const files = await readdir(kicadDir)
+  expect(files.some((f) => f.endsWith(".kicad_pro"))).toBe(true)
+  expect(files.some((f) => f.endsWith(".kicad_sch"))).toBe(true)
+  expect(files.some((f) => f.endsWith(".kicad_pcb"))).toBe(true)
+}, 60_000)
+
+test("build uses kicadLibraryEntrypointPath for --kicad when no file specified", async () => {
+  const { tmpDir, runCommand } = await getCliTestFixture()
+
+  await mkdir(path.join(tmpDir, "lib"), { recursive: true })
+  await writeFile(path.join(tmpDir, "lib", "my-library.tsx"), circuitCode)
+  await writeFile(path.join(tmpDir, "package.json"), "{}")
+  await writeFile(
+    path.join(tmpDir, "tscircuit.config.json"),
+    JSON.stringify({
+      kicadLibraryEntrypointPath: "lib/my-library.tsx",
+      build: {
+        kicadProject: true,
+      },
+    }),
+  )
+
+  const { stderr, stdout } = await runCommand(`tsci build`)
+  expect(stderr).toBe("")
+  expect(stdout).toContain("kicad")
+
+  // Should build the file from kicadLibraryEntrypointPath
+  const kicadDir = path.join(tmpDir, "dist", "lib", "my-library", "kicad")
+  expect((await stat(kicadDir)).isDirectory()).toBe(true)
+
+  const files = await readdir(kicadDir)
+  expect(files.some((f) => f.endsWith(".kicad_pro"))).toBe(true)
+  expect(files.some((f) => f.endsWith(".kicad_sch"))).toBe(true)
+  expect(files.some((f) => f.endsWith(".kicad_pcb"))).toBe(true)
+}, 60_000)
