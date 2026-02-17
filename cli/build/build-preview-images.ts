@@ -1,12 +1,13 @@
 import fs from "node:fs"
 import path from "node:path"
+import type { AnyCircuitElement } from "circuit-json"
+import { convertCircuitJsonToGltf } from "circuit-json-to-gltf"
 import {
   convertCircuitJsonToPcbSvg,
   convertCircuitJsonToSchematicSvg,
 } from "circuit-to-svg"
+import { getCircuitJsonToGltfOptions } from "lib/shared/get-circuit-json-to-gltf-options"
 import { renderGLTFToPNGBufferFromGLBBuffer } from "poppygl"
-import { convertCircuitJsonToGltf } from "circuit-json-to-gltf"
-import type { AnyCircuitElement } from "circuit-json"
 import { convertModelUrlsToFileUrls } from "./convert-model-urls-to-file-urls"
 
 export interface BuildFileResult {
@@ -114,9 +115,10 @@ const generatePreviewAssets = async ({
   try {
     console.log(`${prefix}Converting circuit to GLB...`)
     const circuitJsonWithFileUrls = convertModelUrlsToFileUrls(circuitJson)
-    const glbBuffer = await convertCircuitJsonToGltf(circuitJsonWithFileUrls, {
-      format: "glb",
-    })
+    const glbBuffer = await convertCircuitJsonToGltf(
+      circuitJsonWithFileUrls,
+      getCircuitJsonToGltfOptions({ format: "glb" }),
+    )
     console.log(`${prefix}Rendering GLB to PNG buffer...`)
     const glbArrayBuffer = await normalizeToArrayBuffer(glbBuffer)
     const pngBuffer = await renderGLTFToPNGBufferFromGLBBuffer(glbArrayBuffer, {
