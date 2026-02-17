@@ -11,7 +11,11 @@ import {
   getStaticIndexHtmlFile,
   type StaticBuildFileReference,
 } from "lib/site/getStaticIndexHtmlFile"
-import type { PlatformConfig } from "@tscircuit/props"
+import type {
+  PlatformConfig,
+  KicadFootprintMetadata,
+  KicadSymbolMetadata,
+} from "@tscircuit/props"
 import type { BuildFileResult } from "./build-preview-images"
 import { buildPreviewImages } from "./build-preview-images"
 import { buildPreviewGltf } from "./build-preview-gltf"
@@ -26,6 +30,8 @@ import { resolveKicadLibraryName } from "lib/utils/resolve-kicad-library-name"
 import { getLatestTscircuitCdnUrl } from "../utils/get-latest-tscircuit-cdn-url"
 import { buildFilesWithWorkerPool } from "./worker-pool"
 import type { BuildJobResult } from "./worker-types"
+import { extractKicadMetadataForKicadProject } from "lib/shared/extract-kicad-metadata-for-kicad-project"
+import { registerStaticAssetLoaders } from "lib/shared/register-static-asset-loaders"
 import kleur from "kleur"
 
 // @ts-ignore
@@ -260,11 +266,50 @@ export const registerBuild = (program: Command) => {
                 "kicad",
               )
               const projectName = path.basename(outputDirName)
+
+              // Extract kicad metadata from board component using BFS traversal
+              let footprintMetadataMap:
+                | Map<string, KicadFootprintMetadata>
+                | undefined
+              let symbolMetadataMap:
+                | Map<string, KicadSymbolMetadata>
+                | undefined
+              try {
+                // Register static asset loaders before importing component
+                registerStaticAssetLoaders()
+                const { pathToFileURL } = await import("node:url")
+                const module = await import(pathToFileURL(filePath).href)
+                const Component = module.default || Object.values(module)[0]
+                if (Component && typeof Component === "function") {
+                  const metadata =
+                    extractKicadMetadataForKicadProject(Component)
+                  if (metadata.footprintMetadataMap.size > 0) {
+                    footprintMetadataMap = metadata.footprintMetadataMap
+                    console.log(
+                      `  Found ${footprintMetadataMap.size} footprint metadata entries`,
+                    )
+                  }
+                  if (metadata.symbolMetadataMap.size > 0) {
+                    symbolMetadataMap = metadata.symbolMetadataMap
+                    console.log(
+                      `  Found ${symbolMetadataMap.size} symbol metadata entries`,
+                    )
+                  }
+                }
+              } catch (err) {
+                // Metadata extraction is optional, continue without it
+                console.log(
+                  `  Warning: Could not extract kicad metadata: ${err}`,
+                )
+              }
+
               const project = await generateKicadProject({
                 circuitJson,
                 outputDir: projectOutputDir,
                 projectName,
                 writeFiles: Boolean(resolvedOptions?.kicadProject),
+                footprintMetadataMap,
+                symbolMetadataMap,
               })
               kicadProjects.push({
                 ...project,

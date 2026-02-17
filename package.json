@@ -26,7 +26,7 @@
     "@types/semver": "^7.5.8",
     "bun-match-svg": "^0.0.12",
     "chokidar": "4.0.1",
-    "circuit-json-to-kicad": "^0.0.71",
+    "circuit-json-to-kicad": "^0.0.73",
     "circuit-json-to-readable-netlist": "^0.0.13",
     "circuit-json-to-spice": "^0.0.10",
     "circuit-json-to-tscircuit": "^0.0.9",

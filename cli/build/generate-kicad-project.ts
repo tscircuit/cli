@@ -4,12 +4,20 @@ import {
   CircuitJsonToKicadPcbConverter,
   CircuitJsonToKicadSchConverter,
 } from "circuit-json-to-kicad"
+import type {
+  KicadFootprintMetadata,
+  KicadSymbolMetadata,
+} from "@tscircuit/props"
 
 type GenerateKicadProjectOptions = {
   circuitJson: unknown[]
   outputDir: string
   projectName: string
   writeFiles: boolean
+  /** Map of RefDes prefix to kicadFootprintMetadata */
+  footprintMetadataMap?: Map<string, KicadFootprintMetadata>
+  /** Map of RefDes prefix to kicadSymbolMetadata */
+  symbolMetadataMap?: Map<string, KicadSymbolMetadata>
 }
 
 export type GeneratedKicadProject = {
@@ -52,15 +60,19 @@ export const generateKicadProject = async ({
   outputDir,
   projectName,
   writeFiles,
+  footprintMetadataMap,
+  symbolMetadataMap,
 }: GenerateKicadProjectOptions): Promise<GeneratedKicadProject> => {
   const schConverter = new CircuitJsonToKicadSchConverter(
     circuitJson as unknown as any[],
+    symbolMetadataMap ? { symbolMetadataMap } : undefined,
   )
   schConverter.runUntilFinished()
   const schContent = schConverter.getOutputString()
 
   const pcbConverter = new CircuitJsonToKicadPcbConverter(
     circuitJson as unknown as any[],
+    footprintMetadataMap ? { footprintMetadataMap } : undefined,
   )
   pcbConverter.runUntilFinished()
   const pcbContent = pcbConverter.getOutputString()
