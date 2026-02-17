@@ -1,7 +1,8 @@
 import fs from "node:fs"
 import path from "node:path"
-import { convertCircuitJsonToGltf } from "circuit-json-to-gltf"
 import type { AnyCircuitElement } from "circuit-json"
+import { convertCircuitJsonToGltf } from "circuit-json-to-gltf"
+import { getCircuitJsonToGltfOptions } from "lib/shared/get-circuit-json-to-gltf-options"
 import type { BuildFileResult } from "./build-preview-images"
 import { convertModelUrlsToFileUrls } from "./convert-model-urls-to-file-urls"
 
@@ -62,9 +63,7 @@ export const buildGlbs = async ({
       const circuitJsonWithFileUrls = convertModelUrlsToFileUrls(circuitJson)
       const glbBuffer = await convertCircuitJsonToGltf(
         circuitJsonWithFileUrls,
-        {
-          format: "glb",
-        },
+        getCircuitJsonToGltfOptions({ format: "glb" }),
       )
       const glbData = normalizeToUint8Array(glbBuffer)
       fs.writeFileSync(path.join(outputDir, "3d.glb"), Buffer.from(glbData))

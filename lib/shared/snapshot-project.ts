@@ -1,23 +1,24 @@
 import fs from "node:fs"
 import path from "node:path"
-import kleur from "kleur"
-import looksSame from "looks-same"
+import type { PlatformConfig } from "@tscircuit/props"
+import { convertCircuitJsonToGltf } from "circuit-json-to-gltf"
 import {
   convertCircuitJsonToPcbSvg,
   convertCircuitJsonToSchematicSvg,
 } from "circuit-to-svg"
-import { convertCircuitJsonToGltf } from "circuit-json-to-gltf"
-import { renderGLTFToPNGBufferFromGLBBuffer } from "poppygl"
-import { generateCircuitJson } from "lib/shared/generate-circuit-json"
-import type { PlatformConfig } from "@tscircuit/props"
-import { getCompletePlatformConfig } from "lib/shared/get-complete-platform-config"
+import kleur from "kleur"
+import { getSnapshotsDir } from "lib/project-config"
 import { findBoardFiles } from "lib/shared/find-board-files"
+import { generateCircuitJson } from "lib/shared/generate-circuit-json"
+import { getCircuitJsonToGltfOptions } from "lib/shared/get-circuit-json-to-gltf-options"
+import { getCompletePlatformConfig } from "lib/shared/get-complete-platform-config"
 import {
   DEFAULT_IGNORED_PATTERNS,
   normalizeIgnorePattern,
 } from "lib/shared/should-ignore-path"
+import looksSame from "looks-same"
+import { renderGLTFToPNGBufferFromGLBBuffer } from "poppygl"
 import { compareAndCreateDiff } from "./compare-images"
-import { getSnapshotsDir } from "lib/project-config"
 
 type SnapshotOptions = {
   update?: boolean
@@ -131,9 +132,10 @@ export const snapshotProject = async ({
     let png3d: Buffer | null = null
     if (threeD) {
       try {
-        const glbBuffer = await convertCircuitJsonToGltf(circuitJson, {
-          format: "glb",
-        })
+        const glbBuffer = await convertCircuitJsonToGltf(
+          circuitJson,
+          getCircuitJsonToGltfOptions({ format: "glb" }),
+        )
         if (!(glbBuffer instanceof ArrayBuffer)) {
           throw new Error(
             "Expected ArrayBuffer from convertCircuitJsonToGltf with glb format",

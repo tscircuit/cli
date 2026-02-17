@@ -1,21 +1,22 @@
 import fs from "node:fs"
 import path from "node:path"
 import { promisify } from "node:util"
+import type { PlatformConfig } from "@tscircuit/props"
+import { convertCircuitJsonToGltf } from "circuit-json-to-gltf"
+import {
+  CircuitJsonToKicadPcbConverter,
+  CircuitJsonToKicadSchConverter,
+} from "circuit-json-to-kicad"
 import { convertCircuitJsonToReadableNetlist } from "circuit-json-to-readable-netlist"
 import {
   convertCircuitJsonToPcbSvg,
   convertCircuitJsonToSchematicSvg,
 } from "circuit-to-svg"
-import { convertCircuitJsonToGltf } from "circuit-json-to-gltf"
 import { convertCircuitJsonToDsnString } from "dsn-converter"
-import {
-  CircuitJsonToKicadPcbConverter,
-  CircuitJsonToKicadSchConverter,
-} from "circuit-json-to-kicad"
-import { convertToKicadLibrary } from "./convert-to-kicad-library"
 import JSZip from "jszip"
 import { generateCircuitJson } from "lib/shared/generate-circuit-json"
-import type { PlatformConfig } from "@tscircuit/props"
+import { getCircuitJsonToGltfOptions } from "lib/shared/get-circuit-json-to-gltf-options"
+import { convertToKicadLibrary } from "./convert-to-kicad-library"
 
 const writeFileAsync = promisify(fs.writeFile)
 
@@ -135,18 +136,20 @@ export const exportSnippet = async ({
       break
     case "gltf":
       outputContent = JSON.stringify(
-        await convertCircuitJsonToGltf(circuitData.circuitJson, {
-          format: "gltf",
-        }),
+        await convertCircuitJsonToGltf(
+          circuitData.circuitJson,
+          getCircuitJsonToGltfOptions({ format: "gltf" }),
+        ),
         null,
         2,
       )
       break
     case "glb":
       outputContent = Buffer.from(
-        (await convertCircuitJsonToGltf(circuitData.circuitJson, {
-          format: "glb",
-        })) as ArrayBuffer,
+        (await convertCircuitJsonToGltf(
+          circuitData.circuitJson,
+          getCircuitJsonToGltfOptions({ format: "glb" }),
+        )) as ArrayBuffer,
       )
       break
     case "kicad_sch": {

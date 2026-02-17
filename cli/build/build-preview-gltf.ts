@@ -1,7 +1,8 @@
 import fs from "node:fs"
 import path from "node:path"
-import { convertCircuitJsonToGltf } from "circuit-json-to-gltf"
 import type { AnyCircuitElement } from "circuit-json"
+import { convertCircuitJsonToGltf } from "circuit-json-to-gltf"
+import { getCircuitJsonToGltfOptions } from "lib/shared/get-circuit-json-to-gltf-options"
 import type { BuildFileResult } from "./build-preview-images"
 import { convertModelUrlsToFileUrls } from "./convert-model-urls-to-file-urls"
 
@@ -62,9 +63,10 @@ export const buildPreviewGltf = async ({
   try {
     console.log("Converting circuit to GLTF...")
     const circuitJsonWithFileUrls = convertModelUrlsToFileUrls(circuitJson)
-    const gltfData = await convertCircuitJsonToGltf(circuitJsonWithFileUrls, {
-      format: "gltf",
-    })
+    const gltfData = await convertCircuitJsonToGltf(
+      circuitJsonWithFileUrls,
+      getCircuitJsonToGltfOptions({ format: "gltf" }),
+    )
     const gltfContent = JSON.stringify(gltfData, null, 2)
     fs.writeFileSync(outputPath, gltfContent, "utf-8")
     console.log(`Written ${gltfFilename}`)
