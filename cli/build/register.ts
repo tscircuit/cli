@@ -260,11 +260,13 @@ export const registerBuild = (program: Command) => {
                 "kicad",
               )
               const projectName = path.basename(outputDirName)
+
               const project = await generateKicadProject({
                 circuitJson,
                 outputDir: projectOutputDir,
                 projectName,
                 writeFiles: Boolean(resolvedOptions?.kicadProject),
+                filePath,
               })
               kicadProjects.push({
                 ...project,

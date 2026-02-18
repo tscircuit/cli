@@ -4,12 +4,20 @@ import {
   CircuitJsonToKicadPcbConverter,
   CircuitJsonToKicadSchConverter,
 } from "circuit-json-to-kicad"
+import type {
+  KicadFootprintMetadata,
+  KicadSymbolMetadata,
+} from "@tscircuit/props"
+import { extractKicadMetadataForKicadProject } from "lib/shared/extract-kicad-metadata-for-kicad-project"
+import { registerStaticAssetLoaders } from "lib/shared/register-static-asset-loaders"
 
 type GenerateKicadProjectOptions = {
   circuitJson: unknown[]
   outputDir: string
   projectName: string
   writeFiles: boolean
+  /** Path to the source file for metadata extraction */
+  filePath?: string
 }
 
 export type GeneratedKicadProject = {
@@ -52,15 +60,48 @@ export const generateKicadProject = async ({
   outputDir,
   projectName,
   writeFiles,
+  filePath,
 }: GenerateKicadProjectOptions): Promise<GeneratedKicadProject> => {
+  // Extract kicad metadata from source file if provided
+  let footprintMetadataMap: Map<string, KicadFootprintMetadata> | undefined
+  let symbolMetadataMap: Map<string, KicadSymbolMetadata> | undefined
+
+  if (filePath) {
+    try {
+      registerStaticAssetLoaders()
+      const { pathToFileURL } = await import("node:url")
+      const module = await import(pathToFileURL(filePath).href)
+      const Component = module.default || Object.values(module)[0]
+      if (Component && typeof Component === "function") {
+        const metadata = extractKicadMetadataForKicadProject(Component)
+        if (metadata.footprintMetadataMap.size > 0) {
+          footprintMetadataMap = metadata.footprintMetadataMap
+          console.log(
+            `  Found ${footprintMetadataMap.size} footprint metadata entries`,
+          )
+        }
+        if (metadata.symbolMetadataMap.size > 0) {
+          symbolMetadataMap = metadata.symbolMetadataMap
+          console.log(
+            `  Found ${symbolMetadataMap.size} symbol metadata entries`,
+          )
+        }
+      }
+    } catch (err) {
+      console.log(`  Warning: Could not extract kicad metadata: ${err}`)
+    }
+  }
+
   const schConverter = new CircuitJsonToKicadSchConverter(
     circuitJson as unknown as any[],
+    symbolMetadataMap ? { symbolMetadataMap } : undefined,
   )
   schConverter.runUntilFinished()
   const schContent = schConverter.getOutputString()
 
   const pcbConverter = new CircuitJsonToKicadPcbConverter(
     circuitJson as unknown as any[],
+    footprintMetadataMap ? { footprintMetadataMap } : undefined,
   )
   pcbConverter.runUntilFinished()
   const pcbContent = pcbConverter.getOutputString()
