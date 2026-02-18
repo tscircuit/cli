@@ -20,7 +20,7 @@ export function getBestCameraPosition(circuitJson: CircuitJson): {
   if (!surface) {
     // Default fallback for circuits without explicit board or panel
     return {
-      camPos: [30, 30, 25] as const,
+      camPos: [10, 10, 10] as const,
       lookAt: [0, 0, 0] as const,
     }
   }
@@ -30,7 +30,7 @@ export function getBestCameraPosition(circuitJson: CircuitJson): {
   // Validate required properties
   if (!width || !height || !center) {
     return {
-      camPos: [30, 30, 25] as const,
+      camPos: [10, 10, 10] as const,
       lookAt: [0, 0, 0] as const,
     }
   }
