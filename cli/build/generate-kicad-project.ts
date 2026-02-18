@@ -10,6 +10,7 @@ import type {
 } from "@tscircuit/props"
 import { extractKicadMetadataForKicadProject } from "lib/shared/extract-kicad-metadata-for-kicad-project"
 import { registerStaticAssetLoaders } from "lib/shared/register-static-asset-loaders"
+import { pathToFileURL } from "node:url"
 
 type GenerateKicadProjectOptions = {
   circuitJson: unknown[]
@@ -69,7 +70,6 @@ export const generateKicadProject = async ({
   if (filePath) {
     try {
       registerStaticAssetLoaders()
-      const { pathToFileURL } = await import("node:url")
       const module = await import(pathToFileURL(filePath).href)
       const Component = module.default || Object.values(module)[0]
       if (Component && typeof Component === "function") {
