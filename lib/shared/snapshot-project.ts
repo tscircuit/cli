@@ -10,6 +10,7 @@ import kleur from "kleur"
 import { getSnapshotsDir } from "lib/project-config"
 import { findBoardFiles } from "lib/shared/find-board-files"
 import { generateCircuitJson } from "lib/shared/generate-circuit-json"
+import { getBestCameraPosition } from "lib/shared/get-best-camera-position"
 import { getCircuitJsonToGltfOptions } from "lib/shared/get-circuit-json-to-gltf-options"
 import { getCompletePlatformConfig } from "lib/shared/get-complete-platform-config"
 import {
@@ -141,10 +142,13 @@ export const snapshotProject = async ({
             "Expected ArrayBuffer from convertCircuitJsonToGltf with glb format",
           )
         }
-        png3d = await renderGLTFToPNGBufferFromGLBBuffer(glbBuffer, {
-          camPos: [10, 10, 10],
-          lookAt: [0, 0, 0],
-        })
+
+        const cameraOptions = getBestCameraPosition(circuitJson)
+
+        png3d = await renderGLTFToPNGBufferFromGLBBuffer(
+          glbBuffer,
+          cameraOptions,
+        )
       } catch (error) {
         const errorMessage =
           error instanceof Error ? error.message : String(error)

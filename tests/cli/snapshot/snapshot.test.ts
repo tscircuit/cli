@@ -541,3 +541,46 @@ test("snapshot command with wildcard glob pattern", async () => {
   expect(alsoPcb).toBe(true)
   expect(skipPcb).toBe(false)
 }, 30_000)
+
+test("snapshot command creates 3d snapshot for larger board", async () => {
+  const { tmpDir, runCommand } = await getCliTestFixture()
+
+  await Bun.write(
+    join(tmpDir, "large-pcb.board.tsx"),
+    `
+    export const LargePcb = () => (
+      <board width="40.64mm" height="24.13mm">
+        <chip
+          name="U1"
+          footprint="soic8"
+        />
+      </board>
+    )
+  `,
+  )
+
+  const { stdout } = await runCommand("tsci snapshot --update --3d")
+  expect(stdout).toContain("Created snapshots")
+  expect(stdout).toContain(
+    `${join("__snapshots__", "large-pcb.board-3d.snap.png")}`,
+  )
+
+  const snapshotDir = join(tmpDir, "__snapshots__")
+  const threeDExists = await Bun.file(
+    join(snapshotDir, "large-pcb.board-3d.snap.png"),
+  ).exists()
+  expect(threeDExists).toBe(true)
+
+  // Save snapshot to repo __snapshots__ directory
+  const repoSnapshotPath = join(
+    import.meta.dir,
+    "__snapshots__",
+    "large-pcb-3d.snap.png",
+  )
+  if (!fs.existsSync(repoSnapshotPath)) {
+    await Bun.write(
+      repoSnapshotPath,
+      Bun.file(join(snapshotDir, "large-pcb.board-3d.snap.png")),
+    )
+  }
+}, 60_000)
