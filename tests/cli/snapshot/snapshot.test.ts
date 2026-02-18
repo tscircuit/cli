@@ -577,10 +577,8 @@ test("snapshot command creates 3d snapshot for larger board", async () => {
     "__snapshots__",
     "large-pcb-3d.snap.png",
   )
-  if (!fs.existsSync(repoSnapshotPath)) {
-    await Bun.write(
-      repoSnapshotPath,
-      Bun.file(join(snapshotDir, "large-pcb.board-3d.snap.png")),
-    )
-  }
+  await Bun.write(
+    repoSnapshotPath,
+    Bun.file(join(snapshotDir, "large-pcb.board-3d.snap.png")),
+  )
 }, 60_000)
