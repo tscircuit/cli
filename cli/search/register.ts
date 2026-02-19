@@ -91,18 +91,14 @@ export const registerSearch = (program: Command) => {
           !results.packages.length &&
           !jlcResults.length
         ) {
-          console.log(kleur.yellow(`No results found for "${query}".`))
-          console.log(kleur.dim("Searched the following sources:"))
-          if (searchTscircuit) console.log(kleur.dim("  - tscircuit registry"))
-          if (searchJlc) console.log(kleur.dim("  - JLCPCB component database"))
-          if (searchKicad) console.log(kleur.dim("  - KiCad footprint library"))
-          console.log()
+          const sources = [
+            searchTscircuit && "tscircuit registry",
+            searchJlc && "JLCPCB",
+            searchKicad && "KiCad",
+          ].filter(Boolean)
           console.log(
-            kleur.dim("The part may not be available in the JLCPCB catalog."),
-          )
-          console.log(
-            kleur.dim(
-              "Try a different name, or browse https://jlcpcb.com/parts",
+            kleur.yellow(
+              `No results found for "${query}" in ${sources.join(", ")}.`,
             ),
           )
           return
