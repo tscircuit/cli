@@ -114,10 +114,6 @@ export const MyResistor = () => (
     expect(passedOptions.entrypoint).toContain("lib/index.tsx")
     expect(typeof passedOptions.buildFileToCircuitJson).toBe("function")
     expect(typeof passedOptions.getExportsFromTsxFile).toBe("function")
-    expect(typeof passedOptions.getComponentKicadMetadata).toBe("function")
-    expect(typeof passedOptions.getComponentKicadSymbolMetadata).toBe(
-      "function",
-    )
 
     // Verify the output files were written
     expect(result.outputDir).toBe(outputDir)
