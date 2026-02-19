@@ -16,6 +16,8 @@ export const convertModelUrlsToFileUrls = (circuitJson: any[]): any[] => {
     "obj_model_url",
     "model_gltf_url",
     "gltf_model_url",
+    "model_step_url",
+    "step_model_url",
   ]
 
   return circuitJson.map((element) => {
