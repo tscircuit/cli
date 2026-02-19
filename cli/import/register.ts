@@ -63,8 +63,12 @@ export const registerImport = (program: Command) => {
 
       spinner.stop()
 
-      if (!registryResults.length && !jlcResults.length) {
-        console.log(kleur.yellow("No results found matching your query."))
+      if (!registryResults.length && !jlcResults?.length) {
+        console.log(
+          kleur.yellow(
+            `No results found for "${query}" in the tscircuit registry or JLCPCB.`,
+          ),
+        )
         return
       }
 

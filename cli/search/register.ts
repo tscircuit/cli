@@ -91,7 +91,16 @@ export const registerSearch = (program: Command) => {
           !results.packages.length &&
           !jlcResults.length
         ) {
-          console.log(kleur.yellow("No results found matching your query."))
+          const sources = [
+            searchTscircuit && "tscircuit registry",
+            searchJlc && "JLCPCB",
+            searchKicad && "KiCad",
+          ].filter(Boolean)
+          console.log(
+            kleur.yellow(
+              `No results found for "${query}" in ${sources.join(", ")}.`,
+            ),
+          )
           return
         }
 
