@@ -93,12 +93,9 @@ export const registerSearch = (program: Command) => {
         ) {
           console.log(kleur.yellow(`No results found for "${query}".`))
           console.log(kleur.dim("Searched the following sources:"))
-          if (searchTscircuit)
-            console.log(kleur.dim("  - tscircuit registry"))
-          if (searchJlc)
-            console.log(kleur.dim("  - JLCPCB component database"))
-          if (searchKicad)
-            console.log(kleur.dim("  - KiCad footprint library"))
+          if (searchTscircuit) console.log(kleur.dim("  - tscircuit registry"))
+          if (searchJlc) console.log(kleur.dim("  - JLCPCB component database"))
+          if (searchKicad) console.log(kleur.dim("  - KiCad footprint library"))
           console.log()
           console.log(
             kleur.dim("The part may not be available in the JLCPCB catalog."),
@@ -142,7 +139,8 @@ export const registerSearch = (program: Command) => {
             const star = pkg.star_count ?? 0
             const versionStr = pkg.version ? ` (v${pkg.version})` : ""
             console.log(
-              `${idx + 1}. ${pkg.name}${versionStr} - Stars: ${star}${pkg.description ? ` - ${pkg.description}` : ""
+              `${idx + 1}. ${pkg.name}${versionStr} - Stars: ${star}${
+                pkg.description ? ` - ${pkg.description}` : ""
               }`,
             )
           })
