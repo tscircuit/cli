@@ -63,8 +63,22 @@ export const registerImport = (program: Command) => {
 
       spinner.stop()
 
-      if (!registryResults.length && !jlcResults.length) {
-        console.log(kleur.yellow("No results found matching your query."))
+      if (!registryResults.length && !jlcResults?.length) {
+        console.log(kleur.yellow(`No results found for "${query}".`))
+        console.log(kleur.dim("Searched the following sources:"))
+        console.log(kleur.dim("  - tscircuit registry (no matching packages)"))
+        console.log(
+          kleur.dim("  - JLCPCB component database (no matching components)"),
+        )
+        console.log()
+        console.log(
+          kleur.dim("This part may not be available in the JLCPCB catalog."),
+        )
+        console.log(
+          kleur.dim(
+            "Try searching with a different name, or browse https://jlcpcb.com/parts",
+          ),
+        )
         return
       }
 
