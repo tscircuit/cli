@@ -1,7 +1,10 @@
 import fs from "node:fs"
 import path from "node:path"
 import type { PlatformConfig } from "@tscircuit/props"
-import { convertCircuitJsonToGltf } from "circuit-json-to-gltf"
+import {
+  convertCircuitJsonToGltf,
+  getBestCameraPosition,
+} from "circuit-json-to-gltf"
 import {
   convertCircuitJsonToPcbSvg,
   convertCircuitJsonToSchematicSvg,
@@ -141,10 +144,13 @@ export const snapshotProject = async ({
             "Expected ArrayBuffer from convertCircuitJsonToGltf with glb format",
           )
         }
-        png3d = await renderGLTFToPNGBufferFromGLBBuffer(glbBuffer, {
-          camPos: [10, 10, 10],
-          lookAt: [0, 0, 0],
-        })
+
+        const cameraOptions = getBestCameraPosition(circuitJson)
+
+        png3d = await renderGLTFToPNGBufferFromGLBBuffer(
+          glbBuffer,
+          cameraOptions,
+        )
       } catch (error) {
         const errorMessage =
           error instanceof Error ? error.message : String(error)
