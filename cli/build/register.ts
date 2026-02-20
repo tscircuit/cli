@@ -63,6 +63,10 @@ export const registerBuild = (program: Command) => {
     )
     .option("--kicad-library", "Generate KiCad library in dist/kicad-library")
     .option(
+      "--kicad-library-name <name>",
+      "Specify the name of the KiCad library",
+    )
+    .option(
       "--preview-gltf",
       "Generate a GLTF file from the preview entrypoint",
     )
@@ -463,7 +467,9 @@ export const registerBuild = (program: Command) => {
               process.exit(1)
             }
           } else {
-            const libraryName = resolveKicadLibraryName({ projectDir })
+            const libraryName =
+              resolvedOptions?.kicadLibraryName ||
+              resolveKicadLibraryName({ projectDir })
             const kicadLibOutputDir = path.join(distDir, "kicad-library")
             try {
               await convertToKicadLibrary({
@@ -516,6 +522,7 @@ export const registerBuild = (program: Command) => {
                 entryFile,
                 projectDir,
                 distDir,
+                kicadLibraryName: resolvedOptions?.kicadLibraryName,
               })
             } catch (err) {
               console.error(

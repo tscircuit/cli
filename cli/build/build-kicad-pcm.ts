@@ -21,6 +21,7 @@ export interface BuildKicadPcmOptions {
    * This is useful for testing upstream changes to the circuit-json-to-kicad package.
    */
   circuitJsonToKicadModule?: CircuitJsonToKicadModule
+  kicadLibraryName?: string
 }
 
 export async function buildKicadPcm({
@@ -29,6 +30,7 @@ export async function buildKicadPcm({
   distDir,
   baseUrl: baseUrlOption,
   circuitJsonToKicadModule,
+  kicadLibraryName: kicadLibraryNameOption,
 }: BuildKicadPcmOptions): Promise<void> {
   const packageJsonPath = path.join(projectDir, "package.json")
   if (!fs.existsSync(packageJsonPath)) {
@@ -45,7 +47,8 @@ export async function buildKicadPcm({
   const author = getPackageAuthor(packageJson.name || "") || "tscircuit"
   const description = packageJson.description || ""
 
-  const libraryName = resolveKicadLibraryName({ projectDir })
+  const libraryName =
+    kicadLibraryNameOption ?? resolveKicadLibraryName({ projectDir })
   const kicadLibOutputDir = path.join(distDir, "kicad-library-pcm")
 
   // Generate PCM package identifier (e.g., "com_tscircuit_author_package-name")
@@ -89,7 +92,8 @@ export async function buildKicadPcm({
     outputDir: pcmOutputDir,
     baseUrl,
     // Use custom display name if kicadLibraryName is configured
-    displayName: projectConfig?.kicadLibraryName || undefined,
+    displayName:
+      kicadLibraryNameOption || projectConfig?.kicadLibraryName || undefined,
   })
 
   console.log(

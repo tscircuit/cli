@@ -44,6 +44,8 @@ export const resolveBuildOptions = ({
     ...cliOptions,
     kicadProject: cliOptions?.kicadProject ?? configBuild?.kicadProject,
     kicadLibrary: cliOptions?.kicadLibrary ?? configBuild?.kicadLibrary,
+    kicadLibraryName:
+      cliOptions?.kicadLibraryName ?? projectConfig?.kicadLibraryName,
     kicadPcm: cliOptions?.kicadPcm ?? configBuild?.kicadPcm,
     previewImages: cliOptions?.previewImages ?? configBuild?.previewImages,
     glbs: cliOptions?.glbs ?? configBuild?.glbs,
