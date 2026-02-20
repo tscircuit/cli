@@ -1,7 +1,10 @@
 import fs from "node:fs"
 import path from "node:path"
 import type { PlatformConfig } from "@tscircuit/props"
-import { convertCircuitJsonToGltf } from "circuit-json-to-gltf"
+import {
+  convertCircuitJsonToGltf,
+  getBestCameraPosition,
+} from "circuit-json-to-gltf"
 import {
   convertCircuitJsonToPcbSvg,
   convertCircuitJsonToSchematicSvg,
@@ -10,7 +13,6 @@ import kleur from "kleur"
 import { getSnapshotsDir } from "lib/project-config"
 import { findBoardFiles } from "lib/shared/find-board-files"
 import { generateCircuitJson } from "lib/shared/generate-circuit-json"
-import { getBestCameraPosition } from "lib/shared/get-best-camera-position"
 import { getCircuitJsonToGltfOptions } from "lib/shared/get-circuit-json-to-gltf-options"
 import { getCompletePlatformConfig } from "lib/shared/get-complete-platform-config"
 import {
