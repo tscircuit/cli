@@ -12,6 +12,7 @@ export type BuildFileMessage = {
     ignoreErrors?: boolean
     ignoreWarnings?: boolean
     platformConfig?: PlatformConfig
+    profile?: boolean
   }
 }
 
@@ -28,6 +29,7 @@ export type BuildCompletedMessage = {
   isFatalError?: { errorType: string; message: string }
   errors: string[]
   warnings: string[]
+  durationMs?: number
 }
 
 /**
@@ -59,4 +61,5 @@ export type BuildJobResult = {
   isFatalError?: { errorType: string; message: string }
   errors: string[]
   warnings: string[]
+  durationMs?: number
 }

@@ -18,6 +18,7 @@ export type BuildJob = {
     ignoreErrors?: boolean
     ignoreWarnings?: boolean
     platformConfig?: PlatformConfig
+    profile?: boolean
   }
 }
 
@@ -108,6 +109,7 @@ export class WorkerPool {
             isFatalError: completedMsg.isFatalError,
             errors: completedMsg.errors,
             warnings: completedMsg.warnings,
+            durationMs: completedMsg.durationMs,
           })
           threadWorker.currentJob = null
           threadWorker.busy = false
@@ -220,6 +222,7 @@ export async function buildFilesWithWorkerPool(options: {
     ignoreErrors?: boolean
     ignoreWarnings?: boolean
     platformConfig?: PlatformConfig
+    profile?: boolean
   }
   onLog?: (lines: string[]) => void
   onJobComplete?: (result: BuildJobResult) => void

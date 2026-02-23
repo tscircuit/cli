@@ -72,6 +72,10 @@ export const registerBuild = (program: Command) => {
     )
     .option("--glbs", "Generate GLB 3D model files for every successful build")
     .option(
+      "--profile",
+      "Log per-circuit circuit.json generation time during build",
+    )
+    .option(
       "--kicad-pcm",
       "Generate KiCad PCM (Plugin and Content Manager) assets in dist/pcm",
     )
@@ -195,6 +199,8 @@ export const registerBuild = (program: Command) => {
         const kicadProjects: Array<
           GeneratedKicadProject & { sourcePath: string }
         > = []
+        const profileEntries: Array<{ filePath: string; durationMs: number }> =
+          []
 
         const shouldGenerateKicadProject =
           resolvedOptions?.kicadProject || resolvedOptions?.kicadLibrary
@@ -204,6 +210,7 @@ export const registerBuild = (program: Command) => {
           ignoreErrors: resolvedOptions?.ignoreErrors,
           ignoreWarnings: resolvedOptions?.ignoreWarnings,
           platformConfig,
+          profile: resolvedOptions?.profile,
         }
 
         // Helper function to process a single build result
@@ -288,12 +295,20 @@ export const registerBuild = (program: Command) => {
               "",
             )
             const outputPath = path.join(distDir, outputDirName, "circuit.json")
+            const startedAt = resolvedOptions?.profile ? performance.now() : 0
             const buildOutcome = await buildFile(
               filePath,
               outputPath,
               projectDir,
               buildOptions,
             )
+            if (resolvedOptions?.profile) {
+              const durationMs = performance.now() - startedAt
+              profileEntries.push({ filePath: relative, durationMs })
+              console.log(
+                kleur.cyan(`[profile] ${relative}: ${durationMs.toFixed(1)}ms`),
+              )
+            }
             await processBuildResult(filePath, outputPath, buildOutcome)
           }
         }
@@ -329,6 +344,21 @@ export const registerBuild = (program: Command) => {
                 for (const error of result.errors) {
                   console.error(kleur.red(`  ${error}`))
                 }
+              }
+
+              if (
+                resolvedOptions?.profile &&
+                typeof result.durationMs === "number"
+              ) {
+                profileEntries.push({
+                  filePath: relative,
+                  durationMs: result.durationMs,
+                })
+                console.log(
+                  kleur.cyan(
+                    `[profile] ${relative}: ${result.durationMs.toFixed(1)}ms`,
+                  ),
+                )
               }
 
               // circuitJson is not passed through IPC - processBuildResult reads from file if needed
@@ -547,7 +577,21 @@ export const registerBuild = (program: Command) => {
           resolvedOptions?.kicadLibrary && "kicad-library",
           resolvedOptions?.kicadPcm && "kicad-pcm",
           resolvedOptions?.previewGltf && "preview-gltf",
+          resolvedOptions?.profile && "profile",
         ].filter(Boolean) as string[]
+
+        if (resolvedOptions?.profile && profileEntries.length > 0) {
+          console.log("")
+          console.log(kleur.bold("Profile Summary (slowest first)"))
+          const sortedProfileEntries = [...profileEntries].sort(
+            (a, b) => b.durationMs - a.durationMs,
+          )
+          for (const profileEntry of sortedProfileEntries) {
+            console.log(
+              `  ${kleur.cyan(profileEntry.durationMs.toFixed(1) + "ms")} ${profileEntry.filePath}`,
+            )
+          }
+        }
 
         console.log("")
         console.log(kleur.bold("Build complete"))

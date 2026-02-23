@@ -20,6 +20,7 @@ export interface BuildCommandOptions {
   kicadPcm?: boolean
   previewGltf?: boolean
   glbs?: boolean
+  profile?: boolean
   useCdnJavascript?: boolean
   concurrency?: string
 }

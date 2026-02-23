@@ -39,10 +39,12 @@ const handleBuildFile = async (
     ignoreErrors?: boolean
     ignoreWarnings?: boolean
     platformConfig?: unknown
+    profile?: boolean
   },
 ): Promise<BuildCompletedMessage> => {
   const errors: string[] = []
   const warnings: string[] = []
+  const startedAt = options?.profile ? performance.now() : 0
 
   try {
     // Change to project directory for proper module resolution
@@ -100,6 +102,7 @@ const handleBuildFile = async (
       ok: !hasErrors,
       errors,
       warnings,
+      durationMs: options?.profile ? performance.now() - startedAt : undefined,
     }
   } catch (err) {
     const errorMsg = err instanceof Error ? err.message : String(err)
@@ -119,6 +122,7 @@ const handleBuildFile = async (
       },
       errors,
       warnings,
+      durationMs: options?.profile ? performance.now() - startedAt : undefined,
     }
   }
 }
