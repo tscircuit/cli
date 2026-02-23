@@ -303,9 +303,7 @@ export const registerBuild = (program: Command) => {
             if (resolvedOptions?.profile) {
               const durationMs = performance.now() - startedAt
               console.log(
-                kleur.cyan(
-                  `[profile] ${relative}: ${durationMs.toFixed(1)}ms`,
-                ),
+                kleur.cyan(`[profile] ${relative}: ${durationMs.toFixed(1)}ms`),
               )
             }
             await processBuildResult(filePath, outputPath, buildOutcome)
@@ -345,7 +343,10 @@ export const registerBuild = (program: Command) => {
                 }
               }
 
-              if (resolvedOptions?.profile && typeof result.durationMs === "number") {
+              if (
+                resolvedOptions?.profile &&
+                typeof result.durationMs === "number"
+              ) {
                 console.log(
                   kleur.cyan(
                     `[profile] ${relative}: ${result.durationMs.toFixed(1)}ms`,
