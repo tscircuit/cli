@@ -14,6 +14,7 @@ import { getPackageFilePaths } from "cli/dev/get-package-file-paths"
 import { checkOrgAccess } from "lib/utils/check-org-access"
 import { isBinaryFile } from "./is-binary-file"
 import { hasBinaryContent } from "./has-binary-content"
+import JSZip from "jszip"
 
 type PushOptions = {
   filePath?: string
@@ -27,6 +28,31 @@ type PushOptions = {
 }
 
 const debug = Debug("tsci:push-snippet")
+
+const getArchivePayload = async (
+  filePaths: string[],
+  projectDir: string,
+  packageNameWithVersion: string,
+) => {
+  const zip = new JSZip()
+
+  for (const fullFilePath of filePaths) {
+    const relativeFilePath = path.relative(projectDir, fullFilePath)
+    zip.file(relativeFilePath, fs.readFileSync(fullFilePath))
+  }
+
+  const archive = await zip.generateAsync({
+    type: "uint8array",
+    compression: "DEFLATE",
+    compressionOptions: { level: 9 },
+  })
+
+  return {
+    package_name_with_version: packageNameWithVersion,
+    archive_base64: Buffer.from(archive).toString("base64"),
+    archive_format: "zip",
+  }
+}
 
 export const pushSnippet = async ({
   filePath,
@@ -327,48 +353,78 @@ export const pushSnippet = async ({
     failed: { file: string; error: string }[]
   } = { succeeded: [], failed: [] }
 
-  for (const fullFilePath of filePaths) {
-    const relativeFilePath = path.relative(projectDir, fullFilePath)
+  const packageNameWithVersion = `${scopedPackageName}@${releaseVersion}`
+  const shouldUploadArchive = process.env.TSCI_PUSH_ARCHIVE === "1"
 
-    // Check if file is binary by extension first, then by content if needed
-    const fileBuffer = fs.readFileSync(fullFilePath)
-    const isBinary =
-      isBinaryFile(relativeFilePath) || hasBinaryContent(fileBuffer)
-
-    // Build the request payload based on whether the file is binary or text
-    const payload: {
-      file_path: string
-      package_name_with_version: string
-      content_text?: string
-      content_base64?: string
-    } = {
-      file_path: relativeFilePath,
-      package_name_with_version: `${scopedPackageName}@${releaseVersion}`,
-    }
-
-    if (isBinary) {
-      payload.content_base64 = fileBuffer.toString("base64")
-    } else {
-      payload.content_text = fileBuffer.toString("utf-8")
-    }
-
-    await ky
-      .post("package_files/create", {
-        json: payload,
+  if (shouldUploadArchive) {
+    log(kleur.gray("Uploading package archive..."))
+    try {
+      const archivePayload = await getArchivePayload(
+        filePaths,
+        projectDir,
+        packageNameWithVersion,
+      )
+      await ky.post("package_files/upload_archive", {
+        json: archivePayload,
       })
-      .then(() => {
-        const icon = isBinary ? "📦" : "⬆︎"
-        console.log(kleur.gray(`${icon} ${relativeFilePath}`))
+      for (const fullFilePath of filePaths) {
+        const relativeFilePath = path.relative(projectDir, fullFilePath)
         uploadResults.succeeded.push(relativeFilePath)
-      })
-      .catch(async (error) => {
-        const errorDetails = String(error)?.split(`\n\nRequest Body:`)?.[0]
-        console.log(kleur.red(`  ${relativeFilePath} - failed`))
-        uploadResults.failed.push({
-          file: relativeFilePath,
-          error: errorDetails,
+      }
+      log(kleur.gray(`📦 Uploaded archive with ${filePaths.length} files`))
+    } catch (error) {
+      log(
+        kleur.yellow(
+          `Archive upload failed, falling back to file-by-file upload: ${error}`,
+        ),
+      )
+    }
+  }
+
+  if (uploadResults.succeeded.length === 0) {
+    for (const fullFilePath of filePaths) {
+      const relativeFilePath = path.relative(projectDir, fullFilePath)
+
+      // Check if file is binary by extension first, then by content if needed
+      const fileBuffer = fs.readFileSync(fullFilePath)
+      const isBinary =
+        isBinaryFile(relativeFilePath) || hasBinaryContent(fileBuffer)
+
+      // Build the request payload based on whether the file is binary or text
+      const payload: {
+        file_path: string
+        package_name_with_version: string
+        content_text?: string
+        content_base64?: string
+      } = {
+        file_path: relativeFilePath,
+        package_name_with_version: packageNameWithVersion,
+      }
+
+      if (isBinary) {
+        payload.content_base64 = fileBuffer.toString("base64")
+      } else {
+        payload.content_text = fileBuffer.toString("utf-8")
+      }
+
+      await ky
+        .post("package_files/create", {
+          json: payload,
         })
-      })
+        .then(() => {
+          const icon = isBinary ? "📦" : "⬆︎"
+          console.log(kleur.gray(`${icon} ${relativeFilePath}`))
+          uploadResults.succeeded.push(relativeFilePath)
+        })
+        .catch(async (error) => {
+          const errorDetails = String(error)?.split(`\n\nRequest Body:`)?.[0]
+          console.log(kleur.red(`  ${relativeFilePath} - failed`))
+          uploadResults.failed.push({
+            file: relativeFilePath,
+            error: errorDetails,
+          })
+        })
+    }
   }
 
   log("\n")
