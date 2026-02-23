@@ -11,7 +11,7 @@ export const prompts = (...args: Parameters<typeof ogPrompts>) => {
     const result: any = {}
     promptArray.forEach((prompt) => {
       if (prompt.type === "confirm") {
-        result[(prompt as any).name] = prompt.initial ?? true
+        result[(prompt as any).name] = true
         return
       } else if (prompt.initial) {
         result[(prompt as any).name] = prompt.initial
