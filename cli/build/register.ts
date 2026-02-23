@@ -199,6 +199,8 @@ export const registerBuild = (program: Command) => {
         const kicadProjects: Array<
           GeneratedKicadProject & { sourcePath: string }
         > = []
+        const profileEntries: Array<{ filePath: string; durationMs: number }> =
+          []
 
         const shouldGenerateKicadProject =
           resolvedOptions?.kicadProject || resolvedOptions?.kicadLibrary
@@ -302,6 +304,7 @@ export const registerBuild = (program: Command) => {
             )
             if (resolvedOptions?.profile) {
               const durationMs = performance.now() - startedAt
+              profileEntries.push({ filePath: relative, durationMs })
               console.log(
                 kleur.cyan(`[profile] ${relative}: ${durationMs.toFixed(1)}ms`),
               )
@@ -347,6 +350,10 @@ export const registerBuild = (program: Command) => {
                 resolvedOptions?.profile &&
                 typeof result.durationMs === "number"
               ) {
+                profileEntries.push({
+                  filePath: relative,
+                  durationMs: result.durationMs,
+                })
                 console.log(
                   kleur.cyan(
                     `[profile] ${relative}: ${result.durationMs.toFixed(1)}ms`,
@@ -572,6 +579,19 @@ export const registerBuild = (program: Command) => {
           resolvedOptions?.previewGltf && "preview-gltf",
           resolvedOptions?.profile && "profile",
         ].filter(Boolean) as string[]
+
+        if (resolvedOptions?.profile && profileEntries.length > 0) {
+          console.log("")
+          console.log(kleur.bold("Profile Summary (slowest first)"))
+          const sortedProfileEntries = [...profileEntries].sort(
+            (a, b) => b.durationMs - a.durationMs,
+          )
+          for (const profileEntry of sortedProfileEntries) {
+            console.log(
+              `  ${kleur.cyan(profileEntry.durationMs.toFixed(1) + "ms")} ${profileEntry.filePath}`,
+            )
+          }
+        }
 
         console.log("")
         console.log(kleur.bold("Build complete"))

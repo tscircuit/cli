@@ -22,4 +22,20 @@ test("build with --profile logs per-circuit circuit.json generation time", async
   expect(exitCode).toBe(0)
   expect(stdout).toContain("[profile] first.circuit.tsx:")
   expect(stdout).toContain("[profile] second.circuit.tsx:")
+  expect(stdout).toContain("Profile Summary (slowest first)")
+
+  const profileSummaryLines = stdout
+    .split("\n")
+    .filter((line) => line.trim().match(/^[0-9]+\.[0-9]ms\s+/))
+
+  expect(profileSummaryLines.length).toBeGreaterThanOrEqual(2)
+
+  const durations = profileSummaryLines.map((line) => {
+    const match = line.trim().match(/^([0-9]+\.[0-9])ms\s+/)
+    return match ? Number.parseFloat(match[1]) : Number.NaN
+  })
+
+  for (let i = 1; i < durations.length; i++) {
+    expect(durations[i - 1] >= durations[i]).toBe(true)
+  }
 }, 30_000)
