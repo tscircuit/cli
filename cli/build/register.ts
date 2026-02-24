@@ -1,32 +1,32 @@
-import type { Command } from "commander"
-import path from "node:path"
 import fs from "node:fs"
-import { buildFile } from "./build-file"
-import { applyCiBuildOptions, type BuildCommandOptions } from "./build-ci"
-import { resolveBuildOptions } from "./resolve-build-options"
-import { getBuildEntrypoints } from "./get-build-entrypoints"
+import path from "node:path"
+import type { PlatformConfig } from "@tscircuit/props"
+import type { Command } from "commander"
+import kleur from "kleur"
 import { loadProjectConfig } from "lib/project-config"
+import type { BuildJobResult } from "lib/rpc-worker/types"
+import { RpcWorkerPool } from "lib/rpc-worker/worker-pool"
+import { convertToKicadLibrary } from "lib/shared/convert-to-kicad-library"
 import { getEntrypoint } from "lib/shared/get-entrypoint"
 import {
-  getStaticIndexHtmlFile,
   type StaticBuildFileReference,
+  getStaticIndexHtmlFile,
 } from "lib/site/getStaticIndexHtmlFile"
-import type { PlatformConfig } from "@tscircuit/props"
-import type { BuildFileResult } from "./build-preview-images"
-import { buildPreviewImages } from "./build-preview-images"
-import { buildPreviewGltf } from "./build-preview-gltf"
-import { buildGlbs } from "./build-glbs"
-import { generateKicadProject } from "./generate-kicad-project"
-import type { GeneratedKicadProject } from "./generate-kicad-project"
-import { convertToKicadLibrary } from "lib/shared/convert-to-kicad-library"
-import { buildKicadPcm } from "./build-kicad-pcm"
-import { transpileFile } from "./transpile"
-import { validateMainInDist } from "../utils/validate-main-in-dist"
 import { resolveKicadLibraryName } from "lib/utils/resolve-kicad-library-name"
 import { getLatestTscircuitCdnUrl } from "../utils/get-latest-tscircuit-cdn-url"
-import { buildFilesWithWorkerPool } from "./worker-pool"
-import type { BuildJobResult } from "./worker-types"
-import kleur from "kleur"
+import { validateMainInDist } from "../utils/validate-main-in-dist"
+import { type BuildCommandOptions, applyCiBuildOptions } from "./build-ci"
+import { buildFile } from "./build-file"
+import { buildGlbs } from "./build-glbs"
+import { buildKicadPcm } from "./build-kicad-pcm"
+import { buildPreviewGltf } from "./build-preview-gltf"
+import type { BuildFileResult } from "./build-preview-images"
+import { buildPreviewImages } from "./build-preview-images"
+import { generateKicadProject } from "./generate-kicad-project"
+import type { GeneratedKicadProject } from "./generate-kicad-project"
+import { getBuildEntrypoints } from "./get-build-entrypoints"
+import { resolveBuildOptions } from "./resolve-build-options"
+import { transpileFile } from "./transpile"
 
 // @ts-ignore
 import runFrameStandaloneBundleContent from "@tscircuit/runframe/standalone" with {
@@ -307,37 +307,42 @@ export const registerBuild = (program: Command) => {
               "",
             )
             const outputPath = path.join(distDir, outputDirName, "circuit.json")
-            return { filePath, outputPath }
+            return { filePath, outputPath, projectDir, options: buildOptions }
           })
 
-          await buildFilesWithWorkerPool({
-            files: filesToBuild,
-            projectDir,
+          const pool = new RpcWorkerPool({
             concurrency: concurrencyValue,
-            buildOptions,
-            onLog: (lines) => {
+            service: "build",
+            onLog: (lines: string[]) => {
               for (const line of lines) {
                 console.log(line)
               }
             },
-            onJobComplete: async (result: BuildJobResult) => {
-              const relative = path.relative(projectDir, result.filePath)
-              if (result.ok) {
-                console.log(kleur.green(`✓ ${relative}`))
-              } else {
-                console.log(kleur.red(`✗ ${relative}`))
-                for (const error of result.errors) {
-                  console.error(kleur.red(`  ${error}`))
-                }
-              }
-
-              // circuitJson is not passed through IPC - processBuildResult reads from file if needed
-              await processBuildResult(result.filePath, result.outputPath, {
-                ok: result.ok,
-                isFatalError: result.isFatalError,
-              })
-            },
           })
+
+          const jobs = filesToBuild.map((f) => ({
+            method: "buildFile",
+            args: f,
+          }))
+
+          await pool.runJobs(jobs, async (result: BuildJobResult) => {
+            const relative = path.relative(projectDir, result.filePath)
+            if (result.ok) {
+              console.log(kleur.green(`✓ ${relative}`))
+            } else {
+              console.log(kleur.red(`✗ ${relative}`))
+              for (const error of result.errors) {
+                console.error(kleur.red(`  ${error}`))
+              }
+            }
+
+            await processBuildResult(result.filePath, result.outputPath, {
+              ok: result.ok,
+              isFatalError: result.isFatalError,
+            })
+          })
+
+          await pool.terminate()
         }
 
         if (concurrencyValue > 1) {

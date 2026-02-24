@@ -9,7 +9,7 @@ const ALLOW_BUNDLING = ["@tscircuit/runframe"]
 const result = await Bun.build({
   entrypoints: [
     "./cli/main.ts",
-    "./cli/build/build-worker-entrypoint.ts",
+    "./lib/rpc-worker/rpc-worker-entrypoint.ts",
     "./lib/index.ts",
   ],
   target: "node",
@@ -41,5 +41,3 @@ for (const output of outputs) {
     `${basename(output.path)} ${(output.size / 1024 / 1024).toFixed(2)} MB`,
   )
 }
-
-export {}

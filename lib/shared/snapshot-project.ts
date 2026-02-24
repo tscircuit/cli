@@ -11,6 +11,7 @@ import {
 } from "circuit-to-svg"
 import kleur from "kleur"
 import { getSnapshotsDir } from "lib/project-config"
+import { RpcWorkerPool } from "lib/rpc-worker/worker-pool"
 import { findBoardFiles } from "lib/shared/find-board-files"
 import { generateCircuitJson } from "lib/shared/generate-circuit-json"
 import { getCircuitJsonToGltfOptions } from "lib/shared/get-circuit-json-to-gltf-options"
@@ -21,7 +22,6 @@ import {
 } from "lib/shared/should-ignore-path"
 import looksSame from "looks-same"
 import { renderGLTFToPNGBufferFromGLBBuffer } from "poppygl"
-import { snapshotFilesWithWorkerPool } from "../../cli/snapshot/worker-pool"
 import { compareAndCreateDiff } from "./compare-images"
 
 type SnapshotOptions = {
@@ -317,40 +317,50 @@ export const snapshotProject = async ({
       `Processing ${boardFiles.length} file(s) with concurrency ${concurrency}...`,
     )
 
-    await snapshotFilesWithWorkerPool({
-      files: boardFiles,
-      projectDir,
+    const pool = new RpcWorkerPool({
       concurrency,
-      snapshotsDirName,
-      buildOptions: {
-        update,
-        threeD,
-        pcbOnly,
-        schematicOnly,
-        forceUpdate,
-        platformConfig,
-      },
-      onLog: (lines) => {
+      service: "snapshot",
+      onLog: (lines: string[]) => {
         for (const line of lines) {
           console.log(line)
         }
       },
-      onJobComplete: (result) => {
-        const relativeFilePath = path.relative(projectDir, result.filePath)
-
-        didUpdate = didUpdate || result.didUpdate
-        mismatches.push(...result.mismatches)
-        allErrors.push(...result.errors)
-
-        if (result.errors.length > 0) {
-          for (const err of result.errors) {
-            onError(kleur.red(`\n❌ ${err}\n`))
-          }
-        } else {
-          console.log(kleur.green(`✓ ${relativeFilePath}`))
-        }
-      },
     })
+
+    const jobs = boardFiles.map((filePath) => ({
+      method: "snapshotFile",
+      args: {
+        filePath,
+        projectDir,
+        options: {
+          update,
+          threeD,
+          pcbOnly,
+          schematicOnly,
+          forceUpdate,
+          snapshotsDirName,
+          platformConfig,
+        },
+      },
+    }))
+
+    await pool.runJobs(jobs, (result: any) => {
+      const relativeFilePath = path.relative(projectDir, result.filePath)
+
+      didUpdate = didUpdate || result.didUpdate
+      mismatches.push(...result.mismatches)
+      allErrors.push(...result.errors)
+
+      if (result.errors.length > 0) {
+        for (const err of result.errors) {
+          onError(kleur.red(`\n❌ ${err}\n`))
+        }
+      } else {
+        console.log(kleur.green(`✓ ${relativeFilePath}`))
+      }
+    })
+
+    await pool.terminate()
   }
 
   if (update) {
