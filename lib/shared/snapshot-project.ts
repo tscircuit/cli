@@ -36,6 +36,8 @@ type SnapshotOptions = {
   filePaths?: string[]
   /** Force updating snapshots even if they match */
   forceUpdate?: boolean
+  /** Number of files to process in parallel */
+  concurrency?: number
   /** Optional platform configuration overrides */
   platformConfig?: PlatformConfig
   onExit?: (code: number) => void
@@ -51,6 +53,7 @@ export const snapshotProject = async ({
   schematicOnly = false,
   filePaths = [],
   forceUpdate = false,
+  concurrency = 1,
   onExit = (code) => process.exit(code),
   onError = (msg) => console.error(msg),
   onSuccess = (msg) => console.log(msg),
@@ -77,18 +80,24 @@ export const snapshotProject = async ({
   }
 
   const snapshotsDirName = getSnapshotsDir(projectDir)
-  const mismatches: string[] = []
-  let didUpdate = false
 
-  for (const file of boardFiles) {
+  const processFile = async (
+    file: string,
+  ): Promise<{
+    didUpdate: boolean
+    mismatches: string[]
+    errors: string[]
+  }> => {
     const relativeFilePath = path.relative(projectDir, file)
+    const fileDidUpdate = false
+    const fileMismatches: string[] = []
+    const fileErrors: string[] = []
 
     let circuitJson: any
     let pcbSvg: string
     let schSvg: string
 
     try {
-      // Get complete platform config with kicad_mod support
       const completePlatformConfig = getCompletePlatformConfig(platformConfig)
 
       const result = await generateCircuitJson({
@@ -99,12 +108,14 @@ export const snapshotProject = async ({
     } catch (error) {
       const errorMessage =
         error instanceof Error ? error.message : String(error)
-      onError(
-        kleur.red(
-          `\n❌ Failed to generate circuit JSON for ${relativeFilePath}:\n`,
-        ) + kleur.red(`   ${errorMessage}\n`),
+      fileErrors.push(
+        `Failed to generate circuit JSON for ${relativeFilePath}: ${errorMessage}`,
       )
-      return onExit(1)
+      return {
+        didUpdate: fileDidUpdate,
+        mismatches: fileMismatches,
+        errors: fileErrors,
+      }
     }
 
     try {
@@ -112,12 +123,14 @@ export const snapshotProject = async ({
     } catch (error) {
       const errorMessage =
         error instanceof Error ? error.message : String(error)
-      onError(
-        kleur.red(
-          `\n❌ Failed to generate PCB SVG for ${relativeFilePath}:\n`,
-        ) + kleur.red(`   ${errorMessage}\n`),
+      fileErrors.push(
+        `Failed to generate PCB SVG for ${relativeFilePath}: ${errorMessage}`,
       )
-      return onExit(1)
+      return {
+        didUpdate: fileDidUpdate,
+        mismatches: fileMismatches,
+        errors: fileErrors,
+      }
     }
 
     try {
@@ -125,12 +138,14 @@ export const snapshotProject = async ({
     } catch (error) {
       const errorMessage =
         error instanceof Error ? error.message : String(error)
-      onError(
-        kleur.red(
-          `\n❌ Failed to generate schematic SVG for ${relativeFilePath}:\n`,
-        ) + kleur.red(`   ${errorMessage}\n`),
+      fileErrors.push(
+        `Failed to generate schematic SVG for ${relativeFilePath}: ${errorMessage}`,
       )
-      return onExit(1)
+      return {
+        didUpdate: fileDidUpdate,
+        mismatches: fileMismatches,
+        errors: fileErrors,
+      }
     }
     let png3d: Buffer | null = null
     if (threeD) {
@@ -155,7 +170,6 @@ export const snapshotProject = async ({
         const errorMessage =
           error instanceof Error ? error.message : String(error)
 
-        // Check if it's a "no pcb_board" error
         if (errorMessage.includes("No pcb_board found in circuit JSON")) {
           const fileDir = path.dirname(file)
           const relativeDir = path.relative(projectDir, fileDir)
@@ -167,19 +181,10 @@ export const snapshotProject = async ({
           const existing3dSnapshot = fs.existsSync(snap3dPath)
 
           if (existing3dSnapshot) {
-            // Error if there's an existing snapshot
-            onError(
-              kleur.red(
-                `\n❌ Failed to generate 3D snapshot for ${relativeFilePath}:\n`,
-              ) +
-                kleur.red(`   No pcb_board found in circuit JSON\n`) +
-                kleur.red(
-                  `   Existing snapshot: ${path.relative(projectDir, snap3dPath)}\n`,
-                ),
+            fileErrors.push(
+              `Failed to generate 3D snapshot for ${relativeFilePath}: No pcb_board found in circuit JSON. Existing snapshot: ${path.relative(projectDir, snap3dPath)}`,
             )
-            return onExit(1)
           } else {
-            // Skip with warning if no existing snapshot
             console.log(
               kleur.red(`⚠️  Skipping 3D snapshot for ${relativeFilePath}:`) +
                 kleur.red(` No pcb_board found in circuit JSON`),
@@ -187,27 +192,20 @@ export const snapshotProject = async ({
             png3d = null
           }
         } else {
-          // For any other error, show board name and full error
-          onError(
-            kleur.red(
-              `\n❌ Failed to generate 3D snapshot for ${relativeFilePath}:\n`,
-            ) + kleur.red(`   ${errorMessage}\n`),
+          fileErrors.push(
+            `Failed to generate 3D snapshot for ${relativeFilePath}: ${errorMessage}`,
           )
-          return onExit(1)
         }
       }
     }
 
-    // Determine snapshot directory based on whether snapshotsDir is configured
     const snapDir = snapshotsDirName
-      ? // If snapshotsDir is provided, everything goes in the snapshots directory
-        path.join(
+      ? path.join(
           projectDir,
           snapshotsDirName,
           path.relative(projectDir, path.dirname(file)),
         )
-      : // If snapshotsDir isn't provided, we create a `__snapshots__` directory next to the file like jest
-        path.join(path.dirname(file), "__snapshots__")
+      : path.join(path.dirname(file), "__snapshots__")
 
     fs.mkdirSync(snapDir, { recursive: true })
 
@@ -230,8 +228,14 @@ export const snapshotProject = async ({
       console.error(
         "looks-same is required. Install it with 'bun add -d looks-same'",
       )
-      return onExit(1)
+      return {
+        didUpdate: fileDidUpdate,
+        mismatches: fileMismatches,
+        errors: ["looks-same is required"],
+      }
     }
+
+    let didUpdateForFile = false
 
     for (const snapshot of snapshots) {
       const { type } = snapshot
@@ -251,7 +255,7 @@ export const snapshotProject = async ({
       if (!existing) {
         fs.writeFileSync(snapPath, newContentForFile)
         console.log("✅", kleur.gray(path.relative(projectDir, snapPath)))
-        didUpdate = true
+        didUpdateForFile = true
         continue
       }
 
@@ -274,12 +278,68 @@ export const snapshotProject = async ({
         } else {
           fs.writeFileSync(snapPath, newContentForFile)
           console.log("✅", kleur.gray(path.relative(projectDir, snapPath)))
-          didUpdate = true
+          didUpdateForFile = true
         }
       } else if (!equal) {
-        mismatches.push(`${snapPath} (diff: ${diffPath})`)
+        fileMismatches.push(`${snapPath} (diff: ${diffPath})`)
       } else {
         console.log("✅", kleur.gray(path.relative(projectDir, snapPath)))
+      }
+    }
+
+    return {
+      didUpdate: didUpdateForFile,
+      mismatches: fileMismatches,
+      errors: fileErrors,
+    }
+  }
+
+  let didUpdate = false
+  const mismatches: string[] = []
+  const allErrors: string[] = []
+
+  if (concurrency <= 1) {
+    for (const file of boardFiles) {
+      const result = await processFile(file)
+      didUpdate = didUpdate || result.didUpdate
+      mismatches.push(...result.mismatches)
+      allErrors.push(...result.errors)
+
+      if (result.errors.length > 0) {
+        for (const err of result.errors) {
+          onError(kleur.red(`\n❌ ${err}\n`))
+        }
+      }
+    }
+  } else {
+    console.log(
+      `Processing ${boardFiles.length} file(s) with concurrency ${concurrency}...`,
+    )
+
+    const chunks: string[][] = []
+    for (let i = 0; i < boardFiles.length; i += concurrency) {
+      chunks.push(boardFiles.slice(i, i + concurrency))
+    }
+
+    for (const chunk of chunks) {
+      const results = await Promise.all(chunk.map((file) => processFile(file)))
+
+      for (let i = 0; i < chunk.length; i++) {
+        const file = chunk[i]
+        const result = results[i]
+        const relativeFilePath = path.relative(projectDir, file)
+
+        didUpdate = didUpdate || result.didUpdate
+        mismatches.push(...result.mismatches)
+
+        if (result.errors.length > 0) {
+          for (const err of result.errors) {
+            allErrors.push(err)
+            onError(kleur.red(`\n❌ ${err}\n`))
+          }
+        } else {
+          console.log(kleur.green(`✓ ${relativeFilePath}`))
+        }
       }
     }
   }
@@ -289,6 +349,13 @@ export const snapshotProject = async ({
       ? onSuccess("Created snapshots")
       : onSuccess("All snapshots already up to date")
     return onExit(0)
+  }
+
+  if (allErrors.length > 0) {
+    onError(
+      `\n❌ ${allErrors.length} error(s) occurred during snapshot generation\n`,
+    )
+    return onExit(1)
   }
 
   if (mismatches.length) {

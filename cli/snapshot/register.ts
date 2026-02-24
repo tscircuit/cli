@@ -17,6 +17,11 @@ export const registerSnapshot = (program: Command) => {
     .option("--pcb-only", "Generate only PCB snapshots")
     .option("--schematic-only", "Generate only schematic snapshots")
     .option("--disable-parts-engine", "Disable the parts engine")
+    .option(
+      "--concurrency <number>",
+      "Number of files to build in parallel (default: 1)",
+      "1",
+    )
     .action(
       async (
         target: string | undefined,
@@ -27,14 +32,21 @@ export const registerSnapshot = (program: Command) => {
           schematicOnly?: boolean
           forceUpdate?: boolean
           disablePartsEngine?: boolean
+          concurrency?: string
         },
       ) => {
+        const concurrencyValue = Math.max(
+          1,
+          Number.parseInt(options.concurrency || "1", 10),
+        )
+
         await snapshotProject({
           update: options.update ?? false,
           threeD: options["3d"] ?? false,
           pcbOnly: options.pcbOnly ?? false,
           schematicOnly: options.schematicOnly ?? false,
           forceUpdate: options.forceUpdate ?? false,
+          concurrency: concurrencyValue,
           filePaths: target ? [target] : [],
           platformConfig: options.disablePartsEngine
             ? { partsEngineDisabled: true }
