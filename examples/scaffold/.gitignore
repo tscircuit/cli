@@ -15,6 +15,7 @@ build/
 .idea/
 *.swp
 *.swo
+.tscircuit
 
 # OS files
 .DS_Store
