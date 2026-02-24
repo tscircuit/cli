@@ -21,6 +21,7 @@ import {
 } from "lib/shared/should-ignore-path"
 import looksSame from "looks-same"
 import { renderGLTFToPNGBufferFromGLBBuffer } from "poppygl"
+import { snapshotFilesWithWorkerPool } from "../../cli/snapshot/worker-pool"
 import { compareAndCreateDiff } from "./compare-images"
 
 type SnapshotOptions = {
@@ -316,35 +317,49 @@ export const snapshotProject = async ({
       `Processing ${boardFiles.length} file(s) with concurrency ${concurrency}...`,
     )
 
-    const chunks: string[][] = []
-    for (let i = 0; i < boardFiles.length; i += concurrency) {
-      chunks.push(boardFiles.slice(i, i + concurrency))
-    }
-
-    for (const chunk of chunks) {
-      const results = await Promise.all(chunk.map((file) => processFile(file)))
-
-      for (let i = 0; i < chunk.length; i++) {
-        const file = chunk[i]
-        const result = results[i]
-        const relativeFilePath = path.relative(projectDir, file)
+    await snapshotFilesWithWorkerPool({
+      files: boardFiles,
+      projectDir,
+      concurrency,
+      snapshotsDirName,
+      buildOptions: {
+        update,
+        threeD,
+        pcbOnly,
+        schematicOnly,
+        forceUpdate,
+        platformConfig,
+      },
+      onLog: (lines) => {
+        for (const line of lines) {
+          console.log(line)
+        }
+      },
+      onJobComplete: (result) => {
+        const relativeFilePath = path.relative(projectDir, result.filePath)
 
         didUpdate = didUpdate || result.didUpdate
         mismatches.push(...result.mismatches)
+        allErrors.push(...result.errors)
 
         if (result.errors.length > 0) {
           for (const err of result.errors) {
-            allErrors.push(err)
             onError(kleur.red(`\n❌ ${err}\n`))
           }
         } else {
           console.log(kleur.green(`✓ ${relativeFilePath}`))
         }
-      }
-    }
+      },
+    })
   }
 
   if (update) {
+    if (allErrors.length > 0) {
+      onError(
+        `\n❌ ${allErrors.length} error(s) occurred during snapshot update\n`,
+      )
+      return onExit(1)
+    }
     didUpdate
       ? onSuccess("Created snapshots")
       : onSuccess("All snapshots already up to date")
