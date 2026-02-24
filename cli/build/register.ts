@@ -1,32 +1,32 @@
-import type { Command } from "commander"
-import path from "node:path"
 import fs from "node:fs"
-import { buildFile } from "./build-file"
-import { applyCiBuildOptions, type BuildCommandOptions } from "./build-ci"
-import { resolveBuildOptions } from "./resolve-build-options"
-import { getBuildEntrypoints } from "./get-build-entrypoints"
+import path from "node:path"
+import type { PlatformConfig } from "@tscircuit/props"
+import type { Command } from "commander"
+import kleur from "kleur"
 import { loadProjectConfig } from "lib/project-config"
+import { convertToKicadLibrary } from "lib/shared/convert-to-kicad-library"
 import { getEntrypoint } from "lib/shared/get-entrypoint"
 import {
-  getStaticIndexHtmlFile,
   type StaticBuildFileReference,
+  getStaticIndexHtmlFile,
 } from "lib/site/getStaticIndexHtmlFile"
-import type { PlatformConfig } from "@tscircuit/props"
-import type { BuildFileResult } from "./build-preview-images"
-import { buildPreviewImages } from "./build-preview-images"
-import { buildPreviewGltf } from "./build-preview-gltf"
-import { buildGlbs } from "./build-glbs"
-import { generateKicadProject } from "./generate-kicad-project"
-import type { GeneratedKicadProject } from "./generate-kicad-project"
-import { convertToKicadLibrary } from "lib/shared/convert-to-kicad-library"
-import { buildKicadPcm } from "./build-kicad-pcm"
-import { transpileFile } from "./transpile"
-import { validateMainInDist } from "../utils/validate-main-in-dist"
 import { resolveKicadLibraryName } from "lib/utils/resolve-kicad-library-name"
 import { getLatestTscircuitCdnUrl } from "../utils/get-latest-tscircuit-cdn-url"
+import { validateMainInDist } from "../utils/validate-main-in-dist"
+import { type BuildCommandOptions, applyCiBuildOptions } from "./build-ci"
+import { buildFile } from "./build-file"
+import { buildGlbs } from "./build-glbs"
+import { buildKicadPcm } from "./build-kicad-pcm"
+import { buildPreviewGltf } from "./build-preview-gltf"
+import type { BuildFileResult } from "./build-preview-images"
+import { buildPreviewImages } from "./build-preview-images"
+import { generateKicadProject } from "./generate-kicad-project"
+import type { GeneratedKicadProject } from "./generate-kicad-project"
+import { getBuildEntrypoints } from "./get-build-entrypoints"
+import { resolveBuildOptions } from "./resolve-build-options"
+import { transpileFile } from "./transpile"
 import { buildFilesWithWorkerPool } from "./worker-pool"
 import type { BuildJobResult } from "./worker-types"
-import kleur from "kleur"
 
 // @ts-ignore
 import runFrameStandaloneBundleContent from "@tscircuit/runframe/standalone" with {
@@ -310,6 +310,10 @@ export const registerBuild = (program: Command) => {
               )
             }
             await processBuildResult(filePath, outputPath, buildOutcome)
+
+            if (buildOutcome.isFatalError) {
+              break
+            }
           }
         }
 
@@ -330,6 +334,7 @@ export const registerBuild = (program: Command) => {
             projectDir,
             concurrency: concurrencyValue,
             buildOptions,
+            stopOnFatal: true,
             onLog: (lines) => {
               for (const line of lines) {
                 console.log(line)
@@ -366,6 +371,10 @@ export const registerBuild = (program: Command) => {
                 ok: result.ok,
                 isFatalError: result.isFatalError,
               })
+
+              if (result.isFatalError) {
+                process.exit(1)
+              }
             },
           })
         }

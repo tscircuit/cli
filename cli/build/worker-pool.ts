@@ -1,10 +1,10 @@
-import path from "node:path"
 import fs from "node:fs"
+import path from "node:path"
 import { Worker } from "node:worker_threads"
 import type { PlatformConfig } from "@tscircuit/props"
 import type {
-  BuildFileMessage,
   BuildCompletedMessage,
+  BuildFileMessage,
   BuildJobResult,
   WorkerLogMessage,
   WorkerOutputMessage,
@@ -59,6 +59,8 @@ export class WorkerPool {
   private onLog?: (lines: string[]) => void
   private workerEntrypointPath: string
   private initialized = false
+  private stopped = false
+  private stopReason: Error | null = null
 
   constructor(options: {
     concurrency: number
@@ -145,6 +147,7 @@ export class WorkerPool {
   }
 
   private processQueue(): void {
+    if (this.stopped) return
     if (this.jobQueue.length === 0) return
 
     const availableWorker = this.workers.find((w) => !w.busy)
@@ -168,6 +171,10 @@ export class WorkerPool {
   }
 
   async queueJob(job: BuildJob): Promise<BuildJobResult> {
+    if (this.stopped) {
+      return Promise.reject(this.stopReason ?? new Error("Worker pool stopped"))
+    }
+
     // Initialize workers on first job
     await this.initWorkers()
 
@@ -180,6 +187,19 @@ export class WorkerPool {
       this.jobQueue.push(queuedJob)
       this.processQueue()
     })
+  }
+
+  async stop(reason: Error): Promise<void> {
+    if (this.stopped) return
+
+    this.stopped = true
+    this.stopReason = reason
+
+    // Reject queued jobs that have not started yet
+    for (const queuedJob of this.jobQueue) {
+      queuedJob.reject(reason)
+    }
+    this.jobQueue = []
   }
 
   async runUntilComplete(): Promise<void> {
@@ -226,6 +246,7 @@ export async function buildFilesWithWorkerPool(options: {
   }
   onLog?: (lines: string[]) => void
   onJobComplete?: (result: BuildJobResult) => void
+  stopOnFatal?: boolean
 }): Promise<BuildJobResult[]> {
   const pool = new WorkerPool({
     concurrency: options.concurrency,
@@ -234,6 +255,7 @@ export async function buildFilesWithWorkerPool(options: {
 
   const results: BuildJobResult[] = []
   const promises: Promise<BuildJobResult>[] = []
+  const cancellationError = new Error("Build cancelled due fatal error")
 
   for (const file of options.files) {
     const promise = pool
@@ -243,18 +265,33 @@ export async function buildFilesWithWorkerPool(options: {
         projectDir: options.projectDir,
         options: options.buildOptions,
       })
-      .then((result) => {
+      .then(async (result) => {
         results.push(result)
         if (options.onJobComplete) {
-          options.onJobComplete(result)
+          await options.onJobComplete(result)
         }
+
+        if (options.stopOnFatal && result.isFatalError) {
+          await pool.stop(cancellationError)
+        }
+
         return result
       })
 
     promises.push(promise)
   }
 
-  await Promise.all(promises)
+  const settledResults = await Promise.allSettled(promises)
+
+  for (const settledResult of settledResults) {
+    if (
+      settledResult.status === "rejected" &&
+      settledResult.reason !== cancellationError
+    ) {
+      throw settledResult.reason
+    }
+  }
+
   await pool.terminate()
 
   return results
