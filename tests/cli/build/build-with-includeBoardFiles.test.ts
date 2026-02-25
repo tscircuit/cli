@@ -1,5 +1,5 @@
 import { expect, test } from "bun:test"
-import { writeFile, stat } from "node:fs/promises"
+import { stat, writeFile } from "node:fs/promises"
 import path from "node:path"
 import { getCliTestFixture } from "../../fixtures/get-cli-test-fixture"
 
@@ -36,9 +36,10 @@ test("build with includeBoardFiles does not fall back to entrypoint files", asyn
 
   expect(exitCode).toBe(0)
   expect(stdout).toContain("Building 0 file(s)...")
-  expect(stdout).toContain(
-    "Skipping transpilation because includeBoardFiles only contains prebuilt files.",
-  )
+  expect(stdout).toContain("Transpiling entry file...")
+  await expect(
+    stat(path.join(tmpDir, "dist", "index.js")),
+  ).resolves.toBeTruthy()
   await expect(
     stat(path.join(tmpDir, "dist", "index", "circuit.json")),
   ).rejects.toBeTruthy()

@@ -41,11 +41,6 @@ const getOutputDirName = (relativePath: string) =>
     .replace(/(\.board|\.circuit)?\.tsx$/, "")
     .replace(/\.circuit\.json$/, "")
 
-const includeBoardPatternsContainSourceFiles = (patterns: string[]) =>
-  patterns.some((pattern) =>
-    /\.tsx?\b|\.js\b|\{[^}]*\b(?:ts|tsx|js)\b[^}]*\}/.test(pattern),
-  )
-
 export const registerBuild = (program: Command) => {
   program
     .command("build")
@@ -435,60 +430,51 @@ export const registerBuild = (program: Command) => {
               pattern.trim(),
             ) ?? []
           const hasConfiguredIncludeBoardFiles = includeBoardPatterns.length > 0
-          const hasSourceIncludeBoardPatterns =
-            includeBoardPatternsContainSourceFiles(includeBoardPatterns)
 
-          if (
-            hasConfiguredIncludeBoardFiles &&
-            !hasSourceIncludeBoardPatterns &&
-            !transpileExplicitlyRequested
-          ) {
-            console.log(
-              "Skipping transpilation because includeBoardFiles only contains prebuilt files.",
-            )
-          } else {
-            validateMainInDist(projectDir, distDir)
+          validateMainInDist(projectDir, distDir)
 
-            console.log("Transpiling entry file...")
-            // For transpilation, we need to find the main library entrypoint
-            // (not board files).
-            const { mainEntrypoint: transpileEntrypoint } =
-              await getBuildEntrypoints({
-                fileOrDir: file,
-                includeBoardFiles: false,
-              })
-            const resolvedFileArgPath = file
-              ? path.resolve(projectDir, file)
-              : undefined
-            const fileArgIsDirectFile = Boolean(
-              resolvedFileArgPath &&
-                fs.existsSync(resolvedFileArgPath) &&
-                fs.statSync(resolvedFileArgPath).isFile(),
-            )
-            const entryFile = fileArgIsDirectFile
-              ? resolvedFileArgPath
-              : transpileEntrypoint
-            if (!entryFile) {
-              if (hasConfiguredIncludeBoardFiles) {
-                console.log(
-                  "Skipping transpilation because includeBoardFiles is configured and no library entrypoint was found.",
-                )
-              } else {
-                console.error(
-                  "No entry file found for transpilation. Make sure you have a lib/index.ts or set mainEntrypoint in tscircuit.config.json",
-                )
-                process.exit(1)
-              }
+          console.log("Transpiling entry file...")
+          // For transpilation, we need to find the main library entrypoint
+          // (not board files).
+          const { mainEntrypoint: transpileEntrypoint } =
+            await getBuildEntrypoints({
+              fileOrDir: file,
+              includeBoardFiles: false,
+            })
+          const resolvedFileArgPath = file
+            ? path.resolve(projectDir, file)
+            : undefined
+          const fileArgIsDirectFile = Boolean(
+            resolvedFileArgPath &&
+              fs.existsSync(resolvedFileArgPath) &&
+              fs.statSync(resolvedFileArgPath).isFile(),
+          )
+          const entryFile = fileArgIsDirectFile
+            ? resolvedFileArgPath
+            : transpileEntrypoint
+          if (!entryFile) {
+            if (
+              hasConfiguredIncludeBoardFiles &&
+              !transpileExplicitlyRequested
+            ) {
+              console.log(
+                "Skipping transpilation because includeBoardFiles is configured and no library entrypoint was found.",
+              )
             } else {
-              const transpileSuccess = await transpileFile({
-                input: entryFile,
-                outputDir: distDir,
-                projectDir,
-              })
-              if (!transpileSuccess) {
-                console.error("Transpilation failed")
-                process.exit(1)
-              }
+              console.error(
+                "No entry file found for transpilation. Make sure you have a lib/index.ts or set mainEntrypoint in tscircuit.config.json",
+              )
+              process.exit(1)
+            }
+          } else {
+            const transpileSuccess = await transpileFile({
+              input: entryFile,
+              outputDir: distDir,
+              projectDir,
+            })
+            if (!transpileSuccess) {
+              console.error("Transpilation failed")
+              process.exit(1)
             }
           }
         }

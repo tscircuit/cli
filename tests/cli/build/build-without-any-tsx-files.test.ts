@@ -49,7 +49,7 @@ test("build without any tsx files and only circuit.json files are present", asyn
   expect(stdout).toContain("Building 1 file(s)...")
   expect(stdout).toContain("Building prebuilt.circuit.json...")
   expect(stdout).toContain(
-    "Skipping transpilation because includeBoardFiles only contains prebuilt files.",
+    "Skipping transpilation because includeBoardFiles is configured and no library entrypoint was found.",
   )
 
   const builtFromPrebuiltPath = JSON.parse(
