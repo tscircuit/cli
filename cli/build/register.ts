@@ -20,6 +20,7 @@ import { buildKicadPcm } from "./build-kicad-pcm"
 import { buildPreviewGltf } from "./build-preview-gltf"
 import type { BuildFileResult } from "./build-preview-images"
 import { buildPreviewImages } from "./build-preview-images"
+import { exitBuild } from "./utils/exit-build"
 import { generateKicadProject } from "./generate-kicad-project"
 import type { GeneratedKicadProject } from "./generate-kicad-project"
 import { getBuildEntrypoints } from "./get-build-entrypoints"
@@ -368,10 +369,6 @@ export const registerBuild = (program: Command) => {
                 ok: result.ok,
                 isFatalError: result.isFatalError,
               })
-
-              if (result.isFatalError) {
-                process.exit(1)
-              }
             },
           })
         }
@@ -380,12 +377,6 @@ export const registerBuild = (program: Command) => {
           await buildWithWorkers()
         } else {
           await buildSequentially()
-        }
-
-        // Fatal errors (e.g., circuit generation exceptions) always cause exit code 1
-        // Non-fatal errors can be suppressed with --ignore-errors
-        if (hasFatalErrors || (hasErrors && !resolvedOptions?.ignoreErrors)) {
-          process.exit(1)
         }
 
         const shouldGeneratePreviewImages =
@@ -464,7 +455,7 @@ export const registerBuild = (program: Command) => {
               console.error(
                 "No entry file found for transpilation. Make sure you have a lib/index.ts or set mainEntrypoint in tscircuit.config.json",
               )
-              process.exit(1)
+              exitBuild(1, "transpile entry file not found")
             }
           } else {
             const transpileSuccess = await transpileFile({
@@ -474,7 +465,7 @@ export const registerBuild = (program: Command) => {
             })
             if (!transpileSuccess) {
               console.error("Transpilation failed")
-              process.exit(1)
+              exitBuild(1, "transpile command failed")
             }
           }
         }
@@ -526,7 +517,7 @@ export const registerBuild = (program: Command) => {
               "No entry file found for KiCad library generation. Make sure you have a lib/index.ts or set mainEntrypoint/kicadLibraryEntrypointPath in tscircuit.config.json",
             )
             if (!resolvedOptions?.ignoreErrors) {
-              process.exit(1)
+              exitBuild(1, "kicad-library entry file not found")
             }
           } else {
             const libraryName =
@@ -547,7 +538,7 @@ export const registerBuild = (program: Command) => {
                 `Error generating KiCad library: ${err instanceof Error ? err.message : err}`,
               )
               if (!resolvedOptions?.ignoreErrors) {
-                process.exit(1)
+                exitBuild(1, "kicad-library generation failed")
               }
             }
           }
@@ -576,7 +567,7 @@ export const registerBuild = (program: Command) => {
               "No entry file found for KiCad PCM generation. Make sure you have a lib/index.ts or set mainEntrypoint/kicadLibraryEntrypointPath in tscircuit.config.json",
             )
             if (!resolvedOptions?.ignoreErrors) {
-              process.exit(1)
+              exitBuild(1, "kicad-pcm entry file not found")
             }
           } else {
             try {
@@ -591,11 +582,16 @@ export const registerBuild = (program: Command) => {
                 `Error generating KiCad PCM assets: ${err instanceof Error ? err.message : err}`,
               )
               if (!resolvedOptions?.ignoreErrors) {
-                process.exit(1)
+                exitBuild(1, "kicad-pcm generation failed")
               }
             }
           }
         }
+
+        // Fatal errors (e.g., circuit generation exceptions) always cause exit code 1.
+        // Non-fatal errors can be suppressed with --ignore-errors.
+        const shouldExitNonZero =
+          hasFatalErrors || (hasErrors && !resolvedOptions?.ignoreErrors)
 
         const successCount = builtFiles.filter((f) => f.ok).length
         const failCount = builtFiles.length - successCount
@@ -646,11 +642,20 @@ export const registerBuild = (program: Command) => {
             ? kleur.yellow("\n⚠ Build completed with errors")
             : kleur.green("\n✓ Done"),
         )
-        process.exit(0)
+        if (shouldExitNonZero) {
+          exitBuild(
+            1,
+            hasFatalErrors
+              ? "fatal circuit build errors occurred"
+              : "build errors occurred and --ignore-errors was not enabled",
+          )
+        }
+
+        exitBuild(0, "build finished successfully")
       } catch (error) {
         const message = error instanceof Error ? error.message : String(error)
         console.error(message)
-        process.exit(1)
+        exitBuild(1, "unexpected exception")
       }
     })
 }

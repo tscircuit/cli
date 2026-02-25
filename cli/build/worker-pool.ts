@@ -61,14 +61,20 @@ export class WorkerPool {
   private initialized = false
   private stopped = false
   private stopReason: Error | null = null
+  private stopOnFatal = false
+  private cancellationError: Error | null = null
 
   constructor(options: {
     concurrency: number
     onLog?: (lines: string[]) => void
+    stopOnFatal?: boolean
+    cancellationError?: Error
   }) {
     this.concurrency = options.concurrency
     this.onLog = options.onLog
     this.workerEntrypointPath = getWorkerEntrypointPath()
+    this.stopOnFatal = options.stopOnFatal ?? false
+    this.cancellationError = options.cancellationError ?? null
   }
 
   private async initWorkers(): Promise<void> {
@@ -104,6 +110,14 @@ export class WorkerPool {
         const job = threadWorker.currentJob
 
         if (job) {
+          if (
+            this.stopOnFatal &&
+            completedMsg.isFatalError &&
+            this.cancellationError
+          ) {
+            void this.stop(this.cancellationError)
+          }
+
           job.resolve({
             filePath: completedMsg.file_path,
             outputPath: completedMsg.output_path,
@@ -248,14 +262,16 @@ export async function buildFilesWithWorkerPool(options: {
   onJobComplete?: (result: BuildJobResult) => void
   stopOnFatal?: boolean
 }): Promise<BuildJobResult[]> {
+  const cancellationError = new Error("Build cancelled due fatal error")
   const pool = new WorkerPool({
     concurrency: options.concurrency,
     onLog: options.onLog,
+    stopOnFatal: options.stopOnFatal,
+    cancellationError,
   })
 
   const results: BuildJobResult[] = []
   const promises: Promise<BuildJobResult>[] = []
-  const cancellationError = new Error("Build cancelled due fatal error")
 
   for (const file of options.files) {
     const promise = pool
@@ -269,10 +285,6 @@ export async function buildFilesWithWorkerPool(options: {
         results.push(result)
         if (options.onJobComplete) {
           await options.onJobComplete(result)
-        }
-
-        if (options.stopOnFatal && result.isFatalError) {
-          await pool.stop(cancellationError)
         }
 
         return result
