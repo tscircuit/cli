@@ -457,7 +457,17 @@ export const registerBuild = (program: Command) => {
                 fileOrDir: file,
                 includeBoardFiles: false,
               })
-            const entryFile = transpileEntrypoint
+            const resolvedFileArgPath = file
+              ? path.resolve(projectDir, file)
+              : undefined
+            const fileArgIsDirectFile = Boolean(
+              resolvedFileArgPath &&
+                fs.existsSync(resolvedFileArgPath) &&
+                fs.statSync(resolvedFileArgPath).isFile(),
+            )
+            const entryFile = fileArgIsDirectFile
+              ? resolvedFileArgPath
+              : transpileEntrypoint
             if (!entryFile) {
               if (hasConfiguredIncludeBoardFiles) {
                 console.log(
