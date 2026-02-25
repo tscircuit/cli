@@ -1,8 +1,7 @@
-import { getCliTestFixture } from "../../fixtures/get-cli-test-fixture"
-import { test, expect } from "bun:test"
-import { readdirSync } from "node:fs"
-import { writeFile, readFile, stat, mkdir, readdir } from "node:fs/promises"
+import { expect, test } from "bun:test"
+import { mkdir, readFile, readdir, stat, writeFile } from "node:fs/promises"
 import path from "node:path"
+import { getCliTestFixture } from "../../fixtures/get-cli-test-fixture"
 
 const circuitCode = `
 export default () => (
@@ -135,12 +134,16 @@ test("build uses config build.typescriptLibrary setting for transpile69", async 
   const esmPath = path.join(tmpDir, "dist", "index.js")
   const esmContent = await readFile(esmPath, "utf-8")
   expect(esmContent).toContain("export")
-  expect(esmContent).toContain("MyResistor")
+  expect(esmContent).toContain("jsx")
+  expect(esmContent).toContain("react/jsx-runtime")
+  expect(esmContent).toContain("board")
 
   const cjsPath = path.join(tmpDir, "dist", "index.cjs")
   const cjsContent = await readFile(cjsPath, "utf-8")
   expect(cjsContent).toContain("exports")
-  expect(cjsContent).toContain("MyResistor")
+  expect(cjsContent).toContain("jsx")
+  expect(cjsContent).toContain("react/jsx-runtime")
+  expect(cjsContent).toContain("board")
 
   const dtsPath = path.join(tmpDir, "dist", "index.d.ts")
   const dtsContent = await readFile(dtsPath, "utf-8")
