@@ -368,10 +368,6 @@ export const registerBuild = (program: Command) => {
                 ok: result.ok,
                 isFatalError: result.isFatalError,
               })
-
-              if (result.isFatalError) {
-                process.exit(1)
-              }
             },
           })
         }
@@ -380,12 +376,6 @@ export const registerBuild = (program: Command) => {
           await buildWithWorkers()
         } else {
           await buildSequentially()
-        }
-
-        // Fatal errors (e.g., circuit generation exceptions) always cause exit code 1
-        // Non-fatal errors can be suppressed with --ignore-errors
-        if (hasFatalErrors || (hasErrors && !resolvedOptions?.ignoreErrors)) {
-          process.exit(1)
         }
 
         const shouldGeneratePreviewImages =
@@ -646,7 +636,11 @@ export const registerBuild = (program: Command) => {
             ? kleur.yellow("\n⚠ Build completed with errors")
             : kleur.green("\n✓ Done"),
         )
-        process.exit(0)
+        const exitCode =
+          hasFatalErrors || (hasErrors && !resolvedOptions?.ignoreErrors)
+            ? 1
+            : 0
+        process.exit(exitCode)
       } catch (error) {
         const message = error instanceof Error ? error.message : String(error)
         console.error(message)
