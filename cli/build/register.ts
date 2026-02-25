@@ -36,6 +36,16 @@ import runFrameStandaloneBundleContent from "@tscircuit/runframe/standalone" wit
 const normalizeRelativePath = (projectDir: string, targetPath: string) =>
   path.relative(projectDir, targetPath).split(path.sep).join("/")
 
+const getOutputDirName = (relativePath: string) =>
+  relativePath
+    .replace(/(\.board|\.circuit)?\.tsx$/, "")
+    .replace(/\.circuit\.json$/, "")
+
+const includeBoardPatternsContainSourceFiles = (patterns: string[]) =>
+  patterns.some((pattern) =>
+    /\.tsx?\b|\.js\b|\{[^}]*\b(?:ts|tsx|js)\b[^}]*\}/.test(pattern),
+  )
+
 export const registerBuild = (program: Command) => {
   program
     .command("build")
@@ -90,6 +100,7 @@ export const registerBuild = (program: Command) => {
     )
     .action(async (file?: string, options?: BuildCommandOptions) => {
       try {
+        const transpileExplicitlyRequested = options?.transpile === true
         // First, determine projectDir so we can run prebuild commands BEFORE scanning for files
         // This allows prebuild commands to generate files that will be included in the build
         const resolvedRoot = path.resolve(process.cwd())
@@ -224,10 +235,7 @@ export const registerBuild = (program: Command) => {
           },
         ) => {
           const relative = path.relative(projectDir, filePath)
-          const outputDirName = relative.replace(
-            /(\.board|\.circuit)?\.tsx$/,
-            "",
-          )
+          const outputDirName = getOutputDirName(relative)
 
           builtFiles.push({
             sourcePath: filePath,
@@ -290,10 +298,7 @@ export const registerBuild = (program: Command) => {
           for (const filePath of circuitFiles) {
             const relative = path.relative(projectDir, filePath)
             console.log(`Building ${relative}...`)
-            const outputDirName = relative.replace(
-              /(\.board|\.circuit)?\.tsx$/,
-              "",
-            )
+            const outputDirName = getOutputDirName(relative)
             const outputPath = path.join(distDir, outputDirName, "circuit.json")
             const startedAt = resolvedOptions?.profile ? performance.now() : 0
             const buildOutcome = await buildFile(
@@ -321,10 +326,7 @@ export const registerBuild = (program: Command) => {
         const buildWithWorkers = async () => {
           const filesToBuild = circuitFiles.map((filePath) => {
             const relative = path.relative(projectDir, filePath)
-            const outputDirName = relative.replace(
-              /(\.board|\.circuit)?\.tsx$/,
-              "",
-            )
+            const outputDirName = getOutputDirName(relative)
             const outputPath = path.join(distDir, outputDirName, "circuit.json")
             return { filePath, outputPath }
           })
@@ -428,31 +430,56 @@ export const registerBuild = (program: Command) => {
         }
 
         if (resolvedOptions?.transpile) {
-          validateMainInDist(projectDir, distDir)
+          const includeBoardPatterns =
+            projectConfig?.includeBoardFiles?.filter((pattern) =>
+              pattern.trim(),
+            ) ?? []
+          const hasConfiguredIncludeBoardFiles = includeBoardPatterns.length > 0
+          const hasSourceIncludeBoardPatterns =
+            includeBoardPatternsContainSourceFiles(includeBoardPatterns)
 
-          console.log("Transpiling entry file...")
-          // For transpilation, we need to find the main library entrypoint
-          // (not board files).
-          const { mainEntrypoint: transpileEntrypoint } =
-            await getBuildEntrypoints({
-              fileOrDir: file,
-              includeBoardFiles: false,
-            })
-          const entryFile = transpileEntrypoint
-          if (!entryFile) {
-            console.error(
-              "No entry file found for transpilation. Make sure you have a lib/index.ts or set mainEntrypoint in tscircuit.config.json",
+          if (
+            hasConfiguredIncludeBoardFiles &&
+            !hasSourceIncludeBoardPatterns &&
+            !transpileExplicitlyRequested
+          ) {
+            console.log(
+              "Skipping transpilation because includeBoardFiles only contains prebuilt files.",
             )
-            process.exit(1)
-          }
-          const transpileSuccess = await transpileFile({
-            input: entryFile,
-            outputDir: distDir,
-            projectDir,
-          })
-          if (!transpileSuccess) {
-            console.error("Transpilation failed")
-            process.exit(1)
+          } else {
+            validateMainInDist(projectDir, distDir)
+
+            console.log("Transpiling entry file...")
+            // For transpilation, we need to find the main library entrypoint
+            // (not board files).
+            const { mainEntrypoint: transpileEntrypoint } =
+              await getBuildEntrypoints({
+                fileOrDir: file,
+                includeBoardFiles: false,
+              })
+            const entryFile = transpileEntrypoint
+            if (!entryFile) {
+              if (hasConfiguredIncludeBoardFiles) {
+                console.log(
+                  "Skipping transpilation because includeBoardFiles is configured and no library entrypoint was found.",
+                )
+              } else {
+                console.error(
+                  "No entry file found for transpilation. Make sure you have a lib/index.ts or set mainEntrypoint in tscircuit.config.json",
+                )
+                process.exit(1)
+              }
+            } else {
+              const transpileSuccess = await transpileFile({
+                input: entryFile,
+                outputDir: distDir,
+                projectDir,
+              })
+              if (!transpileSuccess) {
+                console.error("Transpilation failed")
+                process.exit(1)
+              }
+            }
           }
         }
 
@@ -597,7 +624,7 @@ export const registerBuild = (program: Command) => {
           )
           for (const profileEntry of sortedProfileEntries) {
             console.log(
-              `  ${kleur.cyan(profileEntry.durationMs.toFixed(1) + "ms")} ${profileEntry.filePath}`,
+              `  ${kleur.cyan(`${profileEntry.durationMs.toFixed(1)}ms`)} ${profileEntry.filePath}`,
             )
           }
         }
