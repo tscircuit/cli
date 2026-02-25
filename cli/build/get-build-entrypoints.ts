@@ -1,8 +1,8 @@
 import fs from "node:fs"
 import path from "node:path"
-import { getEntrypoint } from "lib/shared/get-entrypoint"
-import { findBoardFiles } from "lib/shared/find-board-files"
 import { getBoardFilePatterns, loadProjectConfig } from "lib/project-config"
+import { findBoardFiles } from "lib/shared/find-board-files"
+import { getEntrypoint } from "lib/shared/get-entrypoint"
 
 const isSubPath = (maybeChild: string, maybeParent: string) => {
   const relative = path.relative(maybeParent, maybeChild)
@@ -48,6 +48,9 @@ export async function getBuildEntrypoints({
 
   const buildFromProjectDir = async () => {
     const projectConfig = loadProjectConfig(resolvedRoot)
+    const hasConfiguredIncludeBoardFiles = Boolean(
+      projectConfig?.includeBoardFiles?.some((pattern) => pattern.trim()),
+    )
     const resolvedPreviewComponentPath = projectConfig?.previewComponentPath
       ? path.resolve(resolvedRoot, projectConfig.previewComponentPath)
       : undefined
@@ -65,6 +68,15 @@ export async function getBuildEntrypoints({
           previewComponentPath: resolvedPreviewComponentPath,
           siteDefaultComponentPath: resolvedSiteDefaultComponentPath,
           circuitFiles: files,
+        }
+      }
+
+      if (hasConfiguredIncludeBoardFiles) {
+        return {
+          projectDir: resolvedRoot,
+          previewComponentPath: resolvedPreviewComponentPath,
+          siteDefaultComponentPath: resolvedSiteDefaultComponentPath,
+          circuitFiles: [],
         }
       }
     }

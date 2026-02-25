@@ -1,14 +1,15 @@
-import path from "node:path"
 import fs from "node:fs"
-import kleur from "kleur"
-import { generateCircuitJson } from "lib/shared/generate-circuit-json"
-import { analyzeCircuitJson } from "lib/shared/circuit-json-diagnostics"
+import path from "node:path"
 import type { PlatformConfig } from "@tscircuit/props"
+import kleur from "kleur"
+import { analyzeCircuitJson } from "lib/shared/circuit-json-diagnostics"
+import { generateCircuitJson } from "lib/shared/generate-circuit-json"
 import { getCompletePlatformConfig } from "lib/shared/get-complete-platform-config"
+import type { AnyCircuitElement } from "circuit-json"
 
 export type BuildFileOutcome = {
   ok: boolean
-  circuitJson?: unknown[]
+  circuitJson?: AnyCircuitElement[]
   /** Fatal error that should always cause exit code 1, even with --ignore-errors */
   isFatalError?: { errorType: string; message: string }
 }
@@ -26,20 +27,32 @@ export const buildFile = async (
   try {
     console.log("Generating circuit JSON...")
 
+    const isPrebuiltCircuitJson = input.toLowerCase().endsWith(".circuit.json")
+    let circuitJson: AnyCircuitElement[] = []
+
+    if (isPrebuiltCircuitJson) {
+      const parsed = JSON.parse(fs.readFileSync(input, "utf-8"))
+      circuitJson = Array.isArray(parsed) ? parsed : []
+    }
+
     // Get complete platform config with kicad_mod support
     const completePlatformConfig = getCompletePlatformConfig(
       options?.platformConfig,
     )
 
-    const result = await generateCircuitJson({
-      filePath: input,
-      platformConfig: completePlatformConfig,
-    })
+    if (!isPrebuiltCircuitJson) {
+      const result = await generateCircuitJson({
+        filePath: input,
+        platformConfig: completePlatformConfig,
+      })
+      circuitJson = result.circuitJson
+    }
+
     fs.mkdirSync(path.dirname(output), { recursive: true })
-    fs.writeFileSync(output, JSON.stringify(result.circuitJson, null, 2))
+    fs.writeFileSync(output, JSON.stringify(circuitJson, null, 2))
     console.log(`Circuit JSON written to ${path.relative(projectDir, output)}`)
 
-    const { errors, warnings } = analyzeCircuitJson(result.circuitJson)
+    const { errors, warnings } = analyzeCircuitJson(circuitJson)
 
     if (!options?.ignoreWarnings) {
       for (const warn of warnings) {
@@ -68,7 +81,7 @@ export const buildFile = async (
     } else {
       return {
         ok: true,
-        circuitJson: result.circuitJson,
+        circuitJson,
       }
     }
   } catch (err) {
