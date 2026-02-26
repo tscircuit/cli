@@ -7,6 +7,7 @@ import type {
   KicadLibraryConverterOutput,
 } from "circuit-json-to-kicad"
 import { importFromUserLand } from "./importFromUserLand"
+import { getCompletePlatformConfig } from "./get-complete-platform-config"
 
 /**
  * Interface for a circuit-json-to-kicad module that provides the KicadLibraryConverter.
@@ -50,6 +51,8 @@ export async function convertToKicadLibrary({
   kicadPcmPackageId,
   circuitJsonToKicadModule,
 }: ConvertToKicadLibraryOptions) {
+  const platformConfig = getCompletePlatformConfig()
+  const platformFetch = platformConfig.platformFetch ?? globalThis.fetch
   const absoluteFilePath = path.isAbsolute(filePath)
     ? filePath
     : path.resolve(process.cwd(), filePath)
@@ -121,14 +124,35 @@ export async function convertToKicadLibrary({
     }
   }
 
-  // Copy 3D model files to .3dshapes folder
+  // Copy or fetch 3D model files to .3dshapes folders
+  // Local paths go to {libraryName}.3dshapes, CDN URLs go to tscircuit_builtin.3dshapes
   if (kicadLibOutput.model3dSourcePaths.length > 0) {
-    const shapesDir = path.join(outputDir, `3dmodels/${libraryName}.3dshapes`)
-    fs.mkdirSync(shapesDir, { recursive: true })
     for (const modelPath of kicadLibOutput.model3dSourcePaths) {
-      if (fs.existsSync(modelPath)) {
-        const filename = path.basename(modelPath)
-        fs.copyFileSync(modelPath, path.join(shapesDir, filename))
+      const filename = path.basename(modelPath)
+      const isRemote =
+        modelPath.startsWith("http://") || modelPath.startsWith("https://")
+      const shapesDir = isRemote
+        ? "tscircuit_builtin.3dshapes"
+        : `${libraryName}.3dshapes`
+      const destDir = path.join(outputDir, `3dmodels/${shapesDir}`)
+      fs.mkdirSync(destDir, { recursive: true })
+      const destPath = path.join(destDir, filename)
+
+      if (isRemote) {
+        try {
+          const response = await platformFetch(modelPath)
+          if (!response.ok) {
+            throw new Error(`${response.status} ${response.statusText}`)
+          }
+          const buffer = Buffer.from(await response.arrayBuffer())
+          fs.writeFileSync(destPath, buffer)
+        } catch (error) {
+          console.warn(
+            `Failed to fetch 3D model from ${modelPath}: ${error instanceof Error ? error.message : error}`,
+          )
+        }
+      } else if (fs.existsSync(modelPath)) {
+        fs.copyFileSync(modelPath, destPath)
       }
     }
   }
