@@ -1,9 +1,9 @@
 import type { Command } from "commander"
-import { getRegistryApiKy } from "lib/registry-api/get-ky"
 import kleur from "kleur"
-import { prompts } from "lib/utils/prompts"
 import { importComponentFromJlcpcb } from "lib/import/import-component-from-jlcpcb"
+import { getRegistryApiKy } from "lib/registry-api/get-ky"
 import { addPackage } from "lib/shared/add-package"
+import { prompts } from "lib/utils/prompts"
 import ora from "ora"
 
 export const registerImport = (program: Command) => {
@@ -65,9 +65,7 @@ export const registerImport = (program: Command) => {
         if (searchJlc) {
           try {
             spinner.text = "Searching JLCPCB parts..."
-            const searchUrl =
-              "https://jlcsearch.tscircuit.com/api/search?limit=10&q=" +
-              encodeURIComponent(query)
+            const searchUrl = `https://jlcsearch.tscircuit.com/api/search?limit=10&q=${encodeURIComponent(query)}`
             const resp = await fetch(searchUrl).then((r) => r.json())
             jlcResults = resp.components
           } catch (error) {
@@ -114,12 +112,19 @@ export const registerImport = (program: Command) => {
           })
         })
 
-        const { choice } = await prompts({
-          type: "select",
-          name: "choice",
-          message: "Select a part to import",
-          choices,
-        })
+        const shouldAutoSelectSingleJlcResult =
+          searchJlc && !searchTscircuit && choices.length === 1
+
+        const choice = shouldAutoSelectSingleJlcResult
+          ? choices[0].value
+          : (
+              await prompts({
+                type: "select",
+                name: "choice",
+                message: "Select a part to import",
+                choices,
+              })
+            ).choice
 
         if (!choice) {
           console.log("Aborted.")
