@@ -58,7 +58,7 @@ Commands:
   doctor                      Run diagnostic checks for your tscircuit setup
   search [options] <query>    Search for footprints, CAD models or packages in
                               the tscircuit ecosystem
-  import <query>              Search JLCPCB or the tscircuit registry and import
+  import [options] <query>    Search JLCPCB or the tscircuit registry and import
                               a component
   convert [options] <file>    Convert a .kicad_mod footprint to a tscircuit
                               component
