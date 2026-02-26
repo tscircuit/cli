@@ -79,6 +79,9 @@ export const MyResistor = () => (
   expect(distStructure).toMatchInlineSnapshot(`
     [
       "kicad-library-pcm/",
+      "kicad-library-pcm/3dmodels/",
+      "kicad-library-pcm/3dmodels/tscircuit_builtin.3dshapes/",
+      "kicad-library-pcm/3dmodels/tscircuit_builtin.3dshapes/0402.step",
       "kicad-library-pcm/footprints/",
       "kicad-library-pcm/footprints/tscircuit_builtin.pretty/",
       "kicad-library-pcm/footprints/tscircuit_builtin.pretty/resistor_0402.kicad_mod",
@@ -120,6 +123,9 @@ export const MyResistor = () => (
   const zipPaths = Object.keys(zip.files).sort()
   expect(zipPaths).toMatchInlineSnapshot(`
     [
+      "3dmodels/",
+      "3dmodels/tscircuit_builtin.3dshapes/",
+      "3dmodels/tscircuit_builtin.3dshapes/0402.step",
       "footprints/",
       "footprints/tscircuit_builtin.pretty/",
       "footprints/tscircuit_builtin.pretty/resistor_0402.kicad_mod",
