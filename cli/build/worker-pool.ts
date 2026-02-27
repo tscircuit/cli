@@ -263,8 +263,12 @@ export async function buildFilesWithWorkerPool(options: {
   stopOnFatal?: boolean
 }): Promise<BuildJobResult[]> {
   const cancellationError = new Error("Build cancelled due fatal error")
+  const poolConcurrency = Math.max(
+    1,
+    Math.min(options.concurrency, options.files.length),
+  )
   const pool = new WorkerPool({
-    concurrency: options.concurrency,
+    concurrency: poolConcurrency,
     onLog: options.onLog,
     stopOnFatal: options.stopOnFatal,
     cancellationError,
@@ -304,7 +308,13 @@ export async function buildFilesWithWorkerPool(options: {
     }
   }
 
-  await pool.terminate()
+  // NOTE: In some Bun runtimes, terminating worker threads here can cause the
+  // parent process to exit before post-build steps (site/preview/transpile)
+  // run. The CLI exits explicitly at the end of the build command, so on Bun
+  // we let process shutdown clean up workers.
+  if (typeof Bun === "undefined") {
+    await pool.terminate()
+  }
 
   return results
 }
