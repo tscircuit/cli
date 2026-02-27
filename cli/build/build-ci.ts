@@ -75,11 +75,11 @@ export const applyCiBuildOptions = async ({
   return {
     resolvedOptions: {
       ...options,
-      previewImages: options?.previewImages ?? true,
-      transpile: options?.transpile ?? true,
-      site: options?.site ?? true,
-      useCdnJavascript: options?.useCdnJavascript ?? true,
-      ignoreErrors: options?.ignoreErrors ?? true,
+      previewImages: options?.previewImages || true,
+      transpile: options?.transpile || true,
+      site: options?.site || true,
+      useCdnJavascript: options?.useCdnJavascript || true,
+      ignoreErrors: options?.ignoreErrors || true,
       kicadLibrary:
         options?.kicadLibrary ?? projectConfig?.build?.kicadLibrary ?? false,
       kicadPcm: options?.kicadPcm ?? projectConfig?.build?.kicadPcm ?? false,
