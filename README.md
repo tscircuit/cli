@@ -56,6 +56,7 @@ Commands:
                               https://github.com/espressif/kicad-libraries)
   upgrade                     Upgrade CLI to the latest version
   doctor                      Run diagnostic checks for your tscircuit setup
+  check                       Partially build and validate circuit artifacts
   search [options] <query>    Search for footprints, CAD models or packages in
                               the tscircuit ecosystem
   import [options] <query>    Search JLCPCB or the tscircuit registry and import
