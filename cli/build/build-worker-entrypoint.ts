@@ -1,16 +1,16 @@
-import path from "node:path"
 import fs from "node:fs"
+import path from "node:path"
 import { parentPort } from "node:worker_threads"
-import { generateCircuitJson } from "../../lib/shared/generate-circuit-json"
+import type { PlatformConfig } from "@tscircuit/props"
 import { analyzeCircuitJson } from "../../lib/shared/circuit-json-diagnostics"
+import { generateCircuitJson } from "../../lib/shared/generate-circuit-json"
 import { getCompletePlatformConfig } from "../../lib/shared/get-complete-platform-config"
 import { registerStaticAssetLoaders } from "../../lib/shared/register-static-asset-loaders"
 import type {
-  WorkerInputMessage,
   BuildCompletedMessage,
+  WorkerInputMessage,
   WorkerLogMessage,
 } from "./worker-types"
-import type { PlatformConfig } from "@tscircuit/props"
 
 if (!parentPort) {
   throw new Error("This file must be run as a worker thread")
@@ -60,10 +60,22 @@ const handleBuildFile = async (
       options?.platformConfig as PlatformConfig,
     )
 
-    const result = await generateCircuitJson({
-      filePath,
-      platformConfig: completePlatformConfig,
-    })
+    const normalizedInputPath = filePath.toLowerCase().replaceAll("\\", "/")
+    const isPrebuiltCircuitJson =
+      normalizedInputPath.endsWith(".circuit.json") ||
+      normalizedInputPath.endsWith("/circuit.json")
+
+    const result = isPrebuiltCircuitJson
+      ? {
+          circuitJson: (() => {
+            const parsed = JSON.parse(fs.readFileSync(filePath, "utf-8"))
+            return Array.isArray(parsed) ? parsed : []
+          })(),
+        }
+      : await generateCircuitJson({
+          filePath,
+          platformConfig: completePlatformConfig,
+        })
 
     // Write circuit JSON to disk (not sent through IPC to avoid memory issues)
     fs.mkdirSync(path.dirname(outputPath), { recursive: true })

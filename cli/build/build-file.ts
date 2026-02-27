@@ -1,11 +1,11 @@
 import fs from "node:fs"
 import path from "node:path"
 import type { PlatformConfig } from "@tscircuit/props"
+import type { AnyCircuitElement } from "circuit-json"
 import kleur from "kleur"
 import { analyzeCircuitJson } from "lib/shared/circuit-json-diagnostics"
 import { generateCircuitJson } from "lib/shared/generate-circuit-json"
 import { getCompletePlatformConfig } from "lib/shared/get-complete-platform-config"
-import type { AnyCircuitElement } from "circuit-json"
 
 export type BuildFileOutcome = {
   ok: boolean
@@ -27,7 +27,10 @@ export const buildFile = async (
   try {
     console.log("Generating circuit JSON...")
 
-    const isPrebuiltCircuitJson = input.toLowerCase().endsWith(".circuit.json")
+    const normalizedInputPath = input.toLowerCase().replaceAll("\\", "/")
+    const isPrebuiltCircuitJson =
+      normalizedInputPath.endsWith(".circuit.json") ||
+      normalizedInputPath.endsWith("/circuit.json")
     let circuitJson: AnyCircuitElement[] = []
 
     if (isPrebuiltCircuitJson) {

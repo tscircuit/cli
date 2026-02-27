@@ -20,12 +20,12 @@ import { buildKicadPcm } from "./build-kicad-pcm"
 import { buildPreviewGltf } from "./build-preview-gltf"
 import type { BuildFileResult } from "./build-preview-images"
 import { buildPreviewImages } from "./build-preview-images"
-import { exitBuild } from "./utils/exit-build"
 import { generateKicadProject } from "./generate-kicad-project"
 import type { GeneratedKicadProject } from "./generate-kicad-project"
 import { getBuildEntrypoints } from "./get-build-entrypoints"
 import { resolveBuildOptions } from "./resolve-build-options"
 import { transpileFile } from "./transpile"
+import { exitBuild } from "./utils/exit-build"
 import { buildFilesWithWorkerPool } from "./worker-pool"
 import type { BuildJobResult } from "./worker-types"
 
@@ -37,10 +37,22 @@ import runFrameStandaloneBundleContent from "@tscircuit/runframe/standalone" wit
 const normalizeRelativePath = (projectDir: string, targetPath: string) =>
   path.relative(projectDir, targetPath).split(path.sep).join("/")
 
-const getOutputDirName = (relativePath: string) =>
-  relativePath
+const getOutputDirName = (relativePath: string) => {
+  const normalizedRelativePath = relativePath
+    .toLowerCase()
+    .replaceAll("\\", "/")
+
+  if (
+    normalizedRelativePath === "circuit.json" ||
+    normalizedRelativePath.endsWith("/circuit.json")
+  ) {
+    return path.dirname(relativePath)
+  }
+
+  return relativePath
     .replace(/(\.board|\.circuit)?\.tsx$/, "")
     .replace(/\.circuit\.json$/, "")
+}
 
 export const registerBuild = (program: Command) => {
   program

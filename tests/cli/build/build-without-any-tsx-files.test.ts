@@ -1,5 +1,5 @@
 import { expect, test } from "bun:test"
-import { readFile, writeFile } from "node:fs/promises"
+import { mkdir, readFile, writeFile } from "node:fs/promises"
 import path from "node:path"
 import { getCliTestFixture } from "../../fixtures/get-cli-test-fixture"
 
@@ -55,6 +55,67 @@ test("build without any tsx files and only circuit.json files are present", asyn
   const builtFromPrebuiltPath = JSON.parse(
     await readFile(
       path.join(tmpDir, "dist", "prebuilt", "circuit.json"),
+      "utf-8",
+    ),
+  )
+  expect(builtFromPrebuiltPath).toEqual([
+    {
+      type: "source_component",
+      source_component_id: "source_component_0",
+      name: "U1",
+    },
+  ])
+}, 30_000)
+
+test("build treats nested circuit.json files as prebuilt outputs with concurrency", async () => {
+  const { tmpDir, runCommand } = await getCliTestFixture()
+
+  await mkdir(path.join(tmpDir, "generated", "index"), { recursive: true })
+
+  await writeFile(
+    path.join(tmpDir, "generated", "index", "circuit.json"),
+    JSON.stringify([
+      {
+        type: "source_component",
+        source_component_id: "source_component_0",
+        name: "U1",
+      },
+    ]),
+  )
+
+  await writeFile(
+    path.join(tmpDir, "package.json"),
+    `{
+    "name": "test-build-with-nested-circuit-json",
+    "version": "1.0.0",
+    "dependencies": {
+      "tscircuit": "latest"
+    }
+  }`,
+  )
+
+  await writeFile(
+    path.join(tmpDir, "tscircuit.config.json"),
+    JSON.stringify({ includeBoardFiles: ["**/circuit.json"] }),
+  )
+
+  await runCommand("tsci install")
+  const { stdout, exitCode } = await runCommand(
+    "tsci build --ci --concurrency 2",
+  )
+
+  expect(exitCode).toBe(0)
+  expect(stdout).toContain("Building 1 file(s) with concurrency 2...")
+  expect(stdout).toContain(
+    "Generating circuit JSON for generated/index/circuit.json...",
+  )
+  expect(stdout).toContain(
+    "Skipping transpilation because includeBoardFiles is configured and no library entrypoint was found.",
+  )
+
+  const builtFromPrebuiltPath = JSON.parse(
+    await readFile(
+      path.join(tmpDir, "dist", "generated", "index", "circuit.json"),
       "utf-8",
     ),
   )
