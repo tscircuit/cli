@@ -1,36 +1,40 @@
 #!/usr/bin/env node
 import { Command } from "commander"
-import { registerInit } from "./init/register"
-import { registerDev } from "./dev/register"
-import { registerAuthLogin } from "./auth/login/register"
-import { registerAuthLogout } from "./auth/logout/register"
-import { registerAuth } from "./auth/register"
-import { registerConfig } from "./config/register"
-import { registerConfigPrint } from "./config/print/register"
-import { registerClone } from "./clone/register"
+import { registerStaticAssetLoaders } from "lib/shared/register-static-asset-loaders"
 import { perfectCli } from "perfect-cli"
 import { getVersion } from "./../lib/getVersion"
-import { registerExport } from "./export/register"
-import { registerAuthPrintToken } from "./auth/print-token/register"
-import { registerAuthSetToken } from "./auth/set-token/register"
-import { registerAuthWhoami } from "./auth/whoami/register"
-import { registerPush } from "./push/register"
 import { registerAdd } from "./add/register"
-import { registerUpgradeCommand } from "./upgrade/register"
-import { registerConfigSet } from "./config/set/register"
-import { registerSearch } from "./search/register"
-import { registerImport } from "./import/register"
-import { registerRemove } from "./remove/register"
-import { registerBuild } from "./build/register"
-import { registerSnapshot } from "./snapshot/register"
-import { registerSetup } from "./setup/register"
+import { registerAuthLogin } from "./auth/login/register"
+import { registerAuthLogout } from "./auth/logout/register"
+import { registerAuthPrintToken } from "./auth/print-token/register"
+import { registerAuth } from "./auth/register"
+import { registerAuthSetToken } from "./auth/set-token/register"
 import { registerAuthSetupNpmrc } from "./auth/setup-npmrc/register"
+import { registerAuthWhoami } from "./auth/whoami/register"
+import { registerBuild } from "./build/register"
+import { registerCheckNetlist } from "./check/netlist/register"
+import { registerCheckPlacement } from "./check/placement/register"
+import { registerCheck } from "./check/register"
+import { registerCheckRouting } from "./check/routing/register"
+import { registerClone } from "./clone/register"
+import { registerConfigPrint } from "./config/print/register"
+import { registerConfig } from "./config/register"
+import { registerConfigSet } from "./config/set/register"
 import { registerConvert } from "./convert/register"
-import { registerSimulate } from "./simulate/register"
-import { registerInstall } from "./install/register"
-import { registerTranspile } from "./transpile/register"
-import { registerStaticAssetLoaders } from "lib/shared/register-static-asset-loaders"
+import { registerDev } from "./dev/register"
 import { registerDoctor } from "./doctor/register"
+import { registerExport } from "./export/register"
+import { registerImport } from "./import/register"
+import { registerInit } from "./init/register"
+import { registerInstall } from "./install/register"
+import { registerPush } from "./push/register"
+import { registerRemove } from "./remove/register"
+import { registerSearch } from "./search/register"
+import { registerSetup } from "./setup/register"
+import { registerSimulate } from "./simulate/register"
+import { registerSnapshot } from "./snapshot/register"
+import { registerTranspile } from "./transpile/register"
+import { registerUpgradeCommand } from "./upgrade/register"
 
 export const program = new Command()
 
@@ -66,6 +70,10 @@ registerSetup(program)
 registerInstall(program)
 registerUpgradeCommand(program)
 registerDoctor(program)
+registerCheck(program)
+registerCheckNetlist(program)
+registerCheckPlacement(program)
+registerCheckRouting(program)
 
 registerSearch(program)
 registerImport(program)
