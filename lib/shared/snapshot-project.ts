@@ -173,17 +173,17 @@ export const snapshotProject = async ({
               kleur.red(
                 `\n❌ Failed to generate 3D snapshot for ${relativeFilePath}:\n`,
               ) +
-              kleur.red(`   No pcb_board found in circuit JSON\n`) +
-              kleur.red(
-                `   Existing snapshot: ${path.relative(projectDir, snap3dPath)}\n`,
-              ),
+                kleur.red(`   No pcb_board found in circuit JSON\n`) +
+                kleur.red(
+                  `   Existing snapshot: ${path.relative(projectDir, snap3dPath)}\n`,
+                ),
             )
             return onExit(1)
           } else {
             // Skip with warning if no existing snapshot
             console.log(
               kleur.red(`⚠️  Skipping 3D snapshot for ${relativeFilePath}:`) +
-              kleur.red(` No pcb_board found in circuit JSON`),
+                kleur.red(` No pcb_board found in circuit JSON`),
             )
             png3d = null
           }
@@ -202,13 +202,13 @@ export const snapshotProject = async ({
     // Determine snapshot directory based on whether snapshotsDir is configured
     const snapDir = snapshotsDirName
       ? // If snapshotsDir is provided, everything goes in the snapshots directory
-      path.join(
-        projectDir,
-        snapshotsDirName,
-        path.relative(projectDir, path.dirname(file)),
-      )
+        path.join(
+          projectDir,
+          snapshotsDirName,
+          path.relative(projectDir, path.dirname(file)),
+        )
       : // If snapshotsDir isn't provided, we create a `__snapshots__` directory next to the file like jest
-      path.join(path.dirname(file), "__snapshots__")
+        path.join(path.dirname(file), "__snapshots__")
 
     fs.mkdirSync(snapDir, { recursive: true })
 
