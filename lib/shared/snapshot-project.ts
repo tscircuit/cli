@@ -1,3 +1,4 @@
+import type { AnyCircuitElement } from "circuit-json"
 import fs from "node:fs"
 import path from "node:path"
 import type { PlatformConfig } from "@tscircuit/props"
@@ -83,7 +84,7 @@ export const snapshotProject = async ({
   for (const file of boardFiles) {
     const relativeFilePath = path.relative(projectDir, file)
 
-    let circuitJson: any
+    let circuitJson: AnyCircuitElement[]
     let pcbSvg: string
     let schSvg: string
 
