@@ -4,6 +4,7 @@ import {
   CircuitJsonToKicadPcbConverter,
   CircuitJsonToKicadSchConverter,
 } from "circuit-json-to-kicad"
+import type { AnyCircuitElement } from "circuit-json"
 
 type GenerateKicadProjectOptions = {
   circuitJson: unknown[]
@@ -54,13 +55,13 @@ export const generateKicadProject = async ({
   writeFiles,
 }: GenerateKicadProjectOptions): Promise<GeneratedKicadProject> => {
   const schConverter = new CircuitJsonToKicadSchConverter(
-    circuitJson as unknown as any[],
+    circuitJson as AnyCircuitElement[],
   )
   schConverter.runUntilFinished()
   const schContent = schConverter.getOutputString()
 
   const pcbConverter = new CircuitJsonToKicadPcbConverter(
-    circuitJson as unknown as any[],
+    circuitJson as AnyCircuitElement[],
   )
   pcbConverter.runUntilFinished()
   const pcbContent = pcbConverter.getOutputString()
