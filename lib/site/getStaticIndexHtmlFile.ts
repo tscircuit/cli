@@ -1,3 +1,5 @@
+import { loadingStateUi } from "./loadingStateUi"
+
 export interface StaticBuildFileReference {
   filePath: string
   fileStaticAssetUrl: string
@@ -35,12 +37,12 @@ export const getStaticIndexHtmlFile = ({
     <head>
       <link rel="icon" type="image/png" href="https://github.com/tscircuit.png">
       <meta charset="UTF-8" />
-      <title>tscircuit</title>
+      <title>${packageName || "tscircuit"}</title>
       <meta name="viewport" content="width=device-width, initial-scale=1.0">
     </head>
     <body>
 ${scriptBlock}      <script src="https://cdn.tailwindcss.com"></script>
-      <div id="root">loading...</div>
+      <div id="root">${loadingStateUi}</div>
       <script>
       globalThis.process = { env: { NODE_ENV: "production" } }
       </script>
