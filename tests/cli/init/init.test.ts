@@ -7,7 +7,7 @@ test("init command installs @types/react and passes type-checking", async () => 
   const { tmpDir, runCommand } = await getCliTestFixture()
 
   const projectDir = "project-dir"
-  const { stdout } = await runCommand(`tsci init ${projectDir}`)
+  const { stdout } = await runCommand(`tsci init ${projectDir} --no-install`)
 
   const pkgJsonPath = join(tmpDir, projectDir, "package.json")
   const pkgJson = await Bun.file(pkgJsonPath).json()
@@ -32,6 +32,16 @@ test("init command installs @types/react and passes type-checking", async () => 
   expect(tsconfig?.compilerOptions?.types).toEqual(
     expect.arrayContaining(["tscircuit"]),
   )
+
+  const tscircuitConfigPath = join(tmpDir, projectDir, "tscircuit.config.json")
+  const tscircuitConfigExists = await Bun.file(tscircuitConfigPath).exists()
+  expect(tscircuitConfigExists).toBeTrue()
+
+  const tscircuitConfig = await Bun.file(tscircuitConfigPath).json()
+  expect(tscircuitConfig).toMatchObject({
+    $schema: expect.any(String),
+    includeBoardFiles: ["**/**/*.circuit.json", "**/circuit.json"],
+  })
 
   try {
     const typeCheckResult = execSync("bunx tsc --noEmit", {
