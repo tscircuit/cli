@@ -39,6 +39,8 @@ type SnapshotOptions = {
   forceUpdate?: boolean
   /** Optional platform configuration overrides */
   platformConfig?: PlatformConfig
+  /** Create visual diff artifacts when snapshots mismatch */
+  createDiff?: boolean
   onExit?: (code: number) => void
   onError?: (message: string) => void
   onSuccess?: (message: string) => void
@@ -56,6 +58,7 @@ export const snapshotProject = async ({
   onError = (msg) => console.error(msg),
   onSuccess = (msg) => console.log(msg),
   platformConfig,
+  createDiff = false,
 }: SnapshotOptions = {}) => {
   const projectDir = process.cwd()
   const ignore = [
@@ -280,6 +283,7 @@ export const snapshotProject = async ({
         oldContentBuffer,
         newContentBuffer,
         diffPath,
+        createDiff,
       )
 
       if (update) {
@@ -291,7 +295,9 @@ export const snapshotProject = async ({
           didUpdate = true
         }
       } else if (!equal) {
-        mismatches.push(`${snapPath} (diff: ${diffPath})`)
+        mismatches.push(
+          createDiff ? `${snapPath} (diff: ${diffPath})` : snapPath,
+        )
       } else {
         console.log("✅", kleur.gray(path.relative(projectDir, snapPath)))
       }

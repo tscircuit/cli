@@ -17,6 +17,8 @@ export const registerSnapshot = (program: Command) => {
     .option("--pcb-only", "Generate only PCB snapshots")
     .option("--schematic-only", "Generate only schematic snapshots")
     .option("--disable-parts-engine", "Disable the parts engine")
+    .option("--ci", "Enable CI mode with snapshot diff artifacts")
+    .option("--test", "Enable test mode with snapshot diff artifacts")
     .action(
       async (
         target: string | undefined,
@@ -27,6 +29,8 @@ export const registerSnapshot = (program: Command) => {
           schematicOnly?: boolean
           forceUpdate?: boolean
           disablePartsEngine?: boolean
+          ci?: boolean
+          test?: boolean
         },
       ) => {
         await snapshotProject({
@@ -39,6 +43,7 @@ export const registerSnapshot = (program: Command) => {
           platformConfig: options.disablePartsEngine
             ? { partsEngineDisabled: true }
             : undefined,
+          createDiff: (options.ci ?? false) || (options.test ?? false),
           onExit: (code) => process.exit(code),
           onError: (msg) => console.error(msg),
           onSuccess: (msg) => console.log(msg),

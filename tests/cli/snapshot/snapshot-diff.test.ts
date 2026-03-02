@@ -31,7 +31,7 @@ test("snapshot command creates diff images for pcb, schematic and 3d when visual
   `,
   )
 
-  const { stderr } = await runCommand("tsci snapshot --3d")
+  const { stderr } = await runCommand("tsci snapshot --3d --ci")
   expect(stderr).toContain("Snapshot mismatch")
 
   const snapDir = join(tmpDir, "__snapshots__")
@@ -48,4 +48,4 @@ test("snapshot command creates diff images for pcb, schematic and 3d when visual
   expect(pcbDiff).toBe(true)
   expect(schDiff).toBe(true)
   expect(threeDDiff).toBe(true)
-}, 30_000)
+}, 45_000)

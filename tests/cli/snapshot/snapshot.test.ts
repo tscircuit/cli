@@ -420,6 +420,49 @@ test("visual comparison works for pcb and schematic snapshots", async () => {
   expect(schAfter).toBe(schBefore)
 }, 30_000)
 
+test("snapshot command does not create diff files by default when visuals change", async () => {
+  const { tmpDir, runCommand } = await getCliTestFixture()
+
+  await Bun.write(
+    join(tmpDir, "mismatch-no-diff.board.tsx"),
+    `
+    export const MismatchNoDiff = () => (
+      <board width="10mm" height="10mm">
+        <chip name="U1" footprint="soic8" />
+      </board>
+    )
+  `,
+  )
+
+  await runCommand("tsci snapshot --update")
+
+  await Bun.write(
+    join(tmpDir, "mismatch-no-diff.board.tsx"),
+    `
+    export const MismatchNoDiff = () => (
+      <board width="10mm" height="10mm">
+        <chip name="U1" footprint="soic8" />
+        <chip name="U2" footprint="soic8" schX={-3} pcbX={-3} />
+      </board>
+    )
+  `,
+  )
+
+  const { stderr } = await runCommand("tsci snapshot")
+  expect(stderr).toContain("Snapshot mismatch")
+  expect(stderr).not.toContain(".diff")
+
+  const snapDir = join(tmpDir, "__snapshots__")
+  const pcbDiff = await Bun.file(
+    join(snapDir, "mismatch-no-diff.board-pcb.diff.svg"),
+  ).exists()
+  const schDiff = await Bun.file(
+    join(snapDir, "mismatch-no-diff.board-schematic.diff.svg"),
+  ).exists()
+
+  expect(pcbDiff).toBe(false)
+  expect(schDiff).toBe(false)
+}, 30_000)
 test("snapshot command creates diff files when visuals change", async () => {
   const { tmpDir, runCommand } = await getCliTestFixture()
 
@@ -448,7 +491,7 @@ test("snapshot command creates diff files when visuals change", async () => {
   `,
   )
 
-  const { stderr } = await runCommand("tsci snapshot")
+  const { stderr } = await runCommand("tsci snapshot --test")
   expect(stderr).toContain("Snapshot mismatch")
 
   const snapDir = join(tmpDir, "__snapshots__")

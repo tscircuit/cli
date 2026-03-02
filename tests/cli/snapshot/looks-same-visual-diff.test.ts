@@ -37,7 +37,7 @@ test("CLI detects visual change when another chip is added", async () => {
   fs.writeFileSync(snapPath, mutatedSvg)
 
   // Run snapshot again, expect visual diff detected
-  const { stdout, stderr } = await runCommand("tsci snapshot")
+  const { stdout, stderr } = await runCommand("tsci snapshot --test")
   expect(stdout).not.toContain("All snapshots match")
   expect(stderr).toContain(".diff.svg")
 
