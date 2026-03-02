@@ -114,7 +114,7 @@ export default () => (
 
         if (saveProjectConfig(null, projectDir)) {
           console.log(
-            "Updated tscircuit.config.json with mainEntrypoint: 'index.circuit.tsx'",
+            "Created tscircuit.config.json with schema",
           )
         }
 
