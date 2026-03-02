@@ -81,6 +81,14 @@ export const snapshotProject = async ({
   const mismatches: string[] = []
   let didUpdate = false
 
+  const isCircuitJsonFile = (filePath: string) => {
+    const normalizedPath = filePath.toLowerCase().replaceAll("\\", "/")
+    return (
+      normalizedPath.endsWith(".circuit.json") ||
+      normalizedPath.endsWith("/circuit.json")
+    )
+  }
+
   for (const file of boardFiles) {
     const relativeFilePath = path.relative(projectDir, file)
 
@@ -89,14 +97,19 @@ export const snapshotProject = async ({
     let schSvg: string
 
     try {
-      // Get complete platform config with kicad_mod support
-      const completePlatformConfig = getCompletePlatformConfig(platformConfig)
+      if (isCircuitJsonFile(file)) {
+        const parsed = JSON.parse(fs.readFileSync(file, "utf-8"))
+        circuitJson = Array.isArray(parsed) ? parsed : []
+      } else {
+        // Get complete platform config with kicad_mod support
+        const completePlatformConfig = getCompletePlatformConfig(platformConfig)
 
-      const result = await generateCircuitJson({
-        filePath: file,
-        platformConfig: completePlatformConfig,
-      })
-      circuitJson = result.circuitJson
+        const result = await generateCircuitJson({
+          filePath: file,
+          platformConfig: completePlatformConfig,
+        })
+        circuitJson = result.circuitJson
+      }
     } catch (error) {
       const errorMessage =
         error instanceof Error ? error.message : String(error)
@@ -163,7 +176,7 @@ export const snapshotProject = async ({
           const snapDir = snapshotsDirName
             ? path.join(projectDir, snapshotsDirName, relativeDir)
             : path.join(fileDir, "__snapshots__")
-          const base = path.basename(file).replace(/\.tsx$/, "")
+          const base = path.basename(file).replace(/\.[^.]+$/, "")
           const snap3dPath = path.join(snapDir, `${base}-3d.snap.png`)
           const existing3dSnapshot = fs.existsSync(snap3dPath)
 
@@ -212,7 +225,7 @@ export const snapshotProject = async ({
 
     fs.mkdirSync(snapDir, { recursive: true })
 
-    const base = path.basename(file).replace(/\.tsx$/, "")
+    const base = path.basename(file).replace(/\.[^.]+$/, "")
     const snapshots: Array<
       | { type: "pcb" | "schematic"; content: string; isBinary: false }
       | { type: "3d"; content: Buffer; isBinary: true }

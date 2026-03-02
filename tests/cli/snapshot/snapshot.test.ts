@@ -125,6 +125,41 @@ test("snapshot command snapshots circuit files", async () => {
   expect(extraSch).toBe(true)
 }, 30_000)
 
+test("snapshot command supports direct circuit.json files", async () => {
+  const { tmpDir, runCommand } = await getCliTestFixture()
+
+  await Bun.write(
+    join(tmpDir, "circuit.json"),
+    JSON.stringify([
+      {
+        type: "pcb_board",
+        center: { x: 0, y: 0 },
+        width: 10,
+        height: 10,
+        thickness: 1.6,
+        num_layers: 2,
+      },
+    ]),
+  )
+
+  const { stdout } = await runCommand("tsci snapshot circuit.json --update")
+  expect(stdout).toContain("Created snapshots")
+  expect(stdout).toContain(
+    `✅ ${join("__snapshots__", "circuit-pcb.snap.svg")}`,
+  )
+  expect(stdout).toContain(
+    `✅ ${join("__snapshots__", "circuit-schematic.snap.svg")}`,
+  )
+
+  const snapDir = join(tmpDir, "__snapshots__")
+  expect(await Bun.file(join(snapDir, "circuit-pcb.snap.svg")).exists()).toBe(
+    true,
+  )
+  expect(
+    await Bun.file(join(snapDir, "circuit-schematic.snap.svg")).exists(),
+  ).toBe(true)
+}, 30_000)
+
 test("snapshot respects includeBoardFiles config", async () => {
   const { tmpDir, runCommand } = await getCliTestFixture()
 
