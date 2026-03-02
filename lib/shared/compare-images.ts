@@ -5,13 +5,14 @@ export const compareAndCreateDiff = async (
   buffer1: Buffer,
   buffer2: Buffer,
   diffPath: string,
+  createDiff = true,
 ): Promise<{ equal: boolean }> => {
   const { equal } = await looksSame(buffer1, buffer2, {
     strict: false,
     tolerance: 2,
   })
 
-  if (!equal) {
+  if (!equal && createDiff) {
     if (diffPath.endsWith(".png")) {
       await looksSame.createDiff({
         reference: buffer1,
