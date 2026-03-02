@@ -6,6 +6,7 @@ import {
   convertCircuitJsonToGltf,
   getBestCameraPosition,
 } from "circuit-json-to-gltf"
+import { type CameraPreset, applyCameraPreset } from "lib/shared/camera-presets"
 import {
   convertCircuitJsonToPcbSvg,
   convertCircuitJsonToSchematicSvg,
@@ -41,6 +42,8 @@ type SnapshotOptions = {
   platformConfig?: PlatformConfig
   /** Create visual diff artifacts when snapshots mismatch */
   createDiff?: boolean
+  /** Camera preset name for 3D snapshots (implies --3d) */
+  cameraPreset?: CameraPreset
   onExit?: (code: number) => void
   onError?: (message: string) => void
   onSuccess?: (message: string) => void
@@ -59,7 +62,12 @@ export const snapshotProject = async ({
   onSuccess = (msg) => console.log(msg),
   platformConfig,
   createDiff = false,
+  cameraPreset,
 }: SnapshotOptions = {}) => {
+  // --camera-preset implies --3d
+  if (cameraPreset) {
+    threeD = true
+  }
   const projectDir = process.cwd()
   const ignore = [
     ...DEFAULT_IGNORED_PATTERNS,
@@ -162,7 +170,10 @@ export const snapshotProject = async ({
           )
         }
 
-        const cameraOptions = getBestCameraPosition(circuitJson)
+        let cameraOptions = getBestCameraPosition(circuitJson)
+        if (cameraPreset) {
+          cameraOptions = applyCameraPreset(cameraPreset, cameraOptions)
+        }
 
         png3d = await renderGLTFToPNGBufferFromGLBBuffer(
           glbBuffer,
