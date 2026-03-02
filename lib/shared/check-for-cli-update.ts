@@ -13,9 +13,6 @@ export const currentCliVersion = () =>
   program?.version() ?? semver.inc(pkgVersion, "patch") ?? pkgVersion
 
 export const getLatestVersion = async () => {
-  if (process.env.TSCI_FAKE_LATEST_VERSION) {
-    return process.env.TSCI_FAKE_LATEST_VERSION
-  }
   const { version: latestCliVersion } = await ky
     .get<{ version: string }>(
       "https://registry.npmjs.org/@tscircuit/cli/latest",
@@ -27,22 +24,12 @@ export const getLatestVersion = async () => {
 
 export const checkForTsciUpdates = async () => {
   if (process.env.TSCI_SKIP_CLI_UPDATE === "true") return false
+  if (!shouldBeInteractive()) return false
 
   const latestCliVersion = await getLatestVersion()
   if (!latestCliVersion) return false
 
   if (semver.gt(latestCliVersion, currentCliVersion())) {
-    if (!shouldBeInteractive()) {
-      const installCommand = getGlobalDepsInstallCommand(
-        getPackageManager().name,
-        "@tscircuit/cli@latest",
-      )
-      console.log(
-        `A new version of tsci is available (${currentCliVersion()} → ${latestCliVersion}). Run \`${installCommand}\` to update.`,
-      )
-      return false
-    }
-
     const { userWantsToUpdate } = await prompts({
       type: "confirm",
       name: "userWantsToUpdate",

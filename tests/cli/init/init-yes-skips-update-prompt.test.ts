@@ -1,22 +1,18 @@
 import { expect, test } from "bun:test"
 import { getCliTestFixture } from "../../fixtures/get-cli-test-fixture"
 
-test("init -y skips update prompt when newer version is available", async () => {
+test("init -y skips update check entirely", async () => {
   const { runCommand } = await getCliTestFixture()
 
   const projectDir = "test-project"
   const { stdout, exitCode } = await runCommand(
     `tsci init ${projectDir} -y --no-install`,
-    { env: { TSCI_FAKE_LATEST_VERSION: "99.99.99" } },
   )
 
-  // Should not show interactive update prompt or attempt auto-update
+  // Should not show any update-related output
   expect(stdout).not.toContain("Would you like to update now?")
   expect(stdout).not.toContain("Updating tsci using:")
-
-  // Should show non-blocking update note
-  expect(stdout).toContain("A new version of tsci is available")
-  expect(stdout).toContain("to update.")
+  expect(stdout).not.toContain("new version")
 
   // Should complete init successfully
   expect(stdout).toContain("Initialization complete!")
