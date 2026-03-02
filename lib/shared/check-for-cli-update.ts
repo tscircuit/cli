@@ -25,16 +25,14 @@ export const getLatestVersion = async () => {
   return latestCliVersion
 }
 
-export const checkForTsciUpdates = async (opts?: {
-  nonInteractive?: boolean
-}) => {
+export const checkForTsciUpdates = async () => {
   if (process.env.TSCI_SKIP_CLI_UPDATE === "true") return false
 
   const latestCliVersion = await getLatestVersion()
   if (!latestCliVersion) return false
 
   if (semver.gt(latestCliVersion, currentCliVersion())) {
-    if (opts?.nonInteractive || !shouldBeInteractive()) {
+    if (!shouldBeInteractive()) {
       const installCommand = getGlobalDepsInstallCommand(
         getPackageManager().name,
         "@tscircuit/cli@latest",
