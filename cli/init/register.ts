@@ -32,7 +32,7 @@ export const registerInit = (program: Command) => {
         directory?: string,
         options?: { yes?: boolean; install?: boolean },
       ) => {
-        await checkForTsciUpdates()
+        await checkForTsciUpdates({ nonInteractive: options?.yes })
 
         if (!directory && !options?.yes) {
           const { continueInCurrentDirectory } = await prompts({
