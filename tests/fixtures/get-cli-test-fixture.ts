@@ -13,7 +13,6 @@ export interface CliTestFixture {
   tmpDir: string
   runCommand: (
     command: string,
-    runOpts?: { env?: Record<string, string> },
   ) => Promise<{ stdout: string; stderr: string; exitCode: number }>
   registryServer: any
   registryDb: DbClient
@@ -81,10 +80,7 @@ export async function getCliTestFixture(
   }
 
   // Create command runner
-  const runCommand = async (
-    command: string,
-    runOpts?: { env?: Record<string, string> },
-  ) => {
+  const runCommand = async (command: string) => {
     const args = command.split(" ")
     if (args[0] !== "tsci") {
       throw new Error(
@@ -100,7 +96,6 @@ export async function getCliTestFixture(
       FORCE_COLOR: "0",
       NODE_ENV: "test",
       TSCIRCUIT_CONFIG_DIR: testConfigDir,
-      ...runOpts?.env,
     }
 
     let stdout = ""
