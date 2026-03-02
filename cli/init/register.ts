@@ -113,9 +113,7 @@ export default () => (
         )
 
         if (saveProjectConfig(null, projectDir)) {
-          console.log(
-            "Created tscircuit.config.json with schema",
-          )
+          console.log("Created tscircuit.config.json with schema")
         }
 
         writeFileIfNotExists(
