@@ -113,9 +113,7 @@ export default () => (
         )
 
         if (saveProjectConfig(null, projectDir)) {
-          console.log(
-            "Updated tscircuit.config.json with mainEntrypoint: 'index.circuit.tsx'",
-          )
+          console.log("Created tscircuit.config.json with schema")
         }
 
         writeFileIfNotExists(
