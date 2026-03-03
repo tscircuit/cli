@@ -7,6 +7,7 @@ import semver from "semver"
 import { version as pkgVersion } from "../../package.json"
 import kleur from "kleur"
 import { prompts } from "lib/utils/prompts"
+import { shouldBeInteractive } from "lib/utils/should-be-interactive"
 
 export const currentCliVersion = () =>
   program?.version() ?? semver.inc(pkgVersion, "patch") ?? pkgVersion
@@ -23,6 +24,7 @@ export const getLatestVersion = async () => {
 
 export const checkForTsciUpdates = async () => {
   if (process.env.TSCI_SKIP_CLI_UPDATE === "true") return false
+  if (!shouldBeInteractive()) return false
 
   const latestCliVersion = await getLatestVersion()
   if (!latestCliVersion) return false
