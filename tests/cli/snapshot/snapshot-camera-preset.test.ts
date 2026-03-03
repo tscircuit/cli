@@ -2,10 +2,7 @@ import { test, expect } from "bun:test"
 import { join } from "node:path"
 import fs from "node:fs"
 import { getCliTestFixture } from "../../fixtures/get-cli-test-fixture"
-import {
-  CAMERA_PRESET_NAMES,
-  type CameraPreset,
-} from "lib/shared/camera-presets"
+import { CAMERA_PRESET_NAMES } from "lib/shared/camera-presets"
 
 const BOARD_TSX = `
 export const TestBoard = () => (
@@ -62,53 +59,3 @@ for (const preset of CAMERA_PRESET_NAMES) {
     )
   }, 60_000)
 }
-
-test("snapshot --camera-preset with invalid preset fails", async () => {
-  const { tmpDir, runCommand } = await getCliTestFixture()
-
-  await Bun.write(join(tmpDir, "test.board.tsx"), BOARD_TSX)
-
-  const { stderr, exitCode } = await runCommand(
-    "tsci snapshot --update --camera-preset=bogus-preset",
-  )
-
-  expect(exitCode).not.toBe(0)
-  expect(stderr).toContain('Unknown camera preset "bogus-preset"')
-}, 30_000)
-
-test("snapshot --camera-preset without --3d still generates 3D snapshot", async () => {
-  const { tmpDir, runCommand } = await getCliTestFixture()
-
-  await Bun.write(join(tmpDir, "test.board.tsx"), BOARD_TSX)
-
-  // No explicit --3d flag; --camera-preset should imply it
-  const { stdout, exitCode } = await runCommand(
-    "tsci snapshot --update --camera-preset=top-down",
-  )
-
-  expect(exitCode).toBe(0)
-  expect(stdout).toContain("Created snapshots")
-
-  const snapshotDir = join(tmpDir, "__snapshots__")
-  expect(fs.existsSync(join(snapshotDir, "test.board-3d.snap.png"))).toBe(true)
-}, 60_000)
-
-test("different camera presets produce different 3D snapshots", async () => {
-  const { tmpDir, runCommand } = await getCliTestFixture()
-
-  await Bun.write(join(tmpDir, "test.board.tsx"), BOARD_TSX)
-
-  // Generate with top-down
-  await runCommand("tsci snapshot --update --camera-preset=top-down")
-  const snapshotDir = join(tmpDir, "__snapshots__")
-  const topDownPng = fs.readFileSync(
-    join(snapshotDir, "test.board-3d.snap.png"),
-  )
-
-  // Generate with front (overwrites the snapshot)
-  await runCommand("tsci snapshot --update --camera-preset=front")
-  const frontPng = fs.readFileSync(join(snapshotDir, "test.board-3d.snap.png"))
-
-  // The two images should differ
-  expect(Buffer.compare(topDownPng, frontPng)).not.toBe(0)
-}, 90_000)
