@@ -51,7 +51,7 @@ function repositionCamera(
 export const CAMERA_PRESETS = {
   /** Directly above the board looking straight down */
   "top-down": (cam: CameraResult): CameraResult =>
-    repositionCamera(cam, [0.001, 1, -0.001]),
+    repositionCamera(cam, [0.0001, 1, -0.01]),
 
   /** Angled view from top-left corner */
   "top-left-corner": (cam: CameraResult): CameraResult =>
