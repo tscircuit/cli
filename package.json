@@ -1,6 +1,6 @@
 {
   "name": "@tscircuit/cli",
-  "version": "0.1.1018",
+  "version": "0.1.1020",
   "main": "dist/cli/main.js",
   "exports": {
     ".": "./dist/cli/main.js",
@@ -68,10 +68,6 @@
   },
   "peerDependencies": {
     "tscircuit": "*"
-  },
-  "exports": {
-    ".": "./dist/cli/main.js",
-    "./lib": "./dist/lib/index.js"
   },
   "bin": {
     "tscircuit-cli": "./cli/entrypoint.js"
