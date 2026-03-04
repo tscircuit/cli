@@ -21,13 +21,15 @@ const isPortAvailable = (port: number): Promise<boolean> => {
 
 const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms))
 
+const DEFAULT_PORT_TIMEOUT_MS = 10_000
+
 const findAvailablePort = async ({
   preferredPort,
-  timeoutMs,
+  timeoutMs = DEFAULT_PORT_TIMEOUT_MS,
   verbose,
 }: {
   preferredPort: number
-  timeoutMs: number
+  timeoutMs?: number
   verbose: boolean
 }): Promise<{ port: number; attempts: number }> => {
   let port = preferredPort
@@ -49,7 +51,7 @@ const findAvailablePort = async ({
 
     if (Date.now() - start >= timeoutMs) {
       throw new Error(
-        `Unable to find an open port within ${timeoutMs}ms starting from ${preferredPort}. Last tried port ${port}. Try specifying a different --port or increasing --port-timeout.`,
+        `Unable to find an open port within ${timeoutMs}ms starting from ${preferredPort}. Last tried port ${port}. Try specifying a different --port.`,
       )
     }
 
@@ -112,11 +114,6 @@ export const registerDev = (program: Command) => {
     .description("Start development server for a package")
     .argument("[file]", "Path to the package file or directory")
     .option("-p, --port <number>", "Port to run server on", "3020")
-    .option(
-      "--port-timeout <ms>",
-      "Maximum time in ms to search for an open port",
-      "10000",
-    )
     .option("--kicad-pcm", "Enable KiCad PCM proxy server at /pcm/*")
     .option("-v, --verbose", "Enable verbose debug logging")
     .action(
@@ -124,13 +121,11 @@ export const registerDev = (program: Command) => {
         file: string,
         options: {
           port: string
-          portTimeout?: string
           kicadPcm?: boolean
           verbose?: boolean
         },
       ) => {
         let port = parseInt(options.port)
-        const portTimeout = parseInt(options.portTimeout ?? "10000")
         const startTime = Date.now()
 
         if (options.verbose) {
@@ -139,7 +134,7 @@ export const registerDev = (program: Command) => {
 
         const { port: resolvedPort } = await findAvailablePort({
           preferredPort: port,
-          timeoutMs: portTimeout,
+          timeoutMs: DEFAULT_PORT_TIMEOUT_MS,
           verbose: !!options.verbose,
         })
         port = resolvedPort
