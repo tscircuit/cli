@@ -59,7 +59,7 @@ export const CAMERA_PRESETS = {
 
   /** Top-down with reduced perspective (pseudo-ortho) */
   "top-down-ortho": (cam: CameraResult): CameraResult => {
-    const desiredFov = 5
+    const desiredFov = 3
     const dir: [number, number, number] = [0.00000001, 1, -0.001]
 
     const origDist = distance(cam.camPos, cam.lookAt)
