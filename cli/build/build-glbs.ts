@@ -5,6 +5,7 @@ import { convertCircuitJsonToGltf } from "circuit-json-to-gltf"
 import { getCircuitJsonToGltfOptions } from "lib/shared/get-circuit-json-to-gltf-options"
 import type { BuildFileResult } from "./build-preview-images"
 import { convertModelUrlsToFileUrls } from "./convert-model-urls-to-file-urls"
+import { buildGlbsWithWorkerPool } from "./worker-pool"
 
 const viewToArrayBuffer = (view: ArrayBufferView): ArrayBuffer => {
   const copy = new Uint8Array(view.byteLength)
@@ -33,14 +34,54 @@ const normalizeToUint8Array = (value: unknown): Uint8Array => {
 export const buildGlbs = async ({
   builtFiles,
   distDir,
+  projectDir,
+  concurrency,
 }: {
   builtFiles: BuildFileResult[]
   distDir: string
+  projectDir: string
+  concurrency: number
 }) => {
   const successfulBuilds = builtFiles.filter((file) => file.ok)
 
   if (successfulBuilds.length === 0) {
     console.warn("No successful build output available for GLB generation.")
+    return
+  }
+
+  if (concurrency > 1) {
+    const filesToConvert = successfulBuilds.map((build) => {
+      const outputDir = path.dirname(build.outputPath)
+      return {
+        circuitJsonPath: build.outputPath,
+        glbOutputPath: path.join(outputDir, "3d.glb"),
+      }
+    })
+
+    await buildGlbsWithWorkerPool({
+      files: filesToConvert,
+      projectDir,
+      concurrency,
+      onLog: (lines) => {
+        for (const line of lines) {
+          console.log(line)
+        }
+      },
+      onJobComplete: async (result) => {
+        const outputDir = path.dirname(result.circuitJsonPath)
+        const prefixRelative = path.relative(distDir, outputDir) || "."
+        const prefix = prefixRelative === "." ? "" : `[${prefixRelative}] `
+
+        if (result.ok) {
+          console.log(`${prefix}Written 3d.glb`)
+        } else {
+          console.error(
+            `${prefix}Failed to generate GLB:${result.error ? ` ${result.error}` : ""}`,
+          )
+        }
+      },
+    })
+
     return
   }
 
