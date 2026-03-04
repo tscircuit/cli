@@ -1,11 +1,11 @@
-import * as http from "node:http"
 import * as fs from "node:fs"
-import { getNodeHandler } from "winterspec/adapters/node"
-import pkg from "../../package.json"
+import * as http from "node:http"
 // @ts-ignore
 import runFrameStandaloneBundleContent from "@tscircuit/runframe/standalone" with {
   type: "text",
 }
+import { getNodeHandler } from "winterspec/adapters/node"
+import pkg from "../../package.json"
 
 // @ts-ignore
 import winterspecBundle from "@tscircuit/file-server/dist/bundle.js"
@@ -34,7 +34,77 @@ export const createHttpServer = async ({
       : null
 
   const server = http.createServer(async (req, res) => {
-    const url = new URL(req.url!, `http://${req.headers.host}`)
+    const requestHost = req.headers.host ?? `localhost:${port}`
+    const url = new URL(req.url!, `http://${requestHost}`)
+
+    if (
+      url.pathname === "/api/files/upsert-multipart" &&
+      req.method === "POST"
+    ) {
+      try {
+        const request = new Request(url.toString(), {
+          method: req.method,
+          headers: req.headers as HeadersInit,
+          body: req as unknown as BodyInit,
+          duplex: "half",
+        } as RequestInit)
+
+        const formData = await request.formData()
+        const filePath = formData.get("file_path")?.toString()
+        const initiator = formData.get("initiator")?.toString()
+        const binaryFile = formData.get("binary_file")
+
+        if (!filePath || !(binaryFile instanceof Blob)) {
+          res.writeHead(400, { "Content-Type": "application/json" })
+          res.end(
+            JSON.stringify({
+              error:
+                "Missing required multipart fields: file_path, binary_file",
+            }),
+          )
+          return
+        }
+
+        const binaryContentB64 = Buffer.from(
+          await binaryFile.arrayBuffer(),
+        ).toString("base64")
+
+        const upstreamResponse = await fetch(
+          `http://${requestHost}/api/files/upsert`,
+          {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify({
+              file_path: filePath,
+              initiator,
+              binary_content_b64: binaryContentB64,
+            }),
+          },
+        )
+
+        const responseText = await upstreamResponse.text()
+        res.writeHead(upstreamResponse.status, {
+          "Content-Type":
+            upstreamResponse.headers.get("content-type") ?? "application/json",
+        })
+        res.end(responseText)
+        return
+      } catch (error) {
+        res.writeHead(500, { "Content-Type": "application/json" })
+        res.end(
+          JSON.stringify({
+            error_code: "MULTIPART_UPLOAD_FAILED",
+            message:
+              error instanceof Error
+                ? error.message
+                : "Failed to process multipart upload",
+          }),
+        )
+        return
+      }
+    }
 
     if (url.pathname === "/standalone.min.js") {
       const standaloneFilePath = process.env.RUNFRAME_STANDALONE_FILE_PATH
