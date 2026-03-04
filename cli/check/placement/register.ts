@@ -44,7 +44,8 @@ const getCircuitJsonForPlacementCheck = async (filePath: string) => {
   }
 
   const completePlatformConfig = getCompletePlatformConfig({
-    pcbDisabled: true,
+    pcbDisabled: false,
+    routingDisabled: true,
   } satisfies PlatformConfig)
 
   const { circuitJson } = await generateCircuitJson({
