@@ -17,6 +17,12 @@ type CameraResult = {
   fov: number
 }
 
+function normalizeDir(dir: [number, number, number]): [number, number, number] {
+  const len = Math.sqrt(dir[0] ** 2 + dir[1] ** 2 + dir[2] ** 2)
+  if (len === 0) return [0, 1, 0]
+  return [dir[0] / len, dir[1] / len, dir[2] / len]
+}
+
 function distance(
   a: readonly [number, number, number],
   b: readonly [number, number, number],
@@ -31,12 +37,10 @@ function distance(
 function repositionCamera(
   cam: CameraResult,
   dir: [number, number, number],
+  distOverride?: number,
 ): CameraResult {
-  const dist = distance(cam.camPos, cam.lookAt)
-  const len = Math.sqrt(dir[0] ** 2 + dir[1] ** 2 + dir[2] ** 2)
-  const nx = dir[0] / len
-  const ny = dir[1] / len
-  const nz = dir[2] / len
+  const dist = distOverride ?? distance(cam.camPos, cam.lookAt)
+  const [nx, ny, nz] = normalizeDir(dir)
   return {
     camPos: [
       cam.lookAt[0] + nx * dist,
@@ -51,7 +55,29 @@ function repositionCamera(
 export const CAMERA_PRESETS = {
   /** Directly above the board looking straight down */
   "top-down": (cam: CameraResult): CameraResult =>
-    repositionCamera(cam, [0.0001, 1, -0.01]),
+    repositionCamera(cam, [0.00000001, 1, -0.001]),
+
+  /** Top-down with reduced perspective (pseudo-ortho) */
+  "top-down-ortho": (cam: CameraResult): CameraResult => {
+    const desiredFov = 3
+    const dir: [number, number, number] = [0.00000001, 1, -0.001]
+
+    const origDist = distance(cam.camPos, cam.lookAt)
+
+    const origFovRad = Math.max((cam.fov * Math.PI) / 180, 0.01)
+    const desiredFovRad = Math.max((desiredFov * Math.PI) / 180, 0.01)
+    const tanOrig = Math.tan(origFovRad / 2)
+    const tanDesired = Math.max(Math.tan(desiredFovRad / 2), 0.0001)
+    const distScale =
+      Number.isFinite(tanOrig / tanDesired) && tanOrig > 0
+        ? tanOrig / tanDesired
+        : 1
+    const newDist = origDist * distScale
+
+    const repositioned = repositionCamera(cam, dir, newDist)
+
+    return { ...repositioned, fov: desiredFov }
+  },
 
   /** Angled view from top-left corner */
   "top-left-corner": (cam: CameraResult): CameraResult =>
