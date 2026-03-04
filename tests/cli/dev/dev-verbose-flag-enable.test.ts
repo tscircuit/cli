@@ -2,10 +2,11 @@ import { expect, test } from "bun:test"
 import Debug from "debug"
 import { enableDevVerboseLoggingForTest } from "cli/dev/register"
 
-const getDebugNamespaces = () => (process.env.DEBUG ?? "")
-  .split(/[\s,]+/)
-  .map((ns) => ns.trim())
-  .filter(Boolean)
+const getDebugNamespaces = () =>
+  (process.env.DEBUG ?? "")
+    .split(/[\s,]+/)
+    .map((ns) => ns.trim())
+    .filter(Boolean)
 
 test("verbose helper enables tscircuit devserver namespace", () => {
   const originalEnv = process.env.DEBUG
