@@ -1,40 +1,37 @@
-import ky, { TimeoutError } from "ky"
-import type { FileServerRoutes } from "lib/file-server/FileServerRoutes"
-import { createHttpServer } from "lib/server/createHttpServer"
-import { EventsWatcher } from "lib/server/EventsWatcher"
-import type http from "node:http"
-import type { TypedKyInstance } from "typed-ky"
-import path from "node:path"
 import fs from "node:fs"
-import type {
-  FileUpdatedEvent,
-  FileDeletedEvent,
-} from "../../lib/file-server/FileServerEvent"
+import type http from "node:http"
+import path from "node:path"
 import * as chokidar from "chokidar"
-import { pushSnippet } from "lib/shared/push-snippet"
-import { getPackageFilePaths } from "./get-package-file-paths"
-import { addPackage } from "lib/shared/add-package"
 import Debug from "debug"
 import kleur from "kleur"
-import { loadProjectConfig } from "lib/project-config"
-import { shouldIgnorePath } from "lib/shared/should-ignore-path"
-import { getAllNodeModuleFilePaths } from "lib/dependency-analysis/getNodeModuleDependencies"
+import ky, { TimeoutError } from "ky"
 import { setSessionToken } from "lib/cli-config"
+import { getAllNodeModuleFilePaths } from "lib/dependency-analysis/getNodeModuleDependencies"
+import type { FileServerRoutes } from "lib/file-server/FileServerRoutes"
+import { loadProjectConfig } from "lib/project-config"
+import { EventsWatcher } from "lib/server/EventsWatcher"
+import { createHttpServer } from "lib/server/createHttpServer"
+import { addPackage } from "lib/shared/add-package"
+import { pushSnippet } from "lib/shared/push-snippet"
+import { shouldIgnorePath } from "lib/shared/should-ignore-path"
+import type { TypedKyInstance } from "typed-ky"
+import type {
+  FileDeletedEvent,
+  FileUpdatedEvent,
+} from "../../lib/file-server/FileServerEvent"
+import { getPackageFilePaths } from "./get-package-file-paths"
 
 const debug = Debug("tscircuit:devserver")
 
-const BINARY_FILE_EXTENSIONS = new Set([
-  ".glb",
-  ".png",
-  ".jpeg",
-  ".jpg",
-  ".step",
-])
+const BINARY_FILE_EXTENSIONS = new Set([".glb", ".png", ".jpeg", ".jpg"])
 
-type FileUploadPayload = Pick<
-  FileServerRoutes["api/files/upsert"]["POST"]["requestJson"],
-  "text_content" | "binary_content_b64"
->
+type FileUploadPayload =
+  | {
+      text_content: string
+    }
+  | {
+      binary_content: Buffer
+    }
 
 export class DevServer {
   port: number
@@ -429,6 +426,15 @@ export class DevServer {
     filePayload: FileUploadPayload
   }) {
     try {
+      if ("binary_content" in filePayload) {
+        await this.postBinaryFileUpsertMultipart({
+          filePath,
+          initiator,
+          binaryContent: filePayload.binary_content,
+        })
+        return
+      }
+
       await this.fsKy.post("api/files/upsert", {
         json: {
           file_path: filePath,
@@ -442,6 +448,41 @@ export class DevServer {
     }
   }
 
+  private async postBinaryFileUpsertMultipart({
+    filePath,
+    initiator,
+    binaryContent,
+  }: {
+    filePath: string
+    initiator: "filesystem_change"
+    binaryContent: Buffer
+  }) {
+    const formData = new FormData()
+    formData.set("file_path", filePath)
+    formData.set("initiator", initiator)
+    const binaryBytes = Uint8Array.from(binaryContent)
+    formData.set(
+      "binary_file",
+      new Blob([binaryBytes]),
+      path.basename(filePath),
+    )
+
+    const response = await fetch(
+      `http://localhost:${this.port}/api/files/upsert-multipart`,
+      {
+        method: "POST",
+        body: formData,
+      },
+    )
+
+    if (!response.ok) {
+      const errorBody = await response.text()
+      throw new Error(
+        `Multipart upload failed for ${filePath}: ${response.status} ${response.statusText}${errorBody ? ` - ${errorBody}` : ""}`,
+      )
+    }
+  }
+
   private logFileUpsertTimeout(error: unknown, filePath: string) {
     if (!(error instanceof TimeoutError)) return
 
@@ -452,8 +493,7 @@ export class DevServer {
     )
     console.error(
       kleur.yellow(
-        `Additional info: the file server at http://localhost:${this.port}/api/files/upsert did not respond in time. ` +
-          "Make sure the dev server started successfully, the port is not blocked, and try again.",
+        `Additional info: the file server at http://localhost:${this.port}/api/files/upsert did not respond in time. Make sure the dev server started successfully, the port is not blocked, and try again.`,
       ),
     )
   }
@@ -495,7 +535,7 @@ export class DevServer {
 
     if (BINARY_FILE_EXTENSIONS.has(ext)) {
       const fileBuffer = fs.readFileSync(absoluteFilePath)
-      return { binary_content_b64: fileBuffer.toString("base64") }
+      return { binary_content: fileBuffer }
     }
 
     return { text_content: fs.readFileSync(absoluteFilePath, "utf-8") }
