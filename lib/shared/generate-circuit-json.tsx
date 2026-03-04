@@ -27,6 +27,7 @@ type GenerateCircuitJsonOptions = {
   outputFileName?: string
   saveToFile?: boolean
   platformConfig?: PlatformConfig
+  injectedProps?: Record<string, unknown>
 }
 
 /**
@@ -41,6 +42,7 @@ export async function generateCircuitJson({
   outputFileName,
   saveToFile = false,
   platformConfig,
+  injectedProps,
 }: GenerateCircuitJsonOptions) {
   debug(`Generating circuit JSON for ${filePath}`)
 
@@ -120,7 +122,7 @@ export async function generateCircuitJson({
     )
   }
 
-  runner.add(<Component />)
+  runner.add(<Component {...(injectedProps ?? {})} />)
 
   // Wait for the circuit to be fully rendered
   await runner.renderUntilSettled()

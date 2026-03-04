@@ -37,6 +37,50 @@ import runFrameStandaloneBundleContent from "@tscircuit/runframe/standalone" wit
 const normalizeRelativePath = (projectDir: string, targetPath: string) =>
   path.relative(projectDir, targetPath).split(path.sep).join("/")
 
+const parseInjectedProps = ({
+  injectProps,
+  injectPropsFile,
+  projectDir,
+}: {
+  injectProps?: string
+  injectPropsFile?: string
+  projectDir: string
+}): Record<string, unknown> | undefined => {
+  if (injectProps && injectPropsFile) {
+    throw new Error(
+      "Cannot use --inject-props and --inject-props-file together",
+    )
+  }
+
+  const rawProps = (() => {
+    if (injectPropsFile) {
+      const resolvedPropsPath = path.resolve(projectDir, injectPropsFile)
+      return fs.readFileSync(resolvedPropsPath, "utf-8")
+    }
+
+    return injectProps
+  })()
+
+  if (!rawProps) {
+    return undefined
+  }
+
+  let parsed: unknown
+  try {
+    parsed = JSON.parse(rawProps)
+  } catch (error) {
+    throw new Error(
+      `Failed to parse injected props JSON: ${error instanceof Error ? error.message : String(error)}`,
+    )
+  }
+
+  if (!parsed || typeof parsed !== "object" || Array.isArray(parsed)) {
+    throw new Error("Injected props must be a JSON object")
+  }
+
+  return parsed as Record<string, unknown>
+}
+
 const getOutputDirName = (relativePath: string) => {
   const normalizedRelativePath = relativePath
     .toLowerCase()
@@ -105,6 +149,14 @@ export const registerBuild = (program: Command) => {
       "--concurrency <number>",
       "Number of files to build in parallel (default: 1)",
       "1",
+    )
+    .option(
+      "--inject-props <json>",
+      "Inject JSON props into the built file's default export",
+    )
+    .option(
+      "--inject-props-file <path>",
+      "Inject JSON props from a file into the built file's default export",
     )
     .action(async (file?: string, options?: BuildCommandOptions) => {
       try {
@@ -224,12 +276,19 @@ export const registerBuild = (program: Command) => {
         const shouldGenerateKicadProject =
           resolvedOptions?.kicadProject || resolvedOptions?.kicadLibrary
 
+        const injectedProps = parseInjectedProps({
+          injectProps: resolvedOptions?.injectProps,
+          injectPropsFile: resolvedOptions?.injectPropsFile,
+          projectDir,
+        })
+
         // Prepare build options for reuse
         const buildOptions = {
           ignoreErrors: resolvedOptions?.ignoreErrors,
           ignoreWarnings: resolvedOptions?.ignoreWarnings,
           platformConfig,
           profile: resolvedOptions?.profile,
+          injectedProps,
         }
 
         // Helper function to process a single build result

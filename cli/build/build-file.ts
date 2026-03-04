@@ -22,6 +22,7 @@ export const buildFile = async (
     ignoreErrors?: boolean
     ignoreWarnings?: boolean
     platformConfig?: PlatformConfig
+    injectedProps?: Record<string, unknown>
   },
 ): Promise<BuildFileOutcome> => {
   try {
@@ -47,6 +48,7 @@ export const buildFile = async (
       const result = await generateCircuitJson({
         filePath: input,
         platformConfig: completePlatformConfig,
+        injectedProps: options?.injectedProps,
       })
       circuitJson = result.circuitJson
     }

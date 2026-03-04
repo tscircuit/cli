@@ -23,6 +23,8 @@ export interface BuildCommandOptions {
   profile?: boolean
   useCdnJavascript?: boolean
   concurrency?: string
+  injectProps?: string
+  injectPropsFile?: string
 }
 
 const runCommand = (command: string, cwd: string) => {

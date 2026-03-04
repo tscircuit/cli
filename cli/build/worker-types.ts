@@ -13,6 +13,7 @@ export type BuildFileMessage = {
     ignoreWarnings?: boolean
     platformConfig?: PlatformConfig
     profile?: boolean
+    injectedProps?: Record<string, unknown>
   }
 }
 

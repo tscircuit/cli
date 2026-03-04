@@ -22,6 +22,7 @@ export type BuildJob = {
     ignoreWarnings?: boolean
     platformConfig?: PlatformConfig
     profile?: boolean
+    injectedProps?: Record<string, unknown>
   }
 }
 
@@ -333,6 +334,7 @@ export async function buildFilesWithWorkerPool(options: {
     ignoreWarnings?: boolean
     platformConfig?: PlatformConfig
     profile?: boolean
+    injectedProps?: Record<string, unknown>
   }
   onLog?: (lines: string[]) => void
   onJobComplete?: (result: BuildJobResult) => void

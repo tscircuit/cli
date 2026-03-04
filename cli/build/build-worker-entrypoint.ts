@@ -71,6 +71,7 @@ const handleBuildFile = async (
     ignoreWarnings?: boolean
     platformConfig?: unknown
     profile?: boolean
+    injectedProps?: Record<string, unknown>
   },
 ): Promise<BuildCompletedMessage> => {
   const errors: string[] = []
@@ -106,6 +107,7 @@ const handleBuildFile = async (
       : await generateCircuitJson({
           filePath,
           platformConfig: completePlatformConfig,
+          injectedProps: options?.injectedProps,
         })
 
     // Write circuit JSON to disk (not sent through IPC to avoid memory issues)
