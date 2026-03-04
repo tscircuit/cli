@@ -1,7 +1,7 @@
-import { getCliTestFixture } from "../../fixtures/get-cli-test-fixture"
-import { test, expect } from "bun:test"
-import { writeFile, readFile, stat, mkdir, readdir } from "node:fs/promises"
+import { expect, test } from "bun:test"
+import { mkdir, readFile, readdir, stat, writeFile } from "node:fs/promises"
 import path from "node:path"
+import { getCliTestFixture } from "../../fixtures/get-cli-test-fixture"
 
 const circuitCode = `
 export default () => (

@@ -5,6 +5,9 @@ import type { PlatformConfig } from "@tscircuit/props"
 import type {
   BuildCompletedMessage,
   BuildFileMessage,
+  BuildGlbCompletedMessage,
+  BuildGlbJobResult,
+  BuildGlbMessage,
   BuildJobResult,
   WorkerLogMessage,
   WorkerOutputMessage,
@@ -27,10 +30,31 @@ type QueuedJob = BuildJob & {
   reject: (error: Error) => void
 }
 
+export type BuildGlbJob = {
+  circuitJsonPath: string
+  glbOutputPath: string
+  projectDir: string
+}
+
+type QueuedGlbJob = BuildGlbJob & {
+  resolve: (result: BuildGlbJobResult) => void
+  reject: (error: Error) => void
+}
+
+type WorkerJob =
+  | {
+      kind: "build"
+      job: QueuedJob
+    }
+  | {
+      kind: "glb"
+      job: QueuedGlbJob
+    }
+
 type ThreadWorker = {
   worker: Worker
   busy: boolean
-  currentJob: QueuedJob | null
+  currentJob: WorkerJob | null
 }
 
 const getWorkerEntrypointPath = (): string => {
@@ -54,7 +78,7 @@ const getWorkerEntrypointPath = (): string => {
 
 export class WorkerPool {
   private workers: ThreadWorker[] = []
-  private jobQueue: QueuedJob[] = []
+  private jobQueue: WorkerJob[] = []
   private concurrency: number
   private onLog?: (lines: string[]) => void
   private workerEntrypointPath: string
@@ -107,9 +131,10 @@ export class WorkerPool {
         }
       } else if (message.message_type === "build_completed") {
         const completedMsg = message as BuildCompletedMessage
-        const job = threadWorker.currentJob
+        const workerJob = threadWorker.currentJob
 
-        if (job) {
+        if (workerJob?.kind === "build") {
+          const job = workerJob.job
           if (
             this.stopOnFatal &&
             completedMsg.isFatalError &&
@@ -131,6 +156,22 @@ export class WorkerPool {
           threadWorker.busy = false
           this.processQueue()
         }
+      } else if (message.message_type === "build_glb_completed") {
+        const completedMsg = message as BuildGlbCompletedMessage
+        const workerJob = threadWorker.currentJob
+
+        if (workerJob?.kind === "glb") {
+          const job = workerJob.job
+          job.resolve({
+            circuitJsonPath: completedMsg.circuit_json_path,
+            glbOutputPath: completedMsg.glb_output_path,
+            ok: completedMsg.ok,
+            error: completedMsg.error,
+          })
+          threadWorker.currentJob = null
+          threadWorker.busy = false
+          this.processQueue()
+        }
       }
     })
   }
@@ -138,7 +179,7 @@ export class WorkerPool {
   private setupWorkerErrorHandling(threadWorker: ThreadWorker): void {
     threadWorker.worker.on("error", (error) => {
       if (threadWorker.currentJob) {
-        threadWorker.currentJob.reject(error as Error)
+        threadWorker.currentJob.job.reject(error as Error)
         threadWorker.currentJob = null
         threadWorker.busy = false
       }
@@ -151,7 +192,7 @@ export class WorkerPool {
 
     threadWorker.worker.on("exit", (code) => {
       if (code !== 0 && threadWorker.currentJob) {
-        threadWorker.currentJob.reject(
+        threadWorker.currentJob.job.reject(
           new Error(`Worker exited with code ${code}`),
         )
         threadWorker.currentJob = null
@@ -173,15 +214,26 @@ export class WorkerPool {
     availableWorker.busy = true
     availableWorker.currentJob = job
 
-    const message: BuildFileMessage = {
-      message_type: "build_file",
-      file_path: job.filePath,
-      output_path: job.outputPath,
-      project_dir: job.projectDir,
-      options: job.options,
+    if (job.kind === "build") {
+      const buildJob = job.job
+      const message: BuildFileMessage = {
+        message_type: "build_file",
+        file_path: buildJob.filePath,
+        output_path: buildJob.outputPath,
+        project_dir: buildJob.projectDir,
+        options: buildJob.options,
+      }
+      availableWorker.worker.postMessage(message)
+    } else {
+      const glbJob = job.job
+      const message: BuildGlbMessage = {
+        message_type: "build_glb",
+        circuit_json_path: glbJob.circuitJsonPath,
+        glb_output_path: glbJob.glbOutputPath,
+        project_dir: glbJob.projectDir,
+      }
+      availableWorker.worker.postMessage(message)
     }
-
-    availableWorker.worker.postMessage(message)
   }
 
   async queueJob(job: BuildJob): Promise<BuildJobResult> {
@@ -198,7 +250,31 @@ export class WorkerPool {
         resolve,
         reject,
       }
-      this.jobQueue.push(queuedJob)
+      this.jobQueue.push({
+        kind: "build",
+        job: queuedJob,
+      })
+      this.processQueue()
+    })
+  }
+
+  async queueGlbJob(job: BuildGlbJob): Promise<BuildGlbJobResult> {
+    if (this.stopped) {
+      return Promise.reject(this.stopReason ?? new Error("Worker pool stopped"))
+    }
+
+    await this.initWorkers()
+
+    return new Promise((resolve, reject) => {
+      const queuedJob: QueuedGlbJob = {
+        ...job,
+        resolve,
+        reject,
+      }
+      this.jobQueue.push({
+        kind: "glb",
+        job: queuedJob,
+      })
       this.processQueue()
     })
   }
@@ -211,7 +287,7 @@ export class WorkerPool {
 
     // Reject queued jobs that have not started yet
     for (const queuedJob of this.jobQueue) {
-      queuedJob.reject(reason)
+      queuedJob.job.reject(reason)
     }
     this.jobQueue = []
   }
@@ -312,6 +388,59 @@ export async function buildFilesWithWorkerPool(options: {
   // parent process to exit before post-build steps (site/preview/transpile)
   // run. The CLI exits explicitly at the end of the build command, so on Bun
   // we let process shutdown clean up workers.
+  if (typeof Bun === "undefined") {
+    await pool.terminate()
+  }
+
+  return results
+}
+
+export async function buildGlbsWithWorkerPool(options: {
+  files: Array<{
+    circuitJsonPath: string
+    glbOutputPath: string
+  }>
+  projectDir: string
+  concurrency: number
+  onLog?: (lines: string[]) => void
+  onJobComplete?: (result: BuildGlbJobResult) => void
+}): Promise<BuildGlbJobResult[]> {
+  const poolConcurrency = Math.max(
+    1,
+    Math.min(options.concurrency, options.files.length),
+  )
+
+  const pool = new WorkerPool({
+    concurrency: poolConcurrency,
+    onLog: options.onLog,
+  })
+
+  const results: BuildGlbJobResult[] = []
+
+  const promises = options.files.map((file) =>
+    pool
+      .queueGlbJob({
+        circuitJsonPath: file.circuitJsonPath,
+        glbOutputPath: file.glbOutputPath,
+        projectDir: options.projectDir,
+      })
+      .then(async (result) => {
+        results.push(result)
+        if (options.onJobComplete) {
+          await options.onJobComplete(result)
+        }
+
+        return result
+      }),
+  )
+
+  const settledResults = await Promise.allSettled(promises)
+  for (const settledResult of settledResults) {
+    if (settledResult.status === "rejected") {
+      throw settledResult.reason
+    }
+  }
+
   if (typeof Bun === "undefined") {
     await pool.terminate()
   }

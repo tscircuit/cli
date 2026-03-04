@@ -17,6 +17,16 @@ export type BuildFileMessage = {
 }
 
 /**
+ * Message sent from main thread to worker to convert circuit.json to GLB
+ */
+export type BuildGlbMessage = {
+  message_type: "build_glb"
+  circuit_json_path: string
+  glb_output_path: string
+  project_dir: string
+}
+
+/**
  * Message sent from worker to main thread when build completes.
  */
 export type BuildCompletedMessage = {
@@ -33,6 +43,17 @@ export type BuildCompletedMessage = {
 }
 
 /**
+ * Message sent from worker to main thread when GLB conversion completes.
+ */
+export type BuildGlbCompletedMessage = {
+  message_type: "build_glb_completed"
+  circuit_json_path: string
+  glb_output_path: string
+  ok: boolean
+  error?: string
+}
+
+/**
  * Message sent from worker to main thread for logging
  */
 export type WorkerLogMessage = {
@@ -43,12 +64,15 @@ export type WorkerLogMessage = {
 /**
  * Union type for all messages sent to workers
  */
-export type WorkerInputMessage = BuildFileMessage
+export type WorkerInputMessage = BuildFileMessage | BuildGlbMessage
 
 /**
  * Union type for all messages sent from workers
  */
-export type WorkerOutputMessage = BuildCompletedMessage | WorkerLogMessage
+export type WorkerOutputMessage =
+  | BuildCompletedMessage
+  | BuildGlbCompletedMessage
+  | WorkerLogMessage
 
 /**
  * Result type for a build job in the worker pool.
@@ -62,4 +86,11 @@ export type BuildJobResult = {
   errors: string[]
   warnings: string[]
   durationMs?: number
+}
+
+export type BuildGlbJobResult = {
+  circuitJsonPath: string
+  glbOutputPath: string
+  ok: boolean
+  error?: string
 }
