@@ -68,9 +68,10 @@ export const CAMERA_PRESETS = {
     const desiredFovRad = Math.max((desiredFov * Math.PI) / 180, 0.01)
     const tanOrig = Math.tan(origFovRad / 2)
     const tanDesired = Math.max(Math.tan(desiredFovRad / 2), 0.0001)
-    const distScale = Number.isFinite(tanOrig / tanDesired) && tanOrig > 0
-      ? tanOrig / tanDesired
-      : 1
+    const distScale =
+      Number.isFinite(tanOrig / tanDesired) && tanOrig > 0
+        ? tanOrig / tanDesired
+        : 1
     const newDist = origDist * distScale
 
     return {
