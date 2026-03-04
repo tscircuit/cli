@@ -74,9 +74,9 @@ The `build` command also accepts the following options:
 - `--ignore-errors` - continue build even if circuit JSON contains errors
 - `--ignore-warnings` - suppress warning output
 
-## Development
+## Local development
 
-This command will open the `index.tsx` file for editing.
+This command starts local development and watches for changes.
 
 ```bash
 bun run dev
@@ -87,7 +87,7 @@ bun run dev
 When you run `tsci dev`, we start a local
 server that uses the [@tscircuit/file-server](https://github.com/tscircuit/file-server) and [@tscircuit/runframe](https://github.com/tscircuit/runframe) (on the browser)
 
-We use commanderjs to define the CLI commands inside
+We use Commander.js to define the CLI commands inside
 of `cli/main.ts`
 
 Utility functions are defined in `lib/*`
