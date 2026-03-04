@@ -2,6 +2,7 @@ import type { Command } from "commander"
 import * as fs from "node:fs"
 import * as net from "node:net"
 import * as path from "node:path"
+import Debug from "debug"
 import { DevServer } from "./DevServer"
 import { resolveDevTarget } from "./resolve-dev-target"
 import kleur from "kleur"
@@ -16,6 +17,45 @@ const isPortAvailable = (port: number): Promise<boolean> => {
     })
     server.listen(port)
   })
+}
+
+const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms))
+
+const findAvailablePort = async ({
+  preferredPort,
+  timeoutMs,
+  verbose,
+}: {
+  preferredPort: number
+  timeoutMs: number
+  verbose: boolean
+}): Promise<{ port: number; attempts: number }> => {
+  let port = preferredPort
+  const start = Date.now()
+  let attempts = 0
+
+  while (true) {
+    const available = await isPortAvailable(port)
+    if (available) return { port, attempts }
+
+    attempts += 1
+    if (verbose) {
+      console.log(
+        kleur.gray(
+          `Port ${port} is in use, trying port ${port + 1}... (attempt ${attempts})`,
+        ),
+      )
+    }
+
+    if (Date.now() - start >= timeoutMs) {
+      throw new Error(
+        `Unable to find an open port within ${timeoutMs}ms starting from ${preferredPort}. Last tried port ${port}. Try specifying a different --port or increasing --port-timeout.`,
+      )
+    }
+
+    port += 1
+    await sleep(150)
+  }
 }
 
 const warnIfTsconfigMissingTscircuitType = (projectDir: string) => {
@@ -39,24 +79,70 @@ const warnIfTsconfigMissingTscircuitType = (projectDir: string) => {
   }
 }
 
+const enableDevVerboseLogging = () => {
+  const namespace = "tscircuit:devserver"
+  const existingNamespaces = (process.env.DEBUG ?? "")
+    .split(/[\s,]+/)
+    .map((ns) => ns.trim())
+    .filter(Boolean)
+
+  if (!existingNamespaces.includes(namespace)) {
+    existingNamespaces.push(namespace)
+  }
+
+  const mergedNamespaces = existingNamespaces.join(",")
+
+  Debug.enable(mergedNamespaces || namespace)
+  process.env.DEBUG = mergedNamespaces || namespace
+
+  console.log(
+    kleur.gray(
+      `Verbose debug logging enabled (DEBUG=${mergedNamespaces || namespace})`,
+    ),
+  )
+}
+
+// Exported for testing to verify DEBUG namespace wiring
+export const enableDevVerboseLoggingForTest = enableDevVerboseLogging
+export const findAvailablePortForTest = findAvailablePort
+
 export const registerDev = (program: Command) => {
   program
     .command("dev")
     .description("Start development server for a package")
     .argument("[file]", "Path to the package file or directory")
     .option("-p, --port <number>", "Port to run server on", "3020")
+    .option(
+      "--port-timeout <ms>",
+      "Maximum time in ms to search for an open port",
+      "10000",
+    )
     .option("--kicad-pcm", "Enable KiCad PCM proxy server at /pcm/*")
+    .option("-v, --verbose", "Enable verbose debug logging")
     .action(
-      async (file: string, options: { port: string; kicadPcm?: boolean }) => {
+      async (
+        file: string,
+        options: {
+          port: string
+          portTimeout?: string
+          kicadPcm?: boolean
+          verbose?: boolean
+        },
+      ) => {
         let port = parseInt(options.port)
+        const portTimeout = parseInt(options.portTimeout ?? "10000")
         const startTime = Date.now()
 
-        while (!(await isPortAvailable(port))) {
-          console.log(
-            kleur.gray(`Port ${port} is in use, trying port ${port + 1}...`),
-          )
-          port += 1
+        if (options.verbose) {
+          enableDevVerboseLogging()
         }
+
+        const { port: resolvedPort } = await findAvailablePort({
+          preferredPort: port,
+          timeoutMs: portTimeout,
+          verbose: !!options.verbose,
+        })
+        port = resolvedPort
 
         const target = await resolveDevTarget(file)
         if (!target) return
