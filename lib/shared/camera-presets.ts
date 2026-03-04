@@ -17,6 +17,12 @@ type CameraResult = {
   fov: number
 }
 
+function normalizeDir(dir: [number, number, number]): [number, number, number] {
+  const len = Math.sqrt(dir[0] ** 2 + dir[1] ** 2 + dir[2] ** 2)
+  if (len === 0) return [0, 1, 0]
+  return [dir[0] / len, dir[1] / len, dir[2] / len]
+}
+
 function distance(
   a: readonly [number, number, number],
   b: readonly [number, number, number],
@@ -31,12 +37,10 @@ function distance(
 function repositionCamera(
   cam: CameraResult,
   dir: [number, number, number],
+  distOverride?: number,
 ): CameraResult {
-  const dist = distance(cam.camPos, cam.lookAt)
-  const len = Math.sqrt(dir[0] ** 2 + dir[1] ** 2 + dir[2] ** 2)
-  const nx = dir[0] / len
-  const ny = dir[1] / len
-  const nz = dir[2] / len
+  const dist = distOverride ?? distance(cam.camPos, cam.lookAt)
+  const [nx, ny, nz] = normalizeDir(dir)
   return {
     camPos: [
       cam.lookAt[0] + nx * dist,
@@ -59,10 +63,6 @@ export const CAMERA_PRESETS = {
     const dir: [number, number, number] = [0.00000001, 1, -0.001]
 
     const origDist = distance(cam.camPos, cam.lookAt)
-    const len = Math.sqrt(dir[0] ** 2 + dir[1] ** 2 + dir[2] ** 2)
-    const nx = dir[0] / len
-    const ny = dir[1] / len
-    const nz = dir[2] / len
 
     const origFovRad = Math.max((cam.fov * Math.PI) / 180, 0.01)
     const desiredFovRad = Math.max((desiredFov * Math.PI) / 180, 0.01)
@@ -74,15 +74,9 @@ export const CAMERA_PRESETS = {
         : 1
     const newDist = origDist * distScale
 
-    return {
-      camPos: [
-        cam.lookAt[0] + nx * newDist,
-        cam.lookAt[1] + ny * newDist,
-        cam.lookAt[2] + nz * newDist,
-      ] as const,
-      lookAt: cam.lookAt,
-      fov: desiredFov,
-    }
+    const repositioned = repositionCamera(cam, dir, newDist)
+
+    return { ...repositioned, fov: desiredFov }
   },
 
   /** Angled view from top-left corner */
