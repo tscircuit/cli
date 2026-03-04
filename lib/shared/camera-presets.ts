@@ -51,7 +51,38 @@ function repositionCamera(
 export const CAMERA_PRESETS = {
   /** Directly above the board looking straight down */
   "top-down": (cam: CameraResult): CameraResult =>
-    repositionCamera(cam, [0.0001, 1, -0.01]),
+    repositionCamera(cam, [0.00000001, 1, -0.001]),
+
+  /** Top-down with reduced perspective (pseudo-ortho) */
+  "top-down-ortho": (cam: CameraResult): CameraResult => {
+    const desiredFov = 5
+    const dir: [number, number, number] = [0.00000001, 1, -0.001]
+
+    const origDist = distance(cam.camPos, cam.lookAt)
+    const len = Math.sqrt(dir[0] ** 2 + dir[1] ** 2 + dir[2] ** 2)
+    const nx = dir[0] / len
+    const ny = dir[1] / len
+    const nz = dir[2] / len
+
+    const origFovRad = Math.max((cam.fov * Math.PI) / 180, 0.01)
+    const desiredFovRad = Math.max((desiredFov * Math.PI) / 180, 0.01)
+    const tanOrig = Math.tan(origFovRad / 2)
+    const tanDesired = Math.max(Math.tan(desiredFovRad / 2), 0.0001)
+    const distScale = Number.isFinite(tanOrig / tanDesired) && tanOrig > 0
+      ? tanOrig / tanDesired
+      : 1
+    const newDist = origDist * distScale
+
+    return {
+      camPos: [
+        cam.lookAt[0] + nx * newDist,
+        cam.lookAt[1] + ny * newDist,
+        cam.lookAt[2] + nz * newDist,
+      ] as const,
+      lookAt: cam.lookAt,
+      fov: desiredFov,
+    }
+  },
 
   /** Angled view from top-left corner */
   "top-left-corner": (cam: CameraResult): CameraResult =>
