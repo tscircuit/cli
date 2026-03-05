@@ -14,6 +14,10 @@
       "type": "string",
       "description": "Entry file for the circuit project."
     },
+    "libraryEntrypoint": {
+      "type": "string",
+      "description": "Alias for mainEntrypoint used as the TypeScript library entry file."
+    },
     "previewComponentPath": {
       "type": "string",
       "description": "Optional component path used for previews."

@@ -50,6 +50,54 @@ test("getEntrypoint detects entrypoint from config", async () => {
   expect(entrypoint).toBe(path.join(tmpDir, "src", "main.circuit.tsx"))
 })
 
+test("getEntrypoint detects entrypoint from libraryEntrypoint config alias", async () => {
+  const { tmpDir } = await getCliTestFixture()
+
+  await fs.mkdir(path.join(tmpDir, "src"))
+  await fs.writeFile(
+    path.join(tmpDir, "src", "library.tsx"),
+    'export default () => <board width="10mm" height="10mm"></board>',
+  )
+  await fs.writeFile(
+    path.join(tmpDir, "tscircuit.config.json"),
+    JSON.stringify({ libraryEntrypoint: "src/library.tsx" }),
+  )
+
+  const entrypoint = await getEntrypoint({
+    projectDir: tmpDir,
+  })
+
+  expect(entrypoint).not.toBeNull()
+  expect(entrypoint).toBe(path.join(tmpDir, "src", "library.tsx"))
+})
+
+test("getEntrypoint prioritizes mainEntrypoint over libraryEntrypoint", async () => {
+  const { tmpDir } = await getCliTestFixture()
+
+  await fs.mkdir(path.join(tmpDir, "src"))
+  await fs.writeFile(
+    path.join(tmpDir, "src", "main.tsx"),
+    'export default () => <board width="10mm" height="10mm"></board>',
+  )
+  await fs.writeFile(
+    path.join(tmpDir, "src", "library.tsx"),
+    'export default () => <board width="11mm" height="11mm"></board>',
+  )
+  await fs.writeFile(
+    path.join(tmpDir, "tscircuit.config.json"),
+    JSON.stringify({
+      mainEntrypoint: "src/main.tsx",
+      libraryEntrypoint: "src/library.tsx",
+    }),
+  )
+
+  const entrypoint = await getEntrypoint({
+    projectDir: tmpDir,
+  })
+
+  expect(entrypoint).not.toBeNull()
+  expect(entrypoint).toBe(path.join(tmpDir, "src", "main.tsx"))
+})
 test("getEntrypoint detects entrypoint in common locations", async () => {
   const { tmpDir } = await getCliTestFixture()
 

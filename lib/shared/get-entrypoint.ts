@@ -127,12 +127,11 @@ export const getEntrypoint = async ({
     }
 
     const projectConfig = loadProjectConfig(validatedProjectDir)
-    if (
-      projectConfig?.mainEntrypoint &&
-      typeof projectConfig.mainEntrypoint === "string"
-    ) {
+    const configEntrypoint =
+      projectConfig?.mainEntrypoint ?? projectConfig?.libraryEntrypoint
+    if (configEntrypoint && typeof configEntrypoint === "string") {
       const validatedConfigPath = validateFilePath(
-        projectConfig.mainEntrypoint,
+        configEntrypoint,
         validatedProjectDir,
       )
       if (validatedConfigPath) {
