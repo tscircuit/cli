@@ -2,17 +2,12 @@ import fs from "node:fs"
 import path from "node:path"
 import { parentPort } from "node:worker_threads"
 import type { PlatformConfig } from "@tscircuit/props"
-import type { AnyCircuitElement } from "circuit-json"
-import { convertCircuitJsonToGltf } from "circuit-json-to-gltf"
 import { analyzeCircuitJson } from "../../lib/shared/circuit-json-diagnostics"
 import { generateCircuitJson } from "../../lib/shared/generate-circuit-json"
-import { getCircuitJsonToGltfOptions } from "../../lib/shared/get-circuit-json-to-gltf-options"
 import { getCompletePlatformConfig } from "../../lib/shared/get-complete-platform-config"
 import { registerStaticAssetLoaders } from "../../lib/shared/register-static-asset-loaders"
-import { convertModelUrlsToFileUrls } from "./convert-model-urls-to-file-urls"
 import type {
   BuildCompletedMessage,
-  BuildGlbCompletedMessage,
   WorkerInputMessage,
   WorkerLogMessage,
 } from "./worker-types"
@@ -21,9 +16,7 @@ if (!parentPort) {
   throw new Error("This file must be run as a worker thread")
 }
 
-const sendMessage = (
-  message: BuildCompletedMessage | BuildGlbCompletedMessage | WorkerLogMessage,
-) => {
+const sendMessage = (message: BuildCompletedMessage | WorkerLogMessage) => {
   parentPort!.postMessage(message)
 }
 
@@ -36,30 +29,6 @@ const workerLog = (...args: unknown[]) => {
     log_lines: [line],
   }
   sendMessage(message)
-}
-
-const viewToArrayBuffer = (view: ArrayBufferView): ArrayBuffer => {
-  const copy = new Uint8Array(view.byteLength)
-  copy.set(new Uint8Array(view.buffer, view.byteOffset, view.byteLength))
-  return copy.buffer
-}
-
-const normalizeToUint8Array = (value: unknown): Uint8Array => {
-  if (value instanceof Uint8Array) {
-    return value
-  }
-
-  if (value instanceof ArrayBuffer) {
-    return new Uint8Array(value)
-  }
-
-  if (ArrayBuffer.isView(value)) {
-    return new Uint8Array(viewToArrayBuffer(value as ArrayBufferView))
-  }
-
-  throw new Error(
-    "Expected Uint8Array, ArrayBuffer, or ArrayBufferView for GLB",
-  )
 }
 
 const handleBuildFile = async (
@@ -172,55 +141,6 @@ const handleBuildFile = async (
   }
 }
 
-const handleBuildGlb = async (
-  circuitJsonPath: string,
-  glbOutputPath: string,
-  projectDir: string,
-): Promise<BuildGlbCompletedMessage> => {
-  try {
-    process.chdir(projectDir)
-
-    workerLog(
-      `Converting ${path.relative(projectDir, circuitJsonPath)} to GLB...`,
-    )
-
-    const circuitJsonRaw = fs.readFileSync(circuitJsonPath, "utf-8")
-    const parsed = JSON.parse(circuitJsonRaw)
-
-    if (!Array.isArray(parsed)) {
-      throw new Error("Expected circuit.json to contain an array")
-    }
-
-    const circuitJson = parsed as AnyCircuitElement[]
-    const circuitJsonWithFileUrls = convertModelUrlsToFileUrls(circuitJson)
-    const glbBuffer = await convertCircuitJsonToGltf(
-      circuitJsonWithFileUrls,
-      getCircuitJsonToGltfOptions({ format: "glb" }),
-    )
-
-    const glbData = normalizeToUint8Array(glbBuffer)
-    fs.mkdirSync(path.dirname(glbOutputPath), { recursive: true })
-    fs.writeFileSync(glbOutputPath, Buffer.from(glbData))
-
-    return {
-      message_type: "build_glb_completed",
-      circuit_json_path: circuitJsonPath,
-      glb_output_path: glbOutputPath,
-      ok: true,
-    }
-  } catch (err) {
-    const errorMsg = err instanceof Error ? err.message : String(err)
-    workerLog(`GLB conversion error: ${errorMsg}`)
-    return {
-      message_type: "build_glb_completed",
-      circuit_json_path: circuitJsonPath,
-      glb_output_path: glbOutputPath,
-      ok: false,
-      error: errorMsg,
-    }
-  }
-}
-
 // Listen for messages from the main thread
 parentPort.on("message", async (msg: WorkerInputMessage) => {
   if (msg.message_type === "build_file") {
@@ -229,13 +149,6 @@ parentPort.on("message", async (msg: WorkerInputMessage) => {
       msg.output_path,
       msg.project_dir,
       msg.options,
-    )
-    sendMessage(result)
-  } else if (msg.message_type === "build_glb") {
-    const result = await handleBuildGlb(
-      msg.circuit_json_path,
-      msg.glb_output_path,
-      msg.project_dir,
     )
     sendMessage(result)
   }
