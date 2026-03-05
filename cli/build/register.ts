@@ -483,8 +483,6 @@ export const registerBuild = (program: Command) => {
           await buildGlbs({
             builtFiles,
             distDir,
-            projectDir,
-            concurrency: concurrencyValue,
           })
         }
 
