@@ -289,7 +289,26 @@ export const registerBuild = (program: Command) => {
           platformConfig,
           profile: resolvedOptions?.profile,
           injectedProps,
+          generatePreviewAssets: false,
         }
+
+        const shouldGeneratePreviewImages =
+          resolvedOptions?.previewImages || resolvedOptions?.allImages
+        const shouldGenerateAllPreviewImages = Boolean(
+          resolvedOptions?.allImages,
+        )
+        const shouldGeneratePreviewAssetsInWorker = Boolean(
+          resolvedOptions?.ci &&
+            concurrencyValue > 1 &&
+            shouldGeneratePreviewImages,
+        )
+        buildOptions.generatePreviewAssets = shouldGeneratePreviewAssetsInWorker
+
+        const previewEntrypointForWorker =
+          previewComponentPath || mainEntrypoint
+        const resolvedPreviewEntrypointForWorker = previewEntrypointForWorker
+          ? path.resolve(previewEntrypointForWorker)
+          : undefined
 
         // Helper function to process a single build result
         const processBuildResult = async (
@@ -395,7 +414,42 @@ export const registerBuild = (program: Command) => {
             const relative = path.relative(projectDir, filePath)
             const outputDirName = getOutputDirName(relative)
             const outputPath = path.join(distDir, outputDirName, "circuit.json")
-            return { filePath, outputPath }
+            const glbOutputPath = resolvedOptions?.glbs
+              ? path.join(distDir, outputDirName, "3d.glb")
+              : undefined
+
+            const generatePreviewAssets = (() => {
+              if (!shouldGeneratePreviewAssetsInWorker) {
+                return false
+              }
+
+              if (shouldGenerateAllPreviewImages) {
+                return true
+              }
+
+              if (resolvedPreviewEntrypointForWorker) {
+                return (
+                  path.resolve(filePath) === resolvedPreviewEntrypointForWorker
+                )
+              }
+
+              return filePath === circuitFiles[0]
+            })()
+
+            const previewOutputDir =
+              shouldGeneratePreviewAssetsInWorker &&
+              generatePreviewAssets &&
+              !shouldGenerateAllPreviewImages
+                ? distDir
+                : path.join(distDir, outputDirName)
+
+            return {
+              filePath,
+              outputPath,
+              glbOutputPath,
+              previewOutputDir,
+              generatePreviewAssets,
+            }
           })
 
           await buildFilesWithWorkerPool({
@@ -440,6 +494,21 @@ export const registerBuild = (program: Command) => {
                 ok: result.ok,
                 isFatalError: result.isFatalError,
               })
+
+              if (resolvedOptions?.glbs && result.ok) {
+                const outputDir = path.dirname(result.outputPath)
+                const prefixRelative = path.relative(distDir, outputDir) || "."
+                const prefix =
+                  prefixRelative === "." ? "" : `[${prefixRelative}] `
+
+                if (result.glbOk) {
+                  console.log(`${prefix}Written 3d.glb`)
+                } else if (result.glbOutputPath && result.glbError) {
+                  console.error(
+                    `${prefix}Failed to generate GLB: ${result.glbError}`,
+                  )
+                }
+              }
             },
           })
         }
@@ -450,22 +519,27 @@ export const registerBuild = (program: Command) => {
           await buildSequentially()
         }
 
-        const shouldGeneratePreviewImages =
-          resolvedOptions?.previewImages || resolvedOptions?.allImages
-
         if (shouldGeneratePreviewImages) {
-          console.log(
-            resolvedOptions?.allImages
-              ? "Generating preview images for all builds..."
-              : "Generating preview images...",
-          )
-          await buildPreviewImages({
-            builtFiles,
-            distDir,
-            mainEntrypoint,
-            previewComponentPath,
-            allImages: resolvedOptions?.allImages,
-          })
+          if (shouldGeneratePreviewAssetsInWorker) {
+            console.log(
+              shouldGenerateAllPreviewImages
+                ? "Generating preview images for all builds in worker threads..."
+                : "Generating preview images in worker threads...",
+            )
+          } else {
+            console.log(
+              shouldGenerateAllPreviewImages
+                ? "Generating preview images for all builds..."
+                : "Generating preview images...",
+            )
+            await buildPreviewImages({
+              builtFiles,
+              distDir,
+              mainEntrypoint,
+              previewComponentPath,
+              allImages: shouldGenerateAllPreviewImages,
+            })
+          }
         }
 
         if (resolvedOptions?.previewGltf) {
@@ -478,7 +552,7 @@ export const registerBuild = (program: Command) => {
           })
         }
 
-        if (resolvedOptions?.glbs) {
+        if (resolvedOptions?.glbs && concurrencyValue === 1) {
           console.log("Generating GLB models for all builds...")
           await buildGlbs({
             builtFiles,

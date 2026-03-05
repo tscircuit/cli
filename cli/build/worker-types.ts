@@ -7,6 +7,8 @@ export type BuildFileMessage = {
   message_type: "build_file"
   file_path: string
   output_path: string
+  glb_output_path?: string
+  preview_output_dir?: string
   project_dir: string
   options?: {
     ignoreErrors?: boolean
@@ -14,6 +16,7 @@ export type BuildFileMessage = {
     platformConfig?: PlatformConfig
     profile?: boolean
     injectedProps?: Record<string, unknown>
+    generatePreviewAssets?: boolean
   }
 }
 
@@ -25,6 +28,12 @@ export type BuildCompletedMessage = {
   file_path: string
   output_path: string
   circuit_json_path: string
+  glb_output_path?: string
+  preview_output_dir?: string
+  glb_ok?: boolean
+  glb_error?: string
+  preview_ok?: boolean
+  preview_error?: string
   ok: boolean
   /** Fatal error that should always cause exit code 1, even with --ignore-errors */
   isFatalError?: { errorType: string; message: string }
@@ -57,6 +66,12 @@ export type WorkerOutputMessage = BuildCompletedMessage | WorkerLogMessage
 export type BuildJobResult = {
   filePath: string
   outputPath: string
+  glbOutputPath?: string
+  previewOutputDir?: string
+  glbOk?: boolean
+  glbError?: string
+  previewOk?: boolean
+  previewError?: string
   ok: boolean
   /** Fatal error that should always cause exit code 1, even with --ignore-errors */
   isFatalError?: { errorType: string; message: string }
