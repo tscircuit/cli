@@ -58,39 +58,31 @@ export const buildGlbs = async ({
       }
     })
 
-    try {
-      await buildGlbsWithWorkerPool({
-        files: filesToConvert,
-        projectDir,
-        concurrency,
-        stallTimeoutMs: 60_000,
-        onLog: (lines) => {
-          for (const line of lines) {
-            console.log(line)
-          }
-        },
-        onJobComplete: async (result) => {
-          const outputDir = path.dirname(result.circuitJsonPath)
-          const prefixRelative = path.relative(distDir, outputDir) || "."
-          const prefix = prefixRelative === "." ? "" : `[${prefixRelative}] `
+    await buildGlbsWithWorkerPool({
+      files: filesToConvert,
+      projectDir,
+      concurrency,
+      onLog: (lines) => {
+        for (const line of lines) {
+          console.log(line)
+        }
+      },
+      onJobComplete: async (result) => {
+        const outputDir = path.dirname(result.circuitJsonPath)
+        const prefixRelative = path.relative(distDir, outputDir) || "."
+        const prefix = prefixRelative === "." ? "" : `[${prefixRelative}] `
 
-          if (result.ok) {
-            console.log(`${prefix}Written 3d.glb`)
-          } else {
-            console.error(
-              `${prefix}Failed to generate GLB:${result.error ? ` ${result.error}` : ""}`,
-            )
-          }
-        },
-      })
+        if (result.ok) {
+          console.log(`${prefix}Written 3d.glb`)
+        } else {
+          console.error(
+            `${prefix}Failed to generate GLB:${result.error ? ` ${result.error}` : ""}`,
+          )
+        }
+      },
+    })
 
-      return
-    } catch (error) {
-      const message = error instanceof Error ? error.message : String(error)
-      console.warn(
-        `GLB worker pool failed (${message}). Falling back to sequential conversion.`,
-      )
-    }
+    return
   }
 
   for (const build of successfulBuilds) {
