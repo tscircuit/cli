@@ -406,7 +406,6 @@ export async function buildGlbsWithWorkerPool(options: {
   concurrency: number
   onLog?: (lines: string[]) => void
   onJobComplete?: (result: BuildGlbJobResult) => void
-  stallTimeoutMs?: number
 }): Promise<BuildGlbJobResult[]> {
   const poolConcurrency = Math.max(
     1,
@@ -419,31 +418,6 @@ export async function buildGlbsWithWorkerPool(options: {
   })
 
   const results: BuildGlbJobResult[] = []
-  let completedJobs = 0
-  let lastProgressAt = Date.now()
-  const stallTimeoutMs = options.stallTimeoutMs ?? 60_000
-
-  let watchdogTimer: ReturnType<typeof setInterval> | null = null
-
-  const watchdogPromise = new Promise<void>((_resolve, reject) => {
-    watchdogTimer = setInterval(() => {
-      if (completedJobs >= options.files.length) {
-        return
-      }
-
-      const stalledForMs = Date.now() - lastProgressAt
-      if (stalledForMs < stallTimeoutMs) {
-        return
-      }
-
-      const stallError = new Error(
-        `GLB worker pool stalled: no completed jobs for ${Math.round(stalledForMs / 1000)}s`,
-      )
-
-      void pool.stop(stallError).then(() => pool.terminate())
-      reject(stallError)
-    }, 1_000)
-  })
 
   const promises = options.files.map((file) =>
     pool
@@ -454,8 +428,6 @@ export async function buildGlbsWithWorkerPool(options: {
       })
       .then(async (result) => {
         results.push(result)
-        completedJobs += 1
-        lastProgressAt = Date.now()
         if (options.onJobComplete) {
           await options.onJobComplete(result)
         }
@@ -464,19 +436,7 @@ export async function buildGlbsWithWorkerPool(options: {
       }),
   )
 
-  const settledResults = await Promise.race([
-    Promise.allSettled(promises),
-    watchdogPromise.then(() => []),
-  ])
-
-  if (watchdogTimer) {
-    clearInterval(watchdogTimer)
-  }
-
-  if (!Array.isArray(settledResults)) {
-    throw new Error("Unexpected GLB worker result state")
-  }
-
+  const settledResults = await Promise.allSettled(promises)
   for (const settledResult of settledResults) {
     if (settledResult.status === "rejected") {
       throw settledResult.reason
