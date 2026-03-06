@@ -93,7 +93,7 @@ export const handleBuildFile = async (
     let previewOk: boolean | undefined
     let previewError: string | undefined
 
-    if (glbOutputPath && !hasErrors) {
+    if (glbOutputPath) {
       try {
         workerLog(
           `Converting ${path.relative(projectDir, outputPath)} to GLB in same worker...`,
@@ -107,7 +107,7 @@ export const handleBuildFile = async (
       }
     }
 
-    if (options?.generatePreviewAssets && !hasErrors) {
+    if (options?.generatePreviewAssets) {
       try {
         const resolvedPreviewOutputDir =
           previewOutputDir ?? path.dirname(outputPath)
@@ -137,7 +137,8 @@ export const handleBuildFile = async (
       glb_error: glbError,
       preview_ok: previewOk,
       preview_error: previewError,
-      ok: !hasErrors,
+      ok: true,
+      hasErrors,
       errors,
       warnings,
       durationMs: options?.profile ? performance.now() - startedAt : undefined,
@@ -155,6 +156,7 @@ export const handleBuildFile = async (
       glb_output_path: glbOutputPath,
       preview_output_dir: previewOutputDir,
       ok: false,
+      hasErrors: true,
       isFatalError: {
         errorType: "circuit_generation_failed",
         message: errorMsg,
