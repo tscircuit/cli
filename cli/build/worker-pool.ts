@@ -27,21 +27,17 @@ type BuildJob = {
 
 const getWorkerEntrypointPath = (): string => {
   // Check for .ts file first (development), then .js (published/dist)
-  const tsPath = path.join(import.meta.dir, "build-worker-entrypoint.ts")
+  const tsPath = path.join(import.meta.dir, "build.worker.ts")
   if (fs.existsSync(tsPath)) {
     return tsPath
   }
   // When bundled, main.js is in dist/ and worker is in dist/build/
-  const jsBundledPath = path.join(
-    import.meta.dir,
-    "build",
-    "build-worker-entrypoint.js",
-  )
+  const jsBundledPath = path.join(import.meta.dir, "build", "build.worker.js")
   if (fs.existsSync(jsBundledPath)) {
     return jsBundledPath
   }
   // Fallback: same directory
-  return path.join(import.meta.dir, "build-worker-entrypoint.js")
+  return path.join(import.meta.dir, "build.worker.js")
 }
 
 /**

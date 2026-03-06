@@ -20,7 +20,7 @@ type SnapshotJob = {
 }
 
 const getWorkerEntrypointPath = (): string => {
-  const tsPath = path.join(import.meta.dir, "snapshot-worker-entrypoint.ts")
+  const tsPath = path.join(import.meta.dir, "snapshot.worker.ts")
   if (fs.existsSync(tsPath)) {
     return tsPath
   }
@@ -28,13 +28,13 @@ const getWorkerEntrypointPath = (): string => {
   const jsBundledPath = path.join(
     import.meta.dir,
     "snapshot",
-    "snapshot-worker-entrypoint.js",
+    "snapshot.worker.js",
   )
   if (fs.existsSync(jsBundledPath)) {
     return jsBundledPath
   }
 
-  return path.join(import.meta.dir, "snapshot-worker-entrypoint.js")
+  return path.join(import.meta.dir, "snapshot.worker.js")
 }
 
 export const snapshotFilesWithWorkerPool = async (options: {
