@@ -1,4 +1,4 @@
-import { extname, basename } from "node:path"
+import { basename } from "node:path"
 // @ts-ignore
 import tscircuitPackageJson from "tscircuit/package.json"
 
@@ -9,7 +9,8 @@ const ALLOW_BUNDLING = ["@tscircuit/runframe"]
 const result = await Bun.build({
   entrypoints: [
     "./cli/main.ts",
-    "./cli/build/build-worker-entrypoint.ts",
+    "./cli/build/build.worker.ts",
+    "./cli/snapshot/snapshot.worker.ts",
     "./lib/index.ts",
   ],
   target: "node",

@@ -27,6 +27,11 @@ export const registerSnapshot = (program: Command) => {
     )
     .option("--ci", "Enable CI mode with snapshot diff artifacts")
     .option("--test", "Enable test mode with snapshot diff artifacts")
+    .option(
+      "--concurrency <number>",
+      "Number of files to snapshot in parallel (default: 1)",
+      "1",
+    )
     .action(
       async (
         target: string | undefined,
@@ -40,6 +45,7 @@ export const registerSnapshot = (program: Command) => {
           cameraPreset?: string
           ci?: boolean
           test?: boolean
+          concurrency?: string
         },
       ) => {
         if (
@@ -53,6 +59,10 @@ export const registerSnapshot = (program: Command) => {
         }
 
         await snapshotProject({
+          concurrency: Math.max(
+            1,
+            Number.parseInt(options.concurrency || "1", 10),
+          ),
           update: options.update ?? false,
           threeD: options["3d"] ?? false,
           pcbOnly: options.pcbOnly ?? false,
