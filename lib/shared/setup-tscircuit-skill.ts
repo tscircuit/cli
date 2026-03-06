@@ -12,7 +12,10 @@ interface GitHubContent {
 
 const SKILL_REPO_API_URL =
   "https://api.github.com/repos/tscircuit/skill/contents"
-const SKILL_DIR_NAME = ".claude/skills/tscircuit"
+const SKILL_INSTALL_PATHS = [
+  ".claude/skills/tscircuit",
+  ".codex/skills/tscircuit",
+]
 
 async function fetchGitHubContents(apiUrl: string): Promise<GitHubContent[]> {
   const response = await fetch(apiUrl)
@@ -75,10 +78,12 @@ export async function setupTscircuitSkill(
   projectDir: string,
   skipPrompt = false,
 ): Promise<boolean> {
-  const skillDir = path.join(projectDir, SKILL_DIR_NAME)
+  const missingSkillPaths = SKILL_INSTALL_PATHS.filter(
+    (skillPath) => !fs.existsSync(path.join(projectDir, skillPath, "SKILL.md")),
+  )
 
-  if (fs.existsSync(path.join(skillDir, "SKILL.md"))) {
-    console.log("Claude skill already exists, skipping...")
+  if (missingSkillPaths.length === 0) {
+    console.log("TSCircuit AI skills already exist, skipping...")
     return true
   }
 
@@ -87,7 +92,7 @@ export async function setupTscircuitSkill(
       type: "confirm",
       name: "setupSkill",
       message:
-        "Would you like to set up tscircuit AI skill for enhanced AI assistance?",
+        "Would you like to set up tscircuit AI skills for enhanced AI assistance?",
       initial: true,
     })
 
@@ -97,11 +102,14 @@ export async function setupTscircuitSkill(
     }
   }
 
-  console.info("Setting up tscircuit skill...")
+  console.info("Setting up tscircuit AI skills...")
 
   try {
-    await downloadSkillRepo(skillDir)
-    console.info(`tscircuit skill installed at ${SKILL_DIR_NAME}`)
+    for (const skillPath of missingSkillPaths) {
+      const targetDir = path.join(projectDir, skillPath)
+      await downloadSkillRepo(targetDir)
+      console.info(`tscircuit skill installed at ${skillPath}`)
+    }
     return true
   } catch (error) {
     const errorMessage =

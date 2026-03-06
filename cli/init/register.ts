@@ -40,6 +40,7 @@ export const registerInit = (program: Command) => {
             name: "continueInCurrentDirectory",
             message:
               "Do you want to initialize a new project in the current directory?",
+            initial: true,
           })
           if (!continueInCurrentDirectory) {
             const { desiredDirectory } = await prompts({
