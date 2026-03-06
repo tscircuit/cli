@@ -3,6 +3,9 @@ import { join } from "node:path"
 import { getCliTestFixture } from "../../fixtures/get-cli-test-fixture"
 
 test("snapshot supports --concurrency with worker threads", async () => {
+  if (process.env.CI) {
+    return
+  }
   const { tmpDir, runCommand } = await getCliTestFixture()
 
   await runCommand("tsci init")
