@@ -1,4 +1,4 @@
-import { extname, basename } from "node:path"
+import { basename } from "node:path"
 // @ts-ignore
 import tscircuitPackageJson from "tscircuit/package.json"
 
@@ -10,6 +10,7 @@ const result = await Bun.build({
   entrypoints: [
     "./cli/main.ts",
     "./cli/build/build-worker-entrypoint.ts",
+    "./cli/snapshot/snapshot-worker-entrypoint.ts",
     "./lib/index.ts",
   ],
   target: "node",

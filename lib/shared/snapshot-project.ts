@@ -1,29 +1,15 @@
-import type { AnyCircuitElement } from "circuit-json"
-import fs from "node:fs"
 import path from "node:path"
 import type { PlatformConfig } from "@tscircuit/props"
-import {
-  convertCircuitJsonToGltf,
-  getBestCameraPosition,
-} from "circuit-json-to-gltf"
-import { type CameraPreset, applyCameraPreset } from "lib/shared/camera-presets"
-import {
-  convertCircuitJsonToPcbSvg,
-  convertCircuitJsonToSchematicSvg,
-} from "circuit-to-svg"
+import { snapshotFilesWithWorkerPool } from "cli/snapshot/worker-pool"
 import kleur from "kleur"
 import { getSnapshotsDir } from "lib/project-config"
+import type { CameraPreset } from "lib/shared/camera-presets"
 import { findBoardFiles } from "lib/shared/find-board-files"
-import { generateCircuitJson } from "lib/shared/generate-circuit-json"
-import { getCircuitJsonToGltfOptions } from "lib/shared/get-circuit-json-to-gltf-options"
-import { getCompletePlatformConfig } from "lib/shared/get-complete-platform-config"
+import { processSnapshotFile } from "lib/shared/process-snapshot-file"
 import {
   DEFAULT_IGNORED_PATTERNS,
   normalizeIgnorePattern,
 } from "lib/shared/should-ignore-path"
-import looksSame from "looks-same"
-import { renderGLTFToPNGBufferFromGLBBuffer } from "poppygl"
-import { compareAndCreateDiff } from "./compare-images"
 
 type SnapshotOptions = {
   update?: boolean
@@ -44,6 +30,8 @@ type SnapshotOptions = {
   createDiff?: boolean
   /** Camera preset name for 3D snapshots (implies --3d) */
   cameraPreset?: CameraPreset
+  /** Number of files to process in parallel (default: 1) */
+  concurrency?: number
   onExit?: (code: number) => void
   onError?: (message: string) => void
   onSuccess?: (message: string) => void
@@ -63,6 +51,7 @@ export const snapshotProject = async ({
   platformConfig,
   createDiff = false,
   cameraPreset,
+  concurrency = 1,
 }: SnapshotOptions = {}) => {
   // --camera-preset implies --3d
   if (cameraPreset) {
@@ -92,225 +81,92 @@ export const snapshotProject = async ({
   const mismatches: string[] = []
   let didUpdate = false
 
-  const isCircuitJsonFile = (filePath: string) => {
-    const normalizedPath = filePath.toLowerCase().replaceAll("\\", "/")
-    return (
-      normalizedPath.endsWith(".circuit.json") ||
-      normalizedPath.endsWith("/circuit.json")
-    )
+  const concurrencyValue = Math.max(1, concurrency)
+  const processResult = (
+    result: Awaited<ReturnType<typeof processSnapshotFile>>,
+  ) => {
+    for (const warningMessage of result.warningMessages) {
+      console.log(warningMessage)
+    }
+
+    for (const successPath of result.successPaths) {
+      console.log("✅", kleur.gray(successPath))
+    }
+
+    didUpdate = didUpdate || result.didUpdate
+    mismatches.push(...result.mismatches)
   }
 
-  for (const file of boardFiles) {
-    const relativeFilePath = path.relative(projectDir, file)
+  if (concurrencyValue > 1 && boardFiles.length > 1) {
+    console.log(
+      `Generating snapshots for ${boardFiles.length} file(s) with concurrency ${concurrencyValue}...`,
+    )
 
-    let circuitJson: AnyCircuitElement[]
-    let pcbSvg: string
-    let schSvg: string
-
-    try {
-      if (isCircuitJsonFile(file)) {
-        const parsed = JSON.parse(fs.readFileSync(file, "utf-8"))
-        circuitJson = Array.isArray(parsed) ? parsed : []
-      } else {
-        // Get complete platform config with kicad_mod support
-        const completePlatformConfig = getCompletePlatformConfig(platformConfig)
-
-        const result = await generateCircuitJson({
-          filePath: file,
-          platformConfig: completePlatformConfig,
-        })
-        circuitJson = result.circuitJson
-      }
-    } catch (error) {
-      const errorMessage =
-        error instanceof Error ? error.message : String(error)
-      onError(
-        kleur.red(
-          `\n❌ Failed to generate circuit JSON for ${relativeFilePath}:\n`,
-        ) + kleur.red(`   ${errorMessage}\n`),
-      )
-      return onExit(1)
-    }
+    let firstErrorMessage: string | undefined
 
     try {
-      pcbSvg = convertCircuitJsonToPcbSvg(circuitJson)
-    } catch (error) {
-      const errorMessage =
-        error instanceof Error ? error.message : String(error)
-      onError(
-        kleur.red(
-          `\n❌ Failed to generate PCB SVG for ${relativeFilePath}:\n`,
-        ) + kleur.red(`   ${errorMessage}\n`),
-      )
-      return onExit(1)
-    }
-
-    try {
-      schSvg = convertCircuitJsonToSchematicSvg(circuitJson)
-    } catch (error) {
-      const errorMessage =
-        error instanceof Error ? error.message : String(error)
-      onError(
-        kleur.red(
-          `\n❌ Failed to generate schematic SVG for ${relativeFilePath}:\n`,
-        ) + kleur.red(`   ${errorMessage}\n`),
-      )
-      return onExit(1)
-    }
-    let png3d: Buffer | null = null
-    if (threeD) {
-      try {
-        const glbBuffer = await convertCircuitJsonToGltf(
-          circuitJson,
-          getCircuitJsonToGltfOptions({ format: "glb" }),
-        )
-        if (!(glbBuffer instanceof ArrayBuffer)) {
-          throw new Error(
-            "Expected ArrayBuffer from convertCircuitJsonToGltf with glb format",
-          )
-        }
-
-        let cameraOptions = getBestCameraPosition(circuitJson)
-        if (cameraPreset) {
-          cameraOptions = applyCameraPreset(cameraPreset, cameraOptions)
-        }
-
-        png3d = await renderGLTFToPNGBufferFromGLBBuffer(
-          glbBuffer,
-          cameraOptions,
-        )
-      } catch (error) {
-        const errorMessage =
-          error instanceof Error ? error.message : String(error)
-
-        // Check if it's a "no pcb_board" error
-        if (errorMessage.includes("No pcb_board found in circuit JSON")) {
-          const fileDir = path.dirname(file)
-          const relativeDir = path.relative(projectDir, fileDir)
-          const snapDir = snapshotsDirName
-            ? path.join(projectDir, snapshotsDirName, relativeDir)
-            : path.join(fileDir, "__snapshots__")
-          const base = path.basename(file).replace(/\.[^.]+$/, "")
-          const snap3dPath = path.join(snapDir, `${base}-3d.snap.png`)
-          const existing3dSnapshot = fs.existsSync(snap3dPath)
-
-          if (existing3dSnapshot) {
-            // Error if there's an existing snapshot
-            onError(
-              kleur.red(
-                `\n❌ Failed to generate 3D snapshot for ${relativeFilePath}:\n`,
-              ) +
-                kleur.red(`   No pcb_board found in circuit JSON\n`) +
-                kleur.red(
-                  `   Existing snapshot: ${path.relative(projectDir, snap3dPath)}\n`,
-                ),
-            )
-            return onExit(1)
-          } else {
-            // Skip with warning if no existing snapshot
-            console.log(
-              kleur.red(`⚠️  Skipping 3D snapshot for ${relativeFilePath}:`) +
-                kleur.red(` No pcb_board found in circuit JSON`),
-            )
-            png3d = null
+      await snapshotFilesWithWorkerPool({
+        files: boardFiles,
+        projectDir,
+        snapshotsDirName,
+        concurrency: concurrencyValue,
+        snapshotOptions: {
+          update,
+          threeD,
+          pcbOnly,
+          schematicOnly,
+          forceUpdate,
+          platformConfig,
+          createDiff,
+          cameraPreset,
+        },
+        stopOnFailure: true,
+        onLog: (lines) => {
+          for (const line of lines) {
+            console.log(line)
           }
-        } else {
-          // For any other error, show board name and full error
-          onError(
-            kleur.red(
-              `\n❌ Failed to generate 3D snapshot for ${relativeFilePath}:\n`,
-            ) + kleur.red(`   ${errorMessage}\n`),
-          )
-          return onExit(1)
-        }
-      }
-    }
-
-    // Determine snapshot directory based on whether snapshotsDir is configured
-    const snapDir = snapshotsDirName
-      ? // If snapshotsDir is provided, everything goes in the snapshots directory
-        path.join(
-          projectDir,
-          snapshotsDirName,
-          path.relative(projectDir, path.dirname(file)),
-        )
-      : // If snapshotsDir isn't provided, we create a `__snapshots__` directory next to the file like jest
-        path.join(path.dirname(file), "__snapshots__")
-
-    fs.mkdirSync(snapDir, { recursive: true })
-
-    const base = path.basename(file).replace(/\.[^.]+$/, "")
-    const snapshots: Array<
-      | { type: "pcb" | "schematic"; content: string; isBinary: false }
-      | { type: "3d"; content: Buffer; isBinary: true }
-    > = []
-    if (pcbOnly || !schematicOnly) {
-      snapshots.push({ type: "pcb", content: pcbSvg, isBinary: false })
-    }
-    if (schematicOnly || !pcbOnly) {
-      snapshots.push({ type: "schematic", content: schSvg, isBinary: false })
-    }
-    if (threeD && png3d) {
-      snapshots.push({ type: "3d", content: png3d, isBinary: true })
-    }
-
-    if (!looksSame) {
-      console.error(
-        "looks-same is required. Install it with 'bun add -d looks-same'",
-      )
+        },
+        onJobComplete: (jobResult) => {
+          const { result } = jobResult
+          processResult(result)
+          if (!result.ok && !firstErrorMessage) {
+            firstErrorMessage =
+              result.errorMessage ?? "Snapshot generation failed"
+          }
+        },
+      })
+    } catch (error) {
+      const errorMessage =
+        error instanceof Error ? error.message : String(error)
+      onError(kleur.red(errorMessage))
       return onExit(1)
     }
 
-    for (const snapshot of snapshots) {
-      const { type } = snapshot
-      const is3d = type === "3d"
-      const snapPath = path.join(
-        snapDir,
-        `${base}-${type}.snap.${is3d ? "png" : "svg"}`,
-      )
-      const existing = fs.existsSync(snapPath)
-
-      const newContentBuffer = snapshot.isBinary
-        ? snapshot.content
-        : Buffer.from(snapshot.content, "utf8")
-
-      const newContentForFile = snapshot.content
-
-      if (!existing) {
-        fs.writeFileSync(snapPath, newContentForFile)
-        console.log("✅", kleur.gray(path.relative(projectDir, snapPath)))
-        didUpdate = true
-        continue
-      }
-
-      const oldContentBuffer = fs.readFileSync(snapPath)
-
-      const diffPath = snapPath.replace(
-        is3d ? ".snap.png" : ".snap.svg",
-        is3d ? ".diff.png" : ".diff.svg",
-      )
-
-      const { equal } = await compareAndCreateDiff(
-        oldContentBuffer,
-        newContentBuffer,
-        diffPath,
+    if (firstErrorMessage) {
+      onError(firstErrorMessage)
+      return onExit(1)
+    }
+  } else {
+    for (const file of boardFiles) {
+      const result = await processSnapshotFile({
+        file,
+        projectDir,
+        snapshotsDirName,
+        update,
+        threeD,
+        pcbOnly,
+        schematicOnly,
+        forceUpdate,
+        platformConfig,
         createDiff,
-      )
+        cameraPreset,
+      })
 
-      if (update) {
-        if (!forceUpdate && equal) {
-          console.log("✅", kleur.gray(path.relative(projectDir, snapPath)))
-        } else {
-          fs.writeFileSync(snapPath, newContentForFile)
-          console.log("✅", kleur.gray(path.relative(projectDir, snapPath)))
-          didUpdate = true
-        }
-      } else if (!equal) {
-        mismatches.push(
-          createDiff ? `${snapPath} (diff: ${diffPath})` : snapPath,
-        )
-      } else {
-        console.log("✅", kleur.gray(path.relative(projectDir, snapPath)))
+      processResult(result)
+
+      if (!result.ok) {
+        onError(result.errorMessage ?? "Snapshot generation failed")
+        return onExit(1)
       }
     }
   }
