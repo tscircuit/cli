@@ -10,6 +10,7 @@ import { getCompletePlatformConfig } from "lib/shared/get-complete-platform-conf
 export type BuildFileOutcome = {
   ok: boolean
   circuitJson?: AnyCircuitElement[]
+  hasErrors?: boolean
   /** Fatal error that should always cause exit code 1, even with --ignore-errors */
   isFatalError?: { errorType: string; message: string }
 }
@@ -76,18 +77,10 @@ export const buildFile = async (
       }
     }
 
-    if (errors.length > 0 && !options?.ignoreErrors) {
-      console.error(
-        kleur.red(
-          `Build failed with ${errors.length} error(s). Use --ignore-errors to continue.`,
-        ),
-      )
-      return { ok: false }
-    } else {
-      return {
-        ok: true,
-        circuitJson,
-      }
+    return {
+      ok: true,
+      circuitJson,
+      hasErrors: errors.length > 0 && !options?.ignoreErrors,
     }
   } catch (err) {
     console.error(err)

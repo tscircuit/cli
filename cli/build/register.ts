@@ -317,6 +317,7 @@ export const registerBuild = (program: Command) => {
           buildOutcome: {
             ok: boolean
             circuitJson?: unknown[]
+            hasErrors?: boolean
             isFatalError?: { errorType: string; message: string }
           },
         ) => {
@@ -328,6 +329,10 @@ export const registerBuild = (program: Command) => {
             outputPath,
             ok: buildOutcome.ok,
           })
+
+          if (buildOutcome.hasErrors) {
+            hasErrors = true
+          }
 
           if (!buildOutcome.ok) {
             hasErrors = true
@@ -466,7 +471,15 @@ export const registerBuild = (program: Command) => {
             onJobComplete: async (result: BuildJobResult) => {
               const relative = path.relative(projectDir, result.filePath)
               if (result.ok) {
-                console.log(kleur.green(`✓ ${relative}`))
+                if (result.hasErrors) {
+                  console.log(
+                    kleur.yellow(
+                      `⚠ ${relative} (${result.errors.length} error(s))`,
+                    ),
+                  )
+                } else {
+                  console.log(kleur.green(`✓ ${relative}`))
+                }
               } else {
                 console.log(kleur.red(`✗ ${relative}`))
                 for (const error of result.errors) {
@@ -492,6 +505,7 @@ export const registerBuild = (program: Command) => {
               // circuitJson is not passed through IPC - processBuildResult reads from file if needed
               await processBuildResult(result.filePath, result.outputPath, {
                 ok: result.ok,
+                hasErrors: result.hasErrors,
                 isFatalError: result.isFatalError,
               })
 
@@ -734,9 +748,7 @@ export const registerBuild = (program: Command) => {
         }
 
         // Fatal errors (e.g., circuit generation exceptions) always cause exit code 1.
-        // Non-fatal errors can be suppressed with --ignore-errors.
-        const shouldExitNonZero =
-          hasFatalErrors || (hasErrors && !resolvedOptions?.ignoreErrors)
+        const shouldExitNonZero = hasFatalErrors
 
         const successCount = builtFiles.filter((f) => f.ok).length
         const failCount = builtFiles.length - successCount
@@ -788,12 +800,7 @@ export const registerBuild = (program: Command) => {
             : kleur.green("\n✓ Done"),
         )
         if (shouldExitNonZero) {
-          exitBuild(
-            1,
-            hasFatalErrors
-              ? "fatal circuit build errors occurred"
-              : "build errors occurred and --ignore-errors was not enabled",
-          )
+          exitBuild(1, "fatal circuit build errors occurred")
         }
 
         exitBuild(0, "build finished successfully")
