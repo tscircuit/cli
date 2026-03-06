@@ -13,6 +13,8 @@ import type {
 export type BuildJob = {
   filePath: string
   outputPath: string
+  glbOutputPath?: string
+  previewOutputDir?: string
   projectDir: string
   options?: {
     ignoreErrors?: boolean
@@ -20,6 +22,7 @@ export type BuildJob = {
     platformConfig?: PlatformConfig
     profile?: boolean
     injectedProps?: Record<string, unknown>
+    generatePreviewAssets?: boolean
   }
 }
 
@@ -122,6 +125,12 @@ export class WorkerPool {
           job.resolve({
             filePath: completedMsg.file_path,
             outputPath: completedMsg.output_path,
+            glbOutputPath: completedMsg.glb_output_path,
+            previewOutputDir: completedMsg.preview_output_dir,
+            glbOk: completedMsg.glb_ok,
+            glbError: completedMsg.glb_error,
+            previewOk: completedMsg.preview_ok,
+            previewError: completedMsg.preview_error,
             ok: completedMsg.ok,
             isFatalError: completedMsg.isFatalError,
             errors: completedMsg.errors,
@@ -178,6 +187,8 @@ export class WorkerPool {
       message_type: "build_file",
       file_path: job.filePath,
       output_path: job.outputPath,
+      glb_output_path: job.glbOutputPath,
+      preview_output_dir: job.previewOutputDir,
       project_dir: job.projectDir,
       options: job.options,
     }
@@ -250,6 +261,9 @@ export async function buildFilesWithWorkerPool(options: {
   files: Array<{
     filePath: string
     outputPath: string
+    glbOutputPath?: string
+    previewOutputDir?: string
+    generatePreviewAssets?: boolean
   }>
   projectDir: string
   concurrency: number
@@ -259,6 +273,7 @@ export async function buildFilesWithWorkerPool(options: {
     platformConfig?: PlatformConfig
     profile?: boolean
     injectedProps?: Record<string, unknown>
+    generatePreviewAssets?: boolean
   }
   onLog?: (lines: string[]) => void
   onJobComplete?: (result: BuildJobResult) => void
@@ -284,8 +299,15 @@ export async function buildFilesWithWorkerPool(options: {
       .queueJob({
         filePath: file.filePath,
         outputPath: file.outputPath,
+        glbOutputPath: file.glbOutputPath,
+        previewOutputDir: file.previewOutputDir,
         projectDir: options.projectDir,
-        options: options.buildOptions,
+        options: {
+          ...options.buildOptions,
+          generatePreviewAssets:
+            file.generatePreviewAssets ??
+            options.buildOptions?.generatePreviewAssets,
+        },
       })
       .then(async (result) => {
         results.push(result)
