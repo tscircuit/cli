@@ -28,7 +28,7 @@ export const checkNetlist = async (file?: string) => {
   const resolvedInputFilePath = await resolveInputFilePath(file)
 
   const completePlatformConfig = getCompletePlatformConfig({
-    routingDrcChecksDisabled: true,
+    routingDisabled: true,
     placementDrcChecksDisabled: true,
   } satisfies PlatformConfig)
 
