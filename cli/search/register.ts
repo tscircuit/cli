@@ -14,6 +14,7 @@ export const registerSearch = (program: Command) => {
     .option("--jlcpcb", "Search JLCPCB components")
     .option("--lcsc", "Alias for --jlcpcb")
     .option("--tscircuit", "Search tscircuit registry packages")
+    .option("--json", "Output search results as JSON")
     .action(
       async (
         query: string,
@@ -22,6 +23,7 @@ export const registerSearch = (program: Command) => {
           jlcpcb?: boolean
           lcsc?: boolean
           tscircuit?: boolean
+          json?: boolean
         },
       ) => {
         const hasFilters =
@@ -84,6 +86,35 @@ export const registerSearch = (program: Command) => {
             error instanceof Error ? error.message : error,
           )
           process.exit(1)
+        }
+
+        if (opts.json) {
+          const unifiedResults = [
+            ...kicadResults.map((path) => ({
+              source: "kicad" as const,
+              path,
+            })),
+            ...results.packages.map((pkg) => ({
+              source: "tscircuit" as const,
+              ...pkg,
+            })),
+            ...jlcResults.map((comp) => ({
+              source: "jlcpcb" as const,
+              ...comp,
+            })),
+          ]
+
+          console.log(
+            JSON.stringify(
+              {
+                query,
+                results: unifiedResults,
+              },
+              null,
+              2,
+            ),
+          )
+          return
         }
 
         if (
