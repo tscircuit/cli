@@ -37,7 +37,7 @@ test("check netlist includes readable netlist output", async () => {
 
   expect(exitCode).toBe(0)
   expect(stderr).toBe("")
-  expect(stdout).toMatch(/Errors: \d+/)
+  expect(stdout).toContain("Errors: 0")
   expect(stdout).toMatch(/Warnings: \d+/)
   expect(stdout).toContain("Readable Netlist:")
   expect(stdout).toContain("COMPONENTS:")
