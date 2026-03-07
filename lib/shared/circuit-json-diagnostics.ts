@@ -14,12 +14,17 @@ export function analyzeCircuitJson(circuitJson: any[]): {
     if (!item || typeof item !== "object") continue
 
     const t = item.type
-    if (typeof t === "string") {
-      if (t.endsWith("_error")) errors.push(item)
-      else if (t.endsWith("_warning")) warnings.push(item)
+    const hasErrorByType = typeof t === "string" && t.endsWith("_error")
+    const hasErrorByKey = "error_type" in item
+    if (hasErrorByType || hasErrorByKey) {
+      errors.push(item)
     }
-    if ("error_type" in item) errors.push(item)
-    if ("warning_type" in item) warnings.push(item as CircuitJsonIssue)
+
+    const hasWarningByType = typeof t === "string" && t.endsWith("_warning")
+    const hasWarningByKey = "warning_type" in item
+    if (hasWarningByType || hasWarningByKey) {
+      warnings.push(item as CircuitJsonIssue)
+    }
   }
 
   return { errors, warnings }

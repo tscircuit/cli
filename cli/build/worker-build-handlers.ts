@@ -3,6 +3,7 @@ import path from "node:path"
 import type { PlatformConfig } from "@tscircuit/props"
 import type { AnyCircuitElement } from "circuit-json"
 import { analyzeCircuitJson } from "../../lib/shared/circuit-json-diagnostics"
+import { isDrcIssue } from "../../lib/shared/drc-diagnostics"
 import { generateCircuitJson } from "../../lib/shared/generate-circuit-json"
 import { getCompletePlatformConfig } from "../../lib/shared/get-complete-platform-config"
 import { registerStaticAssetLoaders } from "../../lib/shared/register-static-asset-loaders"
@@ -70,9 +71,15 @@ export const handleBuildFile = async (
     )
 
     const diagnostics = analyzeCircuitJson(circuitJson)
+    const filteredErrors = options?.ignoreDrc
+      ? diagnostics.errors.filter((issue) => !isDrcIssue(issue))
+      : diagnostics.errors
+    const filteredWarnings = options?.ignoreDrc
+      ? diagnostics.warnings.filter((issue) => !isDrcIssue(issue))
+      : diagnostics.warnings
 
     if (!options?.ignoreWarnings) {
-      for (const warn of diagnostics.warnings) {
+      for (const warn of filteredWarnings) {
         const msg = warn.message || JSON.stringify(warn)
         warnings.push(msg)
         workerLog(`Warning: ${msg}`)
@@ -80,14 +87,14 @@ export const handleBuildFile = async (
     }
 
     if (!options?.ignoreErrors) {
-      for (const err of diagnostics.errors) {
+      for (const err of filteredErrors) {
         const msg = err.message || JSON.stringify(err)
         errors.push(msg)
         workerLog(`Error: ${msg}`)
       }
     }
 
-    const hasErrors = diagnostics.errors.length > 0 && !options?.ignoreErrors
+    const hasErrors = filteredErrors.length > 0 && !options?.ignoreErrors
     let glbOk: boolean | undefined
     let glbError: string | undefined
     let previewOk: boolean | undefined
@@ -139,6 +146,8 @@ export const handleBuildFile = async (
       preview_error: previewError,
       ok: true,
       hasErrors,
+      ignoredDrcErrors: diagnostics.errors.length - filteredErrors.length,
+      ignoredDrcWarnings: diagnostics.warnings.length - filteredWarnings.length,
       errors,
       warnings,
       durationMs: options?.profile ? performance.now() - startedAt : undefined,

@@ -4,6 +4,7 @@ import type { PlatformConfig } from "@tscircuit/props"
 import type { AnyCircuitElement } from "circuit-json"
 import kleur from "kleur"
 import { analyzeCircuitJson } from "lib/shared/circuit-json-diagnostics"
+import { isDrcIssue } from "lib/shared/drc-diagnostics"
 import { generateCircuitJson } from "lib/shared/generate-circuit-json"
 import { getCompletePlatformConfig } from "lib/shared/get-complete-platform-config"
 
@@ -11,6 +12,8 @@ export type BuildFileOutcome = {
   ok: boolean
   circuitJson?: AnyCircuitElement[]
   hasErrors?: boolean
+  ignoredDrcErrors?: number
+  ignoredDrcWarnings?: number
   /** Fatal error that should always cause exit code 1, even with --ignore-errors */
   isFatalError?: { errorType: string; message: string }
 }
@@ -22,6 +25,7 @@ export const buildFile = async (
   options?: {
     ignoreErrors?: boolean
     ignoreWarnings?: boolean
+    ignoreDrc?: boolean
     platformConfig?: PlatformConfig
     injectedProps?: Record<string, unknown>
   },
@@ -59,16 +63,22 @@ export const buildFile = async (
     console.log(`Circuit JSON written to ${path.relative(projectDir, output)}`)
 
     const { errors, warnings } = analyzeCircuitJson(circuitJson)
+    const filteredErrors = options?.ignoreDrc
+      ? errors.filter((issue) => !isDrcIssue(issue))
+      : errors
+    const filteredWarnings = options?.ignoreDrc
+      ? warnings.filter((issue) => !isDrcIssue(issue))
+      : warnings
 
     if (!options?.ignoreWarnings) {
-      for (const warn of warnings) {
+      for (const warn of filteredWarnings) {
         const msg = warn.message || JSON.stringify(warn)
         console.log(kleur.yellow(msg))
       }
     }
 
     if (!options?.ignoreErrors) {
-      for (const err of errors) {
+      for (const err of filteredErrors) {
         const msg = err.message || JSON.stringify(err)
         console.error(kleur.red(msg))
         if (err.stack) {
@@ -80,7 +90,9 @@ export const buildFile = async (
     return {
       ok: true,
       circuitJson,
-      hasErrors: errors.length > 0 && !options?.ignoreErrors,
+      hasErrors: filteredErrors.length > 0 && !options?.ignoreErrors,
+      ignoredDrcErrors: errors.length - filteredErrors.length,
+      ignoredDrcWarnings: warnings.length - filteredWarnings.length,
     }
   } catch (err) {
     console.error(err)

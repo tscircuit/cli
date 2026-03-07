@@ -109,6 +109,7 @@ export const registerBuild = (program: Command) => {
     )
     .option("--ignore-errors", "Do not exit with code 1 on errors")
     .option("--ignore-warnings", "Do not log warnings")
+    .option("--ignore-drc", "Ignore DRC check errors and warnings")
     .option("--ignore-config", "Ignore options from tscircuit.config.json")
     .option("--disable-pcb", "Disable PCB outputs")
     .option("--disable-parts-engine", "Disable the parts engine")
@@ -227,7 +228,8 @@ export const registerBuild = (program: Command) => {
         const platformConfig: PlatformConfig | undefined = (() => {
           if (
             !resolvedOptions?.disablePcb &&
-            !resolvedOptions?.disablePartsEngine
+            !resolvedOptions?.disablePartsEngine &&
+            !resolvedOptions?.ignoreDrc
           ) {
             return
           }
@@ -240,6 +242,12 @@ export const registerBuild = (program: Command) => {
 
           if (resolvedOptions?.disablePartsEngine) {
             config.partsEngineDisabled = true
+          }
+
+          if (resolvedOptions?.ignoreDrc) {
+            config.netlistDrcChecksDisabled = true
+            config.routingDrcChecksDisabled = true
+            config.placementDrcChecksDisabled = true
           }
 
           return config
@@ -264,6 +272,8 @@ export const registerBuild = (program: Command) => {
 
         let hasErrors = false
         let hasFatalErrors = false
+        let ignoredDrcErrorCount = 0
+        let ignoredDrcWarningCount = 0
         const staticFileReferences: StaticBuildFileReference[] = []
 
         const builtFiles: BuildFileResult[] = []
@@ -286,6 +296,7 @@ export const registerBuild = (program: Command) => {
         const buildOptions = {
           ignoreErrors: resolvedOptions?.ignoreErrors,
           ignoreWarnings: resolvedOptions?.ignoreWarnings,
+          ignoreDrc: resolvedOptions?.ignoreDrc,
           platformConfig,
           profile: resolvedOptions?.profile,
           injectedProps,
@@ -319,6 +330,8 @@ export const registerBuild = (program: Command) => {
             circuitJson?: unknown[]
             hasErrors?: boolean
             isFatalError?: { errorType: string; message: string }
+            ignoredDrcErrors?: number
+            ignoredDrcWarnings?: number
           },
         ) => {
           const relative = path.relative(projectDir, filePath)
@@ -329,6 +342,9 @@ export const registerBuild = (program: Command) => {
             outputPath,
             ok: buildOutcome.ok,
           })
+
+          ignoredDrcErrorCount += buildOutcome.ignoredDrcErrors ?? 0
+          ignoredDrcWarningCount += buildOutcome.ignoredDrcWarnings ?? 0
 
           if (buildOutcome.hasErrors) {
             hasErrors = true
@@ -507,6 +523,8 @@ export const registerBuild = (program: Command) => {
                 ok: result.ok,
                 hasErrors: result.hasErrors,
                 isFatalError: result.isFatalError,
+                ignoredDrcErrors: result.ignoredDrcErrors,
+                ignoredDrcWarnings: result.ignoredDrcWarnings,
               })
 
               if (resolvedOptions?.glbs && result.ok) {
@@ -794,6 +812,17 @@ export const registerBuild = (program: Command) => {
         console.log(
           `  Output    ${kleur.dim(path.relative(process.cwd(), distDir) || "dist")}`,
         )
+
+        if (
+          resolvedOptions?.ignoreDrc &&
+          (ignoredDrcErrorCount > 1 || ignoredDrcWarningCount > 1)
+        ) {
+          console.log(
+            kleur.gray(
+              `> Ignored ${ignoredDrcErrorCount} DRC check errors and ${ignoredDrcWarningCount} warnings`,
+            ),
+          )
+        }
         console.log(
           hasErrors
             ? kleur.yellow("\n⚠ Build completed with errors")

@@ -18,6 +18,7 @@ type BuildJob = {
   options?: {
     ignoreErrors?: boolean
     ignoreWarnings?: boolean
+    ignoreDrc?: boolean
     platformConfig?: PlatformConfig
     profile?: boolean
     injectedProps?: Record<string, unknown>
@@ -58,6 +59,7 @@ export async function buildFilesWithWorkerPool(options: {
   buildOptions?: {
     ignoreErrors?: boolean
     ignoreWarnings?: boolean
+    ignoreDrc?: boolean
     platformConfig?: PlatformConfig
     profile?: boolean
     injectedProps?: Record<string, unknown>
@@ -108,6 +110,8 @@ export async function buildFilesWithWorkerPool(options: {
         previewError: completedMessage.preview_error,
         ok: completedMessage.ok,
         hasErrors: completedMessage.hasErrors,
+        ignoredDrcErrors: completedMessage.ignoredDrcErrors,
+        ignoredDrcWarnings: completedMessage.ignoredDrcWarnings,
         isFatalError: completedMessage.isFatalError,
         errors: completedMessage.errors,
         warnings: completedMessage.warnings,
