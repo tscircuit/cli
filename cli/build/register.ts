@@ -263,6 +263,7 @@ export const registerBuild = (program: Command) => {
         }
 
         let hasErrors = false
+        let hasWarnings = false
         let hasFatalErrors = false
         const staticFileReferences: StaticBuildFileReference[] = []
 
@@ -318,6 +319,7 @@ export const registerBuild = (program: Command) => {
             ok: boolean
             circuitJson?: unknown[]
             hasErrors?: boolean
+            hasWarnings?: boolean
             isFatalError?: { errorType: string; message: string }
           },
         ) => {
@@ -332,6 +334,10 @@ export const registerBuild = (program: Command) => {
 
           if (buildOutcome.hasErrors) {
             hasErrors = true
+          }
+
+          if (buildOutcome.hasWarnings) {
+            hasWarnings = true
           }
 
           if (!buildOutcome.ok) {
@@ -506,6 +512,7 @@ export const registerBuild = (program: Command) => {
               await processBuildResult(result.filePath, result.outputPath, {
                 ok: result.ok,
                 hasErrors: result.hasErrors,
+                hasWarnings: result.hasWarnings,
                 isFatalError: result.isFatalError,
               })
 
@@ -747,8 +754,9 @@ export const registerBuild = (program: Command) => {
           }
         }
 
-        // Fatal errors (e.g., circuit generation exceptions) always cause exit code 1.
-        const shouldExitNonZero = hasFatalErrors
+        // Exit code 1 for errors (fatal or non-fatal), exit code 2 for warnings only
+        const shouldExitWithError = hasFatalErrors || hasErrors
+        const shouldExitWithWarning = hasWarnings && !hasErrors && !hasFatalErrors
 
         const successCount = builtFiles.filter((f) => f.ok).length
         const failCount = builtFiles.length - successCount
@@ -795,12 +803,17 @@ export const registerBuild = (program: Command) => {
           `  Output    ${kleur.dim(path.relative(process.cwd(), distDir) || "dist")}`,
         )
         console.log(
-          hasErrors
-            ? kleur.yellow("\n⚠ Build completed with errors")
-            : kleur.green("\n✓ Done"),
+          hasErrors || hasFatalErrors
+            ? kleur.red("\n✗ Build completed with errors")
+            : hasWarnings
+              ? kleur.yellow("\n⚠ Build completed with warnings")
+              : kleur.green("\n✓ Done"),
         )
-        if (shouldExitNonZero) {
-          exitBuild(1, "fatal circuit build errors occurred")
+        if (shouldExitWithError) {
+          exitBuild(1, "circuit build errors occurred")
+        }
+        if (shouldExitWithWarning) {
+          exitBuild(2, "circuit build warnings occurred")
         }
 
         exitBuild(0, "build finished successfully")

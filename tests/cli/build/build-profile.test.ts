@@ -19,7 +19,7 @@ test("build with --profile logs per-circuit circuit.json generation time", async
 
   const { stdout, exitCode } = await runCommand("tsci build --profile")
 
-  expect(exitCode).toBe(0)
+  expect(exitCode).toBeOneOf([0, 2])
   expect(stdout).toContain("[profile] first.circuit.tsx:")
   expect(stdout).toContain("[profile] second.circuit.tsx:")
   expect(stdout).toContain("Profile Summary (slowest first)")

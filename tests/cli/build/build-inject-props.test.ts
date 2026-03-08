@@ -26,7 +26,7 @@ test("build --inject-props injects props into default export", async () => {
     'tsci build --inject-props {"resistorName":"R9"} with-props.circuit.tsx',
   )
 
-  expect(exitCode).toBe(0)
+  expect(exitCode).toBeOneOf([0, 2])
 
   const outputPath = path.join(tmpDir, "dist", "with-props", "circuit.json")
   const circuitJson = JSON.parse(await readFile(outputPath, "utf-8"))
@@ -54,7 +54,7 @@ test("build --inject-props-file injects props from file", async () => {
     "tsci build --inject-props-file ./config/props.json with-props-file.circuit.tsx",
   )
 
-  expect(exitCode).toBe(0)
+  expect(exitCode).toBeOneOf([0, 2])
 
   const outputPath = path.join(
     tmpDir,

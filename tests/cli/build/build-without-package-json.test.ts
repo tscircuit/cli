@@ -28,7 +28,7 @@ test("build without package.json creates dist in cwd, not at root", async () => 
   expect(stderr).not.toContain("mkdir '/dist'")
 
   // The build should succeed and create dist in the correct location
-  expect(exitCode).toBe(0)
+  expect(exitCode).toBeOneOf([0, 2])
 
   // Verify the output was created in tmpDir/dist, not /dist
   const outputPath = path.join(tmpDir, "dist", "test-circuit", "circuit.json")
@@ -62,7 +62,7 @@ test("build with file path in subdirectory without package.json uses cwd", async
   expect(stderr).not.toContain("EROFS")
   expect(stderr).not.toContain("mkdir '/dist'")
 
-  expect(exitCode).toBe(0)
+  expect(exitCode).toBeOneOf([0, 2])
 
   // Output should be in tmpDir/dist
   const outputPath = path.join(

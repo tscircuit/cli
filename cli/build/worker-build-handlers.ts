@@ -88,6 +88,8 @@ export const handleBuildFile = async (
     }
 
     const hasErrors = diagnostics.errors.length > 0 && !options?.ignoreErrors
+    const hasWarnings =
+      diagnostics.warnings.length > 0 && !options?.ignoreWarnings
     let glbOk: boolean | undefined
     let glbError: string | undefined
     let previewOk: boolean | undefined
@@ -139,6 +141,7 @@ export const handleBuildFile = async (
       preview_error: previewError,
       ok: true,
       hasErrors,
+      hasWarnings,
       errors,
       warnings,
       durationMs: options?.profile ? performance.now() - startedAt : undefined,
