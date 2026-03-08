@@ -7,6 +7,10 @@ import {
   CircuitJsonToKicadPcbConverter,
   CircuitJsonToKicadSchConverter,
 } from "circuit-json-to-kicad"
+import {
+  convertCircuitJsonToBomRows,
+  convertBomRowsToCsv,
+} from "circuit-json-to-bom-csv"
 import { convertCircuitJsonToReadableNetlist } from "circuit-json-to-readable-netlist"
 import {
   convertCircuitJsonToPcbSvg,
@@ -34,6 +38,7 @@ export const ALLOWED_EXPORT_FORMATS = [
   "kicad_pcb",
   "kicad_zip",
   "kicad-library",
+  "bom-csv",
 ] as const
 
 export type ExportFormat = (typeof ALLOWED_EXPORT_FORMATS)[number]
@@ -52,6 +57,7 @@ const OUTPUT_EXTENSIONS: Record<ExportFormat, string> = {
   kicad_pcb: ".kicad_pcb",
   kicad_zip: "-kicad.zip",
   "kicad-library": "",
+  "bom-csv": "-bom.csv",
 }
 
 type ExportOptions = {
@@ -182,6 +188,13 @@ export const exportSnippet = async ({
       zip.file(`${outputBaseName}.kicad_sch`, schConverter.getOutputString())
       zip.file(`${outputBaseName}.kicad_pcb`, pcbConverter.getOutputString())
       outputContent = await zip.generateAsync({ type: "nodebuffer" })
+      break
+    }
+    case "bom-csv": {
+      const bomRows = await convertCircuitJsonToBomRows({
+        circuitJson: circuitData.circuitJson,
+      })
+      outputContent = convertBomRowsToCsv(bomRows)
       break
     }
     default:
