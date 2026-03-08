@@ -493,3 +493,29 @@ test("getEntrypoint uses custom callback functions", async () => {
   expect(successMessage).toContain("Detected entrypoint")
   expect(errorMessage).toBe("")
 })
+
+test("getEntrypoint warns when multiple common locations exist", async () => {
+  const { tmpDir } = await getCliTestFixture()
+
+  await fs.writeFile(
+    path.join(tmpDir, "index.tsx"),
+    'export default () => <board width="10mm" height="10mm"></board>',
+  )
+  await fs.mkdir(path.join(tmpDir, "src"))
+  await fs.writeFile(
+    path.join(tmpDir, "src", "index.tsx"),
+    'export default () => <board width="10mm" height="10mm"></board>',
+  )
+
+  const warnings: string[] = []
+  const entrypoint = await getEntrypoint({
+    projectDir: tmpDir,
+    onWarning: (message) => warnings.push(message),
+  })
+
+  expect(entrypoint).toBe(path.join(tmpDir, "index.tsx"))
+  expect(warnings).toHaveLength(1)
+  expect(warnings[0]).toContain("Multiple common entrypoints found")
+  expect(warnings[0]).toContain("Choosing 'index.tsx'")
+  expect(warnings[0]).toContain("'src/index.tsx'")
+})
