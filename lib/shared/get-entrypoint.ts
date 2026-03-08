@@ -8,6 +8,7 @@ type EntrypointOptions = {
   projectDir?: string
   onSuccess?: (message: string) => void
   onError?: (message: string) => void
+  onWarning?: (message: string) => void
 }
 
 const ALLOWED_ENTRYPOINT_NAMES = Object.freeze([
@@ -111,6 +112,7 @@ export const getEntrypoint = async ({
   projectDir = process.cwd(),
   onSuccess = (message: string) => console.log(message),
   onError = (message: string) => console.error(message),
+  onWarning = (message: string) => console.warn(kleur.yellow(message)),
 }: EntrypointOptions): Promise<string | null> => {
   try {
     const validatedProjectDir = validateProjectDir(projectDir)
@@ -163,6 +165,25 @@ export const getEntrypoint = async ({
       "src/main.tsx",
       "src/main.circuit.tsx",
     ].map((location) => path.resolve(validatedProjectDir, location))
+
+    const existingCommonEntrypoints = commonLocations.filter(
+      (entrypoint) =>
+        fs.existsSync(entrypoint) &&
+        isValidDirectory(entrypoint, validatedProjectDir),
+    )
+
+    if (existingCommonEntrypoints.length > 1) {
+      const chosenEntrypoint = path.relative(
+        validatedProjectDir,
+        existingCommonEntrypoints[0],
+      )
+      const ignoredEntrypoints = existingCommonEntrypoints
+        .slice(1)
+        .map((entrypoint) => path.relative(validatedProjectDir, entrypoint))
+      onWarning(
+        `Multiple common entrypoints found. Choosing '${chosenEntrypoint}' and ignoring: ${ignoredEntrypoints.map((entrypoint) => `'${entrypoint}'`).join(", ")}.`,
+      )
+    }
 
     const recursiveEntrypoints = findEntrypointsRecursively(
       validatedProjectDir,
