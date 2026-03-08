@@ -13,6 +13,7 @@ import {
   normalizeToArrayBuffer,
   normalizeToUint8Array,
 } from "./worker-binary-utils"
+import type { BuildPreviewOutputSelection } from "./preview-output-selection"
 
 export const writeGlbFromCircuitJson = async (
   circuitJson: AnyCircuitElement[],
@@ -32,28 +33,39 @@ export const writeGlbFromCircuitJson = async (
 export const writePreviewAssetsFromCircuitJson = async (
   circuitJson: AnyCircuitElement[],
   outputDir: string,
+  outputs: BuildPreviewOutputSelection,
 ) => {
   fs.mkdirSync(outputDir, { recursive: true })
 
-  const pcbSvg = convertCircuitJsonToPcbSvg(circuitJson)
-  fs.writeFileSync(path.join(outputDir, "pcb.svg"), pcbSvg, "utf-8")
+  if (outputs.pcbSvgs) {
+    const pcbSvg = convertCircuitJsonToPcbSvg(circuitJson)
+    fs.writeFileSync(path.join(outputDir, "pcb.svg"), pcbSvg, "utf-8")
+  }
 
-  const schematicSvg = convertCircuitJsonToSchematicSvg(circuitJson)
-  fs.writeFileSync(path.join(outputDir, "schematic.svg"), schematicSvg, "utf-8")
+  if (outputs.schematicSvgs) {
+    const schematicSvg = convertCircuitJsonToSchematicSvg(circuitJson)
+    fs.writeFileSync(
+      path.join(outputDir, "schematic.svg"),
+      schematicSvg,
+      "utf-8",
+    )
+  }
 
-  const circuitJsonWithFileUrls = convertModelUrlsToFileUrls(circuitJson)
-  const glbBuffer = await convertCircuitJsonToGltf(
-    circuitJsonWithFileUrls,
-    getCircuitJsonToGltfOptions({ format: "glb" }),
-  )
-  const glbArrayBuffer = await normalizeToArrayBuffer(glbBuffer)
-  const pngBuffer = await renderGLTFToPNGBufferFromGLBBuffer(glbArrayBuffer, {
-    camPos: [10, 10, 10],
-    lookAt: [0, 0, 0],
-  })
+  if (outputs.threeDPngs) {
+    const circuitJsonWithFileUrls = convertModelUrlsToFileUrls(circuitJson)
+    const glbBuffer = await convertCircuitJsonToGltf(
+      circuitJsonWithFileUrls,
+      getCircuitJsonToGltfOptions({ format: "glb" }),
+    )
+    const glbArrayBuffer = await normalizeToArrayBuffer(glbBuffer)
+    const pngBuffer = await renderGLTFToPNGBufferFromGLBBuffer(glbArrayBuffer, {
+      camPos: [10, 10, 10],
+      lookAt: [0, 0, 0],
+    })
 
-  fs.writeFileSync(
-    path.join(outputDir, "3d.png"),
-    Buffer.from(normalizeToUint8Array(pngBuffer)),
-  )
+    fs.writeFileSync(
+      path.join(outputDir, "3d.png"),
+      Buffer.from(normalizeToUint8Array(pngBuffer)),
+    )
+  }
 }

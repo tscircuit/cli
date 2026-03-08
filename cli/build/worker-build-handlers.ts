@@ -10,6 +10,7 @@ import {
   writeGlbFromCircuitJson,
   writePreviewAssetsFromCircuitJson,
 } from "./worker-output-generators"
+import { DEFAULT_PREVIEW_OUTPUT_SELECTION } from "./preview-output-selection"
 import type { BuildCompletedMessage, BuildFileMessage } from "./worker-types"
 
 type WorkerLogger = (...args: unknown[]) => void
@@ -117,6 +118,7 @@ export const handleBuildFile = async (
         await writePreviewAssetsFromCircuitJson(
           circuitJson,
           resolvedPreviewOutputDir,
+          options?.previewOutputs ?? DEFAULT_PREVIEW_OUTPUT_SELECTION,
         )
         previewOk = true
       } catch (err) {

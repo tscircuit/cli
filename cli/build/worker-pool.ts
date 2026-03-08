@@ -2,6 +2,7 @@ import fs from "node:fs"
 import path from "node:path"
 import type { PlatformConfig } from "@tscircuit/props"
 import { ThreadWorkerPool } from "lib/shared/thread-worker-pool"
+import type { BuildPreviewOutputSelection } from "./preview-output-selection"
 import type {
   BuildCompletedMessage,
   BuildFileMessage,
@@ -22,6 +23,7 @@ type BuildJob = {
     profile?: boolean
     injectedProps?: Record<string, unknown>
     generatePreviewAssets?: boolean
+    previewOutputs?: BuildPreviewOutputSelection
   }
 }
 
@@ -62,6 +64,7 @@ export async function buildFilesWithWorkerPool(options: {
     profile?: boolean
     injectedProps?: Record<string, unknown>
     generatePreviewAssets?: boolean
+    previewOutputs?: BuildPreviewOutputSelection
   }
   onLog?: (lines: string[]) => void
   onJobComplete?: (result: BuildJobResult) => void

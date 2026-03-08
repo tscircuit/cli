@@ -23,6 +23,10 @@ import { buildPreviewImages } from "./build-preview-images"
 import { generateKicadProject } from "./generate-kicad-project"
 import type { GeneratedKicadProject } from "./generate-kicad-project"
 import { getBuildEntrypoints } from "./get-build-entrypoints"
+import {
+  hasAnyPreviewOutput,
+  resolvePreviewOutputSelection,
+} from "./preview-output-selection"
 import { resolveBuildOptions } from "./resolve-build-options"
 import { transpileFile } from "./transpile"
 import { exitBuild } from "./utils/exit-build"
@@ -118,6 +122,25 @@ export const registerBuild = (program: Command) => {
     .option(
       "--all-images",
       "Generate preview images for every successful build output",
+    )
+    .option("--pngs", "Generate PNG outputs during build preview generation")
+    .option("--svgs", "Generate SVG outputs during build preview generation")
+    .option(
+      "--pcb-svgs",
+      "Generate PCB SVG outputs during build preview generation",
+    )
+    .option(
+      "--schematic-svgs",
+      "Generate schematic SVG outputs during build preview generation",
+    )
+    .option("--3d", "Legacy alias for generating PNG preview outputs")
+    .option(
+      "--pcb-only",
+      "Legacy compatibility flag: omit schematic SVG preview outputs",
+    )
+    .option(
+      "--schematic-only",
+      "Legacy compatibility flag: omit PCB SVG preview outputs",
     )
     .option(
       "--kicad-project",
@@ -283,6 +306,11 @@ export const registerBuild = (program: Command) => {
         })
 
         // Prepare build options for reuse
+        const {
+          selection: previewOutputSelection,
+          hasExplicitSelection: hasExplicitPreviewOutputSelection,
+        } = resolvePreviewOutputSelection(resolvedOptions)
+
         const buildOptions = {
           ignoreErrors: resolvedOptions?.ignoreErrors,
           ignoreWarnings: resolvedOptions?.ignoreWarnings,
@@ -290,10 +318,15 @@ export const registerBuild = (program: Command) => {
           profile: resolvedOptions?.profile,
           injectedProps,
           generatePreviewAssets: false,
+          previewOutputs: previewOutputSelection,
         }
 
-        const shouldGeneratePreviewImages =
-          resolvedOptions?.previewImages || resolvedOptions?.allImages
+        const shouldGeneratePreviewImages = Boolean(
+          (resolvedOptions?.previewImages ||
+            resolvedOptions?.allImages ||
+            hasExplicitPreviewOutputSelection) &&
+            hasAnyPreviewOutput(previewOutputSelection),
+        )
         const shouldGenerateAllPreviewImages = Boolean(
           resolvedOptions?.allImages,
         )
@@ -552,6 +585,7 @@ export const registerBuild = (program: Command) => {
               mainEntrypoint,
               previewComponentPath,
               allImages: shouldGenerateAllPreviewImages,
+              previewOutputs: previewOutputSelection,
             })
           }
         }
@@ -757,6 +791,13 @@ export const registerBuild = (program: Command) => {
           resolvedOptions?.transpile && "transpile",
           resolvedOptions?.previewImages && "preview-images",
           resolvedOptions?.allImages && "all-images",
+          resolvedOptions?.pngs && "pngs",
+          resolvedOptions?.svgs && "svgs",
+          resolvedOptions?.pcbSvgs && "pcb-svgs",
+          resolvedOptions?.schematicSvgs && "schematic-svgs",
+          resolvedOptions?.["3d"] && "3d",
+          resolvedOptions?.pcbOnly && "pcb-only",
+          resolvedOptions?.schematicOnly && "schematic-only",
           resolvedOptions?.glbs && "glbs",
           resolvedOptions?.kicadProject && "kicad-project",
           resolvedOptions?.kicadLibrary && "kicad-library",

@@ -25,6 +25,13 @@ export interface BuildCommandOptions {
   concurrency?: string
   injectProps?: string
   injectPropsFile?: string
+  pngs?: boolean
+  svgs?: boolean
+  pcbSvgs?: boolean
+  schematicSvgs?: boolean
+  "3d"?: boolean
+  pcbOnly?: boolean
+  schematicOnly?: boolean
 }
 
 const runCommand = (command: string, cwd: string) => {
