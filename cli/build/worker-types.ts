@@ -36,6 +36,8 @@ export type BuildCompletedMessage = {
   preview_error?: string
   ok: boolean
   hasErrors?: boolean
+  errorCount?: number
+  warningCount?: number
   /** Fatal error that should always cause exit code 1, even with --ignore-errors */
   isFatalError?: { errorType: string; message: string }
   errors: string[]
@@ -75,6 +77,8 @@ export type BuildJobResult = {
   previewError?: string
   ok: boolean
   hasErrors?: boolean
+  errorCount?: number
+  warningCount?: number
   /** Fatal error that should always cause exit code 1, even with --ignore-errors */
   isFatalError?: { errorType: string; message: string }
   errors: string[]

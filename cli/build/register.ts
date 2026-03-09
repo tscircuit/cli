@@ -264,6 +264,8 @@ export const registerBuild = (program: Command) => {
 
         let hasErrors = false
         let hasFatalErrors = false
+        let totalErrorCount = 0
+        let totalWarningCount = 0
         const staticFileReferences: StaticBuildFileReference[] = []
 
         const builtFiles: BuildFileResult[] = []
@@ -318,6 +320,8 @@ export const registerBuild = (program: Command) => {
             ok: boolean
             circuitJson?: unknown[]
             hasErrors?: boolean
+            errorCount?: number
+            warningCount?: number
             isFatalError?: { errorType: string; message: string }
           },
         ) => {
@@ -333,6 +337,8 @@ export const registerBuild = (program: Command) => {
           if (buildOutcome.hasErrors) {
             hasErrors = true
           }
+          totalErrorCount += buildOutcome.errorCount ?? 0
+          totalWarningCount += buildOutcome.warningCount ?? 0
 
           if (!buildOutcome.ok) {
             hasErrors = true
@@ -506,6 +512,8 @@ export const registerBuild = (program: Command) => {
               await processBuildResult(result.filePath, result.outputPath, {
                 ok: result.ok,
                 hasErrors: result.hasErrors,
+                errorCount: result.errorCount,
+                warningCount: result.warningCount,
                 isFatalError: result.isFatalError,
               })
 
@@ -795,9 +803,9 @@ export const registerBuild = (program: Command) => {
           `  Output    ${kleur.dim(path.relative(process.cwd(), distDir) || "dist")}`,
         )
         console.log(
-          hasErrors
-            ? kleur.yellow("\n⚠ Build completed with errors")
-            : kleur.green("\n✓ Done"),
+          kleur.green(
+            `\nBuild Completed with ${totalErrorCount} errors and ${totalWarningCount} warnings`,
+          ),
         )
         if (shouldExitNonZero) {
           exitBuild(1, "fatal circuit build errors occurred")

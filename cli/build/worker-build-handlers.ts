@@ -87,7 +87,9 @@ export const handleBuildFile = async (
       }
     }
 
-    const hasErrors = diagnostics.errors.length > 0 && !options?.ignoreErrors
+    const errorCount = diagnostics.errors.length
+    const warningCount = diagnostics.warnings.length
+    const hasErrors = errorCount > 0 && !options?.ignoreErrors
     let glbOk: boolean | undefined
     let glbError: string | undefined
     let previewOk: boolean | undefined
@@ -139,6 +141,8 @@ export const handleBuildFile = async (
       preview_error: previewError,
       ok: true,
       hasErrors,
+      errorCount,
+      warningCount,
       errors,
       warnings,
       durationMs: options?.profile ? performance.now() - startedAt : undefined,
@@ -157,6 +161,8 @@ export const handleBuildFile = async (
       preview_output_dir: previewOutputDir,
       ok: false,
       hasErrors: true,
+      errorCount: 1,
+      warningCount: 0,
       isFatalError: {
         errorType: "circuit_generation_failed",
         message: errorMsg,

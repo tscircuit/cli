@@ -11,6 +11,8 @@ export type BuildFileOutcome = {
   ok: boolean
   circuitJson?: AnyCircuitElement[]
   hasErrors?: boolean
+  errorCount?: number
+  warningCount?: number
   /** Fatal error that should always cause exit code 1, even with --ignore-errors */
   isFatalError?: { errorType: string; message: string }
 }
@@ -81,6 +83,8 @@ export const buildFile = async (
       ok: true,
       circuitJson,
       hasErrors: errors.length > 0 && !options?.ignoreErrors,
+      errorCount: errors.length,
+      warningCount: warnings.length,
     }
   } catch (err) {
     console.error(err)
@@ -91,6 +95,8 @@ export const buildFile = async (
     // Fatal error: circuit generation itself failed (not just analysis errors)
     return {
       ok: false,
+      errorCount: 1,
+      warningCount: 0,
       isFatalError: {
         errorType: "circuit_generation_failed",
         message: err instanceof Error ? err.message : String(err),

@@ -29,5 +29,5 @@ test("build succeeds when circuit JSON is generated with DRC errors", async () =
   )
 
   expect(exitCode).toBe(0)
-  expect(stdout).toContain("Build completed with errors")
+  expect(stdout).toMatch(/Build Completed with \d+ errors and \d+ warnings/)
 }, 30_000)
