@@ -137,7 +137,7 @@ export const registerBuild = (program: Command) => {
     )
     .option(
       "--schematic-only",
-      "Generate only schematic SVG outputs outputs during build generation",
+      "Generate only schematic SVG outputs during build generation",
     )
     .option(
       "--kicad-project",
