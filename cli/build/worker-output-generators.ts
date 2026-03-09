@@ -13,7 +13,7 @@ import {
   normalizeToArrayBuffer,
   normalizeToUint8Array,
 } from "./worker-binary-utils"
-import type { BuildPreviewOutputSelection } from "./preview-output-selection"
+import type { BuildImageFormatSelection } from "./image-format-selection"
 
 export const writeGlbFromCircuitJson = async (
   circuitJson: AnyCircuitElement[],
@@ -30,19 +30,22 @@ export const writeGlbFromCircuitJson = async (
   fs.writeFileSync(glbOutputPath, Buffer.from(glbData))
 }
 
-export const writePreviewAssetsFromCircuitJson = async (
+export const writeImageAssetsFromCircuitJson = async (
   circuitJson: AnyCircuitElement[],
-  outputDir: string,
-  outputs: BuildPreviewOutputSelection,
+  options: {
+    outputDir: string
+    imageFormats: BuildImageFormatSelection
+  },
 ) => {
+  const { outputDir, imageFormats } = options
   fs.mkdirSync(outputDir, { recursive: true })
 
-  if (outputs.pcbSvgs) {
+  if (imageFormats.pcbSvgs) {
     const pcbSvg = convertCircuitJsonToPcbSvg(circuitJson)
     fs.writeFileSync(path.join(outputDir, "pcb.svg"), pcbSvg, "utf-8")
   }
 
-  if (outputs.schematicSvgs) {
+  if (imageFormats.schematicSvgs) {
     const schematicSvg = convertCircuitJsonToSchematicSvg(circuitJson)
     fs.writeFileSync(
       path.join(outputDir, "schematic.svg"),
@@ -51,7 +54,7 @@ export const writePreviewAssetsFromCircuitJson = async (
     )
   }
 
-  if (outputs.threeDPngs) {
+  if (imageFormats.threeDPngs) {
     const circuitJsonWithFileUrls = convertModelUrlsToFileUrls(circuitJson)
     const glbBuffer = await convertCircuitJsonToGltf(
       circuitJsonWithFileUrls,

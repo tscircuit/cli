@@ -1,25 +1,26 @@
 import type { BuildCommandOptions } from "./build-ci"
 
-export type BuildPreviewOutputSelection = {
+export type BuildImageFormatSelection = {
   threeDPngs: boolean
   pcbSvgs: boolean
   schematicSvgs: boolean
 }
 
-export const DEFAULT_PREVIEW_OUTPUT_SELECTION: BuildPreviewOutputSelection = {
+export const DEFAULT_IMAGE_FORMAT_SELECTION: BuildImageFormatSelection = {
   threeDPngs: true,
   pcbSvgs: true,
   schematicSvgs: true,
 }
 
-export const EMPTY_PREVIEW_OUTPUT_SELECTION: BuildPreviewOutputSelection = {
+export const EMPTY_IMAGE_FORMAT_SELECTION: BuildImageFormatSelection = {
   threeDPngs: false,
   pcbSvgs: false,
   schematicSvgs: false,
 }
 
-export const hasAnyPreviewOutput = (selection: BuildPreviewOutputSelection) =>
-  selection.threeDPngs || selection.pcbSvgs || selection.schematicSvgs
+export const hasAnyImageFormatSelected = (
+  selection: BuildImageFormatSelection,
+) => selection.threeDPngs || selection.pcbSvgs || selection.schematicSvgs
 
 const hasNewOutputFlags = (options?: BuildCommandOptions) =>
   Boolean(
@@ -29,28 +30,28 @@ const hasNewOutputFlags = (options?: BuildCommandOptions) =>
       options?.schematicSvgs,
   )
 
-const hasLegacyOutputFlags = (options?: BuildCommandOptions) =>
+const hasEstablishedOutputFlags = (options?: BuildCommandOptions) =>
   Boolean(options?.["3d"] || options?.pcbOnly || options?.schematicOnly)
 
-export const resolvePreviewOutputSelection = (
+export const resolveImageFormatSelection = (
   options?: BuildCommandOptions,
 ): {
-  selection: BuildPreviewOutputSelection
+  selection: BuildImageFormatSelection
   hasExplicitSelection: boolean
 } => {
   const hasNewFlags = hasNewOutputFlags(options)
-  const hasLegacyFlags = hasLegacyOutputFlags(options)
-  const hasExplicitSelection = hasNewFlags || hasLegacyFlags
+  const hasEstablishedFlags = hasEstablishedOutputFlags(options)
+  const hasExplicitSelection = hasNewFlags || hasEstablishedFlags
 
   if (!hasExplicitSelection) {
     return {
-      selection: { ...DEFAULT_PREVIEW_OUTPUT_SELECTION },
+      selection: { ...DEFAULT_IMAGE_FORMAT_SELECTION },
       hasExplicitSelection: false,
     }
   }
 
-  if (!hasNewFlags && hasLegacyFlags) {
-    const selection: BuildPreviewOutputSelection = {
+  if (!hasNewFlags && hasEstablishedFlags) {
+    const selection: BuildImageFormatSelection = {
       threeDPngs: Boolean(options?.["3d"]),
       pcbSvgs: true,
       schematicSvgs: true,
@@ -67,8 +68,8 @@ export const resolvePreviewOutputSelection = (
     return { selection, hasExplicitSelection: true }
   }
 
-  const selection: BuildPreviewOutputSelection = {
-    ...EMPTY_PREVIEW_OUTPUT_SELECTION,
+  const selection: BuildImageFormatSelection = {
+    ...EMPTY_IMAGE_FORMAT_SELECTION,
   }
 
   if (options?.svgs) {
@@ -85,7 +86,7 @@ export const resolvePreviewOutputSelection = (
     selection.threeDPngs = true
   }
 
-  // Preserve compatibility with legacy filtering flags when used together.
+  // Preserve compatibility with filtering flags when used together.
   if (options?.pcbOnly && !options?.schematicOnly) {
     selection.schematicSvgs = false
   }

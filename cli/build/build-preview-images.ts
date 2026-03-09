@@ -9,7 +9,7 @@ import {
 import { getCircuitJsonToGltfOptions } from "lib/shared/get-circuit-json-to-gltf-options"
 import { renderGLTFToPNGBufferFromGLBBuffer } from "poppygl"
 import { convertModelUrlsToFileUrls } from "./convert-model-urls-to-file-urls"
-import type { BuildPreviewOutputSelection } from "./preview-output-selection"
+import type { BuildImageFormatSelection } from "./image-format-selection"
 
 export interface BuildFileResult {
   sourcePath: string
@@ -69,12 +69,12 @@ const generatePreviewAssets = async ({
   build,
   outputDir,
   distDir,
-  previewOutputs,
+  imageFormats,
 }: {
   build: BuildFileResult
   outputDir: string
   distDir: string
-  previewOutputs: BuildPreviewOutputSelection
+  imageFormats: BuildImageFormatSelection
 }) => {
   const prefixRelative = path.relative(distDir, outputDir) || "."
   const prefix = prefixRelative === "." ? "" : `[${prefixRelative}] `
@@ -90,7 +90,7 @@ const generatePreviewAssets = async ({
 
   fs.mkdirSync(outputDir, { recursive: true })
 
-  if (previewOutputs.pcbSvgs) {
+  if (imageFormats.pcbSvgs) {
     try {
       console.log(`${prefix}Generating PCB SVG...`)
       const pcbSvg = convertCircuitJsonToPcbSvg(circuitJson)
@@ -101,7 +101,7 @@ const generatePreviewAssets = async ({
     }
   }
 
-  if (previewOutputs.schematicSvgs) {
+  if (imageFormats.schematicSvgs) {
     try {
       console.log(`${prefix}Generating schematic SVG...`)
       const schematicSvg = convertCircuitJsonToSchematicSvg(circuitJson)
@@ -116,7 +116,7 @@ const generatePreviewAssets = async ({
     }
   }
 
-  if (previewOutputs.threeDPngs) {
+  if (imageFormats.threeDPngs) {
     try {
       console.log(`${prefix}Converting circuit to GLB...`)
       const circuitJsonWithFileUrls = convertModelUrlsToFileUrls(circuitJson)
@@ -150,14 +150,14 @@ export const buildPreviewImages = async ({
   mainEntrypoint,
   previewComponentPath,
   allImages,
-  previewOutputs,
+  imageFormats,
 }: {
   builtFiles: BuildFileResult[]
   distDir: string
   mainEntrypoint?: string
   previewComponentPath?: string
   allImages?: boolean
-  previewOutputs: BuildPreviewOutputSelection
+  imageFormats: BuildImageFormatSelection
 }) => {
   const successfulBuilds = builtFiles.filter((file) => file.ok)
   // previewComponentPath takes precedence over mainEntrypoint for preview images
@@ -180,7 +180,7 @@ export const buildPreviewImages = async ({
         build,
         outputDir,
         distDir,
-        previewOutputs,
+        imageFormats,
       })
     }
     return
@@ -207,6 +207,6 @@ export const buildPreviewImages = async ({
     build: previewBuild,
     outputDir: distDir,
     distDir,
-    previewOutputs,
+    imageFormats,
   })
 }

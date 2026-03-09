@@ -86,7 +86,7 @@ test("build --schematic-svgs generates only schematic.svg", async () => {
   await expect(stat(path.join(tmpDir, "dist", "3d.png"))).rejects.toBeTruthy()
 }, 30_000)
 
-test("build legacy flags still work (--3d --pcb-only)", async () => {
+test("build established flags still work (--3d --pcb-only)", async () => {
   const { tmpDir, runCommand } = await getCliTestFixture()
   const circuitPath = path.join(tmpDir, "preview.circuit.tsx")
   await writeFile(circuitPath, circuitCode)
