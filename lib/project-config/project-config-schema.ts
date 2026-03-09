@@ -13,6 +13,12 @@ export const projectConfigSchema = z.object({
   kicadProjectEntrypointPath: z.string().optional(),
   kicadLibraryEntrypointPath: z.string().optional(),
   kicadLibraryName: z.string().optional(),
+  allowedSources: z
+    .array(z.enum(["jlcpcb", "tscircuit"]))
+    .optional()
+    .describe(
+      "Restrict which sources tsci import may pull from. Omit to allow all.",
+    ),
   alwaysUseLatestTscircuitOnCloud: z.boolean().optional(),
   build: z
     .object({

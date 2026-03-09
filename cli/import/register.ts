@@ -2,6 +2,7 @@ import type { Command } from "commander"
 import kleur from "kleur"
 import { getQueryFromParts } from "cli/utils/get-query-from-parts"
 import { importComponentFromJlcpcb } from "lib/import/import-component-from-jlcpcb"
+import { loadProjectConfig } from "lib/project-config"
 import { getRegistryApiKy } from "lib/registry-api/get-ky"
 import { addPackage } from "lib/shared/add-package"
 import { prompts } from "lib/utils/prompts"
@@ -28,8 +29,41 @@ export const registerImport = (program: Command) => {
       ) => {
         const query = getQueryFromParts(queryParts)
         const hasFilters = opts.jlcpcb || opts.lcsc || opts.tscircuit
-        const searchJlc = opts.jlcpcb || opts.lcsc || !hasFilters
-        const searchTscircuit = opts.tscircuit || !hasFilters
+        let searchJlc = opts.jlcpcb || opts.lcsc || !hasFilters
+        let searchTscircuit = opts.tscircuit || !hasFilters
+
+        // Enforce project-level source policy from tscircuit.config.json
+        const projectConfig = loadProjectConfig(process.cwd())
+        const allowedSources = projectConfig?.allowedSources
+        if (allowedSources) {
+          if (
+            (opts.jlcpcb || opts.lcsc) &&
+            !allowedSources.includes("jlcpcb")
+          ) {
+            console.error(
+              kleur.red(
+                `Import from JLCPCB is not allowed by this project's policy.\n` +
+                  `Allowed sources: ${allowedSources.join(", ")}\n` +
+                  `To change this, update "allowedSources" in tscircuit.config.json.`,
+              ),
+            )
+            process.exit(1)
+          }
+          if (opts.tscircuit && !allowedSources.includes("tscircuit")) {
+            console.error(
+              kleur.red(
+                `Import from the tscircuit registry is not allowed by this project's policy.\n` +
+                  `Allowed sources: ${allowedSources.join(", ")}\n` +
+                  `To change this, update "allowedSources" in tscircuit.config.json.`,
+              ),
+            )
+            process.exit(1)
+          }
+          // Restrict default (unflagged) searches to allowed sources
+          if (!allowedSources.includes("jlcpcb")) searchJlc = false
+          if (!allowedSources.includes("tscircuit")) searchTscircuit = false
+        }
+
         const ky = getRegistryApiKy()
         const spinner = ora("Searching...").start()
 
@@ -84,7 +118,7 @@ export const registerImport = (program: Command) => {
         if (!registryResults.length && !jlcResults?.length) {
           console.log(
             kleur.yellow(
-              `No results found for "${query}" in the tscircuit registry or JLCPCB.`,
+              `No results found for "${query}" in ${[searchTscircuit && "tscircuit registry", searchJlc && "JLCPCB"].filter(Boolean).join(" or ")}.`,
             ),
           )
           return

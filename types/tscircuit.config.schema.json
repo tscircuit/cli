@@ -64,6 +64,14 @@
       "type": "string",
       "description": "Name for the generated KiCad library. Falls back to package.json name, then directory name."
     },
+    "allowedSources": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "enum": ["jlcpcb", "tscircuit"]
+      },
+      "description": "Restrict which sources tsci import may pull from. Omit to allow all sources."
+    },
     "alwaysUseLatestTscircuitOnCloud": {
       "type": "boolean",
       "description": "Always use the latest TSCircuit version when building on the cloud."
