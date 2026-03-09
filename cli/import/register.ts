@@ -1,5 +1,6 @@
 import type { Command } from "commander"
 import kleur from "kleur"
+import { getQueryFromParts } from "cli/utils/get-query-from-parts"
 import { importComponentFromJlcpcb } from "lib/import/import-component-from-jlcpcb"
 import { getRegistryApiKy } from "lib/registry-api/get-ky"
 import { addPackage } from "lib/shared/add-package"
@@ -12,19 +13,20 @@ export const registerImport = (program: Command) => {
     .description(
       "Search JLCPCB or the tscircuit registry and import a component",
     )
-    .argument("<query>", "Chip name, part number, or package name")
+    .argument("<query...>", "Chip name, part number, or package name")
     .option("--jlcpcb", "Search JLCPCB components")
     .option("--lcsc", "Alias for --jlcpcb")
     .option("--tscircuit", "Search tscircuit registry packages")
     .action(
       async (
-        query: string,
+        queryParts: string[],
         opts: {
           jlcpcb?: boolean
           lcsc?: boolean
           tscircuit?: boolean
         },
       ) => {
+        const query = getQueryFromParts(queryParts)
         const hasFilters = opts.jlcpcb || opts.lcsc || opts.tscircuit
         const searchJlc = opts.jlcpcb || opts.lcsc || !hasFilters
         const searchTscircuit = opts.tscircuit || !hasFilters

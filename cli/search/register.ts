@@ -2,6 +2,7 @@ import type { Command } from "commander"
 import { getRegistryApiKy } from "lib/registry-api/get-ky"
 import Fuse from "fuse.js"
 import kleur from "kleur"
+import { getQueryFromParts } from "cli/utils/get-query-from-parts"
 
 export const registerSearch = (program: Command) => {
   program
@@ -9,7 +10,10 @@ export const registerSearch = (program: Command) => {
     .description(
       "Search for footprints, CAD models or packages in the tscircuit ecosystem",
     )
-    .argument("<query>", "Search query (e.g. keyword, author, or package name)")
+    .argument(
+      "<query...>",
+      "Search query (e.g. keyword, author, or package name)",
+    )
     .option("--kicad", "Search KiCad footprints")
     .option("--jlcpcb", "Search JLCPCB components")
     .option("--lcsc", "Alias for --jlcpcb")
@@ -17,7 +21,7 @@ export const registerSearch = (program: Command) => {
     .option("--json", "Output search results as JSON")
     .action(
       async (
-        query: string,
+        queryParts: string[],
         opts: {
           kicad?: boolean
           jlcpcb?: boolean
@@ -26,6 +30,7 @@ export const registerSearch = (program: Command) => {
           json?: boolean
         },
       ) => {
+        const query = getQueryFromParts(queryParts)
         const hasFilters =
           opts.kicad || opts.jlcpcb || opts.lcsc || opts.tscircuit
         const searchKicad = opts.kicad || !hasFilters
