@@ -126,13 +126,7 @@ const generatePreviewAssets = async ({
       )
       console.log(`${prefix}Rendering GLB to PNG buffer...`)
       const glbArrayBuffer = await normalizeToArrayBuffer(glbBuffer)
-      const pngBuffer = await renderGLTFToPNGBufferFromGLBBuffer(
-        glbArrayBuffer,
-        {
-          camPos: [10, 10, 10],
-          lookAt: [0, 0, 0],
-        },
-      )
+      const pngBuffer = await renderGLTFToPNGBufferFromGLBBuffer(glbArrayBuffer)
       fs.writeFileSync(
         path.join(outputDir, "3d.png"),
         Buffer.from(normalizeToUint8Array(pngBuffer)),
