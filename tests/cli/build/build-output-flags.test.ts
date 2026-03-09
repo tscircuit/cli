@@ -21,10 +21,8 @@ test("build --pcb-svgs generates only pcb.svg", async () => {
   const pcbSvg = await readFile(path.join(tmpDir, "dist", "pcb.svg"), "utf-8")
   expect(pcbSvg).toContain("<svg")
 
-  await expect(
-    stat(path.join(tmpDir, "dist", "schematic.svg")),
-  ).rejects.toBeTruthy()
-  await expect(stat(path.join(tmpDir, "dist", "3d.png"))).rejects.toBeTruthy()
+  expect(stat(path.join(tmpDir, "dist", "schematic.svg"))).rejects.toBeTruthy()
+  expect(stat(path.join(tmpDir, "dist", "3d.png"))).rejects.toBeTruthy()
 }, 30_000)
 
 test("build --pngs generates only 3d.png", async () => {
@@ -42,10 +40,8 @@ test("build --pngs generates only 3d.png", async () => {
   expect(preview3d[2]).toBe(0x4e)
   expect(preview3d[3]).toBe(0x47)
 
-  await expect(stat(path.join(tmpDir, "dist", "pcb.svg"))).rejects.toBeTruthy()
-  await expect(
-    stat(path.join(tmpDir, "dist", "schematic.svg")),
-  ).rejects.toBeTruthy()
+  expect(stat(path.join(tmpDir, "dist", "pcb.svg"))).rejects.toBeTruthy()
+  expect(stat(path.join(tmpDir, "dist", "schematic.svg"))).rejects.toBeTruthy()
 }, 30_000)
 
 test("build --svgs generates only pcb.svg and schematic.svg", async () => {
@@ -65,7 +61,7 @@ test("build --svgs generates only pcb.svg and schematic.svg", async () => {
   )
   expect(schematicSvg).toContain("<svg")
 
-  await expect(stat(path.join(tmpDir, "dist", "3d.png"))).rejects.toBeTruthy()
+  expect(stat(path.join(tmpDir, "dist", "3d.png"))).rejects.toBeTruthy()
 }, 30_000)
 
 test("build --schematic-svgs generates only schematic.svg", async () => {
@@ -82,8 +78,8 @@ test("build --schematic-svgs generates only schematic.svg", async () => {
   )
   expect(schematicSvg).toContain("<svg")
 
-  await expect(stat(path.join(tmpDir, "dist", "pcb.svg"))).rejects.toBeTruthy()
-  await expect(stat(path.join(tmpDir, "dist", "3d.png"))).rejects.toBeTruthy()
+  expect(stat(path.join(tmpDir, "dist", "pcb.svg"))).rejects.toBeTruthy()
+  expect(stat(path.join(tmpDir, "dist", "3d.png"))).rejects.toBeTruthy()
 }, 30_000)
 
 test("build established flags still work (--3d --pcb-only)", async () => {
@@ -104,7 +100,5 @@ test("build established flags still work (--3d --pcb-only)", async () => {
   expect(preview3d[2]).toBe(0x4e)
   expect(preview3d[3]).toBe(0x47)
 
-  await expect(
-    stat(path.join(tmpDir, "dist", "schematic.svg")),
-  ).rejects.toBeTruthy()
+  expect(stat(path.join(tmpDir, "dist", "schematic.svg"))).rejects.toBeTruthy()
 }, 30_000)
