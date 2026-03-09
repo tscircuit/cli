@@ -10,6 +10,7 @@ type ThreadWorker<TJob, TResult> = {
   worker: Worker
   busy: boolean
   currentJob: QueuedJob<TJob, TResult> | null
+  timeoutId: NodeJS.Timeout | null
 }
 
 type ThreadWorkerPoolOptions<TJob, TWorkerInput, TWorkerOutput, TResult> = {
@@ -23,6 +24,7 @@ type ThreadWorkerPoolOptions<TJob, TWorkerInput, TWorkerOutput, TResult> = {
   shouldStopOnMessage?: (message: TWorkerOutput) => boolean
   onLog?: (lines: string[]) => void
   cancellationError?: Error
+  jobTimeoutMs?: number
 }
 
 export class ThreadWorkerPool<TJob, TWorkerInput, TWorkerOutput, TResult> {
@@ -55,25 +57,97 @@ export class ThreadWorkerPool<TJob, TWorkerInput, TWorkerOutput, TResult> {
     if (this.initialized) return
 
     for (let i = 0; i < this.concurrency; i++) {
-      const worker = new Worker(this.options.workerEntrypointPath)
-      const threadWorker: ThreadWorker<TJob, TResult> = {
-        worker,
-        busy: false,
-        currentJob: null,
-      }
-
-      this.setupWorkerMessageHandling(threadWorker)
-      this.setupWorkerErrorHandling(threadWorker)
-      this.workers.push(threadWorker)
+      this.workers.push(this.createThreadWorker())
     }
 
     this.initialized = true
   }
 
-  private setupWorkerMessageHandling(
+  private createThreadWorker(): ThreadWorker<TJob, TResult> {
+    const threadWorker: ThreadWorker<TJob, TResult> = {
+      worker: new Worker(this.options.workerEntrypointPath),
+      busy: false,
+      currentJob: null,
+      timeoutId: null,
+    }
+
+    this.attachWorkerHandlers(threadWorker)
+
+    return threadWorker
+  }
+
+  private clearWorkerTimeout(threadWorker: ThreadWorker<TJob, TResult>): void {
+    if (threadWorker.timeoutId) {
+      clearTimeout(threadWorker.timeoutId)
+      threadWorker.timeoutId = null
+    }
+  }
+
+  private startJobTimeout(threadWorker: ThreadWorker<TJob, TResult>): void {
+    this.clearWorkerTimeout(threadWorker)
+
+    if (!this.options.jobTimeoutMs || this.options.jobTimeoutMs <= 0) {
+      return
+    }
+
+    const job = threadWorker.currentJob
+    if (!job) {
+      return
+    }
+
+    threadWorker.timeoutId = setTimeout(() => {
+      const timedOutJob = threadWorker.currentJob
+      if (!timedOutJob) {
+        return
+      }
+
+      const timeoutError = new Error(
+        `Worker job timed out after ${this.options.jobTimeoutMs}ms`,
+      )
+
+      timedOutJob.reject(timeoutError)
+      this.replaceWorker(threadWorker)
+      this.processQueue()
+    }, this.options.jobTimeoutMs)
+  }
+
+  private replaceWorker(threadWorker: ThreadWorker<TJob, TResult>): void {
+    this.clearWorkerTimeout(threadWorker)
+    void threadWorker.worker.terminate().catch(() => undefined)
+
+    threadWorker.worker = new Worker(this.options.workerEntrypointPath)
+    threadWorker.busy = false
+    threadWorker.currentJob = null
+
+    this.attachWorkerHandlers(threadWorker)
+  }
+
+  private finishJob(
+    threadWorker: ThreadWorker<TJob, TResult>,
+    action: (job: QueuedJob<TJob, TResult>) => void,
+  ): void {
+    const job = threadWorker.currentJob
+    if (!job) {
+      return
+    }
+
+    this.clearWorkerTimeout(threadWorker)
+    threadWorker.currentJob = null
+    threadWorker.busy = false
+    action(job)
+    this.processQueue()
+  }
+
+  private attachWorkerHandlers(
     threadWorker: ThreadWorker<TJob, TResult>,
   ): void {
-    threadWorker.worker.on("message", (message: TWorkerOutput) => {
+    const worker = threadWorker.worker
+
+    worker.on("message", (message: TWorkerOutput) => {
+      if (threadWorker.worker !== worker) {
+        return
+      }
+
       if (this.options.isLogMessage(message)) {
         this.options.onLog?.(this.options.getLogLines(message))
         return
@@ -83,47 +157,47 @@ export class ThreadWorkerPool<TJob, TWorkerInput, TWorkerOutput, TResult> {
         return
       }
 
-      const job = threadWorker.currentJob
-      if (!job) {
+      this.finishJob(threadWorker, (job) => {
+        if (
+          this.options.shouldStopOnMessage?.(message) &&
+          this.options.cancellationError
+        ) {
+          void this.stop(this.options.cancellationError)
+        }
+
+        job.resolve(this.options.getResult(message))
+      })
+    })
+
+    worker.on("error", (error) => {
+      if (threadWorker.worker !== worker) {
         return
       }
 
-      if (
-        this.options.shouldStopOnMessage?.(message) &&
-        this.options.cancellationError
-      ) {
-        void this.stop(this.options.cancellationError)
-      }
-
-      job.resolve(this.options.getResult(message))
-      threadWorker.currentJob = null
-      threadWorker.busy = false
-      this.processQueue()
-    })
-  }
-
-  private setupWorkerErrorHandling(
-    threadWorker: ThreadWorker<TJob, TResult>,
-  ): void {
-    threadWorker.worker.on("error", (error) => {
-      if (threadWorker.currentJob) {
-        threadWorker.currentJob.reject(error as Error)
-        threadWorker.currentJob = null
-        threadWorker.busy = false
-      }
+      this.finishJob(threadWorker, (job) => {
+        job.reject(error as Error)
+      })
 
       this.options.onLog?.([
         `Worker error: ${error instanceof Error ? error.message : String(error)}`,
       ])
+
+      this.replaceWorker(threadWorker)
+      this.processQueue()
     })
 
-    threadWorker.worker.on("exit", (code) => {
-      if (code !== 0 && threadWorker.currentJob) {
-        threadWorker.currentJob.reject(
-          new Error(`Worker exited with code ${code}`),
-        )
-        threadWorker.currentJob = null
-        threadWorker.busy = false
+    worker.on("exit", (code) => {
+      if (threadWorker.worker !== worker) {
+        return
+      }
+
+      if (code !== 0) {
+        this.finishJob(threadWorker, (job) => {
+          job.reject(new Error(`Worker exited with code ${code}`))
+        })
+
+        this.replaceWorker(threadWorker)
+        this.processQueue()
       }
     })
   }
@@ -145,6 +219,7 @@ export class ThreadWorkerPool<TJob, TWorkerInput, TWorkerOutput, TResult> {
 
     availableWorker.busy = true
     availableWorker.currentJob = queuedJob
+    this.startJobTimeout(availableWorker)
     availableWorker.worker.postMessage(
       this.options.createMessage(queuedJob.job),
     )
@@ -175,7 +250,12 @@ export class ThreadWorkerPool<TJob, TWorkerInput, TWorkerOutput, TResult> {
   }
 
   async terminate(): Promise<void> {
-    await Promise.all(this.workers.map((worker) => worker.worker.terminate()))
+    await Promise.all(
+      this.workers.map((worker) => {
+        this.clearWorkerTimeout(worker)
+        return worker.worker.terminate()
+      }),
+    )
     this.workers = []
     this.initialized = false
   }
