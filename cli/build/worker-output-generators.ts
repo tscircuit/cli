@@ -13,6 +13,7 @@ import {
   normalizeToArrayBuffer,
   normalizeToUint8Array,
 } from "./worker-binary-utils"
+import type { BuildImageFormatSelection } from "./image-format-selection"
 
 export const writeGlbFromCircuitJson = async (
   circuitJson: AnyCircuitElement[],
@@ -29,31 +30,42 @@ export const writeGlbFromCircuitJson = async (
   fs.writeFileSync(glbOutputPath, Buffer.from(glbData))
 }
 
-export const writePreviewAssetsFromCircuitJson = async (
+export const writeImageAssetsFromCircuitJson = async (
   circuitJson: AnyCircuitElement[],
-  outputDir: string,
+  options: {
+    outputDir: string
+    imageFormats: BuildImageFormatSelection
+  },
 ) => {
+  const { outputDir, imageFormats } = options
   fs.mkdirSync(outputDir, { recursive: true })
 
-  const pcbSvg = convertCircuitJsonToPcbSvg(circuitJson)
-  fs.writeFileSync(path.join(outputDir, "pcb.svg"), pcbSvg, "utf-8")
+  if (imageFormats.pcbSvgs) {
+    const pcbSvg = convertCircuitJsonToPcbSvg(circuitJson)
+    fs.writeFileSync(path.join(outputDir, "pcb.svg"), pcbSvg, "utf-8")
+  }
 
-  const schematicSvg = convertCircuitJsonToSchematicSvg(circuitJson)
-  fs.writeFileSync(path.join(outputDir, "schematic.svg"), schematicSvg, "utf-8")
+  if (imageFormats.schematicSvgs) {
+    const schematicSvg = convertCircuitJsonToSchematicSvg(circuitJson)
+    fs.writeFileSync(
+      path.join(outputDir, "schematic.svg"),
+      schematicSvg,
+      "utf-8",
+    )
+  }
 
-  const circuitJsonWithFileUrls = convertModelUrlsToFileUrls(circuitJson)
-  const glbBuffer = await convertCircuitJsonToGltf(
-    circuitJsonWithFileUrls,
-    getCircuitJsonToGltfOptions({ format: "glb" }),
-  )
-  const glbArrayBuffer = await normalizeToArrayBuffer(glbBuffer)
-  const pngBuffer = await renderGLTFToPNGBufferFromGLBBuffer(glbArrayBuffer, {
-    camPos: [10, 10, 10],
-    lookAt: [0, 0, 0],
-  })
+  if (imageFormats.threeDPngs) {
+    const circuitJsonWithFileUrls = convertModelUrlsToFileUrls(circuitJson)
+    const glbBuffer = await convertCircuitJsonToGltf(
+      circuitJsonWithFileUrls,
+      getCircuitJsonToGltfOptions({ format: "glb" }),
+    )
+    const glbArrayBuffer = await normalizeToArrayBuffer(glbBuffer)
+    const pngBuffer = await renderGLTFToPNGBufferFromGLBBuffer(glbArrayBuffer)
 
-  fs.writeFileSync(
-    path.join(outputDir, "3d.png"),
-    Buffer.from(normalizeToUint8Array(pngBuffer)),
-  )
+    fs.writeFileSync(
+      path.join(outputDir, "3d.png"),
+      Buffer.from(normalizeToUint8Array(pngBuffer)),
+    )
+  }
 }

@@ -9,6 +9,7 @@ import {
 import { getCircuitJsonToGltfOptions } from "lib/shared/get-circuit-json-to-gltf-options"
 import { renderGLTFToPNGBufferFromGLBBuffer } from "poppygl"
 import { convertModelUrlsToFileUrls } from "./convert-model-urls-to-file-urls"
+import type { BuildImageFormatSelection } from "./image-format-selection"
 
 export interface BuildFileResult {
   sourcePath: string
@@ -68,10 +69,12 @@ const generatePreviewAssets = async ({
   build,
   outputDir,
   distDir,
+  imageFormats,
 }: {
   build: BuildFileResult
   outputDir: string
   distDir: string
+  imageFormats: BuildImageFormatSelection
 }) => {
   const prefixRelative = path.relative(distDir, outputDir) || "."
   const prefix = prefixRelative === "." ? "" : `[${prefixRelative}] `
@@ -87,51 +90,51 @@ const generatePreviewAssets = async ({
 
   fs.mkdirSync(outputDir, { recursive: true })
 
-  // Generate PCB SVG
-  try {
-    console.log(`${prefix}Generating PCB SVG...`)
-    const pcbSvg = convertCircuitJsonToPcbSvg(circuitJson)
-    fs.writeFileSync(path.join(outputDir, "pcb.svg"), pcbSvg, "utf-8")
-    console.log(`${prefix}Written pcb.svg`)
-  } catch (error) {
-    console.error(`${prefix}Failed to generate PCB SVG:`, error)
+  if (imageFormats.pcbSvgs) {
+    try {
+      console.log(`${prefix}Generating PCB SVG...`)
+      const pcbSvg = convertCircuitJsonToPcbSvg(circuitJson)
+      fs.writeFileSync(path.join(outputDir, "pcb.svg"), pcbSvg, "utf-8")
+      console.log(`${prefix}Written pcb.svg`)
+    } catch (error) {
+      console.error(`${prefix}Failed to generate PCB SVG:`, error)
+    }
   }
 
-  // Generate schematic SVG
-  try {
-    console.log(`${prefix}Generating schematic SVG...`)
-    const schematicSvg = convertCircuitJsonToSchematicSvg(circuitJson)
-    fs.writeFileSync(
-      path.join(outputDir, "schematic.svg"),
-      schematicSvg,
-      "utf-8",
-    )
-    console.log(`${prefix}Written schematic.svg`)
-  } catch (error) {
-    console.error(`${prefix}Failed to generate schematic SVG:`, error)
+  if (imageFormats.schematicSvgs) {
+    try {
+      console.log(`${prefix}Generating schematic SVG...`)
+      const schematicSvg = convertCircuitJsonToSchematicSvg(circuitJson)
+      fs.writeFileSync(
+        path.join(outputDir, "schematic.svg"),
+        schematicSvg,
+        "utf-8",
+      )
+      console.log(`${prefix}Written schematic.svg`)
+    } catch (error) {
+      console.error(`${prefix}Failed to generate schematic SVG:`, error)
+    }
   }
 
-  // Generate 3D PNG
-  try {
-    console.log(`${prefix}Converting circuit to GLB...`)
-    const circuitJsonWithFileUrls = convertModelUrlsToFileUrls(circuitJson)
-    const glbBuffer = await convertCircuitJsonToGltf(
-      circuitJsonWithFileUrls,
-      getCircuitJsonToGltfOptions({ format: "glb" }),
-    )
-    console.log(`${prefix}Rendering GLB to PNG buffer...`)
-    const glbArrayBuffer = await normalizeToArrayBuffer(glbBuffer)
-    const pngBuffer = await renderGLTFToPNGBufferFromGLBBuffer(glbArrayBuffer, {
-      camPos: [10, 10, 10],
-      lookAt: [0, 0, 0],
-    })
-    fs.writeFileSync(
-      path.join(outputDir, "3d.png"),
-      Buffer.from(normalizeToUint8Array(pngBuffer)),
-    )
-    console.log(`${prefix}Written 3d.png`)
-  } catch (error) {
-    console.error(`${prefix}Failed to generate 3D PNG:`, error)
+  if (imageFormats.threeDPngs) {
+    try {
+      console.log(`${prefix}Converting circuit to GLB...`)
+      const circuitJsonWithFileUrls = convertModelUrlsToFileUrls(circuitJson)
+      const glbBuffer = await convertCircuitJsonToGltf(
+        circuitJsonWithFileUrls,
+        getCircuitJsonToGltfOptions({ format: "glb" }),
+      )
+      console.log(`${prefix}Rendering GLB to PNG buffer...`)
+      const glbArrayBuffer = await normalizeToArrayBuffer(glbBuffer)
+      const pngBuffer = await renderGLTFToPNGBufferFromGLBBuffer(glbArrayBuffer)
+      fs.writeFileSync(
+        path.join(outputDir, "3d.png"),
+        Buffer.from(normalizeToUint8Array(pngBuffer)),
+      )
+      console.log(`${prefix}Written 3d.png`)
+    } catch (error) {
+      console.error(`${prefix}Failed to generate 3D PNG:`, error)
+    }
   }
 }
 
@@ -141,12 +144,14 @@ export const buildPreviewImages = async ({
   mainEntrypoint,
   previewComponentPath,
   allImages,
+  imageFormats,
 }: {
   builtFiles: BuildFileResult[]
   distDir: string
   mainEntrypoint?: string
   previewComponentPath?: string
   allImages?: boolean
+  imageFormats: BuildImageFormatSelection
 }) => {
   const successfulBuilds = builtFiles.filter((file) => file.ok)
   // previewComponentPath takes precedence over mainEntrypoint for preview images
@@ -169,6 +174,7 @@ export const buildPreviewImages = async ({
         build,
         outputDir,
         distDir,
+        imageFormats,
       })
     }
     return
@@ -195,5 +201,6 @@ export const buildPreviewImages = async ({
     build: previewBuild,
     outputDir: distDir,
     distDir,
+    imageFormats,
   })
 }

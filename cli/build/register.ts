@@ -23,6 +23,10 @@ import { buildPreviewImages } from "./build-preview-images"
 import { generateKicadProject } from "./generate-kicad-project"
 import type { GeneratedKicadProject } from "./generate-kicad-project"
 import { getBuildEntrypoints } from "./get-build-entrypoints"
+import {
+  hasAnyImageFormatSelected,
+  resolveImageFormatSelection,
+} from "./image-format-selection"
 import { resolveBuildOptions } from "./resolve-build-options"
 import { transpileFile } from "./transpile"
 import { exitBuild } from "./utils/exit-build"
@@ -118,6 +122,22 @@ export const registerBuild = (program: Command) => {
     .option(
       "--all-images",
       "Generate preview images for every successful build output",
+    )
+    .option("--pngs", "Generate PNG outputs during build generation")
+    .option("--svgs", "Generate SVG outputs during build generation")
+    .option("--pcb-svgs", "Generate PCB SVG outputs during build generation")
+    .option(
+      "--schematic-svgs",
+      "Generate schematic SVG outputs during build generation",
+    )
+    .option("--3d", "Generate 3D PNG outputs during build generation")
+    .option(
+      "--pcb-only",
+      "Generate only PCB SVG outputs during build generation",
+    )
+    .option(
+      "--schematic-only",
+      "Generate only schematic SVG outputs during build generation",
     )
     .option(
       "--kicad-project",
@@ -283,6 +303,11 @@ export const registerBuild = (program: Command) => {
         })
 
         // Prepare build options for reuse
+        const {
+          selection: imageFormatSelection,
+          hasExplicitSelection: hasExplicitImageFormatSelection,
+        } = resolveImageFormatSelection(resolvedOptions)
+
         const buildOptions = {
           ignoreErrors: resolvedOptions?.ignoreErrors,
           ignoreWarnings: resolvedOptions?.ignoreWarnings,
@@ -290,10 +315,15 @@ export const registerBuild = (program: Command) => {
           profile: resolvedOptions?.profile,
           injectedProps,
           generatePreviewAssets: false,
+          imageFormats: imageFormatSelection,
         }
 
-        const shouldGeneratePreviewImages =
-          resolvedOptions?.previewImages || resolvedOptions?.allImages
+        const shouldGeneratePreviewImages = Boolean(
+          (resolvedOptions?.previewImages ||
+            resolvedOptions?.allImages ||
+            hasExplicitImageFormatSelection) &&
+            hasAnyImageFormatSelected(imageFormatSelection),
+        )
         const shouldGenerateAllPreviewImages = Boolean(
           resolvedOptions?.allImages,
         )
@@ -552,6 +582,7 @@ export const registerBuild = (program: Command) => {
               mainEntrypoint,
               previewComponentPath,
               allImages: shouldGenerateAllPreviewImages,
+              imageFormats: imageFormatSelection,
             })
           }
         }
@@ -757,6 +788,13 @@ export const registerBuild = (program: Command) => {
           resolvedOptions?.transpile && "transpile",
           resolvedOptions?.previewImages && "preview-images",
           resolvedOptions?.allImages && "all-images",
+          resolvedOptions?.pngs && "pngs",
+          resolvedOptions?.svgs && "svgs",
+          resolvedOptions?.pcbSvgs && "pcb-svgs",
+          resolvedOptions?.schematicSvgs && "schematic-svgs",
+          resolvedOptions?.["3d"] && "3d",
+          resolvedOptions?.pcbOnly && "pcb-only",
+          resolvedOptions?.schematicOnly && "schematic-only",
           resolvedOptions?.glbs && "glbs",
           resolvedOptions?.kicadProject && "kicad-project",
           resolvedOptions?.kicadLibrary && "kicad-library",

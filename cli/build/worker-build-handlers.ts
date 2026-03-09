@@ -8,8 +8,9 @@ import { getCompletePlatformConfig } from "../../lib/shared/get-complete-platfor
 import { registerStaticAssetLoaders } from "../../lib/shared/register-static-asset-loaders"
 import {
   writeGlbFromCircuitJson,
-  writePreviewAssetsFromCircuitJson,
+  writeImageAssetsFromCircuitJson,
 } from "./worker-output-generators"
+import { DEFAULT_IMAGE_FORMAT_SELECTION } from "./image-format-selection"
 import type { BuildCompletedMessage, BuildFileMessage } from "./worker-types"
 
 type WorkerLogger = (...args: unknown[]) => void
@@ -114,10 +115,10 @@ export const handleBuildFile = async (
         workerLog(
           `Generating preview assets for ${path.relative(projectDir, resolvedPreviewOutputDir)} in same worker...`,
         )
-        await writePreviewAssetsFromCircuitJson(
-          circuitJson,
-          resolvedPreviewOutputDir,
-        )
+        await writeImageAssetsFromCircuitJson(circuitJson, {
+          outputDir: resolvedPreviewOutputDir,
+          imageFormats: options?.imageFormats ?? DEFAULT_IMAGE_FORMAT_SELECTION,
+        })
         previewOk = true
       } catch (err) {
         previewOk = false

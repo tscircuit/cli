@@ -1,4 +1,5 @@
 import type { PlatformConfig } from "@tscircuit/props"
+import type { BuildImageFormatSelection } from "./image-format-selection"
 
 /**
  * Message sent from main thread to worker to build a file
@@ -17,6 +18,7 @@ export type BuildFileMessage = {
     profile?: boolean
     injectedProps?: Record<string, unknown>
     generatePreviewAssets?: boolean
+    imageFormats?: BuildImageFormatSelection
   }
 }
 
