@@ -90,13 +90,17 @@ test("build uses config build.previewImages setting", async () => {
 
   await runCommand(`tsci build ${circuitPath}`)
 
-  const outputDir = path.join(tmpDir, "dist", "preview")
   const schematicSvg = await readFile(
-    path.join(outputDir, "schematic.svg"),
+    path.join(tmpDir, "dist", "preview", "schematic.svg"),
     "utf-8",
   )
-  const pcbSvg = await readFile(path.join(outputDir, "pcb.svg"), "utf-8")
-  const preview3d = await readFile(path.join(outputDir, "3d.png"))
+  const pcbSvg = await readFile(
+    path.join(tmpDir, "dist", "preview", "pcb.svg"),
+    "utf-8",
+  )
+  const preview3d = await readFile(
+    path.join(tmpDir, "dist", "preview", "3d.png"),
+  )
 
   expect(schematicSvg).toContain("<svg")
   expect(pcbSvg).toContain("<svg")

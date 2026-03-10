@@ -55,12 +55,14 @@ test("build --preview-images uses previewComponentPath from config", async () =>
   await runCommand("tsci build --preview-images")
 
   // Check that preview images were generated
-  const previewOutputDir = path.join(tmpDir, "dist", "examples", "showcase")
   const schematicSvg = await readFile(
-    path.join(previewOutputDir, "schematic.svg"),
+    path.join(tmpDir, "dist", "examples", "showcase", "schematic.svg"),
     "utf-8",
   )
-  const pcbSvg = await readFile(path.join(previewOutputDir, "pcb.svg"), "utf-8")
+  const pcbSvg = await readFile(
+    path.join(tmpDir, "dist", "examples", "showcase", "pcb.svg"),
+    "utf-8",
+  )
 
   // The preview should be valid SVGs
   expect(schematicSvg).toContain("<svg")
