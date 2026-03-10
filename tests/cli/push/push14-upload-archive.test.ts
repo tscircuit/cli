@@ -35,3 +35,27 @@ test("should attempt archive upload when TSCI_PUSH_ARCHIVE is enabled", async ()
   expect(stdout).toContain("⬆︎ snippet.tsx")
   expect(stdout).toContain('"@tsci/test-user.test-package@1.0.0" published!')
 }, 30_000)
+
+test("should attempt archive upload when --compress is passed", async () => {
+  const { tmpDir, runCommand } = await getCliTestFixture({ loggedIn: true })
+  const snippetFilePath = path.resolve(tmpDir, "snippet.tsx")
+
+  fs.writeFileSync(snippetFilePath, "// Snippet content")
+  fs.writeFileSync(
+    path.resolve(tmpDir, "package.json"),
+    JSON.stringify({ name: "@tsci/test-user.test-package", version: "1.0.0" }),
+  )
+
+  const { stdout, stderr } = await runCommand(
+    `tsci push ${snippetFilePath} --compress`,
+  )
+
+  expect(stderr).toBe("")
+  expect(stdout).toContain("Uploading package archive...")
+  expect(stdout).toContain(
+    "Archive upload failed, falling back to file-by-file upload",
+  )
+  expect(stdout).toContain("⬆︎ package.json")
+  expect(stdout).toContain("⬆︎ snippet.tsx")
+  expect(stdout).toContain('"@tsci/test-user.test-package@1.0.0" published!')
+}, 30_000)

@@ -12,6 +12,10 @@ export const registerPush = (program: Command) => {
       "Publish as a non-latest version using the provided tag",
     )
     .option("--include-dist", "Include the dist directory in the push")
+    .option(
+      "--compress",
+      "Compress project files into a single archive upload for faster pushes",
+    )
     .action(
       async (
         filePath?: string,
@@ -19,6 +23,7 @@ export const registerPush = (program: Command) => {
           private?: boolean
           versionTag?: string
           includeDist?: boolean
+          compress?: boolean
         } = {},
       ) => {
         await pushSnippet({
@@ -26,6 +31,7 @@ export const registerPush = (program: Command) => {
           isPrivate: options.private ?? false,
           versionTag: options.versionTag,
           includeDist: options.includeDist ?? false,
+          compress: options.compress ?? false,
           onExit: (code) => process.exit(code),
           onError: (message) => console.error(message),
           onSuccess: (message) => console.log(message),
