@@ -56,10 +56,13 @@ test("build --preview-images uses previewComponentPath from config", async () =>
 
   // Check that preview images were generated
   const schematicSvg = await readFile(
-    path.join(tmpDir, "dist", "schematic.svg"),
+    path.join(tmpDir, "dist", "examples", "showcase", "schematic.svg"),
     "utf-8",
   )
-  const pcbSvg = await readFile(path.join(tmpDir, "dist", "pcb.svg"), "utf-8")
+  const pcbSvg = await readFile(
+    path.join(tmpDir, "dist", "examples", "showcase", "pcb.svg"),
+    "utf-8",
+  )
 
   // The preview should be valid SVGs
   expect(schematicSvg).toContain("<svg")

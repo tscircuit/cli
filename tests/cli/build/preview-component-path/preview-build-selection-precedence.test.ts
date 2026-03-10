@@ -56,10 +56,13 @@ test("build --preview-images previewComponentPath takes precedence over mainEntr
 
   // Both should be built, but preview images should come from previewComponentPath
   const schematicSvg = await readFile(
-    path.join(tmpDir, "dist", "schematic.svg"),
+    path.join(tmpDir, "dist", "examples", "demo", "schematic.svg"),
     "utf-8",
   )
-  const pcbSvg = await readFile(path.join(tmpDir, "dist", "pcb.svg"), "utf-8")
+  const pcbSvg = await readFile(
+    path.join(tmpDir, "dist", "examples", "demo", "pcb.svg"),
+    "utf-8",
+  )
 
   expect(schematicSvg).toContain("<svg")
   expect(pcbSvg).toContain("<svg")

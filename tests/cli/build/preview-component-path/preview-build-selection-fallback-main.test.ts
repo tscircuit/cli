@@ -41,10 +41,13 @@ test("build --preview-images falls back to mainEntrypoint when no previewCompone
 
   // Check that preview images were generated
   const schematicSvg = await readFile(
-    path.join(tmpDir, "dist", "schematic.svg"),
+    path.join(tmpDir, "dist", "index", "schematic.svg"),
     "utf-8",
   )
-  const pcbSvg = await readFile(path.join(tmpDir, "dist", "pcb.svg"), "utf-8")
+  const pcbSvg = await readFile(
+    path.join(tmpDir, "dist", "index", "pcb.svg"),
+    "utf-8",
+  )
 
   expect(schematicSvg).toContain("<svg")
   expect(pcbSvg).toContain("<svg")

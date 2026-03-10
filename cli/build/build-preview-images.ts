@@ -199,7 +199,7 @@ export const buildPreviewImages = async ({
 
   await generatePreviewAssets({
     build: previewBuild,
-    outputDir: distDir,
+    outputDir: path.dirname(previewBuild.outputPath),
     distDir,
     imageFormats,
   })

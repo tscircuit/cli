@@ -91,11 +91,16 @@ test("build uses config build.previewImages setting", async () => {
   await runCommand(`tsci build ${circuitPath}`)
 
   const schematicSvg = await readFile(
-    path.join(tmpDir, "dist", "schematic.svg"),
+    path.join(tmpDir, "dist", "preview", "schematic.svg"),
     "utf-8",
   )
-  const pcbSvg = await readFile(path.join(tmpDir, "dist", "pcb.svg"), "utf-8")
-  const preview3d = await readFile(path.join(tmpDir, "dist", "3d.png"))
+  const pcbSvg = await readFile(
+    path.join(tmpDir, "dist", "preview", "pcb.svg"),
+    "utf-8",
+  )
+  const preview3d = await readFile(
+    path.join(tmpDir, "dist", "preview", "3d.png"),
+  )
 
   expect(schematicSvg).toContain("<svg")
   expect(pcbSvg).toContain("<svg")
@@ -173,7 +178,7 @@ test("CLI options override config build settings", async () => {
   expect(stdout).toContain("Generating preview images")
 
   const schematicSvgExists = await stat(
-    path.join(tmpDir, "dist", "schematic.svg"),
+    path.join(tmpDir, "dist", "override", "schematic.svg"),
   )
     .then(() => true)
     .catch(() => false)
@@ -194,7 +199,9 @@ test("build without config or CLI options does not generate optional outputs", a
   )
   expect(JSON.parse(circuitJson)).toBeTruthy()
 
-  expect(stat(path.join(tmpDir, "dist", "schematic.svg"))).rejects.toBeTruthy()
+  expect(
+    stat(path.join(tmpDir, "dist", "plain", "schematic.svg")),
+  ).rejects.toBeTruthy()
   expect(stat(path.join(tmpDir, "dist", "plain", "kicad"))).rejects.toBeTruthy()
 })
 
@@ -221,7 +228,7 @@ test("build with multiple config build options", async () => {
   expect((await stat(kicadDir)).isDirectory()).toBe(true)
 
   const schematicSvgExists = await stat(
-    path.join(tmpDir, "dist", "schematic.svg"),
+    path.join(tmpDir, "dist", "multi", "schematic.svg"),
   )
     .then(() => true)
     .catch(() => false)
@@ -250,7 +257,7 @@ test("build with --ignore-config skips config options", async () => {
   expect(stdout).not.toContain("(from tscircuit.config.json)")
 
   const schematicSvgExists = await stat(
-    path.join(tmpDir, "dist", "schematic.svg"),
+    path.join(tmpDir, "dist", "ignore-config", "schematic.svg"),
   )
     .then(() => true)
     .catch(() => false)

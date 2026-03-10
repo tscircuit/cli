@@ -42,7 +42,9 @@ test("build with --ci generates index.html and circuit.json", async () => {
   expect(stdout).toContain("[second] Written 3d.glb")
   expect(stdout).toContain("[third] Written 3d.glb")
 
-  expect(stdout).toContain("Generating preview assets for dist in same worker")
+  expect(stdout).toContain(
+    "Generating preview assets for dist/first in same worker",
+  )
   expect(stdout).toContain("Generating preview images in worker threads")
   expect(stdout).not.toContain("Generating preview images for all builds")
   expect(stdout).not.toContain("Generating GLB models for all builds")
