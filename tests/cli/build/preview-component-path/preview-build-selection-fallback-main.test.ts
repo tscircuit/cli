@@ -40,11 +40,12 @@ test("build --preview-images falls back to mainEntrypoint when no previewCompone
   await runCommand("tsci build --preview-images")
 
   // Check that preview images were generated
+  const previewOutputDir = path.join(tmpDir, "dist", "index")
   const schematicSvg = await readFile(
-    path.join(tmpDir, "dist", "schematic.svg"),
+    path.join(previewOutputDir, "schematic.svg"),
     "utf-8",
   )
-  const pcbSvg = await readFile(path.join(tmpDir, "dist", "pcb.svg"), "utf-8")
+  const pcbSvg = await readFile(path.join(previewOutputDir, "pcb.svg"), "utf-8")
 
   expect(schematicSvg).toContain("<svg")
   expect(pcbSvg).toContain("<svg")

@@ -472,11 +472,9 @@ export const registerBuild = (program: Command) => {
             })()
 
             const previewOutputDir =
-              shouldGeneratePreviewAssetsInWorker &&
-              generatePreviewAssets &&
-              !shouldGenerateAllPreviewImages
-                ? distDir
-                : path.join(distDir, outputDirName)
+              shouldGeneratePreviewAssetsInWorker && generatePreviewAssets
+                ? path.join(distDir, outputDirName)
+                : undefined
 
             return {
               filePath,

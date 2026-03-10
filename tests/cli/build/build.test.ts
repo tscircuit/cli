@@ -197,12 +197,13 @@ test("build with --preview-images generates preview assets", async () => {
 
   await runCommand(`tsci build --preview-images ${circuitPath}`)
 
+  const outputDir = path.join(tmpDir, "dist", "preview")
   const schematicSvg = await readFile(
-    path.join(tmpDir, "dist", "schematic.svg"),
+    path.join(outputDir, "schematic.svg"),
     "utf-8",
   )
-  const pcbSvg = await readFile(path.join(tmpDir, "dist", "pcb.svg"), "utf-8")
-  const preview3d = await readFile(path.join(tmpDir, "dist", "3d.png"))
+  const pcbSvg = await readFile(path.join(outputDir, "pcb.svg"), "utf-8")
+  const preview3d = await readFile(path.join(outputDir, "3d.png"))
 
   expect(schematicSvg).toContain("<svg")
   expect(pcbSvg).toContain("<svg")
@@ -323,12 +324,13 @@ test("build with --preview-images generates preview assets with GLB cad_model", 
   expect(stderr).not.toContain("ERR_INVALID_URL")
 
   // Preview images should be generated successfully
+  const outputDir = path.join(tmpDir, "dist", "glb-preview")
   const schematicSvg = await readFile(
-    path.join(tmpDir, "dist", "schematic.svg"),
+    path.join(outputDir, "schematic.svg"),
     "utf-8",
   )
-  const pcbSvg = await readFile(path.join(tmpDir, "dist", "pcb.svg"), "utf-8")
-  const preview3d = await readFile(path.join(tmpDir, "dist", "3d.png"))
+  const pcbSvg = await readFile(path.join(outputDir, "pcb.svg"), "utf-8")
+  const preview3d = await readFile(path.join(outputDir, "3d.png"))
 
   expect(schematicSvg).toContain("<svg")
   expect(pcbSvg).toContain("<svg")

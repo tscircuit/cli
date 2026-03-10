@@ -55,11 +55,12 @@ test("build --preview-images previewComponentPath takes precedence over mainEntr
   await runCommand("tsci build --preview-images")
 
   // Both should be built, but preview images should come from previewComponentPath
+  const previewOutputDir = path.join(tmpDir, "dist", "examples", "demo")
   const schematicSvg = await readFile(
-    path.join(tmpDir, "dist", "schematic.svg"),
+    path.join(previewOutputDir, "schematic.svg"),
     "utf-8",
   )
-  const pcbSvg = await readFile(path.join(tmpDir, "dist", "pcb.svg"), "utf-8")
+  const pcbSvg = await readFile(path.join(previewOutputDir, "pcb.svg"), "utf-8")
 
   expect(schematicSvg).toContain("<svg")
   expect(pcbSvg).toContain("<svg")
