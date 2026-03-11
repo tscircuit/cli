@@ -1,7 +1,7 @@
 import fs from "node:fs"
 import path from "node:path"
 import { promisify } from "node:util"
-import { getSimpleRouteJsonFromCircuitJson } from "@tscircuit/core"
+import { getSimpleRouteJsonFromCircuitJson } from "tscircuit"
 import type { PlatformConfig } from "@tscircuit/props"
 import type { AnyCircuitElement } from "circuit-json"
 import { convertCircuitJsonToGltf } from "circuit-json-to-gltf"
