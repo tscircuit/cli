@@ -29,6 +29,9 @@ import { registerInit } from "./init/register"
 import { registerInstall } from "./install/register"
 import { registerPush } from "./push/register"
 import { registerRemove } from "./remove/register"
+import { registerRegistryPackagesCreate } from "./registry/packages/create/register"
+import { registerRegistryPackages } from "./registry/packages/register"
+import { registerRegistry } from "./registry/register"
 import { registerSearch } from "./search/register"
 import { registerSetup } from "./setup/register"
 import { registerSimulate } from "./simulate/register"
@@ -74,6 +77,10 @@ registerCheck(program)
 registerCheckNetlist(program)
 registerCheckPlacement(program)
 registerCheckRouting(program)
+
+registerRegistry(program)
+registerRegistryPackages(program)
+registerRegistryPackagesCreate(program)
 
 registerSearch(program)
 registerImport(program)
