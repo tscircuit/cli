@@ -13,6 +13,7 @@ import { registerAuthSetupNpmrc } from "./auth/setup-npmrc/register"
 import { registerAuthWhoami } from "./auth/whoami/register"
 import { registerBuild } from "./build/register"
 import { registerCheckNetlist } from "./check/netlist/register"
+import { registerCheckPinSpecification } from "./check/pin-specification/register"
 import { registerCheckPlacement } from "./check/placement/register"
 import { registerCheck } from "./check/register"
 import { registerCheckRouting } from "./check/routing/register"
@@ -75,6 +76,7 @@ registerUpgradeCommand(program)
 registerDoctor(program)
 registerCheck(program)
 registerCheckNetlist(program)
+registerCheckPinSpecification(program)
 registerCheckPlacement(program)
 registerCheckRouting(program)
 
