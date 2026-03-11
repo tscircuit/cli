@@ -184,7 +184,8 @@ export const exportSnippet = async ({
     case "srj":
       {
         const userLandTscircuit = await importFromUserLand("tscircuit")
-        const simpleRouteJson = userLandTscircuit.getSimpleRouteJsonFromCircuitJson({ circuitJson })
+        const simpleRouteJson =
+          userLandTscircuit.getSimpleRouteJsonFromCircuitJson({ circuitJson })
         outputContent = JSON.stringify(simpleRouteJson, null, 2)
       }
       break
