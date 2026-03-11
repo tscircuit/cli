@@ -1,8 +1,8 @@
 import fs from "node:fs"
 import path from "node:path"
 import { promisify } from "node:util"
-// import { getSimpleRouteJsonFromCircuitJson } from "tscircuit"
 import type { PlatformConfig } from "@tscircuit/props"
+import { importFromUserLand } from "./importFromUserLand"
 import type { AnyCircuitElement } from "circuit-json"
 import { convertCircuitJsonToGltf } from "circuit-json-to-gltf"
 import {
@@ -182,12 +182,11 @@ export const exportSnippet = async ({
       )
       break
     case "srj":
-      outputContent = JSON.stringify(
-        // getSimpleRouteJsonFromCircuitJson({ circuitJson }),
-        {},
-        null,
-        2,
-      )
+      {
+        const userLandTscircuit = await importFromUserLand("tscircuit")
+        const simpleRouteJson = userLandTscircuit.getSimpleRouteJsonFromCircuitJson({ circuitJson })
+        outputContent = JSON.stringify(simpleRouteJson, null, 2)
+      }
       break
     case "kicad_sch": {
       const converter = new CircuitJsonToKicadSchConverter(circuitJson)
