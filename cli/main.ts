@@ -30,6 +30,7 @@ import { registerInstall } from "./install/register"
 import { registerPush } from "./push/register"
 import { registerRemove } from "./remove/register"
 import { registerRegistryPackagesCreate } from "./registry/packages/create/register"
+import { registerRegistryPackagesUpdate } from "./registry/packages/update/register"
 import { registerRegistryPackages } from "./registry/packages/register"
 import { registerRegistry } from "./registry/register"
 import { registerSearch } from "./search/register"
@@ -81,6 +82,7 @@ registerCheckRouting(program)
 registerRegistry(program)
 registerRegistryPackages(program)
 registerRegistryPackagesCreate(program)
+registerRegistryPackagesUpdate(program)
 
 registerSearch(program)
 registerImport(program)
