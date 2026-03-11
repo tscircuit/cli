@@ -17,6 +17,7 @@ import { getCircuitJsonToGltfOptions } from "lib/shared/get-circuit-json-to-gltf
 import { getCompletePlatformConfig } from "lib/shared/get-complete-platform-config"
 import { renderGLTFToPNGBufferFromGLBBuffer } from "poppygl"
 import { compareAndCreateDiff } from "./compare-images"
+import { isCircuitJsonFile } from "./is-circuit-json-file"
 
 export type ProcessSnapshotFileOptions = {
   file: string
@@ -39,14 +40,6 @@ export type ProcessSnapshotFileResult = {
   warningMessages: string[]
   mismatches: string[]
   errorMessage?: string
-}
-
-const isCircuitJsonFile = (filePath: string) => {
-  const normalizedPath = filePath.toLowerCase().replaceAll("\\", "/")
-  return (
-    normalizedPath.endsWith(".circuit.json") ||
-    normalizedPath.endsWith("/circuit.json")
-  )
 }
 
 export const processSnapshotFile = async ({
