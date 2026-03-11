@@ -654,7 +654,7 @@
 
     "hasown": ["hasown@2.0.2", "", { "dependencies": { "function-bind": "^1.1.2" } }, "sha512-0hJU9SCPvmMzIBdZFqNPXWa6dqh7WdH0cII9y+CyS8rG3nL48Bclra9HmKhVVUHyPWNH5Y7xDwAB7bfgSjkUMQ=="],
 
-    "high-density-dataset-z04": ["high-density-dataset-z04@github:tscircuit/high-density-dataset-z04#7e6328d", {}, "tscircuit-high-density-dataset-z04-7e6328d"],
+    "high-density-dataset-z04": ["high-density-dataset-z04@github:tscircuit/high-density-dataset-z04#7e6328d", {}, "tscircuit-high-density-dataset-z04-7e6328d", "sha512-9Ei+0vINPyZBdfjP+op4zPP7TpymdYSc6eLpLGjG6sXK6wuvTrap7mCaKbeC3jKUQRCXBhOJNz3HGuREHkwHHw=="],
 
     "human-readable": ["human-readable@0.2.1", "", {}, "sha512-uFtz4WZlB1M5xI45MZ5AjyAzfrrgLOdty4363Jd0LQ5NGXa+UiKaD0EQXQeDfCinodrpePFk/vKjzBlDTZdZQQ=="],
 
