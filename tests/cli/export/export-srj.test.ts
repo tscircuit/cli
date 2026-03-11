@@ -51,6 +51,4 @@ test("export srj from circuit.json", async () => {
   expect(typeof parsedSrj).toBe("object")
   expect(parsedSrj).not.toBeNull()
   expect(Object.keys(parsedSrj).length).toBeGreaterThan(0)
-
-  Bun.write("test-circuit.circuit.simple-route.json", srj)
 })
