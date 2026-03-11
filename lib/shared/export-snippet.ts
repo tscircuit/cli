@@ -1,7 +1,9 @@
 import fs from "node:fs"
 import path from "node:path"
 import { promisify } from "node:util"
+import { getSimpleRouteJsonFromCircuitJson } from "@tscircuit/core"
 import type { PlatformConfig } from "@tscircuit/props"
+import type { AnyCircuitElement } from "circuit-json"
 import { convertCircuitJsonToGltf } from "circuit-json-to-gltf"
 import {
   CircuitJsonToKicadPcbConverter,
@@ -17,6 +19,7 @@ import JSZip from "jszip"
 import { generateCircuitJson } from "lib/shared/generate-circuit-json"
 import { getCircuitJsonToGltfOptions } from "lib/shared/get-circuit-json-to-gltf-options"
 import { convertToKicadLibrary } from "./convert-to-kicad-library"
+import { isCircuitJsonFile } from "./is-circuit-json-file"
 
 const writeFileAsync = promisify(fs.writeFile)
 
@@ -34,6 +37,7 @@ export const ALLOWED_EXPORT_FORMATS = [
   "kicad_pcb",
   "kicad_zip",
   "kicad-library",
+  "srj",
 ] as const
 
 export type ExportFormat = (typeof ALLOWED_EXPORT_FORMATS)[number]
@@ -52,6 +56,7 @@ const OUTPUT_EXTENSIONS: Record<ExportFormat, string> = {
   kicad_pcb: ".kicad_pcb",
   kicad_zip: "-kicad.zip",
   "kicad-library": "",
+  srj: ".simple-route.json",
 }
 
 type ExportOptions = {
@@ -106,38 +111,62 @@ export const exportSnippet = async ({
     }
   }
 
-  const circuitData = await generateCircuitJson({
-    filePath,
-    saveToFile: format === "circuit-json",
-    platformConfig,
-  }).catch((err) => {
-    onError(`Error generating circuit JSON: ${err}`)
-    return null
-  })
+  let circuitJson: AnyCircuitElement[]
 
-  if (!circuitData) return onExit(1)
+  if (isCircuitJsonFile(filePath)) {
+    const rawCircuitJson = await fs.promises
+      .readFile(filePath, "utf-8")
+      .catch((err) => {
+        onError(`Error reading circuit JSON file: ${err}`)
+        return null
+      })
+
+    if (!rawCircuitJson) return onExit(1)
+
+    try {
+      const parsedCircuitJson = JSON.parse(rawCircuitJson)
+      if (!Array.isArray(parsedCircuitJson)) {
+        onError("Error parsing circuit JSON file: expected an array")
+        return onExit(1)
+      }
+      circuitJson = parsedCircuitJson as AnyCircuitElement[]
+    } catch (err) {
+      onError(`Error parsing circuit JSON file: ${err}`)
+      return onExit(1)
+    }
+  } else {
+    const circuitData = await generateCircuitJson({
+      filePath,
+      saveToFile: format === "circuit-json",
+      platformConfig,
+    }).catch((err) => {
+      onError(`Error generating circuit JSON: ${err}`)
+      return null
+    })
+
+    if (!circuitData) return onExit(1)
+    circuitJson = circuitData.circuitJson
+  }
 
   let outputContent: string | Buffer
 
   switch (format) {
     case "schematic-svg":
-      outputContent = convertCircuitJsonToSchematicSvg(circuitData.circuitJson)
+      outputContent = convertCircuitJsonToSchematicSvg(circuitJson)
       break
     case "pcb-svg":
-      outputContent = convertCircuitJsonToPcbSvg(circuitData.circuitJson)
+      outputContent = convertCircuitJsonToPcbSvg(circuitJson)
       break
     case "specctra-dsn":
-      outputContent = convertCircuitJsonToDsnString(circuitData.circuitJson)
+      outputContent = convertCircuitJsonToDsnString(circuitJson)
       break
     case "readable-netlist":
-      outputContent = convertCircuitJsonToReadableNetlist(
-        circuitData.circuitJson,
-      )
+      outputContent = convertCircuitJsonToReadableNetlist(circuitJson)
       break
     case "gltf":
       outputContent = JSON.stringify(
         await convertCircuitJsonToGltf(
-          circuitData.circuitJson,
+          circuitJson,
           getCircuitJsonToGltfOptions({ format: "gltf" }),
         ),
         null,
@@ -147,35 +176,34 @@ export const exportSnippet = async ({
     case "glb":
       outputContent = Buffer.from(
         (await convertCircuitJsonToGltf(
-          circuitData.circuitJson,
+          circuitJson,
           getCircuitJsonToGltfOptions({ format: "glb" }),
         )) as ArrayBuffer,
       )
       break
-    case "kicad_sch": {
-      const converter = new CircuitJsonToKicadSchConverter(
-        circuitData.circuitJson,
+    case "srj":
+      outputContent = JSON.stringify(
+        getSimpleRouteJsonFromCircuitJson({ circuitJson }),
+        null,
+        2,
       )
+      break
+    case "kicad_sch": {
+      const converter = new CircuitJsonToKicadSchConverter(circuitJson)
       converter.runUntilFinished()
       outputContent = converter.getOutputString()
       break
     }
     case "kicad_pcb": {
-      const converter = new CircuitJsonToKicadPcbConverter(
-        circuitData.circuitJson,
-      )
+      const converter = new CircuitJsonToKicadPcbConverter(circuitJson)
       converter.runUntilFinished()
       outputContent = converter.getOutputString()
       break
     }
     case "kicad_zip": {
-      const schConverter = new CircuitJsonToKicadSchConverter(
-        circuitData.circuitJson,
-      )
+      const schConverter = new CircuitJsonToKicadSchConverter(circuitJson)
       schConverter.runUntilFinished()
-      const pcbConverter = new CircuitJsonToKicadPcbConverter(
-        circuitData.circuitJson,
-      )
+      const pcbConverter = new CircuitJsonToKicadPcbConverter(circuitJson)
       pcbConverter.runUntilFinished()
 
       const zip = new JSZip()
@@ -185,7 +213,7 @@ export const exportSnippet = async ({
       break
     }
     default:
-      outputContent = JSON.stringify(circuitData.circuitJson, null, 2)
+      outputContent = JSON.stringify(circuitJson, null, 2)
   }
   if (writeFile) {
     await writeFileAsync(outputDestination, outputContent).catch((err) => {
