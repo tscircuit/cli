@@ -10,6 +10,7 @@ type ThreadWorker<TJob, TResult> = {
   worker: Worker
   busy: boolean
   currentJob: QueuedJob<TJob, TResult> | null
+  currentJobStartedAt: number | null
   timeoutId: NodeJS.Timeout | null
 }
 
@@ -25,6 +26,8 @@ type ThreadWorkerPoolOptions<TJob, TWorkerInput, TWorkerOutput, TResult> = {
   onLog?: (lines: string[]) => void
   cancellationError?: Error
   jobTimeoutMs?: number
+  heartbeatIntervalMs?: number
+  describeJob?: (job: TJob) => string
 }
 
 export class ThreadWorkerPool<TJob, TWorkerInput, TWorkerOutput, TResult> {
@@ -40,6 +43,7 @@ export class ThreadWorkerPool<TJob, TWorkerInput, TWorkerOutput, TResult> {
   private initialized = false
   private stopped = false
   private stopReason: Error | null = null
+  private heartbeatIntervalId: NodeJS.Timeout | null = null
 
   constructor(
     options: ThreadWorkerPoolOptions<
@@ -60,7 +64,72 @@ export class ThreadWorkerPool<TJob, TWorkerInput, TWorkerOutput, TResult> {
       this.workers.push(this.createThreadWorker())
     }
 
+    this.startHeartbeat()
     this.initialized = true
+  }
+
+  private describeJob(job: TJob): string {
+    if (this.options.describeJob) {
+      return this.options.describeJob(job)
+    }
+
+    if (typeof job === "object" && job !== null) {
+      const jobCandidate = job as Record<string, unknown>
+      if (typeof jobCandidate.filePath === "string") {
+        return jobCandidate.filePath
+      }
+      if (typeof jobCandidate.id === "string") {
+        return jobCandidate.id
+      }
+      if (typeof jobCandidate.outputPath === "string") {
+        return jobCandidate.outputPath
+      }
+    }
+
+    return "unknown-job"
+  }
+
+  private startHeartbeat(): void {
+    if (!this.options.onLog || this.heartbeatIntervalId) {
+      return
+    }
+
+    const heartbeatIntervalMs = this.options.heartbeatIntervalMs ?? 5000
+    if (heartbeatIntervalMs <= 0) {
+      return
+    }
+
+    this.heartbeatIntervalId = setInterval(() => {
+      const busyWorkers = this.workers.filter((worker) => worker.busy).length
+      const totalWorkers = this.workers.length
+      const idleWorkers = totalWorkers - busyWorkers
+      const queuedJobs = this.jobQueue.length
+      const now = Date.now()
+      const workerDetails = this.workers.map((worker, index) => {
+        if (!worker.busy || !worker.currentJob || !worker.currentJobStartedAt) {
+          return `w${index}:idle`
+        }
+
+        const runningForMs = now - worker.currentJobStartedAt
+        const jobDescription = this.describeJob(worker.currentJob.job)
+        return `w${index}:busy task=${jobDescription} running_ms=${runningForMs}`
+      })
+
+      this.options.onLog?.([
+        `[worker-pool] heartbeat: workers busy=${busyWorkers}/${totalWorkers}, idle=${idleWorkers}, queued_jobs=${queuedJobs} | ${workerDetails.join(" | ")}`,
+      ])
+    }, heartbeatIntervalMs)
+
+    this.heartbeatIntervalId.unref?.()
+  }
+
+  private stopHeartbeat(): void {
+    if (!this.heartbeatIntervalId) {
+      return
+    }
+
+    clearInterval(this.heartbeatIntervalId)
+    this.heartbeatIntervalId = null
   }
 
   private createThreadWorker(): ThreadWorker<TJob, TResult> {
@@ -68,6 +137,7 @@ export class ThreadWorkerPool<TJob, TWorkerInput, TWorkerOutput, TResult> {
       worker: new Worker(this.options.workerEntrypointPath),
       busy: false,
       currentJob: null,
+      currentJobStartedAt: null,
       timeoutId: null,
     }
 
@@ -118,6 +188,7 @@ export class ThreadWorkerPool<TJob, TWorkerInput, TWorkerOutput, TResult> {
     threadWorker.worker = new Worker(this.options.workerEntrypointPath)
     threadWorker.busy = false
     threadWorker.currentJob = null
+    threadWorker.currentJobStartedAt = null
 
     this.attachWorkerHandlers(threadWorker)
   }
@@ -133,6 +204,7 @@ export class ThreadWorkerPool<TJob, TWorkerInput, TWorkerOutput, TResult> {
 
     this.clearWorkerTimeout(threadWorker)
     threadWorker.currentJob = null
+    threadWorker.currentJobStartedAt = null
     threadWorker.busy = false
     action(job)
     this.processQueue()
@@ -219,6 +291,7 @@ export class ThreadWorkerPool<TJob, TWorkerInput, TWorkerOutput, TResult> {
 
     availableWorker.busy = true
     availableWorker.currentJob = queuedJob
+    availableWorker.currentJobStartedAt = Date.now()
     this.startJobTimeout(availableWorker)
     availableWorker.worker.postMessage(
       this.options.createMessage(queuedJob.job),
@@ -242,6 +315,7 @@ export class ThreadWorkerPool<TJob, TWorkerInput, TWorkerOutput, TResult> {
     if (this.stopped) return
 
     this.stopped = true
+    this.stopHeartbeat()
     this.stopReason = reason
     for (const queuedJob of this.jobQueue) {
       queuedJob.reject(reason)
@@ -250,6 +324,7 @@ export class ThreadWorkerPool<TJob, TWorkerInput, TWorkerOutput, TResult> {
   }
 
   async terminate(): Promise<void> {
+    this.stopHeartbeat()
     await Promise.all(
       this.workers.map((worker) => {
         this.clearWorkerTimeout(worker)
