@@ -163,13 +163,54 @@ test("build with directory argument errors when no files match", async () => {
 
   await writeFile(path.join(tmpDir, "package.json"), "{}")
 
-  const { stderr } = await runCommand(
+  const { stderr, exitCode } = await runCommand(
     `tsci build ${path.relative(tmpDir, srcDir)}`,
   )
 
+  expect(exitCode).toBe(1)
   expect(stderr).toContain(
-    'There were no files to build found matching the includeBoardFiles globs: ["src/**/*.board.tsx"]',
+    'No files matched includeBoardFiles in the provided build directory: "src"',
   )
+  expect(stderr).toContain('Patterns: ["src/**/*.board.tsx"]')
+  expect(stderr).toContain("Expected files like")
+  expect(stderr).not.toContain("unexpected exception")
+}, 30_000)
+
+test("build with directory argument and concurrency flags returns clear no-match error", async () => {
+  const { tmpDir, runCommand } = await getCliTestFixture()
+  const targetDir = path.join(
+    tmpDir,
+    "lib",
+    "example_connectors",
+    "example_header",
+  )
+  await mkdir(targetDir, { recursive: true })
+
+  await writeFile(
+    path.join(targetDir, "index.tsx"),
+    `
+    export default () => (
+      <board width="10mm" height="10mm">
+        <resistor resistance="1k" footprint="0402" name="R1" schX={3} pcbX={3} />
+      </board>
+    )
+  `,
+  )
+  await writeFile(path.join(tmpDir, "package.json"), "{}")
+
+  const { stderr, exitCode } = await runCommand(
+    "tsci build lib/example_connectors/example_header --pcb-svgs --concurrency 4",
+  )
+
+  expect(exitCode).toBe(1)
+  expect(stderr).toContain(
+    'No files matched includeBoardFiles in the provided build directory: "lib/example_connectors/example_header"',
+  )
+  expect(stderr).toContain(
+    'Patterns: ["**/*.board.tsx","**/*.circuit.tsx","**/*.circuit.json"]',
+  )
+  expect(stderr).toContain("Expected files like")
+  expect(stderr).not.toContain("unexpected exception")
 }, 30_000)
 
 test("build without circuit files falls back to main entrypoint", async () => {

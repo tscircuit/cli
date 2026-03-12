@@ -22,7 +22,10 @@ import type { BuildFileResult } from "./build-preview-images"
 import { buildPreviewImages } from "./build-preview-images"
 import { generateKicadProject } from "./generate-kicad-project"
 import type { GeneratedKicadProject } from "./generate-kicad-project"
-import { getBuildEntrypoints } from "./get-build-entrypoints"
+import {
+  BuildNoMatchingFilesError,
+  getBuildEntrypoints,
+} from "./get-build-entrypoints"
 import {
   hasAnyImageFormatSelected,
   resolveImageFormatSelection,
@@ -841,6 +844,11 @@ export const registerBuild = (program: Command) => {
 
         exitBuild(0, "build finished successfully")
       } catch (error) {
+        if (error instanceof BuildNoMatchingFilesError) {
+          console.error(error.message)
+          exitBuild(1, "no matching build files found")
+        }
+
         const message = error instanceof Error ? error.message : String(error)
         console.error(message)
         exitBuild(1, "unexpected exception")

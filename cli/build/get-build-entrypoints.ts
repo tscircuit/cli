@@ -4,6 +4,33 @@ import { getBoardFilePatterns, loadProjectConfig } from "lib/project-config"
 import { findBoardFiles } from "lib/shared/find-board-files"
 import { getEntrypoint } from "lib/shared/get-entrypoint"
 
+export class BuildNoMatchingFilesError extends Error {
+  readonly directoryPath: string
+  readonly includeBoardFilePatterns: string[]
+
+  constructor({
+    directoryPath,
+    includeBoardFilePatterns,
+    projectDir,
+  }: {
+    directoryPath: string
+    includeBoardFilePatterns: string[]
+    projectDir: string
+  }) {
+    const relativeDirectory = path.relative(projectDir, directoryPath) || "."
+    super(
+      [
+        `No files matched includeBoardFiles in the provided build directory: "${relativeDirectory}"`,
+        `Patterns: ${JSON.stringify(includeBoardFilePatterns)}`,
+        'Expected files like "*.board.tsx", "*.circuit.tsx", or "*.circuit.json". Update includeBoardFiles in tscircuit.config.json if your naming differs.',
+      ].join("\n"),
+    )
+    this.name = "BuildNoMatchingFilesError"
+    this.directoryPath = directoryPath
+    this.includeBoardFilePatterns = includeBoardFilePatterns
+  }
+}
+
 const isSubPath = (maybeChild: string, maybeParent: string) => {
   const relative = path.relative(maybeParent, maybeChild)
   return (
@@ -118,15 +145,19 @@ export async function getBuildEntrypoints({
           : undefined
 
       if (includeBoardFiles) {
-        const circuitFiles = findBoardFiles({
+        const matchedFiles = findBoardFiles({
           projectDir: resolvedRoot,
-          filePaths: [resolved],
-        }).filter((file) => isSubPath(file, resolved))
+        })
+        const circuitFiles = matchedFiles.filter((file) =>
+          isSubPath(file, resolved),
+        )
 
         if (circuitFiles.length === 0) {
-          throw new Error(
-            `There were no files to build found matching the includeBoardFiles globs: ${JSON.stringify(includeBoardFilePatterns)}`,
-          )
+          throw new BuildNoMatchingFilesError({
+            directoryPath: resolved,
+            includeBoardFilePatterns,
+            projectDir: resolvedRoot,
+          })
         }
 
         return {
