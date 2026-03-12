@@ -123,7 +123,6 @@ test("thread worker pool emits heartbeat logs", async () => {
     )
 
     expect(detailedHeartbeat).toBeDefined()
-
   } finally {
     await pool.terminate()
   }
