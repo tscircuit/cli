@@ -111,14 +111,19 @@ test("thread worker pool emits heartbeat logs", async () => {
   })
 
   try {
-    const result = await pool.queueJob({ id: "success" })
-    expect(result).toBe("success")
+    void pool.queueJob({ id: "stuck", hang: true }).catch(() => undefined)
 
-    await new Promise((resolve) => setTimeout(resolve, 60))
+    await new Promise((resolve) => setTimeout(resolve, 80))
 
-    expect(logs.some((line) => line.includes("[worker-pool] heartbeat:"))).toBe(
-      true,
+    const detailedHeartbeat = logs.find(
+      (line) =>
+        line.includes("[worker-pool] heartbeat:") &&
+        line.includes("task=stuck") &&
+        line.includes("running_ms="),
     )
+
+    expect(detailedHeartbeat).toBeDefined()
+
   } finally {
     await pool.terminate()
   }
