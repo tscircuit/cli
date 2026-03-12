@@ -23,7 +23,7 @@
         "@types/semver": "^7.5.8",
         "bun-match-svg": "^0.0.12",
         "chokidar": "4.0.1",
-        "circuit-json": "^0.0.397",
+        "circuit-json": "^0.0.400",
         "circuit-json-to-kicad": "^0.0.84",
         "circuit-json-to-readable-netlist": "^0.0.14",
         "circuit-json-to-spice": "^0.0.10",
@@ -447,7 +447,7 @@
 
     "chownr": ["chownr@1.1.4", "", {}, "sha512-jJ0bqzaylmJtVnNgzTeSOs8DPavpbYgEr/b0YL8/2GO3xJEhInFmhKMUnEJQjZumK7KXGFhUy89PrsJWlakBVg=="],
 
-    "circuit-json": ["circuit-json@0.0.397", "", {}, "sha512-gDjNJ/WN4IpYmp9cHZRO4F62lo/HHBHvQB9pwH7IZUWXf8zKuWGTbsRhmc7UfBW2SRPCvRSj/TPh5x2UBsMpjw=="],
+    "circuit-json": ["circuit-json@0.0.400", "", {}, "sha512-ZB5Pf/h9yKc03ee+b6NRniE8MKobVpqnFoDlxf0kTLRswtErRgS9fusndGVHc/nAyWYSAka0SzRGrl0ovLNIcA=="],
 
     "circuit-json-to-bpc": ["circuit-json-to-bpc@0.0.13", "", { "peerDependencies": { "bpc-graph": "*", "circuit-json": "*", "typescript": "^5" } }, "sha512-3wSMtPa6tJkiBQN4tsm7f0Mb7Wp90X2c8dNbULoDVE4mGGoFqP1DXqBlyvvZZl+4SjqznzQQ0EioLe2SCQTOcg=="],
 
@@ -1200,6 +1200,8 @@
     "tscircuit/@tscircuit/schematic-match-adapt": ["@tscircuit/schematic-match-adapt@0.0.16", "", { "peerDependencies": { "typescript": "^5" } }, "sha512-85e6Pq58zrhZqivyW4bPVZfGfg8xLBCj3yjHl5LZslwfsDRgtWVob4bjJMhCfNL/mLsPUQKnpiDNnFKl9ugUZw=="],
 
     "tscircuit/@tscircuit/solver-utils": ["@tscircuit/solver-utils@0.0.3", "", { "peerDependencies": { "typescript": "^5" } }, "sha512-NMzqn7NM0SpeHnoWwewcnitxSNczaFsm/WENmBy8dxnFbUkGBdmSY5Gbky8C9e7q8+SzRcwj7GqXE7EWAHTirw=="],
+
+    "tscircuit/circuit-json": ["circuit-json@0.0.397", "", {}, "sha512-gDjNJ/WN4IpYmp9cHZRO4F62lo/HHBHvQB9pwH7IZUWXf8zKuWGTbsRhmc7UfBW2SRPCvRSj/TPh5x2UBsMpjw=="],
 
     "tscircuit/circuit-json-to-spice": ["circuit-json-to-spice@0.0.34", "", { "dependencies": { "circuit-json-to-connectivity-map": "^0.0.22" }, "peerDependencies": { "@tscircuit/circuit-json-util": "*", "circuit-json": "*", "typescript": "^5.0.0" } }, "sha512-59XyRHATq455875XlEiAfycIvxkOjaKnX4nzzlvY88UJyFcjkHSQCB9HCnbHJGsRxVBEmrTcELLyVIFmB+c4LA=="],
 
