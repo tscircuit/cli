@@ -1,5 +1,6 @@
 {
   "lockfileVersion": 1,
+  "configVersion": 0,
   "workspaces": {
     "": {
       "name": "@tscircuit/cli",
@@ -1193,11 +1194,7 @@
 
     "sucrase/commander": ["commander@4.1.1", "", {}, "sha512-NOKm8xhkzAjzFx8B2v5OAHT+u5pRQc2UCa2Vq9jYL/31o2wi9mxBA7LIFs3sV5VSC49z6pEhfbMULvShKj26WA=="],
 
-    "tscircuit/@tscircuit/eval": ["@tscircuit/eval@0.0.707", "", { "peerDependencies": { "@tscircuit/core": "*", "circuit-json": "*", "typescript": "^5.0.0", "zod": "3" } }, "sha512-HFqV5bXqs2D/1AasAonTbDwm2NhO771AW4Bdt5c7dr5EVZWytbD/jd4BQyxr97MTzJtZqWz08pQ49uBM5qAQJA=="],
-
     "tscircuit/@tscircuit/props": ["@tscircuit/props@0.0.495", "", { "peerDependencies": { "circuit-json": "*", "react": "*", "zod": "*" } }, "sha512-BgyRakBN6jZJxboMvlF98xB8X9MZ+OhPY8nY5pn5cQiW3NK8KzqY0Q9fMiiDTBtqa+FSzXUSYtRMSRQ/eWv36Q=="],
-
-    "tscircuit/@tscircuit/runframe": ["@tscircuit/runframe@0.0.1719", "", { "dependencies": { "@tscircuit/eval": "^0.0.707", "@tscircuit/solver-utils": "^0.0.7" } }, "sha512-egMOULt6+SE69OsyItDV7wdGR1ngL4x4qcxzZHDL4GI8dI3Z7E224B6UKnKzxufXrNuHhU4gUGjqXDhlJkVvYw=="],
 
     "tscircuit/@tscircuit/schematic-match-adapt": ["@tscircuit/schematic-match-adapt@0.0.16", "", { "peerDependencies": { "typescript": "^5" } }, "sha512-85e6Pq58zrhZqivyW4bPVZfGfg8xLBCj3yjHl5LZslwfsDRgtWVob4bjJMhCfNL/mLsPUQKnpiDNnFKl9ugUZw=="],
 
@@ -1266,8 +1263,6 @@
     "prebuild-install/tar-fs/tar-stream": ["tar-stream@2.2.0", "", { "dependencies": { "bl": "^4.0.3", "end-of-stream": "^1.4.1", "fs-constants": "^1.0.0", "inherits": "^2.0.3", "readable-stream": "^3.1.1" } }, "sha512-ujeqbceABgwMZxEJnk2HDY2DlnUZ+9oEcb1KzTVfYHio0UE6dG71n60d8D2I4qNvleWrrXpmjpt7vZeF1LnMZQ=="],
 
     "string-width-cjs/strip-ansi/ansi-regex": ["ansi-regex@5.0.1", "", {}, "sha512-quJQXlTSUGL2LH9SUXo8VwsY4soanhgo6LNSm84E1LBcE8s3O0wpdiRzyR9z/ZZJMlMWv37qOOb9pdJlMUEKFQ=="],
-
-    "tscircuit/@tscircuit/runframe/@tscircuit/solver-utils": ["@tscircuit/solver-utils@0.0.7", "", { "peerDependencies": { "typescript": "^5" } }, "sha512-SB5+A92BMsozxOWfi6iXrcVv1UAFfbBAbKlWHG9TXWquEvAVPSukeCZJ08Yhq0b22T4qkMNy5bZWshXwlO+BuQ=="],
 
     "tscircuit/circuit-json-to-spice/circuit-json-to-connectivity-map": ["circuit-json-to-connectivity-map@0.0.22", "", { "dependencies": { "@tscircuit/math-utils": "^0.0.9" }, "peerDependencies": { "typescript": "^5.0.0" } }, "sha512-HN8DiISjZZLTglGEkYNRpKeQ/DMG4dDo5j4Hck0UGSJbpux9aFwtJOGszMf06Inh/gu5oKBrpZJIeWxaNacKUg=="],
 
