@@ -83,3 +83,47 @@ test("thread worker pool times out stuck jobs and continues", async () => {
     await pool.terminate()
   }
 })
+
+test("thread worker pool emits heartbeat logs", async () => {
+  const logs: string[] = []
+  const pool = new ThreadWorkerPool<
+    TestJob,
+    TestJob,
+    TestWorkerMessage,
+    string
+  >({
+    concurrency: 1,
+    workerEntrypointPath: writeTestWorker(),
+    createMessage: (job) => job,
+    isLogMessage: (message) => message.message_type === "log",
+    getLogLines: (message) =>
+      message.message_type === "log" ? message.log_lines : [],
+    isCompletionMessage: (message) => message.message_type === "done",
+    getResult: (message) => {
+      if (message.message_type !== "done") {
+        throw new Error("Expected done message")
+      }
+
+      return message.id
+    },
+    heartbeatIntervalMs: 20,
+    onLog: (lines) => logs.push(...lines),
+  })
+
+  try {
+    void pool.queueJob({ id: "stuck", hang: true }).catch(() => undefined)
+
+    await new Promise((resolve) => setTimeout(resolve, 80))
+
+    const detailedHeartbeat = logs.find(
+      (line) =>
+        line.includes("[worker-pool] heartbeat:") &&
+        line.includes("task=stuck") &&
+        line.includes("running_ms="),
+    )
+
+    expect(detailedHeartbeat).toBeDefined()
+  } finally {
+    await pool.terminate()
+  }
+})
