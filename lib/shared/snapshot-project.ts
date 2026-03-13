@@ -42,13 +42,13 @@ type SnapshotOptions = {
   onSuccess?: (message: string) => void
 }
 
-const getIncludeBoardFilesSource = (projectDir: string): boolean => {
+const hasConfiguredIncludeBoardFiles = (projectDir: string): boolean => {
   const projectConfig = loadProjectConfig(projectDir)
-  const hasConfiguredIncludeBoardFiles = Boolean(
+  const hasConfiguredPatterns = Boolean(
     projectConfig?.includeBoardFiles?.some((pattern) => pattern.trim()),
   )
 
-  return hasConfiguredIncludeBoardFiles
+  return hasConfiguredPatterns
 }
 
 export const snapshotProject = async ({
@@ -96,8 +96,7 @@ export const snapshotProject = async ({
       const relativeDirectory =
         path.relative(projectDir, explicitDirectoryTarget) || "."
       const includeBoardFilePatterns = getBoardFilePatterns(projectDir)
-      const includeBoardFilesSource = getIncludeBoardFilesSource(projectDir)
-      const patternSourceMessage = includeBoardFilesSource
+      const patternSourceMessage = hasConfiguredIncludeBoardFiles(projectDir)
         ? "Searched using tscircuit.config.json includeBoardFiles"
         : "Searched using default includeBoardFiles"
 
