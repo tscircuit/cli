@@ -94,6 +94,10 @@ export class ThreadWorkerPool<TJob, TWorkerInput, TWorkerOutput, TResult> {
       return
     }
 
+    if (process.env.DEBUG !== "1") {
+      return
+    }
+
     const heartbeatIntervalMs = this.options.heartbeatIntervalMs ?? 5000
     if (heartbeatIntervalMs <= 0) {
       return
