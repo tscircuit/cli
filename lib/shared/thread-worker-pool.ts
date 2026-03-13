@@ -30,6 +30,8 @@ type ThreadWorkerPoolOptions<TJob, TWorkerInput, TWorkerOutput, TResult> = {
   describeJob?: (job: TJob) => string
 }
 
+const DEFAULT_WORKER_JOB_TIMEOUT_MS = 5 * 60 * 1000
+
 export class ThreadWorkerPool<TJob, TWorkerInput, TWorkerOutput, TResult> {
   private workers: Array<ThreadWorker<TJob, TResult>> = []
   private jobQueue: Array<QueuedJob<TJob, TResult>> = []
@@ -160,7 +162,12 @@ export class ThreadWorkerPool<TJob, TWorkerInput, TWorkerOutput, TResult> {
   private startJobTimeout(threadWorker: ThreadWorker<TJob, TResult>): void {
     this.clearWorkerTimeout(threadWorker)
 
-    if (!this.options.jobTimeoutMs || this.options.jobTimeoutMs <= 0) {
+    const timeoutMs =
+      this.options.jobTimeoutMs === undefined
+        ? DEFAULT_WORKER_JOB_TIMEOUT_MS
+        : this.options.jobTimeoutMs
+
+    if (!Number.isFinite(timeoutMs) || timeoutMs <= 0) {
       return
     }
 
@@ -176,13 +183,13 @@ export class ThreadWorkerPool<TJob, TWorkerInput, TWorkerOutput, TResult> {
       }
 
       const timeoutError = new Error(
-        `Worker job timed out after ${this.options.jobTimeoutMs}ms`,
+        `Worker job timed out after ${timeoutMs}ms`,
       )
 
       timedOutJob.reject(timeoutError)
       this.replaceWorker(threadWorker)
       this.processQueue()
-    }, this.options.jobTimeoutMs)
+    }, timeoutMs)
   }
 
   private replaceWorker(threadWorker: ThreadWorker<TJob, TResult>): void {
