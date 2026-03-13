@@ -182,6 +182,11 @@ export class ThreadWorkerPool<TJob, TWorkerInput, TWorkerOutput, TResult> {
         return
       }
 
+      const jobDescription = this.describeJob(timedOutJob.job)
+      this.options.onLog?.([
+        `[worker-pool] timeout: task=${jobDescription} timeout_ms=${timeoutMs}; replacing worker`,
+      ])
+
       const timeoutError = new Error(
         `Worker job timed out after ${timeoutMs}ms`,
       )
