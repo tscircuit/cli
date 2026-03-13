@@ -4,6 +4,37 @@ import { getBoardFilePatterns, loadProjectConfig } from "lib/project-config"
 import { findBoardFiles } from "lib/shared/find-board-files"
 import { getEntrypoint } from "lib/shared/get-entrypoint"
 
+export class BuildNoMatchingFilesError extends Error {
+  readonly directoryPath: string
+  readonly includeBoardFilePatterns: string[]
+
+  constructor({
+    directoryPath,
+    includeBoardFilePatterns,
+    hasConfiguredIncludeBoardFiles,
+    projectDir,
+  }: {
+    directoryPath: string
+    includeBoardFilePatterns: string[]
+    hasConfiguredIncludeBoardFiles: boolean
+    projectDir: string
+  }) {
+    const relativeDirectory = path.relative(projectDir, directoryPath) || "."
+    const patternSourceMessage = hasConfiguredIncludeBoardFiles
+      ? "Searched using tscircuit.config.json includeBoardFiles"
+      : "Searched using default includeBoardFiles"
+    super(
+      [
+        `No buildable files found in directory: "${relativeDirectory}"`,
+        `${patternSourceMessage}: ${JSON.stringify(includeBoardFilePatterns)}`,
+      ].join("\n"),
+    )
+    this.name = "BuildNoMatchingFilesError"
+    this.directoryPath = directoryPath
+    this.includeBoardFilePatterns = includeBoardFilePatterns
+  }
+}
+
 const isSubPath = (maybeChild: string, maybeParent: string) => {
   const relative = path.relative(maybeParent, maybeChild)
   return (
@@ -118,15 +149,23 @@ export async function getBuildEntrypoints({
           : undefined
 
       if (includeBoardFiles) {
-        const circuitFiles = findBoardFiles({
+        const hasConfiguredIncludeBoardFiles = Boolean(
+          projectConfig?.includeBoardFiles?.some((pattern) => pattern.trim()),
+        )
+        const matchedFiles = findBoardFiles({
           projectDir: resolvedRoot,
-          filePaths: [resolved],
-        }).filter((file) => isSubPath(file, resolved))
+        })
+        const circuitFiles = matchedFiles.filter((file) =>
+          isSubPath(file, resolved),
+        )
 
         if (circuitFiles.length === 0) {
-          throw new Error(
-            `There were no files to build found matching the includeBoardFiles globs: ${JSON.stringify(includeBoardFilePatterns)}`,
-          )
+          throw new BuildNoMatchingFilesError({
+            directoryPath: resolved,
+            includeBoardFilePatterns,
+            hasConfiguredIncludeBoardFiles,
+            projectDir: resolvedRoot,
+          })
         }
 
         return {
