@@ -351,6 +351,70 @@ test("snapshot command with directory path", async () => {
   expect(rootExists).toBe(false)
 }, 30_000)
 
+test("snapshot with directory path errors when no files match configured includeBoardFiles", async () => {
+  const { tmpDir, runCommand } = await getCliTestFixture()
+  const srcDir = join(tmpDir, "src")
+  fs.mkdirSync(srcDir)
+
+  await Bun.write(
+    join(tmpDir, "tscircuit.config.json"),
+    JSON.stringify({ includeBoardFiles: ["src/**/*.board.tsx"] }),
+  )
+  await Bun.write(
+    join(srcDir, "index.tsx"),
+    `
+    export const Component = () => (
+      <board width="10mm" height="10mm">
+        <chip name="U1" footprint="soic8" />
+      </board>
+    )
+  `,
+  )
+
+  const { stderr, stdout, exitCode } = await runCommand("tsci snapshot src")
+
+  expect(exitCode).toBe(1)
+  expect(stderr).toContain(
+    'No circuit files found to create snapshots in directory: "src"',
+  )
+  expect(stderr).toContain(
+    'Searched using tscircuit.config.json includeBoardFiles: ["src/**/*.board.tsx"]',
+  )
+  expect(stderr).not.toContain("No entrypoint found")
+  expect(stdout).not.toContain("No entrypoint found")
+}, 30_000)
+
+test("snapshot with directory path and default includeBoardFiles returns clear no-match error", async () => {
+  const { tmpDir, runCommand } = await getCliTestFixture()
+  const targetDir = join(tmpDir, "lib", "example_connectors", "example_header")
+  fs.mkdirSync(targetDir, { recursive: true })
+
+  await Bun.write(
+    join(targetDir, "index.tsx"),
+    `
+    export const Component = () => (
+      <board width="10mm" height="10mm">
+        <chip name="U1" footprint="soic8" />
+      </board>
+    )
+  `,
+  )
+
+  const { stderr, stdout, exitCode } = await runCommand(
+    "tsci snapshot lib/example_connectors/example_header --concurrency 4",
+  )
+
+  expect(exitCode).toBe(1)
+  expect(stderr).toContain(
+    'No circuit files found to create snapshots in directory: "lib/example_connectors/example_header"',
+  )
+  expect(stderr).toContain(
+    'Searched using default includeBoardFiles: ["**/*.board.tsx","**/*.circuit.tsx","**/*.circuit.json"]',
+  )
+  expect(stderr).not.toContain("No entrypoint found")
+  expect(stdout).not.toContain("No entrypoint found")
+}, 30_000)
+
 test("snapshot command skips updates when snapshots match visually", async () => {
   const { tmpDir, runCommand } = await getCliTestFixture()
 
