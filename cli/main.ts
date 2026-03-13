@@ -97,7 +97,7 @@ if (
   process.argv.includes("-v") ||
   process.argv.includes("-V")
 ) {
-  console.log(getVersion())
+  console.log(getVersion({ verbose: process.argv.includes("--verbose") }))
   process.exit(0)
 }
 
@@ -105,8 +105,9 @@ if (
 program
   .command("version")
   .description("Print CLI version")
-  .action(() => {
-    console.log(getVersion())
+  .option("--verbose", "Print tscircuit + CLI dependency versions")
+  .action((options: { verbose?: boolean }) => {
+    console.log(getVersion({ verbose: options.verbose }))
   })
 
 if (process.argv.length === 2) {
