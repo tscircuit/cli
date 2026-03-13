@@ -65,7 +65,7 @@ Commands:
   convert [options] <file>     Convert a .kicad_mod footprint to a tscircuit
                                component
   simulate                     Run a simulation
-  version                      Print CLI version
+  version [options]            Print CLI version
   help [command]               display help for command
 ```
 <!-- END_HELP_OUTPUT -->
