@@ -1,8 +1,13 @@
+import fs from "node:fs"
 import path from "node:path"
 import type { PlatformConfig } from "@tscircuit/props"
 import { snapshotFilesWithWorkerPool } from "cli/snapshot/worker-pool"
 import kleur from "kleur"
-import { getSnapshotsDir } from "lib/project-config"
+import {
+  getBoardFilePatterns,
+  getSnapshotsDir,
+  loadProjectConfig,
+} from "lib/project-config"
 import type { CameraPreset } from "lib/shared/camera-presets"
 import { findBoardFiles } from "lib/shared/find-board-files"
 import { processSnapshotFile } from "lib/shared/process-snapshot-file"
@@ -37,6 +42,15 @@ type SnapshotOptions = {
   onSuccess?: (message: string) => void
 }
 
+const hasConfiguredIncludeBoardFiles = (projectDir: string): boolean => {
+  const projectConfig = loadProjectConfig(projectDir)
+  const hasConfiguredPatterns = Boolean(
+    projectConfig?.includeBoardFiles?.some((pattern) => pattern.trim()),
+  )
+
+  return hasConfiguredPatterns
+}
+
 export const snapshotProject = async ({
   update = false,
   ignored = [],
@@ -64,6 +78,13 @@ export const snapshotProject = async ({
   ]
 
   const resolvedPaths = filePaths.map((f) => path.resolve(projectDir, f))
+  const explicitDirectoryTarget = resolvedPaths.find((resolvedPath) => {
+    if (!fs.existsSync(resolvedPath)) {
+      return false
+    }
+
+    return fs.statSync(resolvedPath).isDirectory()
+  })
   const boardFiles = findBoardFiles({
     projectDir,
     ignore,
@@ -71,6 +92,23 @@ export const snapshotProject = async ({
   })
 
   if (boardFiles.length === 0) {
+    if (explicitDirectoryTarget) {
+      const relativeDirectory =
+        path.relative(projectDir, explicitDirectoryTarget) || "."
+      const includeBoardFilePatterns = getBoardFilePatterns(projectDir)
+      const patternSourceMessage = hasConfiguredIncludeBoardFiles(projectDir)
+        ? "Searched using tscircuit.config.json includeBoardFiles"
+        : "Searched using default includeBoardFiles"
+
+      onError(
+        [
+          `No circuit files found to create snapshots in directory: "${relativeDirectory}"`,
+          `${patternSourceMessage}: ${JSON.stringify(includeBoardFilePatterns)}`,
+        ].join("\n"),
+      )
+      return onExit(1)
+    }
+
     console.log(
       "No entrypoint found. Run 'tsci init' to bootstrap a project or specify a file with 'tsci snapshot <file>'",
     )
