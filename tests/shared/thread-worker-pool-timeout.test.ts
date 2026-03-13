@@ -136,7 +136,6 @@ test("thread worker pool emits heartbeat logs only when DEBUG=1", async () => {
   }
 })
 
-
 test("thread worker pool does not emit heartbeat logs when DEBUG is not 1", async () => {
   const previousDebug = process.env.DEBUG
   delete process.env.DEBUG
