@@ -30,7 +30,7 @@ type ThreadWorkerPoolOptions<TJob, TWorkerInput, TWorkerOutput, TResult> = {
   describeJob?: (job: TJob) => string
 }
 
-const DEFAULT_WORKER_JOB_TIMEOUT_MS = 5 * 60 * 1000
+const DEFAULT_WORKER_JOB_TIMEOUT_MS = 3 * 60 * 1000
 
 export class ThreadWorkerPool<TJob, TWorkerInput, TWorkerOutput, TResult> {
   private workers: Array<ThreadWorker<TJob, TResult>> = []
