@@ -6,11 +6,18 @@ import kleur from "kleur"
 import { analyzeCircuitJson } from "lib/shared/circuit-json-diagnostics"
 import { generateCircuitJson } from "lib/shared/generate-circuit-json"
 import { getCompletePlatformConfig } from "lib/shared/get-complete-platform-config"
+import {
+  type DrcIgnoreCounts,
+  type DrcIgnoreOptions,
+  filterDiagnosticsByDrcCategory,
+} from "./drc-diagnostic-filter"
 
 export type BuildFileOutcome = {
   ok: boolean
   circuitJson?: AnyCircuitElement[]
   hasErrors?: boolean
+  ignoredDrcCount?: number
+  ignoredDrcByCategory?: DrcIgnoreCounts
   /** Fatal error that should always cause exit code 1, even with --ignore-errors */
   isFatalError?: { errorType: string; message: string }
 }
@@ -22,9 +29,10 @@ export const buildFile = async (
   options?: {
     ignoreErrors?: boolean
     ignoreWarnings?: boolean
-    platformConfig?: PlatformConfig
-    injectedProps?: Record<string, unknown>
-  },
+  } & DrcIgnoreOptions & {
+      platformConfig?: PlatformConfig
+      injectedProps?: Record<string, unknown>
+    },
 ): Promise<BuildFileOutcome> => {
   try {
     console.log("Generating circuit JSON...")
@@ -58,17 +66,22 @@ export const buildFile = async (
     fs.writeFileSync(output, JSON.stringify(circuitJson, null, 2))
     console.log(`Circuit JSON written to ${path.relative(projectDir, output)}`)
 
-    const { errors, warnings } = analyzeCircuitJson(circuitJson)
+    const diagnostics = analyzeCircuitJson(circuitJson)
+    const filteredDiagnostics = filterDiagnosticsByDrcCategory({
+      errors: diagnostics.errors,
+      warnings: diagnostics.warnings,
+      ignoreOptions: options,
+    })
 
     if (!options?.ignoreWarnings) {
-      for (const warn of warnings) {
+      for (const warn of filteredDiagnostics.warnings) {
         const msg = warn.message || JSON.stringify(warn)
         console.log(kleur.yellow(msg))
       }
     }
 
     if (!options?.ignoreErrors) {
-      for (const err of errors) {
+      for (const err of filteredDiagnostics.errors) {
         const msg = err.message || JSON.stringify(err)
         console.error(kleur.red(msg))
         if (err.stack) {
@@ -80,7 +93,10 @@ export const buildFile = async (
     return {
       ok: true,
       circuitJson,
-      hasErrors: errors.length > 0 && !options?.ignoreErrors,
+      hasErrors:
+        filteredDiagnostics.errors.length > 0 && !options?.ignoreErrors,
+      ignoredDrcCount: filteredDiagnostics.ignoredCount,
+      ignoredDrcByCategory: filteredDiagnostics.ignoredByCategory,
     }
   } catch (err) {
     console.error(err)

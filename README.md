@@ -74,6 +74,10 @@ The `build` command also accepts the following options:
 
 - `--ignore-errors` - continue build even if circuit JSON contains errors
 - `--ignore-warnings` - suppress warning output
+- `--ignore-netlist-drc` - suppress netlist DRC diagnostics
+- `--ignore-pin-specification-drc` - suppress pin-specification DRC diagnostics
+- `--ignore-placement-drc` - suppress placement DRC diagnostics
+- `--ignore-routing-drc` - suppress routing DRC diagnostics
 
 ## Development
 

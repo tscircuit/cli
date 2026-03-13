@@ -6,6 +6,10 @@ import { installProjectDependencies } from "lib/shared/install-project-dependenc
 export interface BuildCommandOptions {
   ignoreErrors?: boolean
   ignoreWarnings?: boolean
+  ignoreNetlistDrc?: boolean
+  ignorePinSpecificationDrc?: boolean
+  ignorePlacementDrc?: boolean
+  ignoreRoutingDrc?: boolean
   disablePcb?: boolean
   routingDisabled?: boolean
   disablePartsEngine?: boolean
