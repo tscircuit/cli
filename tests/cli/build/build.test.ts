@@ -168,11 +168,10 @@ test("build with directory argument errors when no files match", async () => {
   )
 
   expect(exitCode).toBe(1)
+  expect(stderr).toContain('No buildable files found in directory: "src"')
   expect(stderr).toContain(
-    'No files matched includeBoardFiles in the provided build directory: "src"',
+    'Searched using tscircuit.config.json includeBoardFiles: ["src/**/*.board.tsx"]',
   )
-  expect(stderr).toContain('Patterns: ["src/**/*.board.tsx"]')
-  expect(stderr).toContain("Expected files like")
   expect(stderr).not.toContain("unexpected exception")
 }, 30_000)
 
@@ -204,12 +203,11 @@ test("build with directory argument and concurrency flags returns clear no-match
 
   expect(exitCode).toBe(1)
   expect(stderr).toContain(
-    'No files matched includeBoardFiles in the provided build directory: "lib/example_connectors/example_header"',
+    'No buildable files found in directory: "lib/example_connectors/example_header"',
   )
   expect(stderr).toContain(
-    'Patterns: ["**/*.board.tsx","**/*.circuit.tsx","**/*.circuit.json"]',
+    'Searched using default includeBoardFiles: ["**/*.board.tsx","**/*.circuit.tsx","**/*.circuit.json"]',
   )
-  expect(stderr).toContain("Expected files like")
   expect(stderr).not.toContain("unexpected exception")
 }, 30_000)
 

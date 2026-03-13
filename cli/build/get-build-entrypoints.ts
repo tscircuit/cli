@@ -11,18 +11,22 @@ export class BuildNoMatchingFilesError extends Error {
   constructor({
     directoryPath,
     includeBoardFilePatterns,
+    hasConfiguredIncludeBoardFiles,
     projectDir,
   }: {
     directoryPath: string
     includeBoardFilePatterns: string[]
+    hasConfiguredIncludeBoardFiles: boolean
     projectDir: string
   }) {
     const relativeDirectory = path.relative(projectDir, directoryPath) || "."
+    const patternSourceMessage = hasConfiguredIncludeBoardFiles
+      ? "Searched using tscircuit.config.json includeBoardFiles"
+      : "Searched using default includeBoardFiles"
     super(
       [
-        `No files matched includeBoardFiles in the provided build directory: "${relativeDirectory}"`,
-        `Patterns: ${JSON.stringify(includeBoardFilePatterns)}`,
-        'Expected files like "*.board.tsx", "*.circuit.tsx", or "*.circuit.json". Update includeBoardFiles in tscircuit.config.json if your naming differs.',
+        `No buildable files found in directory: "${relativeDirectory}"`,
+        `${patternSourceMessage}: ${JSON.stringify(includeBoardFilePatterns)}`,
       ].join("\n"),
     )
     this.name = "BuildNoMatchingFilesError"
@@ -145,6 +149,9 @@ export async function getBuildEntrypoints({
           : undefined
 
       if (includeBoardFiles) {
+        const hasConfiguredIncludeBoardFiles = Boolean(
+          projectConfig?.includeBoardFiles?.some((pattern) => pattern.trim()),
+        )
         const matchedFiles = findBoardFiles({
           projectDir: resolvedRoot,
         })
@@ -156,6 +163,7 @@ export async function getBuildEntrypoints({
           throw new BuildNoMatchingFilesError({
             directoryPath: resolved,
             includeBoardFilePatterns,
+            hasConfiguredIncludeBoardFiles,
             projectDir: resolvedRoot,
           })
         }
