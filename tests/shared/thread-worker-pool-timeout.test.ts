@@ -84,6 +84,51 @@ test("thread worker pool times out stuck jobs and continues", async () => {
   }
 })
 
+test("thread worker pool logs when a job times out", async () => {
+  const logs: string[] = []
+
+  const pool = new ThreadWorkerPool<
+    TestJob,
+    TestJob,
+    TestWorkerMessage,
+    string
+  >({
+    concurrency: 1,
+    workerEntrypointPath: writeTestWorker(),
+    createMessage: (job) => job,
+    isLogMessage: (message) => message.message_type === "log",
+    getLogLines: (message) =>
+      message.message_type === "log" ? message.log_lines : [],
+    isCompletionMessage: (message) => message.message_type === "done",
+    getResult: (message) => {
+      if (message.message_type !== "done") {
+        throw new Error("Expected done message")
+      }
+
+      return message.id
+    },
+    jobTimeoutMs: 50,
+    onLog: (lines) => logs.push(...lines),
+  })
+
+  try {
+    await expect(pool.queueJob({ id: "stuck", hang: true })).rejects.toThrow(
+      /timed out/i,
+    )
+
+    const timeoutLog = logs.find(
+      (line) =>
+        line.includes("[worker-pool] timeout:") &&
+        line.includes("task=stuck") &&
+        line.includes("timeout_ms=50"),
+    )
+
+    expect(timeoutLog).toBeDefined()
+  } finally {
+    await pool.terminate()
+  }
+})
+
 test("thread worker pool emits heartbeat logs only when DEBUG=1", async () => {
   const previousDebug = process.env.DEBUG
   process.env.DEBUG = "1"
@@ -129,7 +174,7 @@ test("thread worker pool emits heartbeat logs only when DEBUG=1", async () => {
   } finally {
     await pool.terminate()
     if (previousDebug === undefined) {
-      delete process.env.DEBUG
+      process.env.DEBUG = undefined
     } else {
       process.env.DEBUG = previousDebug
     }
@@ -138,7 +183,7 @@ test("thread worker pool emits heartbeat logs only when DEBUG=1", async () => {
 
 test("thread worker pool does not emit heartbeat logs when DEBUG is not 1", async () => {
   const previousDebug = process.env.DEBUG
-  delete process.env.DEBUG
+  process.env.DEBUG = undefined
 
   const logs: string[] = []
   const pool = new ThreadWorkerPool<
@@ -178,7 +223,7 @@ test("thread worker pool does not emit heartbeat logs when DEBUG is not 1", asyn
   } finally {
     await pool.terminate()
     if (previousDebug === undefined) {
-      delete process.env.DEBUG
+      process.env.DEBUG = undefined
     } else {
       process.env.DEBUG = previousDebug
     }
