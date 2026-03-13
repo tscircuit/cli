@@ -75,7 +75,7 @@ export async function buildFilesWithWorkerPool(options: {
 }): Promise<BuildJobResult[]> {
   const cancellationError = new Error("Build cancelled due fatal error")
   const workerJobTimeoutMs = Number.parseInt(
-    process.env.TSCIRCUIT_BUILD_WORKER_TIMEOUT_MS || "600000",
+    process.env.TSCIRCUIT_BUILD_WORKER_TIMEOUT_MS || "180000",
     10,
   )
   const poolConcurrency = Math.max(
