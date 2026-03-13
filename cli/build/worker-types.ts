@@ -1,4 +1,5 @@
 import type { PlatformConfig } from "@tscircuit/props"
+import type { DrcIgnoreCounts, DrcIgnoreOptions } from "./drc-diagnostic-filter"
 import type { BuildImageFormatSelection } from "./image-format-selection"
 
 /**
@@ -14,12 +15,13 @@ export type BuildFileMessage = {
   options?: {
     ignoreErrors?: boolean
     ignoreWarnings?: boolean
-    platformConfig?: PlatformConfig
-    profile?: boolean
-    injectedProps?: Record<string, unknown>
-    generatePreviewAssets?: boolean
-    imageFormats?: BuildImageFormatSelection
-  }
+  } & DrcIgnoreOptions & {
+      platformConfig?: PlatformConfig
+      profile?: boolean
+      injectedProps?: Record<string, unknown>
+      generatePreviewAssets?: boolean
+      imageFormats?: BuildImageFormatSelection
+    }
 }
 
 /**
@@ -38,6 +40,8 @@ export type BuildCompletedMessage = {
   preview_error?: string
   ok: boolean
   hasErrors?: boolean
+  ignoredDrcCount?: number
+  ignoredDrcByCategory?: DrcIgnoreCounts
   /** Fatal error that should always cause exit code 1, even with --ignore-errors */
   isFatalError?: { errorType: string; message: string }
   errors: string[]
@@ -77,6 +81,8 @@ export type BuildJobResult = {
   previewError?: string
   ok: boolean
   hasErrors?: boolean
+  ignoredDrcCount?: number
+  ignoredDrcByCategory?: DrcIgnoreCounts
   /** Fatal error that should always cause exit code 1, even with --ignore-errors */
   isFatalError?: { errorType: string; message: string }
   errors: string[]

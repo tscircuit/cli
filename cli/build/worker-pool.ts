@@ -2,6 +2,7 @@ import fs from "node:fs"
 import path from "node:path"
 import type { PlatformConfig } from "@tscircuit/props"
 import { ThreadWorkerPool } from "lib/shared/thread-worker-pool"
+import type { DrcIgnoreOptions } from "./drc-diagnostic-filter"
 import type { BuildImageFormatSelection } from "./image-format-selection"
 import type {
   BuildCompletedMessage,
@@ -19,12 +20,13 @@ type BuildJob = {
   options?: {
     ignoreErrors?: boolean
     ignoreWarnings?: boolean
-    platformConfig?: PlatformConfig
-    profile?: boolean
-    injectedProps?: Record<string, unknown>
-    generatePreviewAssets?: boolean
-    imageFormats?: BuildImageFormatSelection
-  }
+  } & DrcIgnoreOptions & {
+      platformConfig?: PlatformConfig
+      profile?: boolean
+      injectedProps?: Record<string, unknown>
+      generatePreviewAssets?: boolean
+      imageFormats?: BuildImageFormatSelection
+    }
 }
 
 const getWorkerEntrypointPath = (): string => {
@@ -60,12 +62,13 @@ export async function buildFilesWithWorkerPool(options: {
   buildOptions?: {
     ignoreErrors?: boolean
     ignoreWarnings?: boolean
-    platformConfig?: PlatformConfig
-    profile?: boolean
-    injectedProps?: Record<string, unknown>
-    generatePreviewAssets?: boolean
-    imageFormats?: BuildImageFormatSelection
-  }
+  } & DrcIgnoreOptions & {
+      platformConfig?: PlatformConfig
+      profile?: boolean
+      injectedProps?: Record<string, unknown>
+      generatePreviewAssets?: boolean
+      imageFormats?: BuildImageFormatSelection
+    }
   onLog?: (lines: string[]) => void
   onJobComplete?: (result: BuildJobResult) => void
   stopOnFatal?: boolean
@@ -115,6 +118,8 @@ export async function buildFilesWithWorkerPool(options: {
         previewError: completedMessage.preview_error,
         ok: completedMessage.ok,
         hasErrors: completedMessage.hasErrors,
+        ignoredDrcCount: completedMessage.ignoredDrcCount,
+        ignoredDrcByCategory: completedMessage.ignoredDrcByCategory,
         isFatalError: completedMessage.isFatalError,
         errors: completedMessage.errors,
         warnings: completedMessage.warnings,

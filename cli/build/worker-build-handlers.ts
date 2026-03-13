@@ -6,11 +6,12 @@ import { analyzeCircuitJson } from "../../lib/shared/circuit-json-diagnostics"
 import { generateCircuitJson } from "../../lib/shared/generate-circuit-json"
 import { getCompletePlatformConfig } from "../../lib/shared/get-complete-platform-config"
 import { registerStaticAssetLoaders } from "../../lib/shared/register-static-asset-loaders"
+import { filterDiagnosticsByDrcCategory } from "./drc-diagnostic-filter"
+import { DEFAULT_IMAGE_FORMAT_SELECTION } from "./image-format-selection"
 import {
   writeGlbFromCircuitJson,
   writeImageAssetsFromCircuitJson,
 } from "./worker-output-generators"
-import { DEFAULT_IMAGE_FORMAT_SELECTION } from "./image-format-selection"
 import type { BuildCompletedMessage, BuildFileMessage } from "./worker-types"
 
 type WorkerLogger = (...args: unknown[]) => void
@@ -71,9 +72,14 @@ export const handleBuildFile = async (
     )
 
     const diagnostics = analyzeCircuitJson(circuitJson)
+    const filteredDiagnostics = filterDiagnosticsByDrcCategory({
+      errors: diagnostics.errors,
+      warnings: diagnostics.warnings,
+      ignoreOptions: options,
+    })
 
     if (!options?.ignoreWarnings) {
-      for (const warn of diagnostics.warnings) {
+      for (const warn of filteredDiagnostics.warnings) {
         const msg = warn.message || JSON.stringify(warn)
         warnings.push(msg)
         workerLog(`Warning: ${msg}`)
@@ -81,14 +87,15 @@ export const handleBuildFile = async (
     }
 
     if (!options?.ignoreErrors) {
-      for (const err of diagnostics.errors) {
+      for (const err of filteredDiagnostics.errors) {
         const msg = err.message || JSON.stringify(err)
         errors.push(msg)
         workerLog(`Error: ${msg}`)
       }
     }
 
-    const hasErrors = diagnostics.errors.length > 0 && !options?.ignoreErrors
+    const hasErrors =
+      filteredDiagnostics.errors.length > 0 && !options?.ignoreErrors
     let glbOk: boolean | undefined
     let glbError: string | undefined
     let previewOk: boolean | undefined
@@ -140,6 +147,8 @@ export const handleBuildFile = async (
       preview_error: previewError,
       ok: true,
       hasErrors,
+      ignoredDrcCount: filteredDiagnostics.ignoredCount,
+      ignoredDrcByCategory: filteredDiagnostics.ignoredByCategory,
       errors,
       warnings,
       durationMs: options?.profile ? performance.now() - startedAt : undefined,
