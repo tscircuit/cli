@@ -7,6 +7,7 @@ export interface BuildCommandOptions {
   ignoreErrors?: boolean
   ignoreWarnings?: boolean
   disablePcb?: boolean
+  routingDisabled?: boolean
   disablePartsEngine?: boolean
   ignoreConfig?: boolean
   ci?: boolean

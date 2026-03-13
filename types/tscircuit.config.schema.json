@@ -96,6 +96,10 @@
           "type": "boolean",
           "description": "Enable GLB 3D model outputs for each circuit in build."
         },
+        "routingDisabled": {
+          "type": "boolean",
+          "description": "Disable routing during circuit generation in build."
+        },
         "typescriptLibrary": {
           "type": "boolean",
           "description": "Enable TypeScript library output in build."
