@@ -118,6 +118,7 @@ export const registerBuild = (program: Command) => {
     .option("--ignore-warnings", "Do not log warnings")
     .option("--ignore-config", "Ignore options from tscircuit.config.json")
     .option("--disable-pcb", "Disable PCB outputs")
+    .option("--routing-disabled", "Disable routing during circuit generation")
     .option("--disable-parts-engine", "Disable the parts engine")
     .option("--site", "Generate a static site in the dist directory")
     .option("--transpile", "Transpile the entry file to JavaScript")
@@ -250,6 +251,7 @@ export const registerBuild = (program: Command) => {
         const platformConfig: PlatformConfig | undefined = (() => {
           if (
             !resolvedOptions?.disablePcb &&
+            !resolvedOptions?.routingDisabled &&
             !resolvedOptions?.disablePartsEngine
           ) {
             return
@@ -259,6 +261,10 @@ export const registerBuild = (program: Command) => {
 
           if (resolvedOptions?.disablePcb) {
             config.pcbDisabled = true
+          }
+
+          if (resolvedOptions?.routingDisabled) {
+            config.routingDisabled = true
           }
 
           if (resolvedOptions?.disablePartsEngine) {
