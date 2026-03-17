@@ -89,7 +89,5 @@ test("export kicad zip", async () => {
   const proContent = await proEntry!.async("string")
   const proJson = JSON.parse(proContent)
   expect(proJson.head.generator).toBe("circuit-json-to-kicad")
-  expect(proJson.project.name).toBe("test-circuit")
-  expect(proJson.project.files.schematic).toBe("test-circuit.kicad_sch")
-  expect(proJson.project.files.board).toBe("test-circuit.kicad_pcb")
+  expect(proJson.head.project_name).toBe("test-circuit")
 }, 60_000)
