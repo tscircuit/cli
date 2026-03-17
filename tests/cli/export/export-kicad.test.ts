@@ -74,13 +74,17 @@ test("export kicad zip", async () => {
   const zip = await JSZip.loadAsync(zipBuffer)
   const schEntry = zip.file("test-circuit.kicad_sch")
   const pcbEntry = zip.file("test-circuit.kicad_pcb")
+  const proEntry = zip.file("test-circuit.kicad_pro")
 
   expect(schEntry).not.toBeNull()
   expect(pcbEntry).not.toBeNull()
+  expect(proEntry).not.toBeNull()
 
   const schContent = await schEntry!.async("string")
   const pcbContent = await pcbEntry!.async("string")
+  const proContent = await proEntry!.async("string")
 
   expect(schContent).toContain("kicad_sch")
   expect(pcbContent).toContain("kicad_pcb")
+  expect(proContent).toContain("kicad_pro")
 }, 60_000)
