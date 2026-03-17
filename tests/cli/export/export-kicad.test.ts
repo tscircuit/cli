@@ -82,9 +82,14 @@ test("export kicad zip", async () => {
 
   const schContent = await schEntry!.async("string")
   const pcbContent = await pcbEntry!.async("string")
-  const proContent = await proEntry!.async("string")
 
   expect(schContent).toContain("kicad_sch")
   expect(pcbContent).toContain("kicad_pcb")
-  expect(proContent).toContain("kicad_pro")
+
+  const proContent = await proEntry!.async("string")
+  const proJson = JSON.parse(proContent)
+  expect(proJson.head.generator).toBe("tsci")
+  expect(proJson.project.name).toBe("test-circuit")
+  expect(proJson.project.files.schematic).toBe("test-circuit.kicad_sch")
+  expect(proJson.project.files.board).toBe("test-circuit.kicad_pcb")
 }, 60_000)
