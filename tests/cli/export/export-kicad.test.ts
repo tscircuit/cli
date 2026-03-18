@@ -91,3 +91,40 @@ test("export kicad zip", async () => {
   expect(proJson.head.generator).toBe("circuit-json-to-kicad")
   expect(proJson.head.project_name).toBe("test-circuit")
 }, 60_000)
+
+test("export kicad zip includes 3d models", async () => {
+  const { tmpDir, runCommand } = await getCliTestFixture()
+  const circuitPath = path.join(tmpDir, "test-circuit.tsx")
+
+  await writeFile(circuitPath, circuitCode)
+
+  const { stderr } = await runCommand(`tsci export ${circuitPath} -f kicad_zip`)
+
+  expect(stderr).toBe("")
+
+  const zipBuffer = await readFile(path.join(tmpDir, "test-circuit-kicad.zip"))
+  const zip = await JSZip.loadAsync(zipBuffer)
+
+  const pcbEntry = zip.file("test-circuit.kicad_pcb")
+  expect(pcbEntry).not.toBeNull()
+  const pcbContent = await pcbEntry!.async("string")
+
+  // PCB should reference 3D models via KIPRJMOD
+  expect(pcbContent).toContain(
+    "${KIPRJMOD}/3dmodels/tscircuit_builtin.3dshapes",
+  )
+
+  // 3D model files should be included in the zip
+  const modelFiles = Object.keys(zip.files).filter(
+    (f) =>
+      f.startsWith("3dmodels/tscircuit_builtin.3dshapes/") && !f.endsWith("/"),
+  )
+  expect(modelFiles).toContain("3dmodels/tscircuit_builtin.3dshapes/0402.step")
+
+  // Each model file should have non-zero content
+  for (const modelFile of modelFiles) {
+    const entry = zip.files[modelFile]
+    const content = await entry.async("nodebuffer")
+    expect(content.length).toBeGreaterThan(0)
+  }
+}, 60_000)
