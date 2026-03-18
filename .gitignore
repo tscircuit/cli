@@ -181,3 +181,4 @@ package-lock.json
 
 .yalc
 .yalc.lock
+.tscircuit

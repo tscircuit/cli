@@ -1,12 +1,8 @@
-import fs from "node:fs"
 import type { PlatformConfig } from "@tscircuit/props"
 import { runAllPinSpecificationChecks } from "@tscircuit/checks"
 import type { AnyCircuitElement } from "circuit-json"
 import type { Command } from "commander"
-import { generateCircuitJson } from "lib/shared/generate-circuit-json"
-import { getCompletePlatformConfig } from "lib/shared/get-complete-platform-config"
-import { getEntrypoint } from "lib/shared/get-entrypoint"
-import path from "node:path"
+import { getCircuitJsonForCheck, resolveCheckInputFilePath } from "../shared"
 
 type CircuitJsonIssue = {
   type?: string
@@ -15,56 +11,17 @@ type CircuitJsonIssue = {
   message?: string
 }
 
-const resolveInputFilePath = async (file?: string) => {
-  if (file) {
-    return path.isAbsolute(file) ? file : path.resolve(process.cwd(), file)
-  }
-
-  const entrypoint = await getEntrypoint({
-    projectDir: process.cwd(),
-  })
-
-  if (!entrypoint) {
-    throw new Error("No input file provided and no entrypoint found")
-  }
-
-  return entrypoint
-}
-
-const isPrebuiltCircuitJsonFile = (filePath: string) => {
-  const normalizedInputPath = filePath.toLowerCase().replaceAll("\\", "/")
-
-  return (
-    normalizedInputPath.endsWith(".circuit.json") ||
-    normalizedInputPath.endsWith("/circuit.json")
-  )
-}
-
-const getCircuitJsonForPinSpecificationCheck = async (filePath: string) => {
-  if (isPrebuiltCircuitJsonFile(filePath)) {
-    const parsedJson = JSON.parse(fs.readFileSync(filePath, "utf-8"))
-    return Array.isArray(parsedJson) ? parsedJson : []
-  }
-
-  const completePlatformConfig = getCompletePlatformConfig({
-    pcbDisabled: true,
-    routingDisabled: true,
-    placementDrcChecksDisabled: true,
-  } satisfies PlatformConfig)
-
-  const { circuitJson } = await generateCircuitJson({
-    filePath,
-    platformConfig: completePlatformConfig,
-  })
-
-  return circuitJson
-}
-
 export const checkPinSpecification = async (file?: string) => {
-  const resolvedInputFilePath = await resolveInputFilePath(file)
-  const typedCircuitJson = (await getCircuitJsonForPinSpecificationCheck(
-    resolvedInputFilePath,
-  )) as AnyCircuitElement[]
+  const resolvedInputFilePath = await resolveCheckInputFilePath(file)
+  const typedCircuitJson = (await getCircuitJsonForCheck({
+    filePath: resolvedInputFilePath,
+    platformConfig: {
+      pcbDisabled: true,
+      routingDisabled: true,
+      placementDrcChecksDisabled: true,
+    } satisfies PlatformConfig,
+    allowPrebuiltCircuitJson: true,
+  })) as AnyCircuitElement[]
   const pinSpecificationIssues = (await runAllPinSpecificationChecks(
     typedCircuitJson,
   )) as CircuitJsonIssue[]
