@@ -1,5 +1,13 @@
 import { z } from "zod"
 
+export const pcbSnapshotSettingsSchema = z.object({
+  showCourtyards: z.boolean().optional(),
+  showPcbNotes: z.boolean().optional(),
+  showFabricationNotes: z.boolean().optional(),
+})
+
+export type PcbSnapshotSettings = z.infer<typeof pcbSnapshotSettingsSchema>
+
 export const projectConfigSchema = z.object({
   mainEntrypoint: z.string().optional(),
   libraryEntrypoint: z.string().optional(),
@@ -8,6 +16,7 @@ export const projectConfigSchema = z.object({
   ignoredFiles: z.array(z.string()).optional(),
   includeBoardFiles: z.array(z.string()).optional(),
   snapshotsDir: z.string().optional(),
+  pcbSnapshotSettings: pcbSnapshotSettingsSchema.optional(),
   prebuildCommand: z.string().optional(),
   buildCommand: z.string().optional(),
   kicadProjectEntrypointPath: z.string().optional(),

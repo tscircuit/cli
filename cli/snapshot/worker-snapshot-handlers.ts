@@ -1,5 +1,6 @@
 import type { PlatformConfig } from "@tscircuit/props"
 import type { CameraPreset } from "lib/shared/camera-presets"
+import type { PcbSnapshotSettings } from "lib/project-config/project-config-schema"
 import { processSnapshotFile } from "lib/shared/process-snapshot-file"
 import { registerStaticAssetLoaders } from "lib/shared/register-static-asset-loaders"
 import type { SnapshotCompletedMessage } from "./worker-types"
@@ -11,6 +12,7 @@ type SnapshotWorkerOptions = {
   schematicOnly: boolean
   forceUpdate: boolean
   platformConfig?: PlatformConfig
+  pcbSnapshotSettings?: PcbSnapshotSettings
   createDiff: boolean
   cameraPreset?: CameraPreset
 }
@@ -34,6 +36,7 @@ export const handleSnapshotFile = async (
     schematicOnly: options.schematicOnly,
     forceUpdate: options.forceUpdate,
     platformConfig: options.platformConfig,
+    pcbSnapshotSettings: options.pcbSnapshotSettings,
     createDiff: options.createDiff,
     cameraPreset: options.cameraPreset,
   })

@@ -72,6 +72,7 @@ export const snapshotProject = async ({
     threeD = true
   }
   const projectDir = process.cwd()
+  const projectConfig = loadProjectConfig(projectDir)
   const ignore = [
     ...DEFAULT_IGNORED_PATTERNS,
     ...ignored.map(normalizeIgnorePattern),
@@ -155,6 +156,7 @@ export const snapshotProject = async ({
           schematicOnly,
           forceUpdate,
           platformConfig,
+          pcbSnapshotSettings: projectConfig?.pcbSnapshotSettings,
           createDiff,
           cameraPreset,
         },
@@ -196,6 +198,7 @@ export const snapshotProject = async ({
         schematicOnly,
         forceUpdate,
         platformConfig,
+        pcbSnapshotSettings: projectConfig?.pcbSnapshotSettings,
         createDiff,
         cameraPreset,
       })

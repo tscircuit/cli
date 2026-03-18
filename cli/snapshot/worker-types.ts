@@ -1,5 +1,6 @@
 import type { PlatformConfig } from "@tscircuit/props"
 import type { CameraPreset } from "lib/shared/camera-presets"
+import type { PcbSnapshotSettings } from "lib/project-config/project-config-schema"
 import type { ProcessSnapshotFileResult } from "lib/shared/process-snapshot-file"
 
 export type SnapshotFileMessage = {
@@ -14,6 +15,7 @@ export type SnapshotFileMessage = {
     schematicOnly: boolean
     forceUpdate: boolean
     platformConfig?: PlatformConfig
+    pcbSnapshotSettings?: PcbSnapshotSettings
     createDiff: boolean
     cameraPreset?: CameraPreset
   }
