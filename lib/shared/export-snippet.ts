@@ -235,15 +235,12 @@ export const exportSnippet = async ({
         if (isRemote) {
           try {
             const response = await platformFetch(modelPath)
-            if (!response.ok) {
-              throw new Error(`${response.status} ${response.statusText}`)
+            if (response.ok) {
+              const buffer = Buffer.from(await response.arrayBuffer())
+              zip.file(zipPath, buffer)
             }
-            const buffer = Buffer.from(await response.arrayBuffer())
-            zip.file(zipPath, buffer)
           } catch (error) {
-            console.warn(
-              `Failed to fetch 3D model from ${modelPath}: ${error instanceof Error ? error.message : error}`,
-            )
+            console.log(`Failed to fetch 3D model from ${modelPath}`)
           }
         } else {
           const resolvedPath = path.resolve(projectDir, modelPath)
