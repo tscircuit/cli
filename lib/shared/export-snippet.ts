@@ -7,6 +7,7 @@ import type { AnyCircuitElement } from "circuit-json"
 import { convertCircuitJsonToGltf } from "circuit-json-to-gltf"
 import {
   CircuitJsonToKicadPcbConverter,
+  CircuitJsonToKicadProConverter,
   CircuitJsonToKicadSchConverter,
 } from "circuit-json-to-kicad"
 import { convertCircuitJsonToReadableNetlist } from "circuit-json-to-readable-netlist"
@@ -206,10 +207,17 @@ export const exportSnippet = async ({
       schConverter.runUntilFinished()
       const pcbConverter = new CircuitJsonToKicadPcbConverter(circuitJson)
       pcbConverter.runUntilFinished()
+      const proConverter = new CircuitJsonToKicadProConverter(circuitJson, {
+        projectName: outputBaseName,
+        schematicFilename: `${outputBaseName}.kicad_sch`,
+        pcbFilename: `${outputBaseName}.kicad_pcb`,
+      })
+      proConverter.runUntilFinished()
 
       const zip = new JSZip()
       zip.file(`${outputBaseName}.kicad_sch`, schConverter.getOutputString())
       zip.file(`${outputBaseName}.kicad_pcb`, pcbConverter.getOutputString())
+      zip.file(`${outputBaseName}.kicad_pro`, proConverter.getOutputString())
       outputContent = await zip.generateAsync({ type: "nodebuffer" })
       break
     }

@@ -1,8 +1,8 @@
-import { getCliTestFixture } from "../../fixtures/get-cli-test-fixture"
-import { test, expect } from "bun:test"
-import { writeFile, readFile } from "node:fs/promises"
+import { expect, test } from "bun:test"
+import { readFile, writeFile } from "node:fs/promises"
 import path from "node:path"
 import JSZip from "jszip"
+import { getCliTestFixture } from "../../fixtures/get-cli-test-fixture"
 
 const circuitCode = `
 export default () => (
@@ -74,13 +74,20 @@ test("export kicad zip", async () => {
   const zip = await JSZip.loadAsync(zipBuffer)
   const schEntry = zip.file("test-circuit.kicad_sch")
   const pcbEntry = zip.file("test-circuit.kicad_pcb")
+  const proEntry = zip.file("test-circuit.kicad_pro")
 
   expect(schEntry).not.toBeNull()
   expect(pcbEntry).not.toBeNull()
+  expect(proEntry).not.toBeNull()
 
   const schContent = await schEntry!.async("string")
   const pcbContent = await pcbEntry!.async("string")
 
   expect(schContent).toContain("kicad_sch")
   expect(pcbContent).toContain("kicad_pcb")
+
+  const proContent = await proEntry!.async("string")
+  const proJson = JSON.parse(proContent)
+  expect(proJson.head.generator).toBe("circuit-json-to-kicad")
+  expect(proJson.head.project_name).toBe("test-circuit")
 }, 60_000)
