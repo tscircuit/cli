@@ -415,7 +415,7 @@ test("snapshot with directory path and default includeBoardFiles returns clear n
   expect(stdout).not.toContain("No entrypoint found")
 }, 30_000)
 
-test("snapshot command skips updates when snapshots match visually", async () => {
+test("snapshot command treats textual snapshot changes as mismatch by default", async () => {
   const { tmpDir, runCommand } = await getCliTestFixture()
 
   await Bun.write(
@@ -437,16 +437,19 @@ test("snapshot command skips updates when snapshots match visually", async () =>
   fs.appendFileSync(pcbPath, "\n<!-- comment -->\n")
   const contentsBefore = fs.readFileSync(pcbPath, "utf-8")
 
-  const { stdout: matchStdout } = await runCommand("tsci snapshot")
-  expect(matchStdout).toContain("All snapshots match")
+  const { stderr: matchStderr, exitCode: matchExitCode } =
+    await runCommand("tsci snapshot")
+  expect(matchExitCode).toBe(1)
+  expect(matchStderr).toContain("Snapshot mismatch")
 
   await runCommand("tsci snapshot --update")
   const contentsAfter = fs.readFileSync(pcbPath, "utf-8")
 
-  expect(contentsAfter).toBe(contentsBefore)
+  expect(contentsAfter).not.toBe(contentsBefore)
+  expect(contentsAfter).not.toContain("<!-- comment -->")
 }, 30_000)
 
-test("visual comparison works for pcb and schematic snapshots", async () => {
+test("snapshot command treats textual pcb and schematic changes as mismatch by default", async () => {
   const { tmpDir, runCommand } = await getCliTestFixture()
 
   await Bun.write(
@@ -472,16 +475,19 @@ test("visual comparison works for pcb and schematic snapshots", async () => {
   const pcbBefore = fs.readFileSync(pcbPath, "utf-8")
   const schBefore = fs.readFileSync(schPath, "utf-8")
 
-  const { stdout } = await runCommand("tsci snapshot")
-  expect(stdout).toContain("All snapshots match")
+  const { stderr, exitCode } = await runCommand("tsci snapshot")
+  expect(exitCode).toBe(1)
+  expect(stderr).toContain("Snapshot mismatch")
 
   await runCommand("tsci snapshot --update")
 
   const pcbAfter = fs.readFileSync(pcbPath, "utf-8")
   const schAfter = fs.readFileSync(schPath, "utf-8")
 
-  expect(pcbAfter).toBe(pcbBefore)
-  expect(schAfter).toBe(schBefore)
+  expect(pcbAfter).not.toBe(pcbBefore)
+  expect(schAfter).not.toBe(schBefore)
+  expect(pcbAfter).not.toContain("<!-- comment -->")
+  expect(schAfter).not.toContain("<!-- comment -->")
 }, 30_000)
 
 test("snapshot command does not create diff files by default when visuals change", async () => {
