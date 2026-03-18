@@ -207,6 +207,7 @@ export const exportSnippet = async ({
       schConverter.runUntilFinished()
       const pcbConverter = new CircuitJsonToKicadPcbConverter(circuitJson, {
         includeBuiltin3dModels: true,
+        projectName: outputBaseName,
       })
       pcbConverter.runUntilFinished()
       const proConverter = new CircuitJsonToKicadProConverter(circuitJson, {
@@ -222,24 +223,35 @@ export const exportSnippet = async ({
       zip.file(`${outputBaseName}.kicad_pro`, proConverter.getOutputString())
 
       const platformFetch = platformConfig?.platformFetch ?? globalThis.fetch
-      const modelUrls = pcbConverter.get3dModelURL()
-      await Promise.all(
-        modelUrls.map(async (url) => {
-          const fileName = url.split("/").pop()!
+      for (const modelPath of pcbConverter.getModel3dSourcePaths()) {
+        const fileName = path.basename(modelPath)
+        const isRemote =
+          modelPath.startsWith("http://") || modelPath.startsWith("https://")
+        const shapesDir = isRemote
+          ? "tscircuit_builtin.3dshapes"
+          : `${outputBaseName}.3dshapes`
+        const zipPath = `3dmodels/${shapesDir}/${fileName}`
+
+        if (isRemote) {
           try {
-            const response = await platformFetch(url)
+            const response = await platformFetch(modelPath)
             if (!response.ok) {
               throw new Error(`${response.status} ${response.statusText}`)
             }
             const buffer = Buffer.from(await response.arrayBuffer())
-            zip.file(`3dmodels/tscircuit_builtin.3dshapes/${fileName}`, buffer)
+            zip.file(zipPath, buffer)
           } catch (error) {
             console.warn(
-              `Failed to fetch 3D model from ${url}: ${error instanceof Error ? error.message : error}`,
+              `Failed to fetch 3D model from ${modelPath}: ${error instanceof Error ? error.message : error}`,
             )
           }
-        }),
-      )
+        } else {
+          const resolvedPath = path.resolve(projectDir, modelPath)
+          if (fs.existsSync(resolvedPath)) {
+            zip.file(zipPath, await fs.promises.readFile(resolvedPath))
+          }
+        }
+      }
 
       outputContent = await zip.generateAsync({ type: "nodebuffer" })
       break
