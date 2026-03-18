@@ -4,7 +4,7 @@ import { join } from "node:path"
 import fs from "node:fs"
 import "bun-match-svg"
 
-test("snapshot does not update on metadata-only changes", async () => {
+test("snapshot updates on metadata-only changes by default", async () => {
   const { tmpDir, runCommand } = await getCliTestFixture()
 
   await Bun.write(
@@ -40,10 +40,9 @@ test("snapshot does not update on metadata-only changes", async () => {
   // mtime checks
   const statsBefore = fs.statSync(pcbPath)
   const { stdout } = await runCommand("tsci snapshot --update")
-  expect(stdout).toContain("✅")
-  expect(stdout).not.toContain("Created snapshots")
+  expect(stdout).toContain("Created snapshots")
   const statsAfter = fs.statSync(pcbPath)
-  expect(statsAfter.mtimeMs).toBe(statsBefore.mtimeMs)
+  expect(statsAfter.mtimeMs).toBeGreaterThan(statsBefore.mtimeMs)
 
   // no diff image
   const diffPath = join(snapDir, "meta.board-pcb.diff.png")

@@ -247,17 +247,24 @@ export const processSnapshotFile = async ({
     }
 
     const oldContentBuffer = fs.readFileSync(snapPath)
-    const diffPath = snapPath.replace(
-      is3d ? ".snap.png" : ".snap.svg",
-      is3d ? ".diff.png" : ".diff.svg",
-    )
+    let equal: boolean
+    let diffPath: string | undefined
 
-    const { equal } = await compareAndCreateDiff(
-      oldContentBuffer,
-      newContentBuffer,
-      diffPath,
-      createDiff,
-    )
+    if (createDiff) {
+      diffPath = snapPath.replace(
+        is3d ? ".snap.png" : ".snap.svg",
+        is3d ? ".diff.png" : ".diff.svg",
+      )
+      const comparison = await compareAndCreateDiff(
+        oldContentBuffer,
+        newContentBuffer,
+        diffPath,
+        true,
+      )
+      equal = comparison.equal
+    } else {
+      equal = oldContentBuffer.equals(newContentBuffer)
+    }
 
     if (update) {
       if (!forceUpdate && equal) {
@@ -268,7 +275,7 @@ export const processSnapshotFile = async ({
         didUpdate = true
       }
     } else if (!equal) {
-      mismatches.push(createDiff ? `${snapPath} (diff: ${diffPath})` : snapPath)
+      mismatches.push(diffPath ? `${snapPath} (diff: ${diffPath})` : snapPath)
     } else {
       successPaths.push(path.relative(projectDir, snapPath))
     }
