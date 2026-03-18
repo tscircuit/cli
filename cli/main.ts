@@ -16,6 +16,7 @@ import { registerCheckNetlist } from "./check/netlist/register"
 import { registerCheckPinSpecification } from "./check/pin-specification/register"
 import { registerCheckPlacement } from "./check/placement/register"
 import { registerCheck } from "./check/register"
+import { registerCheckRoutingDifficulty } from "./check/routing-difficulty/register"
 import { registerCheckRouting } from "./check/routing/register"
 import { registerClone } from "./clone/register"
 import { registerConfigPrint } from "./config/print/register"
@@ -79,6 +80,7 @@ registerCheck(program)
 registerCheckNetlist(program)
 registerCheckPinSpecification(program)
 registerCheckPlacement(program)
+registerCheckRoutingDifficulty(program)
 registerCheckRouting(program)
 
 registerRegistry(program)

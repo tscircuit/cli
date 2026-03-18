@@ -1,5 +1,3 @@
-import fs from "node:fs"
-import path from "node:path"
 import {
   analyzeAllPlacements,
   analyzeComponentPlacement,
@@ -7,60 +5,18 @@ import {
 import type { PlatformConfig } from "@tscircuit/props"
 import type { AnyCircuitElement } from "circuit-json"
 import type { Command } from "commander"
-import { generateCircuitJson } from "lib/shared/generate-circuit-json"
-import { getCompletePlatformConfig } from "lib/shared/get-complete-platform-config"
-import { getEntrypoint } from "lib/shared/get-entrypoint"
-
-const isPrebuiltCircuitJsonFile = (filePath: string) => {
-  const normalizedInputPath = filePath.toLowerCase().replaceAll("\\", "/")
-
-  return (
-    normalizedInputPath.endsWith(".circuit.json") ||
-    normalizedInputPath.endsWith("/circuit.json")
-  )
-}
-
-const resolveInputFilePath = async (file?: string) => {
-  if (file) {
-    return path.isAbsolute(file) ? file : path.resolve(process.cwd(), file)
-  }
-
-  const entrypoint = await getEntrypoint({
-    projectDir: process.cwd(),
-  })
-
-  if (!entrypoint) {
-    throw new Error("No input file provided and no entrypoint found")
-  }
-
-  return entrypoint
-}
-
-const getCircuitJsonForPlacementCheck = async (filePath: string) => {
-  if (isPrebuiltCircuitJsonFile(filePath)) {
-    const parsedJson = JSON.parse(fs.readFileSync(filePath, "utf-8"))
-
-    return Array.isArray(parsedJson) ? parsedJson : []
-  }
-
-  const completePlatformConfig = getCompletePlatformConfig({
-    pcbDisabled: false,
-    routingDisabled: true,
-  } satisfies PlatformConfig)
-
-  const { circuitJson } = await generateCircuitJson({
-    filePath,
-    platformConfig: completePlatformConfig,
-  })
-
-  return circuitJson
-}
+import { getCircuitJsonForCheck, resolveCheckInputFilePath } from "../shared"
 
 export const checkPlacement = async (file?: string, refdes?: string) => {
-  const resolvedInputFilePath = await resolveInputFilePath(file)
-  const circuitJson = (await getCircuitJsonForPlacementCheck(
-    resolvedInputFilePath,
-  )) as AnyCircuitElement[]
+  const resolvedInputFilePath = await resolveCheckInputFilePath(file)
+  const circuitJson = (await getCircuitJsonForCheck({
+    filePath: resolvedInputFilePath,
+    platformConfig: {
+      pcbDisabled: false,
+      routingDisabled: true,
+    } satisfies PlatformConfig,
+    allowPrebuiltCircuitJson: true,
+  })) as AnyCircuitElement[]
 
   const analysis = refdes
     ? analyzeComponentPlacement(circuitJson, refdes)
