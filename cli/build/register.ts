@@ -356,7 +356,7 @@ export const registerBuild = (program: Command) => {
             hasAnyImageFormatSelected(imageFormatSelection),
         )
         const shouldGenerateAllPreviewImages = Boolean(
-          resolvedOptions?.allImages,
+          resolvedOptions?.allImages || hasExplicitImageFormatSelection,
         )
         const shouldGeneratePreviewAssetsInWorker = Boolean(
           resolvedOptions?.ci &&
