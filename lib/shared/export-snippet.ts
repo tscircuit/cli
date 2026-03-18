@@ -205,7 +205,9 @@ export const exportSnippet = async ({
     case "kicad_zip": {
       const schConverter = new CircuitJsonToKicadSchConverter(circuitJson)
       schConverter.runUntilFinished()
-      const pcbConverter = new CircuitJsonToKicadPcbConverter(circuitJson)
+      const pcbConverter = new CircuitJsonToKicadPcbConverter(circuitJson, {
+        includeBuiltin3dModels: true,
+      })
       pcbConverter.runUntilFinished()
       const proConverter = new CircuitJsonToKicadProConverter(circuitJson, {
         projectName: outputBaseName,
@@ -218,6 +220,27 @@ export const exportSnippet = async ({
       zip.file(`${outputBaseName}.kicad_sch`, schConverter.getOutputString())
       zip.file(`${outputBaseName}.kicad_pcb`, pcbConverter.getOutputString())
       zip.file(`${outputBaseName}.kicad_pro`, proConverter.getOutputString())
+
+      const platformFetch = platformConfig?.platformFetch ?? globalThis.fetch
+      const modelUrls = pcbConverter.get3dModelURL()
+      await Promise.all(
+        modelUrls.map(async (url) => {
+          const fileName = url.split("/").pop()!
+          try {
+            const response = await platformFetch(url)
+            if (!response.ok) {
+              throw new Error(`${response.status} ${response.statusText}`)
+            }
+            const buffer = Buffer.from(await response.arrayBuffer())
+            zip.file(`3dmodels/tscircuit_builtin.3dshapes/${fileName}`, buffer)
+          } catch (error) {
+            console.warn(
+              `Failed to fetch 3D model from ${url}: ${error instanceof Error ? error.message : error}`,
+            )
+          }
+        }),
+      )
+
       outputContent = await zip.generateAsync({ type: "nodebuffer" })
       break
     }
