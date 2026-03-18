@@ -1,6 +1,7 @@
 import fs from "node:fs"
 import path from "node:path"
 import type { PlatformConfig } from "@tscircuit/props"
+import type { PcbSnapshotSettings } from "lib/project-config/project-config-schema"
 import type { AnyCircuitElement } from "circuit-json"
 import {
   convertCircuitJsonToGltf,
@@ -29,6 +30,7 @@ export type ProcessSnapshotFileOptions = {
   schematicOnly: boolean
   forceUpdate: boolean
   platformConfig?: PlatformConfig
+  pcbSnapshotSettings?: PcbSnapshotSettings
   createDiff: boolean
   cameraPreset?: CameraPreset
 }
@@ -52,6 +54,7 @@ export const processSnapshotFile = async ({
   schematicOnly,
   forceUpdate,
   platformConfig,
+  pcbSnapshotSettings,
   createDiff,
   cameraPreset,
 }: ProcessSnapshotFileOptions): Promise<ProcessSnapshotFileResult> => {
@@ -94,7 +97,7 @@ export const processSnapshotFile = async ({
   }
 
   try {
-    pcbSvg = convertCircuitJsonToPcbSvg(circuitJson)
+    pcbSvg = convertCircuitJsonToPcbSvg(circuitJson, pcbSnapshotSettings)
   } catch (error) {
     const errorMessage = error instanceof Error ? error.message : String(error)
     return {

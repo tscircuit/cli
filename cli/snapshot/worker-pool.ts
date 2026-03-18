@@ -76,6 +76,7 @@ export const snapshotFilesWithWorkerPool = async (options: {
         schematicOnly: job.options.schematicOnly,
         forceUpdate: job.options.forceUpdate,
         platformConfig: job.options.platformConfig,
+        pcbSnapshotSettings: job.options.pcbSnapshotSettings,
         createDiff: job.options.createDiff,
         cameraPreset: job.options.cameraPreset,
       },

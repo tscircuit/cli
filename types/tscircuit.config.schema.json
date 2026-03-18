@@ -44,6 +44,25 @@
       "type": "string",
       "description": "Directory path for storing snapshots."
     },
+    "pcbSnapshotSettings": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "showCourtyards": {
+          "type": "boolean",
+          "description": "Whether to show courtyard outlines in PCB snapshots."
+        },
+        "showPcbNotes": {
+          "type": "boolean",
+          "description": "Whether to show PCB notes in PCB snapshots."
+        },
+        "showFabricationNotes": {
+          "type": "boolean",
+          "description": "Whether to show fabrication notes in PCB snapshots."
+        }
+      },
+      "description": "Settings for PCB snapshot rendering."
+    },
     "prebuildCommand": {
       "type": "string",
       "description": "Command to run before builds."
