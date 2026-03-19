@@ -1,4 +1,4 @@
-import looksSame from "looks-same"
+import looksSame from "@tscircuit/image-utils/looks-same"
 import fs from "node:fs/promises"
 
 export const compareAndCreateDiff = async (
