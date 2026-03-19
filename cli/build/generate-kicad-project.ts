@@ -60,14 +60,15 @@ export const generateKicadProject = async ({
   schConverter.runUntilFinished()
   const schContent = schConverter.getOutputString()
 
+  const sanitizedProjectName =
+    projectName.trim().length > 0 ? projectName.trim() : "project"
+
   const pcbConverter = new CircuitJsonToKicadPcbConverter(
     circuitJson as AnyCircuitElement[],
+    { includeBuiltin3dModels: true, projectName: sanitizedProjectName },
   )
   pcbConverter.runUntilFinished()
   const pcbContent = pcbConverter.getOutputString()
-
-  const sanitizedProjectName =
-    projectName.trim().length > 0 ? projectName.trim() : "project"
   const schematicFileName = `${sanitizedProjectName}.kicad_sch`
   const boardFileName = `${sanitizedProjectName}.kicad_pcb`
   const projectFileName = `${sanitizedProjectName}.kicad_pro`
@@ -83,6 +84,33 @@ export const generateKicadProject = async ({
     fs.writeFileSync(path.join(outputDir, schematicFileName), schContent)
     fs.writeFileSync(path.join(outputDir, boardFileName), pcbContent)
     fs.writeFileSync(path.join(outputDir, projectFileName), proContent)
+
+    // Download and write 3D model files
+    const platformFetch = globalThis.fetch
+    for (const modelPath of pcbConverter.getModel3dSourcePaths()) {
+      const fileName = path.basename(modelPath)
+      const isRemote =
+        modelPath.startsWith("http://") || modelPath.startsWith("https://")
+      const shapesDir = isRemote
+        ? "tscircuit_builtin.3dshapes"
+        : `${sanitizedProjectName}.3dshapes`
+      const destDir = path.join(outputDir, `3dmodels/${shapesDir}`)
+      fs.mkdirSync(destDir, { recursive: true })
+
+      if (isRemote) {
+        try {
+          const response = await platformFetch(modelPath)
+          if (response.ok) {
+            const buffer = Buffer.from(await response.arrayBuffer())
+            fs.writeFileSync(path.join(destDir, fileName), buffer)
+          }
+        } catch (error) {
+          console.warn(`Failed to fetch 3D model from ${modelPath}`)
+        }
+      } else if (fs.existsSync(modelPath)) {
+        fs.copyFileSync(modelPath, path.join(destDir, fileName))
+      }
+    }
   }
 
   return {
