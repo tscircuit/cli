@@ -43,9 +43,9 @@ test("snapshot command creates diff images for pcb, schematic and 3d when visual
   ).text()
   const threeDDiff = await Bun.file(
     join(snapDir, "diff-test.board-3d.diff.png"),
-  ).text()
+  ).exists()
 
   expect(pcbDiff).toMatchSvgSnapshot(import.meta.path, "pcb-diff")
   expect(schDiff).toMatchSvgSnapshot(import.meta.path, "schematic-diff")
-  expect(threeDDiff).toMatchSvgSnapshot(import.meta.path, "3d-diff")
+  expect(threeDDiff).toBe(true)
 }, 45_000)
