@@ -240,7 +240,7 @@ export const exportSnippet = async ({
               zip.file(zipPath, buffer)
             }
           } catch (error) {
-            console.log(`Failed to fetch 3D model from ${modelPath}`)
+            console.warn(`Failed to fetch 3D model from ${modelPath}`)
           }
         } else {
           const resolvedPath = path.resolve(projectDir, modelPath)
