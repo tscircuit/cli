@@ -26,7 +26,7 @@
         "bun-match-svg": "^0.0.12",
         "chokidar": "4.0.1",
         "circuit-json": "^0.0.403",
-        "circuit-json-to-kicad": "^0.0.85",
+        "circuit-json-to-kicad": "^0.0.86",
         "circuit-json-to-readable-netlist": "^0.0.15",
         "circuit-json-to-spice": "^0.0.10",
         "circuit-json-to-tscircuit": "^0.0.9",
@@ -461,7 +461,7 @@
 
     "circuit-json-to-gltf": ["circuit-json-to-gltf@0.0.84", "", { "dependencies": { "@jscad/modeling": "^2.12.6", "earcut": "^3.0.2", "jscad-electronics": "^0.0.120", "jscad-to-gltf": "^0.0.5", "occt-import-js": "^0.0.23" }, "peerDependencies": { "@resvg/resvg-js": "2", "@resvg/resvg-wasm": "2", "@tscircuit/circuit-json-util": "*", "circuit-json": "*", "circuit-to-svg": "*", "typescript": "^5" }, "optionalPeers": ["@resvg/resvg-js", "@resvg/resvg-wasm"] }, "sha512-XcgoOmKJ9uJr7JwOS0ppepMmhCHo7rDdhhQbf99zygQ599k4NSCNw+Xjs3A0qAGL/2WGjcD5G3xIaLf1cNQa9A=="],
 
-    "circuit-json-to-kicad": ["circuit-json-to-kicad@0.0.85", "", { "peerDependencies": { "typescript": "^5" } }, "sha512-GyC3YqMUcZRUtyCMTpTEsDI6wcY3JWZcmFmJEWOZC/0c6FGuOm6+F8BCfIJt6ubrrM/iUjMPXogm3/+yVYh3jA=="],
+    "circuit-json-to-kicad": ["circuit-json-to-kicad@0.0.86", "", { "peerDependencies": { "typescript": "^5" } }, "sha512-U+ushHedFOViZx8Wfk6gXrXIS26CzyLJEmHjNltsivN6Uat6xZaHrLEPBxdFTfbZ6ini72J+T1Q2IevszehQ3A=="],
 
     "circuit-json-to-readable-netlist": ["circuit-json-to-readable-netlist@0.0.15", "", { "peerDependencies": { "@tscircuit/circuit-json-util": "*", "circuit-json": "*", "circuit-json-to-connectivity-map": "*", "typescript": "^5.0.0" } }, "sha512-mnWH1WIkH+BrMIYDRspWKlLa8fGB/mlGKBi5NsMBpV7UHNc3Bn2EC+KIKcEY9I3EhspfXXOW5GUI7leehdP3mA=="],
 
