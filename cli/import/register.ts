@@ -96,7 +96,7 @@ export const registerImport = (program: Command) => {
           title: string
           value:
             | { type: "registry"; name: string }
-            | { type: "jlcpcb"; part: number }
+            | { type: "jlcpcb"; partNumber: number }
           selected?: boolean
         }> = []
 
@@ -111,7 +111,7 @@ export const registerImport = (program: Command) => {
         jlcResults?.forEach((comp, idx) => {
           choices.push({
             title: `[jlcpcb] ${comp.mfr} (C${comp.lcsc}) - ${comp.description}`,
-            value: { type: "jlcpcb", part: comp.lcsc },
+            value: { type: "jlcpcb", partNumber: comp.lcsc },
             selected: !choices.length && idx === 0,
           })
         })
@@ -146,12 +146,12 @@ export const registerImport = (program: Command) => {
             return process.exit(1)
           }
         } else {
-          const partId = `C${choice.part}`
+          const lcscId = `C${choice.partNumber}`
           const importSpinner = ora(
-            `Importing "${partId}" from JLCPCB...`,
+            `Importing "${lcscId}" from JLCPCB...`,
           ).start()
           try {
-            const { filePath } = await importComponentFromJlcpcb(partId, {
+            const { filePath } = await importComponentFromJlcpcb(lcscId, {
               download: opts.download,
             })
             importSpinner.succeed(kleur.green(`Imported ${filePath}`))
