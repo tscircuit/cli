@@ -1,6 +1,6 @@
+import { getQueryFromParts } from "cli/utils/get-query-from-parts"
 import type { Command } from "commander"
 import kleur from "kleur"
-import { getQueryFromParts } from "cli/utils/get-query-from-parts"
 import { importComponentFromJlcpcb } from "lib/import/import-component-from-jlcpcb"
 import { getRegistryApiKy } from "lib/registry-api/get-ky"
 import { addPackage } from "lib/shared/add-package"
@@ -17,6 +17,11 @@ export const registerImport = (program: Command) => {
     .option("--jlcpcb", "Search JLCPCB components")
     .option("--lcsc", "Alias for --jlcpcb")
     .option("--tscircuit", "Search tscircuit registry packages")
+    .option(
+      "--model-format <format>",
+      "CAD model format to import from JLCPCB (obj, step)",
+      "obj",
+    )
     .action(
       async (
         queryParts: string[],
@@ -24,6 +29,7 @@ export const registerImport = (program: Command) => {
           jlcpcb?: boolean
           lcsc?: boolean
           tscircuit?: boolean
+          modelFormat?: "obj" | "step"
         },
       ) => {
         const query = getQueryFromParts(queryParts)
@@ -31,7 +37,10 @@ export const registerImport = (program: Command) => {
         const searchJlc = opts.jlcpcb || opts.lcsc || !hasFilters
         const searchTscircuit = opts.tscircuit || !hasFilters
         const ky = getRegistryApiKy()
-        const spinner = ora("Searching...").start()
+        const spinner = ora({
+          text: "Searching...",
+          stream: process.stdout,
+        }).start()
 
         let registryResults: Array<{
           name: string
@@ -134,7 +143,10 @@ export const registerImport = (program: Command) => {
         }
 
         if (choice.type === "registry") {
-          const installSpinner = ora(`Installing ${choice.name}...`).start()
+          const installSpinner = ora({
+            text: `Installing ${choice.name}...`,
+            stream: process.stdout,
+          }).start()
           try {
             await addPackage(choice.name)
             installSpinner.succeed(kleur.green(`Installed ${choice.name}`))
@@ -144,13 +156,15 @@ export const registerImport = (program: Command) => {
             return process.exit(1)
           }
         } else {
-          const importSpinner = ora(
-            `Importing "C${choice.part}" from JLCPCB...`,
-          ).start()
+          const importSpinner = ora({
+            text: `Importing "C${choice.part}" from JLCPCB...`,
+            stream: process.stdout,
+          }).start()
           try {
-            const { filePath } = await importComponentFromJlcpcb(
-              `C${String(choice.part)}`,
-            )
+            const { filePath } = await importComponentFromJlcpcb({
+              jlcpcbPartNumber: `C${String(choice.part)}`,
+              modelFormat: opts.modelFormat,
+            })
             importSpinner.succeed(kleur.green(`Imported ${filePath}`))
           } catch (error) {
             importSpinner.fail(kleur.red("Failed to import part"))
