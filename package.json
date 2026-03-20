@@ -29,6 +29,7 @@
     "bun-match-svg": "^0.0.12",
     "chokidar": "4.0.1",
     "circuit-json": "^0.0.403",
+    "circuit-json-to-bom-csv": "^0.0.8",
     "circuit-json-to-kicad": "^0.0.86",
     "circuit-json-to-readable-netlist": "^0.0.15",
     "circuit-json-to-spice": "^0.0.10",
@@ -95,8 +96,5 @@
     "cli": "bun ./cli/main.ts",
     "pkg-pr-new-release": "bunx pkg-pr-new publish --comment=off --peerDeps"
   },
-  "type": "module",
-  "dependencies": {
-    "circuit-json-to-bom-csv": "^0.0.8"
-  }
+  "type": "module"
 }
