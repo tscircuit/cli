@@ -18,8 +18,6 @@ const result = await Bun.build({
   external: [
     ...tscircuitPackageJsonDeps.filter((dep) => !ALLOW_BUNDLING.includes(dep)),
     "zod",
-    "looks-same",
-    "sharp",
     "tscircuit",
     "typescript",
     "circuit-to-svg",
