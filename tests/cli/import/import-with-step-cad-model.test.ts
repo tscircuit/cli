@@ -9,9 +9,7 @@ test("import command generates package from JLCPCB part", async () => {
   }
 
   const { tmpDir, runCommand } = await getCliTestFixture({ loggedIn: true })
-  const { stdout, stderr } = await runCommand(
-    "tsci import C2040",
-  )
+  const { stdout, stderr } = await runCommand("tsci import C2040")
   const filePath = path.join(tmpDir, "imports", "RP2040.tsx")
   expect(fs.existsSync(filePath)).toBe(true)
   const fileContent = fs.readFileSync(filePath, "utf8")
