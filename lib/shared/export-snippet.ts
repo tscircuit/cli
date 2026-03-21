@@ -10,6 +10,10 @@ import {
   CircuitJsonToKicadProConverter,
   CircuitJsonToKicadSchConverter,
 } from "circuit-json-to-kicad"
+import {
+  convertCircuitJsonToBomRows,
+  convertBomRowsToCsv,
+} from "circuit-json-to-bom-csv"
 import { convertCircuitJsonToReadableNetlist } from "circuit-json-to-readable-netlist"
 import {
   convertCircuitJsonToPcbSvg,
@@ -39,6 +43,7 @@ export const ALLOWED_EXPORT_FORMATS = [
   "kicad_zip",
   "kicad-library",
   "srj",
+  "bom-csv",
 ] as const
 
 export type ExportFormat = (typeof ALLOWED_EXPORT_FORMATS)[number]
@@ -58,6 +63,7 @@ const OUTPUT_EXTENSIONS: Record<ExportFormat, string> = {
   kicad_zip: "-kicad.zip",
   "kicad-library": "",
   srj: ".simple-route.json",
+  "bom-csv": ".bom.csv",
 }
 
 type ExportOptions = {
@@ -163,6 +169,14 @@ export const exportSnippet = async ({
       break
     case "readable-netlist":
       outputContent = convertCircuitJsonToReadableNetlist(circuitJson)
+      break
+    case "bom-csv":
+      {
+        const bomRows = await convertCircuitJsonToBomRows({
+          circuitJson,
+        })
+        outputContent = convertBomRowsToCsv(bomRows)
+      }
       break
     case "gltf":
       outputContent = JSON.stringify(
