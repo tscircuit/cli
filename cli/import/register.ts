@@ -1,6 +1,6 @@
+import { getQueryFromParts } from "cli/utils/get-query-from-parts"
 import type { Command } from "commander"
 import kleur from "kleur"
-import { getQueryFromParts } from "cli/utils/get-query-from-parts"
 import { importComponentFromJlcpcb } from "lib/import/import-component-from-jlcpcb"
 import { getRegistryApiKy } from "lib/registry-api/get-ky"
 import { addPackage } from "lib/shared/add-package"
@@ -31,7 +31,10 @@ export const registerImport = (program: Command) => {
         const searchJlc = opts.jlcpcb || opts.lcsc || !hasFilters
         const searchTscircuit = opts.tscircuit || !hasFilters
         const ky = getRegistryApiKy()
-        const spinner = ora("Searching...").start()
+        const spinner = ora({
+          text: "Searching...",
+          stream: process.stdout,
+        }).start()
 
         let registryResults: Array<{
           name: string
@@ -68,6 +71,7 @@ export const registerImport = (program: Command) => {
           try {
             spinner.text = "Searching JLCPCB parts..."
             const searchUrl = `https://jlcsearch.tscircuit.com/api/search?limit=10&q=${encodeURIComponent(query)}`
+            console.log(searchUrl)
             const resp = await fetch(searchUrl).then((r) => r.json())
             jlcResults = resp.components
           } catch (error) {
@@ -134,7 +138,10 @@ export const registerImport = (program: Command) => {
         }
 
         if (choice.type === "registry") {
-          const installSpinner = ora(`Installing ${choice.name}...`).start()
+          const installSpinner = ora({
+            text: `Installing ${choice.name}...`,
+            stream: process.stdout,
+          }).start()
           try {
             await addPackage(choice.name)
             installSpinner.succeed(kleur.green(`Installed ${choice.name}`))
@@ -144,9 +151,10 @@ export const registerImport = (program: Command) => {
             return process.exit(1)
           }
         } else {
-          const importSpinner = ora(
-            `Importing "C${choice.part}" from JLCPCB...`,
-          ).start()
+          const importSpinner = ora({
+            text: `Importing "C${choice.part}" from JLCPCB...`,
+            stream: process.stdout,
+          }).start()
           try {
             const { filePath } = await importComponentFromJlcpcb(
               `C${String(choice.part)}`,
