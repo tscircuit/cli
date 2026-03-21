@@ -7,7 +7,7 @@ export const importComponentFromJlcpcb = async (
   projectDir: string = process.cwd(),
 ) => {
   const component = await fetchEasyEDAComponent(jlcpcbPartNumber)
-  const tsx = await convertRawEasyToTsx(component)
+  const tsx = await convertRawEasyToTsx({ rawEasy: component })
   const fileName = tsx.match(/export const (\w+) = .*/)?.[1]
   if (!fileName) {
     throw new Error("Could not determine file name of converted component")
