@@ -17,6 +17,7 @@ export const registerImport = (program: Command) => {
     .option("--jlcpcb", "Search JLCPCB components")
     .option("--lcsc", "Alias for --jlcpcb")
     .option("--tscircuit", "Search tscircuit registry packages")
+    .option("--download", "Download 3D models locally")
     .action(
       async (
         queryParts: string[],
@@ -24,6 +25,7 @@ export const registerImport = (program: Command) => {
           jlcpcb?: boolean
           lcsc?: boolean
           tscircuit?: boolean
+          download?: boolean
         },
       ) => {
         const query = getQueryFromParts(queryParts)
@@ -94,7 +96,7 @@ export const registerImport = (program: Command) => {
           title: string
           value:
             | { type: "registry"; name: string }
-            | { type: "jlcpcb"; part: number }
+            | { type: "jlcpcb"; partNumber: number }
           selected?: boolean
         }> = []
 
@@ -109,7 +111,7 @@ export const registerImport = (program: Command) => {
         jlcResults?.forEach((comp, idx) => {
           choices.push({
             title: `[jlcpcb] ${comp.mfr} (C${comp.lcsc}) - ${comp.description}`,
-            value: { type: "jlcpcb", part: comp.lcsc },
+            value: { type: "jlcpcb", partNumber: comp.lcsc },
             selected: !choices.length && idx === 0,
           })
         })
@@ -144,13 +146,14 @@ export const registerImport = (program: Command) => {
             return process.exit(1)
           }
         } else {
+          const lcscId = `C${choice.partNumber}`
           const importSpinner = ora(
-            `Importing "C${choice.part}" from JLCPCB...`,
+            `Importing "${lcscId}" from JLCPCB...`,
           ).start()
           try {
-            const { filePath } = await importComponentFromJlcpcb(
-              `C${String(choice.part)}`,
-            )
+            const { filePath } = await importComponentFromJlcpcb(lcscId, {
+              download: opts.download,
+            })
             importSpinner.succeed(kleur.green(`Imported ${filePath}`))
           } catch (error) {
             importSpinner.fail(kleur.red("Failed to import part"))
