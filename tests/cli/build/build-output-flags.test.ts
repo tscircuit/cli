@@ -1,4 +1,4 @@
-import { test, expect } from "bun:test"
+import { expect, test } from "bun:test"
 import { readFile, stat, writeFile } from "node:fs/promises"
 import path from "node:path"
 import { getCliTestFixture } from "../../fixtures/get-cli-test-fixture"
@@ -154,6 +154,36 @@ test("build --pcb-only generates only pcb.svg", async () => {
     stat(path.join(tmpDir, "dist", "preview", "3d.png")),
   ).rejects.toBeTruthy()
 }, 30_000)
+
+test("build --pcb-svgs --schematic-svgs places SVGs in each component subdirectory", async () => {
+  const { tmpDir, runCommand } = await getCliTestFixture()
+  const firstCircuit = path.join(tmpDir, "first.circuit.tsx")
+  const secondCircuit = path.join(tmpDir, "second.circuit.tsx")
+  await writeFile(firstCircuit, circuitCode)
+  await writeFile(secondCircuit, circuitCode)
+  await writeFile(path.join(tmpDir, "package.json"), "{}")
+
+  await runCommand(`tsci build --pcb-svgs --schematic-svgs`)
+
+  // SVGs should be in each component's subdirectory
+  for (const name of ["first", "second"]) {
+    const pcbSvg = await readFile(
+      path.join(tmpDir, "dist", name, "pcb.svg"),
+      "utf-8",
+    )
+    expect(pcbSvg).toContain("<svg")
+
+    const schematicSvg = await readFile(
+      path.join(tmpDir, "dist", name, "schematic.svg"),
+      "utf-8",
+    )
+    expect(schematicSvg).toContain("<svg")
+  }
+
+  // SVGs should NOT be at dist root
+  expect(stat(path.join(tmpDir, "dist", "pcb.svg"))).rejects.toBeTruthy()
+  expect(stat(path.join(tmpDir, "dist", "schematic.svg"))).rejects.toBeTruthy()
+}, 60_000)
 
 test("build --schematic-only generates only schematic.svg", async () => {
   const { tmpDir, runCommand } = await getCliTestFixture()
