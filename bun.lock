@@ -37,7 +37,7 @@
         "cosmiconfig": "^9.0.0",
         "debug": "^4.4.0",
         "delay": "^6.0.0",
-        "dsn-converter": "^0.0.63",
+        "dsn-converter": "0.0.86",
         "easyeda": "^0.0.252",
         "fuse.js": "^7.1.0",
         "get-port": "^7.1.0",
@@ -558,7 +558,7 @@
 
     "dot-prop": ["dot-prop@9.0.0", "", { "dependencies": { "type-fest": "^4.18.2" } }, "sha512-1gxPBJpI/pcjQhKgIU91II6Wkay+dLcN3M6rf2uwP8hRur3HtQXjVrdAK3sjC0piaEuxzMwjXChcETiJl47lAQ=="],
 
-    "dsn-converter": ["dsn-converter@0.0.63", "", { "dependencies": { "@tscircuit/soup-util": "^0.0.41", "debug": "^4.3.7", "uuid": "^10.0.0", "zod": "^3.23.8" }, "peerDependencies": { "circuit-json": "*", "typescript": "^5.0.0" } }, "sha512-MrAFWW1WCaJ+1WQIG6ghCtzJSqammn98HmA6DDS+1x44x/ke5d+LF27LU802D0gM7ouksHhtCu0c/28ZYr6Tww=="],
+    "dsn-converter": ["dsn-converter@0.0.86", "", { "dependencies": { "@tscircuit/soup-util": "^0.0.41", "debug": "^4.3.7", "uuid": "^10.0.0", "zod": "^3.23.8" }, "peerDependencies": { "circuit-json": "*", "typescript": "^5.0.0" } }, "sha512-q+yaRalRrO4wit6yKfspgrXHZrqR2xoV1gA9YFOqM6gkS0koahNXN+q8nVD0lcTWBZ6jyaMM09FR7SCxfkgViQ=="],
 
     "earcut": ["earcut@3.0.2", "", {}, "sha512-X7hshQbLyMJ/3RPhyObLARM2sNxxmRALLKx1+NVFFnQ9gKzmCrxm9+uLIAdBcvc8FNLpctqlQ2V6AE92Ol9UDQ=="],
 
