@@ -17,6 +17,7 @@ export const registerImport = (program: Command) => {
     .option("--jlcpcb", "Search JLCPCB components")
     .option("--lcsc", "Alias for --jlcpcb")
     .option("--tscircuit", "Search tscircuit registry packages")
+    .option("--download", "Download 3D model assets (.step, .obj) locally")
     .action(
       async (
         queryParts: string[],
@@ -24,6 +25,7 @@ export const registerImport = (program: Command) => {
           jlcpcb?: boolean
           lcsc?: boolean
           tscircuit?: boolean
+          download?: boolean
         },
       ) => {
         const query = getQueryFromParts(queryParts)
@@ -157,6 +159,8 @@ export const registerImport = (program: Command) => {
           try {
             const { filePath } = await importComponentFromJlcpcb(
               `C${String(choice.part)}`,
+              process.cwd(),
+              { download: opts.download },
             )
             importSpinner.succeed(kleur.green(`Imported ${filePath}`))
           } catch (error) {
