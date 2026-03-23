@@ -9,8 +9,7 @@ import kleur from "kleur"
 import { prompts } from "lib/utils/prompts"
 import { shouldBeInteractive } from "lib/utils/should-be-interactive"
 
-export const currentCliVersion = () =>
-  program?.version() ?? semver.inc(pkgVersion, "patch") ?? pkgVersion
+export const currentCliVersion = () => program?.version() ?? pkgVersion
 
 export const getLatestVersion = async () => {
   const { version: latestCliVersion } = await ky
