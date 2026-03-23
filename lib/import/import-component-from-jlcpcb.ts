@@ -6,6 +6,7 @@ import {
 } from "easyeda"
 import fs from "node:fs/promises"
 import path from "node:path"
+import { getCompletePlatformConfig } from "lib/shared/get-complete-platform-config"
 
 export const importComponentFromJlcpcb = async (
   jlcpcbPartNumber: string,
@@ -22,10 +23,14 @@ export const importComponentFromJlcpcb = async (
 
   let tsx = await convertRawEasyToTsx({ rawEasy })
 
-  const importsDir = path.join(projectDir, "imports")
-  await fs.mkdir(importsDir, { recursive: true })
+  const componentDir = options.download
+    ? path.join(projectDir, "imports", componentName)
+    : path.join(projectDir, "imports")
+  await fs.mkdir(componentDir, { recursive: true })
 
   if (options.download) {
+    const platformConfig = getCompletePlatformConfig()
+    const platformFetch = platformConfig.platformFetch ?? globalThis.fetch
     const circuitJson = convertEasyEdaJsonToCircuitJson(betterEasy, {
       useModelCdn: true,
     })
@@ -35,9 +40,9 @@ export const importComponentFromJlcpcb = async (
 
     if (cadComponent?.model_step_url) {
       const stepFileName = `${componentName}.step`
-      const stepResp = await fetch(cadComponent.model_step_url)
+      const stepResp = await platformFetch(cadComponent.model_step_url)
       await fs.writeFile(
-        path.join(importsDir, stepFileName),
+        path.join(componentDir, stepFileName),
         Buffer.from(await stepResp.arrayBuffer()),
       )
       tsx = tsx.replace(cadComponent.model_step_url, `./${stepFileName}`)
@@ -45,16 +50,16 @@ export const importComponentFromJlcpcb = async (
 
     if (cadComponent?.model_obj_url) {
       const objFileName = `${componentName}.obj`
-      const objResp = await fetch(cadComponent.model_obj_url)
+      const objResp = await platformFetch(cadComponent.model_obj_url)
       await fs.writeFile(
-        path.join(importsDir, objFileName),
+        path.join(componentDir, objFileName),
         Buffer.from(await objResp.arrayBuffer()),
       )
       tsx = tsx.replace(cadComponent.model_obj_url, `./${objFileName}`)
     }
   }
 
-  const filePath = path.join(importsDir, `${componentName}.tsx`)
+  const filePath = path.join(componentDir, `${componentName}.tsx`)
   await fs.writeFile(filePath, tsx)
   return { filePath }
 }

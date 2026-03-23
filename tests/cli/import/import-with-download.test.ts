@@ -11,8 +11,8 @@ test("import --download downloads step and obj files locally and updates TSX pat
   const { tmpDir, runCommand } = await getCliTestFixture({ loggedIn: true })
   await runCommand("tsci import --jlcpcb --download C2040")
 
-  const importsDir = path.join(tmpDir, "imports")
-  expect(fs.readdirSync(importsDir).sort()).toMatchInlineSnapshot(`
+  const componentDir = path.join(tmpDir, "imports", "RP2040")
+  expect(fs.readdirSync(componentDir).sort()).toMatchInlineSnapshot(`
     [
       "RP2040.obj",
       "RP2040.step",
@@ -21,7 +21,7 @@ test("import --download downloads step and obj files locally and updates TSX pat
   `)
 
   const fileContent = fs.readFileSync(
-    path.join(importsDir, "RP2040.tsx"),
+    path.join(componentDir, "RP2040.tsx"),
     "utf8",
   )
 
