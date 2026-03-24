@@ -1,5 +1,6 @@
 import fs from "node:fs"
 import path from "node:path"
+import JSZip from "jszip"
 import type { PlatformConfig } from "@tscircuit/props"
 import type { Command } from "commander"
 import kleur from "kleur"
@@ -157,6 +158,10 @@ export const registerBuild = (program: Command) => {
     .option(
       "--kicad-project",
       "Generate KiCad project directories for each successful build output",
+    )
+    .option(
+      "--kicad-project-zip",
+      "Generate a zipped KiCad project for each successful build output",
     )
     .option("--kicad-library", "Generate KiCad library in dist/kicad-library")
     .option(
@@ -321,7 +326,9 @@ export const registerBuild = (program: Command) => {
           []
 
         const shouldGenerateKicadProject =
-          resolvedOptions?.kicadProject || resolvedOptions?.kicadLibrary
+          resolvedOptions?.kicadProject ||
+          resolvedOptions?.kicadProjectZip ||
+          resolvedOptions?.kicadLibrary
 
         const injectedProps = parseInjectedProps({
           injectProps: resolvedOptions?.injectProps,
@@ -444,16 +451,52 @@ export const registerBuild = (program: Command) => {
                 "kicad",
               )
               const projectName = path.basename(outputDirName)
+              const shouldWriteKicadFiles = Boolean(
+                resolvedOptions?.kicadProject ||
+                  resolvedOptions?.kicadProjectZip,
+              )
               const project = await generateKicadProject({
                 circuitJson,
                 outputDir: projectOutputDir,
                 projectName,
-                writeFiles: Boolean(resolvedOptions?.kicadProject),
+                writeFiles: shouldWriteKicadFiles,
               })
               kicadProjects.push({
                 ...project,
                 sourcePath: filePath,
               })
+
+              if (resolvedOptions?.kicadProjectZip && shouldWriteKicadFiles) {
+                const zip = new JSZip()
+                const addDirToZip = (dirPath: string, zipFolder: JSZip) => {
+                  for (const entry of fs.readdirSync(dirPath)) {
+                    const fullPath = path.join(dirPath, entry)
+                    if (fs.statSync(fullPath).isDirectory()) {
+                      addDirToZip(fullPath, zipFolder.folder(entry)!)
+                    } else {
+                      zipFolder.file(entry, fs.readFileSync(fullPath))
+                    }
+                  }
+                }
+                addDirToZip(projectOutputDir, zip)
+                const zipBuffer = await zip.generateAsync({
+                  type: "nodebuffer",
+                })
+                const zipPath = path.join(
+                  distDir,
+                  outputDirName,
+                  `${projectName}-kicad.zip`,
+                )
+                fs.writeFileSync(zipPath, zipBuffer)
+                console.log(
+                  kleur.green(
+                    `  KiCad zip: ${path.relative(process.cwd(), zipPath)}`,
+                  ),
+                )
+                if (!resolvedOptions?.kicadProject) {
+                  fs.rmSync(projectOutputDir, { recursive: true, force: true })
+                }
+              }
             }
           }
         }
