@@ -30,20 +30,20 @@ test(
   async () => {
     const { tmpDir, runCommand } = await getCliTestFixture()
     const circuitPath = path.join(tmpDir, "test-circuit.tsx")
-    
+
     await writeFile(circuitPath, circuitCode)
-    
+
     const { stdout, stderr } = await runCommand(
       `tsci export ${circuitPath} -f step`,
     )
-    
+
     expect(stderr).toBe("")
-    
+
     const stepContent = await readFile(
       path.join(tmpDir, "test-circuit.step"),
       "utf-8",
     )
-    
+
     // STEP files start with an ISO-10303-21 header
     expect(stepContent).toContain("ISO-10303-21")
     expect(stepContent).toContain("FILE_DESCRIPTION")

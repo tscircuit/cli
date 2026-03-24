@@ -64,7 +64,9 @@
     "tscircuit": "0.0.1519-libonly",
     "tsx": "^4.7.1",
     "typed-ky": "^0.0.4",
-    "zod": "^3.23.8"
+    "zod": "^3.23.8",
+    "circuit-json-to-step": "^0.0.18",
+    "stepts": "^0.0.3"
   },
   "peerDependencies": {
     "tscircuit": "*"
@@ -95,9 +97,5 @@
     "cli": "bun ./cli/main.ts",
     "pkg-pr-new-release": "bunx pkg-pr-new publish --comment=off --peerDeps"
   },
-  "type": "module",
-  "dependencies": {
-    "circuit-json-to-step": "^0.0.18",
-    "stepts": "^0.0.3"
-  }
+  "type": "module"
 }
