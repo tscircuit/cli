@@ -26,6 +26,8 @@ test("import --download downloads step and obj files locally and updates TSX pat
   )
 
   expect(fileContent).not.toContain("https://")
-  expect(fileContent).toContain("./RP2040.step")
-  expect(fileContent).toContain("./RP2040.obj")
+  expect(fileContent).toContain('import stepPath from "./RP2040.step"')
+  expect(fileContent).toContain('import objPath from "./RP2040.obj"')
+  expect(fileContent).toContain("stepUrl: stepPath")
+  expect(fileContent).toContain("objUrl: objPath")
 }, 60_000)

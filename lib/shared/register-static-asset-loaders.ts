@@ -4,6 +4,7 @@ import path from "node:path"
 const STATIC_ASSET_EXTENSIONS = [
   ".glb",
   ".gltf",
+  ".obj",
   ".step",
   ".kicad_mod",
   ".kicad_pcb",

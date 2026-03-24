@@ -45,7 +45,8 @@ export const importComponentFromJlcpcb = async (
         path.join(componentDir, stepFileName),
         Buffer.from(await stepResp.arrayBuffer()),
       )
-      tsx = tsx.replace(cadComponent.model_step_url, `./${stepFileName}`)
+      tsx = `import stepPath from "./${stepFileName}"\n` + tsx
+      tsx = tsx.replace(`"${cadComponent.model_step_url}"`, "stepPath")
     }
 
     if (cadComponent?.model_obj_url) {
@@ -55,7 +56,8 @@ export const importComponentFromJlcpcb = async (
         path.join(componentDir, objFileName),
         Buffer.from(await objResp.arrayBuffer()),
       )
-      tsx = tsx.replace(cadComponent.model_obj_url, `./${objFileName}`)
+      tsx = `import objPath from "./${objFileName}"\n` + tsx
+      tsx = tsx.replace(`"${cadComponent.model_obj_url}"`, "objPath")
     }
   }
 
