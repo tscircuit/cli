@@ -20,6 +20,7 @@ export interface BuildCommandOptions {
   previewImages?: boolean
   allImages?: boolean
   kicadProject?: boolean
+  kicadProjectZip?: boolean
   kicadLibrary?: boolean
   kicadLibraryName?: string
   kicadPcm?: boolean
