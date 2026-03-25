@@ -57,7 +57,7 @@ export const updateTsci = async () => {
   const packageManager = getPackageManager()
   const installCommand = getGlobalDepsInstallCommand(
     packageManager.name,
-    "@tscircuit/cli@latest",
+    "tscircuit@latest",
   )
   try {
     console.log(`Updating tsci using: ${installCommand}`)
