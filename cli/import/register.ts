@@ -6,6 +6,7 @@ import { getRegistryApiKy } from "lib/registry-api/get-ky"
 import { addPackage } from "lib/shared/add-package"
 import { prompts } from "lib/utils/prompts"
 import ora from "ora"
+import { parseDirectLcscPartNumber } from "./parse-direct-lcsc-part-number"
 
 export const registerImport = (program: Command) => {
   program
@@ -87,6 +88,29 @@ export const registerImport = (program: Command) => {
         spinner.stop()
 
         if (!registryResults.length && !jlcResults?.length) {
+          const directLcscPartNumber = searchJlc
+            ? parseDirectLcscPartNumber(query)
+            : null
+          if (directLcscPartNumber) {
+            const importSpinner = ora({
+              text: `Importing "${directLcscPartNumber}" from JLCPCB...`,
+              stream: process.stdout,
+            }).start()
+            try {
+              const { filePath } = await importComponentFromJlcpcb(
+                directLcscPartNumber,
+                process.cwd(),
+                { download: opts.download },
+              )
+              importSpinner.succeed(kleur.green(`Imported ${filePath}`))
+              return
+            } catch (error) {
+              importSpinner.fail(kleur.red("Failed to import part"))
+              console.error(error instanceof Error ? error.message : error)
+              return process.exit(1)
+            }
+          }
+
           console.log(
             kleur.yellow(
               `No results found for "${query}" in the tscircuit registry or JLCPCB.`,
