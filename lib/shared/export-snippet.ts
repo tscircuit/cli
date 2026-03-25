@@ -17,6 +17,7 @@ import {
 } from "circuit-to-svg"
 import { convertCircuitJsonToDsnString } from "dsn-converter"
 import JSZip from "jszip"
+import { circuitJsonToStep } from "circuit-json-to-step"
 import { generateCircuitJson } from "lib/shared/generate-circuit-json"
 import { getCircuitJsonToGltfOptions } from "lib/shared/get-circuit-json-to-gltf-options"
 import { convertToKicadLibrary } from "./convert-to-kicad-library"
@@ -39,6 +40,7 @@ export const ALLOWED_EXPORT_FORMATS = [
   "kicad_zip",
   "kicad-library",
   "srj",
+  "step",
 ] as const
 
 export type ExportFormat = (typeof ALLOWED_EXPORT_FORMATS)[number]
@@ -58,6 +60,7 @@ const OUTPUT_EXTENSIONS: Record<ExportFormat, string> = {
   kicad_zip: "-kicad.zip",
   "kicad-library": "",
   srj: ".simple-route.json",
+  step: ".step",
 }
 
 type ExportOptions = {
@@ -253,6 +256,9 @@ export const exportSnippet = async ({
       outputContent = await zip.generateAsync({ type: "nodebuffer" })
       break
     }
+    case "step":
+      outputContent = await circuitJsonToStep(circuitJson)
+      break
     default:
       outputContent = JSON.stringify(circuitJson, null, 2)
   }
