@@ -33,9 +33,9 @@ export const registerSearch = (program: Command) => {
         const query = getQueryFromParts(queryParts)
         const hasFilters =
           opts.kicad || opts.jlcpcb || opts.lcsc || opts.tscircuit
-        const searchKicad = opts.kicad || !hasFilters
+        const searchKicad = opts.kicad
         const searchJlc = opts.jlcpcb || opts.lcsc || !hasFilters
-        const searchTscircuit = opts.tscircuit || !hasFilters
+        const searchTscircuit = opts.tscircuit
 
         let results: {
           packages: Array<{
