@@ -57,6 +57,32 @@ test("build --pngs generates only 3d.png", async () => {
   ).rejects.toBeTruthy()
 }, 30_000)
 
+test("build --pcb-png generates only pcb.png", async () => {
+  const { tmpDir, runCommand } = await getCliTestFixture()
+  const circuitPath = path.join(tmpDir, "preview.circuit.tsx")
+  await writeFile(circuitPath, circuitCode)
+  await writeFile(path.join(tmpDir, "package.json"), "{}")
+
+  await runCommand(`tsci build --pcb-png ${circuitPath}`)
+
+  const pcbPng = await readFile(path.join(tmpDir, "dist", "preview", "pcb.png"))
+  expect(pcbPng.byteLength).toBeGreaterThan(0)
+  expect(pcbPng[0]).toBe(0x89)
+  expect(pcbPng[1]).toBe(0x50)
+  expect(pcbPng[2]).toBe(0x4e)
+  expect(pcbPng[3]).toBe(0x47)
+
+  expect(
+    stat(path.join(tmpDir, "dist", "preview", "pcb.svg")),
+  ).rejects.toBeTruthy()
+  expect(
+    stat(path.join(tmpDir, "dist", "preview", "schematic.svg")),
+  ).rejects.toBeTruthy()
+  expect(
+    stat(path.join(tmpDir, "dist", "preview", "3d.png")),
+  ).rejects.toBeTruthy()
+}, 30_000)
+
 test("build --svgs generates only pcb.svg and schematic.svg", async () => {
   const { tmpDir, runCommand } = await getCliTestFixture()
   const circuitPath = path.join(tmpDir, "preview.circuit.tsx")
