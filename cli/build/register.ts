@@ -147,6 +147,7 @@ export const registerBuild = (program: Command) => {
       "--schematic-svgs",
       "Generate schematic SVG outputs during build generation",
     )
+    .option("--3d-png", "Generate 3D PNG outputs during build generation")
     .option("--3d", "Generate 3D PNG outputs during build generation")
     .option(
       "--pcb-only",
@@ -885,6 +886,7 @@ export const registerBuild = (program: Command) => {
           resolvedOptions?.svgs && "svgs",
           resolvedOptions?.pcbSvgs && "pcb-svgs",
           resolvedOptions?.schematicSvgs && "schematic-svgs",
+          resolvedOptions?.["3dPng"] && "3d-png",
           resolvedOptions?.["3d"] && "3d",
           resolvedOptions?.pcbOnly && "pcb-only",
           resolvedOptions?.schematicOnly && "schematic-only",
