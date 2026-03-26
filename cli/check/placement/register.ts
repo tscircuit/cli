@@ -18,11 +18,11 @@ export const checkPlacement = async (file?: string, refdes?: string) => {
     allowPrebuiltCircuitJson: true,
   })) as AnyCircuitElement[]
 
-  const analysis = refdes
-    ? analyzeComponentPlacement(circuitJson, refdes)
-    : analyzeAllPlacements(circuitJson)
+  if (refdes) {
+    return analyzeComponentPlacement(circuitJson, refdes).getString()
+  }
 
-  return analysis.getString()
+  return analyzeAllPlacements(circuitJson).getString()
 }
 
 export const registerCheckPlacement = (program: Command) => {

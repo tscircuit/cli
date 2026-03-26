@@ -9,7 +9,7 @@
   "devDependencies": {
     "@babel/standalone": "^7.26.9",
     "@biomejs/biome": "^1.9.4",
-    "@tscircuit/circuit-json-placement-analysis": "^0.0.4",
+    "@tscircuit/circuit-json-placement-analysis": "^0.0.5",
     "@tscircuit/circuit-json-routing-analysis": "^0.0.1",
     "@tscircuit/fake-snippets": "^0.0.182",
     "@tscircuit/file-server": "^0.0.32",
