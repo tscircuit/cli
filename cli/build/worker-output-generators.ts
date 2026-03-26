@@ -50,7 +50,7 @@ export const writeImageAssetsFromCircuitJson = async (
     const pcbSvg = convertCircuitJsonToPcbSvg(circuitJson)
     fs.writeFileSync(
       path.join(outputDir, "pcb.png"),
-      Buffer.from(convertSvgToPngBuffer(pcbSvg)),
+      await convertSvgToPngBuffer(pcbSvg),
     )
   }
 

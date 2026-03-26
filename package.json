@@ -97,8 +97,5 @@
     "cli": "bun ./cli/main.ts",
     "pkg-pr-new-release": "bunx pkg-pr-new publish --comment=off --peerDeps"
   },
-  "type": "module",
-  "dependencies": {
-    "@resvg/resvg-js": "^2.6.2"
-  }
+  "type": "module"
 }
