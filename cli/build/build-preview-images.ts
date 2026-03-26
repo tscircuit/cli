@@ -10,6 +10,7 @@ import { getCircuitJsonToGltfOptions } from "lib/shared/get-circuit-json-to-gltf
 import { renderGLTFToPNGBufferFromGLBBuffer } from "poppygl"
 import { convertModelUrlsToFileUrls } from "./convert-model-urls-to-file-urls"
 import type { BuildImageFormatSelection } from "./image-format-selection"
+import { convertSvgToPngBuffer } from "./svg-to-png"
 
 export interface BuildFileResult {
   sourcePath: string
@@ -98,6 +99,20 @@ const generatePreviewAssets = async ({
       console.log(`${prefix}Written pcb.svg`)
     } catch (error) {
       console.error(`${prefix}Failed to generate PCB SVG:`, error)
+    }
+  }
+
+  if (imageFormats.pcbPngs) {
+    try {
+      console.log(`${prefix}Generating PCB PNG...`)
+      const pcbSvg = convertCircuitJsonToPcbSvg(circuitJson)
+      fs.writeFileSync(
+        path.join(outputDir, "pcb.png"),
+        Buffer.from(convertSvgToPngBuffer(pcbSvg)),
+      )
+      console.log(`${prefix}Written pcb.png`)
+    } catch (error) {
+      console.error(`${prefix}Failed to generate PCB PNG:`, error)
     }
   }
 

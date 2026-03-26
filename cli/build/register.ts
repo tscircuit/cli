@@ -140,6 +140,7 @@ export const registerBuild = (program: Command) => {
       "Generate preview images for every successful build output",
     )
     .option("--pngs", "Generate PNG outputs during build generation")
+    .option("--pcb-png", "Generate PCB PNG outputs during build generation")
     .option("--svgs", "Generate SVG outputs during build generation")
     .option("--pcb-svgs", "Generate PCB SVG outputs during build generation")
     .option(
@@ -880,6 +881,7 @@ export const registerBuild = (program: Command) => {
           resolvedOptions?.previewImages && "preview-images",
           resolvedOptions?.allImages && "all-images",
           resolvedOptions?.pngs && "pngs",
+          resolvedOptions?.pcbPng && "pcb-png",
           resolvedOptions?.svgs && "svgs",
           resolvedOptions?.pcbSvgs && "pcb-svgs",
           resolvedOptions?.schematicSvgs && "schematic-svgs",

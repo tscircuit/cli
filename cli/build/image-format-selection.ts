@@ -2,29 +2,37 @@ import type { BuildCommandOptions } from "./build-ci"
 
 export type BuildImageFormatSelection = {
   threeDPngs: boolean
+  pcbPngs: boolean
   pcbSvgs: boolean
   schematicSvgs: boolean
 }
 
 export const DEFAULT_IMAGE_FORMAT_SELECTION: BuildImageFormatSelection = {
   threeDPngs: true,
+  pcbPngs: false,
   pcbSvgs: true,
   schematicSvgs: true,
 }
 
 export const EMPTY_IMAGE_FORMAT_SELECTION: BuildImageFormatSelection = {
   threeDPngs: false,
+  pcbPngs: false,
   pcbSvgs: false,
   schematicSvgs: false,
 }
 
 export const hasAnyImageFormatSelected = (
   selection: BuildImageFormatSelection,
-) => selection.threeDPngs || selection.pcbSvgs || selection.schematicSvgs
+) =>
+  selection.threeDPngs ||
+  selection.pcbPngs ||
+  selection.pcbSvgs ||
+  selection.schematicSvgs
 
 const hasNewOutputFlags = (options?: BuildCommandOptions) =>
   Boolean(
     options?.pngs ||
+      options?.pcbPng ||
       options?.svgs ||
       options?.pcbSvgs ||
       options?.schematicSvgs,
@@ -53,6 +61,7 @@ export const resolveImageFormatSelection = (
   if (!hasNewFlags && hasEstablishedFlags) {
     const selection: BuildImageFormatSelection = {
       threeDPngs: Boolean(options?.["3d"]),
+      pcbPngs: false,
       pcbSvgs: true,
       schematicSvgs: true,
     }
@@ -78,6 +87,9 @@ export const resolveImageFormatSelection = (
   }
   if (options?.pcbSvgs) {
     selection.pcbSvgs = true
+  }
+  if (options?.pcbPng) {
+    selection.pcbPngs = true
   }
   if (options?.schematicSvgs) {
     selection.schematicSvgs = true

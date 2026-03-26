@@ -14,6 +14,7 @@ import {
   normalizeToUint8Array,
 } from "./worker-binary-utils"
 import type { BuildImageFormatSelection } from "./image-format-selection"
+import { convertSvgToPngBuffer } from "./svg-to-png"
 
 export const writeGlbFromCircuitJson = async (
   circuitJson: AnyCircuitElement[],
@@ -43,6 +44,14 @@ export const writeImageAssetsFromCircuitJson = async (
   if (imageFormats.pcbSvgs) {
     const pcbSvg = convertCircuitJsonToPcbSvg(circuitJson)
     fs.writeFileSync(path.join(outputDir, "pcb.svg"), pcbSvg, "utf-8")
+  }
+
+  if (imageFormats.pcbPngs) {
+    const pcbSvg = convertCircuitJsonToPcbSvg(circuitJson)
+    fs.writeFileSync(
+      path.join(outputDir, "pcb.png"),
+      Buffer.from(convertSvgToPngBuffer(pcbSvg)),
+    )
   }
 
   if (imageFormats.schematicSvgs) {
