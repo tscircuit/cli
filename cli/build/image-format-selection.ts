@@ -39,7 +39,12 @@ const hasNewOutputFlags = (options?: BuildCommandOptions) =>
   )
 
 const hasEstablishedOutputFlags = (options?: BuildCommandOptions) =>
-  Boolean(options?.["3d"] || options?.pcbOnly || options?.schematicOnly)
+  Boolean(
+    options?.["3d"] ||
+      options?.["3dPng"] ||
+      options?.pcbOnly ||
+      options?.schematicOnly,
+  )
 
 export const resolveImageFormatSelection = (
   options?: BuildCommandOptions,
@@ -60,7 +65,7 @@ export const resolveImageFormatSelection = (
 
   if (!hasNewFlags && hasEstablishedFlags) {
     const selection: BuildImageFormatSelection = {
-      threeDPngs: Boolean(options?.["3d"]),
+      threeDPngs: Boolean(options?.["3d"] || options?.["3dPng"]),
       pcbPngs: false,
       pcbSvgs: true,
       schematicSvgs: true,
@@ -94,7 +99,7 @@ export const resolveImageFormatSelection = (
   if (options?.schematicSvgs) {
     selection.schematicSvgs = true
   }
-  if (options?.pngs || options?.["3d"]) {
+  if (options?.pngs || options?.["3d"] || options?.["3dPng"]) {
     selection.threeDPngs = true
   }
 
