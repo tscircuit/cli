@@ -1,6 +1,6 @@
 {
   "name": "@tscircuit/cli",
-  "version": "0.1.1176",
+  "version": "0.1.1177",
   "main": "dist/cli/main.js",
   "exports": {
     ".": "./dist/cli/main.js",
