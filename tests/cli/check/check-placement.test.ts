@@ -39,10 +39,11 @@ test("check placement analyzes all placements when refdes is missing", async () 
 
   try {
     const output = await checkPlacement(circuitPath)
-    expect(output).toContain("R1")
-    expect(output).toContain("C1")
-    expect(output).toContain("R1.center=(3mm, 2mm)")
-    expect(output).toContain("C1.center=(-3mm, -2mm)")
+    expect(output).toContain("placement summary:")
+    expect(output).toContain("no placement issues")
+    expect(output).toContain("board-edge status:")
+    expect(output).toContain("- R1:")
+    expect(output).toContain("- C1:")
   } finally {
     await unlink(circuitPath)
   }
