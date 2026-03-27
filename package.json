@@ -65,7 +65,7 @@
     "tsx": "^4.7.1",
     "typed-ky": "^0.0.4",
     "zod": "^3.23.8",
-    "circuit-json-to-step": "^0.0.19",
+    "circuit-json-to-step": "^0.0.20",
     "stepts": "^0.0.3"
   },
   "peerDependencies": {
