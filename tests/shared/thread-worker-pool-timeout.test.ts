@@ -215,9 +215,8 @@ test("thread worker pool emits heartbeat logs when DEBUG is not 1", async () => 
 
     await new Promise((resolve) => setTimeout(resolve, 80))
 
-    const detailedHeartbeat = logs.find(
-      (line) =>
-        line.includes("[worker-pool] heartbeat:"),
+    const detailedHeartbeat = logs.find((line) =>
+      line.includes("[worker-pool] heartbeat:"),
     )
 
     expect(detailedHeartbeat).toBeDefined()
