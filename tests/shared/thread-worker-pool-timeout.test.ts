@@ -129,7 +129,7 @@ test("thread worker pool logs when a job times out", async () => {
   }
 })
 
-test("thread worker pool emits heartbeat logs only when DEBUG=1", async () => {
+test("thread worker pool emits heartbeat logs when DEBUG=1", async () => {
   const previousDebug = process.env.DEBUG
   process.env.DEBUG = "1"
 
@@ -181,7 +181,7 @@ test("thread worker pool emits heartbeat logs only when DEBUG=1", async () => {
   }
 })
 
-test("thread worker pool does not emit heartbeat logs when DEBUG is not 1", async () => {
+test("thread worker pool emits heartbeat logs when DEBUG is not 1", async () => {
   const previousDebug = process.env.DEBUG
   process.env.DEBUG = undefined
 
@@ -219,7 +219,7 @@ test("thread worker pool does not emit heartbeat logs when DEBUG is not 1", asyn
       line.includes("[worker-pool] heartbeat:"),
     )
 
-    expect(detailedHeartbeat).toBeUndefined()
+    expect(detailedHeartbeat).toBeDefined()
   } finally {
     await pool.terminate()
     if (previousDebug === undefined) {
