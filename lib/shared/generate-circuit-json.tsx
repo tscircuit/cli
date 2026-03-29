@@ -1,10 +1,10 @@
-import { getVirtualFileSystemFromDirPath } from "make-vfs"
-import path from "node:path"
 import fs from "node:fs"
+import path from "node:path"
 import { pathToFileURL } from "node:url"
-import Debug from "debug"
 import type { PlatformConfig } from "@tscircuit/props"
+import Debug from "debug"
 import { abbreviateStringifyObject } from "lib/utils/abbreviate-stringify-object"
+import { getVirtualFileSystemFromDirPath } from "make-vfs"
 import { importFromUserLand } from "./importFromUserLand"
 
 const debug = Debug("tsci:generate-circuit-json")
@@ -28,6 +28,18 @@ type GenerateCircuitJsonOptions = {
   saveToFile?: boolean
   platformConfig?: PlatformConfig
   injectedProps?: Record<string, unknown>
+}
+
+const attachAsyncStatusLogger = (circuit: {
+  on: (
+    event: "asyncEffect:start",
+    listener: (event: { effectName?: string }) => void,
+  ) => void
+}) => {
+  circuit.on("asyncEffect:start", ({ effectName }) => {
+    const asyncEffectName = effectName || "unknown async effect"
+    console.log(`waiting on ${asyncEffectName}…`)
+  })
 }
 
 /**
@@ -54,6 +66,7 @@ export async function generateCircuitJson({
   const runner = new userLandTscircuit.RootCircuit({
     platform: platformConfig,
   })
+  attachAsyncStatusLogger(runner)
   const absoluteFilePath = path.isAbsolute(filePath)
     ? filePath
     : path.resolve(process.cwd(), filePath)
