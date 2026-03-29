@@ -31,6 +31,7 @@ type ThreadWorkerPoolOptions<TJob, TWorkerInput, TWorkerOutput, TResult> = {
 }
 
 const DEFAULT_WORKER_JOB_TIMEOUT_MS = 3 * 60 * 1000
+const DEFAULT_HEARTBEAT_INTERVAL_MS = 30 * 1000
 
 export class ThreadWorkerPool<TJob, TWorkerInput, TWorkerOutput, TResult> {
   private workers: Array<ThreadWorker<TJob, TResult>> = []
@@ -96,11 +97,8 @@ export class ThreadWorkerPool<TJob, TWorkerInput, TWorkerOutput, TResult> {
       return
     }
 
-    if (process.env.DEBUG !== "1") {
-      return
-    }
-
-    const heartbeatIntervalMs = this.options.heartbeatIntervalMs ?? 5000
+    const heartbeatIntervalMs =
+      this.options.heartbeatIntervalMs ?? DEFAULT_HEARTBEAT_INTERVAL_MS
     if (heartbeatIntervalMs <= 0) {
       return
     }
