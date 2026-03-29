@@ -43,7 +43,7 @@ export const getVersion = ({ verbose = false }: { verbose?: boolean } = {}) => {
   const versions = getVersionInfo()
 
   if (!verbose) {
-    return versions.tscircuitVersion ?? versions.cliVersion
+    return versions.cliVersion ?? versions.tscircuitVersion
   }
 
   return [
