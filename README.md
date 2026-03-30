@@ -54,6 +54,8 @@ Commands:
   install [packageSpec]        Install project dependencies, or install a
                                specific package (e.g., tsci install
                                https://github.com/espressif/kicad-libraries)
+  update [packageSpec]         Update tscircuit component packages to their
+                               latest version
   upgrade                      Upgrade CLI to the latest version
   doctor                       Run diagnostic checks for your tscircuit setup
   check                        Partially build and validate circuit artifacts
