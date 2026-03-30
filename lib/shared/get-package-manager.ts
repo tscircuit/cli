@@ -32,6 +32,7 @@ export interface PackageManager {
   name: "npm" | "yarn" | "pnpm" | "bun"
   uninstall: (opts: { name: string; cwd: string }) => void
   install: (opts: { name: string; cwd: string }) => void
+  update: (opts: { name: string; cwd: string }) => void
   init: (opts: { cwd: string }) => void
   installDeps: (opts: {
     deps: string[]
@@ -74,6 +75,26 @@ export function getPackageManager(): PackageManager {
       }
       console.log(kleur.gray(`> ${installCommand}`))
       const output = execSync(installCommand, {
+        stdio: ["inherit", "pipe", "pipe"],
+        cwd,
+      })
+      if (output) {
+        process.stdout.write(output)
+      }
+    },
+    update: ({ name, cwd }) => {
+      let updateCommand: string
+      if (pm === "yarn") {
+        updateCommand = `yarn upgrade ${name}`
+      } else if (pm === "pnpm") {
+        updateCommand = `pnpm update ${name}`
+      } else if (pm === "bun") {
+        updateCommand = `bun update ${name}`
+      } else {
+        updateCommand = `npm update ${name}`
+      }
+      console.log(kleur.gray(`> ${updateCommand}`))
+      const output = execSync(updateCommand, {
         stdio: ["inherit", "pipe", "pipe"],
         cwd,
       })

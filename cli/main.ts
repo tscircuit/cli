@@ -41,6 +41,7 @@ import { registerSimulate } from "./simulate/register"
 import { registerSnapshot } from "./snapshot/register"
 import { registerTranspile } from "./transpile/register"
 import { registerUpgradeCommand } from "./upgrade/register"
+import { registerUpdate } from "./update/register"
 
 export const program = new Command()
 
@@ -74,6 +75,7 @@ registerRemove(program)
 registerSnapshot(program)
 registerSetup(program)
 registerInstall(program)
+registerUpdate(program)
 registerUpgradeCommand(program)
 registerDoctor(program)
 registerCheck(program)

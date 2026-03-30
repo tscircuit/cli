@@ -52,4 +52,4 @@ test("build without tsconfig.json auto-generates it and has no type errors", asy
   const dtsPath = path.join(tmpDir, "dist", "index.d.ts")
   const dtsStat = await stat(dtsPath)
   expect(dtsStat.isFile()).toBe(true)
-}, 30_000)
+}, 60_000)

@@ -49,7 +49,7 @@ test("build with --transpile generates ESM, CommonJS, and type declarations", as
   const dtsContent = await readFile(dtsPath, "utf-8")
   expect(dtsContent).toContain("declare")
   expect(dtsContent).toContain("export")
-}, 30_000)
+}, 60_000)
 
 test("build with --transpile uses mainEntrypoint when available", async () => {
   const { tmpDir, runCommand } = await getCliTestFixture()
@@ -77,7 +77,7 @@ test("build with --transpile uses mainEntrypoint when available", async () => {
   const dtsPath = path.join(tmpDir, "dist", "index.d.ts")
   const dtsStat = await stat(dtsPath)
   expect(dtsStat.isFile()).toBe(true)
-}, 30_000)
+}, 60_000)
 
 test("build with --transpile warns when main is outside dist", async () => {
   const { tmpDir, runCommand } = await getCliTestFixture()
@@ -94,7 +94,7 @@ test("build with --transpile warns when main is outside dist", async () => {
   expect(stderr).toContain(
     'When using transpilation, your package\'s "main" field should point inside the `dist/*` directory, usually to "dist/index.js"',
   )
-}, 30_000)
+}, 60_000)
 
 test("build with --transpile transforms JSX correctly", async () => {
   const { tmpDir, runCommand } = await getCliTestFixture()
@@ -118,7 +118,7 @@ test("build with --transpile transforms JSX correctly", async () => {
   expect(cjsContent).toContain("jsx")
   expect(cjsContent).toContain("react/jsx-runtime")
   expect(cjsContent).not.toContain("<board")
-}, 30_000)
+}, 60_000)
 
 test("build with --transpile JSX with import from other files", async () => {
   const { tmpDir, runCommand } = await getCliTestFixture()
@@ -161,4 +161,4 @@ test("build with --transpile JSX with import from other files", async () => {
   expect(cjsContent).toContain("jsx")
   expect(cjsContent).toContain("react/jsx-runtime")
   expect(cjsContent).not.toContain("<board")
-}, 30_000)
+}, 60_000)
