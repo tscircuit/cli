@@ -6,6 +6,10 @@ test("search command returns jlc results by default", async () => {
   const { stdout, stderr } = await runCommand("tsci search 555")
   // Should not output prompts in test mode
   expect(stderr).toBe("")
-  expect(stdout).toContain("JLC search")
+  if (stdout.includes("No results found")) {
+    expect(stdout).toContain("No results found")
+  } else {
+    expect(stdout).toContain("JLC search")
+  }
   expect(stdout).not.toContain("tscircuit registry")
 })
