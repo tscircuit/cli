@@ -118,49 +118,12 @@ export class ThreadWorkerPool<TJob, TWorkerInput, TWorkerOutput, TResult> {
         const jobDescription = this.describeJob(worker.currentJob.job)
         return `w${index}:busy task=${jobDescription} running_ms=${runningForMs}`
       })
-      const asyncEffectsStatus = this.getAsyncEffectsStatus()
-
       this.options.onLog?.([
-        `[worker-pool] heartbeat: workers busy=${busyWorkers}/${totalWorkers}, idle=${idleWorkers}, queued_jobs=${queuedJobs}, async_effects=${asyncEffectsStatus} | ${workerDetails.join(" | ")}`,
+        `[worker-pool] heartbeat: workers busy=${busyWorkers}/${totalWorkers}, idle=${idleWorkers}, queued_jobs=${queuedJobs} | ${workerDetails.join(" | ")}`,
       ])
     }, heartbeatIntervalMs)
 
     this.heartbeatIntervalId.unref?.()
-  }
-
-  private getAsyncEffectsStatus(): string {
-    const candidate = (
-      globalThis as {
-        getRunningAsyncEffects?: () => unknown
-      }
-    ).getRunningAsyncEffects
-
-    if (typeof candidate !== "function") {
-      return "unavailable"
-    }
-
-    try {
-      const runningAsyncEffects = candidate()
-      if (Array.isArray(runningAsyncEffects)) {
-        return `${runningAsyncEffects.length}`
-      }
-      if (runningAsyncEffects === undefined || runningAsyncEffects === null) {
-        return "0"
-      }
-      if (typeof runningAsyncEffects === "number") {
-        return `${runningAsyncEffects}`
-      }
-      if (
-        typeof runningAsyncEffects === "object" &&
-        "length" in (runningAsyncEffects as Record<string, unknown>) &&
-        typeof (runningAsyncEffects as { length: unknown }).length === "number"
-      ) {
-        return `${(runningAsyncEffects as { length: number }).length}`
-      }
-      return "unknown"
-    } catch {
-      return "error"
-    }
   }
 
   private stopHeartbeat(): void {

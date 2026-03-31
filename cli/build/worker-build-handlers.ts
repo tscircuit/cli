@@ -38,9 +38,14 @@ export const handleBuildFile = async (
 
   try {
     process.chdir(projectDir)
+    const relativeFilePath = path.relative(projectDir, filePath)
+    const asyncEffectsHeartbeatIntervalMs = Number.parseInt(
+      process.env.TSCIRCUIT_BUILD_ASYNC_EFFECTS_HEARTBEAT_INTERVAL_MS || "200",
+      10,
+    )
 
     workerLog(
-      `Generating circuit JSON for ${path.relative(projectDir, filePath)}...`,
+      `Generating circuit JSON for ${relativeFilePath}...`,
     )
 
     await registerStaticAssetLoaders()
@@ -61,6 +66,16 @@ export const handleBuildFile = async (
             filePath,
             platformConfig: completePlatformConfig,
             injectedProps: options?.injectedProps,
+            asyncEffectsHeartbeatIntervalMs:
+              Number.isFinite(asyncEffectsHeartbeatIntervalMs) &&
+              asyncEffectsHeartbeatIntervalMs > 0
+                ? asyncEffectsHeartbeatIntervalMs
+                : 200,
+            onAsyncEffectsHeartbeat: (runningAsyncEffectsCount) => {
+              workerLog(
+                `[worker-async-effects] file=${relativeFilePath} running_async_effects=${runningAsyncEffectsCount}`,
+              )
+            },
           })
         ).circuitJson
 

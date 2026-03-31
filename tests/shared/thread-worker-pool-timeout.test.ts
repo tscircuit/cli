@@ -130,14 +130,8 @@ test("thread worker pool logs when a job times out", async () => {
 })
 
 test("thread worker pool emits heartbeat logs when DEBUG=1", async () => {
-  const globalWithAsyncEffects = globalThis as {
-    getRunningAsyncEffects?: () => unknown
-  }
   const previousDebug = process.env.DEBUG
-  const previousGetRunningAsyncEffects =
-    globalWithAsyncEffects.getRunningAsyncEffects
   process.env.DEBUG = "1"
-  globalWithAsyncEffects.getRunningAsyncEffects = () => ["effect1", "effect2"]
 
   const logs: string[] = []
   const pool = new ThreadWorkerPool<
@@ -173,8 +167,7 @@ test("thread worker pool emits heartbeat logs when DEBUG=1", async () => {
       (line) =>
         line.includes("[worker-pool] heartbeat:") &&
         line.includes("task=stuck") &&
-        line.includes("running_ms=") &&
-        line.includes("async_effects=2"),
+        line.includes("running_ms="),
     )
 
     expect(detailedHeartbeat).toBeDefined()
@@ -184,12 +177,6 @@ test("thread worker pool emits heartbeat logs when DEBUG=1", async () => {
       process.env.DEBUG = undefined
     } else {
       process.env.DEBUG = previousDebug
-    }
-    if (previousGetRunningAsyncEffects === undefined) {
-      globalWithAsyncEffects.getRunningAsyncEffects = undefined
-    } else {
-      globalWithAsyncEffects.getRunningAsyncEffects =
-        previousGetRunningAsyncEffects
     }
   }
 })

@@ -28,6 +28,8 @@ type GenerateCircuitJsonOptions = {
   saveToFile?: boolean
   platformConfig?: PlatformConfig
   injectedProps?: Record<string, unknown>
+  onAsyncEffectsHeartbeat?: (runningAsyncEffectsCount: number) => void
+  asyncEffectsHeartbeatIntervalMs?: number
 }
 
 /**
@@ -43,6 +45,8 @@ export async function generateCircuitJson({
   saveToFile = false,
   platformConfig,
   injectedProps,
+  onAsyncEffectsHeartbeat,
+  asyncEffectsHeartbeatIntervalMs = 200,
 }: GenerateCircuitJsonOptions) {
   debug(`Generating circuit JSON for ${filePath}`)
 
@@ -124,8 +128,39 @@ export async function generateCircuitJson({
 
   runner.add(<Component {...(injectedProps ?? {})} />)
 
+  let asyncEffectsHeartbeatInterval: NodeJS.Timeout | null = null
+  const runnerWithAsyncEffects = runner as {
+    getRunningAsyncEffects?: () => unknown
+  }
+  if (
+    onAsyncEffectsHeartbeat &&
+    asyncEffectsHeartbeatIntervalMs > 0 &&
+    typeof runnerWithAsyncEffects.getRunningAsyncEffects === "function"
+  ) {
+    asyncEffectsHeartbeatInterval = setInterval(() => {
+      try {
+        const runningAsyncEffects =
+          runnerWithAsyncEffects.getRunningAsyncEffects?.()
+        const runningAsyncEffectsCount = Array.isArray(runningAsyncEffects)
+          ? runningAsyncEffects.length
+          : 0
+        onAsyncEffectsHeartbeat(runningAsyncEffectsCount)
+      } catch {
+        onAsyncEffectsHeartbeat(0)
+      }
+    }, asyncEffectsHeartbeatIntervalMs)
+
+    asyncEffectsHeartbeatInterval.unref?.()
+  }
+
   // Wait for the circuit to be fully rendered
-  await runner.renderUntilSettled()
+  try {
+    await runner.renderUntilSettled()
+  } finally {
+    if (asyncEffectsHeartbeatInterval) {
+      clearInterval(asyncEffectsHeartbeatInterval)
+    }
+  }
 
   // Get the circuit JSON
   const circuitJson = await runner.getCircuitJson()
