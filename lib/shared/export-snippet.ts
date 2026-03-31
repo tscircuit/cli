@@ -22,6 +22,17 @@ import { generateCircuitJson } from "lib/shared/generate-circuit-json"
 import { getCircuitJsonToGltfOptions } from "lib/shared/get-circuit-json-to-gltf-options"
 import { convertToKicadLibrary } from "./convert-to-kicad-library"
 import { isCircuitJsonFile } from "./is-circuit-json-file"
+import {
+  convertSoupToGerberCommands,
+  stringifyGerberCommandLayers,
+  convertSoupToExcellonDrillCommands,
+  stringifyExcellonDrill,
+} from "circuit-json-to-gerber"
+import {
+  convertCircuitJsonToBomRows,
+  convertBomRowsToCsv,
+} from "circuit-json-to-bom-csv"
+import { convertCircuitJsonToPickAndPlaceCsv } from "circuit-json-to-pnp-csv"
 
 const writeFileAsync = promisify(fs.writeFile)
 
@@ -256,6 +267,49 @@ export const exportSnippet = async ({
       outputContent = await zip.generateAsync({ type: "nodebuffer" })
       break
     }
+    case "gerbers": {
+      const zip = new JSZip()
+
+      const gerberLayerCmds = convertSoupToGerberCommands(circuitJson, {
+        flip_y_axis: false,
+      })
+      const gerberFileContents = stringifyGerberCommandLayers(gerberLayerCmds)
+
+      for (const [fileName, fileContents] of Object.entries(
+        gerberFileContents,
+      )) {
+        zip.file(`${fileName}.gbr`, fileContents)
+      }
+
+      const platedDrillCmds = convertSoupToExcellonDrillCommands({
+        circuitJson,
+        is_plated: true,
+        flip_y_axis: false,
+      })
+      if (platedDrillCmds.length > 0) {
+        zip.file("drill.drl", stringifyExcellonDrill(platedDrillCmds))
+      }
+
+      const nonPlatedDrillCmds = convertSoupToExcellonDrillCommands({
+        circuitJson,
+        is_plated: false,
+        flip_y_axis: false,
+      })
+      if (nonPlatedDrillCmds.length > 0) {
+        zip.file("drill_npth.drl", stringifyExcellonDrill(nonPlatedDrillCmds))
+      }
+
+      const bomRows = await convertCircuitJsonToBomRows({ circuitJson })
+      const bomCsv = await convertBomRowsToCsv(bomRows)
+      zip.file("bom.csv", bomCsv)
+
+      const pnpCsv = await convertCircuitJsonToPickAndPlaceCsv(circuitJson)
+      zip.file("pick_and_place.csv", pnpCsv)
+
+      outputContent = await zip.generateAsync({ type: "nodebuffer" })
+      break
+    }
+
     case "step":
       outputContent = await circuitJsonToStep(circuitJson)
       break
