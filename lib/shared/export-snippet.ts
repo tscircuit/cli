@@ -14,6 +14,7 @@ import { convertCircuitJsonToReadableNetlist } from "circuit-json-to-readable-ne
 import {
   convertCircuitJsonToPcbSvg,
   convertCircuitJsonToSchematicSvg,
+  convertCircuitJsonToAssemblySvg,
 } from "circuit-to-svg"
 import { convertCircuitJsonToDsnString } from "dsn-converter"
 import JSZip from "jszip"
@@ -52,6 +53,7 @@ export const ALLOWED_EXPORT_FORMATS = [
   "kicad-library",
   "srj",
   "step",
+  "assembly-svg",
 ] as const
 
 export type ExportFormat = (typeof ALLOWED_EXPORT_FORMATS)[number]
@@ -61,6 +63,7 @@ const OUTPUT_EXTENSIONS: Record<ExportFormat, string> = {
   "circuit-json": ".circuit.json",
   "schematic-svg": "-schematic.svg",
   "pcb-svg": "-pcb.svg",
+  "assembly-svg": "-assembly.svg",
   gerbers: "-gerbers.zip",
   "readable-netlist": "-readable.netlist",
   gltf: ".gltf",
@@ -312,6 +315,9 @@ export const exportSnippet = async ({
 
     case "step":
       outputContent = await circuitJsonToStep(circuitJson)
+      break
+    case "assembly-svg":
+      outputContent = convertCircuitJsonToAssemblySvg(circuitJson)
       break
     default:
       outputContent = JSON.stringify(circuitJson, null, 2)
