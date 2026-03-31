@@ -81,6 +81,10 @@ export async function buildFilesWithWorkerPool(options: {
     process.env.TSCIRCUIT_BUILD_WORKER_TIMEOUT_MS || "180000",
     10,
   )
+  const workerHeartbeatIntervalMs = Number.parseInt(
+    process.env.TSCIRCUIT_BUILD_WORKER_HEARTBEAT_INTERVAL_MS || "",
+    10,
+  )
   const poolConcurrency = Math.max(
     1,
     Math.min(options.concurrency, options.files.length),
@@ -139,6 +143,10 @@ export async function buildFilesWithWorkerPool(options: {
     jobTimeoutMs:
       Number.isFinite(workerJobTimeoutMs) && workerJobTimeoutMs > 0
         ? workerJobTimeoutMs
+        : undefined,
+    heartbeatIntervalMs:
+      Number.isFinite(workerHeartbeatIntervalMs) && workerHeartbeatIntervalMs > 0
+        ? workerHeartbeatIntervalMs
         : undefined,
     onLog: options.onLog,
   })
