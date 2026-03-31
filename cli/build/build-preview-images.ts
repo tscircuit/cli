@@ -7,6 +7,7 @@ import {
   convertCircuitJsonToSchematicSvg,
 } from "circuit-to-svg"
 import { getCircuitJsonToGltfOptions } from "lib/shared/get-circuit-json-to-gltf-options"
+import type { PcbSnapshotSettings } from "lib/project-config/project-config-schema"
 import { renderGLTFToPNGBufferFromGLBBuffer } from "poppygl"
 import { convertModelUrlsToFileUrls } from "./convert-model-urls-to-file-urls"
 import type { BuildImageFormatSelection } from "./image-format-selection"
@@ -71,11 +72,13 @@ const generatePreviewAssets = async ({
   outputDir,
   distDir,
   imageFormats,
+  pcbSnapshotSettings,
 }: {
   build: BuildFileResult
   outputDir: string
   distDir: string
   imageFormats: BuildImageFormatSelection
+  pcbSnapshotSettings?: PcbSnapshotSettings
 }) => {
   const prefixRelative = path.relative(distDir, outputDir) || "."
   const prefix = prefixRelative === "." ? "" : `[${prefixRelative}] `
@@ -94,7 +97,10 @@ const generatePreviewAssets = async ({
   if (imageFormats.pcbSvgs) {
     try {
       console.log(`${prefix}Generating PCB SVG...`)
-      const pcbSvg = convertCircuitJsonToPcbSvg(circuitJson)
+      const pcbSvg = convertCircuitJsonToPcbSvg(
+        circuitJson,
+        pcbSnapshotSettings,
+      )
       fs.writeFileSync(path.join(outputDir, "pcb.svg"), pcbSvg, "utf-8")
       console.log(`${prefix}Written pcb.svg`)
     } catch (error) {
@@ -105,7 +111,10 @@ const generatePreviewAssets = async ({
   if (imageFormats.pcbPngs) {
     try {
       console.log(`${prefix}Generating PCB PNG...`)
-      const pcbSvg = convertCircuitJsonToPcbSvg(circuitJson)
+      const pcbSvg = convertCircuitJsonToPcbSvg(
+        circuitJson,
+        pcbSnapshotSettings,
+      )
       fs.writeFileSync(
         path.join(outputDir, "pcb.png"),
         await convertSvgToPngBuffer(pcbSvg),
@@ -160,6 +169,7 @@ export const buildPreviewImages = async ({
   previewComponentPath,
   allImages,
   imageFormats,
+  pcbSnapshotSettings,
 }: {
   builtFiles: BuildFileResult[]
   distDir: string
@@ -167,6 +177,7 @@ export const buildPreviewImages = async ({
   previewComponentPath?: string
   allImages?: boolean
   imageFormats: BuildImageFormatSelection
+  pcbSnapshotSettings?: PcbSnapshotSettings
 }) => {
   const successfulBuilds = builtFiles.filter((file) => file.ok)
   // previewComponentPath takes precedence over mainEntrypoint for preview images
@@ -190,6 +201,7 @@ export const buildPreviewImages = async ({
         outputDir,
         distDir,
         imageFormats,
+        pcbSnapshotSettings,
       })
     }
     return
@@ -215,6 +227,7 @@ export const buildPreviewImages = async ({
   await generatePreviewAssets({
     build: previewBuild,
     outputDir: path.dirname(previewBuild.outputPath),
+    pcbSnapshotSettings,
     distDir,
     imageFormats,
   })

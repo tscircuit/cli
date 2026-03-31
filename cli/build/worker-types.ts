@@ -1,4 +1,5 @@
 import type { PlatformConfig } from "@tscircuit/props"
+import type { PcbSnapshotSettings } from "lib/project-config/project-config-schema"
 import type { DrcIgnoreCounts, DrcIgnoreOptions } from "./drc-diagnostic-filter"
 import type { BuildImageFormatSelection } from "./image-format-selection"
 
@@ -21,6 +22,7 @@ export type BuildFileMessage = {
       injectedProps?: Record<string, unknown>
       generatePreviewAssets?: boolean
       imageFormats?: BuildImageFormatSelection
+      pcbSnapshotSettings?: PcbSnapshotSettings
     }
 }
 
