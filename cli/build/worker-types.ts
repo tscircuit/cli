@@ -57,6 +57,7 @@ export type BuildCompletedMessage = {
 export type WorkerLogMessage = {
   message_type: "worker_log"
   log_lines: string[]
+  status_line?: string | null
 }
 
 /**

@@ -1,10 +1,10 @@
-import { getVirtualFileSystemFromDirPath } from "make-vfs"
-import path from "node:path"
 import fs from "node:fs"
+import path from "node:path"
 import { pathToFileURL } from "node:url"
-import Debug from "debug"
 import type { PlatformConfig } from "@tscircuit/props"
+import Debug from "debug"
 import { abbreviateStringifyObject } from "lib/utils/abbreviate-stringify-object"
+import { getVirtualFileSystemFromDirPath } from "make-vfs"
 import { importFromUserLand } from "./importFromUserLand"
 
 const debug = Debug("tsci:generate-circuit-json")
@@ -28,6 +28,7 @@ type GenerateCircuitJsonOptions = {
   saveToFile?: boolean
   platformConfig?: PlatformConfig
   injectedProps?: Record<string, unknown>
+  onAsyncEffectStatus?: (asyncEffectName: string) => void
 }
 
 /**
@@ -43,6 +44,7 @@ export async function generateCircuitJson({
   saveToFile = false,
   platformConfig,
   injectedProps,
+  onAsyncEffectStatus,
 }: GenerateCircuitJsonOptions) {
   debug(`Generating circuit JSON for ${filePath}`)
 
@@ -124,8 +126,26 @@ export async function generateCircuitJson({
 
   runner.add(<Component {...(injectedProps ?? {})} />)
 
-  // Wait for the circuit to be fully rendered
-  await runner.renderUntilSettled()
+  runner.render()
+
+  const loggedAsyncEffectNames = new Set<string>()
+
+  while (runner._hasIncompleteAsyncEffects()) {
+    for (const asyncEffect of runner.getRunningAsyncEffects()) {
+      const asyncEffectName = asyncEffect.effectName
+      if (!asyncEffectName || loggedAsyncEffectNames.has(asyncEffectName)) {
+        continue
+      }
+
+      loggedAsyncEffectNames.add(asyncEffectName)
+      onAsyncEffectStatus?.(asyncEffectName)
+    }
+
+    await new Promise((resolve) => setTimeout(resolve, 100))
+    runner.render()
+  }
+
+  runner.emit("renderComplete")
 
   // Get the circuit JSON
   const circuitJson = await runner.getCircuitJson()
@@ -139,5 +159,6 @@ export async function generateCircuitJson({
   return {
     circuitJson,
     outputPath,
+    rootCircuit: runner,
   }
 }

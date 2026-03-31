@@ -12,6 +12,7 @@ type ThreadWorker<TJob, TResult> = {
   currentJob: QueuedJob<TJob, TResult> | null
   currentJobStartedAt: number | null
   timeoutId: NodeJS.Timeout | null
+  currentStatus: string | null
 }
 
 type ThreadWorkerPoolOptions<TJob, TWorkerInput, TWorkerOutput, TResult> = {
@@ -20,6 +21,7 @@ type ThreadWorkerPoolOptions<TJob, TWorkerInput, TWorkerOutput, TResult> = {
   createMessage: (job: TJob) => TWorkerInput
   isLogMessage: (message: TWorkerOutput) => boolean
   getLogLines: (message: TWorkerOutput) => string[]
+  getStatusLine?: (message: TWorkerOutput) => string | null
   isCompletionMessage: (message: TWorkerOutput) => boolean
   getResult: (message: TWorkerOutput) => TResult
   shouldStopOnMessage?: (message: TWorkerOutput) => boolean
@@ -116,7 +118,10 @@ export class ThreadWorkerPool<TJob, TWorkerInput, TWorkerOutput, TResult> {
 
         const runningForMs = now - worker.currentJobStartedAt
         const jobDescription = this.describeJob(worker.currentJob.job)
-        return `w${index}:busy task=${jobDescription} running_ms=${runningForMs}`
+        const statusSuffix = worker.currentStatus
+          ? ` status=${worker.currentStatus}`
+          : ""
+        return `w${index}:busy task=${jobDescription} running_ms=${runningForMs}${statusSuffix}`
       })
 
       this.options.onLog?.([
@@ -143,6 +148,7 @@ export class ThreadWorkerPool<TJob, TWorkerInput, TWorkerOutput, TResult> {
       currentJob: null,
       currentJobStartedAt: null,
       timeoutId: null,
+      currentStatus: null,
     }
 
     this.attachWorkerHandlers(threadWorker)
@@ -203,6 +209,7 @@ export class ThreadWorkerPool<TJob, TWorkerInput, TWorkerOutput, TResult> {
     threadWorker.busy = false
     threadWorker.currentJob = null
     threadWorker.currentJobStartedAt = null
+    threadWorker.currentStatus = null
 
     this.attachWorkerHandlers(threadWorker)
   }
@@ -219,6 +226,7 @@ export class ThreadWorkerPool<TJob, TWorkerInput, TWorkerOutput, TResult> {
     this.clearWorkerTimeout(threadWorker)
     threadWorker.currentJob = null
     threadWorker.currentJobStartedAt = null
+    threadWorker.currentStatus = null
     threadWorker.busy = false
     action(job)
     this.processQueue()
@@ -235,6 +243,8 @@ export class ThreadWorkerPool<TJob, TWorkerInput, TWorkerOutput, TResult> {
       }
 
       if (this.options.isLogMessage(message)) {
+        threadWorker.currentStatus =
+          this.options.getStatusLine?.(message) ?? null
         this.options.onLog?.(this.options.getLogLines(message))
         return
       }
@@ -306,6 +316,7 @@ export class ThreadWorkerPool<TJob, TWorkerInput, TWorkerOutput, TResult> {
     availableWorker.busy = true
     availableWorker.currentJob = queuedJob
     availableWorker.currentJobStartedAt = Date.now()
+    availableWorker.currentStatus = null
     this.startJobTimeout(availableWorker)
     availableWorker.worker.postMessage(
       this.options.createMessage(queuedJob.job),

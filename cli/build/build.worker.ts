@@ -25,6 +25,14 @@ const workerLog = (...args: unknown[]) => {
   })
 }
 
+const workerStatus = (statusLine: string | null) => {
+  sendMessage({
+    message_type: "worker_log",
+    log_lines: [],
+    status_line: statusLine,
+  })
+}
+
 parentPort.on("message", async (msg: WorkerInputMessage) => {
   if (msg.message_type === "build_file") {
     const result = await handleBuildFile(
@@ -35,6 +43,7 @@ parentPort.on("message", async (msg: WorkerInputMessage) => {
       msg.project_dir,
       msg.options,
       workerLog,
+      workerStatus,
     )
     sendMessage(result)
   }
