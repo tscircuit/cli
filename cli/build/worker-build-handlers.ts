@@ -125,6 +125,7 @@ export const handleBuildFile = async (
         await writeImageAssetsFromCircuitJson(circuitJson, {
           outputDir: resolvedPreviewOutputDir,
           imageFormats: options?.imageFormats ?? DEFAULT_IMAGE_FORMAT_SELECTION,
+          pcbSnapshotSettings: options?.pcbSnapshotSettings,
         })
         previewOk = true
       } catch (err) {

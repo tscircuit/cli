@@ -2,6 +2,7 @@ import fs from "node:fs"
 import path from "node:path"
 import type { PlatformConfig } from "@tscircuit/props"
 import { ThreadWorkerPool } from "lib/shared/thread-worker-pool"
+import type { PcbSnapshotSettings } from "lib/project-config/project-config-schema"
 import type { DrcIgnoreOptions } from "./drc-diagnostic-filter"
 import type { BuildImageFormatSelection } from "./image-format-selection"
 import type {
@@ -26,6 +27,7 @@ type BuildJob = {
       injectedProps?: Record<string, unknown>
       generatePreviewAssets?: boolean
       imageFormats?: BuildImageFormatSelection
+      pcbSnapshotSettings?: PcbSnapshotSettings
     }
 }
 
@@ -68,6 +70,7 @@ export async function buildFilesWithWorkerPool(options: {
       injectedProps?: Record<string, unknown>
       generatePreviewAssets?: boolean
       imageFormats?: BuildImageFormatSelection
+      pcbSnapshotSettings?: PcbSnapshotSettings
     }
   onLog?: (lines: string[]) => void
   onJobComplete?: (result: BuildJobResult) => void

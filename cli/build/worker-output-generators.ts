@@ -8,6 +8,7 @@ import {
 } from "circuit-to-svg"
 import { renderGLTFToPNGBufferFromGLBBuffer } from "poppygl"
 import { getCircuitJsonToGltfOptions } from "../../lib/shared/get-circuit-json-to-gltf-options"
+import type { PcbSnapshotSettings } from "../../lib/project-config/project-config-schema"
 import { convertModelUrlsToFileUrls } from "./convert-model-urls-to-file-urls"
 import {
   normalizeToArrayBuffer,
@@ -36,18 +37,19 @@ export const writeImageAssetsFromCircuitJson = async (
   options: {
     outputDir: string
     imageFormats: BuildImageFormatSelection
+    pcbSnapshotSettings?: PcbSnapshotSettings
   },
 ) => {
-  const { outputDir, imageFormats } = options
+  const { outputDir, imageFormats, pcbSnapshotSettings } = options
   fs.mkdirSync(outputDir, { recursive: true })
 
   if (imageFormats.pcbSvgs) {
-    const pcbSvg = convertCircuitJsonToPcbSvg(circuitJson)
+    const pcbSvg = convertCircuitJsonToPcbSvg(circuitJson, pcbSnapshotSettings)
     fs.writeFileSync(path.join(outputDir, "pcb.svg"), pcbSvg, "utf-8")
   }
 
   if (imageFormats.pcbPngs) {
-    const pcbSvg = convertCircuitJsonToPcbSvg(circuitJson)
+    const pcbSvg = convertCircuitJsonToPcbSvg(circuitJson, pcbSnapshotSettings)
     fs.writeFileSync(
       path.join(outputDir, "pcb.png"),
       await convertSvgToPngBuffer(pcbSvg),

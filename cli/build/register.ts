@@ -356,6 +356,7 @@ export const registerBuild = (program: Command) => {
           injectedProps,
           generatePreviewAssets: false,
           imageFormats: imageFormatSelection,
+          pcbSnapshotSettings: projectConfig?.pcbSnapshotSettings,
         }
 
         const shouldGeneratePreviewImages = Boolean(
@@ -671,6 +672,7 @@ export const registerBuild = (program: Command) => {
               previewComponentPath,
               allImages: shouldGenerateAllPreviewImages,
               imageFormats: imageFormatSelection,
+              pcbSnapshotSettings: projectConfig?.pcbSnapshotSettings,
             })
           }
         }
