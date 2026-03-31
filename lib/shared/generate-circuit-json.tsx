@@ -28,7 +28,7 @@ type GenerateCircuitJsonOptions = {
   saveToFile?: boolean
   platformConfig?: PlatformConfig
   injectedProps?: Record<string, unknown>
-  onAsyncEffectsHeartbeat?: (runningAsyncEffectsCount: number) => void
+  onAsyncEffectsHeartbeat?: (runningAsyncEffectsPhase: string) => void
   asyncEffectsHeartbeatIntervalMs?: number
 }
 
@@ -141,12 +141,25 @@ export async function generateCircuitJson({
       try {
         const runningAsyncEffects =
           runnerWithAsyncEffects.getRunningAsyncEffects?.()
-        const runningAsyncEffectsCount = Array.isArray(runningAsyncEffects)
-          ? runningAsyncEffects.length
-          : 0
-        onAsyncEffectsHeartbeat(runningAsyncEffectsCount)
+        const runningAsyncEffectsPhase = Array.isArray(runningAsyncEffects)
+          ? runningAsyncEffects
+              .map((asyncEffect) => {
+                if (
+                  typeof asyncEffect === "object" &&
+                  asyncEffect !== null &&
+                  "phase" in asyncEffect
+                ) {
+                  return String((asyncEffect as { phase: unknown }).phase)
+                }
+
+                return null
+              })
+              .filter((phase): phase is string => phase !== null)
+              .join(",") || "none"
+          : "none"
+        onAsyncEffectsHeartbeat(runningAsyncEffectsPhase)
       } catch {
-        onAsyncEffectsHeartbeat(0)
+        onAsyncEffectsHeartbeat("unknown")
       }
     }, asyncEffectsHeartbeatIntervalMs)
 

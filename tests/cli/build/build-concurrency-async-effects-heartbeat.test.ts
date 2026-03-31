@@ -39,7 +39,7 @@ test("build with --concurrency prints async effects status in worker stdio heart
 
     expect(exitCode).toBe(0)
     expect(stdout).toContain("[worker-async-effects]")
-    expect(stdout).toContain("running_async_effects=")
+    expect(stdout).toContain("running_async_effect_phase=")
   } finally {
     if (previousAsyncEffectsHeartbeatInterval === undefined) {
       process.env.TSCIRCUIT_BUILD_ASYNC_EFFECTS_HEARTBEAT_INTERVAL_MS =

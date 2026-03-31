@@ -71,9 +71,9 @@ export const handleBuildFile = async (
               asyncEffectsHeartbeatIntervalMs > 0
                 ? asyncEffectsHeartbeatIntervalMs
                 : 200,
-            onAsyncEffectsHeartbeat: (runningAsyncEffectsCount) => {
+            onAsyncEffectsHeartbeat: (runningAsyncEffectsPhase) => {
               workerLog(
-                `[worker-async-effects] file=${relativeFilePath} running_async_effects=${runningAsyncEffectsCount}`,
+                `[worker-async-effects] file=${relativeFilePath} running_async_effect_phase=${runningAsyncEffectsPhase}`,
               )
             },
           })
