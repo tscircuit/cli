@@ -21,6 +21,7 @@ export const registerSnapshot = (program: Command) => {
     .option("--pcb-only", "Generate only PCB snapshots")
     .option("--schematic-only", "Generate only schematic snapshots")
     .option("--disable-parts-engine", "Disable the parts engine")
+    .option("--show-courtyards", "Show courtyard outlines in PCB snapshots")
     .option(
       "--camera-preset <preset>",
       `Camera angle preset for 3D snapshots (implies --3d). Valid presets: ${CAMERA_PRESET_NAMES.join(", ")}`,
@@ -42,6 +43,7 @@ export const registerSnapshot = (program: Command) => {
           schematicOnly?: boolean
           forceUpdate?: boolean
           disablePartsEngine?: boolean
+          showCourtyards?: boolean
           cameraPreset?: string
           ci?: boolean
           test?: boolean
@@ -71,6 +73,9 @@ export const registerSnapshot = (program: Command) => {
           filePaths: target ? [target] : [],
           platformConfig: options.disablePartsEngine
             ? { partsEngineDisabled: true }
+            : undefined,
+          pcbSnapshotSettingsOverride: options.showCourtyards
+            ? { showCourtyards: true }
             : undefined,
           cameraPreset: options.cameraPreset as CameraPreset | undefined,
           createDiff: (options.ci ?? false) || (options.test ?? false),

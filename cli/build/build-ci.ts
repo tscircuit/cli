@@ -40,6 +40,7 @@ export interface BuildCommandOptions {
   "3dPng"?: boolean
   pcbOnly?: boolean
   schematicOnly?: boolean
+  showCourtyards?: boolean
 }
 
 const runCommand = (command: string, cwd: string) => {

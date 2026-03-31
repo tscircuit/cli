@@ -8,6 +8,7 @@ import {
   getSnapshotsDir,
   loadProjectConfig,
 } from "lib/project-config"
+import type { PcbSnapshotSettings } from "lib/project-config/project-config-schema"
 import type { CameraPreset } from "lib/shared/camera-presets"
 import { findBoardFiles } from "lib/shared/find-board-files"
 import { processSnapshotFile } from "lib/shared/process-snapshot-file"
@@ -31,6 +32,8 @@ type SnapshotOptions = {
   forceUpdate?: boolean
   /** Optional platform configuration overrides */
   platformConfig?: PlatformConfig
+  /** Overrides pcbSnapshotSettings from project config (merged on top) */
+  pcbSnapshotSettingsOverride?: PcbSnapshotSettings
   /** Create visual diff artifacts when snapshots mismatch */
   createDiff?: boolean
   /** Camera preset name for 3D snapshots (implies --3d) */
@@ -63,6 +66,7 @@ export const snapshotProject = async ({
   onError = (msg) => console.error(msg),
   onSuccess = (msg) => console.log(msg),
   platformConfig,
+  pcbSnapshotSettingsOverride,
   createDiff = false,
   cameraPreset,
   concurrency = 1,
@@ -117,6 +121,9 @@ export const snapshotProject = async ({
   }
 
   const snapshotsDirName = getSnapshotsDir(projectDir)
+  const pcbSnapshotSettings = pcbSnapshotSettingsOverride
+    ? { ...projectConfig?.pcbSnapshotSettings, ...pcbSnapshotSettingsOverride }
+    : projectConfig?.pcbSnapshotSettings
   const mismatches: string[] = []
   let didUpdate = false
 
@@ -156,7 +163,7 @@ export const snapshotProject = async ({
           schematicOnly,
           forceUpdate,
           platformConfig,
-          pcbSnapshotSettings: projectConfig?.pcbSnapshotSettings,
+          pcbSnapshotSettings,
           createDiff,
           cameraPreset,
         },
@@ -198,7 +205,7 @@ export const snapshotProject = async ({
         schematicOnly,
         forceUpdate,
         platformConfig,
-        pcbSnapshotSettings: projectConfig?.pcbSnapshotSettings,
+        pcbSnapshotSettings,
         createDiff,
         cameraPreset,
       })
