@@ -15,6 +15,7 @@ import {
 import type { BuildCompletedMessage, BuildFileMessage } from "./worker-types"
 
 type WorkerLogger = (...args: unknown[]) => void
+type WorkerStatusReporter = (statusLine: string | null) => void
 
 const loadCircuitJsonFromInputFile = (
   filePath: string,
@@ -31,6 +32,7 @@ export const handleBuildFile = async (
   projectDir: string,
   options: BuildFileMessage["options"],
   workerLog: WorkerLogger,
+  workerStatus: WorkerStatusReporter,
 ): Promise<BuildCompletedMessage> => {
   const errors: string[] = []
   const warnings: string[] = []
@@ -61,6 +63,9 @@ export const handleBuildFile = async (
             filePath,
             platformConfig: completePlatformConfig,
             injectedProps: options?.injectedProps,
+            onAsyncEffectStatus: (asyncEffectName) => {
+              workerStatus(`waiting on ${asyncEffectName}…`)
+            },
           })
         ).circuitJson
 
@@ -176,5 +181,7 @@ export const handleBuildFile = async (
       warnings,
       durationMs: options?.profile ? performance.now() - startedAt : undefined,
     }
+  } finally {
+    workerStatus(null)
   }
 }

@@ -1,8 +1,8 @@
 import fs from "node:fs"
 import path from "node:path"
 import type { PlatformConfig } from "@tscircuit/props"
-import { ThreadWorkerPool } from "lib/shared/thread-worker-pool"
 import type { PcbSnapshotSettings } from "lib/project-config/project-config-schema"
+import { ThreadWorkerPool } from "lib/shared/thread-worker-pool"
 import type { DrcIgnoreOptions } from "./drc-diagnostic-filter"
 import type { BuildImageFormatSelection } from "./image-format-selection"
 import type {
@@ -106,6 +106,10 @@ export async function buildFilesWithWorkerPool(options: {
     isLogMessage: (message) => message.message_type === "worker_log",
     getLogLines: (message) =>
       message.message_type === "worker_log" ? message.log_lines : [],
+    getStatusLine: (message) =>
+      message.message_type === "worker_log"
+        ? (message.status_line ?? null)
+        : null,
     isCompletionMessage: (message) =>
       message.message_type === "build_completed",
     getResult: (message) => {
@@ -141,6 +145,7 @@ export async function buildFilesWithWorkerPool(options: {
         ? workerJobTimeoutMs
         : undefined,
     onLog: options.onLog,
+    heartbeatIntervalMs: 100,
   })
 
   const results: BuildJobResult[] = []
