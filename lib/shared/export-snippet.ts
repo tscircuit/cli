@@ -2,6 +2,7 @@ import fs from "node:fs"
 import path from "node:path"
 import { promisify } from "node:util"
 import type { PlatformConfig } from "@tscircuit/props"
+import type { PcbSnapshotSettings } from "lib/project-config/project-config-schema"
 import { importFromUserLand } from "./importFromUserLand"
 import type { AnyCircuitElement } from "circuit-json"
 import { convertCircuitJsonToGltf } from "circuit-json-to-gltf"
@@ -83,6 +84,7 @@ type ExportOptions = {
   writeFile?: boolean
   outputPath?: string
   platformConfig?: PlatformConfig
+  pcbSnapshotSettings?: PcbSnapshotSettings
   onExit?: (code: number) => void
   onError?: (message: string) => void
   onSuccess: (data: {
@@ -96,6 +98,7 @@ export const exportSnippet = async ({
   format,
   outputPath,
   platformConfig,
+  pcbSnapshotSettings,
   writeFile = true,
   onExit = (code) => process.exit(code),
   onError = (message) => console.error(message),
@@ -173,7 +176,10 @@ export const exportSnippet = async ({
       outputContent = convertCircuitJsonToSchematicSvg(circuitJson)
       break
     case "pcb-svg":
-      outputContent = convertCircuitJsonToPcbSvg(circuitJson)
+      outputContent = convertCircuitJsonToPcbSvg(
+        circuitJson,
+        pcbSnapshotSettings,
+      )
       break
     case "specctra-dsn":
       outputContent = convertCircuitJsonToDsnString(circuitJson)

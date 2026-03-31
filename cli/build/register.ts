@@ -174,6 +174,7 @@ export const registerBuild = (program: Command) => {
       "--preview-gltf",
       "Generate a GLTF file from the preview entrypoint",
     )
+    .option("--show-courtyards", "Show courtyard outlines in PCB SVG outputs")
     .option("--glbs", "Generate GLB 3D model files for every successful build")
     .option(
       "--profile",
@@ -356,7 +357,9 @@ export const registerBuild = (program: Command) => {
           injectedProps,
           generatePreviewAssets: false,
           imageFormats: imageFormatSelection,
-          pcbSnapshotSettings: projectConfig?.pcbSnapshotSettings,
+          pcbSnapshotSettings: resolvedOptions?.showCourtyards
+            ? { ...projectConfig?.pcbSnapshotSettings, showCourtyards: true }
+            : projectConfig?.pcbSnapshotSettings,
         }
 
         const shouldGeneratePreviewImages = Boolean(
@@ -672,7 +675,12 @@ export const registerBuild = (program: Command) => {
               previewComponentPath,
               allImages: shouldGenerateAllPreviewImages,
               imageFormats: imageFormatSelection,
-              pcbSnapshotSettings: projectConfig?.pcbSnapshotSettings,
+              pcbSnapshotSettings: resolvedOptions?.showCourtyards
+                ? {
+                    ...projectConfig?.pcbSnapshotSettings,
+                    showCourtyards: true,
+                  }
+                : projectConfig?.pcbSnapshotSettings,
             })
           }
         }

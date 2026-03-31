@@ -21,6 +21,7 @@ export const registerExport = (program: Command) => {
     )
     .option("-o, --output <path>", "Output file path")
     .option("--disable-parts-engine", "Disable the parts engine")
+    .option("--show-courtyards", "Show courtyard outlines in PCB SVG output")
     .action(
       async (
         file,
@@ -28,6 +29,7 @@ export const registerExport = (program: Command) => {
           format?: string
           output?: string
           disablePartsEngine?: boolean
+          showCourtyards?: boolean
         },
       ) => {
         const formatOption = options.format ?? "json"
@@ -78,6 +80,9 @@ export const registerExport = (program: Command) => {
           format,
           outputPath: options.output,
           platformConfig,
+          pcbSnapshotSettings: options.showCourtyards
+            ? { showCourtyards: true }
+            : undefined,
           onExit: (code) => process.exit(code),
           onError: (message) => console.error(message),
           onSuccess: ({ outputDestination }) =>
