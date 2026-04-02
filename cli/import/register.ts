@@ -32,7 +32,7 @@ export const registerImport = (program: Command) => {
         const query = getQueryFromParts(queryParts)
         const hasFilters = opts.jlcpcb || opts.lcsc || opts.tscircuit
         const searchJlc = opts.jlcpcb || opts.lcsc || !hasFilters
-        const searchTscircuit = opts.tscircuit
+        const searchTscircuit = opts.tscircuit || !hasFilters
         const ky = getRegistryApiKy()
         const spinner = ora({
           text: "Searching...",
