@@ -14,7 +14,10 @@ export default () => (
 test("build fails with multiple errors and shows them in output", async () => {
   const { tmpDir, runCommand } = await getCliTestFixture()
 
-  await writeFile(path.join(tmpDir, "test.circuit.tsx"), circuitWithMultipleErrors)
+  await writeFile(
+    path.join(tmpDir, "test.circuit.tsx"),
+    circuitWithMultipleErrors,
+  )
   await writeFile(path.join(tmpDir, "package.json"), "{}")
 
   const { exitCode, stdout, stderr } = await runCommand("tsci build")
