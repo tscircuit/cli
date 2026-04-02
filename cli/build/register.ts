@@ -366,15 +366,15 @@ export const registerBuild = (program: Command) => {
           (resolvedOptions?.previewImages ||
             resolvedOptions?.allImages ||
             hasExplicitImageFormatSelection) &&
-            hasAnyImageFormatSelected(imageFormatSelection),
+          hasAnyImageFormatSelected(imageFormatSelection),
         )
         const shouldGenerateAllPreviewImages = Boolean(
           resolvedOptions?.allImages,
         )
         const shouldGeneratePreviewAssetsInWorker = Boolean(
           resolvedOptions?.ci &&
-            concurrencyValue > 1 &&
-            shouldGeneratePreviewImages,
+          concurrencyValue > 1 &&
+          shouldGeneratePreviewImages,
         )
         buildOptions.generatePreviewAssets = shouldGeneratePreviewAssetsInWorker
 
@@ -460,7 +460,7 @@ export const registerBuild = (program: Command) => {
               const projectName = path.basename(outputDirName)
               const shouldWriteKicadFiles = Boolean(
                 resolvedOptions?.kicadProject ||
-                  resolvedOptions?.kicadProjectZip,
+                resolvedOptions?.kicadProjectZip,
               )
               const project = await generateKicadProject({
                 circuitJson,
@@ -678,9 +678,9 @@ export const registerBuild = (program: Command) => {
               imageFormats: imageFormatSelection,
               pcbSnapshotSettings: resolvedOptions?.showCourtyards
                 ? {
-                    ...projectConfig?.pcbSnapshotSettings,
-                    showCourtyards: true,
-                  }
+                  ...projectConfig?.pcbSnapshotSettings,
+                  showCourtyards: true,
+                }
                 : projectConfig?.pcbSnapshotSettings,
             })
           }
@@ -726,8 +726,8 @@ export const registerBuild = (program: Command) => {
             : undefined
           const fileArgIsDirectFile = Boolean(
             resolvedFileArgPath &&
-              fs.existsSync(resolvedFileArgPath) &&
-              fs.statSync(resolvedFileArgPath).isFile(),
+            fs.existsSync(resolvedFileArgPath) &&
+            fs.statSync(resolvedFileArgPath).isFile(),
           )
           const entryFile = fileArgIsDirectFile
             ? resolvedFileArgPath
@@ -797,9 +797,9 @@ export const registerBuild = (program: Command) => {
           const entryFile =
             projectConfig?.kicadLibraryEntrypointPath != null
               ? await getEntrypoint({
-                  filePath: projectConfig.kicadLibraryEntrypointPath,
-                  projectDir,
-                })
+                filePath: projectConfig.kicadLibraryEntrypointPath,
+                projectDir,
+              })
               : kicadEntrypoint
           if (!entryFile) {
             console.error(
@@ -846,9 +846,9 @@ export const registerBuild = (program: Command) => {
           const entryFile =
             projectConfig?.kicadLibraryEntrypointPath != null
               ? await getEntrypoint({
-                  filePath: projectConfig.kicadLibraryEntrypointPath,
-                  projectDir,
-                })
+                filePath: projectConfig.kicadLibraryEntrypointPath,
+                projectDir,
+              })
               : kicadEntrypoint
 
           if (!entryFile) {
@@ -893,7 +893,7 @@ export const registerBuild = (program: Command) => {
           resolvedOptions?.transpile && "transpile",
           resolvedOptions?.ignoreNetlistDrc && "ignore-netlist-drc",
           resolvedOptions?.ignorePinSpecificationDrc &&
-            "ignore-pin-specification-drc",
+          "ignore-pin-specification-drc",
           resolvedOptions?.ignorePlacementDrc && "ignore-placement-drc",
           resolvedOptions?.ignoreRoutingDrc && "ignore-routing-drc",
           resolvedOptions?.previewImages && "preview-images",
@@ -962,7 +962,7 @@ export const registerBuild = (program: Command) => {
           exitBuild(
             1,
             hasFatalErrors
-              ? "fatal circuit build errors occurred"
+              ? "fatal build finished with errors"
               : "build finished with errors",
           )
         }

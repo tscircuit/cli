@@ -46,7 +46,7 @@ test("build fails with multiple errors and shows them in output", async () => {
     Component R1 extends outside board boundaries by 3mm. Try moving it 3.78mm left to fit within the board edge.
     Component R2 extends outside board boundaries by 5mm. Try moving it 5.78mm right to fit within the board edge.
     Component R2 extends outside board boundaries by 5mm. Try moving it 5.78mm right to fit within the board edge.
-    Build exiting with code 1: circuit build errors occurred
+    Build exiting with code 1: build finished with errors
     "
   `)
 }, 30_000)

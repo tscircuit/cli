@@ -60,7 +60,7 @@ test("build reports ignored counts when selected DRC categories are filtered", a
   Ignored DRC 2 (placement: 1, routing: 1)
 ⚠ Build completed with errors
 netlist issue
-Build exiting with code 1: circuit build errors occurred"
+Build exiting with code 1: build finished with errors"
 `)
 }, 30_000)
 
