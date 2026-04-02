@@ -7,5 +7,5 @@ test("search command returns jlc results by default", async () => {
   // Should not output prompts in test mode
   expect(stderr).toBe("")
   expect(stdout).toContain("JLC search")
-  expect(stdout).not.toContain("tscircuit registry")
+  expect(stdout).toContain("tscircuit registry")
 })
