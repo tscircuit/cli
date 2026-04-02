@@ -963,7 +963,7 @@ export const registerBuild = (program: Command) => {
             1,
             hasFatalErrors
               ? "fatal circuit build errors occurred"
-              : "circuit build errors occurred",
+              : "build finished with errors",
           )
         }
 
