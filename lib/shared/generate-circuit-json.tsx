@@ -50,7 +50,7 @@ export async function generateCircuitJson({
 
   // Import React and make it globally available for packages referencing it
   const React = await importFromUserLand("react")
-    ; (globalThis as any).React = React
+  ;(globalThis as any).React = React
   const userLandTscircuit = await importFromUserLand("tscircuit")
 
   const runner = new userLandTscircuit.RootCircuit({
@@ -110,12 +110,12 @@ export async function generateCircuitJson({
   const Component =
     MainComponent.default ||
     (Object.keys(MainComponent).find((k) => k[0] === k[0].toUpperCase()) !==
-      undefined
+    undefined
       ? MainComponent[
-      Object.keys(MainComponent).find(
-        (k) => k[0] === k[0].toUpperCase(),
-      ) as keyof typeof MainComponent
-      ]
+          Object.keys(MainComponent).find(
+            (k) => k[0] === k[0].toUpperCase(),
+          ) as keyof typeof MainComponent
+        ]
       : undefined)
 
   if (!Component) {

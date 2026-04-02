@@ -1,0 +1,5 @@
+Coordinate "Guess-and-Check" Purgatory: Moving components on a board currently requires manually editing pcbX/pcbY in code. The interactive UI allows dragging, but these changes never sync back to the source file.
+The "Vanishing Trace" (Silent Net Failures): Spelling a pin name wrong (e.g. .VCC vs .VIN) results in a trace silently failing to appear in the preview, with no linting errors, warnings, or terminal logs.
+The "Analog Black Hole" (Discoverability Failure): tsci simulate silently exits with no output, masking the mandatory (and undocumented) analog subcommand.
+"Pin Name Blindness": After tsci add, there is no way to see a component's pin names or metadata without manually digging into the node_modules source code.
+The "Red Squiggle Board" (IDE Support Failure): tsci init projects start with "Cannot find name 'board'" type errors in VS Code because the environment isn't linked correctly for a new user.
