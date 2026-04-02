@@ -17,6 +17,7 @@ export interface BuildFileResult {
   sourcePath: string
   outputPath: string
   ok: boolean
+  hasErrors?: boolean
 }
 
 const viewToArrayBuffer = (view: ArrayBufferView): ArrayBuffer => {

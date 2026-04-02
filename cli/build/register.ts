@@ -403,6 +403,7 @@ export const registerBuild = (program: Command) => {
             sourcePath: filePath,
             outputPath,
             ok: buildOutcome.ok,
+            hasErrors: buildOutcome.hasErrors,
           })
 
           if (buildOutcome.hasErrors) {
@@ -877,10 +878,16 @@ export const registerBuild = (program: Command) => {
         }
 
         // Fatal errors (e.g., circuit generation exceptions) always cause exit code 1.
-        const shouldExitNonZero = hasFatalErrors
+        // Also exit code 1 if there were any build errors (e.g., autorouting failing).
+        const shouldExitNonZero = hasFatalErrors || hasErrors
 
         const successCount = builtFiles.filter((f) => f.ok).length
-        const failCount = builtFiles.length - successCount
+        const totalCount = builtFiles.length
+        const failCount = totalCount - successCount
+        const passedWithErrorsCount = builtFiles.filter(
+          (f) => f.ok && f.hasErrors,
+        ).length
+
         const enabledOpts = [
           resolvedOptions?.site && "site",
           resolvedOptions?.transpile && "transpile",
@@ -924,7 +931,7 @@ export const registerBuild = (program: Command) => {
         console.log("")
         console.log(kleur.bold("Build complete"))
         console.log(
-          `  Circuits  ${kleur.green(`${successCount} passed`)}${failCount > 0 ? kleur.red(` ${failCount} failed`) : ""}`,
+          `  Circuits  ${kleur.green(`${successCount - passedWithErrorsCount} passed`)}${passedWithErrorsCount > 0 ? kleur.red(` ${passedWithErrorsCount} with errors`) : ""}${failCount > 0 ? kleur.red(` ${failCount} failed`) : ""}`,
         )
         if (enabledOpts.length > 0) {
           console.log(`  Options   ${kleur.cyan(enabledOpts.join(", "))}`)
@@ -952,7 +959,12 @@ export const registerBuild = (program: Command) => {
             : kleur.green("\n✓ Done"),
         )
         if (shouldExitNonZero) {
-          exitBuild(1, "fatal circuit build errors occurred")
+          exitBuild(
+            1,
+            hasFatalErrors
+              ? "fatal circuit build errors occurred"
+              : "circuit build errors occurred",
+          )
         }
 
         exitBuild(0, "build finished successfully")
