@@ -47,19 +47,20 @@ test("build reports ignored counts when selected DRC categories are filtered", a
   )
   await writeFile(path.join(tmpDir, "package.json"), "{}")
 
-  const { exitCode, stdout } = await runCommand(
+  const { exitCode, stdout, stderr } = await runCommand(
     "tsci build board.circuit.json --ignore-placement-drc --ignore-routing-drc",
   )
 
-  expect(exitCode).toBe(0)
-  expect(getBuildSummarySnippet(stdout)).toMatchInlineSnapshot(`
+  expect(exitCode).toBe(1)
+  expect(getBuildSummarySnippet(stdout + stderr)).toMatchInlineSnapshot(`
 "Build complete
-  Circuits  1 passed
+  Circuits  0 passed 1 with errors
   Options   ignore-placement-drc, ignore-routing-drc
   Output    dist
   Ignored DRC 2 (placement: 1, routing: 1)
 ⚠ Build completed with errors
-Build exiting with code 0: build finished successfully"
+netlist issue
+Build exiting with code 1: circuit build errors occurred"
 `)
 }, 30_000)
 
