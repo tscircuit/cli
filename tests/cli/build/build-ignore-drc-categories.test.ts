@@ -38,7 +38,8 @@ const getBuildSummarySnippet = (stdout: string) => {
     .join("\n")
 }
 
-test("build reports ignored counts when selected DRC categories are filtered", async () => {
+// Placement and routing errors are ignored, but the unignored netlist error still causes exit code 1
+test("build exits non-zero when unignored DRC errors remain after filtering", async () => {
   const { tmpDir, runCommand } = await getCliTestFixture()
 
   await writeFile(
@@ -51,6 +52,7 @@ test("build reports ignored counts when selected DRC categories are filtered", a
     "tsci build board.circuit.json --ignore-placement-drc --ignore-routing-drc",
   )
 
+  // Exit code 1 because the netlist error is NOT covered by the ignore flags
   expect(exitCode).toBe(1)
   expect(getBuildSummarySnippet(stdout + stderr)).toMatchInlineSnapshot(`
 "Build complete

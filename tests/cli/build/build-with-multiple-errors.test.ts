@@ -11,6 +11,7 @@ export default () => (
   </board>
 )`
 
+// No --ignore-* flags used: DRC errors cause exit code 1 (use --ignore-errors or --ignore-*-drc to suppress)
 test("build fails with multiple errors and shows them in output", async () => {
   const { tmpDir, runCommand } = await getCliTestFixture()
 

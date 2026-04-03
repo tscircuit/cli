@@ -10,6 +10,7 @@ export default () => (
   </board>
 )`
 
+// No --ignore-* flags used: DRC errors cause exit code 1 by default.
 test("build fails when circuit JSON is generated with DRC errors", async () => {
   const { tmpDir, runCommand } = await getCliTestFixture()
 
@@ -31,4 +32,18 @@ test("build fails when circuit JSON is generated with DRC errors", async () => {
   expect(exitCode).toBe(1)
   expect(stdout).toContain("Build completed with errors")
   expect(stdout).toContain("0 passed 1 with errors")
+}, 30_000)
+
+// Proves --ignore-errors lets the build pass even with DRC errors.
+test("build succeeds with --ignore-errors despite DRC errors", async () => {
+  const { tmpDir, runCommand } = await getCliTestFixture()
+
+  await writeFile(path.join(tmpDir, "test.circuit.tsx"), validCircuitCode)
+  await writeFile(path.join(tmpDir, "package.json"), "{}")
+
+  const { exitCode, stdout } = await runCommand("tsci build --ignore-errors")
+
+  expect(exitCode).toBe(0)
+  expect(stdout).toContain("1 passed")
+  expect(stdout).not.toContain("with errors")
 }, 30_000)

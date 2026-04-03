@@ -877,8 +877,7 @@ export const registerBuild = (program: Command) => {
           }
         }
 
-        // Fatal errors (e.g., circuit generation exceptions) always cause exit code 1.
-        // Also exit code 1 if there were any build errors (e.g., autorouting failing).
+        // Exit non-zero on fatal errors or unignored DRC errors (--ignore-errors / --ignore-*-drc flags suppress accordingly)
         const shouldExitNonZero = hasFatalErrors || hasErrors
 
         const successCount = builtFiles.filter((f) => f.ok).length
