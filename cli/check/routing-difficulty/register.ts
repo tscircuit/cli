@@ -1,6 +1,7 @@
 import { analyzeRouting } from "@tscircuit/circuit-json-routing-analysis"
 import type { PlatformConfig } from "@tscircuit/props"
 import type { Command } from "commander"
+import path from "node:path"
 import { getCircuitJsonForCheck, resolveCheckInputFilePath } from "../shared"
 
 export const checkRoutingDifficulty = async (file?: string) => {
@@ -15,7 +16,11 @@ export const checkRoutingDifficulty = async (file?: string) => {
   })
 
   const analysis = await analyzeRouting(circuitJson)
-  return analysis.getString()
+  const result = analysis.getString()
+  if (!result) {
+    return `No congested regions in ${path.basename(resolvedInputFilePath)}`
+  }
+  return result
 }
 
 export const registerCheckRoutingDifficulty = (program: Command) => {
