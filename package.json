@@ -16,7 +16,7 @@
     "@tscircuit/image-utils": "^0.0.3",
     "@tscircuit/math-utils": "0.0.36",
     "@tscircuit/props": "^0.0.496",
-    "@tscircuit/runframe": "^0.0.1784",
+    "@tscircuit/runframe": "^0.0.1785",
     "@tscircuit/schematic-match-adapt": "^0.0.22",
     "@types/bun": "^1.2.2",
     "@types/configstore": "^6.0.2",
