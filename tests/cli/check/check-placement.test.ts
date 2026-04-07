@@ -91,7 +91,9 @@ test("check placement scopes placement DRC diagnostics to the requested refdes",
     expect(output).toContain("placement drc:")
     expect(output).toContain("Errors: 0")
     expect(output).toContain("Warnings: 0")
-    expect(output).not.toContain("Component R1 extends outside board boundaries")
+    expect(output).not.toContain(
+      "Component R1 extends outside board boundaries",
+    )
     expect(output).not.toContain("pcb_component_outside_board_error")
   } finally {
     await unlink(circuitPath)

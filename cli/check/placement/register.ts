@@ -130,13 +130,17 @@ const formatPlacementDiagnostics = ({
 
   if (errors.length > 0) {
     lines.push(
-      ...errors.map((issue) => `- ${getIssueType(issue)}: ${issue.message ?? ""}`),
+      ...errors.map(
+        (issue) => `- ${getIssueType(issue)}: ${issue.message ?? ""}`,
+      ),
     )
   }
 
   if (warnings.length > 0) {
     lines.push(
-      ...warnings.map((issue) => `- ${getIssueType(issue)}: ${issue.message ?? ""}`),
+      ...warnings.map(
+        (issue) => `- ${getIssueType(issue)}: ${issue.message ?? ""}`,
+      ),
     )
   }
 
