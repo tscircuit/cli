@@ -1,5 +1,7 @@
 export type CircuitJsonIssue = {
-  type: string
+  type?: string
+  error_type?: string
+  warning_type?: string
   message?: string
 } & Record<string, any>
 
@@ -14,12 +16,19 @@ export function analyzeCircuitJson(circuitJson: any[]): {
     if (!item || typeof item !== "object") continue
 
     const t = item.type
-    if (typeof t === "string") {
-      if (t.endsWith("_error")) errors.push(item)
-      else if (t.endsWith("_warning")) warnings.push(item)
+    const hasErrorType = typeof item.error_type === "string"
+    const hasWarningType = typeof item.warning_type === "string"
+    const isTypedError = typeof t === "string" && t.endsWith("_error")
+    const isTypedWarning = typeof t === "string" && t.endsWith("_warning")
+
+    if (hasErrorType || isTypedError) {
+      errors.push(item as CircuitJsonIssue)
+      continue
     }
-    if ("error_type" in item) errors.push(item)
-    if ("warning_type" in item) warnings.push(item as CircuitJsonIssue)
+
+    if (hasWarningType || isTypedWarning) {
+      warnings.push(item as CircuitJsonIssue)
+    }
   }
 
   return { errors, warnings }
