@@ -143,7 +143,7 @@ export default () => (
           kleur.bold(
             kleur.blue(
               `${
-                directory ? `${kleur.bold(`cd ${directory}`)} & ` : ""
+                directory ? `${kleur.bold(`cd ${directory}`)} && ` : ""
               }${kleur.bold("tsci dev")}`,
             ),
           ),
