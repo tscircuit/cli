@@ -46,6 +46,7 @@
         "fuse.js": "^7.1.0",
         "get-port": "^7.1.0",
         "globby": "^14.1.0",
+        "circuit-json-trace-length-analysis": "https://github.com/tscircuit/circuit-json-trace-length-analysis",
         "jose": "^6.1.0",
         "jsonwebtoken": "^9.0.2",
         "jszip": "^3.10.1",
@@ -482,6 +483,8 @@
     "circuit-json-to-step": ["circuit-json-to-step@0.0.20", "", { "dependencies": { "circuit-json-to-connectivity-map": "^0.0.22", "circuit-json-to-gltf": "^0.0.91", "circuit-to-svg": "^0.0.327", "schematic-symbols": "^0.0.202" }, "peerDependencies": { "@tscircuit/circuit-json-util": "*", "typescript": "^5" } }, "sha512-Fls8sRTV6Vgk2v1z11N1nwmLonRNGsCkiJflf+bxPyPka3MrEeQlU/ELE1SL+j0LUAEJ38s1rDymEt4inodZHw=="],
 
     "circuit-json-to-tscircuit": ["circuit-json-to-tscircuit@0.0.9", "", { "peerDependencies": { "typescript": "^5.0.0" } }, "sha512-2B4E3kOU9zFbJ6SyCKcp9ktlay/Xf2gbLuGcWE8rBL3uuypJU3uX4MFjHVfwx8cbvB/0LTF5v3gHTYbxpiZMOg=="],
+
+    "circuit-json-trace-length-analysis": ["circuit-json-trace-length-analysis@github:tscircuit/circuit-json-trace-length-analysis#02197b5", { "peerDependencies": { "typescript": "^5" } }, "tscircuit-circuit-json-trace-length-analysis-02197b5"],
 
     "circuit-to-svg": ["circuit-to-svg@0.0.327", "", { "dependencies": { "@types/node": "^22.5.5", "bun-types": "^1.1.40", "calculate-elbow": "0.0.12", "debug": "^4.4.3", "svg-path-commander": "^2.1.11", "svgson": "^5.3.1", "transformation-matrix": "^2.16.1" }, "peerDependencies": { "@tscircuit/alphabet": "*" } }, "sha512-tUC0Z+/XBXcGFu2H6coSkxNC+jM5C3VrA3+4RzgIvGUhs5rs58aLXgIWWw1nhzgPD5t3vHwfvVB6UYiNJ8KZVQ=="],
 
