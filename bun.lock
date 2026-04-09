@@ -42,7 +42,7 @@
         "debug": "^4.4.0",
         "delay": "^6.0.0",
         "dsn-converter": "0.0.86",
-        "easyeda": "^0.0.253",
+        "easyeda": "^0.0.258",
         "fuse.js": "^7.1.0",
         "get-port": "^7.1.0",
         "globby": "^14.1.0",
@@ -575,7 +575,7 @@
 
     "eastasianwidth": ["eastasianwidth@0.2.0", "", {}, "sha512-I88TYZWc9XiYHRQ4/3c5rjjfgkjhLyW2luGIheGERbNQ6OY7yTybanSpDXZa8y7VUP9YmDcYa+eyq4ca7iLqWA=="],
 
-    "easyeda": ["easyeda@0.0.253", "", { "peerDependencies": { "typescript": "^5.5.2", "zod": "3" }, "bin": { "easyeda-converter": "dist/main.cjs", "easyeda": "dist/main.cjs" } }, "sha512-kB39WFoZxAmfQ3nETPj7yUq5PbPKUGEVtrVToAuKMQZimC2JJR61k6UsoK0QSk+q1R6RsfWj4v8tKHXXZ97UfQ=="],
+    "easyeda": ["easyeda@0.0.258", "", { "peerDependencies": { "typescript": "^5.5.2", "zod": "3" }, "bin": { "easyeda-converter": "dist/main.cjs", "easyeda": "dist/main.cjs" } }, "sha512-6/juqs4pVgNYkQxWMpYng8jT0aZ8FIoGTvkwBrfXsn4Xbc+0eoQo8LoGN6AzK/CowxmzgHnkmkl0o3J2f9186Q=="],
 
     "ecdsa-sig-formatter": ["ecdsa-sig-formatter@1.0.11", "", { "dependencies": { "safe-buffer": "^5.0.1" } }, "sha512-nagl3RYrbNv6kQkeJIpt6NJZy8twLB/2vtz6yN9Z4vRKHN4/QZJIEbqohALSgwKdnksuY3k5Addp5lg8sVoVcQ=="],
 
