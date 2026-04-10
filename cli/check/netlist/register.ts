@@ -1,12 +1,30 @@
 import { convertCircuitJsonToReadableNetlist } from "circuit-json-to-readable-netlist"
+import {
+  categorizeErrorOrWarning,
+  type DrcCategory,
+} from "@tscircuit/circuit-json-util"
 import type { PlatformConfig } from "@tscircuit/props"
 import type { AnyCircuitElement } from "circuit-json"
 import type { Command } from "commander"
 import { generateCircuitJson } from "lib/shared/generate-circuit-json"
 import { getCompletePlatformConfig } from "lib/shared/get-complete-platform-config"
 import { getEntrypoint } from "lib/shared/get-entrypoint"
-import { analyzeCircuitJson } from "lib/shared/circuit-json-diagnostics"
+import {
+  analyzeCircuitJson,
+  type CircuitJsonIssue,
+} from "lib/shared/circuit-json-diagnostics"
 import path from "node:path"
+
+const normalizeCategory = (category: string): DrcCategory =>
+  category === "netlist" ||
+  category === "pin_specification" ||
+  category === "placement" ||
+  category === "routing"
+    ? category
+    : "unknown"
+
+const isNetlistDiagnostic = (issue: CircuitJsonIssue) =>
+  normalizeCategory(categorizeErrorOrWarning(issue)) === "netlist"
 
 const resolveInputFilePath = async (file?: string) => {
   if (file) {
@@ -40,16 +58,28 @@ export const checkNetlist = async (file?: string) => {
 
   const typedCircuitJson = circuitJson as AnyCircuitElement[]
   const diagnostics = analyzeCircuitJson(typedCircuitJson)
+  const netlistErrors = diagnostics.errors.filter(isNetlistDiagnostic)
+  const netlistWarnings = diagnostics.warnings.filter(isNetlistDiagnostic)
   const readableNetlist = convertCircuitJsonToReadableNetlist(typedCircuitJson)
 
   const diagnosticsLines = [
-    `Errors: ${diagnostics.errors.length}`,
-    `Warnings: ${diagnostics.warnings.length}`,
+    `Errors: ${netlistErrors.length}`,
+    `Warnings: ${netlistWarnings.length}`,
   ]
 
-  if (diagnostics.errors.length > 0) {
+  if (netlistErrors.length > 0) {
     diagnosticsLines.push(
-      ...diagnostics.errors.map((err) => `- ${err.type}: ${err.message ?? ""}`),
+      ...netlistErrors.map((err) => `- ${err.type}: ${err.message ?? ""}`),
+    )
+  }
+
+  if (netlistWarnings.length > 0) {
+    diagnosticsLines.push(
+      ...netlistWarnings.map((warning) => {
+        const issueType =
+          warning.warning_type ?? warning.error_type ?? warning.type
+        return `- ${issueType}: ${warning.message ?? ""}`
+      }),
     )
   }
 
