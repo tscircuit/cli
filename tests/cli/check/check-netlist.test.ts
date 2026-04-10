@@ -25,6 +25,16 @@ export default () => (
 )
 `
 
+const placementDrcCircuitCode = `
+export default () => (
+  <board width="10mm" height="10mm">
+    <resistor resistance="1k" footprint="0402" name="R1" pcbX={5.2} pcbY={0} />
+    <capacitor capacitance="1000pF" footprint="0402" name="C1" pcbX={0} pcbY={0} />
+    <trace from=".R1 > .pin1" to=".C1 > .pin1" />
+  </board>
+)
+`
+
 test("check netlist includes readable netlist output", async () => {
   const { tmpDir, runCommand } = await getCliTestFixture()
   const circuitPath = path.join(tmpDir, "test-circuit.tsx")
@@ -44,4 +54,24 @@ test("check netlist includes readable netlist output", async () => {
   expect(stdout).toContain("R1")
   expect(stdout).toContain("C1")
   expect(stdout).toContain("NET: C1_pos")
+}, 20_000)
+
+test("check netlist filters out placement diagnostics", async () => {
+  const { tmpDir, runCommand } = await getCliTestFixture()
+  const circuitPath = path.join(tmpDir, "placement-drc-circuit.tsx")
+
+  await writeFile(circuitPath, placementDrcCircuitCode)
+
+  const { stdout, stderr, exitCode } = await runCommand(
+    `tsci check netlist ${circuitPath}`,
+  )
+
+  expect(exitCode).toBe(0)
+  expect(stderr).toBe("")
+  expect(stdout).toContain("Errors: 0")
+  expect(stdout).toContain("Warnings: 0")
+  expect(stdout).toContain("Readable Netlist:")
+  expect(stdout).not.toContain("placement")
+  expect(stdout).not.toContain("pcb_component_outside_board_error")
+  expect(stdout).not.toContain("Component R1 extends outside board boundaries")
 }, 20_000)

@@ -9,7 +9,7 @@
   "devDependencies": {
     "@babel/standalone": "^7.26.9",
     "@biomejs/biome": "^1.9.4",
-    "@tscircuit/circuit-json-placement-analysis": "^0.0.5",
+    "@tscircuit/circuit-json-placement-analysis": "^0.0.6",
     "@tscircuit/circuit-json-routing-analysis": "^0.0.1",
     "@tscircuit/fake-snippets": "^0.0.182",
     "@tscircuit/file-server": "^0.0.32",
@@ -37,7 +37,7 @@
     "circuit-json-to-spice": "^0.0.10",
     "circuit-json-to-step": "^0.0.20",
     "circuit-json-to-tscircuit": "^0.0.9",
-    "circuit-json-trace-length-analysis": "https://github.com/tscircuit/circuit-json-trace-length-analysis",
+    "circuit-json-trace-length-analysis": "github:tscircuit/circuit-json-trace-length-analysis#2b44792a40df0ca83b6bfb6ac95ed5e35e7168b8",
     "commander": "^14.0.0",
     "conf": "^13.1.0",
     "configstore": "^7.0.0",
