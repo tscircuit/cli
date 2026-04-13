@@ -115,6 +115,12 @@
           "type": "boolean",
           "description": "Enable GLB 3D model outputs for each circuit in build."
         },
+        "workerTimeoutMs": {
+          "type": "number",
+          "minimum": 1,
+          "multipleOf": 1,
+          "description": "Timeout in milliseconds for each build worker job."
+        },
         "routingDisabled": {
           "type": "boolean",
           "description": "Disable routing during circuit generation in build."
