@@ -14,6 +14,7 @@ function normalizePathSeparators(filePath: string): string {
 export const STATIC_ASSET_EXTENSIONS = new Set([
   ".glb",
   ".gltf",
+  ".obj",
   ".png",
   ".jpg",
   ".jpeg",
