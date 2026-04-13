@@ -583,6 +583,7 @@ export const registerBuild = (program: Command) => {
             projectDir,
             concurrency: concurrencyValue,
             buildOptions,
+            workerJobTimeoutMs: projectConfig?.build?.workerTimeoutMs,
             stopOnFatal: true,
             onLog: (lines) => {
               for (const line of lines) {
