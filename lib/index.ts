@@ -1,4 +1,5 @@
 export { createHttpServer } from "./server/createHttpServer"
+export { DevServer } from "./dev/DevServer"
 export { getLocalFileDependencies } from "./dependency-analysis/getLocalFileDependencies"
 
 // KiCad library conversion exports
