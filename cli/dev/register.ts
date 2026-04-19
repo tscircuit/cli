@@ -2,9 +2,9 @@ import type { Command } from "commander"
 import * as fs from "node:fs"
 import * as net from "node:net"
 import * as path from "node:path"
-import { DevServer } from "./DevServer"
 import { resolveDevTarget } from "./resolve-dev-target"
 import kleur from "kleur"
+import { DevServer } from "lib/dev/DevServer"
 import { getVersion } from "lib/getVersion"
 
 const isPortAvailable = (port: number): Promise<boolean> => {
