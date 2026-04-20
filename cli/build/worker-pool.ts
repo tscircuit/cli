@@ -149,7 +149,6 @@ export async function buildFilesWithWorkerPool(options: {
         ? workerJobTimeoutMs
         : undefined,
     onLog: options.onLog,
-    heartbeatIntervalMs: 100,
   })
 
   const results: BuildJobResult[] = []
