@@ -60,7 +60,10 @@ test("check routing reports no errors for a routed circuit", async () => {
 }, 30_000)
 
 test("check routing reports errors for a circuit json with routing errors", async () => {
-  const circuitPath = await makeCircuitFile(circuitJsonWithRoutingErrors, ".circuit.json")
+  const circuitPath = await makeCircuitFile(
+    circuitJsonWithRoutingErrors,
+    ".circuit.json",
+  )
 
   try {
     const { output, hasErrors } = await checkRouting(circuitPath)
