@@ -51,15 +51,15 @@ test("build reports ignored counts when selected DRC categories are filtered", a
     "tsci build board.circuit.json --ignore-placement-drc --ignore-routing-drc",
   )
 
-  expect(exitCode).toBe(0)
+  // netlist error is NOT suppressed, so the build exits non-zero
+  expect(exitCode).toBe(1)
   expect(getBuildSummarySnippet(stdout)).toMatchInlineSnapshot(`
 "Build complete
   Circuits  1 passed
   Options   ignore-placement-drc, ignore-routing-drc
   Output    dist
   Ignored DRC 2 (placement: 1, routing: 1)
-⚠ Build completed with errors
-Build exiting with code 0: build finished successfully"
+⚠ Build completed with errors"
 `)
 }, 30_000)
 
