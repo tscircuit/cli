@@ -17,6 +17,32 @@ const SKILL_INSTALL_PATHS = [
   ".codex/skills/tscircuit",
 ]
 
+const BUNDLED_SKILL_MD = `---
+name: tscircuit
+description: Build, modify, and debug tscircuit (React/TypeScript) PCB designs. Use when working with tsci CLI (init/dev/search/add/import/build/export/snapshot/push), choosing footprints, placing parts, wiring nets/traces, or preparing fabrication outputs (Gerbers/BOM/PnP).
+allowed-tools: Read, Write, Grep, Glob, Bash
+---
+
+# tscircuit
+
+You are helping the user design electronics using tscircuit (React/TypeScript) and the \`tsci\` CLI.
+
+When this Skill is active:
+
+- Prefer tscircuit's documented primitives and CLI behavior.
+- Read local files (e.g., \`tscircuit.config.json\`, \`index.tsx\`, \`package.json\`) to understand the project.
+- Run \`tsci --help\` or subcommand \`--help\` when unsure about flags.
+
+## Default workflow
+
+1. Clarify requirements (board size, power, I/O, manufacturer constraints)
+2. Choose a starting point (\`tsci init\` for new projects)
+3. Find and install components (\`tsci search\`, \`tsci add\`, \`tsci import\`)
+4. Write/modify TSX circuit code (use \`<trace />\`, layout props, net connections)
+5. Build and iterate (\`tsci build\`, fix DRC/routing issues)
+6. Export (\`tsci export\` for Gerbers, BOM, PnP, STEP)
+`
+
 async function fetchGitHubContents(apiUrl: string): Promise<GitHubContent[]> {
   const response = await fetch(apiUrl)
   if (!response.ok) {
@@ -115,9 +141,24 @@ export async function setupTscircuitSkill(
     const errorMessage =
       error instanceof Error ? error.message : "Unknown error"
     console.warn(
-      kleur.yellow(`Failed to set up tscircuit skill: ${errorMessage}`),
+      kleur.yellow(`Failed to download tscircuit skill: ${errorMessage}`),
     )
-    console.warn("Continuing with initialization...")
-    return false
+    console.warn("Installing bundled tscircuit skill instead...")
+    try {
+      for (const skillPath of missingSkillPaths) {
+        const targetDir = path.join(projectDir, skillPath)
+        fs.mkdirSync(targetDir, { recursive: true })
+        fs.writeFileSync(
+          path.join(targetDir, "SKILL.md"),
+          BUNDLED_SKILL_MD,
+          "utf-8",
+        )
+        console.info(`tscircuit skill installed at ${skillPath}`)
+      }
+      return true
+    } catch (fallbackError) {
+      console.warn("Continuing with initialization...")
+      return false
+    }
   }
 }
