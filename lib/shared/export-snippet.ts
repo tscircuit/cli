@@ -78,6 +78,23 @@ const OUTPUT_EXTENSIONS: Record<ExportFormat, string> = {
   step: ".step",
 }
 
+const isRecord = (value: unknown): value is Record<string, unknown> =>
+  typeof value === "object" && value !== null
+
+const unwrapSimpleRouteJson = (value: unknown) => {
+  if (
+    isRecord(value) &&
+    isRecord(value.simpleRouteJson) &&
+    ("connections" in value.simpleRouteJson ||
+      "obstacles" in value.simpleRouteJson ||
+      "bounds" in value.simpleRouteJson)
+  ) {
+    return value.simpleRouteJson
+  }
+
+  return value
+}
+
 type ExportOptions = {
   filePath: string
   format: ExportFormat
@@ -208,8 +225,11 @@ export const exportSnippet = async ({
     case "srj":
       {
         const userLandTscircuit = await importFromUserLand("tscircuit")
-        const simpleRouteJson =
-          userLandTscircuit.getSimpleRouteJsonFromCircuitJson({ circuitJson })
+        const simpleRouteJson = unwrapSimpleRouteJson(
+          userLandTscircuit.getSimpleRouteJsonFromCircuitJson({
+            circuitJson,
+          }),
+        )
         outputContent = JSON.stringify(simpleRouteJson, null, 2)
       }
       break

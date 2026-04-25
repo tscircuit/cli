@@ -50,5 +50,9 @@ test("export srj from circuit.json", async () => {
 
   expect(typeof parsedSrj).toBe("object")
   expect(parsedSrj).not.toBeNull()
-  expect(Object.keys(parsedSrj).length).toBeGreaterThan(0)
+  expect(parsedSrj).not.toHaveProperty("simpleRouteJson")
+  expect(parsedSrj).toHaveProperty("layerCount")
+  expect(parsedSrj).toHaveProperty("bounds")
+  expect(Array.isArray(parsedSrj.obstacles)).toBe(true)
+  expect(Array.isArray(parsedSrj.connections)).toBe(true)
 })
