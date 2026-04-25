@@ -29,9 +29,7 @@ test("export bom-csv", async () => {
 
   await writeFile(circuitPath, circuitCode)
 
-  const { exitCode } = await runCommand(
-    `tsci export ${circuitPath} -f bom-csv`,
-  )
+  const { exitCode } = await runCommand(`tsci export ${circuitPath} -f bom-csv`)
   expect(exitCode).toBe(0)
 
   const bomCsv = await readFile(
