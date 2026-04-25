@@ -6,6 +6,9 @@ import semver from "semver"
 import Debug from "debug"
 import kleur from "kleur"
 import { getEntrypoint } from "./get-entrypoint"
+import { findBoardFiles } from "./find-board-files"
+import { globbySync } from "globby"
+import { DEFAULT_IGNORED_PATTERNS } from "./should-ignore-path"
 import prompts from "lib/utils/prompts"
 import { getUnscopedPackageName } from "lib/utils/get-unscoped-package-name"
 import { getPackageAuthor } from "lib/utils/get-package-author"
@@ -75,14 +78,40 @@ export const pushSnippet = async ({
   }
 
   // Detect the entrypoint file
-  const snippetFilePath = await getEntrypoint({
+  let snippetFilePath = await getEntrypoint({
     filePath,
     onSuccess: () => {},
-    onError,
+    onError: () => {},
   })
 
   if (!snippetFilePath) {
-    return onExit(1)
+    // Fall back to board files (same as tsci dev behavior)
+    const projectDir = process.cwd()
+    let boardFiles = findBoardFiles({ projectDir }).filter((f) =>
+      fs.existsSync(f),
+    )
+
+    if (boardFiles.length === 0) {
+      // Broader fallback: any .tsx/.ts file (mirrors tsci dev behavior)
+      boardFiles = globbySync(["**/*.tsx", "**/*.ts", "**/*.circuit.json"], {
+        cwd: projectDir,
+        ignore: DEFAULT_IGNORED_PATTERNS,
+      }).map((f) => path.resolve(projectDir, f))
+    }
+
+    if (boardFiles.length > 0) {
+      snippetFilePath = boardFiles[0]
+      onSuccess(
+        `Detected entrypoint: '${path.relative(projectDir, snippetFilePath)}'`,
+      )
+    } else {
+      onError(
+        kleur.red(
+          "No entrypoint found. Run 'tsci init' to bootstrap a basic project or specify a file with 'tsci push <file>'",
+        ),
+      )
+      return onExit(1)
+    }
   }
 
   const packageJsonPath = [
