@@ -1,7 +1,22 @@
-import { analyzeCircuitJsonTraceLength } from "circuit-json-trace-length-analysis"
 import type { PlatformConfig } from "@tscircuit/props"
+import type { AnyCircuitElement } from "circuit-json"
 import type { Command } from "commander"
 import { getCircuitJsonForCheck, resolveCheckInputFilePath } from "../shared"
+
+type TraceLengthAnalyzer = (
+  circuitJson: readonly AnyCircuitElement[],
+  options: { targetPinOrNet: string },
+) => { toString(): string }
+
+const loadTraceLengthAnalyzer = async (): Promise<TraceLengthAnalyzer> => {
+  const mod = (await import(
+    "circuit-json-trace-length-analysis"
+  )) as unknown as {
+    analyzeCircuitJsonTraceLength: TraceLengthAnalyzer
+  }
+
+  return mod.analyzeCircuitJsonTraceLength
+}
 
 export const checkTraceLength = async (pinOrNetRef: string, file?: string) => {
   const resolvedInputFilePath = await resolveCheckInputFilePath(file)
@@ -14,6 +29,7 @@ export const checkTraceLength = async (pinOrNetRef: string, file?: string) => {
     allowPrebuiltCircuitJson: true,
   })
 
+  const analyzeCircuitJsonTraceLength = await loadTraceLengthAnalyzer()
   const analysis = analyzeCircuitJsonTraceLength(circuitJson, {
     targetPinOrNet: pinOrNetRef,
   })
