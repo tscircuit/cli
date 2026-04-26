@@ -1,9 +1,7 @@
 import { expect, test } from "bun:test"
-import { analyzeSchematicPlacement } from "@tscircuit/circuit-json-schematic-placement-analysis"
-import type { CircuitJson } from "circuit-json"
 import { rm, writeFile } from "node:fs/promises"
 import path from "node:path"
-import { getCircuitJsonForCheck } from "../../../cli/check/shared"
+import { checkSchematicPlacement } from "../../../cli/check/schematic-placement/register"
 import { getCliTestFixture } from "../../fixtures/get-cli-test-fixture"
 
 const circuitCode = `
@@ -26,17 +24,7 @@ test("tsci check schematic-placement prints schematic placement analysis", async
   try {
     await writeFile(circuitPath, circuitCode)
 
-    const circuitJson = await getCircuitJsonForCheck({
-      filePath: circuitPath,
-      platformConfig: {
-        pcbDisabled: true,
-        routingDisabled: true,
-        placementDrcChecksDisabled: true,
-      },
-    })
-    const expected = analyzeSchematicPlacement(
-      circuitJson as CircuitJson,
-    ).getString()
+    const expected = await checkSchematicPlacement(circuitPath)
 
     const { stdout, stderr, exitCode } = await runCommand(
       `tsci check schematic-placement ${circuitPath}`,
