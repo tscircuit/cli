@@ -1,7 +1,10 @@
 import fs from "node:fs"
 import path from "node:path"
 import type { AnyCircuitElement } from "circuit-json"
-import { convertCircuitJsonToGltf } from "circuit-json-to-gltf"
+import {
+  convertCircuitJsonToGltf,
+  getBestCameraPosition,
+} from "circuit-json-to-gltf"
 import {
   convertCircuitJsonToPcbSvg,
   convertCircuitJsonToSchematicSvg,
@@ -150,7 +153,10 @@ const generatePreviewAssets = async ({
       )
       console.log(`${prefix}Rendering GLB to PNG buffer...`)
       const glbArrayBuffer = await normalizeToArrayBuffer(glbBuffer)
-      const pngBuffer = await renderGLTFToPNGBufferFromGLBBuffer(glbArrayBuffer)
+      const pngBuffer = await renderGLTFToPNGBufferFromGLBBuffer(
+        glbArrayBuffer,
+        getBestCameraPosition(circuitJson),
+      )
       fs.writeFileSync(
         path.join(outputDir, "3d.png"),
         Buffer.from(normalizeToUint8Array(pngBuffer)),
