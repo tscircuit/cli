@@ -18,6 +18,7 @@ import { registerCheckPlacement } from "./check/placement/register"
 import { registerCheck } from "./check/register"
 import { registerCheckRoutingDifficulty } from "./check/routing-difficulty/register"
 import { registerCheckRouting } from "./check/routing/register"
+import { registerCheckSchematicPlacement } from "./check/schematic-placement/register"
 import { registerCheckTraceLength } from "./check/trace-length/register"
 import { registerClone } from "./clone/register"
 import { registerConfigPrint } from "./config/print/register"
@@ -85,6 +86,7 @@ registerCheckPinSpecification(program)
 registerCheckPlacement(program)
 registerCheckRoutingDifficulty(program)
 registerCheckRouting(program)
+registerCheckSchematicPlacement(program)
 registerCheckTraceLength(program)
 
 registerRegistry(program)

@@ -11,6 +11,7 @@
     "@biomejs/biome": "^1.9.4",
     "@tscircuit/circuit-json-placement-analysis": "^0.0.6",
     "@tscircuit/circuit-json-routing-analysis": "^0.0.1",
+    "@tscircuit/circuit-json-schematic-placement-analysis": "github:tscircuit/circuit-json-schematic-placement-analysis#8b07653c08660ada1a327ad9e262588c8f46603f",
     "@tscircuit/fake-snippets": "^0.0.182",
     "@tscircuit/file-server": "^0.0.32",
     "@tscircuit/image-utils": "^0.0.3",
