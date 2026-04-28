@@ -35,6 +35,7 @@ import {
   convertBomRowsToCsv,
 } from "circuit-json-to-bom-csv"
 import { convertCircuitJsonToPickAndPlaceCsv } from "circuit-json-to-pnp-csv"
+import { circuitJsonToSpice } from "circuit-json-to-spice"
 
 const writeFileAsync = promisify(fs.writeFile)
 
@@ -57,6 +58,7 @@ export const ALLOWED_EXPORT_FORMATS = [
   "assembly-svg",
   "pnp-csv",
   "bom-csv",
+  "spice",
 ] as const
 
 export type ExportFormat = (typeof ALLOWED_EXPORT_FORMATS)[number]
@@ -80,6 +82,7 @@ const OUTPUT_EXTENSIONS: Record<ExportFormat, string> = {
   step: ".step",
   "pnp-csv": "-pnp.csv",
   "bom-csv": "-bom.csv",
+  spice: ".spice",
 }
 
 const isRecord = (value: unknown): value is Record<string, unknown> =>
@@ -356,6 +359,9 @@ export const exportSnippet = async ({
       outputContent = await convertBomRowsToCsv(
         await convertCircuitJsonToBomRows({ circuitJson }),
       )
+      break
+    case "spice":
+      outputContent = circuitJsonToSpice(circuitJson).toSpiceString()
       break
     default:
       outputContent = JSON.stringify(circuitJson, null, 2)
