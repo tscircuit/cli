@@ -6,6 +6,7 @@ import semver from "semver"
 import Debug from "debug"
 import kleur from "kleur"
 import { getEntrypoint } from "./get-entrypoint"
+import { globbySync } from "globby"
 import prompts from "lib/utils/prompts"
 import { getUnscopedPackageName } from "lib/utils/get-unscoped-package-name"
 import { getPackageAuthor } from "lib/utils/get-package-author"
@@ -139,12 +140,12 @@ export const pushSnippet = async ({
 
   // Fallback 2: use globby to find any circuit file if still not found
   if (!snippetFilePath) {
-    const { globbySync } = await import("globby")
+    
     const projectDir = process.cwd()
     const validFiles = globbySync(["**/*.tsx", "**/*.ts", "**/*.circuit.json"], {
       cwd: projectDir,
       ignore: ["node_modules/**", "**/.*"]
-    }).filter(f => fs.existsSync(f))
+    }).filter((relativePath) => fs.existsSync(path.join(projectDir, relativePath)))
 
     if (validFiles.length > 0) {
       snippetFilePath = path.resolve(projectDir, validFiles[0])
