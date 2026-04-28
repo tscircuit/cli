@@ -75,11 +75,26 @@ export const pushSnippet = async ({
   }
 
   // Detect the entrypoint file
-  const snippetFilePath = await getEntrypoint({
+  let snippetFilePath = await getEntrypoint({
     filePath,
     onSuccess: () => {},
     onError,
   })
+
+  // If no entrypoint found, try to find any valid circuit file (like tsci dev does)
+  if (!snippetFilePath) {
+    const { globbySync } = await import("globby")
+    const projectDir = process.cwd()
+    const validFiles = globbySync(["**/*.tsx", "**/*.ts", "**/*.circuit.json"], {
+      cwd: projectDir,
+      ignore: ["node_modules/**", "**/.*"]
+    }).filter(f => fs.existsSync(f))
+
+    if (validFiles.length > 0) {
+      snippetFilePath = path.resolve(projectDir, validFiles[0])
+      onSuccess(`Using fallback file: '${validFiles[0]}'`)
+    }
+  }
 
   if (!snippetFilePath) {
     return onExit(1)
