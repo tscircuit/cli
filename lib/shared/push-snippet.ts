@@ -123,16 +123,40 @@ export const pushSnippet = async ({
     return onExit(1)
   }
 
+  // Use findPushProject to get project info
   const pushProject = await findPushProject({
     filePath,
     onError,
   })
 
-  if (!pushProject) {
+  // Extract snippetFilePath, with fallback to getEntrypoint and globby
+  let snippetFilePath = pushProject?.snippetFilePath
+
+  // Fallback 1: try getEntrypoint if findPushProject didn't find a file
+  if (!snippetFilePath) {
+    snippetFilePath = await getEntrypoint({ filePath, onError })
+  }
+
+  // Fallback 2: use globby to find any circuit file if still not found
+  if (!snippetFilePath) {
+    const { globbySync } = await import("globby")
+    const projectDir = process.cwd()
+    const validFiles = globbySync(["**/*.tsx", "**/*.ts", "**/*.circuit.json"], {
+      cwd: projectDir,
+      ignore: ["node_modules/**", "**/.*"]
+    }).filter(f => fs.existsSync(f))
+
+    if (validFiles.length > 0) {
+      snippetFilePath = path.resolve(projectDir, validFiles[0])
+      onSuccess(`Using fallback file: '${validFiles[0]}'`)
+    }
+  }
+
+  if (!snippetFilePath) {
     return onExit(1)
   }
 
-  const { snippetFilePath, packageJsonPath, projectDir } = pushProject
+  const { packageJsonPath, projectDir } = pushProject ?? {}
 
   if (!packageJsonPath) {
     onError(
