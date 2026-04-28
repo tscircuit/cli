@@ -37,6 +37,13 @@ import {
 import { convertCircuitJsonToPickAndPlaceCsv } from "circuit-json-to-pnp-csv"
 import { circuitJsonToSpice } from "circuit-json-to-spice"
 import { convertCircuitJsonToBpc } from "circuit-json-to-bpc"
+import {
+  ConnectivityMap,
+  PcbConnectivityMap,
+  getFullConnectivityMapFromCircuitJson,
+  getSourcePortConnectivityMapFromCircuitJson,
+  findConnectedNetworks,
+} from "circuit-json-to-connectivity-map"
 
 const writeFileAsync = promisify(fs.writeFile)
 
@@ -61,6 +68,7 @@ export const ALLOWED_EXPORT_FORMATS = [
   "bom-csv",
   "spice",
   "bpc",
+  "connectivity-map",
 ] as const
 
 export type ExportFormat = (typeof ALLOWED_EXPORT_FORMATS)[number]
@@ -86,6 +94,7 @@ const OUTPUT_EXTENSIONS: Record<ExportFormat, string> = {
   "bom-csv": "-bom.csv",
   spice: ".spice",
   bpc: ".bpc.json",
+  "connectivity-map": "-connectivity-map.json",
 }
 
 const isRecord = (value: unknown): value is Record<string, unknown> =>
@@ -368,6 +377,9 @@ export const exportSnippet = async ({
       break
     case "bpc":
       outputContent = JSON.stringify(convertCircuitJsonToBpc(circuitJson), null, 2)
+      break
+    case "connectivity-map":
+      outputContent = JSON.stringify(getFullConnectivityMapFromCircuitJson(circuitJson), null, 2)
       break
     default:
       outputContent = JSON.stringify(circuitJson, null, 2)
