@@ -6,6 +6,7 @@ import semver from "semver"
 import Debug from "debug"
 import kleur from "kleur"
 import { getEntrypoint } from "./get-entrypoint"
+import { globbySync } from "globby"
 import prompts from "lib/utils/prompts"
 import { getUnscopedPackageName } from "lib/utils/get-unscoped-package-name"
 import { getPackageAuthor } from "lib/utils/get-package-author"
@@ -75,11 +76,26 @@ export const pushSnippet = async ({
   }
 
   // Detect the entrypoint file
-  const snippetFilePath = await getEntrypoint({
+  let snippetFilePath = await getEntrypoint({
     filePath,
     onSuccess: () => {},
     onError,
   })
+
+  // If no entrypoint found, try to find any valid circuit file (like tsci dev does)
+  if (!snippetFilePath) {
+    
+    const projectDir = process.cwd()
+    const validFiles = globbySync(["**/*.tsx", "**/*.ts", "**/*.circuit.json"], {
+      cwd: projectDir,
+      ignore: ["node_modules/**", "**/.*"]
+    }).filter((relativePath) => fs.existsSync(path.join(projectDir, relativePath)))
+
+    if (validFiles.length > 0) {
+      snippetFilePath = path.resolve(projectDir, validFiles[0])
+      onSuccess(`Using fallback file: '${validFiles[0]}'`)
+    }
+  }
 
   if (!snippetFilePath) {
     return onExit(1)
