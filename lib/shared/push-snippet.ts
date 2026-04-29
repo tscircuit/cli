@@ -30,6 +30,55 @@ type PushOptions = {
 
 const debug = Debug("tsci:push-snippet")
 
+const findPushProject = async ({
+  filePath,
+  onError,
+}: {
+  filePath?: string
+  onError: (message: string) => void
+}): Promise<{
+  snippetFilePath?: string
+  packageJsonPath?: string
+  projectDir: string
+} | null> => {
+  if (filePath) {
+    const snippetFilePath = await getEntrypoint({
+      filePath,
+      onSuccess: () => {},
+      onError,
+    })
+
+    if (!snippetFilePath) {
+      return null
+    }
+
+    const packageJsonPath = [
+      path.resolve(path.join(path.dirname(snippetFilePath), "package.json")),
+      path.resolve(path.join(process.cwd(), "package.json")),
+    ].find((candidatePath) => fs.existsSync(candidatePath))
+    const projectDir = packageJsonPath
+      ? path.dirname(packageJsonPath)
+      : path.dirname(snippetFilePath)
+
+    return { snippetFilePath, packageJsonPath, projectDir }
+  }
+
+  const projectDir = process.cwd()
+  const packageJsonPath = path.resolve(path.join(projectDir, "package.json"))
+  if (!fs.existsSync(packageJsonPath)) {
+    return { projectDir }
+  }
+
+  const snippetFilePath =
+    (await getEntrypoint({
+      projectDir,
+      onSuccess: () => {},
+      onError: () => {},
+    })) ?? undefined
+
+  return { snippetFilePath, packageJsonPath, projectDir }
+}
+
 const getArchivePayload = async (
   filePaths: string[],
   projectDir: string,
@@ -74,24 +123,16 @@ export const pushSnippet = async ({
     return onExit(1)
   }
 
-  // Detect the entrypoint file
-  const snippetFilePath = await getEntrypoint({
+  const pushProject = await findPushProject({
     filePath,
-    onSuccess: () => {},
     onError,
   })
 
-  if (!snippetFilePath) {
+  if (!pushProject) {
     return onExit(1)
   }
 
-  const packageJsonPath = [
-    path.resolve(path.join(path.dirname(snippetFilePath), "package.json")),
-    path.resolve(path.join(process.cwd(), "package.json")),
-  ].find((path) => fs.existsSync(path))
-  const projectDir = packageJsonPath
-    ? path.dirname(packageJsonPath)
-    : path.dirname(snippetFilePath)
+  const { snippetFilePath, packageJsonPath, projectDir } = pushProject
 
   if (!packageJsonPath) {
     onError(
@@ -110,7 +151,7 @@ export const pushSnippet = async ({
     }
   }
 
-  if (!fs.existsSync(snippetFilePath)) {
+  if (snippetFilePath && !fs.existsSync(snippetFilePath)) {
     onError(`File not found: ${snippetFilePath}`)
     return onExit(1)
   }
