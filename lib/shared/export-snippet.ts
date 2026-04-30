@@ -376,10 +376,18 @@ export const exportSnippet = async ({
       outputContent = circuitJsonToSpice(circuitJson).toSpiceString()
       break
     case "bpc":
-      outputContent = JSON.stringify(convertCircuitJsonToBpc(circuitJson), null, 2)
+      outputContent = JSON.stringify(
+        convertCircuitJsonToBpc(circuitJson),
+        null,
+        2,
+      )
       break
     case "connectivity-map":
-      outputContent = JSON.stringify(getFullConnectivityMapFromCircuitJson(circuitJson), null, 2)
+      outputContent = JSON.stringify(
+        getFullConnectivityMapFromCircuitJson(circuitJson),
+        null,
+        2,
+      )
       break
     default:
       outputContent = JSON.stringify(circuitJson, null, 2)
