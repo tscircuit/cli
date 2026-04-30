@@ -11,16 +11,16 @@ export default () => (
   </board>
 )`
 
-// Test for issue #2550: SVGs should be placed alongside circuit.json in the 
+// Test for issue #2550: SVGs should be placed alongside circuit.json in the
 // component's subdirectory, not at the dist root
 test("build --svgs places SVGs in component subdirectory alongside circuit.json", async () => {
   const { tmpDir, runCommand } = await getCliTestFixture()
-  
+
   // Create component directory
   const componentDir = path.join(tmpDir, "lib/components/MyComponent")
   await mkdir(componentDir, { recursive: true })
   await writeFile(path.join(tmpDir, "package.json"), "{}")
-  
+
   // Create file at lib/components/MyComponent.tsx
   await writeFile(path.join(componentDir, "MyComponent.tsx"), circuitCode)
 
@@ -40,22 +40,25 @@ test("build --svgs places SVGs in component subdirectory alongside circuit.json"
   //       pcb.svg
   //       schematic.svg
   //       3d.glb
-  
+
   // Actually for MyComponent.tsx inside MyComponent dir, getOutputDirName returns
   // lib/components/MyComponent/MyComponent, so we need to check that path
-  const outputSubdir = path.join(tmpDir, "dist/lib/components/MyComponent/MyComponent")
-  
+  const outputSubdir = path.join(
+    tmpDir,
+    "dist/lib/components/MyComponent/MyComponent",
+  )
+
   const pcbSvgPath = path.join(outputSubdir, "pcb.svg")
   const schematicSvgPath = path.join(outputSubdir, "schematic.svg")
   const circuitJsonPath = path.join(outputSubdir, "circuit.json")
-  
+
   // All outputs should be in the same subdirectory
   const pcbSvg = await readFile(pcbSvgPath, "utf-8")
   expect(pcbSvg).toContain("<svg")
 
   const schematicSvg = await readFile(schematicSvgPath, "utf-8")
   expect(schematicSvg).toContain("<svg")
-  
+
   const circuitJson = await readFile(circuitJsonPath, "utf-8")
   expect(circuitJson).toContain("type")
 }, 60_000)
@@ -64,7 +67,7 @@ test("build --svgs places SVGs in component subdirectory alongside circuit.json"
 // SVGs go to the correct subdirectory
 test("build --svgs places SVGs alongside circuit.json for non-same-named dirs", async () => {
   const { tmpDir, runCommand } = await getCliTestFixture()
-  
+
   // Create component at lib/components/Resistor.tsx (dir name differs from file)
   const componentDir = path.join(tmpDir, "lib/components")
   await mkdir(componentDir, { recursive: true })
@@ -82,10 +85,10 @@ test("build --svgs places SVGs alongside circuit.json for non-same-named dirs", 
   // getOutputDirName returns lib/components/Resistor
   // So output should be at dist/lib/components/Resistor/
   const outputSubdir = path.join(tmpDir, "dist/lib/components/Resistor")
-  
+
   const pcbSvgPath = path.join(outputSubdir, "pcb.svg")
   const schematicSvgPath = path.join(outputSubdir, "schematic.svg")
-  
+
   const pcbSvg = await readFile(pcbSvgPath, "utf-8")
   expect(pcbSvg).toContain("<svg")
 
