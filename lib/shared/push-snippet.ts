@@ -140,12 +140,16 @@ export const pushSnippet = async ({
 
   // Fallback 2: use globby to find any circuit file if still not found
   if (!snippetFilePath) {
-    
     const projectDir = process.cwd()
-    const validFiles = globbySync(["**/*.tsx", "**/*.ts", "**/*.circuit.json"], {
-      cwd: projectDir,
-      ignore: ["node_modules/**", "**/.*"]
-    }).filter((relativePath) => fs.existsSync(path.join(projectDir, relativePath)))
+    const validFiles = globbySync(
+      ["**/*.tsx", "**/*.ts", "**/*.circuit.json"],
+      {
+        cwd: projectDir,
+        ignore: ["node_modules/**", "**/.*"],
+      },
+    ).filter((relativePath) =>
+      fs.existsSync(path.join(projectDir, relativePath)),
+    )
 
     if (validFiles.length > 0) {
       snippetFilePath = path.resolve(projectDir, validFiles[0])
