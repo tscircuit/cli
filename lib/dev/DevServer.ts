@@ -23,7 +23,13 @@ import { getPackageFilePaths } from "./get-package-file-paths"
 
 const debug = Debug("tscircuit:devserver")
 
-const BINARY_FILE_EXTENSIONS = new Set([".glb", ".png", ".jpeg", ".jpg"])
+const BINARY_FILE_EXTENSIONS = new Set([
+  ".glb",
+  ".step",
+  ".png",
+  ".jpeg",
+  ".jpg",
+])
 
 type FileUploadPayload =
   | {

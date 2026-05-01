@@ -31,6 +31,7 @@ export const projectConfigSchema = z.object({
       kicadPcm: z.boolean().optional(),
       previewImages: z.boolean().optional(),
       glbs: z.boolean().optional(),
+      steps: z.boolean().optional(),
       workerTimeoutMs: z.number().int().positive().optional(),
       routingDisabled: z.boolean().optional(),
       typescriptLibrary: z.boolean().optional(),

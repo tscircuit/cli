@@ -11,6 +11,7 @@ import { DEFAULT_IMAGE_FORMAT_SELECTION } from "./image-format-selection"
 import {
   writeGlbFromCircuitJson,
   writeImageAssetsFromCircuitJson,
+  writeStepFromCircuitJson,
 } from "./worker-output-generators"
 import type { BuildCompletedMessage, BuildFileMessage } from "./worker-types"
 
@@ -28,6 +29,7 @@ export const handleBuildFile = async (
   filePath: string,
   outputPath: string,
   glbOutputPath: string | undefined,
+  stepOutputPath: string | undefined,
   previewOutputDir: string | undefined,
   projectDir: string,
   options: BuildFileMessage["options"],
@@ -103,6 +105,8 @@ export const handleBuildFile = async (
       filteredDiagnostics.errors.length > 0 && !options?.ignoreErrors
     let glbOk: boolean | undefined
     let glbError: string | undefined
+    let stepOk: boolean | undefined
+    let stepError: string | undefined
     let previewOk: boolean | undefined
     let previewError: string | undefined
 
@@ -117,6 +121,20 @@ export const handleBuildFile = async (
         glbOk = false
         glbError = err instanceof Error ? err.message : String(err)
         workerLog(`GLB conversion error: ${glbError}`)
+      }
+    }
+
+    if (stepOutputPath) {
+      try {
+        workerLog(
+          `Converting ${path.relative(projectDir, outputPath)} to STEP in same worker...`,
+        )
+        await writeStepFromCircuitJson(circuitJson, stepOutputPath)
+        stepOk = true
+      } catch (err) {
+        stepOk = false
+        stepError = err instanceof Error ? err.message : String(err)
+        workerLog(`STEP conversion error: ${stepError}`)
       }
     }
 
@@ -146,9 +164,12 @@ export const handleBuildFile = async (
       output_path: outputPath,
       circuit_json_path: outputPath,
       glb_output_path: glbOutputPath,
+      step_output_path: stepOutputPath,
       preview_output_dir: previewOutputDir,
       glb_ok: glbOk,
       glb_error: glbError,
+      step_ok: stepOk,
+      step_error: stepError,
       preview_ok: previewOk,
       preview_error: previewError,
       ok: true,
@@ -170,6 +191,7 @@ export const handleBuildFile = async (
       output_path: outputPath,
       circuit_json_path: outputPath,
       glb_output_path: glbOutputPath,
+      step_output_path: stepOutputPath,
       preview_output_dir: previewOutputDir,
       ok: false,
       hasErrors: true,

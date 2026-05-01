@@ -17,6 +17,7 @@ import { validateMainInDist } from "../utils/validate-main-in-dist"
 import { type BuildCommandOptions, applyCiBuildOptions } from "./build-ci"
 import { buildFile } from "./build-file"
 import { buildGlbs } from "./build-glbs"
+import { buildSteps } from "./build-steps"
 import { buildKicadPcm } from "./build-kicad-pcm"
 import { buildPreviewGltf } from "./build-preview-gltf"
 import type { BuildFileResult } from "./build-preview-images"
@@ -176,6 +177,10 @@ export const registerBuild = (program: Command) => {
     )
     .option("--show-courtyards", "Show courtyard outlines in PCB SVG outputs")
     .option("--glbs", "Generate GLB 3D model files for every successful build")
+    .option(
+      "--steps",
+      "Generate STEP 3D model files for every successful build",
+    )
     .option(
       "--profile",
       "Log per-circuit circuit.json generation time during build",
@@ -545,6 +550,9 @@ export const registerBuild = (program: Command) => {
             const glbOutputPath = resolvedOptions?.glbs
               ? path.join(distDir, outputDirName, "3d.glb")
               : undefined
+            const stepOutputPath = resolvedOptions?.steps
+              ? path.join(distDir, outputDirName, "3d.step")
+              : undefined
 
             const generatePreviewAssets = (() => {
               if (!shouldGeneratePreviewAssetsInWorker) {
@@ -573,6 +581,7 @@ export const registerBuild = (program: Command) => {
               filePath,
               outputPath,
               glbOutputPath,
+              stepOutputPath,
               previewOutputDir,
               generatePreviewAssets,
             }
@@ -646,6 +655,21 @@ export const registerBuild = (program: Command) => {
                   )
                 }
               }
+
+              if (resolvedOptions?.steps && result.ok) {
+                const outputDir = path.dirname(result.outputPath)
+                const prefixRelative = path.relative(distDir, outputDir) || "."
+                const prefix =
+                  prefixRelative === "." ? "" : `[${prefixRelative}] `
+
+                if (result.stepOk) {
+                  console.log(`${prefix}Written 3d.step`)
+                } else if (result.stepOutputPath && result.stepError) {
+                  console.error(
+                    `${prefix}Failed to generate STEP: ${result.stepError}`,
+                  )
+                }
+              }
             },
           })
         }
@@ -699,6 +723,14 @@ export const registerBuild = (program: Command) => {
         if (resolvedOptions?.glbs && concurrencyValue === 1) {
           console.log("Generating GLB models for all builds...")
           await buildGlbs({
+            builtFiles,
+            distDir,
+          })
+        }
+
+        if (resolvedOptions?.steps && concurrencyValue === 1) {
+          console.log("Generating STEP models for all builds...")
+          await buildSteps({
             builtFiles,
             distDir,
           })

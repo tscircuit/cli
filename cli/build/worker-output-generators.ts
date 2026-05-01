@@ -5,6 +5,8 @@ import {
   convertCircuitJsonToGltf,
   getBestCameraPosition,
 } from "circuit-json-to-gltf"
+
+import { circuitJsonToStep } from "circuit-json-to-step"
 import {
   convertCircuitJsonToPcbSvg,
   convertCircuitJsonToSchematicSvg,
@@ -33,6 +35,17 @@ export const writeGlbFromCircuitJson = async (
   const glbData = normalizeToUint8Array(glbBuffer)
   fs.mkdirSync(path.dirname(glbOutputPath), { recursive: true })
   fs.writeFileSync(glbOutputPath, Buffer.from(glbData))
+}
+
+export const writeStepFromCircuitJson = async (
+  circuitJson: AnyCircuitElement[],
+  stepOutputPath: string,
+) => {
+  const circuitJsonWithFileUrls = convertModelUrlsToFileUrls(circuitJson)
+  const stepString = await circuitJsonToStep(circuitJsonWithFileUrls)
+
+  fs.mkdirSync(path.dirname(stepOutputPath), { recursive: true })
+  fs.writeFileSync(stepOutputPath, stepString)
 }
 
 export const writeImageAssetsFromCircuitJson = async (

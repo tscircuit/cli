@@ -10,6 +10,7 @@ export const BINARY_FILE_EXTENSIONS = new Set([
   ".gltf",
   ".obj",
   ".stl",
+  ".step",
   // Image formats
   ".png",
   ".jpg",
