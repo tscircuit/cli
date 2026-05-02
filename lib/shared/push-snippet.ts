@@ -5,6 +5,7 @@ import * as path from "node:path"
 import semver from "semver"
 import Debug from "debug"
 import kleur from "kleur"
+import { globbySync } from "globby"
 import { getEntrypoint } from "./get-entrypoint"
 import prompts from "lib/utils/prompts"
 import { getUnscopedPackageName } from "lib/utils/get-unscoped-package-name"
@@ -14,6 +15,7 @@ import { getPackageFilePaths } from "lib/dev/get-package-file-paths"
 import { checkOrgAccess } from "lib/utils/check-org-access"
 import { isBinaryFile } from "./is-binary-file"
 import { hasBinaryContent } from "./has-binary-content"
+import { DEFAULT_IGNORED_PATTERNS } from "./should-ignore-path"
 import JSZip from "jszip"
 
 type PushOptions = {
@@ -75,11 +77,32 @@ export const pushSnippet = async ({
   }
 
   // Detect the entrypoint file
-  const snippetFilePath = await getEntrypoint({
+  let snippetFilePath = await getEntrypoint({
     filePath,
     onSuccess: () => {},
     onError,
   })
+
+  // Fallback: if no entrypoint found, look for any .tsx/.ts/.circuit.json file
+  // This mirrors `tsci dev` behavior which also finds alternative files
+  if (!snippetFilePath) {
+    const fallbackFiles = globbySync(
+      ["**/*.tsx", "**/*.ts", "**/*.circuit.json"],
+      {
+        cwd: process.cwd(),
+        ignore: DEFAULT_IGNORED_PATTERNS,
+      },
+    )
+    if (fallbackFiles.length > 0) {
+      const fallbackPath = path.resolve(process.cwd(), fallbackFiles[0])
+      console.log(
+        kleur.gray(
+          `No standard entrypoint found. Using fallback file: '${path.relative(process.cwd(), fallbackPath)}'`,
+        ),
+      )
+      snippetFilePath = fallbackPath
+    }
+  }
 
   if (!snippetFilePath) {
     return onExit(1)
