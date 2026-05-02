@@ -35,6 +35,10 @@ import {
   convertBomRowsToCsv,
 } from "circuit-json-to-bom-csv"
 import { convertCircuitJsonToPickAndPlaceCsv } from "circuit-json-to-pnp-csv"
+import { circuitJsonToSpice } from "circuit-json-to-spice"
+import { convertCircuitJsonToBpc } from "circuit-json-to-bpc"
+import { getFullConnectivityMapFromCircuitJson } from "circuit-json-to-connectivity-map"
+import { convertCircuitJsonToSimple3dSvg } from "circuit-json-to-simple-3d"
 
 const writeFileAsync = promisify(fs.writeFile)
 
@@ -55,6 +59,12 @@ export const ALLOWED_EXPORT_FORMATS = [
   "srj",
   "step",
   "assembly-svg",
+  "pnp-csv",
+  "bom-csv",
+  "spice",
+  "bpc",
+  "connectivity-map",
+  "simple-3d",
 ] as const
 
 export type ExportFormat = (typeof ALLOWED_EXPORT_FORMATS)[number]
@@ -76,6 +86,12 @@ const OUTPUT_EXTENSIONS: Record<ExportFormat, string> = {
   "kicad-library": "",
   srj: ".simple-route.json",
   step: ".step",
+  "pnp-csv": "-pnp.csv",
+  "bom-csv": "-bom.csv",
+  spice: ".spice",
+  bpc: ".bpc.json",
+  "connectivity-map": "-connectivity-map.json",
+  "simple-3d": "-simple-3d.svg",
 }
 
 const isRecord = (value: unknown): value is Record<string, unknown> =>
@@ -344,6 +360,34 @@ export const exportSnippet = async ({
       break
     case "assembly-svg":
       outputContent = convertCircuitJsonToAssemblySvg(circuitJson)
+      break
+    case "pnp-csv":
+      outputContent = await convertCircuitJsonToPickAndPlaceCsv(circuitJson)
+      break
+    case "bom-csv":
+      outputContent = await convertBomRowsToCsv(
+        await convertCircuitJsonToBomRows({ circuitJson }),
+      )
+      break
+    case "spice":
+      outputContent = circuitJsonToSpice(circuitJson).toSpiceString()
+      break
+    case "bpc":
+      outputContent = JSON.stringify(
+        convertCircuitJsonToBpc(circuitJson),
+        null,
+        2,
+      )
+      break
+    case "connectivity-map":
+      outputContent = JSON.stringify(
+        getFullConnectivityMapFromCircuitJson(circuitJson),
+        null,
+        2,
+      )
+      break
+    case "simple-3d":
+      outputContent = await convertCircuitJsonToSimple3dSvg(circuitJson)
       break
     default:
       outputContent = JSON.stringify(circuitJson, null, 2)
