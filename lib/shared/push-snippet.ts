@@ -131,7 +131,6 @@ export const pushSnippet = async ({
     onError: () => {}, // Suppress error here, we'll handle fallback below
   })
 
-
   // If no entrypoint found, try finding board files (like `tsci dev` does)
   if (!snippetFilePath) {
     const boardFiles = findBoardFiles({
@@ -160,6 +159,7 @@ export const pushSnippet = async ({
   const projectDir = packageJsonPath
     ? path.dirname(packageJsonPath)
     : path.dirname(snippetFilePath)
+  if (!packageJsonPath) {
     onError(
       "No package.json found, try running 'tsci init' to bootstrap the project",
     )
