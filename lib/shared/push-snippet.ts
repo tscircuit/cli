@@ -15,6 +15,9 @@ import { checkOrgAccess } from "lib/utils/check-org-access"
 import { isBinaryFile } from "./is-binary-file"
 import { hasBinaryContent } from "./has-binary-content"
 import JSZip from "jszip"
+import { findBoardFiles } from "./find-board-files"
+import { globbySync } from "globby"
+import { DEFAULT_IGNORED_PATTERNS } from "./should-ignore-path"
 
 type PushOptions = {
   filePath?: string
@@ -29,6 +32,26 @@ type PushOptions = {
 }
 
 const debug = Debug("tsci:push-snippet")
+
+const findSelectableFiles = (projectDir: string): string[] => {
+  const boardFiles = findBoardFiles({ projectDir })
+    .filter((file) => fs.existsSync(file))
+    .sort()
+
+  if (boardFiles.length > 0) {
+    return boardFiles
+  }
+
+  const files = globbySync(["**/*.tsx", "**/*.ts", "**/*.circuit.json"], {
+    cwd: projectDir,
+    ignore: DEFAULT_IGNORED_PATTERNS,
+  })
+
+  return files
+    .map((file) => path.resolve(projectDir, file))
+    .filter((file) => fs.existsSync(file))
+    .sort()
+}
 
 const findPushProject = async ({
   filePath,
@@ -74,7 +97,9 @@ const findPushProject = async ({
       projectDir,
       onSuccess: () => {},
       onError: () => {},
-    })) ?? undefined
+    })) ??
+    findSelectableFiles(projectDir)[0] ??
+    undefined
 
   return { snippetFilePath, packageJsonPath, projectDir }
 }
@@ -180,13 +205,12 @@ export const pushSnippet = async ({
   const packageJsonHasName = Boolean(packageJson.name)
   if (!packageJsonHasName) {
     console.log(kleur.gray("No package name found in package.json"))
-    let inputName: string
-    ;({ unscopedPackageName: inputName } = await prompts({
+    const { unscopedPackageName: inputName } = await prompts({
       type: "text",
       name: "unscopedPackageName",
       message: `Enter the unscoped package name:`,
       instructions: `Your package will be published as "@tsci/${currentUsername}.<unscoped package name>"`,
-    }))
+    })
 
     if (!inputName) {
       onError("Package name is required")
