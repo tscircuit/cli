@@ -519,3 +519,49 @@ test("getEntrypoint warns when multiple common locations exist", async () => {
   expect(warnings[0]).toContain("Choosing 'index.tsx'")
   expect(warnings[0]).toContain("'src/index.tsx'")
 })
+
+test("getEntrypoint returns circuit.json as implicit entrypoint when no tsx/ts files exist", async () => {
+  const { tmpDir } = await getCliTestFixture()
+
+  // Create only a circuit.json file, no tsx/ts entrypoints
+  await fs.writeFile(
+    path.join(tmpDir, "prebuilt.circuit.json"),
+    JSON.stringify([{ type: "source_component", name: "U1" }]),
+  )
+
+  let onSuccessMessage = ""
+  const entrypoint = await getEntrypoint({
+    projectDir: tmpDir,
+    onSuccess: (msg) => {
+      onSuccessMessage = msg
+    },
+  })
+
+  expect(entrypoint).not.toBeNull()
+  expect(entrypoint).toBe(path.join(tmpDir, "prebuilt.circuit.json"))
+  expect(onSuccessMessage).toContain(
+    "Using circuit.json as implicit entrypoint",
+  )
+})
+
+test("getEntrypoint prefers tsx entrypoint over circuit.json", async () => {
+  const { tmpDir } = await getCliTestFixture()
+
+  // Create both a circuit.json and an index.tsx
+  await fs.writeFile(
+    path.join(tmpDir, "prebuilt.circuit.json"),
+    JSON.stringify([{ type: "source_component", name: "U1" }]),
+  )
+  await fs.writeFile(
+    path.join(tmpDir, "index.tsx"),
+    'export default () => <board width="10mm" height="10mm"></board>',
+  )
+
+  const entrypoint = await getEntrypoint({
+    projectDir: tmpDir,
+  })
+
+  // Should prefer the tsx file since it comes first in ALLOWED_ENTRYPOINT_NAMES
+  expect(entrypoint).not.toBeNull()
+  expect(entrypoint).toBe(path.join(tmpDir, "index.tsx"))
+})

@@ -1,5 +1,6 @@
 import * as fs from "node:fs"
 import * as path from "node:path"
+import { globbySync } from "globby"
 import { loadProjectConfig } from "lib/project-config"
 import kleur from "kleur"
 
@@ -200,6 +201,27 @@ export const getEntrypoint = async ({
         onSuccess(`Detected entrypoint: '${relativePath}'`)
         return entrypoint
       }
+    }
+
+    // No entrypoint found - check for circuit.json files as implicit entrypoints
+    // This allows `tsci push` to work the same as `tsci dev` which supports circuit.json files
+    const circuitJsonFiles = globbySync(
+      ["**/*.circuit.json", "**/circuit.json"],
+      {
+        cwd: validatedProjectDir,
+        ignore: ["**/node_modules/**", "**/dist/**"],
+      },
+    )
+      .map((f) => path.resolve(validatedProjectDir, f))
+      .filter(
+        (f) => fs.existsSync(f) && isValidDirectory(f, validatedProjectDir),
+      )
+      .sort()
+
+    if (circuitJsonFiles.length > 0) {
+      const chosenFile = path.relative(validatedProjectDir, circuitJsonFiles[0])
+      onSuccess(`Using circuit.json as implicit entrypoint: '${chosenFile}'`)
+      return circuitJsonFiles[0]
     }
 
     onError(
