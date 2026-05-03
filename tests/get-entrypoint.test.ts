@@ -539,7 +539,9 @@ test("getEntrypoint returns circuit.json as implicit entrypoint when no tsx/ts f
 
   expect(entrypoint).not.toBeNull()
   expect(entrypoint).toBe(path.join(tmpDir, "prebuilt.circuit.json"))
-  expect(onSuccessMessage).toContain("Using circuit.json as implicit entrypoint")
+  expect(onSuccessMessage).toContain(
+    "Using circuit.json as implicit entrypoint",
+  )
 })
 
 test("getEntrypoint prefers tsx entrypoint over circuit.json", async () => {
