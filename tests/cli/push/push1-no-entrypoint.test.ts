@@ -3,13 +3,13 @@ import { getCliTestFixture } from "../../fixtures/get-cli-test-fixture"
 import * as fs from "node:fs"
 import * as path from "node:path"
 
-test("should fail if no package.json is found", async () => {
+test("should fail if no entrypoint and no package.json are found", async () => {
   const { runCommand } = await getCliTestFixture({ loggedIn: true })
   const { stderr, exitCode } = await runCommand("tsci push")
 
   expect(exitCode).toBe(1)
-  expect(stderr).toBe(
-    "No package.json found, try running 'tsci init' to bootstrap the project\n",
+  expect(stderr).toContain(
+    "No entrypoint found. Run 'tsci init' to bootstrap a basic project or specify a file with 'tsci push <file>",
   )
 })
 
