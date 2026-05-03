@@ -6,6 +6,7 @@ import semver from "semver"
 import Debug from "debug"
 import kleur from "kleur"
 import { getEntrypoint } from "./get-entrypoint"
+import { findBoardFiles } from "./find-board-files"
 import prompts from "lib/utils/prompts"
 import { getUnscopedPackageName } from "lib/utils/get-unscoped-package-name"
 import { getPackageAuthor } from "lib/utils/get-package-author"
@@ -123,17 +124,41 @@ export const pushSnippet = async ({
     return onExit(1)
   }
 
-  const pushProject = await findPushProject({
+  // Detect the entrypoint file - first try standard entrypoints, then board files
+  let snippetFilePath = await getEntrypoint({
     filePath,
-    onError,
+    onSuccess: () => {},
+    onError: () => {}, // Suppress error here, we'll handle fallback below
   })
 
-  if (!pushProject) {
+  // If no entrypoint found, try finding board files (like `tsci dev` does)
+  if (!snippetFilePath) {
+    const boardFiles = findBoardFiles({
+      projectDir: filePath ? path.dirname(filePath) : process.cwd(),
+    })
+    if (boardFiles.length > 0) {
+      snippetFilePath = boardFiles[0]
+    }
+  }
+
+  // If still no entrypoint, show error
+  if (!snippetFilePath) {
+    onError(
+      kleur.red(
+        "No entrypoint found. Run 'tsci init' to bootstrap a basic project or specify a file with 'tsci push <file>'",
+      ),
+    )
     return onExit(1)
   }
 
-  const { snippetFilePath, packageJsonPath, projectDir } = pushProject
-
+  // Determine projectDir and packageJsonPath from snippetFilePath
+  const packageJsonPath = [
+    path.resolve(path.join(path.dirname(snippetFilePath), "package.json")),
+    path.resolve(path.join(process.cwd(), "package.json")),
+  ].find((candidatePath) => fs.existsSync(candidatePath))
+  const projectDir = packageJsonPath
+    ? path.dirname(packageJsonPath)
+    : path.dirname(snippetFilePath)
   if (!packageJsonPath) {
     onError(
       "No package.json found, try running 'tsci init' to bootstrap the project",
