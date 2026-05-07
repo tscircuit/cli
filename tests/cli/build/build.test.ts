@@ -35,6 +35,54 @@ test("build with file only outputs that file", async () => {
   ).rejects.toBeTruthy()
 }, 30_000)
 
+test("build with -e outputs inline circuit json", async () => {
+  const { tmpDir, runCommand } = await getCliTestFixture()
+
+  await runCommand([
+    "tsci",
+    "build",
+    "-e",
+    `
+export default () => (
+  <board width="10mm" height="10mm">
+    <resistor resistance="1k" footprint="0402" name="R_inline" schX={3} pcbX={3} />
+  </board>
+)`,
+  ])
+
+  const data = await readFile(
+    path.join(tmpDir, "dist", "inline", "circuit.json"),
+    "utf-8",
+  )
+  const json = JSON.parse(data)
+  const component = json.find((c: any) => c.type === "source_component")
+  expect(component.name).toBe("R_inline")
+
+  const leftoverInlineFiles = (await readdir(tmpDir)).filter(
+    (fileName) =>
+      fileName.startsWith(".tsci-inline-build-") &&
+      fileName.endsWith(".circuit.tsx"),
+  )
+  expect(leftoverInlineFiles).toEqual([])
+}, 30_000)
+
+test("build with -e rejects a file argument", async () => {
+  const { tmpDir, runCommand } = await getCliTestFixture()
+  const circuitPath = path.join(tmpDir, "test-circuit.tsx")
+  await writeFile(circuitPath, circuitCode)
+
+  const { stderr, exitCode } = await runCommand([
+    "tsci",
+    "build",
+    circuitPath,
+    "-e",
+    circuitCode,
+  ])
+
+  expect(exitCode).toBe(1)
+  expect(stderr).toContain("Cannot use a file argument together with --eval")
+}, 30_000)
+
 // When no file is provided search for *.circuit.tsx and *.board.tsx files
 
 test("build without file builds circuit and board files", async () => {

@@ -12,7 +12,7 @@ import * as path from "node:path"
 export interface CliTestFixture {
   tmpDir: string
   runCommand: (
-    command: string,
+    command: string | string[],
   ) => Promise<{ stdout: string; stderr: string; exitCode: number }>
   registryServer: any
   registryDb: DbClient
@@ -80,8 +80,8 @@ export async function getCliTestFixture(
   }
 
   // Create command runner
-  const runCommand = async (command: string) => {
-    const args = command.split(" ")
+  const runCommand = async (command: string | string[]) => {
+    const args = Array.isArray(command) ? [...command] : command.split(" ")
     if (args[0] !== "tsci") {
       throw new Error(
         `Expected command to start with \"tsci\", got: ${command}`,

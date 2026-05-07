@@ -29,6 +29,7 @@ export interface BuildCommandOptions {
   profile?: boolean
   useCdnJavascript?: boolean
   concurrency?: string
+  eval?: string
   injectProps?: string
   injectPropsFile?: string
   pngs?: boolean
