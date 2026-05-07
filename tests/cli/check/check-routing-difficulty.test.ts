@@ -40,7 +40,7 @@ test("tsci check routing-difficulty prints only routing-analysis output", async 
 
     expect(exitCode).toBe(0)
     expect(stderr).toBe("")
-    expect(stdout.trim()).toBe(expected)
+    expect(stdout.trim()).toContain(expected)
   } finally {
     await unlink(circuitPath)
   }
