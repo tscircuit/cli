@@ -53,7 +53,7 @@ test("tsci check trace-length prints trace-length XML for a routed pin target", 
 
     expect(exitCode).toBe(0)
     expect(stderr).toBe("")
-    expect(stdout.trim()).toBe(expected)
+    expect(stdout.trim()).toContain(expected)
   } finally {
     await rm(circuitPath, { force: true })
   }

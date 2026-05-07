@@ -12,8 +12,10 @@ test("clone command fetches and creates package files correctly", async () => {
 
   expect(dirFiles).toMatchInlineSnapshot(`
     [
+      ".cursor",
       ".gitignore",
       ".npmrc",
+      "CLAUDE.md",
       "README.md",
       "bun.lock",
       "dist",
