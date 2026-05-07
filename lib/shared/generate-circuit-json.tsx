@@ -19,6 +19,7 @@ const ALLOWED_FILE_EXTENSIONS = [
   ".md",
   ".obj",
   ".kicad_mod",
+  ".kicad_pcb",
 ]
 
 type GenerateCircuitJsonOptions = {

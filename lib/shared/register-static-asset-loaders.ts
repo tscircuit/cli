@@ -1,5 +1,6 @@
 import fs from "node:fs"
 import path from "node:path"
+import { KicadToCircuitJsonConverter } from "kicad-to-circuit-json"
 
 const STATIC_ASSET_EXTENSIONS = [
   ".glb",
@@ -57,6 +58,27 @@ export const registerStaticAssetLoaders = () => {
       name: "tsci-static-assets",
       setup(build) {
         build.onLoad({ filter: staticAssetFilter }, (args) => {
+          if (args.path.endsWith(".kicad_pcb")) {
+            const converter = new KicadToCircuitJsonConverter()
+            converter.addFile(args.path, fs.readFileSync(args.path, "utf-8"))
+            converter.runUntilFinished()
+            const circuitJson = converter.getOutput()
+            const Board = (props: Record<string, unknown>) =>
+              (globalThis as any).React.createElement("board", {
+                ...props,
+                circuitJson,
+              })
+            return {
+              exports: {
+                __esModule: true,
+                default: circuitJson,
+                Board,
+                circuitJson,
+              },
+              loader: "object",
+            }
+          }
+
           const baseDir = baseUrl
             ? path.resolve(process.cwd(), baseUrl)
             : process.cwd()
