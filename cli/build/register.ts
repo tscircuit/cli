@@ -16,7 +16,12 @@ import { getLatestTscircuitCdnUrl } from "../utils/get-latest-tscircuit-cdn-url"
 import { validateMainInDist } from "../utils/validate-main-in-dist"
 import { type BuildCommandOptions, applyCiBuildOptions } from "./build-ci"
 import { buildFile } from "./build-file"
+import { getBuildFileMetadata } from "./build-file-metadata"
 import { buildGlbs } from "./build-glbs"
+import {
+  createInlineBuildFile,
+  type InlineBuildFile,
+} from "./inline-build-file"
 import { buildKicadPcm } from "./build-kicad-pcm"
 import { buildPreviewGltf } from "./build-preview-gltf"
 import type { BuildFileResult } from "./build-preview-images"
@@ -91,23 +96,6 @@ const parseInjectedProps = ({
   }
 
   return parsed as Record<string, unknown>
-}
-
-const getOutputDirName = (relativePath: string) => {
-  const normalizedRelativePath = relativePath
-    .toLowerCase()
-    .replaceAll("\\", "/")
-
-  if (
-    normalizedRelativePath === "circuit.json" ||
-    normalizedRelativePath.endsWith("/circuit.json")
-  ) {
-    return path.dirname(relativePath)
-  }
-
-  return relativePath
-    .replace(/(\.board|\.circuit)?\.tsx$/, "")
-    .replace(/\.circuit\.json$/, "")
 }
 
 export const registerBuild = (program: Command) => {
@@ -203,8 +191,7 @@ export const registerBuild = (program: Command) => {
       "Inject JSON props from a file into the built file's default export",
     )
     .action(async (file?: string, options?: BuildCommandOptions) => {
-      let inlineBuildFilePath: string | undefined
-      let cleanupInlineBuildFile: (() => void) | undefined
+      let inlineBuildFile: InlineBuildFile | undefined
       try {
         const transpileExplicitlyRequested = options?.transpile === true
         if (file && options?.eval) {
@@ -253,39 +240,27 @@ export const registerBuild = (program: Command) => {
           return
         }
 
-        const inlineBuildOutputDirName = "inline"
-        const isInlineBuildFile = (filePath: string) =>
-          Boolean(
-            inlineBuildFilePath &&
-              path.resolve(filePath) === inlineBuildFilePath,
-          )
-        const getBuildOutputDirName = (filePath: string) =>
-          isInlineBuildFile(filePath)
-            ? inlineBuildOutputDirName
-            : getOutputDirName(path.relative(projectDir, filePath))
-        const getBuildDisplayPath = (filePath: string) =>
-          isInlineBuildFile(filePath)
-            ? "inline.tsx"
-            : path.relative(projectDir, filePath)
-
         if (resolvedOptions?.eval) {
-          inlineBuildFilePath = path.join(
+          inlineBuildFile = createInlineBuildFile({
+            code: resolvedOptions.eval,
             projectDir,
-            `.tsci-inline-build-${process.pid}-${Date.now()}.circuit.tsx`,
-          )
-          cleanupInlineBuildFile = () => {
-            if (inlineBuildFilePath && fs.existsSync(inlineBuildFilePath)) {
-              fs.unlinkSync(inlineBuildFilePath)
-            }
-          }
-          process.once("exit", cleanupInlineBuildFile)
-          fs.writeFileSync(inlineBuildFilePath, resolvedOptions.eval)
+          })
+          process.once("exit", inlineBuildFile.cleanup)
         }
+
+        const fileForEntrypoints = inlineBuildFile?.filePath ?? file
+        const getMetadataForFile = (filePath: string) =>
+          getBuildFileMetadata({
+            filePath,
+            projectDir,
+            inlineBuildFilePath: inlineBuildFile?.filePath,
+          })
 
         // When --kicad-project is used without a file argument and kicadProjectEntrypointPath is set,
         // use that as the file to build
-        let fileOrDirForBuild = file
+        let fileOrDirForBuild = fileForEntrypoints
         if (
+          !inlineBuildFile &&
           !file &&
           resolvedOptions?.kicadProject &&
           projectConfig?.kicadProjectEntrypointPath
@@ -298,16 +273,17 @@ export const registerBuild = (program: Command) => {
           mainEntrypoint,
           previewComponentPath,
           siteDefaultComponentPath,
-        } = inlineBuildFilePath
-          ? {
-              circuitFiles: [inlineBuildFilePath],
-              mainEntrypoint: inlineBuildFilePath,
-              previewComponentPath: undefined,
-              siteDefaultComponentPath: undefined,
-            }
-          : await getBuildEntrypoints({
-              fileOrDir: fileOrDirForBuild,
-            })
+        } = await getBuildEntrypoints({
+          fileOrDir: fileOrDirForBuild,
+        })
+        let buildMainEntrypoint = mainEntrypoint
+        let buildPreviewComponentPath = previewComponentPath
+        let buildSiteDefaultComponentPath = siteDefaultComponentPath
+        if (inlineBuildFile) {
+          buildMainEntrypoint = inlineBuildFile.filePath
+          buildPreviewComponentPath = undefined
+          buildSiteDefaultComponentPath = undefined
+        }
 
         const platformConfig: PlatformConfig | undefined = (() => {
           if (
@@ -421,7 +397,7 @@ export const registerBuild = (program: Command) => {
         buildOptions.generatePreviewAssets = shouldGeneratePreviewAssetsInWorker
 
         const previewEntrypointForWorker =
-          previewComponentPath || mainEntrypoint
+          buildPreviewComponentPath || buildMainEntrypoint
         const resolvedPreviewEntrypointForWorker = previewEntrypointForWorker
           ? path.resolve(previewEntrypointForWorker)
           : undefined
@@ -438,8 +414,8 @@ export const registerBuild = (program: Command) => {
             isFatalError?: { errorType: string; message: string }
           },
         ) => {
-          const relative = path.relative(projectDir, filePath)
-          const outputDirName = getBuildOutputDirName(filePath)
+          const fileMetadata = getMetadataForFile(filePath)
+          const outputDirName = fileMetadata.outputDirName
 
           builtFiles.push({
             sourcePath: filePath,
@@ -474,15 +450,12 @@ export const registerBuild = (program: Command) => {
               )
             }
           } else if (resolvedOptions?.site) {
-            const normalizedSourcePath = isInlineBuildFile(filePath)
-              ? "inline.tsx"
-              : relative.split(path.sep).join("/")
             const relativeOutputPath = path.join(outputDirName, "circuit.json")
             const normalizedOutputPath = relativeOutputPath
               .split(path.sep)
               .join("/")
             staticFileReferences.push({
-              filePath: normalizedSourcePath,
+              filePath: fileMetadata.staticSourcePath,
               fileStaticAssetUrl: `./${normalizedOutputPath}`,
             })
           }
@@ -554,9 +527,10 @@ export const registerBuild = (program: Command) => {
         // Sequential build function (used when concurrency is 1)
         const buildSequentially = async () => {
           for (const filePath of circuitFiles) {
-            const relative = getBuildDisplayPath(filePath)
+            const fileMetadata = getMetadataForFile(filePath)
+            const relative = fileMetadata.displayPath
             console.log(`Building ${relative}...`)
-            const outputDirName = getBuildOutputDirName(filePath)
+            const outputDirName = fileMetadata.outputDirName
             const outputPath = path.join(distDir, outputDirName, "circuit.json")
             const startedAt = resolvedOptions?.profile ? performance.now() : 0
             const buildOutcome = await buildFile(
@@ -583,7 +557,8 @@ export const registerBuild = (program: Command) => {
         // Parallel build function (used when concurrency > 1)
         const buildWithWorkers = async () => {
           const filesToBuild = circuitFiles.map((filePath) => {
-            const outputDirName = getBuildOutputDirName(filePath)
+            const fileMetadata = getMetadataForFile(filePath)
+            const outputDirName = fileMetadata.outputDirName
             const outputPath = path.join(distDir, outputDirName, "circuit.json")
             const glbOutputPath = resolvedOptions?.glbs
               ? path.join(distDir, outputDirName, "3d.glb")
@@ -634,7 +609,9 @@ export const registerBuild = (program: Command) => {
               }
             },
             onJobComplete: async (result: BuildJobResult) => {
-              const relative = getBuildDisplayPath(result.filePath)
+              const { displayPath: relative } = getMetadataForFile(
+                result.filePath,
+              )
               if (result.ok) {
                 if (result.hasErrors) {
                   console.log(
@@ -715,8 +692,8 @@ export const registerBuild = (program: Command) => {
             await buildPreviewImages({
               builtFiles,
               distDir,
-              mainEntrypoint,
-              previewComponentPath,
+              mainEntrypoint: buildMainEntrypoint,
+              previewComponentPath: buildPreviewComponentPath,
               allImages: shouldGenerateAllPreviewImages,
               imageFormats: imageFormatSelection,
               pcbSnapshotSettings: resolvedOptions?.showCourtyards
@@ -734,8 +711,8 @@ export const registerBuild = (program: Command) => {
           await buildPreviewGltf({
             builtFiles,
             distDir,
-            mainEntrypoint,
-            previewComponentPath,
+            mainEntrypoint: buildMainEntrypoint,
+            previewComponentPath: buildPreviewComponentPath,
           })
         }
 
@@ -759,14 +736,13 @@ export const registerBuild = (program: Command) => {
           console.log("Transpiling entry file...")
           // For transpilation, we need to find the main library entrypoint
           // (not board files).
-          const { mainEntrypoint: transpileEntrypoint } = inlineBuildFilePath
-            ? { mainEntrypoint: inlineBuildFilePath }
-            : await getBuildEntrypoints({
-                fileOrDir: file,
-                includeBoardFiles: false,
-              })
-          const resolvedFileArgPath = file
-            ? path.resolve(projectDir, file)
+          const { mainEntrypoint: transpileEntrypoint } =
+            await getBuildEntrypoints({
+              fileOrDir: fileForEntrypoints,
+              includeBoardFiles: false,
+            })
+          const resolvedFileArgPath = fileForEntrypoints
+            ? path.resolve(projectDir, fileForEntrypoints)
             : undefined
           const fileArgIsDirectFile = Boolean(
             resolvedFileArgPath &&
@@ -820,8 +796,8 @@ export const registerBuild = (program: Command) => {
           const indexHtml = getStaticIndexHtmlFile({
             files: staticFileReferences,
             standaloneScriptSrc,
-            defaultMainComponentPath: siteDefaultComponentPath
-              ? normalizeRelativePath(projectDir, siteDefaultComponentPath)
+            defaultMainComponentPath: buildSiteDefaultComponentPath
+              ? normalizeRelativePath(projectDir, buildSiteDefaultComponentPath)
               : undefined,
             packageName: packageName || path.basename(projectDir),
           })
@@ -831,21 +807,22 @@ export const registerBuild = (program: Command) => {
         if (resolvedOptions?.kicadLibrary) {
           console.log("Generating KiCad library...")
           // Find the main library entrypoint for KiCad library generation
-          const { mainEntrypoint: kicadEntrypoint } = inlineBuildFilePath
-            ? { mainEntrypoint: inlineBuildFilePath }
-            : await getBuildEntrypoints({
-                fileOrDir: file,
-                includeBoardFiles: false,
-              })
+          const { mainEntrypoint: kicadEntrypoint } = await getBuildEntrypoints(
+            {
+              fileOrDir: fileForEntrypoints,
+              includeBoardFiles: false,
+            },
+          )
           const projectConfig = loadProjectConfig(projectDir)
-          const entryFile =
-            !inlineBuildFilePath &&
-            projectConfig?.kicadLibraryEntrypointPath != null
-              ? await getEntrypoint({
-                  filePath: projectConfig.kicadLibraryEntrypointPath,
-                  projectDir,
-                })
-              : kicadEntrypoint
+          let entryFile: string | null | undefined = kicadEntrypoint
+          if (inlineBuildFile) {
+            entryFile = inlineBuildFile.filePath
+          } else if (projectConfig?.kicadLibraryEntrypointPath != null) {
+            entryFile = await getEntrypoint({
+              filePath: projectConfig.kicadLibraryEntrypointPath,
+              projectDir,
+            })
+          }
           if (!entryFile) {
             console.error(
               "No entry file found for KiCad library generation. Make sure you have a lib/index.ts or set mainEntrypoint/kicadLibraryEntrypointPath in tscircuit.config.json",
@@ -880,22 +857,23 @@ export const registerBuild = (program: Command) => {
 
         if (resolvedOptions?.kicadPcm) {
           console.log("Generating KiCad PCM assets...")
-          const { mainEntrypoint: kicadEntrypoint } = inlineBuildFilePath
-            ? { mainEntrypoint: inlineBuildFilePath }
-            : await getBuildEntrypoints({
-                fileOrDir: file,
-                includeBoardFiles: false,
-              })
+          const { mainEntrypoint: kicadEntrypoint } = await getBuildEntrypoints(
+            {
+              fileOrDir: fileForEntrypoints,
+              includeBoardFiles: false,
+            },
+          )
 
           const projectConfig = loadProjectConfig(projectDir)
-          const entryFile =
-            !inlineBuildFilePath &&
-            projectConfig?.kicadLibraryEntrypointPath != null
-              ? await getEntrypoint({
-                  filePath: projectConfig.kicadLibraryEntrypointPath,
-                  projectDir,
-                })
-              : kicadEntrypoint
+          let entryFile: string | null | undefined = kicadEntrypoint
+          if (inlineBuildFile) {
+            entryFile = inlineBuildFile.filePath
+          } else if (projectConfig?.kicadLibraryEntrypointPath != null) {
+            entryFile = await getEntrypoint({
+              filePath: projectConfig.kicadLibraryEntrypointPath,
+              projectDir,
+            })
+          }
 
           if (!entryFile) {
             console.error(
@@ -1013,9 +991,9 @@ export const registerBuild = (program: Command) => {
         console.error(message)
         exitBuild(1, "unexpected exception")
       } finally {
-        if (cleanupInlineBuildFile) {
-          process.removeListener("exit", cleanupInlineBuildFile)
-          cleanupInlineBuildFile()
+        if (inlineBuildFile) {
+          process.removeListener("exit", inlineBuildFile.cleanup)
+          inlineBuildFile.cleanup()
         }
       }
     })
