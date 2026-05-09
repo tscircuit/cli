@@ -1,8 +1,8 @@
-import { getCliTestFixture } from "../../fixtures/get-cli-test-fixture"
-import { test, expect } from "bun:test"
-import { writeFile, readdir, stat, copyFile } from "node:fs/promises"
-import path from "node:path"
+import { expect, test } from "bun:test"
 import fs from "node:fs"
+import { copyFile, readdir, stat, writeFile } from "node:fs/promises"
+import path from "node:path"
+import { getCliTestFixture } from "../../fixtures/get-cli-test-fixture"
 
 test("build kicad-project with builtin and custom 3D models", async () => {
   const { tmpDir, runCommand } = await getCliTestFixture()
@@ -55,8 +55,8 @@ export default () => (
   const builtinSteps = (await readdir(builtinShapesDir)).sort()
   expect(builtinSteps).toMatchInlineSnapshot(`
     [
-      "0402.step",
       "0603.step",
+      "res0402.step",
     ]
   `)
 
@@ -76,7 +76,7 @@ export default () => (
     "utf-8",
   )
   expect(pcbContent).toContain(
-    "${KIPRJMOD}/3dmodels/tscircuit_builtin.3dshapes/0402.step",
+    "${KIPRJMOD}/3dmodels/tscircuit_builtin.3dshapes/res0402.step",
   )
   expect(pcbContent).toContain(
     "${KIPRJMOD}/3dmodels/my-board.3dshapes/SW_Push_1P1T_NO_CK_KMR2.step",

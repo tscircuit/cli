@@ -1,8 +1,8 @@
-import type { PlatformConfig } from "@tscircuit/props"
-import { getPlatformConfig } from "@tscircuit/eval/platform-config"
 import { createHash } from "node:crypto"
-import path from "node:path"
 import fs from "node:fs"
+import path from "node:path"
+import { getPlatformConfig } from "@tscircuit/eval/platform-config"
+import type { PlatformConfig } from "@tscircuit/props"
 
 export function createLocalCacheEngine(
   cacheDir = path.join(process.cwd(), ".tscircuit", "cache"),
@@ -93,8 +93,7 @@ export function getCompletePlatformConfig(
     return defaultConfig
   }
 
-  // Merge user config with defaults, ensuring nested objects are properly merged
-  return {
+  const mergedConfig: PlatformConfig = {
     ...defaultConfig,
     ...userConfig,
     // If user provides footprintFileParserMap, merge it with our defaults
@@ -103,4 +102,13 @@ export function getCompletePlatformConfig(
       ...userConfig.footprintFileParserMap,
     },
   }
+
+  if (defaultConfig.staticFileLoaderMap || userConfig.staticFileLoaderMap) {
+    mergedConfig.staticFileLoaderMap = {
+      ...defaultConfig.staticFileLoaderMap,
+      ...userConfig.staticFileLoaderMap,
+    }
+  }
+
+  return mergedConfig
 }

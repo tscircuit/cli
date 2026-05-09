@@ -1,7 +1,7 @@
-import { getCliTestFixture } from "../../fixtures/get-cli-test-fixture"
-import { test, expect } from "bun:test"
-import { writeFile, readFile } from "node:fs/promises"
+import { expect, test } from "bun:test"
+import { readFile, writeFile } from "node:fs/promises"
 import path from "node:path"
+import { getCliTestFixture } from "../../fixtures/get-cli-test-fixture"
 
 const circuitCode = `
 export default () => (
@@ -42,7 +42,7 @@ test("export readable-netlist", async () => {
   )
   expect(readableNetlist).toMatchInlineSnapshot(`
     "COMPONENTS:
-     - R1: 1kΩ 0402 resistor
+     - R1: 1kΩ res0402 resistor
      - C1: 1000pF 0402 capacitor
 
     NET: C1_pos
@@ -51,7 +51,7 @@ test("export readable-netlist", async () => {
 
 
     COMPONENT_PINS:
-    R1 (1kΩ 0402)
+    R1 (1kΩ res0402)
     - pin1(anode, pos, left): NETS(C1_pos)
     - pin2(cathode, neg, right): NOT_CONNECTED
 

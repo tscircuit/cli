@@ -6,6 +6,7 @@ import Debug from "debug"
 import { abbreviateStringifyObject } from "lib/utils/abbreviate-stringify-object"
 import { getVirtualFileSystemFromDirPath } from "make-vfs"
 import { importFromUserLand } from "./importFromUserLand"
+import { registerStaticAssetLoaders } from "./register-static-asset-loaders"
 
 const debug = Debug("tsci:generate-circuit-json")
 
@@ -19,6 +20,9 @@ const ALLOWED_FILE_EXTENSIONS = [
   ".md",
   ".obj",
   ".kicad_mod",
+  ".kicad_pcb",
+  ".kicad_pro",
+  ".kicad_sch",
 ]
 
 type GenerateCircuitJsonOptions = {
@@ -51,6 +55,7 @@ export async function generateCircuitJson({
   // Import React and make it globally available for packages referencing it
   const React = await importFromUserLand("react")
   ;(globalThis as any).React = React
+  registerStaticAssetLoaders(platformConfig)
   const userLandTscircuit = await importFromUserLand("tscircuit")
 
   const runner = new userLandTscircuit.RootCircuit({

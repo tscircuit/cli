@@ -1,9 +1,9 @@
-import { getCliTestFixture } from "../../fixtures/get-cli-test-fixture"
-import { test, expect } from "bun:test"
-import { writeFile, readdir, mkdir, readFile } from "node:fs/promises"
-import path from "node:path"
+import { expect, test } from "bun:test"
 import fs from "node:fs"
+import { mkdir, readFile, readdir, writeFile } from "node:fs/promises"
+import path from "node:path"
 import JSZip from "jszip"
+import { getCliTestFixture } from "../../fixtures/get-cli-test-fixture"
 
 async function getDirectoryStructure(
   dir: string,
@@ -18,7 +18,7 @@ async function getDirectoryStructure(
     const relativePath = path.relative(base, fullPath)
 
     if (entry.isDirectory()) {
-      paths.push(relativePath + "/")
+      paths.push(`${relativePath}/`)
       paths.push(...(await getDirectoryStructure(fullPath, base)))
     } else {
       // Replace version-specific zip filename with placeholder
@@ -81,10 +81,10 @@ export const MyResistor = () => (
       "kicad-library-pcm/",
       "kicad-library-pcm/3dmodels/",
       "kicad-library-pcm/3dmodels/tscircuit_builtin.3dshapes/",
-      "kicad-library-pcm/3dmodels/tscircuit_builtin.3dshapes/0402.step",
+      "kicad-library-pcm/3dmodels/tscircuit_builtin.3dshapes/res0402.step",
       "kicad-library-pcm/footprints/",
       "kicad-library-pcm/footprints/tscircuit_builtin.pretty/",
-      "kicad-library-pcm/footprints/tscircuit_builtin.pretty/resistor_0402.kicad_mod",
+      "kicad-library-pcm/footprints/tscircuit_builtin.pretty/resistor_res0402.kicad_mod",
       "kicad-library-pcm/fp-lib-table",
       "kicad-library-pcm/sym-lib-table",
       "kicad-library-pcm/symbols/",
@@ -125,10 +125,10 @@ export const MyResistor = () => (
     [
       "3dmodels/",
       "3dmodels/tscircuit_builtin.3dshapes/",
-      "3dmodels/tscircuit_builtin.3dshapes/0402.step",
+      "3dmodels/tscircuit_builtin.3dshapes/res0402.step",
       "footprints/",
       "footprints/tscircuit_builtin.pretty/",
-      "footprints/tscircuit_builtin.pretty/resistor_0402.kicad_mod",
+      "footprints/tscircuit_builtin.pretty/resistor_res0402.kicad_mod",
       "metadata.json",
       "symbols/",
       "symbols/tscircuit_builtin.kicad_sym",
