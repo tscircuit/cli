@@ -1,8 +1,8 @@
-import { getCliTestFixture } from "../../fixtures/get-cli-test-fixture"
-import { test, expect } from "bun:test"
-import { writeFile, readFile, copyFile } from "node:fs/promises"
+import { expect, test } from "bun:test"
+import { copyFile, readFile, writeFile } from "node:fs/promises"
 import path from "node:path"
 import JSZip from "jszip"
+import { getCliTestFixture } from "../../fixtures/get-cli-test-fixture"
 
 test("export kicad zip includes user 3d models", async () => {
   const { tmpDir, runCommand } = await getCliTestFixture()
@@ -38,7 +38,7 @@ export default () => (
   const allFiles = Object.keys(zip.files).filter((f) => !f.endsWith("/"))
 
   // Builtin model fetched from CDN
-  expect(allFiles).toContain("3dmodels/tscircuit_builtin.3dshapes/0402.step")
+  expect(allFiles).toContain("3dmodels/tscircuit_builtin.3dshapes/res0402.step")
 
   // User model copied from local path
   expect(allFiles).toContain(
@@ -47,7 +47,7 @@ export default () => (
 
   // Both files should have non-zero content
   for (const f of [
-    "3dmodels/tscircuit_builtin.3dshapes/0402.step",
+    "3dmodels/tscircuit_builtin.3dshapes/res0402.step",
     "3dmodels/test-circuit.3dshapes/SW_Push_1P1T_NO_CK_KMR2.step",
   ]) {
     const content = await zip.files[f].async("nodebuffer")

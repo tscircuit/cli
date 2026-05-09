@@ -1,9 +1,9 @@
-import { getCliTestFixture } from "../../fixtures/get-cli-test-fixture"
-import { test, expect } from "bun:test"
-import { writeFile, readdir, mkdir, readFile } from "node:fs/promises"
-import path from "node:path"
+import { expect, test } from "bun:test"
 import fs from "node:fs"
+import { mkdir, readFile, readdir, writeFile } from "node:fs/promises"
+import path from "node:path"
 import JSZip from "jszip"
+import { getCliTestFixture } from "../../fixtures/get-cli-test-fixture"
 
 async function getDirectoryStructure(
   dir: string,
@@ -18,7 +18,7 @@ async function getDirectoryStructure(
     const relativePath = path.relative(base, fullPath)
 
     if (entry.isDirectory()) {
-      paths.push(relativePath + "/")
+      paths.push(`${relativePath}/`)
       paths.push(...(await getDirectoryStructure(fullPath, base)))
     } else {
       // Replace version-specific zip filename with placeholder
