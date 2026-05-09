@@ -1,5 +1,6 @@
 import fs from "node:fs"
 import path from "node:path"
+import type { PlatformConfig } from "@tscircuit/props"
 
 const STATIC_ASSET_EXTENSIONS = [
   ".glb",
@@ -20,6 +21,54 @@ const staticAssetFilter = new RegExp(
 )
 
 let registered = false
+let activePlatformConfig: PlatformConfig | undefined
+
+const TEXT_STATIC_ASSET_EXTENSIONS = new Set([
+  ".json",
+  ".txt",
+  ".md",
+  ".obj",
+  ".kicad_mod",
+  ".kicad_pcb",
+  ".kicad_pro",
+  ".kicad_sch",
+])
+
+const readFileContentForStaticLoader = (
+  filePath: string,
+): string | ArrayBufferLike => {
+  const ext = path.extname(filePath).toLowerCase()
+
+  if (TEXT_STATIC_ASSET_EXTENSIONS.has(ext)) {
+    return fs.readFileSync(filePath, "utf-8")
+  }
+
+  const buffer = fs.readFileSync(filePath)
+  return buffer.buffer.slice(
+    buffer.byteOffset,
+    buffer.byteOffset + buffer.byteLength,
+  )
+}
+
+const getStaticFileLoader = (filePath: string) => {
+  const extWithDot = path.extname(filePath).toLowerCase()
+  const ext = extWithDot.replace(/^\./, "")
+  return (
+    activePlatformConfig?.staticFileLoaderMap?.[ext] ??
+    activePlatformConfig?.staticFileLoaderMap?.[extWithDot]
+  )
+}
+
+const normalizeStaticFileLoaderResult = (result: any) => {
+  if (result && typeof result === "object" && result.__esModule) {
+    return result
+  }
+
+  return {
+    __esModule: true,
+    default: result,
+  }
+}
 
 /**
  * Finds and reads the tsconfig.json file, returning the baseUrl if configured.
@@ -46,7 +95,9 @@ const getBaseUrlFromTsConfig = (): string | null => {
   return null
 }
 
-export const registerStaticAssetLoaders = () => {
+export const registerStaticAssetLoaders = (platformConfig?: PlatformConfig) => {
+  activePlatformConfig = platformConfig
+
   if (registered) return
   registered = true
 
@@ -56,7 +107,19 @@ export const registerStaticAssetLoaders = () => {
     Bun.plugin({
       name: "tsci-static-assets",
       setup(build) {
-        build.onLoad({ filter: staticAssetFilter }, (args) => {
+        build.onLoad({ filter: staticAssetFilter }, async (args) => {
+          const staticFileLoader = getStaticFileLoader(args.path)
+          if (staticFileLoader) {
+            const loaderExports = normalizeStaticFileLoaderResult(
+              await staticFileLoader(readFileContentForStaticLoader(args.path)),
+            )
+
+            return {
+              exports: loaderExports,
+              loader: "object",
+            }
+          }
+
           const baseDir = baseUrl
             ? path.resolve(process.cwd(), baseUrl)
             : process.cwd()
