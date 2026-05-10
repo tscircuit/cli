@@ -135,7 +135,9 @@ export const pushSnippet = async ({
 
   // Fallback 1: try getEntrypoint if findPushProject didn't find a file
   if (!snippetFilePath) {
-    snippetFilePath = (await getEntrypoint({ filePath, onError })) ?? undefined
+    snippetFilePath =
+      (await getEntrypoint({ filePath, onSuccess: () => {}, onError })) ??
+      undefined
   }
 
   // Fallback 2: use globby to find any circuit file if still not found
