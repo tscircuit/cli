@@ -149,8 +149,11 @@ export const pushSnippet = async ({
   // Fallback 1: try getEntrypoint if findPushProject didn't find a file (silent)
   if (!snippetFilePath) {
     snippetFilePath =
-      (await getEntrypoint({ filePath, onSuccess: () => {}, onError: () => {} })) ??
-      undefined
+      (await getEntrypoint({
+        filePath,
+        onSuccess: () => {},
+        onError: () => {},
+      })) ?? undefined
   }
 
   // Fallback 2: use globby to find any circuit file if still not found
@@ -176,7 +179,7 @@ export const pushSnippet = async ({
   }
 
   let packageJson: { name?: string; author?: string; version?: string } = {}
-  if (fs.existsSync(packageJsonPath)) {
+  if (packageJsonPath && fs.existsSync(packageJsonPath)) {
     try {
       packageJson = JSON.parse(fs.readFileSync(packageJsonPath).toString())
     } catch {
@@ -238,7 +241,9 @@ export const pushSnippet = async ({
 
     // Write the package name to the package.json file
     packageJson.name = `@tsci/${currentUsername}.${unscopedPackageName}`
-    fs.writeFileSync(packageJsonPath, JSON.stringify(packageJson, null, 2))
+    if (packageJsonPath) {
+      fs.writeFileSync(packageJsonPath, JSON.stringify(packageJson, null, 2))
+    }
   }
 
   // Determine the account name to use (either user or org)
@@ -293,7 +298,9 @@ export const pushSnippet = async ({
   const updatePackageJsonVersion = (newVersion?: string) => {
     try {
       packageJson.version = newVersion ?? `${packageVersion}`
-      fs.writeFileSync(packageJsonPath, JSON.stringify(packageJson, null, 2))
+      if (packageJsonPath) {
+        fs.writeFileSync(packageJsonPath, JSON.stringify(packageJson, null, 2))
+      }
     } catch (error) {
       onError(`Failed to update package.json version: ${error}`)
     }
