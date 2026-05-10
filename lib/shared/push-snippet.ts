@@ -130,19 +130,31 @@ export const pushSnippet = async ({
     onError,
   })
 
+  const pkgResult = pushProject ?? {
+    packageJsonPath: undefined,
+    projectDir: process.cwd(),
+  }
+  const { packageJsonPath, projectDir } = pkgResult
+
+  if (!filePath && !packageJsonPath) {
+    onError(
+      "No package.json found, try running 'tsci init' to bootstrap the project",
+    )
+    return onExit(1)
+  }
+
   // Extract snippetFilePath, with fallback to getEntrypoint and globby
   let snippetFilePath = pushProject?.snippetFilePath
 
-  // Fallback 1: try getEntrypoint if findPushProject didn't find a file
+  // Fallback 1: try getEntrypoint if findPushProject didn't find a file (silent)
   if (!snippetFilePath) {
     snippetFilePath =
-      (await getEntrypoint({ filePath, onSuccess: () => {}, onError })) ??
+      (await getEntrypoint({ filePath, onSuccess: () => {}, onError: () => {} })) ??
       undefined
   }
 
   // Fallback 2: use globby to find any circuit file if still not found
   if (!snippetFilePath) {
-    const projectDir = process.cwd()
     const validFiles = globbySync(
       ["**/*.tsx", "**/*.ts", "**/*.circuit.json"],
       {
@@ -159,20 +171,7 @@ export const pushSnippet = async ({
     }
   }
 
-  if (!snippetFilePath) {
-    return onExit(1)
-  }
-
-  const pkgResult = pushProject ?? {
-    packageJsonPath: undefined,
-    projectDir: process.cwd(),
-  }
-  const { packageJsonPath, projectDir } = pkgResult
-
-  if (!packageJsonPath) {
-    onError(
-      "No package.json found, try running 'tsci init' to bootstrap the project",
-    )
+  if (!snippetFilePath && filePath) {
     return onExit(1)
   }
 
