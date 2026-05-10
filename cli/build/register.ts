@@ -732,7 +732,7 @@ export const registerBuild = (program: Command) => {
           const entryFile = fileArgIsDirectFile
             ? resolvedFileArgPath
             : transpileEntrypoint
-          if (!entryFile) {
+          if (!entryFile || (hasConfiguredIncludeBoardFiles && !transpileExplicitlyRequested)) {
             if (
               hasConfiguredIncludeBoardFiles &&
               !transpileExplicitlyRequested
