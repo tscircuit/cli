@@ -17,7 +17,7 @@
         "@tscircuit/krt-wasm": "^0.1.0",
         "@tscircuit/math-utils": "0.0.36",
         "@tscircuit/props": "^0.0.532",
-        "@tscircuit/runframe": "^0.0.1946",
+        "@tscircuit/runframe": "^0.0.1947",
         "@tscircuit/schematic-match-adapt": "^0.0.22",
         "@types/bun": "^1.2.2",
         "@types/configstore": "^6.0.2",
@@ -342,7 +342,7 @@
 
     "@tscircuit/props": ["@tscircuit/props@0.0.532", "", { "peerDependencies": { "circuit-json": "*", "react": "*", "zod": "*" } }, "sha512-dkfkxv/1o2cJ6gR2+jbwxglwgiXBfoXIxiYNOMzrvFPeIzTyC59nYzDZ0nYFWKsJN6rMMI+zuDyKIwoSBAXorA=="],
 
-    "@tscircuit/runframe": ["@tscircuit/runframe@0.0.1946", "", { "dependencies": { "@tscircuit/eval": "^0.0.837", "@tscircuit/solver-utils": "^0.0.7" } }, "sha512-MTfZYSIzkgvZik86IvzRGvq1WeuqWhSwLg7ajCLuhelOO83FWufc/W1aUqzVYxf6jUV8T+oBlc7WooZOnsyPVg=="],
+    "@tscircuit/runframe": ["@tscircuit/runframe@0.0.1947", "", { "dependencies": { "@tscircuit/eval": "^0.0.838", "@tscircuit/solver-utils": "^0.0.7" } }, "sha512-0tkFWSq+DLX+c4jzC0slWAmK4H6SdpF/M8b7SZYa6daKJ70xsRHqgHtXqAlCvmNy1t6NhUXmHGBejr53xd3tuQ=="],
 
     "@tscircuit/schematic-corpus": ["@tscircuit/schematic-corpus@0.0.114", "", { "peerDependencies": { "typescript": "^5" } }, "sha512-jDQX+XDXP6PklB39X8AwUSuiqGRdn78esy1wD/qG8U3cCXkT5rtE3ousDVaKRxclCeED8FxJlD+ZvRtAe8mw8w=="],
 
@@ -1178,7 +1178,7 @@
 
     "@tscircuit/core/transformation-matrix": ["transformation-matrix@2.16.1", "", {}, "sha512-tdtC3wxVEuzU7X/ydL131Q3JU5cPMEn37oqVLITjRDSDsnSHVFzW2JiCLfZLIQEgWzZHdSy3J6bZzvKEN24jGA=="],
 
-    "@tscircuit/runframe/@tscircuit/eval": ["@tscircuit/eval@0.0.837", "", { "peerDependencies": { "@tscircuit/core": "*", "circuit-json": "*", "typescript": "^5.0.0", "zod": "3" } }, "sha512-v5GRGOka+pBVUFxe+0TtVeu3xl5WSeSph7wMv9efdZ9w35EvYAjrOkCcA+jx2taZnGgvTQNe09kCowuhncffYg=="],
+    "@tscircuit/runframe/@tscircuit/eval": ["@tscircuit/eval@0.0.838", "", { "peerDependencies": { "@tscircuit/core": "*", "circuit-json": "*", "typescript": "^5.0.0", "zod": "3" } }, "sha512-R0P79BnfqModD7XqHvIq+D0yrOitpjp8evnSuP8RK9r2YCWNRT2US1l4CR87v+k7mKUokEVAzlKwsHN4JACbtA=="],
 
     "@types/prompts/kleur": ["kleur@3.0.3", "", {}, "sha512-eTIzlVOSUR+JxdDFepEYcBMtZ9Qqdef+rnzWdRZuMbOywu5tO2w2N7rqjoANZ5k9vywhL6Br1VRjUIgTQx4E8w=="],
 
