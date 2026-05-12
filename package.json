@@ -71,7 +71,7 @@
     "semver": "^7.6.3",
     "stepts": "^0.0.3",
     "tempy": "^3.1.0",
-    "tscircuit": "0.0.1744-libonly",
+    "tscircuit": "0.0.1590-libonly",
     "tsx": "^4.7.1",
     "typed-ky": "^0.0.4",
     "zod": "^3.23.8"
