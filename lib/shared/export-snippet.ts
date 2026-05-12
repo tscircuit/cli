@@ -22,6 +22,7 @@ import JSZip from "jszip"
 import { circuitJsonToStep } from "circuit-json-to-step"
 import { generateCircuitJson } from "lib/shared/generate-circuit-json"
 import { getCircuitJsonToGltfOptions } from "lib/shared/get-circuit-json-to-gltf-options"
+import { loadLocalStepModelFsMap } from "lib/shared/load-local-step-model-fs-map"
 import { convertToKicadLibrary } from "./convert-to-kicad-library"
 import { isCircuitJsonFile } from "./is-circuit-json-file"
 import {
@@ -340,7 +341,11 @@ export const exportSnippet = async ({
     }
 
     case "step":
-      outputContent = await circuitJsonToStep(circuitJson)
+      outputContent = await circuitJsonToStep(circuitJson, {
+        includeComponents: true,
+        includeExternalMeshes: true,
+        fsMap: await loadLocalStepModelFsMap(circuitJson),
+      })
       break
     case "assembly-svg":
       outputContent = convertCircuitJsonToAssemblySvg(circuitJson)
