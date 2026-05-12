@@ -115,6 +115,10 @@
           "type": "boolean",
           "description": "Enable GLB 3D model outputs for each circuit in build."
         },
+        "step": {
+          "type": "boolean",
+          "description": "Enable STEP 3D model outputs for each circuit in build."
+        },
         "workerTimeoutMs": {
           "type": "number",
           "minimum": 1,

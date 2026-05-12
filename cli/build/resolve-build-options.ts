@@ -36,6 +36,9 @@ export const resolveBuildOptions = ({
   if (!cliOptions?.glbs && configBuild?.glbs) {
     configAppliedOpts.push("glbs")
   }
+  if (!cliOptions?.step && configBuild?.step) {
+    configAppliedOpts.push("step")
+  }
   if (
     cliOptions?.routingDisabled === undefined &&
     configBuild?.routingDisabled
@@ -55,6 +58,7 @@ export const resolveBuildOptions = ({
     kicadPcm: cliOptions?.kicadPcm ?? configBuild?.kicadPcm,
     previewImages: cliOptions?.previewImages ?? configBuild?.previewImages,
     glbs: cliOptions?.glbs ?? configBuild?.glbs,
+    step: cliOptions?.step ?? configBuild?.step,
     routingDisabled:
       cliOptions?.routingDisabled ?? configBuild?.routingDisabled,
     transpile: cliOptions?.transpile ?? configBuild?.typescriptLibrary,

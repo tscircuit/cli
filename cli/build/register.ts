@@ -18,6 +18,7 @@ import { type BuildCommandOptions, applyCiBuildOptions } from "./build-ci"
 import { buildFile } from "./build-file"
 import { buildGlbs } from "./build-glbs"
 import { buildKicadPcm } from "./build-kicad-pcm"
+import { buildStepFiles } from "./build-step-files"
 import { buildPreviewGltf } from "./build-preview-gltf"
 import type { BuildFileResult } from "./build-preview-images"
 import { buildPreviewImages } from "./build-preview-images"
@@ -176,6 +177,7 @@ export const registerBuild = (program: Command) => {
     )
     .option("--show-courtyards", "Show courtyard outlines in PCB SVG outputs")
     .option("--glbs", "Generate GLB 3D model files for every successful build")
+    .option("--step", "Generate STEP 3D model files for every successful build")
     .option(
       "--profile",
       "Log per-circuit circuit.json generation time during build",
@@ -704,6 +706,14 @@ export const registerBuild = (program: Command) => {
           })
         }
 
+        if (resolvedOptions?.step) {
+          console.log("Generating STEP models for all builds...")
+          await buildStepFiles({
+            builtFiles,
+            distDir,
+          })
+        }
+
         if (resolvedOptions?.transpile) {
           const includeBoardPatterns =
             projectConfig?.includeBoardFiles?.filter((pattern) =>
@@ -902,6 +912,7 @@ export const registerBuild = (program: Command) => {
           resolvedOptions?.pcbOnly && "pcb-only",
           resolvedOptions?.schematicOnly && "schematic-only",
           resolvedOptions?.glbs && "glbs",
+          resolvedOptions?.step && "step",
           resolvedOptions?.kicadProject && "kicad-project",
           resolvedOptions?.kicadLibrary && "kicad-library",
           resolvedOptions?.kicadPcm && "kicad-pcm",
