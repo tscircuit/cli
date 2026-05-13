@@ -547,6 +547,9 @@ export const registerBuild = (program: Command) => {
             const glbOutputPath = resolvedOptions?.glbs
               ? path.join(distDir, outputDirName, "3d.glb")
               : undefined
+            const stepOutputPath = resolvedOptions?.step
+              ? path.join(distDir, outputDirName, "3d.step")
+              : undefined
 
             const generatePreviewAssets = (() => {
               if (!shouldGeneratePreviewAssetsInWorker) {
@@ -575,6 +578,7 @@ export const registerBuild = (program: Command) => {
               filePath,
               outputPath,
               glbOutputPath,
+              stepOutputPath,
               previewOutputDir,
               generatePreviewAssets,
             }
@@ -648,6 +652,21 @@ export const registerBuild = (program: Command) => {
                   )
                 }
               }
+
+              if (resolvedOptions?.step && result.ok) {
+                const outputDir = path.dirname(result.outputPath)
+                const prefixRelative = path.relative(distDir, outputDir) || "."
+                const prefix =
+                  prefixRelative === "." ? "" : `[${prefixRelative}] `
+
+                if (result.stepOk) {
+                  console.log(`${prefix}Written 3d.step`)
+                } else if (result.stepOutputPath && result.stepError) {
+                  console.error(
+                    `${prefix}Failed to generate STEP: ${result.stepError}`,
+                  )
+                }
+              }
             },
           })
         }
@@ -706,7 +725,7 @@ export const registerBuild = (program: Command) => {
           })
         }
 
-        if (resolvedOptions?.step) {
+        if (resolvedOptions?.step && concurrencyValue === 1) {
           console.log("Generating STEP models for all builds...")
           await buildStepFiles({
             builtFiles,

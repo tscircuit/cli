@@ -82,3 +82,43 @@ export default () => (
     stepContent.match(/MANIFOLD_SOLID_BREP/g)?.length ?? 0,
   ).toBeGreaterThan(1)
 }, 60_000)
+
+test("build --step uses worker concurrency", async () => {
+  const { tmpDir, runCommand } = await getCliTestFixture()
+  await writeFile(path.join(tmpDir, "first.circuit.tsx"), circuitCode)
+  await writeFile(path.join(tmpDir, "second.circuit.tsx"), circuitCode)
+  await writeFile(
+    path.join(tmpDir, "package.json"),
+    JSON.stringify({ dependencies: { react: "^19.2.0" } }, null, 2),
+  )
+
+  await runCommand("tsci install")
+
+  const { stderr, stdout } = await runCommand(
+    "tsci build --step --concurrency 2",
+  )
+
+  expect(stderr).toBe("")
+  expect(stdout).toContain("Building 2 file(s) with concurrency 2")
+  expect(stdout).toContain(
+    "Converting dist/first/circuit.json to STEP in same worker",
+  )
+  expect(stdout).toContain(
+    "Converting dist/second/circuit.json to STEP in same worker",
+  )
+  expect(stdout).toContain("[first] Written 3d.step")
+  expect(stdout).toContain("[second] Written 3d.step")
+  expect(stdout).not.toContain("Generating STEP models for all builds")
+
+  const firstStepContent = await readFile(
+    path.join(tmpDir, "dist", "first", "3d.step"),
+    "utf-8",
+  )
+  const secondStepContent = await readFile(
+    path.join(tmpDir, "dist", "second", "3d.step"),
+    "utf-8",
+  )
+
+  expect(firstStepContent).toContain("ISO-10303-21")
+  expect(secondStepContent).toContain("ISO-10303-21")
+}, 60_000)

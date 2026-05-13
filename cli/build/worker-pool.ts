@@ -16,6 +16,7 @@ type BuildJob = {
   filePath: string
   outputPath: string
   glbOutputPath?: string
+  stepOutputPath?: string
   previewOutputDir?: string
   projectDir: string
   options?: {
@@ -56,6 +57,7 @@ export async function buildFilesWithWorkerPool(options: {
     filePath: string
     outputPath: string
     glbOutputPath?: string
+    stepOutputPath?: string
     previewOutputDir?: string
     generatePreviewAssets?: boolean
   }>
@@ -103,6 +105,7 @@ export async function buildFilesWithWorkerPool(options: {
       file_path: job.filePath,
       output_path: job.outputPath,
       glb_output_path: job.glbOutputPath,
+      step_output_path: job.stepOutputPath,
       preview_output_dir: job.previewOutputDir,
       project_dir: job.projectDir,
       options: job.options,
@@ -122,9 +125,12 @@ export async function buildFilesWithWorkerPool(options: {
         filePath: completedMessage.file_path,
         outputPath: completedMessage.output_path,
         glbOutputPath: completedMessage.glb_output_path,
+        stepOutputPath: completedMessage.step_output_path,
         previewOutputDir: completedMessage.preview_output_dir,
         glbOk: completedMessage.glb_ok,
         glbError: completedMessage.glb_error,
+        stepOk: completedMessage.step_ok,
+        stepError: completedMessage.step_error,
         previewOk: completedMessage.preview_ok,
         previewError: completedMessage.preview_error,
         ok: completedMessage.ok,
@@ -160,6 +166,7 @@ export async function buildFilesWithWorkerPool(options: {
         filePath: file.filePath,
         outputPath: file.outputPath,
         glbOutputPath: file.glbOutputPath,
+        stepOutputPath: file.stepOutputPath,
         previewOutputDir: file.previewOutputDir,
         projectDir: options.projectDir,
         options: {
