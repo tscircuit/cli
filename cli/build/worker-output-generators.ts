@@ -1,6 +1,7 @@
 import fs from "node:fs"
 import path from "node:path"
 import type { AnyCircuitElement } from "circuit-json"
+import { circuitJsonToStep } from "circuit-json-to-step"
 import {
   convertCircuitJsonToGltf,
   getBestCameraPosition,
@@ -19,6 +20,7 @@ import {
 } from "./worker-binary-utils"
 import type { BuildImageFormatSelection } from "./image-format-selection"
 import { convertSvgToPngBuffer } from "./svg-to-png"
+import { loadLocalStepModelFsMap } from "lib/shared/load-local-step-model-fs-map"
 
 export const writeGlbFromCircuitJson = async (
   circuitJson: AnyCircuitElement[],
@@ -33,6 +35,20 @@ export const writeGlbFromCircuitJson = async (
   const glbData = normalizeToUint8Array(glbBuffer)
   fs.mkdirSync(path.dirname(glbOutputPath), { recursive: true })
   fs.writeFileSync(glbOutputPath, Buffer.from(glbData))
+}
+
+export const writeStepFromCircuitJson = async (
+  circuitJson: AnyCircuitElement[],
+  stepOutputPath: string,
+) => {
+  const stepContent = await circuitJsonToStep(circuitJson, {
+    includeComponents: true,
+    includeExternalMeshes: true,
+    fsMap: await loadLocalStepModelFsMap(circuitJson),
+  })
+
+  fs.mkdirSync(path.dirname(stepOutputPath), { recursive: true })
+  fs.writeFileSync(stepOutputPath, stepContent)
 }
 
 export const writeImageAssetsFromCircuitJson = async (

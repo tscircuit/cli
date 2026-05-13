@@ -39,6 +39,7 @@ parentPort.on("message", async (msg: WorkerInputMessage) => {
       msg.file_path,
       msg.output_path,
       msg.glb_output_path,
+      msg.step_output_path,
       msg.preview_output_dir,
       msg.project_dir,
       msg.options,

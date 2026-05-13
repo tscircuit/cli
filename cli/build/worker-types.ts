@@ -11,6 +11,7 @@ export type BuildFileMessage = {
   file_path: string
   output_path: string
   glb_output_path?: string
+  step_output_path?: string
   preview_output_dir?: string
   project_dir: string
   options?: {
@@ -35,9 +36,12 @@ export type BuildCompletedMessage = {
   output_path: string
   circuit_json_path: string
   glb_output_path?: string
+  step_output_path?: string
   preview_output_dir?: string
   glb_ok?: boolean
   glb_error?: string
+  step_ok?: boolean
+  step_error?: string
   preview_ok?: boolean
   preview_error?: string
   ok: boolean
@@ -77,9 +81,12 @@ export type BuildJobResult = {
   filePath: string
   outputPath: string
   glbOutputPath?: string
+  stepOutputPath?: string
   previewOutputDir?: string
   glbOk?: boolean
   glbError?: string
+  stepOk?: boolean
+  stepError?: string
   previewOk?: boolean
   previewError?: string
   ok: boolean

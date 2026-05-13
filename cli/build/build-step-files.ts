@@ -1,9 +1,8 @@
 import fs from "node:fs"
 import path from "node:path"
 import type { AnyCircuitElement } from "circuit-json"
-import { circuitJsonToStep } from "circuit-json-to-step"
 import type { BuildFileResult } from "./build-preview-images"
-import { loadLocalStepModelFsMap } from "lib/shared/load-local-step-model-fs-map"
+import { writeStepFromCircuitJson } from "./worker-output-generators"
 
 export const buildStepFiles = async ({
   builtFiles,
@@ -35,12 +34,10 @@ export const buildStepFiles = async ({
 
     try {
       console.log(`${prefix}Converting circuit to STEP...`)
-      const stepContent = await circuitJsonToStep(circuitJson, {
-        includeComponents: true,
-        includeExternalMeshes: true,
-        fsMap: await loadLocalStepModelFsMap(circuitJson),
-      })
-      fs.writeFileSync(path.join(outputDir, "3d.step"), stepContent)
+      await writeStepFromCircuitJson(
+        circuitJson,
+        path.join(outputDir, "3d.step"),
+      )
       console.log(`${prefix}Written 3d.step`)
     } catch (error) {
       console.error(`${prefix}Failed to generate STEP:`, error)
