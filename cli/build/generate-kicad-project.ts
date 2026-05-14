@@ -3,6 +3,7 @@ import path from "node:path"
 import {
   CircuitJsonToKicadPcbConverter,
   CircuitJsonToKicadSchConverter,
+  resolveAndLoadKicad3dModelFiles,
 } from "circuit-json-to-kicad"
 import type { AnyCircuitElement } from "circuit-json"
 
@@ -85,32 +86,20 @@ export const generateKicadProject = async ({
     fs.writeFileSync(path.join(outputDir, boardFileName), pcbContent)
     fs.writeFileSync(path.join(outputDir, projectFileName), proContent)
 
-    // Download and write 3D model files
-    const platformFetch = globalThis.fetch
-    for (const modelPath of pcbConverter.getModel3dSourcePaths()) {
-      const fileName = path.basename(modelPath)
-      const isRemote =
-        modelPath.startsWith("http://") || modelPath.startsWith("https://")
-      const shapesDir = isRemote
-        ? "tscircuit_builtin.3dshapes"
-        : `${sanitizedProjectName}.3dshapes`
-      const destDir = path.join(outputDir, `3dmodels/${shapesDir}`)
-      fs.mkdirSync(destDir, { recursive: true })
-
-      if (isRemote) {
-        try {
-          const response = await platformFetch(modelPath)
-          if (response.ok) {
-            const buffer = Buffer.from(await response.arrayBuffer())
-            fs.writeFileSync(path.join(destDir, fileName), buffer)
-          }
-        } catch (error) {
-          console.warn(`Failed to fetch 3D model from ${modelPath}`)
-        }
-      } else if (fs.existsSync(modelPath)) {
-        fs.copyFileSync(modelPath, path.join(destDir, fileName))
-      }
-    }
+    await resolveAndLoadKicad3dModelFiles({
+      model3dSourcePaths: pcbConverter.getModel3dSourcePaths(),
+      projectName: sanitizedProjectName,
+      fetch: (modelPath) => globalThis.fetch(modelPath),
+      readFile: (modelPath) => fs.promises.readFile(modelPath),
+      onModelFile: ({ outputPath, content }) => {
+        const outputFilePath = path.join(outputDir, outputPath)
+        fs.mkdirSync(path.dirname(outputFilePath), { recursive: true })
+        fs.writeFileSync(outputFilePath, content)
+      },
+      onError: ({ sourcePath }) => {
+        console.warn(`Failed to load 3D model from ${sourcePath}`)
+      },
+    })
   }
 
   return {
