@@ -468,6 +468,7 @@ export const registerBuild = (program: Command) => {
                 outputDir: projectOutputDir,
                 projectName,
                 writeFiles: shouldWriteKicadFiles,
+                platformConfig,
               })
               kicadProjects.push({
                 ...project,

@@ -1,5 +1,6 @@
 import fs from "node:fs"
 import path from "node:path"
+import type { PlatformConfig } from "@tscircuit/props"
 import {
   CircuitJsonToKicadPcbConverter,
   CircuitJsonToKicadSchConverter,
@@ -12,6 +13,7 @@ type GenerateKicadProjectOptions = {
   outputDir: string
   projectName: string
   writeFiles: boolean
+  platformConfig?: PlatformConfig
 }
 
 export type GeneratedKicadProject = {
@@ -54,6 +56,7 @@ export const generateKicadProject = async ({
   outputDir,
   projectName,
   writeFiles,
+  platformConfig,
 }: GenerateKicadProjectOptions): Promise<GeneratedKicadProject> => {
   const schConverter = new CircuitJsonToKicadSchConverter(
     circuitJson as AnyCircuitElement[],
@@ -89,7 +92,7 @@ export const generateKicadProject = async ({
     await resolveAndLoadKicad3dModelFiles({
       model3dSourcePaths: pcbConverter.getModel3dSourcePaths(),
       projectName: sanitizedProjectName,
-      fetch: (modelPath) => globalThis.fetch(modelPath),
+      fetch: platformConfig?.platformFetch ?? globalThis.fetch,
       readFile: (modelPath) => fs.promises.readFile(modelPath),
       onModelFile: ({ outputPath, content }) => {
         const outputFilePath = path.join(outputDir, outputPath)
