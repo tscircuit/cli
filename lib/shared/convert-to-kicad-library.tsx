@@ -2,6 +2,7 @@ import fs from "node:fs"
 import path from "node:path"
 import { pathToFileURL } from "node:url"
 import * as defaultCircuitJsonToKicadModule from "circuit-json-to-kicad"
+import { resolveAndLoadKicad3dModelFiles } from "circuit-json-to-kicad"
 import type {
   KicadLibraryConverterOptions,
   KicadLibraryConverterOutput,
@@ -124,38 +125,20 @@ export async function convertToKicadLibrary({
     }
   }
 
-  // Copy or fetch 3D model files to .3dshapes folders
-  // Local paths go to {libraryName}.3dshapes, CDN URLs go to tscircuit_builtin.3dshapes
-  if (kicadLibOutput.model3dSourcePaths.length > 0) {
-    for (const modelPath of kicadLibOutput.model3dSourcePaths) {
-      const filename = path.basename(modelPath)
-      const isRemote =
-        modelPath.startsWith("http://") || modelPath.startsWith("https://")
-      const shapesDir = isRemote
-        ? "tscircuit_builtin.3dshapes"
-        : `${libraryName}.3dshapes`
-      const destDir = path.join(outputDir, `3dmodels/${shapesDir}`)
-      fs.mkdirSync(destDir, { recursive: true })
-      const destPath = path.join(destDir, filename)
-
-      if (isRemote) {
-        try {
-          const response = await platformFetch(modelPath)
-          if (!response.ok) {
-            throw new Error(`${response.status} ${response.statusText}`)
-          }
-          const buffer = Buffer.from(await response.arrayBuffer())
-          fs.writeFileSync(destPath, buffer)
-        } catch (error) {
-          console.warn(
-            `Failed to fetch 3D model from ${modelPath}: ${error instanceof Error ? error.message : error}`,
-          )
-        }
-      } else if (fs.existsSync(modelPath)) {
-        fs.copyFileSync(modelPath, destPath)
-      }
-    }
-  }
+  await resolveAndLoadKicad3dModelFiles({
+    model3dSourcePaths: kicadLibOutput.model3dSourcePaths,
+    projectName: libraryName,
+    fetch: platformFetch,
+    readFile: (modelPath) => fs.promises.readFile(modelPath),
+    onModelFile: ({ outputPath, content }) => {
+      const outputFilePath = path.join(outputDir, outputPath)
+      fs.mkdirSync(path.dirname(outputFilePath), { recursive: true })
+      fs.writeFileSync(outputFilePath, content)
+    },
+    onError: ({ sourcePath }) => {
+      console.warn(`Failed to load 3D model from ${sourcePath}`)
+    },
+  })
 
   return {
     outputDir,
