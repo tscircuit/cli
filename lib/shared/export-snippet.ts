@@ -10,6 +10,7 @@ import {
   CircuitJsonToKicadPcbConverter,
   CircuitJsonToKicadProConverter,
   CircuitJsonToKicadSchConverter,
+  resolveAndLoadKicad3dModelFiles,
 } from "circuit-json-to-kicad"
 import { convertCircuitJsonToReadableNetlist } from "circuit-json-to-readable-netlist"
 import {
@@ -266,33 +267,19 @@ export const exportSnippet = async ({
       zip.file(`${outputBaseName}.kicad_pcb`, pcbConverter.getOutputString())
       zip.file(`${outputBaseName}.kicad_pro`, proConverter.getOutputString())
 
-      const platformFetch = platformConfig?.platformFetch ?? globalThis.fetch
-      for (const modelPath of pcbConverter.getModel3dSourcePaths()) {
-        const fileName = path.basename(modelPath)
-        const isRemote =
-          modelPath.startsWith("http://") || modelPath.startsWith("https://")
-        const shapesDir = isRemote
-          ? "tscircuit_builtin.3dshapes"
-          : `${outputBaseName}.3dshapes`
-        const zipPath = `3dmodels/${shapesDir}/${fileName}`
-
-        if (isRemote) {
-          try {
-            const response = await platformFetch(modelPath)
-            if (response.ok) {
-              const buffer = Buffer.from(await response.arrayBuffer())
-              zip.file(zipPath, buffer)
-            }
-          } catch (error) {
-            console.warn(`Failed to fetch 3D model from ${modelPath}`)
-          }
-        } else {
-          const resolvedPath = path.resolve(projectDir, modelPath)
-          if (fs.existsSync(resolvedPath)) {
-            zip.file(zipPath, await fs.promises.readFile(resolvedPath))
-          }
-        }
-      }
+      await resolveAndLoadKicad3dModelFiles({
+        model3dSourcePaths: pcbConverter.getModel3dSourcePaths(),
+        projectName: outputBaseName,
+        fetch: platformConfig?.platformFetch ?? globalThis.fetch,
+        readFile: (modelPath) =>
+          fs.promises.readFile(path.resolve(projectDir, modelPath)),
+        onModelFile: ({ outputPath, content }) => {
+          zip.file(outputPath, content)
+        },
+        onError: ({ sourcePath }) => {
+          console.warn(`Failed to load 3D model from ${sourcePath}`)
+        },
+      })
 
       outputContent = await zip.generateAsync({ type: "nodebuffer" })
       break
