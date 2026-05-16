@@ -96,3 +96,4 @@ The CLI entrypoint (`cli/entrypoint.js`) selects between Bun and tsx as the Type
 # bump 1778817605
 # bump 1778860804
 # bump 1778904002
+# bump 1778947204
