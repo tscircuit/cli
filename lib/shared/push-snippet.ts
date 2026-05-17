@@ -6,6 +6,7 @@ import semver from "semver"
 import Debug from "debug"
 import kleur from "kleur"
 import { getEntrypoint } from "./get-entrypoint"
+import { globbySync } from "globby"
 import prompts from "lib/utils/prompts"
 import { getUnscopedPackageName } from "lib/utils/get-unscoped-package-name"
 import { getPackageAuthor } from "lib/utils/get-package-author"
@@ -123,26 +124,62 @@ export const pushSnippet = async ({
     return onExit(1)
   }
 
+  // Use findPushProject to get project info
   const pushProject = await findPushProject({
     filePath,
     onError,
   })
 
-  if (!pushProject) {
-    return onExit(1)
+  const pkgResult = pushProject ?? {
+    packageJsonPath: undefined,
+    projectDir: process.cwd(),
   }
+  const { packageJsonPath, projectDir } = pkgResult
 
-  const { snippetFilePath, packageJsonPath, projectDir } = pushProject
-
-  if (!packageJsonPath) {
+  if (!filePath && !packageJsonPath) {
     onError(
       "No package.json found, try running 'tsci init' to bootstrap the project",
     )
     return onExit(1)
   }
 
+  // Extract snippetFilePath, with fallback to getEntrypoint and globby
+  let snippetFilePath = pushProject?.snippetFilePath
+
+  // Fallback 1: try getEntrypoint if findPushProject didn't find a file (silent)
+  if (!snippetFilePath) {
+    snippetFilePath =
+      (await getEntrypoint({
+        filePath,
+        onSuccess: () => {},
+        onError: () => {},
+      })) ?? undefined
+  }
+
+  // Fallback 2: use globby to find any circuit file if still not found
+  if (!snippetFilePath) {
+    const validFiles = globbySync(
+      ["**/*.tsx", "**/*.ts", "**/*.circuit.json"],
+      {
+        cwd: projectDir,
+        ignore: ["node_modules/**", "**/.*"],
+      },
+    ).filter((relativePath) =>
+      fs.existsSync(path.join(projectDir, relativePath)),
+    )
+
+    if (validFiles.length > 0) {
+      snippetFilePath = path.resolve(projectDir, validFiles[0])
+      onSuccess(`Using fallback file: '${validFiles[0]}'`)
+    }
+  }
+
+  if (!snippetFilePath && filePath) {
+    return onExit(1)
+  }
+
   let packageJson: { name?: string; author?: string; version?: string } = {}
-  if (fs.existsSync(packageJsonPath)) {
+  if (packageJsonPath && fs.existsSync(packageJsonPath)) {
     try {
       packageJson = JSON.parse(fs.readFileSync(packageJsonPath).toString())
     } catch {
@@ -204,7 +241,9 @@ export const pushSnippet = async ({
 
     // Write the package name to the package.json file
     packageJson.name = `@tsci/${currentUsername}.${unscopedPackageName}`
-    fs.writeFileSync(packageJsonPath, JSON.stringify(packageJson, null, 2))
+    if (packageJsonPath) {
+      fs.writeFileSync(packageJsonPath, JSON.stringify(packageJson, null, 2))
+    }
   }
 
   // Determine the account name to use (either user or org)
@@ -259,7 +298,9 @@ export const pushSnippet = async ({
   const updatePackageJsonVersion = (newVersion?: string) => {
     try {
       packageJson.version = newVersion ?? `${packageVersion}`
-      fs.writeFileSync(packageJsonPath, JSON.stringify(packageJson, null, 2))
+      if (packageJsonPath) {
+        fs.writeFileSync(packageJsonPath, JSON.stringify(packageJson, null, 2))
+      }
     } catch (error) {
       onError(`Failed to update package.json version: ${error}`)
     }

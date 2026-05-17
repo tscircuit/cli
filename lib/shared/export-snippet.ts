@@ -57,6 +57,8 @@ export const ALLOWED_EXPORT_FORMATS = [
   "srj",
   "step",
   "assembly-svg",
+  "pnp-csv",
+  "bom-csv",
 ] as const
 
 export type ExportFormat = (typeof ALLOWED_EXPORT_FORMATS)[number]
@@ -78,6 +80,8 @@ const OUTPUT_EXTENSIONS: Record<ExportFormat, string> = {
   "kicad-library": "",
   srj: ".simple-route.json",
   step: ".step",
+  "pnp-csv": "-pnp.csv",
+  "bom-csv": "-bom.csv",
 }
 
 const isRecord = (value: unknown): value is Record<string, unknown> =>
@@ -336,6 +340,14 @@ export const exportSnippet = async ({
       break
     case "assembly-svg":
       outputContent = convertCircuitJsonToAssemblySvg(circuitJson)
+      break
+    case "pnp-csv":
+      outputContent = await convertCircuitJsonToPickAndPlaceCsv(circuitJson)
+      break
+    case "bom-csv":
+      outputContent = await convertBomRowsToCsv(
+        await convertCircuitJsonToBomRows({ circuitJson }),
+      )
       break
     default:
       outputContent = JSON.stringify(circuitJson, null, 2)
