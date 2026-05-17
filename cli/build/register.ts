@@ -762,7 +762,16 @@ export const registerBuild = (program: Command) => {
           const entryFile = fileArgIsDirectFile
             ? resolvedFileArgPath
             : transpileEntrypoint
-          if (!entryFile) {
+          const isRealTsEntrypoint = Boolean(
+            entryFile &&
+              (entryFile.endsWith(".ts") || entryFile.endsWith(".tsx")),
+          )
+          if (
+            !entryFile ||
+            (hasConfiguredIncludeBoardFiles &&
+              !transpileExplicitlyRequested &&
+              !isRealTsEntrypoint)
+          ) {
             if (
               hasConfiguredIncludeBoardFiles &&
               !transpileExplicitlyRequested

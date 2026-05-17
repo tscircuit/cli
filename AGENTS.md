@@ -80,3 +80,20 @@ Test fixture provides:
 ## Runtime
 
 The CLI entrypoint (`cli/entrypoint.js`) selects between Bun and tsx as the TypeScript runner, preferring Bun when available. This allows hot-reload during development while maintaining Node.js compatibility.
+# bump 1778256007
+# bump 1778299207
+# bump 1778342407
+# bump 1778385607
+# bump 1778515208
+# bump 1778558407
+# bump 1778601608
+# bump 1778644807
+# bump 1778688008
+# bump 1778731207
+# bump 1778774409
+# bump 1778817608
+# bump 1778860808
+# bump 1778904006
+# bump 1778947207
+# bump 1778990408
+# bump 1779033606
