@@ -77,7 +77,7 @@
     "zod": "^3.23.8"
   },
   "peerDependencies": {
-    "tscircuit": "^0.0.1771"
+    "tscircuit": "*"
   },
   "bin": {
     "tscircuit-cli": "./cli/entrypoint.js"
