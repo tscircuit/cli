@@ -14,6 +14,7 @@ import { checkForTsciUpdates } from "lib/shared/check-for-cli-update"
 import { prompts } from "lib/utils/prompts"
 import { fetchAccount } from "lib/registry-api/fetch-account"
 import kleur from "kleur"
+import { captureTelemetryEvent } from "lib/telemetry"
 
 export const registerInit = (program: Command) => {
   program
@@ -134,7 +135,15 @@ export default () => (
         // Setup tscircuit claude skill
         await setupTscircuitSkill(projectDir, options?.yes)
         // Setup project dependencies
-        setupTsciProject(projectDir, options?.install ? undefined : [])
+        await setupTsciProject(projectDir, options?.install ? undefined : [])
+
+        await captureTelemetryEvent("tsci_init", {
+          command: "init",
+          directory_provided: directory !== undefined,
+          yes: Boolean(options?.yes),
+          no_install: options?.install === false,
+          status: "success",
+        })
 
         console.info(
           "\n",

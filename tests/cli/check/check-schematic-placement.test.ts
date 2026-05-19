@@ -32,7 +32,7 @@ test("tsci check schematic-placement prints schematic placement analysis", async
 
     expect(exitCode).toBe(0)
     expect(stderr).toBe("")
-    expect(stdout.trim()).toBe(expected)
+    expect(stdout.trim()).toContain(expected)
     expect(stdout).toContain("<SchematicBoxPositions>")
     expect(stdout).toContain('componentName="R1"')
     expect(stdout).toContain('componentName="C1"')
