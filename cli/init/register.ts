@@ -14,7 +14,7 @@ import { checkForTsciUpdates } from "lib/shared/check-for-cli-update"
 import { prompts } from "lib/utils/prompts"
 import { fetchAccount } from "lib/registry-api/fetch-account"
 import kleur from "kleur"
-import { withTelemetryEvent } from "lib/telemetry"
+import { captureTelemetryEvent } from "lib/telemetry"
 
 export const registerInit = (program: Command) => {
   program
@@ -33,86 +33,77 @@ export const registerInit = (program: Command) => {
         directory?: string,
         options?: { yes?: boolean; install?: boolean },
       ) => {
-        await withTelemetryEvent(
-          "tsci_init",
-          {
-            command: "init",
-            directory_provided: directory !== undefined,
-            yes: Boolean(options?.yes),
-            no_install: options?.install === false,
-          },
-          async () => {
-            await checkForTsciUpdates()
+        await checkForTsciUpdates()
 
-            if (!directory && !options?.yes) {
-              const { continueInCurrentDirectory } = await prompts({
-                type: "confirm",
-                name: "continueInCurrentDirectory",
-                message:
-                  "Do you want to initialize a new project in the current directory?",
-                initial: true,
-              })
-              if (!continueInCurrentDirectory) {
-                const { desiredDirectory } = await prompts({
-                  type: "text",
-                  name: "desiredDirectory",
-                  message: "Enter the desired directory name",
-                })
-                if (desiredDirectory) {
-                  directory = desiredDirectory
-                } else {
-                  console.log("Project initialization cancelled.")
-                  return
-                }
-              }
+        if (!directory && !options?.yes) {
+          const { continueInCurrentDirectory } = await prompts({
+            type: "confirm",
+            name: "continueInCurrentDirectory",
+            message:
+              "Do you want to initialize a new project in the current directory?",
+            initial: true,
+          })
+          if (!continueInCurrentDirectory) {
+            const { desiredDirectory } = await prompts({
+              type: "text",
+              name: "desiredDirectory",
+              message: "Enter the desired directory name",
+            })
+            if (desiredDirectory) {
+              directory = desiredDirectory
+            } else {
+              console.log("Project initialization cancelled.")
+              return process.exit(0)
             }
+          }
+        }
 
-            const projectDir = directory
-              ? path.resolve(process.cwd(), directory)
-              : process.cwd()
+        const projectDir = directory
+          ? path.resolve(process.cwd(), directory)
+          : process.cwd()
 
-            let tsciHandle: string | null = null
-            const token = getSessionToken()
-            if (token) {
-              try {
-                const decoded = jwtDecode<{ tscircuit_handle?: string }>(token)
-                if (decoded.tscircuit_handle) {
-                  tsciHandle = decoded.tscircuit_handle
-                }
-              } catch {}
+        let tsciHandle: string | null = null
+        const token = getSessionToken()
+        if (token) {
+          try {
+            const decoded = jwtDecode<{ tscircuit_handle?: string }>(token)
+            if (decoded.tscircuit_handle) {
+              tsciHandle = decoded.tscircuit_handle
             }
+          } catch {}
+        }
 
-            const dirName = path.basename(projectDir)
+        const dirName = path.basename(projectDir)
 
-            let defaultPackageName = dirName
-            if (tsciHandle) {
-              defaultPackageName = `@tsci/${tsciHandle}.${dirName}`
-            }
+        let defaultPackageName = dirName
+        if (tsciHandle) {
+          defaultPackageName = `@tsci/${tsciHandle}.${dirName}`
+        }
 
-            const { packageName } = options?.yes
-              ? { packageName: defaultPackageName }
-              : await prompts({
-                  type: "text",
-                  name: "packageName",
-                  message: "Package name",
-                  initial: defaultPackageName,
-                })
+        const { packageName } = options?.yes
+          ? { packageName: defaultPackageName }
+          : await prompts({
+              type: "text",
+              name: "packageName",
+              message: "Package name",
+              initial: defaultPackageName,
+            })
 
-            let authorName = cliConfig.get("tscircuitHandle")
-            if (!authorName) {
-              const account = await fetchAccount()
-              if (account?.tscircuit_handle) {
-                authorName = account.tscircuit_handle
-              }
-            }
+        let authorName = cliConfig.get("tscircuitHandle")
+        if (!authorName) {
+          const account = await fetchAccount()
+          if (account?.tscircuit_handle) {
+            authorName = account.tscircuit_handle
+          }
+        }
 
-            // Ensure the directory exists
-            fs.mkdirSync(projectDir, { recursive: true })
+        // Ensure the directory exists
+        fs.mkdirSync(projectDir, { recursive: true })
 
-            // Create essential project files
-            writeFileIfNotExists(
-              path.join(projectDir, "index.circuit.tsx"),
-              `
+        // Create essential project files
+        writeFileIfNotExists(
+          path.join(projectDir, "index.circuit.tsx"),
+          `
 export default () => (
   <board>
     <resistor resistance="1k" footprint="0402" name="R1" />
@@ -121,50 +112,52 @@ export default () => (
   </board>
 )
 `,
-            )
-
-            if (saveProjectConfig(null, projectDir)) {
-              console.log("Created tscircuit.config.json with schema")
-            }
-
-            writeFileIfNotExists(
-              path.join(projectDir, ".npmrc"),
-              `
-@tsci:registry=https://npm.tscircuit.com
-`,
-            )
-
-            console.log("Generating package.json")
-            // Generate package.json
-            generatePackageJson(projectDir, { packageName, authorName })
-            // Generate tsconfig.json
-            generateTsConfig(projectDir)
-            // Create .gitignore file
-            generateGitIgnoreFile(projectDir)
-            // Setup tscircuit claude skill
-            await setupTscircuitSkill(projectDir, options?.yes)
-            // Setup project dependencies
-            await setupTsciProject(
-              projectDir,
-              options?.install ? undefined : [],
-            )
-
-            console.info(
-              "\n",
-              kleur.green("🎉 Initialization complete!"),
-              "Run ",
-              kleur.bold(
-                kleur.blue(
-                  `${
-                    directory ? `${kleur.bold(`cd ${directory}`)} && ` : ""
-                  }${kleur.bold("tsci dev")}`,
-                ),
-              ),
-              " to start developing.",
-            )
-          },
         )
 
+        if (saveProjectConfig(null, projectDir)) {
+          console.log("Created tscircuit.config.json with schema")
+        }
+
+        writeFileIfNotExists(
+          path.join(projectDir, ".npmrc"),
+          `
+@tsci:registry=https://npm.tscircuit.com
+`,
+        )
+
+        console.log("Generating package.json")
+        // Generate package.json
+        generatePackageJson(projectDir, { packageName, authorName })
+        // Generate tsconfig.json
+        generateTsConfig(projectDir)
+        // Create .gitignore file
+        generateGitIgnoreFile(projectDir)
+        // Setup tscircuit claude skill
+        await setupTscircuitSkill(projectDir, options?.yes)
+        // Setup project dependencies
+        await setupTsciProject(projectDir, options?.install ? undefined : [])
+
+        await captureTelemetryEvent("tsci_init", {
+          command: "init",
+          directory_provided: directory !== undefined,
+          yes: Boolean(options?.yes),
+          no_install: options?.install === false,
+          status: "success",
+        })
+
+        console.info(
+          "\n",
+          kleur.green("🎉 Initialization complete!"),
+          "Run ",
+          kleur.bold(
+            kleur.blue(
+              `${
+                directory ? `${kleur.bold(`cd ${directory}`)} && ` : ""
+              }${kleur.bold("tsci dev")}`,
+            ),
+          ),
+          " to start developing.",
+        )
         process.exit(0)
       },
     )

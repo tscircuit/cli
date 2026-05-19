@@ -76,30 +76,3 @@ export const captureTelemetryEvent = async (
     // Telemetry must never make CLI commands fail.
   }
 }
-
-export const withTelemetryEvent = async <T>(
-  event: string,
-  properties: TelemetryProperties,
-  action: () => Promise<T>,
-): Promise<T> => {
-  const startedAt = Date.now()
-
-  try {
-    const result = await action()
-    await captureTelemetryEvent(event, {
-      ...properties,
-      status: "success",
-      duration_ms: Date.now() - startedAt,
-    })
-    return result
-  } catch (error) {
-    await captureTelemetryEvent(event, {
-      ...properties,
-      status: "error",
-      duration_ms: Date.now() - startedAt,
-      error_name: error instanceof Error ? error.name : "UnknownError",
-      error_message: error instanceof Error ? error.message : String(error),
-    })
-    throw error
-  }
-}
