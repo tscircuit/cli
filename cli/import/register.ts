@@ -74,7 +74,16 @@ export const registerImport = (program: Command) => {
           try {
             spinner.text = "Searching JLCPCB parts..."
             const searchUrl = `https://jlcsearch.tscircuit.com/api/search?limit=10&q=${encodeURIComponent(query)}`
-            const resp = await fetch(searchUrl).then((r) => r.json())
+            const searchResp = await fetch(searchUrl)
+            if (!searchResp.ok) {
+              const body = await searchResp.text().catch(() => "")
+              throw new Error(
+                `JLCPCB search failed with HTTP ${searchResp.status} ${searchResp.statusText}${
+                  body ? `\n${body.slice(0, 500)}` : ""
+                }`,
+              )
+            }
+            const resp = await searchResp.json()
             jlcResults = resp.components
           } catch (error) {
             spinner.fail("Failed to search JLCPCB")

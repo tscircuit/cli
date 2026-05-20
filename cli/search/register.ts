@@ -71,7 +71,16 @@ export const registerSearch = (program: Command) => {
             const jlcSearchUrl =
               "https://jlcsearch.tscircuit.com/api/search?limit=10&q=" +
               encodeURIComponent(query)
-            const jlcResponse = await fetch(jlcSearchUrl).then((r) => r.json())
+            const response = await fetch(jlcSearchUrl)
+            if (!response.ok) {
+              const body = await response.text().catch(() => "")
+              throw new Error(
+                `JLCPCB search failed with HTTP ${response.status} ${response.statusText}${
+                  body ? `\n${body.slice(0, 500)}` : ""
+                }`,
+              )
+            }
+            const jlcResponse = await response.json()
             jlcResults = jlcResponse?.components ?? []
           }
 

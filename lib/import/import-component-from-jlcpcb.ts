@@ -7,13 +7,23 @@ import {
 import fs from "node:fs/promises"
 import path from "node:path"
 import { getCompletePlatformConfig } from "lib/shared/get-complete-platform-config"
+import { getJlcpcbImportErrorMessage } from "./get-jlcpcb-import-error-message"
 
 export const importComponentFromJlcpcb = async (
   jlcpcbPartNumber: string,
   projectDir: string = process.cwd(),
-  options: { download?: boolean } = {},
+  options: { download?: boolean; fetch?: typeof fetch } = {},
 ) => {
-  const rawEasy = await fetchEasyEDAComponent(jlcpcbPartNumber)
+  let rawEasy: Awaited<ReturnType<typeof fetchEasyEDAComponent>>
+  try {
+    rawEasy = await fetchEasyEDAComponent(jlcpcbPartNumber, {
+      fetch: options.fetch,
+    })
+  } catch (error) {
+    throw new Error(getJlcpcbImportErrorMessage(jlcpcbPartNumber, error), {
+      cause: error,
+    })
+  }
   const betterEasy = EasyEdaJsonSchema.parse(rawEasy)
 
   const rawPn = betterEasy.dataStr.head.c_para["Manufacturer Part"]
