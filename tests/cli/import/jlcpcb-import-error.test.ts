@@ -2,9 +2,14 @@ import { expect, test } from "bun:test"
 import { importComponentFromJlcpcb } from "lib/import/import-component-from-jlcpcb"
 
 test("importComponentFromJlcpcb explains EasyEDA network/search failures", async () => {
+  const mockFetch = Object.assign(
+    async () => new Response("blocked", { status: 400 }),
+    { preconnect: () => {} },
+  )
+
   try {
     await importComponentFromJlcpcb("C2040", "/tmp", {
-      fetch: async () => new Response("blocked", { status: 400 }),
+      fetch: mockFetch,
     })
   } catch (error) {
     expect(
