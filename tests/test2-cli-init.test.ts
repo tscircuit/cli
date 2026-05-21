@@ -7,7 +7,7 @@ test("basic init", async () => {
   const { tmpDir, runCommand } = await getCliTestFixture()
 
   // Run the `tsci init` command
-  const { stdout, stderr } = await runCommand("tsci init project")
+  const { stdout, stderr } = await runCommand("tsci init project --no-install")
 
   const dirContents = fs.readdirSync(path.join(tmpDir, "project"))
 

@@ -1,5 +1,5 @@
 import { expect, test } from "bun:test"
-import { readFile, writeFile } from "node:fs/promises"
+import { mkdir, readFile, writeFile } from "node:fs/promises"
 import path from "node:path"
 import { getCliTestFixture } from "../../fixtures/get-cli-test-fixture"
 
@@ -14,6 +14,17 @@ test("build --ci keeps tscircuit in devDependencies", async () => {
     }),
   )
 
+  await mkdir(path.join(tmpDir, "local-lodash"), { recursive: true })
+  await mkdir(path.join(tmpDir, "local-tscircuit"), { recursive: true })
+  await writeFile(
+    path.join(tmpDir, "local-lodash", "package.json"),
+    JSON.stringify({ name: "lodash", version: "4.17.21" }),
+  )
+  await writeFile(
+    path.join(tmpDir, "local-tscircuit", "package.json"),
+    JSON.stringify({ name: "tscircuit", version: "0.0.101" }),
+  )
+
   await writeFile(
     path.join(tmpDir, "package.json"),
     JSON.stringify({
@@ -21,10 +32,10 @@ test("build --ci keeps tscircuit in devDependencies", async () => {
       version: "1.0.0",
       dependencies: {
         tscircuit: "^0.0.100",
-        lodash: "^4.17.21",
+        lodash: "file:./local-lodash",
       },
       devDependencies: {
-        tscircuit: "^0.0.101",
+        tscircuit: "file:./local-tscircuit",
       },
     }),
   )
@@ -40,6 +51,6 @@ test("build --ci keeps tscircuit in devDependencies", async () => {
   )
 
   expect(packageJson.dependencies.tscircuit).toBeUndefined()
-  expect(packageJson.dependencies.lodash).toBe("^4.17.21")
-  expect(packageJson.devDependencies.tscircuit).toBe("^0.0.101")
+  expect(packageJson.dependencies.lodash).toBe("file:./local-lodash")
+  expect(packageJson.devDependencies.tscircuit).toBe("file:./local-tscircuit")
 }, 60_000)

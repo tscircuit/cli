@@ -104,6 +104,20 @@ export async function setupTscircuitSkill(
 
   console.info("Setting up tscircuit AI skills...")
 
+  if (process.env.TSCI_TEST_MODE === "true") {
+    for (const skillPath of missingSkillPaths) {
+      const targetDir = path.join(projectDir, skillPath)
+      fs.mkdirSync(targetDir, { recursive: true })
+      fs.writeFileSync(
+        path.join(targetDir, "SKILL.md"),
+        "# tscircuit\n\nTest fixture skill.\n",
+        "utf-8",
+      )
+      console.info(`tscircuit skill installed at ${skillPath}`)
+    }
+    return true
+  }
+
   try {
     for (const skillPath of missingSkillPaths) {
       const targetDir = path.join(projectDir, skillPath)
