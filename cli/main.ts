@@ -1,6 +1,8 @@
 #!/usr/bin/env node
 import { Command } from "commander"
+import { cliConfig } from "lib/cli-config"
 import { registerStaticAssetLoaders } from "lib/shared/register-static-asset-loaders"
+import { captureTelemetryEvent } from "lib/telemetry"
 import { perfectCli } from "perfect-cli"
 import { getVersion } from "./../lib/getVersion"
 import { registerAdd } from "./add/register"
@@ -47,6 +49,19 @@ import { registerUpdate } from "./update/register"
 export const program = new Command()
 
 program.name("tsci").description("CLI for developing tscircuit packages")
+
+const getCommandPath = (command: Command) => {
+  const names: string[] = []
+  let currentCommand: Command | null = command
+
+  while (currentCommand) {
+    const name = currentCommand.name()
+    if (name && name !== program.name()) names.unshift(name)
+    currentCommand = currentCommand.parent ?? null
+  }
+
+  return names
+}
 
 registerStaticAssetLoaders()
 
@@ -96,6 +111,17 @@ registerSearch(program)
 registerImport(program)
 registerConvert(program)
 registerSimulate(program)
+
+program.hook("preAction", async (_thisCommand, actionCommand) => {
+  const commandPath = getCommandPath(actionCommand)
+
+  await captureTelemetryEvent("tsci_command", {
+    command: commandPath[0] ?? actionCommand.name(),
+    command_path: commandPath.join(" "),
+    authenticated: Boolean(cliConfig.get("accountId")),
+    status: "started",
+  })
+})
 
 // Manually handle --version, -v, and -V flags
 if (

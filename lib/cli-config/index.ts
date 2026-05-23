@@ -13,6 +13,7 @@ export interface CliConfig {
   tscircuitHandle?: string
   registryApiUrl?: string
   alwaysCloneWithAuthorName?: boolean
+  telemetryAnonymousId?: string
 }
 
 export const getCliConfig = (

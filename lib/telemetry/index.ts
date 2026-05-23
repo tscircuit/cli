@@ -1,4 +1,6 @@
 import { randomUUID } from "node:crypto"
+import type Conf from "conf"
+import { cliConfig, type CliConfig } from "lib/cli-config"
 import { getVersion } from "lib/getVersion"
 
 const POSTHOG_HOST = "https://us.i.posthog.com"
@@ -24,6 +26,19 @@ const isTruthy = (value: string | undefined) =>
 const joinUrl = (host: string, path: string) =>
   `${host.replace(/\/$/, "")}${path}`
 
+export const getTelemetryDistinctId = (config: Conf<CliConfig> = cliConfig) => {
+  const accountId = config.get("accountId")
+  if (accountId) return `account:${accountId}`
+
+  let anonymousId = config.get("telemetryAnonymousId")
+  if (!anonymousId) {
+    anonymousId = randomUUID()
+    config.set("telemetryAnonymousId", anonymousId)
+  }
+
+  return `anonymous:${anonymousId}`
+}
+
 export const getTelemetryConfigFromEnv = (
   env: NodeJS.ProcessEnv = process.env,
 ): TelemetryConfig => {
@@ -41,7 +56,7 @@ export const getTelemetryConfigFromEnv = (
     enabled: true,
     projectApiKey: TSCI_POSTHOG_PROJECT_API_KEY,
     host: POSTHOG_HOST,
-    distinctId: `tscircuit-cli-${randomUUID()}`,
+    distinctId: getTelemetryDistinctId(),
   }
 }
 
@@ -71,6 +86,7 @@ export const captureTelemetryEvent = async (
         "Content-Type": "application/json",
       },
       body: JSON.stringify(payload),
+      signal: AbortSignal.timeout(1_000),
     })
   } catch {
     // Telemetry must never make CLI commands fail.
