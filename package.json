@@ -31,7 +31,7 @@
     "@types/semver": "^7.5.8",
     "bun-match-svg": "^0.0.12",
     "chokidar": "4.0.1",
-    "circuit-json": "^0.0.425",
+    "circuit-json": "^0.0.426",
     "circuit-json-to-bom-csv": "^0.0.7",
     "circuit-json-to-gerber": "^0.0.51",
     "circuit-json-to-kicad": "0.0.137",
@@ -71,7 +71,7 @@
     "semver": "^7.6.3",
     "stepts": "^0.0.3",
     "tempy": "^3.1.0",
-    "tscircuit": "0.0.1778-libonly",
+    "tscircuit": "0.0.1772-libonly",
     "tsx": "^4.7.1",
     "typed-ky": "^0.0.4",
     "zod": "^3.23.8"
