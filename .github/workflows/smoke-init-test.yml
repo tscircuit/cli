@@ -22,37 +22,132 @@ jobs:
           bun-version: latest
 
       - name: Install dependencies
-        run: bun install
+        run: |
+          set -euxo pipefail
+          node --version
+          npm --version
+          bun --version
+          bun install
 
       - name: Build package
-        run: bun run build
+        run: |
+          set -euxo pipefail
+          bun run build
 
       - name: Pack package
-        run: bun pm pack
+        run: |
+          set -euxo pipefail
+          bun pm pack
+          PACKAGE_FILE=$(ls *.tgz)
+          echo "PACKAGE_FILE=$PACKAGE_FILE" >> $GITHUB_ENV
+          tar -xOf "$PACKAGE_FILE" package/package.json > /tmp/packed-package.json
+          node -e "const p=require('/tmp/packed-package.json'); console.log(JSON.stringify({name:p.name, version:p.version, dependencies:p.dependencies, devDependencies:p.devDependencies, peerDependencies:p.peerDependencies}, null, 2))"
 
       - name: Create temporary directory
         run: |
+          set -euxo pipefail
           TEMP_DIR=$(mktemp -d)
           echo "TEMP_DIR=$TEMP_DIR" >> $GITHUB_ENV
 
       - name: Install tscircuit globally from packed file
         run: |
-          PACKAGE_FILE=$(ls *.tgz)
+          set -euxo pipefail
+          npm config get prefix
+          npm root -g
           npm install -g "$PACKAGE_FILE"
+          which tscircuit-cli
+          tscircuit-cli --version
+          npm ls -g --depth=0 || true
+          npm ls -g @tscircuit/cli tscircuit @tscircuit/props circuit-json zod --all || true
+
+      - name: Debug global module resolution
+        run: |
+          set -euxo pipefail
+          export GLOBAL_ROOT=$(npm root -g)
+          CLI_MAIN="$GLOBAL_ROOT/@tscircuit/cli/dist/cli/main.js"
+          test -f "$CLI_MAIN"
+          node --input-type=module - <<'NODE'
+          import { createRequire } from "node:module"
+          import fs from "node:fs"
+          import path from "node:path"
+          import { pathToFileURL } from "node:url"
+
+          const cliMain = `${process.env.GLOBAL_ROOT ?? ""}/@tscircuit/cli/dist/cli/main.js`
+          const requireFromCli = createRequire(pathToFileURL(cliMain))
+          const findPackageJson = (startPath) => {
+            let current = fs.statSync(startPath).isDirectory()
+              ? startPath
+              : path.dirname(startPath)
+            while (current !== path.dirname(current)) {
+              const candidate = path.join(current, "package.json")
+              if (fs.existsSync(candidate)) return candidate
+              current = path.dirname(current)
+            }
+            return null
+          }
+          const packages = [
+            "@tscircuit/cli",
+            "tscircuit",
+            "@tscircuit/props",
+            "circuit-json",
+            "zod",
+          ]
+
+          for (const packageName of packages) {
+            try {
+              const resolvedPath =
+                packageName === "@tscircuit/cli"
+                  ? cliMain
+                  : requireFromCli.resolve(packageName)
+              const packageJsonPath = findPackageJson(resolvedPath)
+              const packageJson = JSON.parse(fs.readFileSync(packageJsonPath, "utf8"))
+              console.log(`${packageName}: ${packageJson.version} @ ${packageJsonPath}`)
+            } catch (error) {
+              console.log(`${packageName}: FAILED TO RESOLVE`)
+              console.log(error?.stack ?? error)
+            }
+          }
+
+          try {
+            const circuitJsonPath = requireFromCli.resolve("circuit-json")
+            console.log(`circuit-json entry: ${circuitJsonPath}`)
+            const circuitJson = await import(pathToFileURL(circuitJsonPath).href)
+            console.log(`circuit-json exports ms: ${Object.hasOwn(circuitJson, "ms")}`)
+            console.log(`circuit-json export sample: ${Object.keys(circuitJson).slice(0, 40).join(", ")}`)
+          } catch (error) {
+            console.log("circuit-json import failed")
+            console.log(error?.stack ?? error)
+            process.exitCode = 1
+          }
+          NODE
 
       - name: Test tsci init in temporary directory
         run: |
+          set -euxo pipefail
           cd "$TEMP_DIR"
           tscircuit-cli init -y
+          ls -la
+          cat package.json
+          test ! -f bun.lock || sed -n '1,140p' bun.lock
+          test ! -f package-lock.json || cat package-lock.json
+          test ! -d node_modules || npm ls --depth=0 || true
 
       - name: Test tsci build in temporary directory
         run: |
+          set -euxo pipefail
           cd "$TEMP_DIR"
           export DEBUG="tsci:generate-circuit-json"
+          set +e
           tscircuit-cli build index.circuit.tsx --ignore-errors
+          EXIT_CODE=$?
+          set -e
+          echo "tscircuit-cli build exit code: $EXIT_CODE"
+          npm ls tscircuit @tscircuit/props circuit-json zod --all || true
+          exit "$EXIT_CODE"
 
       - name: Verify build output
         run: |
+          set -euxo pipefail
           cd "$TEMP_DIR"
           ls -la
           test -f index.circuit.tsx || (echo "index.circuit.tsx not found" && exit 1)
