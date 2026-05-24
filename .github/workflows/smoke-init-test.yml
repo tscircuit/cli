@@ -124,6 +124,8 @@ jobs:
             process.exitCode = 1
           }
           NODE
+          node -e "const p=require('$GLOBAL_ROOT/@tscircuit/cli/node_modules/tscircuit/package.json'); console.log('tscircuit dependencies:'); console.log(JSON.stringify(p.dependencies, null, 2)); console.log('tscircuit peerDependencies:'); console.log(JSON.stringify(p.peerDependencies, null, 2))"
+          npm explain -g circuit-json || true
 
       - name: Test tsci init in temporary directory
         run: |
