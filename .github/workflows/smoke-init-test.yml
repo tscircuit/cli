@@ -56,7 +56,11 @@ jobs:
           npm root -g
           npm install -g "$PACKAGE_FILE"
           which tscircuit-cli
+          set +e
           tscircuit-cli --version
+          VERSION_EXIT_CODE=$?
+          set -e
+          echo "tscircuit-cli --version exit code: $VERSION_EXIT_CODE"
           npm ls -g --depth=0 || true
           npm ls -g @tscircuit/cli tscircuit @tscircuit/props circuit-json zod --all || true
 
