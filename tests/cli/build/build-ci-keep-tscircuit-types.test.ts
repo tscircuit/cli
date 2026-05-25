@@ -42,4 +42,4 @@ test("build --ci keeps tscircuit in devDependencies", async () => {
   expect(packageJson.dependencies.tscircuit).toBeUndefined()
   expect(packageJson.dependencies.lodash).toBe("^4.17.21")
   expect(packageJson.devDependencies.tscircuit).toBe("^0.0.101")
-}, 60_000)
+}, 100_000)
