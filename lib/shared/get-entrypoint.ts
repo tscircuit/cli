@@ -82,6 +82,58 @@ const findEntrypointsRecursively = (
   return results
 }
 
+const findCircuitJsonFiles = (
+  dir: string,
+  projectDir: string,
+  maxDepth: number = MAX_SEARCH_DEPTH,
+): string[] => {
+  if (maxDepth <= 0 || !isValidDirectory(dir, projectDir)) {
+    return []
+  }
+
+  const results: string[] = []
+
+  try {
+    const entries = fs.readdirSync(dir, { withFileTypes: true })
+
+    for (const entry of entries) {
+      if (results.length >= MAX_RESULTS) break
+
+      if (
+        entry.isFile() &&
+        (entry.name === "circuit.json" || entry.name.endsWith(".circuit.json"))
+      ) {
+        const filePath = path.resolve(dir, entry.name)
+        if (isValidDirectory(filePath, projectDir)) {
+          results.push(filePath)
+        }
+      }
+    }
+
+    for (const entry of entries) {
+      if (results.length >= MAX_RESULTS) break
+
+      if (
+        entry.isDirectory() &&
+        !entry.name.startsWith(".") &&
+        entry.name !== "node_modules" &&
+        entry.name !== "dist"
+      ) {
+        const subdirPath = path.resolve(dir, entry.name)
+        if (isValidDirectory(subdirPath, projectDir)) {
+          results.push(
+            ...findCircuitJsonFiles(subdirPath, projectDir, maxDepth - 1),
+          )
+        }
+      }
+    }
+  } catch {
+    return []
+  }
+
+  return results
+}
+
 const validateProjectDir = (projectDir: string): string => {
   const resolvedDir = path.resolve(projectDir)
   if (!fs.existsSync(resolvedDir)) {
@@ -200,6 +252,19 @@ export const getEntrypoint = async ({
         onSuccess(`Detected entrypoint: '${relativePath}'`)
         return entrypoint
       }
+    }
+
+    // No entrypoint found - check for circuit.json files as implicit entrypoints
+    // This allows `tsci push` to work the same as `tsci dev` which supports circuit.json files
+    const circuitJsonFiles = findCircuitJsonFiles(
+      validatedProjectDir,
+      validatedProjectDir,
+    ).sort()
+
+    if (circuitJsonFiles.length > 0) {
+      const chosenFile = path.relative(validatedProjectDir, circuitJsonFiles[0])
+      onSuccess(`Using circuit.json as implicit entrypoint: '${chosenFile}'`)
+      return circuitJsonFiles[0]
     }
 
     onError(

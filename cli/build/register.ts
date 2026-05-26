@@ -762,6 +762,10 @@ export const registerBuild = (program: Command) => {
           const entryFile = fileArgIsDirectFile
             ? resolvedFileArgPath
             : transpileEntrypoint
+          const isRealTsEntrypoint = Boolean(
+            entryFile &&
+              (entryFile.endsWith(".ts") || entryFile.endsWith(".tsx")),
+          )
           if (!entryFile) {
             if (
               hasConfiguredIncludeBoardFiles &&
@@ -776,6 +780,12 @@ export const registerBuild = (program: Command) => {
               )
               exitBuild(1, "transpile entry file not found")
             }
+          } else if (!isRealTsEntrypoint && !transpileExplicitlyRequested) {
+            console.log(
+              hasConfiguredIncludeBoardFiles
+                ? "Skipping transpilation because includeBoardFiles is configured and no library entrypoint was found."
+                : "Skipping transpilation because entrypoint is not a TypeScript file.",
+            )
           } else {
             const transpileSuccess = await transpileFile({
               input: entryFile,
