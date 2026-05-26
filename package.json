@@ -18,7 +18,7 @@
     "@tscircuit/image-utils": "^0.0.3",
     "@tscircuit/krt-wasm": "^0.1.0",
     "@tscircuit/math-utils": "0.0.36",
-    "@tscircuit/props": "^0.0.532",
+    "@tscircuit/props": "^0.0.536",
     "@tscircuit/runframe": "^0.0.2002",
     "@tscircuit/schematic-match-adapt": "^0.0.22",
     "@types/bun": "^1.2.2",
@@ -71,7 +71,7 @@
     "semver": "^7.6.3",
     "stepts": "^0.0.3",
     "tempy": "^3.1.0",
-    "tscircuit": "0.0.1772-libonly",
+    "tscircuit": "0.0.1784-libonly",
     "tsx": "^4.7.1",
     "typed-ky": "^0.0.4",
     "zod": "^3.23.8"
