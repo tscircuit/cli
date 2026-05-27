@@ -1,8 +1,12 @@
+import { getQueryFromParts } from "cli/utils/get-query-from-parts"
 import type { Command } from "commander"
-import { getRegistryApiKy } from "lib/registry-api/get-ky"
 import Fuse from "fuse.js"
 import kleur from "kleur"
-import { getQueryFromParts } from "cli/utils/get-query-from-parts"
+import { getRegistryApiKy } from "lib/registry-api/get-ky"
+import {
+  type JlcpcbSearchResult,
+  formatJlcpcbSearchResult,
+} from "./format-jlcpcb-search-result"
 
 export const registerSearch = (program: Command) => {
   program
@@ -46,14 +50,7 @@ export const registerSearch = (program: Command) => {
           }>
         } = { packages: [] }
 
-        let jlcResults: Array<{
-          lcsc: number
-          mfr: string
-          package: string
-          description: string
-          stock: number
-          price: number
-        }> = []
+        let jlcResults: JlcpcbSearchResult[] = []
 
         let kicadResults: string[] = []
 
@@ -68,9 +65,7 @@ export const registerSearch = (program: Command) => {
           }
 
           if (searchJlc) {
-            const jlcSearchUrl =
-              "https://jlcsearch.tscircuit.com/api/search?limit=10&q=" +
-              encodeURIComponent(query)
+            const jlcSearchUrl = `https://jlcsearch.tscircuit.com/api/search?limit=10&q=${encodeURIComponent(query)}`
             const jlcResponse = await fetch(jlcSearchUrl).then((r) => r.json())
             jlcResults = jlcResponse?.components ?? []
           }
@@ -189,9 +184,7 @@ export const registerSearch = (program: Command) => {
           )
 
           jlcResults.forEach((comp, idx) => {
-            console.log(
-              `${idx + 1}. ${comp.mfr} (C${comp.lcsc}) - ${comp.description} (stock: ${comp.stock.toLocaleString("en-US")})`,
-            )
+            console.log(formatJlcpcbSearchResult(comp, idx))
           })
         }
         console.log("\n")
