@@ -9,6 +9,10 @@ test("parseDirectLcscPartNumber returns normalized C-prefixed part for prefixed 
   expect(parseDirectLcscPartNumber("c14877")).toBe("C14877")
 })
 
+test("parseDirectLcscPartNumber accepts jlcpcb-prefixed identifiers", () => {
+  expect(parseDirectLcscPartNumber("jlcpcb:C14877")).toBe("C14877")
+})
+
 test("parseDirectLcscPartNumber returns null for non-part queries", () => {
   expect(parseDirectLcscPartNumber("RP2040")).toBe(null)
 })

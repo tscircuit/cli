@@ -4,8 +4,14 @@ import kleur from "kleur"
 import { importComponentFromJlcpcb } from "lib/import/import-component-from-jlcpcb"
 import { getRegistryApiKy } from "lib/registry-api/get-ky"
 import { addPackage } from "lib/shared/add-package"
+import type { JlcpcbComponentSearchResult } from "lib/shared/jlcpcb-component"
+import {
+  getJlcpcbPartIdentifier,
+  getJlcpcbPartNumber,
+} from "lib/shared/jlcpcb-part-number"
 import { prompts } from "lib/utils/prompts"
 import ora from "ora"
+import { formatJlcpcbImportChoiceTitle } from "./format-jlcpcb-import-choice-title"
 import { parseDirectLcscPartNumber } from "./parse-direct-lcsc-part-number"
 
 export const registerImport = (program: Command) => {
@@ -38,19 +44,34 @@ export const registerImport = (program: Command) => {
           text: "Searching...",
           stream: process.stdout,
         }).start()
+        const importJlcpcbPart = async (partNumber: number | string) => {
+          const normalizedPartNumber = getJlcpcbPartNumber(partNumber)
+          const partIdentifier = getJlcpcbPartIdentifier(partNumber)
+          const importSpinner = ora({
+            text: `Importing "${partIdentifier}" from JLCPCB...`,
+            stream: process.stdout,
+          }).start()
+
+          try {
+            const { filePath } = await importComponentFromJlcpcb(
+              normalizedPartNumber,
+              process.cwd(),
+              { download: opts.download },
+            )
+            importSpinner.succeed(kleur.green(`Imported ${filePath}`))
+          } catch (error) {
+            importSpinner.fail(kleur.red("Failed to import part"))
+            console.error(error instanceof Error ? error.message : error)
+            process.exit(1)
+          }
+        }
 
         let registryResults: Array<{
           name: string
           version: string
           description?: string
         }> = []
-        let jlcResults: Array<{
-          lcsc: number
-          mfr: string
-          package: string
-          description: string
-          price: number
-        }> = []
+        let jlcResults: JlcpcbComponentSearchResult[] = []
 
         if (searchTscircuit) {
           try {
@@ -92,23 +113,8 @@ export const registerImport = (program: Command) => {
             ? parseDirectLcscPartNumber(query)
             : null
           if (directLcscPartNumber) {
-            const importSpinner = ora({
-              text: `Importing "${directLcscPartNumber}" from JLCPCB...`,
-              stream: process.stdout,
-            }).start()
-            try {
-              const { filePath } = await importComponentFromJlcpcb(
-                directLcscPartNumber,
-                process.cwd(),
-                { download: opts.download },
-              )
-              importSpinner.succeed(kleur.green(`Imported ${filePath}`))
-              return
-            } catch (error) {
-              importSpinner.fail(kleur.red("Failed to import part"))
-              console.error(error instanceof Error ? error.message : error)
-              return process.exit(1)
-            }
+            await importJlcpcbPart(directLcscPartNumber)
+            return
           }
 
           console.log(
@@ -123,7 +129,7 @@ export const registerImport = (program: Command) => {
           title: string
           value:
             | { type: "registry"; name: string }
-            | { type: "jlcpcb"; part: number }
+            | { type: "jlcpcb"; part: number | string }
           selected?: boolean
         }> = []
 
@@ -137,7 +143,7 @@ export const registerImport = (program: Command) => {
 
         jlcResults?.forEach((comp, idx) => {
           choices.push({
-            title: `[jlcpcb] ${comp.mfr} (C${comp.lcsc}) - ${comp.description}`,
+            title: formatJlcpcbImportChoiceTitle(comp),
             value: { type: "jlcpcb", part: comp.lcsc },
             selected: !choices.length && idx === 0,
           })
@@ -176,22 +182,7 @@ export const registerImport = (program: Command) => {
             return process.exit(1)
           }
         } else {
-          const importSpinner = ora({
-            text: `Importing "C${choice.part}" from JLCPCB...`,
-            stream: process.stdout,
-          }).start()
-          try {
-            const { filePath } = await importComponentFromJlcpcb(
-              `C${String(choice.part)}`,
-              process.cwd(),
-              { download: opts.download },
-            )
-            importSpinner.succeed(kleur.green(`Imported ${filePath}`))
-          } catch (error) {
-            importSpinner.fail(kleur.red("Failed to import part"))
-            console.error(error instanceof Error ? error.message : error)
-            return process.exit(1)
-          }
+          await importJlcpcbPart(choice.part)
         }
       },
     )
