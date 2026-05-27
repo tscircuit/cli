@@ -1,4 +1,4 @@
-import { getJlcpcbPartNumber } from "lib/shared/jlcpcb-part-number"
+import { getJlcpcbPartNumber } from "./jlcpcb-part-number"
 
 export const parseDirectLcscPartNumber = (query: string): string | null => {
   const directPartMatch = query.trim().match(/^(?:jlcpcb:)?c?(\d+)$/i)

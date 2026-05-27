@@ -1,8 +1,8 @@
 import {
   type JlcpcbComponentSearchResult,
   getJlcpcbComponentDisplayText,
-} from "lib/shared/jlcpcb-component"
-import { getJlcpcbPartIdentifier } from "lib/shared/jlcpcb-part-number"
+} from "./jlcpcb-component"
+import { getJlcpcbPartIdentifier } from "./jlcpcb-part-number"
 
 export const formatJlcpcbImportChoiceTitle = (
   comp: Pick<JlcpcbComponentSearchResult, "lcsc" | "mfr" | "description">,

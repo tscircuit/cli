@@ -4,14 +4,14 @@ import kleur from "kleur"
 import { importComponentFromJlcpcb } from "lib/import/import-component-from-jlcpcb"
 import { getRegistryApiKy } from "lib/registry-api/get-ky"
 import { addPackage } from "lib/shared/add-package"
-import type { JlcpcbComponentSearchResult } from "lib/shared/jlcpcb-component"
-import {
-  getJlcpcbPartIdentifier,
-  getJlcpcbPartNumber,
-} from "lib/shared/jlcpcb-part-number"
 import { prompts } from "lib/utils/prompts"
 import ora from "ora"
 import { formatJlcpcbImportChoiceTitle } from "./format-jlcpcb-import-choice-title"
+import type { JlcpcbComponentSearchResult } from "./jlcpcb-component"
+import {
+  getJlcpcbPartIdentifier,
+  getJlcpcbPartNumber,
+} from "./jlcpcb-part-number"
 import { parseDirectLcscPartNumber } from "./parse-direct-lcsc-part-number"
 
 export const registerImport = (program: Command) => {
