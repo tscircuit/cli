@@ -1,5 +1,13 @@
 import fs from "node:fs"
 import path from "node:path"
+import { dirname } from "node:path"
+import { fileURLToPath } from "node:url"
+
+// __metaDir is Bun-only; __metaDirname is Node 21.2+
+const __metaDir: string =
+  (import.meta as unknown as { dir?: string }).dir ??
+  __metaDirname ??
+  dirname(fileURLToPath(import.meta.url))
 import type { PlatformConfig } from "@tscircuit/props"
 import type { PcbSnapshotSettings } from "lib/project-config/project-config-schema"
 import { ThreadWorkerPool } from "lib/shared/thread-worker-pool"
@@ -34,17 +42,17 @@ type BuildJob = {
 
 const getWorkerEntrypointPath = (): string => {
   // Check for .ts file first (development), then .js (published/dist)
-  const tsPath = path.join(import.meta.dir, "build.worker.ts")
+  const tsPath = path.join(__metaDir, "build.worker.ts")
   if (fs.existsSync(tsPath)) {
     return tsPath
   }
   // When bundled, main.js is in dist/ and worker is in dist/build/
-  const jsBundledPath = path.join(import.meta.dir, "build", "build.worker.js")
+  const jsBundledPath = path.join(__metaDir, "build", "build.worker.js")
   if (fs.existsSync(jsBundledPath)) {
     return jsBundledPath
   }
   // Fallback: same directory
-  return path.join(import.meta.dir, "build.worker.js")
+  return path.join(__metaDir, "build.worker.js")
 }
 
 /**

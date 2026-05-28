@@ -14,7 +14,7 @@ function commandExists(cmd) {
   }
 }
 
-const runner = commandExists("bun") ? "bun" : "tsx"
+const runner = commandExists("bun") ? "bun" : commandExists("tsx") ? "tsx" : process.execPath
 
 const __dirname = dirname(fileURLToPath(import.meta.url))
 const packageRoot = join(__dirname, "..")
