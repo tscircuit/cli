@@ -1,149 +1,147 @@
-import fs from "node:fs"
-import path from "node:path"
-import { dirname } from "node:path"
-import { fileURLToPath } from "node:url"
-
-// __metaDir is Bun-only; __metaDirname is Node 21.2+
-const __metaDir: string =
-  (import.meta as unknown as { dir?: string }).dir ??
-  __metaDirname ??
-  dirname(fileURLToPath(import.meta.url))
-import type { ProcessSnapshotFileOptions } from "lib/shared/process-snapshot-file"
-import { ThreadWorkerPool } from "lib/shared/thread-worker-pool"
+import fs from "node:fs";
+import path from "node:path";
+import { dirname } from "node:path";
+import { fileURLToPath } from "node:url";
+import type { ProcessSnapshotFileOptions } from "lib/shared/process-snapshot-file";
+import { ThreadWorkerPool } from "lib/shared/thread-worker-pool";
 import type {
-  SnapshotCompletedMessage,
-  SnapshotFileMessage,
-  SnapshotJobResult,
-  WorkerOutputMessage,
-} from "./worker-types"
+	SnapshotCompletedMessage,
+	SnapshotFileMessage,
+	SnapshotJobResult,
+	WorkerOutputMessage,
+} from "./worker-types";
+
+// import.meta.dir is Bun-only; import.meta.dirname is Node >=21.2
+// Cast to include both so TypeScript doesn't complain about either property.
+type ImportMetaWithDir = { dir?: string; dirname?: string };
+const __metaDir: string =
+	(import.meta as unknown as ImportMetaWithDir).dir ??
+	(import.meta as unknown as ImportMetaWithDir).dirname ??
+	dirname(fileURLToPath(import.meta.url));
 
 type SnapshotJob = {
-  filePath: string
-  projectDir: string
-  snapshotsDirName?: string
-  options: Omit<
-    ProcessSnapshotFileOptions,
-    "file" | "projectDir" | "snapshotsDirName"
-  >
-}
+	filePath: string;
+	projectDir: string;
+	snapshotsDirName?: string;
+	options: Omit<
+		ProcessSnapshotFileOptions,
+		"file" | "projectDir" | "snapshotsDirName"
+	>;
+};
 
 const getWorkerEntrypointPath = (): string => {
-  const tsPath = path.join(__metaDir, "snapshot.worker.ts")
-  if (fs.existsSync(tsPath)) {
-    return tsPath
-  }
+	const tsPath = path.join(__metaDir, "snapshot.worker.ts");
+	if (fs.existsSync(tsPath)) {
+		return tsPath;
+	}
 
-  const jsBundledPath = path.join(
-    __metaDir,
-    "snapshot",
-    "snapshot.worker.js",
-  )
-  if (fs.existsSync(jsBundledPath)) {
-    return jsBundledPath
-  }
+	const jsBundledPath = path.join(__metaDir, "snapshot", "snapshot.worker.js");
+	if (fs.existsSync(jsBundledPath)) {
+		return jsBundledPath;
+	}
 
-  return path.join(__metaDir, "snapshot.worker.js")
-}
+	return path.join(__metaDir, "snapshot.worker.js");
+};
 
 export const snapshotFilesWithWorkerPool = async (options: {
-  files: string[]
-  projectDir: string
-  snapshotsDirName?: string
-  concurrency: number
-  snapshotOptions: Omit<
-    ProcessSnapshotFileOptions,
-    "file" | "projectDir" | "snapshotsDirName"
-  >
-  onLog?: (lines: string[]) => void
-  onJobComplete?: (result: SnapshotJobResult) => void | Promise<void>
-  stopOnFailure?: boolean
+	files: string[];
+	projectDir: string;
+	snapshotsDirName?: string;
+	concurrency: number;
+	snapshotOptions: Omit<
+		ProcessSnapshotFileOptions,
+		"file" | "projectDir" | "snapshotsDirName"
+	>;
+	onLog?: (lines: string[]) => void;
+	onJobComplete?: (result: SnapshotJobResult) => void | Promise<void>;
+	stopOnFailure?: boolean;
 }): Promise<SnapshotJobResult[]> => {
-  const cancellationError = new Error("Snapshot cancelled due to file failure")
-  const poolConcurrency = Math.max(
-    1,
-    Math.min(options.concurrency, options.files.length),
-  )
+	const cancellationError = new Error("Snapshot cancelled due to file failure");
+	const poolConcurrency = Math.max(
+		1,
+		Math.min(options.concurrency, options.files.length),
+	);
 
-  const pool = new ThreadWorkerPool<
-    SnapshotJob,
-    SnapshotFileMessage,
-    WorkerOutputMessage,
-    SnapshotJobResult
-  >({
-    concurrency: poolConcurrency,
-    workerEntrypointPath: getWorkerEntrypointPath(),
-    createMessage: (job) => ({
-      message_type: "snapshot_file",
-      file_path: job.filePath,
-      project_dir: job.projectDir,
-      snapshots_dir_name: job.snapshotsDirName,
-      options: {
-        update: job.options.update,
-        threeD: job.options.threeD,
-        pcbOnly: job.options.pcbOnly,
-        schematicOnly: job.options.schematicOnly,
-        forceUpdate: job.options.forceUpdate,
-        platformConfig: job.options.platformConfig,
-        pcbSnapshotSettings: job.options.pcbSnapshotSettings,
-        createDiff: job.options.createDiff,
-        cameraPreset: job.options.cameraPreset,
-      },
-    }),
-    isLogMessage: (message) => message.message_type === "worker_log",
-    getLogLines: (message) =>
-      message.message_type === "worker_log" ? message.log_lines : [],
-    isCompletionMessage: (message) =>
-      message.message_type === "snapshot_completed",
-    getResult: (message) => {
-      const completedMessage = message as SnapshotCompletedMessage
-      return {
-        filePath: completedMessage.file_path,
-        result: completedMessage.result,
-      }
-    },
-    shouldStopOnMessage: (message) => {
-      if (
-        !options.stopOnFailure ||
-        message.message_type !== "snapshot_completed"
-      ) {
-        return false
-      }
-      return !(message as SnapshotCompletedMessage).result.ok
-    },
-    cancellationError,
-    onLog: options.onLog,
-  })
+	const pool = new ThreadWorkerPool<
+		SnapshotJob,
+		SnapshotFileMessage,
+		WorkerOutputMessage,
+		SnapshotJobResult
+	>({
+		concurrency: poolConcurrency,
+		workerEntrypointPath: getWorkerEntrypointPath(),
+		createMessage: (job) => ({
+			message_type: "snapshot_file",
+			file_path: job.filePath,
+			project_dir: job.projectDir,
+			snapshots_dir_name: job.snapshotsDirName,
+			options: {
+				update: job.options.update,
+				threeD: job.options.threeD,
+				pcbOnly: job.options.pcbOnly,
+				schematicOnly: job.options.schematicOnly,
+				forceUpdate: job.options.forceUpdate,
+				platformConfig: job.options.platformConfig,
+				pcbSnapshotSettings: job.options.pcbSnapshotSettings,
+				createDiff: job.options.createDiff,
+				cameraPreset: job.options.cameraPreset,
+			},
+		}),
+		isLogMessage: (message) => message.message_type === "worker_log",
+		getLogLines: (message) =>
+			message.message_type === "worker_log" ? message.log_lines : [],
+		isCompletionMessage: (message) =>
+			message.message_type === "snapshot_completed",
+		getResult: (message) => {
+			const completedMessage = message as SnapshotCompletedMessage;
+			return {
+				filePath: completedMessage.file_path,
+				result: completedMessage.result,
+			};
+		},
+		shouldStopOnMessage: (message) => {
+			if (
+				!options.stopOnFailure ||
+				message.message_type !== "snapshot_completed"
+			) {
+				return false;
+			}
+			return !(message as SnapshotCompletedMessage).result.ok;
+		},
+		cancellationError,
+		onLog: options.onLog,
+	});
 
-  const results: SnapshotJobResult[] = []
-  const jobs = options.files.map((filePath) =>
-    pool
-      .queueJob({
-        filePath,
-        projectDir: options.projectDir,
-        snapshotsDirName: options.snapshotsDirName,
-        options: options.snapshotOptions,
-      })
-      .then(async (result) => {
-        results.push(result)
-        await options.onJobComplete?.(result)
-        return result
-      }),
-  )
+	const results: SnapshotJobResult[] = [];
+	const jobs = options.files.map((filePath) =>
+		pool
+			.queueJob({
+				filePath,
+				projectDir: options.projectDir,
+				snapshotsDirName: options.snapshotsDirName,
+				options: options.snapshotOptions,
+			})
+			.then(async (result) => {
+				results.push(result);
+				await options.onJobComplete?.(result);
+				return result;
+			}),
+	);
 
-  const settledResults = await Promise.allSettled(jobs)
+	const settledResults = await Promise.allSettled(jobs);
 
-  for (const settledResult of settledResults) {
-    if (
-      settledResult.status === "rejected" &&
-      settledResult.reason !== cancellationError
-    ) {
-      throw settledResult.reason
-    }
-  }
+	for (const settledResult of settledResults) {
+		if (
+			settledResult.status === "rejected" &&
+			settledResult.reason !== cancellationError
+		) {
+			throw settledResult.reason;
+		}
+	}
 
-  if (typeof Bun === "undefined") {
-    await pool.terminate()
-  }
+	if (typeof Bun === "undefined") {
+		await pool.terminate();
+	}
 
-  return results
-}
+	return results;
+};
