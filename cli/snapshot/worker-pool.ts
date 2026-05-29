@@ -35,11 +35,7 @@ const getWorkerEntrypointPath = (): string => {
     return tsPath
   }
 
-  const jsBundledPath = path.join(
-    __metaDir,
-    "snapshot",
-    "snapshot.worker.js",
-  )
+  const jsBundledPath = path.join(__metaDir, "snapshot", "snapshot.worker.js")
   if (fs.existsSync(jsBundledPath)) {
     return jsBundledPath
   }
