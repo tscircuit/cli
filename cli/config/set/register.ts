@@ -1,7 +1,7 @@
 import type { Command } from "commander"
 import { type CliConfig, cliConfig } from "lib/cli-config"
 import {
-  loadProjectConfig,
+  loadProjectConfigSync,
   saveProjectConfig,
   CONFIG_FILENAME,
   type TscircuitProjectConfig,
@@ -55,7 +55,7 @@ export const registerConfigSet = (program: Command) => {
           key === "prebuildCommand" ||
           key === "buildCommand"
         ) {
-          const projectConfig = loadProjectConfig(projectDir) ?? {}
+          const projectConfig = loadProjectConfigSync(projectDir) ?? {}
           projectConfig[key] = value
           if (saveProjectConfig(projectConfig, projectDir)) {
             console.log(

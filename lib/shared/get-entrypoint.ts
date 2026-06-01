@@ -128,7 +128,7 @@ export const getEntrypoint = async ({
       return null
     }
 
-    const projectConfig = loadProjectConfig(validatedProjectDir)
+    const projectConfig = await loadProjectConfig(validatedProjectDir)
     const configEntrypoint =
       projectConfig?.mainEntrypoint ?? projectConfig?.libraryEntrypoint
     if (configEntrypoint && typeof configEntrypoint === "string") {
@@ -141,9 +141,7 @@ export const getEntrypoint = async ({
           validatedProjectDir,
           validatedConfigPath,
         )
-        onSuccess(
-          `Using entrypoint from tscircuit.config.json: '${relativePath}'`,
-        )
+        onSuccess(`Using entrypoint from tscircuit config: '${relativePath}'`)
         return validatedConfigPath
       }
     }
