@@ -144,7 +144,7 @@ const loadProjectConfigModule = async (
   return null
 }
 
-export const loadProjectConfig = async (
+export const loadRuntimeProjectConfig = async (
   projectDir: string = process.cwd(),
 ): Promise<TscircuitRuntimeProjectConfig | null> => {
   const jsonConfig = loadProjectConfigSync(projectDir)
@@ -166,6 +166,12 @@ export const loadProjectConfig = async (
       ...moduleConfig?.pcbSnapshotSettings,
     },
   }
+}
+
+export const loadProjectConfig = (
+  projectDir: string = process.cwd(),
+): TscircuitProjectConfig | null => {
+  return loadProjectConfigSync(projectDir)
 }
 
 export const getBoardFilePatterns = (

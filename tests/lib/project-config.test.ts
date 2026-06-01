@@ -2,7 +2,7 @@ import { afterEach, expect, test } from "bun:test"
 import { mkdir, rm, writeFile } from "node:fs/promises"
 import path from "node:path"
 import { temporaryDirectory } from "tempy"
-import { loadProjectConfig } from "lib/project-config"
+import { loadRuntimeProjectConfig } from "lib/project-config"
 
 const tempDirs: string[] = []
 const ENV_KEYS = ["TEST_TI_PARTNER_TOKEN", "TEST_TI_FLAG"] as const
@@ -36,7 +36,7 @@ test("loadProjectConfig loads tscircuit.config.ts and project .env values", asyn
     ].join("\n"),
   )
 
-  const config = await loadProjectConfig(tmpDir)
+  const config = await loadRuntimeProjectConfig(tmpDir)
 
   expect(config?.mainEntrypoint).toBe("src/main.circuit.tsx")
   expect(config?.platformConfig?.partsEngineDisabled).toBeTrue()
@@ -71,7 +71,7 @@ test("loadProjectConfig merges json config with module config", async () => {
     ].join("\n"),
   )
 
-  const config = await loadProjectConfig(tmpDir)
+  const config = await loadRuntimeProjectConfig(tmpDir)
 
   expect(config?.mainEntrypoint).toBe("src/index.circuit.tsx")
   expect(config?.previewComponentPath).toBe("src/preview.tsx")
