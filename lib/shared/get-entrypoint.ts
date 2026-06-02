@@ -1,6 +1,6 @@
 import * as fs from "node:fs"
 import * as path from "node:path"
-import { loadProjectConfig } from "lib/project-config"
+import { loadRuntimeProjectConfig } from "lib/project-config"
 import kleur from "kleur"
 
 type EntrypointOptions = {
@@ -128,7 +128,7 @@ export const getEntrypoint = async ({
       return null
     }
 
-    const projectConfig = loadProjectConfig(validatedProjectDir)
+    const projectConfig = await loadRuntimeProjectConfig(validatedProjectDir)
     const configEntrypoint =
       projectConfig?.mainEntrypoint ?? projectConfig?.libraryEntrypoint
     if (configEntrypoint && typeof configEntrypoint === "string") {
@@ -141,9 +141,7 @@ export const getEntrypoint = async ({
           validatedProjectDir,
           validatedConfigPath,
         )
-        onSuccess(
-          `Using entrypoint from tscircuit.config.json: '${relativePath}'`,
-        )
+        onSuccess(`Using entrypoint from tscircuit config: '${relativePath}'`)
         return validatedConfigPath
       }
     }
