@@ -1,5 +1,6 @@
 import * as fs from "node:fs"
 import * as http from "node:http"
+import type { PlatformConfig } from "@tscircuit/props"
 // @ts-ignore
 import runFrameStandaloneBundleContent from "@tscircuit/runframe/standalone" with {
   type: "text",
@@ -11,6 +12,11 @@ import pkg from "../../package.json"
 import winterspecBundle from "@tscircuit/file-server/dist/bundle.js"
 import { getIndex } from "../site/getIndex"
 import { createKicadPcmProxy } from "./kicad-pcm-proxy"
+import {
+  createRuntimePlatformConfigClientScript,
+  invokeRuntimePlatformConfigFunction,
+  patchStandaloneForRuntimePlatformConfig,
+} from "./runtime-platform-config"
 
 export const createHttpServer = async ({
   port = 3020,
@@ -18,12 +24,14 @@ export const createHttpServer = async ({
   kicadPcm,
   projectDir,
   entryFile,
+  runtimePlatformConfig,
 }: {
   port?: number
   defaultMainComponentPath?: string
   kicadPcm?: boolean
   projectDir?: string
   entryFile?: string
+  runtimePlatformConfig?: PlatformConfig
 }) => {
   const fileServerHandler = getNodeHandler(winterspecBundle as any, {})
 
@@ -106,6 +114,52 @@ export const createHttpServer = async ({
       }
     }
 
+    if (
+      url.pathname === "/__tsci/runtime-platform-config/call" &&
+      req.method === "POST"
+    ) {
+      try {
+        const chunks: Buffer[] = []
+        for await (const chunk of req) {
+          chunks.push(Buffer.isBuffer(chunk) ? chunk : Buffer.from(chunk))
+        }
+
+        const body = JSON.parse(Buffer.concat(chunks).toString("utf8")) as {
+          path?: string[]
+          args?: unknown[]
+        }
+
+        if (!Array.isArray(body.path)) {
+          res.writeHead(400, { "Content-Type": "application/json" })
+          res.end(
+            JSON.stringify({ error: "Invalid runtime platform config path" }),
+          )
+          return
+        }
+
+        const result = await invokeRuntimePlatformConfigFunction(
+          runtimePlatformConfig,
+          body.path,
+          Array.isArray(body.args) ? body.args : [],
+        )
+
+        res.writeHead(200, { "Content-Type": "application/json" })
+        res.end(JSON.stringify({ result }))
+        return
+      } catch (error) {
+        res.writeHead(500, { "Content-Type": "application/json" })
+        res.end(
+          JSON.stringify({
+            error:
+              error instanceof Error
+                ? error.message
+                : String(error ?? "Unknown error"),
+          }),
+        )
+        return
+      }
+    }
+
     if (url.pathname === "/standalone.min.js") {
       const standaloneFilePath = process.env.RUNFRAME_STANDALONE_FILE_PATH
 
@@ -113,7 +167,11 @@ export const createHttpServer = async ({
         res.writeHead(200, {
           "Content-Type": "application/javascript; charset=utf-8",
         })
-        res.end(runFrameStandaloneBundleContent)
+        res.end(
+          patchStandaloneForRuntimePlatformConfig(
+            runFrameStandaloneBundleContent,
+          ),
+        )
         return
       }
 
@@ -122,7 +180,7 @@ export const createHttpServer = async ({
         res.writeHead(200, {
           "Content-Type": "application/javascript; charset=utf-8",
         })
-        res.end(content)
+        res.end(patchStandaloneForRuntimePlatformConfig(content))
         return
       } catch (error) {
         console.info(
@@ -142,6 +200,7 @@ export const createHttpServer = async ({
       const html = await getIndex(
         defaultMainComponentPath,
         fileServerApiBaseUrl,
+        createRuntimePlatformConfigClientScript(runtimePlatformConfig),
       )
       res.writeHead(200, { "Content-Type": "text/html" })
       res.end(html)

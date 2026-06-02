@@ -123,21 +123,32 @@ const loadProjectConfigModule = async (
 ): Promise<TscircuitRuntimeProjectConfig | null> => {
   loadProjectEnv(projectDir)
 
+  const configPath = findRuntimeProjectConfigModulePath(projectDir)
+  if (!configPath) {
+    return null
+  }
+
+  try {
+    const moduleUrl = pathToFileURL(configPath)
+    const stat = fs.statSync(configPath)
+    moduleUrl.searchParams.set("tsci", String(stat.mtimeMs))
+    const importedModule = await import(moduleUrl.href)
+    const exportedConfig =
+      importedModule.default ?? importedModule.config ?? importedModule
+    return parseProjectConfigObject(exportedConfig)
+  } catch (error) {
+    console.error(`Error loading ${path.basename(configPath)}: ${error}`)
+    return null
+  }
+}
+
+export const findRuntimeProjectConfigModulePath = (
+  projectDir: string = process.cwd(),
+): string | null => {
   for (const configFileName of CONFIG_MODULE_FILENAMES) {
     const configPath = path.join(projectDir, configFileName)
-    if (!fs.existsSync(configPath)) continue
-
-    try {
-      const moduleUrl = pathToFileURL(configPath)
-      const stat = fs.statSync(configPath)
-      moduleUrl.searchParams.set("tsci", String(stat.mtimeMs))
-      const importedModule = await import(moduleUrl.href)
-      const exportedConfig =
-        importedModule.default ?? importedModule.config ?? importedModule
-      return parseProjectConfigObject(exportedConfig)
-    } catch (error) {
-      console.error(`Error loading ${configFileName}: ${error}`)
-      return null
+    if (fs.existsSync(configPath)) {
+      return configPath
     }
   }
 
