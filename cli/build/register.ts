@@ -4,9 +4,10 @@ import JSZip from "jszip"
 import type { PlatformConfig } from "@tscircuit/props"
 import type { Command } from "commander"
 import kleur from "kleur"
-import { loadProjectConfig } from "lib/project-config"
+import { loadRuntimeProjectConfig } from "lib/project-config"
 import { convertToKicadLibrary } from "lib/shared/convert-to-kicad-library"
 import { getEntrypoint } from "lib/shared/get-entrypoint"
+import { mergePlatformConfigs } from "lib/shared/platform-config-utils"
 import {
   type StaticBuildFileReference,
   getStaticIndexHtmlFile,
@@ -232,7 +233,7 @@ export const registerBuild = (program: Command) => {
           projectDir = resolvedRoot
         }
 
-        const projectConfig = loadProjectConfig(projectDir)
+        const projectConfig = await loadRuntimeProjectConfig(projectDir)
 
         const { options: optionsWithConfig, configAppliedOpts } =
           resolveBuildOptions({
@@ -269,7 +270,7 @@ export const registerBuild = (program: Command) => {
           fileOrDir: fileOrDirForBuild,
         })
 
-        const platformConfig: PlatformConfig | undefined = (() => {
+        const commandPlatformConfig: PlatformConfig | undefined = (() => {
           if (
             !resolvedOptions?.disablePcb &&
             !resolvedOptions?.routingDisabled &&
@@ -294,6 +295,11 @@ export const registerBuild = (program: Command) => {
 
           return config
         })()
+
+        const platformConfig = mergePlatformConfigs(
+          projectConfig?.platformConfig,
+          commandPlatformConfig,
+        )
 
         const distDir = path.join(projectDir, "dist")
         fs.mkdirSync(distDir, { recursive: true })
@@ -823,7 +829,6 @@ export const registerBuild = (program: Command) => {
               includeBoardFiles: false,
             },
           )
-          const projectConfig = loadProjectConfig(projectDir)
           const entryFile =
             projectConfig?.kicadLibraryEntrypointPath != null
               ? await getEntrypoint({
@@ -872,7 +877,6 @@ export const registerBuild = (program: Command) => {
             },
           )
 
-          const projectConfig = loadProjectConfig(projectDir)
           const entryFile =
             projectConfig?.kicadLibraryEntrypointPath != null
               ? await getEntrypoint({

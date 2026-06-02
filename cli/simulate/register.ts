@@ -4,6 +4,8 @@ import { runSimulation } from "lib/eecircuit-engine/run-simulation"
 import { resultToTable } from "lib/shared/result-to-table"
 import { getSpiceWithPaddedSim } from "lib/shared/get-spice-with-sim"
 import type { PlatformConfig } from "@tscircuit/props"
+import { loadRuntimeProjectConfig } from "lib/project-config"
+import { mergePlatformConfigs } from "lib/shared/platform-config-utils"
 
 export const registerSimulate = (program: Command) => {
   const simulateCommand = program
@@ -16,10 +18,15 @@ export const registerSimulate = (program: Command) => {
     .argument("<file>", "Path to tscircuit tsx or circuit json file")
     .option("--disable-parts-engine", "Disable the parts engine")
     .action(async (file: string, options: { disablePartsEngine?: boolean }) => {
-      const platformConfig: PlatformConfig | undefined =
+      const projectConfig = await loadRuntimeProjectConfig(process.cwd())
+      const commandPlatformConfig: PlatformConfig | undefined =
         options.disablePartsEngine === true
           ? { partsEngineDisabled: true }
           : undefined
+      const platformConfig = mergePlatformConfigs(
+        projectConfig?.platformConfig,
+        commandPlatformConfig,
+      )
 
       const { circuitJson } = await generateCircuitJson({
         filePath: file,

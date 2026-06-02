@@ -1,7 +1,10 @@
 import fs from "node:fs"
 import path from "node:path"
-import { getBoardFilePatterns, loadProjectConfig } from "lib/project-config"
-import { findBoardFiles } from "lib/shared/find-board-files"
+import {
+  DEFAULT_BOARD_FILE_PATTERNS,
+  loadRuntimeProjectConfig,
+} from "lib/project-config"
+import { findBoardFilesAsync } from "lib/shared/find-board-files"
 import { getEntrypoint } from "lib/shared/get-entrypoint"
 
 export class BuildNoMatchingFilesError extends Error {
@@ -73,12 +76,15 @@ export async function getBuildEntrypoints({
   circuitFiles: string[]
 }> {
   const resolvedRoot = path.resolve(rootDir)
+  const rootProjectConfig = await loadRuntimeProjectConfig(resolvedRoot)
   const includeBoardFilePatterns = includeBoardFiles
-    ? getBoardFilePatterns(resolvedRoot)
+    ? (rootProjectConfig?.includeBoardFiles?.filter((pattern) =>
+        pattern.trim(),
+      ) ?? DEFAULT_BOARD_FILE_PATTERNS)
     : []
 
   const buildFromProjectDir = async () => {
-    const projectConfig = loadProjectConfig(resolvedRoot)
+    const projectConfig = rootProjectConfig
     const hasConfiguredIncludeBoardFiles = Boolean(
       projectConfig?.includeBoardFiles?.some((pattern) => pattern.trim()),
     )
@@ -91,7 +97,7 @@ export async function getBuildEntrypoints({
         : undefined
 
     if (includeBoardFiles) {
-      const files = findBoardFiles({ projectDir: resolvedRoot })
+      const files = await findBoardFilesAsync({ projectDir: resolvedRoot })
 
       if (files.length > 0) {
         return {
@@ -139,7 +145,7 @@ export async function getBuildEntrypoints({
   if (fileOrDir) {
     const resolved = path.resolve(resolvedRoot, fileOrDir)
     if (fs.existsSync(resolved) && fs.statSync(resolved).isDirectory()) {
-      const projectConfig = loadProjectConfig(resolvedRoot)
+      const projectConfig = rootProjectConfig
       const resolvedPreviewComponentPath = projectConfig?.previewComponentPath
         ? path.resolve(resolvedRoot, projectConfig.previewComponentPath)
         : undefined
@@ -152,7 +158,7 @@ export async function getBuildEntrypoints({
         const hasConfiguredIncludeBoardFiles = Boolean(
           projectConfig?.includeBoardFiles?.some((pattern) => pattern.trim()),
         )
-        const matchedFiles = findBoardFiles({
+        const matchedFiles = await findBoardFilesAsync({
           projectDir: resolvedRoot,
         })
         const circuitFiles = matchedFiles.filter((file) =>
@@ -194,7 +200,7 @@ export async function getBuildEntrypoints({
     // Find project root by looking for package.json
     const fileDir = path.dirname(resolved)
     const projectDir = findProjectRoot(fileDir)
-    const projectConfig = loadProjectConfig(projectDir)
+    const projectConfig = await loadRuntimeProjectConfig(projectDir)
     const resolvedPreviewComponentPath = projectConfig?.previewComponentPath
       ? path.resolve(projectDir, projectConfig.previewComponentPath)
       : undefined

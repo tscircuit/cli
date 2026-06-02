@@ -1,6 +1,6 @@
 import { execSync } from "node:child_process"
 import kleur from "kleur"
-import { loadProjectConfig } from "lib/project-config"
+import { loadRuntimeProjectConfig } from "lib/project-config"
 import { installProjectDependencies } from "lib/shared/install-project-dependencies"
 
 export interface BuildCommandOptions {
@@ -67,7 +67,7 @@ export const applyCiBuildOptions = async ({
     return { resolvedOptions: options, handled: false }
   }
 
-  const projectConfig = loadProjectConfig(projectDir)
+  const projectConfig = await loadRuntimeProjectConfig(projectDir)
 
   // Check if we're already inside a buildCommand execution to prevent infinite recursion
   const insideBuildCommand = process.env.TSCIRCUIT_INSIDE_BUILD_COMMAND === "1"
