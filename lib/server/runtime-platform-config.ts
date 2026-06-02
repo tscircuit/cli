@@ -136,7 +136,7 @@ export const patchStandaloneForRuntimePlatformConfig = (
     "if(t.projectConfig)for(const _ of f4e(t.projectConfig))await s.setProjectConfigProperty(_,l(BEt(t.projectConfig,_))).catch(h=>{throw new Error(`Error setting project config property ${_}: ${h instanceof Error?h.message:String(h)}`)})"
 
   const replacementSnippet =
-    "const __tsciRuntimeProjectConfig=t.projectConfig??globalThis.TSCIRCUIT_RUNTIME_PLATFORM_CONFIG;if(__tsciRuntimeProjectConfig)for(const _ of f4e(__tsciRuntimeProjectConfig))await s.setProjectConfigProperty(_,l(BEt(__tsciRuntimeProjectConfig,_))).catch(h=>{throw new Error(`Error setting project config property ${_}: ${h instanceof Error?h.message:String(h)}`)})"
+    "const __tsciRuntimeProjectConfig={...(globalThis.TSCIRCUIT_RUNTIME_PLATFORM_CONFIG??{}),...(t.projectConfig??{})};if(Object.keys(__tsciRuntimeProjectConfig).length>0)for(const _ of f4e(__tsciRuntimeProjectConfig))await s.setProjectConfigProperty(_,l(BEt(__tsciRuntimeProjectConfig,_))).catch(h=>{throw new Error(`Error setting project config property ${_}: ${h instanceof Error?h.message:String(h)}`)})"
 
   if (!standaloneContent.includes(originalSnippet)) {
     throw new Error(
