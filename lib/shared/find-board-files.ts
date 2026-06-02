@@ -1,7 +1,11 @@
 import fs from "node:fs"
 import path from "node:path"
 import { globbySync } from "globby"
-import { getBoardFilePatterns } from "lib/project-config"
+import {
+  DEFAULT_BOARD_FILE_PATTERNS,
+  getBoardFilePatterns,
+  loadRuntimeProjectConfig,
+} from "lib/project-config"
 import { DEFAULT_IGNORED_PATTERNS } from "./should-ignore-path"
 
 type FindBoardFilesOptions = {
@@ -38,14 +42,52 @@ export const findBoardFiles = ({
 }: FindBoardFilesOptions = {}): string[] => {
   const resolvedProjectDir = path.resolve(projectDir)
   const boardFilePatterns = getBoardFilePatterns(resolvedProjectDir)
+  return findBoardFilesFromPatterns({
+    boardFilePatterns,
+    projectDir: resolvedProjectDir,
+    ignore,
+    filePaths,
+  })
+}
 
+export const findBoardFilesAsync = async ({
+  projectDir = process.cwd(),
+  ignore = DEFAULT_IGNORED_PATTERNS,
+  filePaths = [],
+}: FindBoardFilesOptions = {}): Promise<string[]> => {
+  const resolvedProjectDir = path.resolve(projectDir)
+  const projectConfig = await loadRuntimeProjectConfig(resolvedProjectDir)
+  const boardFilePatterns =
+    projectConfig?.includeBoardFiles?.filter((pattern) => pattern.trim()) ?? []
+  return findBoardFilesFromPatterns({
+    boardFilePatterns:
+      boardFilePatterns.length > 0
+        ? boardFilePatterns
+        : DEFAULT_BOARD_FILE_PATTERNS,
+    projectDir: resolvedProjectDir,
+    ignore,
+    filePaths,
+  })
+}
+
+const findBoardFilesFromPatterns = ({
+  boardFilePatterns,
+  projectDir,
+  ignore,
+  filePaths,
+}: {
+  boardFilePatterns: string[]
+  projectDir: string
+  ignore: string[]
+  filePaths: string[]
+}): string[] => {
   const relativeBoardFiles = globbySync(boardFilePatterns, {
-    cwd: resolvedProjectDir,
+    cwd: projectDir,
     ignore,
   })
 
   const absoluteBoardFiles = relativeBoardFiles.map((f) =>
-    path.join(resolvedProjectDir, f),
+    path.join(projectDir, f),
   )
 
   const boardFileSet = new Set<string>()
@@ -56,7 +98,7 @@ export const findBoardFiles = ({
       if (isGlobPattern(inputPath)) {
         // Expand the glob pattern relative to the project directory
         const matches = globbySync(inputPath, {
-          cwd: resolvedProjectDir,
+          cwd: projectDir,
           ignore,
           absolute: true,
         })
@@ -66,7 +108,7 @@ export const findBoardFiles = ({
         }
       } else {
         // Handle as a regular file or directory path
-        const targetPath = path.resolve(resolvedProjectDir, inputPath)
+        const targetPath = path.resolve(projectDir, inputPath)
 
         if (!fs.existsSync(targetPath)) {
           continue
@@ -75,7 +117,7 @@ export const findBoardFiles = ({
         const stat = fs.statSync(targetPath)
         if (stat.isDirectory()) {
           const resolvedDir = path.resolve(targetPath)
-          if (isSubPath(resolvedDir, resolvedProjectDir)) {
+          if (isSubPath(resolvedDir, projectDir)) {
             for (const boardFile of absoluteBoardFiles) {
               if (isSubPath(boardFile, resolvedDir)) {
                 boardFileSet.add(boardFile)
