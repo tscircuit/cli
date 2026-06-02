@@ -14,7 +14,7 @@ const SKILL_REPO_API_URL =
   "https://api.github.com/repos/tscircuit/skill/contents"
 const SKILL_INSTALL_PATHS = [
   ".claude/skills/tscircuit",
-  ".codex/skills/tscircuit",
+  ".agents/skills/tscircuit",
 ]
 
 async function fetchGitHubContents(apiUrl: string): Promise<GitHubContent[]> {
