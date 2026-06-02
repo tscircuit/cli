@@ -38,7 +38,7 @@ test("init installs tscircuit skills for both Claude and Codex", async () => {
     join(tmpDir, projectDir, ".claude/skills/tscircuit/SKILL.md"),
   ).exists()
   const codexSkillExists = await Bun.file(
-    join(tmpDir, projectDir, ".codex/skills/tscircuit/SKILL.md"),
+    join(tmpDir, projectDir, ".agents/skills/tscircuit/SKILL.md"),
   ).exists()
 
   expect(claudeSkillExists).toBeTrue()
