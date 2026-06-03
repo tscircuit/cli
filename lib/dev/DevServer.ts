@@ -5,7 +5,6 @@ import * as chokidar from "chokidar"
 import Debug from "debug"
 import kleur from "kleur"
 import ky, { TimeoutError } from "ky"
-import type { PlatformConfig } from "@tscircuit/props"
 import { setSessionToken } from "lib/cli-config"
 import { getAllNodeModuleFilePaths } from "lib/dependency-analysis/getNodeModuleDependencies"
 import type {
@@ -16,7 +15,6 @@ import type { FileServerRoutes } from "lib/file-server/FileServerRoutes"
 import {
   findRuntimeProjectConfigModulePath,
   loadProjectConfig,
-  loadRuntimeProjectConfig,
 } from "lib/project-config"
 import { EventsWatcher } from "lib/server/EventsWatcher"
 import { createHttpServer } from "lib/server/createHttpServer"
@@ -48,7 +46,6 @@ export class DevServer {
   projectDir: string
   /** Paths or directory names to ignore when syncing files */
   ignoredFiles: string[]
-  runtimePlatformConfig?: PlatformConfig
   runtimeConfigModulePath?: string
 
   /** Whether to enable the KiCad PCM proxy server */
@@ -101,26 +98,8 @@ export class DevServer {
   }
 
   async start() {
-    const runtimeProjectConfig = await loadRuntimeProjectConfig(this.projectDir)
-    this.runtimePlatformConfig = runtimeProjectConfig?.platformConfig
     this.runtimeConfigModulePath =
       findRuntimeProjectConfigModulePath(this.projectDir) ?? undefined
-
-    const runtimeIgnoredFiles = runtimeProjectConfig?.ignoredFiles ?? []
-    this.ignoredFiles = [...runtimeIgnoredFiles]
-
-    if (this.runtimeConfigModulePath) {
-      const relativeConfigPath = path.relative(
-        this.projectDir,
-        this.runtimeConfigModulePath,
-      )
-      if (
-        relativeConfigPath &&
-        !this.ignoredFiles.includes(relativeConfigPath)
-      ) {
-        this.ignoredFiles.push(relativeConfigPath)
-      }
-    }
 
     const { server } = await createHttpServer({
       port: this.port,
@@ -131,7 +110,6 @@ export class DevServer {
       kicadPcm: this.kicadPcm,
       projectDir: this.projectDir,
       entryFile: this.componentFilePath,
-      runtimePlatformConfig: this.runtimePlatformConfig,
     })
     this.httpServer = server
 
