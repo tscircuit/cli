@@ -10,16 +10,17 @@
     "electronics"
   ],
   "scripts": {
-    "dev": "tsci dev",
+    "dev": "bun ../../cli/main.ts dev",
     "build": "tsci build",
     "snapshot": "tsci snapshot",
     "snapshot:update": "tsci snapshot --update",
-    "start": "tsci dev",
+    "start": "bun ../../cli/main.ts dev",
     "typecheck": "tsc --noEmit"
   },
   "devDependencies": {
-    "tscircuit": "latest",
-    "typescript": "^5.0.0",
-    "@tscircuit/ti-parts-engine": "github:tscircuit/ti-parts-engine#726b9f2"
+    "@tscircuit/ti-parts-engine": "github:tscircuit/ti-parts-engine#51ca9ba",
+    "jszip": "^3.10.1",
+    "tscircuit": "^0.0.1812",
+    "typescript": "^5.0.0"
   }
 }
