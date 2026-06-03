@@ -9,7 +9,7 @@
         "@biomejs/biome": "^1.9.4",
         "@tscircuit/circuit-json-placement-analysis": "^0.0.6",
         "@tscircuit/circuit-json-routing-analysis": "^0.0.1",
-        "@tscircuit/circuit-json-schematic-placement-analysis": "github:tscircuit/circuit-json-schematic-placement-analysis#40f49bb8ae9dabedb19b47ec0a621c713b40615c",
+        "@tscircuit/circuit-json-schematic-placement-analysis": "github:tscircuit/circuit-json-schematic-placement-analysis#b6d5fe675adc26a2fc988aa081e6fb51e6bf696a",
         "@tscircuit/eval": "^0.0.835",
         "@tscircuit/fake-snippets": "^0.0.182",
         "@tscircuit/file-server": "^0.0.32",
@@ -366,7 +366,7 @@
 
     "@tscircuit/circuit-json-routing-analysis": ["@tscircuit/circuit-json-routing-analysis@0.0.1", "", { "dependencies": { "flatbush": "^4.5.1" }, "peerDependencies": { "typescript": "^5" } }, "sha512-vxXM5Vo92R4GjqYSuGrgRTU8jh3An8tUt4yvBvBALwkAswMWSXJIJFnA/n7wlV9S0uzv9uOvIwizKtbyUgNBpA=="],
 
-    "@tscircuit/circuit-json-schematic-placement-analysis": ["@tscircuit/circuit-json-schematic-placement-analysis@github:tscircuit/circuit-json-schematic-placement-analysis#40f49bb", { "dependencies": { "@tscircuit/circuit-json-util": "^0.0.94" }, "peerDependencies": { "circuit-json": "*", "typescript": "^5" } }, "tscircuit-circuit-json-schematic-placement-analysis-40f49bb", "sha512-WDqJ0OZoS/i6H5rJRszTzuz39Q/KEVoN08Cqm5wVgI7t1mZ3mkLdJAXiEdA2xULXKByK+usmP202pjU7vwgQ/g=="],
+    "@tscircuit/circuit-json-schematic-placement-analysis": ["@tscircuit/circuit-json-schematic-placement-analysis@github:tscircuit/circuit-json-schematic-placement-analysis#b6d5fe6", { "dependencies": { "@tscircuit/circuit-json-util": "^0.0.94" }, "peerDependencies": { "circuit-json": "*", "typescript": "^5" } }, "tscircuit-circuit-json-schematic-placement-analysis-b6d5fe6", "sha512-+4c9n3cdvfRJtCWd+GH9/05N/kEDlhxg7wVeJpMB0zed1JINMAOQvN6/g36e5KjaBO09KDfeql5HV9xSwighNQ=="],
 
     "@tscircuit/circuit-json-util": ["@tscircuit/circuit-json-util@0.0.94", "", { "dependencies": { "parsel-js": "^1.1.2" }, "peerDependencies": { "circuit-json": "*", "transformation-matrix": "*", "zod": "3" } }, "sha512-kEYV6LzcZbRuw43IxsZ1cZL2pUx4nF07MYAHHhY9s90UzKYaIYfZ1q11s+F2wNwKecCcSyTUoAwWeqazLQEyVQ=="],
 
