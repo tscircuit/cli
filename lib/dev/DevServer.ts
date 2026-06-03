@@ -12,7 +12,7 @@ import type {
   FileUpdatedEvent,
 } from "lib/file-server/FileServerEvent"
 import type { FileServerRoutes } from "lib/file-server/FileServerRoutes"
-import { loadProjectConfig } from "lib/project-config"
+import { loadRuntimeProjectConfig } from "lib/project-config"
 import { EventsWatcher } from "lib/server/EventsWatcher"
 import { createHttpServer } from "lib/server/createHttpServer"
 import { addPackage } from "lib/shared/add-package"
@@ -86,14 +86,16 @@ export class DevServer {
     this.componentFilePath = componentFilePath
     this.projectDir = projectDir ?? path.dirname(componentFilePath)
     this.kicadPcm = kicadPcm ?? false
-    const projectConfig = loadProjectConfig(this.projectDir)
-    this.ignoredFiles = projectConfig?.ignoredFiles ?? []
+    this.ignoredFiles = []
     this.fsKy = ky.create({
       prefixUrl: `http://localhost:${port}`,
     }) as any
   }
 
   async start() {
+    const projectConfig = await loadRuntimeProjectConfig(this.projectDir)
+    this.ignoredFiles = projectConfig?.ignoredFiles ?? []
+
     const { server } = await createHttpServer({
       port: this.port,
       defaultMainComponentPath: path.relative(

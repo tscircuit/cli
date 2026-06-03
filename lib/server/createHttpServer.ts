@@ -10,6 +10,10 @@ import pkg from "../../package.json"
 // @ts-ignore
 import winterspecBundle from "@tscircuit/file-server/dist/bundle.js"
 import { getIndex } from "../site/getIndex"
+import {
+  createDevRuntimeConfigApi,
+  handleDevRuntimeConfigRequest,
+} from "./dev-runtime-config"
 import { createKicadPcmProxy } from "./kicad-pcm-proxy"
 
 export const createHttpServer = async ({
@@ -26,6 +30,9 @@ export const createHttpServer = async ({
   entryFile?: string
 }) => {
   const fileServerHandler = getNodeHandler(winterspecBundle as any, {})
+  const runtimeConfigApi = projectDir
+    ? createDevRuntimeConfigApi({ projectDir })
+    : null
 
   // Create PCM proxy if enabled
   const pcmProxy =
@@ -36,6 +43,20 @@ export const createHttpServer = async ({
   const server = http.createServer(async (req, res) => {
     const requestHost = req.headers.host ?? `localhost:${port}`
     const url = new URL(req.url!, `http://${requestHost}`)
+
+    if (
+      runtimeConfigApi &&
+      (url.pathname === "/api/dev/runtime-config" ||
+        url.pathname === "/api/dev/runtime-config/rpc")
+    ) {
+      const handled = await handleDevRuntimeConfigRequest({
+        req,
+        res,
+        url,
+        runtimeConfigApi,
+      })
+      if (handled) return
+    }
 
     if (
       url.pathname === "/api/files/upsert-multipart" &&
@@ -142,6 +163,7 @@ export const createHttpServer = async ({
       const html = await getIndex(
         defaultMainComponentPath,
         fileServerApiBaseUrl,
+        `${fileServerApiBaseUrl}/dev/runtime-config`,
       )
       res.writeHead(200, { "Content-Type": "text/html" })
       res.end(html)
