@@ -50,6 +50,13 @@ export const prettyResponseErrorHook: AfterResponseHook = async (
     const errorString = apiError
       ? `\n${apiError.error_code}: ${apiError.message}`
       : ""
+    const sessionExpiredAdvice =
+      request.headers.has("Authorization") &&
+      /session_expired|token_expired|expired_session/i.test(
+        apiError?.error_code ?? "",
+      )
+        ? "\n\nYour tscircuit session has expired. Run `tsci logout`, then `tsci login` to log back in."
+        : ""
 
     const bodyDisplay = errorData
       ? JSON.stringify(errorData, null, 2)
@@ -58,7 +65,7 @@ export const prettyResponseErrorHook: AfterResponseHook = async (
     throw new PrettyHttpError(
       `FAIL [${response.status}]: ${request.method} ${
         new URL(request.url).pathname
-      }${errorString}${requestBody ? `\n\nRequest Body:\n${requestBody}` : ""}\n\n${bodyDisplay}`,
+      }${errorString}${sessionExpiredAdvice}${requestBody ? `\n\nRequest Body:\n${requestBody}` : ""}\n\n${bodyDisplay}`,
       request,
       response,
     )
