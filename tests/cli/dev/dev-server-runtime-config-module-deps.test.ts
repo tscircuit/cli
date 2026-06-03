@@ -48,7 +48,12 @@ export default {
     ),
   )
 
-  const pkgDir = join(projectDir, "node_modules", "@tscircuit", "ti-parts-engine")
+  const pkgDir = join(
+    projectDir,
+    "node_modules",
+    "@tscircuit",
+    "ti-parts-engine",
+  )
   const libDir = join(pkgDir, "lib", "ti-parts-engine")
   await mkdir(libDir, { recursive: true })
 
@@ -108,7 +113,9 @@ export const createTiPlatformConfig = (options: { partnerToken: string }) => ({
     const filePaths = file_list.map((f) => f.file_path)
 
     expect(filePaths).toContain("tscircuit.config.ts")
-    expect(filePaths).toContain("node_modules/@tscircuit/ti-parts-engine/index.ts")
+    expect(filePaths).toContain(
+      "node_modules/@tscircuit/ti-parts-engine/index.ts",
+    )
     expect(filePaths).toContain(
       "node_modules/@tscircuit/ti-parts-engine/lib/ti-parts-engine/createTiPlatformConfig.ts",
     )

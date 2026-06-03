@@ -155,6 +155,38 @@ export const findRuntimeProjectConfigModulePath = (
   return null
 }
 
+export const resolveProjectDirFromInputPath = (
+  inputPath: string,
+  cwd: string = process.cwd(),
+): string => {
+  const resolvedPath = path.isAbsolute(inputPath)
+    ? inputPath
+    : path.resolve(cwd, inputPath)
+
+  const fallbackDir =
+    fs.existsSync(resolvedPath) && fs.statSync(resolvedPath).isDirectory()
+      ? resolvedPath
+      : path.dirname(resolvedPath)
+
+  let currentDir = fallbackDir
+
+  while (true) {
+    if (
+      findRuntimeProjectConfigModulePath(currentDir) ||
+      fs.existsSync(path.join(currentDir, CONFIG_FILENAME)) ||
+      fs.existsSync(path.join(currentDir, "package.json"))
+    ) {
+      return currentDir
+    }
+
+    const parentDir = path.dirname(currentDir)
+    if (parentDir === currentDir) {
+      return fallbackDir
+    }
+    currentDir = parentDir
+  }
+}
+
 export const loadRuntimeProjectConfig = async (
   projectDir: string = process.cwd(),
 ): Promise<TscircuitRuntimeProjectConfig | null> => {

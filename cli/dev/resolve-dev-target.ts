@@ -1,6 +1,7 @@
 import * as fs from "node:fs"
 import * as path from "node:path"
 import { globbySync } from "globby"
+import { resolveProjectDirFromInputPath } from "lib/project-config"
 import { findBoardFiles } from "lib/shared/find-board-files"
 import { getEntrypoint } from "lib/shared/get-entrypoint"
 import { DEFAULT_IGNORED_PATTERNS } from "lib/shared/should-ignore-path"
@@ -81,6 +82,7 @@ export const resolveDevTarget = async (
       return null
     }
 
+    projectDir = resolveProjectDirFromInputPath(resolvedPath)
     return { absolutePath: resolvedPath, projectDir }
   }
 

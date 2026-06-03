@@ -260,3 +260,38 @@ test("simulate analog consumes runtime platformConfig from tscircuit.config.ts",
   expect(stderr).toContain("source_port_id")
   expect(stdout).toContain("Index  time")
 }, 30_000)
+
+test("export resolves runtime project config from the input file project directory", async () => {
+  const { tmpDir, runCommand } = await getCliTestFixture()
+  const nestedProjectDir = join(tmpDir, "nested-project")
+  const circuitPath = join(nestedProjectDir, "index.circuit.tsx")
+
+  await mkdir(nestedProjectDir, { recursive: true })
+  await writeFile(
+    join(nestedProjectDir, "package.json"),
+    JSON.stringify({ name: "nested-project" }),
+  )
+  await writeFile(circuitPath, tiBoardCircuitCode)
+  await writeFile(
+    join(nestedProjectDir, "tscircuit.config.ts"),
+    createTiPlatformConfigModule(),
+  )
+
+  const { stderr, exitCode } = await runCommand(
+    `tsci export ${circuitPath} -f circuit-json`,
+  )
+
+  expect(exitCode).toBe(0)
+  expect(stderr).toBe("")
+
+  const circuitJson = JSON.parse(
+    await readFile(
+      join(nestedProjectDir, "index.circuit.circuit.json"),
+      "utf-8",
+    ),
+  )
+
+  expect(
+    circuitJson.some((element: any) => element.type === "pcb_smtpad"),
+  ).toBe(true)
+}, 30_000)

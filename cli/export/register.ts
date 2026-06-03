@@ -9,7 +9,10 @@ import { resultToCsv } from "lib/shared/result-to-csv"
 import path from "node:path"
 import { promises as fs } from "node:fs"
 import type { PlatformConfig } from "@tscircuit/props"
-import { loadRuntimeProjectConfig } from "lib/project-config"
+import {
+  loadRuntimeProjectConfig,
+  resolveProjectDirFromInputPath,
+} from "lib/project-config"
 import { mergePlatformConfigs } from "lib/shared/platform-config-utils"
 
 export const registerExport = (program: Command) => {
@@ -35,7 +38,8 @@ export const registerExport = (program: Command) => {
         },
       ) => {
         const formatOption = options.format ?? "json"
-        const projectConfig = await loadRuntimeProjectConfig(process.cwd())
+        const projectDir = resolveProjectDirFromInputPath(file)
+        const projectConfig = await loadRuntimeProjectConfig(projectDir)
 
         const commandPlatformConfig: PlatformConfig | undefined =
           options.disablePartsEngine === true
