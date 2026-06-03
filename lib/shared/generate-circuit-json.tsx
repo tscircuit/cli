@@ -52,19 +52,20 @@ export async function generateCircuitJson({
 }: GenerateCircuitJsonOptions) {
   debug(`Generating circuit JSON for ${filePath}`)
 
-  // Import React and make it globally available for packages referencing it
-  const React = await importFromUserLand("react")
-  ;(globalThis as any).React = React
-  registerStaticAssetLoaders(platformConfig)
-  const userLandTscircuit = await importFromUserLand("tscircuit")
-
-  const runner = new userLandTscircuit.RootCircuit({
-    platform: platformConfig,
-  })
   const absoluteFilePath = path.isAbsolute(filePath)
     ? filePath
     : path.resolve(process.cwd(), filePath)
   const projectDir = path.dirname(absoluteFilePath)
+
+  // Import React and make it globally available for packages referencing it
+  const React = await importFromUserLand("react", projectDir)
+  ;(globalThis as any).React = React
+  registerStaticAssetLoaders(platformConfig)
+  const userLandTscircuit = await importFromUserLand("tscircuit", projectDir)
+
+  const runner = new userLandTscircuit.RootCircuit({
+    platform: platformConfig,
+  })
   const resolvedOutputDir = outputDir ?? projectDir
 
   // Get the relative path to the component from the project directory

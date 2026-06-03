@@ -22,6 +22,7 @@ const CONFIG_MODULE_FILENAMES = [
   "tscircuit.config.ts",
   "tscircuit.config.js",
 ] as const
+const CONFIG_FILENAMES = [CONFIG_FILENAME, ...CONFIG_MODULE_FILENAMES] as const
 const ENV_FILENAMES = [".env", ".env.local"] as const
 export const CONFIG_SCHEMA_URL =
   "https://cdn.jsdelivr.net/npm/@tscircuit/cli/types/tscircuit.config.schema.json"
@@ -165,6 +166,38 @@ export const loadRuntimeProjectConfig = async (
       ...jsonConfig?.pcbSnapshotSettings,
       ...moduleConfig?.pcbSnapshotSettings,
     },
+  }
+}
+
+export const findNearestProjectConfigDir = (
+  startPath: string = process.cwd(),
+): string | null => {
+  const resolvedStartPath = path.resolve(startPath)
+  let currentDir = resolvedStartPath
+
+  try {
+    if (!fs.statSync(resolvedStartPath).isDirectory()) {
+      currentDir = path.dirname(resolvedStartPath)
+    }
+  } catch {
+    currentDir = path.dirname(resolvedStartPath)
+  }
+
+  while (true) {
+    if (
+      CONFIG_FILENAMES.some((configFileName) =>
+        fs.existsSync(path.join(currentDir, configFileName)),
+      )
+    ) {
+      return currentDir
+    }
+
+    const parentDir = path.dirname(currentDir)
+    if (parentDir === currentDir) {
+      return null
+    }
+
+    currentDir = parentDir
   }
 }
 

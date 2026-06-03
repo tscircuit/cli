@@ -9,7 +9,10 @@ import { resultToCsv } from "lib/shared/result-to-csv"
 import path from "node:path"
 import { promises as fs } from "node:fs"
 import type { PlatformConfig } from "@tscircuit/props"
-import { loadRuntimeProjectConfig } from "lib/project-config"
+import {
+  findNearestProjectConfigDir,
+  loadRuntimeProjectConfig,
+} from "lib/project-config"
 import { mergePlatformConfigs } from "lib/shared/platform-config-utils"
 
 export const registerExport = (program: Command) => {
@@ -35,7 +38,11 @@ export const registerExport = (program: Command) => {
         },
       ) => {
         const formatOption = options.format ?? "json"
-        const projectConfig = await loadRuntimeProjectConfig(process.cwd())
+        const resolvedFilePath = path.resolve(file)
+        const fileProjectDir = path.dirname(resolvedFilePath)
+        const projectConfigDir =
+          findNearestProjectConfigDir(fileProjectDir) ?? fileProjectDir
+        const projectConfig = await loadRuntimeProjectConfig(projectConfigDir)
 
         const commandPlatformConfig: PlatformConfig | undefined =
           options.disablePartsEngine === true
@@ -48,7 +55,7 @@ export const registerExport = (program: Command) => {
 
         if (formatOption === "spice") {
           const { circuitJson } = await generateCircuitJson({
-            filePath: file,
+            filePath: resolvedFilePath,
             platformConfig,
           })
           if (circuitJson) {
@@ -57,8 +64,8 @@ export const registerExport = (program: Command) => {
             const outputSpicePath =
               options.output ??
               path.join(
-                path.dirname(file),
-                `${path.basename(file, path.extname(file))}.spice.cir`,
+                path.dirname(resolvedFilePath),
+                `${path.basename(resolvedFilePath, path.extname(resolvedFilePath))}.spice.cir`,
               )
 
             await fs.writeFile(outputSpicePath, spiceString)
@@ -83,7 +90,7 @@ export const registerExport = (program: Command) => {
         const format = formatOption as ExportFormat
 
         await exportSnippet({
-          filePath: file,
+          filePath: resolvedFilePath,
           format,
           outputPath: options.output,
           platformConfig,

@@ -242,6 +242,34 @@ test("export circuit-json consumes runtime platformConfig from tscircuit.config.
   ).toBe(true)
 }, 30_000)
 
+test("export circuit-json resolves runtime config from the target file directory", async () => {
+  const { tmpDir, runCommand } = await getCliTestFixture()
+  const projectDir = join(tmpDir, "examples", "ti-parts-engine")
+  const circuitPath = join(projectDir, "index.circuit.tsx")
+
+  await mkdir(projectDir, { recursive: true })
+  await writeFile(circuitPath, tiBoardCircuitCode)
+  await writeFile(
+    join(projectDir, "tscircuit.config.ts"),
+    createTiPlatformConfigModule(),
+  )
+
+  const { stderr, exitCode } = await runCommand(
+    `tsci export ${circuitPath} -f circuit-json`,
+  )
+
+  expect(exitCode).toBe(0)
+  expect(stderr).toBe("")
+
+  const circuitJson = JSON.parse(
+    await readFile(join(projectDir, "index.circuit.circuit.json"), "utf-8"),
+  )
+
+  expect(
+    circuitJson.some((element: any) => element.type === "pcb_smtpad"),
+  ).toBe(true)
+}, 30_000)
+
 test("simulate analog consumes runtime platformConfig from tscircuit.config.ts", async () => {
   const { tmpDir, runCommand } = await getCliTestFixture()
   const circuitPath = join(tmpDir, "analog.circuit.tsx")

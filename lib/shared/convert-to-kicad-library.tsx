@@ -57,11 +57,12 @@ export async function convertToKicadLibrary({
   const absoluteFilePath = path.isAbsolute(filePath)
     ? filePath
     : path.resolve(process.cwd(), filePath)
+  const projectDir = path.dirname(absoluteFilePath)
 
   // Import React and tscircuit from userland for rendering components
-  const React = await importFromUserLand("react")
+  const React = await importFromUserLand("react", projectDir)
   ;(globalThis as any).React = React
-  const userLandTscircuit = await importFromUserLand("tscircuit")
+  const userLandTscircuit = await importFromUserLand("tscircuit", projectDir)
 
   // Use provided module or default
   const { KicadLibraryConverter } =
