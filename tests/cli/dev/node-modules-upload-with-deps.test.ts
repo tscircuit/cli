@@ -3,6 +3,7 @@ import { DevServer } from "../../../cli/dev/DevServer"
 import * as path from "node:path"
 import * as fs from "node:fs"
 import * as os from "node:os"
+import getPort from "get-port"
 import ky from "ky"
 
 test(
@@ -130,6 +131,102 @@ export default () => {
       await devServer.stop()
     } finally {
       // Cleanup
+      fs.rmSync(tmpDir, { recursive: true, force: true })
+    }
+  },
+  { timeout: 10_000 },
+)
+
+test(
+  "DevServer uploads transitive dependencies imported only from tscircuit.config.ts",
+  async () => {
+    const tmpDir = fs.mkdtempSync(
+      path.join(os.tmpdir(), "tsci-test-config-deps-"),
+    )
+    let devServer: DevServer | undefined
+
+    try {
+      fs.writeFileSync(
+        path.join(tmpDir, "package.json"),
+        JSON.stringify({
+          name: "test-project",
+          version: "1.0.0",
+          dependencies: {
+            "config-lib": "1.0.0",
+          },
+        }),
+      )
+
+      const nodeModulesDir = path.join(tmpDir, "node_modules")
+      const configLibDir = path.join(nodeModulesDir, "config-lib")
+      fs.mkdirSync(configLibDir, { recursive: true })
+
+      fs.writeFileSync(
+        path.join(configLibDir, "package.json"),
+        JSON.stringify({
+          name: "config-lib",
+          version: "1.0.0",
+          main: "index.js",
+        }),
+      )
+
+      fs.writeFileSync(
+        path.join(configLibDir, "index.js"),
+        `import { makePlatformConfig } from "platform-helper"
+export const createConfig = () => ({ platformConfig: makePlatformConfig() })`,
+      )
+
+      const platformHelperDir = path.join(nodeModulesDir, "platform-helper")
+      fs.mkdirSync(platformHelperDir, { recursive: true })
+
+      fs.writeFileSync(
+        path.join(platformHelperDir, "package.json"),
+        JSON.stringify({
+          name: "platform-helper",
+          version: "1.0.0",
+          main: "index.js",
+        }),
+      )
+
+      fs.writeFileSync(
+        path.join(platformHelperDir, "index.js"),
+        "export const makePlatformConfig = () => ({})",
+      )
+
+      const componentPath = path.join(tmpDir, "component.tsx")
+      fs.writeFileSync(
+        componentPath,
+        `export default () => <board width={10} height={10} />`,
+      )
+
+      fs.writeFileSync(
+        path.join(tmpDir, "tscircuit.config.ts"),
+        `import { createConfig } from "config-lib"
+export default createConfig()`,
+      )
+
+      const port = await getPort()
+      devServer = new DevServer({
+        port,
+        componentFilePath: componentPath,
+        projectDir: tmpDir,
+      })
+
+      await devServer.start()
+
+      const fsKy = ky.create({ prefixUrl: `http://localhost:${port}` }) as any
+      const fileListResponse = await fsKy.get("api/files/list").json()
+      const fileList = fileListResponse.file_list as Array<{
+        file_id: string
+        file_path: string
+      }>
+
+      const platformHelperIndex = fileList.find((f) =>
+        f.file_path.includes("node_modules/platform-helper/index.js"),
+      )
+      expect(platformHelperIndex).toBeDefined()
+    } finally {
+      await devServer?.stop()
       fs.rmSync(tmpDir, { recursive: true, force: true })
     }
   },

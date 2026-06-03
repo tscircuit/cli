@@ -24,6 +24,7 @@ import { getPackageFilePaths } from "./get-package-file-paths"
 const debug = Debug("tscircuit:devserver")
 
 const BINARY_FILE_EXTENSIONS = new Set([".glb", ".png", ".jpeg", ".jpg"])
+const CONFIG_MODULE_FILENAMES = ["tscircuit.config.ts", "tscircuit.config.js"]
 
 type FileUploadPayload =
   | {
@@ -367,9 +368,13 @@ export class DevServer {
   private async uploadInitialNodeModules() {
     try {
       console.log(kleur.blue("Analyzing node_modules dependencies..."))
-      const nodeModuleFiles = getAllNodeModuleFilePaths(
-        this.componentFilePath,
-        this.projectDir,
+      const nodeModuleFiles = Array.from(
+        new Set(
+          this.getInitialNodeModuleDependencyEntryFiles().flatMap(
+            (entryFilePath) =>
+              getAllNodeModuleFilePaths(entryFilePath, this.projectDir),
+          ),
+        ),
       )
 
       console.log(
@@ -446,6 +451,19 @@ export class DevServer {
       this.logFileUpsertTimeout(error, filePath)
       throw error
     }
+  }
+
+  private getInitialNodeModuleDependencyEntryFiles() {
+    const entryFiles = [this.componentFilePath]
+
+    for (const configFileName of CONFIG_MODULE_FILENAMES) {
+      const configPath = path.join(this.projectDir, configFileName)
+      if (fs.existsSync(configPath)) {
+        entryFiles.push(configPath)
+      }
+    }
+
+    return entryFiles
   }
 
   private async postBinaryFileUpsertMultipart({
