@@ -319,7 +319,6 @@ export const registerBuild = (program: Command) => {
         }
 
         let hasErrors = false
-        let hasWarnings = false
         let hasFatalErrors = false
         const ignoredDrcByCategory: DrcIgnoreCounts = {
           netlist: 0,
@@ -416,9 +415,6 @@ export const registerBuild = (program: Command) => {
 
           if (buildOutcome.hasErrors) {
             hasErrors = true
-          }
-          if (buildOutcome.hasWarnings) {
-            hasWarnings = true
           }
           if (buildOutcome.ignoredDrcByCategory) {
             ignoredDrcByCategory.netlist +=
@@ -915,12 +911,8 @@ export const registerBuild = (program: Command) => {
           }
         }
 
-        // Exit code conventions:
-        //   0: Build succeeded with no issues
-        //   1: Build failed with errors (unrecoverable)
-        //   2: Build succeeded but with warnings (recoverable, actionable)
-        const shouldExitNonZero = hasFatalErrors || hasErrors
-        const shouldExitWithWarnings = hasWarnings && !shouldExitNonZero
+        // Fatal errors (e.g., circuit generation exceptions) always cause exit code 1.
+        const shouldExitNonZero = hasFatalErrors
 
         const successCount = builtFiles.filter((f) => f.ok).length
         const failCount = builtFiles.length - successCount
@@ -992,16 +984,11 @@ export const registerBuild = (program: Command) => {
         }
         console.log(
           hasErrors
-            ? kleur.red("\n✗ Build completed with errors")
-            : hasWarnings
-              ? kleur.yellow("\n⚠ Build completed with warnings")
-              : kleur.green("\n✓ Done"),
+            ? kleur.yellow("\n⚠ Build completed with errors")
+            : kleur.green("\n✓ Done"),
         )
         if (shouldExitNonZero) {
-          exitBuild(1, "circuit build errors occurred")
-        }
-        if (shouldExitWithWarnings) {
-          exitBuild(2, "build succeeded with warnings")
+          exitBuild(1, "fatal circuit build errors occurred")
         }
 
         exitBuild(0, "build finished successfully")
