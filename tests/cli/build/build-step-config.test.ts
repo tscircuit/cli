@@ -98,7 +98,7 @@ test("build --step uses worker concurrency", async () => {
     "tsci build --step --concurrency 2",
   )
 
-  expect(stderr).toContain("code 2")
+  expect(stderr).toBe("")
   expect(stdout).toContain("Building 2 file(s) with concurrency 2")
   expect(stdout).toContain(
     "Converting dist/first/circuit.json to STEP in same worker",
