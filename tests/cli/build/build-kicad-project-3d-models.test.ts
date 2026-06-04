@@ -41,7 +41,7 @@ export default () => (
   const { stderr } = await runCommand(
     `tsci build --kicad-project ${circuitPath}`,
   )
-  expect(stderr).toBe("")
+  expect(stderr).toContain("code 2")
 
   const projectDir = path.join(tmpDir, "dist", "my-board", "kicad")
   expect(fs.existsSync(projectDir)).toBe(true)

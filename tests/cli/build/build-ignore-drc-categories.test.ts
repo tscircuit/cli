@@ -53,7 +53,7 @@ test("build reports ignored counts when selected DRC categories are filtered", a
 
   expect(exitCode).toBe(1)
   expect(stdout).toContain("Build complete")
-  expect(stdout).toContain("Build exiting with code 1")
+  expect(stderr).toContain("Build exiting with code 1")
 }, 30_000)
 
 test("build can suppress all known DRC categories", async () => {
