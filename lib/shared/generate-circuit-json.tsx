@@ -135,7 +135,7 @@ export async function generateCircuitJson({
 
   const loggedAsyncEffectNames = new Set<string>()
 
-  while (runner._hasIncompleteAsyncEffects()) {
+  while (runner.isDoneRendering()) {
     for (const asyncEffect of runner.getRunningAsyncEffects()) {
       const asyncEffectName = asyncEffect.effectName
       if (!asyncEffectName || loggedAsyncEffectNames.has(asyncEffectName)) {
