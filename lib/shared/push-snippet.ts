@@ -82,8 +82,7 @@ const findPushProject = async ({
       .filter((file) => fs.existsSync(file))
       .sort()
 
-    snippetFilePath =
-      availableFiles.length > 0 ? availableFiles[0] : undefined
+    snippetFilePath = availableFiles.length > 0 ? availableFiles[0] : undefined
   }
 
   return { snippetFilePath, packageJsonPath, projectDir }
