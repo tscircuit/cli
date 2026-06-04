@@ -16,6 +16,7 @@ export type BuildFileOutcome = {
   ok: boolean
   circuitJson?: AnyCircuitElement[]
   hasErrors?: boolean
+  hasWarnings?: boolean
   ignoredDrcCount?: number
   ignoredDrcByCategory?: DrcIgnoreCounts
   /** Fatal error that should always cause exit code 1, even with --ignore-errors */
@@ -95,6 +96,8 @@ export const buildFile = async (
       circuitJson,
       hasErrors:
         filteredDiagnostics.errors.length > 0 && !options?.ignoreErrors,
+      hasWarnings:
+        filteredDiagnostics.warnings.length > 0 && !options?.ignoreWarnings,
       ignoredDrcCount: filteredDiagnostics.ignoredCount,
       ignoredDrcByCategory: filteredDiagnostics.ignoredByCategory,
     }

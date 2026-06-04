@@ -320,6 +320,7 @@ export const registerBuild = (program: Command) => {
 
         let hasErrors = false
         let hasFatalErrors = false
+        let hasWarnings = false
         const ignoredDrcByCategory: DrcIgnoreCounts = {
           netlist: 0,
           pin_specification: 0,
@@ -415,6 +416,9 @@ export const registerBuild = (program: Command) => {
 
           if (buildOutcome.hasErrors) {
             hasErrors = true
+          }
+          if (buildOutcome.hasWarnings) {
+            hasWarnings = true
           }
           if (buildOutcome.ignoredDrcByCategory) {
             ignoredDrcByCategory.netlist +=
@@ -911,8 +915,9 @@ export const registerBuild = (program: Command) => {
           }
         }
 
-        // Fatal errors (e.g., circuit generation exceptions) always cause exit code 1.
-        const shouldExitNonZero = hasFatalErrors
+        // Fatal errors (e.g., circuit generation exceptions) or build errors cause exit code 1.
+        const shouldExitNonZero = hasFatalErrors || hasErrors
+        const shouldExitWithWarnings = hasWarnings && !shouldExitNonZero
 
         const successCount = builtFiles.filter((f) => f.ok).length
         const failCount = builtFiles.length - successCount
@@ -984,11 +989,16 @@ export const registerBuild = (program: Command) => {
         }
         console.log(
           hasErrors
-            ? kleur.yellow("\n⚠ Build completed with errors")
-            : kleur.green("\n✓ Done"),
+            ? kleur.red("\n✗ Build completed with errors")
+            : hasWarnings
+              ? kleur.yellow("\n⚠ Build completed with warnings")
+              : kleur.green("\n✓ Done"),
         )
         if (shouldExitNonZero) {
           exitBuild(1, "fatal circuit build errors occurred")
+        }
+        if (shouldExitWithWarnings) {
+          exitBuild(2, "build completed with warnings")
         }
 
         exitBuild(0, "build finished successfully")
