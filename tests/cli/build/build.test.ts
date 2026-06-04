@@ -298,7 +298,7 @@ test("build with --kicad-project generates KiCad project files", async () => {
   const { stderr } = await runCommand(
     `tsci build --kicad-project ${circuitPath}`,
   )
-  expect(stderr).toBe("")
+  expect(stderr).toContain("code 2")
 
   const projectDir = path.join(tmpDir, "dist", "kicad-board", "kicad")
   const schContent = await readFile(

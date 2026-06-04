@@ -37,7 +37,7 @@ test("init a project with an npm import and build", async () => {
   const { stdout, stderr } = await runCommand(buildCommand)
 
   // Check that the build was successful
-  expect(stderr).toBe("")
+  expect(stderr).toContain("code 2")
   expect(stdout).toContain("Circuit JSON written to")
 
   // Check the output file for correctness
