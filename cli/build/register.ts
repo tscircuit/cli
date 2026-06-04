@@ -401,6 +401,7 @@ export const registerBuild = (program: Command) => {
             ok: boolean
             circuitJson?: unknown[]
             hasErrors?: boolean
+            hasWarnings?: boolean
             ignoredDrcByCategory?: DrcIgnoreCounts
             isFatalError?: { errorType: string; message: string }
           },
