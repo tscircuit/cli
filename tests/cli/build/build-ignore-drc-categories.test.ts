@@ -47,7 +47,7 @@ test("build reports ignored counts when selected DRC categories are filtered", a
   )
   await writeFile(path.join(tmpDir, "package.json"), "{}")
 
-  const { exitCode, stdout } = await runCommand(
+  const { exitCode, stderr, stdout } = await runCommand(
     "tsci build board.circuit.json --ignore-placement-drc --ignore-routing-drc",
   )
 
