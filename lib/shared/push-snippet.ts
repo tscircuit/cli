@@ -5,6 +5,7 @@ import * as path from "node:path"
 import semver from "semver"
 import Debug from "debug"
 import kleur from "kleur"
+import { findBoardFiles } from "./find-board-files"
 import { getEntrypoint } from "./get-entrypoint"
 import prompts from "lib/utils/prompts"
 import { getUnscopedPackageName } from "lib/utils/get-unscoped-package-name"
@@ -69,12 +70,21 @@ const findPushProject = async ({
     return { projectDir }
   }
 
-  const snippetFilePath =
+  let snippetFilePath: string | undefined =
     (await getEntrypoint({
       projectDir,
       onSuccess: () => {},
       onError: () => {},
     })) ?? undefined
+
+  if (!snippetFilePath) {
+    const availableFiles = findBoardFiles({ projectDir })
+      .filter((file) => fs.existsSync(file))
+      .sort()
+
+    snippetFilePath =
+      availableFiles.length > 0 ? availableFiles[0] : undefined
+  }
 
   return { snippetFilePath, packageJsonPath, projectDir }
 }
