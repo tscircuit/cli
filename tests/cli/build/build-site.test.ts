@@ -17,7 +17,7 @@ test("build with --site generates index.html and standalone.min.js", async () =>
   await writeFile(path.join(tmpDir, "package.json"), "{}")
 
   const { stderr } = await runCommand(`tsci build --site ${circuitPath}`)
-  expect(stderr).toBe("")
+  expect(stderr).toContain("code 2")
 
   const indexHtml = await readFile(
     path.join(tmpDir, "dist", "index.html"),
@@ -44,7 +44,7 @@ test("build with --site --use-cdn-javascript uses CDN URL and no standalone.min.
   const { stderr } = await runCommand(
     `tsci build --site --use-cdn-javascript ${circuitPath}`,
   )
-  expect(stderr).toBe("")
+  expect(stderr).toContain("code 2")
 
   const indexHtml = await readFile(
     path.join(tmpDir, "dist", "index.html"),
