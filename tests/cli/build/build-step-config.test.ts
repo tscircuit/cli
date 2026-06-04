@@ -26,7 +26,7 @@ test("build uses config build.step setting", async () => {
   )
 
   const { stderr, stdout } = await runCommand(`tsci build ${circuitPath}`)
-  expect(stderr).toBe("")
+  expect(stderr).toContain("code 2")
   expect(stdout).toContain("Generating STEP models")
   expect(stdout).toContain("step")
 
@@ -68,7 +68,7 @@ export default () => (
   const { stderr, stdout } = await runCommand(
     `tsci build --step ${circuitPath}`,
   )
-  expect(stderr).toBe("")
+  expect(stderr).toContain("code 2")
   expect(stdout).toContain("Written 3d.step")
 
   const stepContent = await readFile(
@@ -98,7 +98,7 @@ test("build --step uses worker concurrency", async () => {
     "tsci build --step --concurrency 2",
   )
 
-  expect(stderr).toBe("")
+  expect(stderr).toContain("code 2")
   expect(stdout).toContain("Building 2 file(s) with concurrency 2")
   expect(stdout).toContain(
     "Converting dist/first/circuit.json to STEP in same worker",

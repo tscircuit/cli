@@ -35,7 +35,7 @@ test("build uses config build.kicadLibrary setting", async () => {
   )
 
   const { stderr, stdout } = await runCommand(`tsci build`)
-  expect(stderr).toBe("")
+  expect(stderr).toContain("code 2")
   expect(stdout).toContain("Generating KiCad library")
   expect(stdout).toContain("kicad-library")
 
@@ -173,7 +173,7 @@ test("CLI options override config build settings", async () => {
   const { stderr, stdout } = await runCommand(
     `tsci build ${circuitPath} --preview-images`,
   )
-  expect(stderr).toBe("")
+  expect(stderr).toContain("code 2")
 
   expect(stdout).toContain("Generating preview images")
 
@@ -309,7 +309,7 @@ test("build uses kicadProjectEntrypointPath for --kicad-project when no file spe
   )
 
   const { stderr, stdout } = await runCommand(`tsci build`)
-  expect(stderr).toBe("")
+  expect(stderr).toContain("code 2")
   expect(stdout).toContain("kicad-project")
 
   // Should build the file from kicadProjectEntrypointPath

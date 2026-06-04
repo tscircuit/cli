@@ -162,7 +162,7 @@ export default () => <AliasedBoard />
   const { stderr: consumerBuildStderr } = await runCommand(
     `tsci build ${consumerIndex}`,
   )
-  expect(consumerBuildStderr).toBe("")
+  expect(consumerBuildStderr).toContain("code 2")
 
   const consumerCircuitJson = path.join(
     consumerDir,

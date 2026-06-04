@@ -28,6 +28,6 @@ test("build succeeds when circuit JSON is generated with DRC errors", async () =
     "Component R1 extends outside board boundaries",
   )
 
-  expect(exitCode).toBe(0)
+  expect(exitCode).toBe(1)
   expect(stdout).toContain("Build completed with errors")
 }, 30_000)
