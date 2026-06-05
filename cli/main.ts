@@ -23,7 +23,6 @@ import { registerClone } from "./clone/register"
 import { registerConfigPrint } from "./config/print/register"
 import { registerConfig } from "./config/register"
 import { registerConfigSet } from "./config/set/register"
-import { registerConvert } from "./convert/register"
 import { registerDev } from "./dev/register"
 import { registerDoctor } from "./doctor/register"
 import { registerExport } from "./export/register"
@@ -94,7 +93,6 @@ registerRegistryPackagesUpdate(program)
 
 registerSearch(program)
 registerImport(program)
-registerConvert(program)
 registerSimulate(program)
 
 // Manually handle --version, -v, and -V flags
