@@ -18,7 +18,7 @@
     "@tscircuit/image-utils": "^0.0.3",
     "@tscircuit/krt-wasm": "^0.1.0",
     "@tscircuit/math-utils": "0.0.36",
-    "@tscircuit/props": "^0.0.536",
+    "@tscircuit/props": "^0.0.546",
     "@tscircuit/runframe": "^0.0.2057",
     "@tscircuit/schematic-match-adapt": "^0.0.22",
     "@types/bun": "^1.2.2",
