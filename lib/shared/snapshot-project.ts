@@ -6,11 +6,12 @@ import kleur from "kleur"
 import {
   getBoardFilePatterns,
   getSnapshotsDir,
-  loadProjectConfig,
+  loadRuntimeProjectConfig,
 } from "lib/project-config"
 import type { PcbSnapshotSettings } from "lib/project-config/project-config-schema"
 import type { CameraPreset } from "lib/shared/camera-presets"
-import { findBoardFiles } from "lib/shared/find-board-files"
+import { findBoardFilesAsync } from "lib/shared/find-board-files"
+import { mergePlatformConfigs } from "lib/shared/platform-config-utils"
 import { processSnapshotFile } from "lib/shared/process-snapshot-file"
 import {
   DEFAULT_IGNORED_PATTERNS,
@@ -45,8 +46,9 @@ type SnapshotOptions = {
   onSuccess?: (message: string) => void
 }
 
-const hasConfiguredIncludeBoardFiles = (projectDir: string): boolean => {
-  const projectConfig = loadProjectConfig(projectDir)
+const hasConfiguredIncludeBoardFiles = (
+  projectConfig: Awaited<ReturnType<typeof loadRuntimeProjectConfig>>,
+): boolean => {
   const hasConfiguredPatterns = Boolean(
     projectConfig?.includeBoardFiles?.some((pattern) => pattern.trim()),
   )
@@ -76,7 +78,7 @@ export const snapshotProject = async ({
     threeD = true
   }
   const projectDir = process.cwd()
-  const projectConfig = loadProjectConfig(projectDir)
+  const projectConfig = await loadRuntimeProjectConfig(projectDir)
   const ignore = [
     ...DEFAULT_IGNORED_PATTERNS,
     ...ignored.map(normalizeIgnorePattern),
@@ -90,7 +92,7 @@ export const snapshotProject = async ({
 
     return fs.statSync(resolvedPath).isDirectory()
   })
-  const boardFiles = findBoardFiles({
+  const boardFiles = await findBoardFilesAsync({
     projectDir,
     ignore,
     filePaths: resolvedPaths,
@@ -100,8 +102,14 @@ export const snapshotProject = async ({
     if (explicitDirectoryTarget) {
       const relativeDirectory =
         path.relative(projectDir, explicitDirectoryTarget) || "."
-      const includeBoardFilePatterns = getBoardFilePatterns(projectDir)
-      const patternSourceMessage = hasConfiguredIncludeBoardFiles(projectDir)
+      const runtimeIncludeBoardFilePatterns =
+        projectConfig?.includeBoardFiles?.filter((pattern) => pattern.trim()) ??
+        []
+      const includeBoardFilePatterns =
+        runtimeIncludeBoardFilePatterns.length > 0
+          ? runtimeIncludeBoardFilePatterns
+          : getBoardFilePatterns(projectDir)
+      const patternSourceMessage = hasConfiguredIncludeBoardFiles(projectConfig)
         ? "Searched using tscircuit.config.json includeBoardFiles"
         : "Searched using default includeBoardFiles"
 
@@ -120,10 +128,15 @@ export const snapshotProject = async ({
     return onExit(0)
   }
 
-  const snapshotsDirName = getSnapshotsDir(projectDir)
+  const snapshotsDirName =
+    projectConfig?.snapshotsDir ?? getSnapshotsDir(projectDir)
   const pcbSnapshotSettings = pcbSnapshotSettingsOverride
     ? { ...projectConfig?.pcbSnapshotSettings, ...pcbSnapshotSettingsOverride }
     : projectConfig?.pcbSnapshotSettings
+  const mergedPlatformConfig = mergePlatformConfigs(
+    projectConfig?.platformConfig,
+    platformConfig,
+  )
   const mismatches: string[] = []
   let didUpdate = false
 
@@ -204,7 +217,7 @@ export const snapshotProject = async ({
         pcbOnly,
         schematicOnly,
         forceUpdate,
-        platformConfig,
+        platformConfig: mergedPlatformConfig,
         pcbSnapshotSettings,
         createDiff,
         cameraPreset,
