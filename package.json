@@ -21,6 +21,7 @@
     "@tscircuit/props": "^0.0.546",
     "@tscircuit/runframe": "^0.0.2057",
     "@tscircuit/schematic-match-adapt": "^0.0.22",
+    "@tscircuit/solver-utils": "0.0.16",
     "@types/bun": "^1.2.2",
     "@types/configstore": "^6.0.2",
     "@types/debug": "^4.1.12",
