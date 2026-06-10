@@ -2,8 +2,15 @@ import type { Command } from "commander"
 import fs from "node:fs/promises"
 import path from "node:path"
 import kleur from "kleur"
-import { parseKicadModToCircuitJson } from "kicad-component-converter"
 import { convertCircuitJsonToTscircuit } from "circuit-json-to-tscircuit"
+import { KicadFootprintToCircuitJsonConverter } from "kicad-to-circuit-json"
+
+const parseKicadModToCircuitJson = (modContent: string) => {
+  const converter = new KicadFootprintToCircuitJsonConverter()
+  converter.addFile("footprint.kicad_mod", modContent)
+  converter.runUntilFinished()
+  return converter.getOutput()
+}
 
 export const registerConvert = (program: Command) => {
   program
