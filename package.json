@@ -21,6 +21,7 @@
     "@tscircuit/props": "^0.0.536",
     "@tscircuit/runframe": "^0.0.2045",
     "@tscircuit/schematic-match-adapt": "^0.0.22",
+    "@tscircuit/ti-parts-engine": "github:tscircuit/ti-parts-engine#8bf0e64",
     "@types/bun": "^1.2.2",
     "@types/configstore": "^6.0.2",
     "@types/debug": "^4.1.12",

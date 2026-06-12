@@ -3,6 +3,10 @@ import { getRegistryApiKy } from "lib/registry-api/get-ky"
 import Fuse from "fuse.js"
 import kleur from "kleur"
 import { getQueryFromParts } from "cli/utils/get-query-from-parts"
+import {
+  TiPartsEngine,
+  type SearchPartResult,
+} from "@tscircuit/ti-parts-engine"
 
 export const registerSearch = (program: Command) => {
   program
@@ -17,6 +21,7 @@ export const registerSearch = (program: Command) => {
     .option("--kicad", "Search KiCad footprints")
     .option("--jlcpcb", "Search JLCPCB components")
     .option("--lcsc", "Alias for --jlcpcb")
+    .option("--ti", "Search Texas Instruments components")
     .option("--tscircuit", "Search tscircuit registry packages")
     .option("--json", "Output search results as JSON")
     .action(
@@ -26,15 +31,17 @@ export const registerSearch = (program: Command) => {
           kicad?: boolean
           jlcpcb?: boolean
           lcsc?: boolean
+          ti?: boolean
           tscircuit?: boolean
           json?: boolean
         },
       ) => {
         const query = getQueryFromParts(queryParts)
         const hasFilters =
-          opts.kicad || opts.jlcpcb || opts.lcsc || opts.tscircuit
+          opts.kicad || opts.jlcpcb || opts.lcsc || opts.ti || opts.tscircuit
         const searchKicad = opts.kicad
         const searchJlc = opts.jlcpcb || opts.lcsc || !hasFilters
+        const searchTi = opts.ti
         const searchTscircuit = opts.tscircuit
 
         let results: {
@@ -55,6 +62,8 @@ export const registerSearch = (program: Command) => {
           price: number
         }> = []
 
+        let tiResults: SearchPartResult[] = []
+
         let kicadResults: string[] = []
 
         try {
@@ -73,6 +82,16 @@ export const registerSearch = (program: Command) => {
               encodeURIComponent(query)
             const jlcResponse = await fetch(jlcSearchUrl).then((r) => r.json())
             jlcResults = jlcResponse?.components ?? []
+          }
+
+          if (searchTi) {
+            const tiPartsEngine = new TiPartsEngine()
+            const tiResponse = await tiPartsEngine.searchParts({
+              query,
+              exactOnly: false,
+              limit: 10,
+            })
+            tiResults = tiResponse.results
           }
 
           if (searchKicad) {
@@ -107,6 +126,10 @@ export const registerSearch = (program: Command) => {
               source: "jlcpcb" as const,
               ...comp,
             })),
+            ...tiResults.map((part) => ({
+              source: "ti" as const,
+              ...part,
+            })),
           ]
 
           console.log(
@@ -125,11 +148,13 @@ export const registerSearch = (program: Command) => {
         if (
           !kicadResults.length &&
           !results.packages.length &&
-          !jlcResults.length
+          !jlcResults.length &&
+          !tiResults.length
         ) {
           const sources = [
             searchTscircuit && "tscircuit registry",
             searchJlc && "JLCPCB",
+            searchTi && "Texas Instruments",
             searchKicad && "KiCad",
           ].filter(Boolean)
           console.log(
@@ -192,6 +217,31 @@ export const registerSearch = (program: Command) => {
             console.log(
               `${idx + 1}. ${comp.mfr} (C${comp.lcsc}) - ${comp.description} (stock: ${comp.stock.toLocaleString("en-US")})`,
             )
+          })
+        }
+
+        if (tiResults.length) {
+          console.log()
+          console.log(
+            kleur
+              .bold()
+              .underline(
+                `Found ${tiResults.length} component(s) from Texas Instruments:`,
+              ),
+          )
+
+          tiResults.forEach((part, idx) => {
+            const mpn =
+              part.mpn ?? part.manufacturer_part_number ?? part.name ?? "?"
+            const assets = [
+              part.symbol_available === true && "symbol",
+              part.footprint_available === true && "footprint",
+              part.threed_available === true && "3D model",
+            ].filter(Boolean)
+            const assetStr = assets.length
+              ? ` - ${assets.join(", ")} available`
+              : ""
+            console.log(`${idx + 1}. ${mpn}${assetStr}`)
           })
         }
         console.log("\n")
