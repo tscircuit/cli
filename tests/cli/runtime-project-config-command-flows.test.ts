@@ -3,6 +3,7 @@ import { mkdir, readFile, writeFile } from "node:fs/promises"
 import { join } from "node:path"
 import { getCliTestFixture } from "../fixtures/get-cli-test-fixture"
 import { getBuildEntrypoints } from "../../cli/build/get-build-entrypoints"
+import "bun-match-svg"
 
 const createTiPlatformConfigModule = ({
   includeBoardFiles,
@@ -260,3 +261,32 @@ test("simulate analog consumes runtime platformConfig from tscircuit.config.ts",
   expect(stderr).toContain("source_port_id")
   expect(stdout).toContain("Index  time")
 }, 30_000)
+
+test("snapshot command consumes runtime platformConfig from tscircuit.config.ts", async () => {
+  const { tmpDir, runCommand } = await getCliTestFixture()
+  const circuitPath = join(tmpDir, "index.circuit.tsx")
+
+  await writeFile(circuitPath, tiBoardCircuitCode)
+  await writeFile(
+    join(tmpDir, "tscircuit.config.ts"),
+    createTiPlatformConfigModule(),
+  )
+
+  const { stdout, stderr, exitCode } = await runCommand(
+    `tsci snapshot --update`,
+  )
+
+  expect(stderr).toBe("")
+  expect(stdout).toContain("Created snapshots")
+
+  const snapshotDir = join(tmpDir, "__snapshots__")
+  const pcbSnapshot = Bun.file(join(snapshotDir, "index.circuit-pcb.snap.svg"))
+  const schematicSnapshot = Bun.file(
+    join(snapshotDir, "index.circuit-schematic.snap.svg"),
+  )
+  expect(pcbSnapshot.text()).toMatchSvgSnapshot(import.meta.path, "pcb")
+  expect(schematicSnapshot.text()).toMatchSvgSnapshot(
+    import.meta.path,
+    "schematic",
+  )
+})

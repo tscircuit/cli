@@ -3,6 +3,8 @@ import type { CameraPreset } from "lib/shared/camera-presets"
 import type { PcbSnapshotSettings } from "lib/project-config/project-config-schema"
 import { processSnapshotFile } from "lib/shared/process-snapshot-file"
 import { registerStaticAssetLoaders } from "lib/shared/register-static-asset-loaders"
+import { loadRuntimeProjectConfig } from "lib/project-config"
+import { mergePlatformConfigs } from "lib/shared/platform-config-utils"
 import type { SnapshotCompletedMessage } from "./worker-types"
 
 type SnapshotWorkerOptions = {
@@ -25,6 +27,11 @@ export const handleSnapshotFile = async (
 ): Promise<SnapshotCompletedMessage> => {
   process.chdir(projectDir)
   await registerStaticAssetLoaders()
+  const projectConfig = await loadRuntimeProjectConfig(projectDir)
+  const platformConfig = mergePlatformConfigs(
+    projectConfig?.platformConfig,
+    options.platformConfig,
+  )
 
   const result = await processSnapshotFile({
     file: filePath,
@@ -35,7 +42,7 @@ export const handleSnapshotFile = async (
     pcbOnly: options.pcbOnly,
     schematicOnly: options.schematicOnly,
     forceUpdate: options.forceUpdate,
-    platformConfig: options.platformConfig,
+    platformConfig,
     pcbSnapshotSettings: options.pcbSnapshotSettings,
     createDiff: options.createDiff,
     cameraPreset: options.cameraPreset,
