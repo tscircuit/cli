@@ -1,23 +1,24 @@
 import { expect, test } from "bun:test"
 import { getCliTestFixture } from "../../fixtures/get-cli-test-fixture"
 
-// Marked `test.failing` on purpose.
+// This asserts the CURRENT failure, not the intended behavior.
 //
 // `tsci search --ti` queries the Texas Instruments parts backend via
-// `@tscircuit/ti-parts-engine`. That package's default endpoint is served by an
-// ephemeral Cloudflare quick-tunnel that is currently offline (returns HTTP 530
+// `@tscircuit/ti-parts-engine`, whose default endpoint is served by an
+// ephemeral Cloudflare quick-tunnel that is currently offline (HTTP 530
 // "Origin DNS error"). Like the other search sources, the CLI does not swallow
-// upstream errors, so a down backend makes the command exit non-zero with the
-// error on stderr and the assertions below fail.
+// upstream errors, so the command exits non-zero with the error on stderr.
 //
-// The assertions describe the intended behavior once the backend is back up.
-// `test.failing` keeps the suite green while it's down and will start failing
-// (alerting us) the moment the endpoint returns and these assertions pass — at
-// which point this marker should be removed.
-test.failing("search --ti returns Texas Instruments results", async () => {
+// When the backend comes back, this test will start failing (exit 0, results on
+// stdout) — that is the signal to rewrite it to assert the real results, e.g.
+//   expect(stderr).toBe("")
+//   expect(stdout).toContain("Texas Instruments")
+test("search --ti errors while the TI parts backend is unavailable", async () => {
   const { runCommand } = await getCliTestFixture()
-  const { stdout, stderr } = await runCommand("tsci search --ti LM358")
-  expect(stderr).toBe("")
-  expect(stdout).toContain("Texas Instruments")
-  expect(stdout).not.toContain("JLC search")
+  const { stdout, stderr, exitCode } = await runCommand(
+    "tsci search --ti LM358",
+  )
+  expect(exitCode).toBe(1)
+  expect(stderr).toContain("Failed to search registry")
+  expect(stdout).toBe("")
 })
