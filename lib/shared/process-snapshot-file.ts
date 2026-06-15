@@ -148,7 +148,7 @@ export const processSnapshotFile = async ({
         cameraOptions = applyCameraPreset(cameraPreset, cameraOptions)
       }
 
-      png3d = await renderGLTFToPNGFromGLB(glbBuffer, cameraOptions)
+      png3d = Buffer.from(await renderGLTFToPNGFromGLB(glbBuffer, cameraOptions))
     } catch (error) {
       const errorMessage =
         error instanceof Error ? error.message : String(error)
