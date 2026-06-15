@@ -85,7 +85,9 @@ export const registerSearch = (program: Command) => {
           }
 
           if (searchTi) {
-            const tiPartsEngine = new TiPartsEngine()
+            const tiPartsEngine = new TiPartsEngine({
+              baseUrl: process.env.TSCIRCUIT_TI_API_BASE_URL,
+            })
             const tiResponse = await tiPartsEngine.searchParts({
               query,
               exactOnly: false,

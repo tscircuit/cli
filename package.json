@@ -14,6 +14,7 @@
     "@tscircuit/circuit-json-schematic-placement-analysis": "github:tscircuit/circuit-json-schematic-placement-analysis#b6d5fe675adc26a2fc988aa081e6fb51e6bf696a",
     "@tscircuit/eval": "^0.0.915",
     "@tscircuit/fake-snippets": "^0.0.182",
+    "@tscircuit/fake-ul-kicad-proxy": "github:tscircuit/fake-ul-kicad-proxy#d174c33c1b17a52d7a9dc3c2b5506d6fd593bed7",
     "@tscircuit/file-server": "^0.0.32",
     "@tscircuit/image-utils": "^0.0.3",
     "@tscircuit/krt-wasm": "^0.1.0",
