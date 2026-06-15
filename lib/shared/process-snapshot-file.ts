@@ -130,7 +130,7 @@ export const processSnapshotFile = async ({
     }
   }
 
-  let png3d: Buffer | null = null
+  let png3d: Uint8Array | null = null
   if (threeD) {
     try {
       const glbBuffer = await convertCircuitJsonToGltf(
@@ -148,7 +148,7 @@ export const processSnapshotFile = async ({
         cameraOptions = applyCameraPreset(cameraPreset, cameraOptions)
       }
 
-      png3d = Buffer.from(await renderGLTFToPNGFromGLB(glbBuffer, cameraOptions))
+      png3d = await renderGLTFToPNGFromGLB(glbBuffer, cameraOptions)
     } catch (error) {
       const errorMessage =
         error instanceof Error ? error.message : String(error)
@@ -215,7 +215,7 @@ export const processSnapshotFile = async ({
   const base = path.basename(file).replace(/\.[^.]+$/, "")
   const snapshots: Array<
     | { type: "pcb" | "schematic"; content: string; isBinary: false }
-    | { type: "3d"; content: Buffer; isBinary: true }
+    | { type: "3d"; content: Uint8Array; isBinary: true }
   > = []
   if (pcbOnly || !schematicOnly) {
     snapshots.push({ type: "pcb", content: pcbSvg, isBinary: false })
