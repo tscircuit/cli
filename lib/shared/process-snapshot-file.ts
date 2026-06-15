@@ -16,7 +16,7 @@ import { type CameraPreset, applyCameraPreset } from "lib/shared/camera-presets"
 import { generateCircuitJson } from "lib/shared/generate-circuit-json"
 import { getCircuitJsonToGltfOptions } from "lib/shared/get-circuit-json-to-gltf-options"
 import { getCompletePlatformConfig } from "lib/shared/get-complete-platform-config"
-import { renderGLTFToPNGBufferFromGLBBuffer } from "poppygl"
+import { renderGLTFToPNGFromGLB } from "poppygl"
 import { compareAndCreateDiff } from "./compare-images"
 import { isCircuitJsonFile } from "./is-circuit-json-file"
 
@@ -148,7 +148,7 @@ export const processSnapshotFile = async ({
         cameraOptions = applyCameraPreset(cameraPreset, cameraOptions)
       }
 
-      png3d = await renderGLTFToPNGBufferFromGLBBuffer(glbBuffer, cameraOptions)
+      png3d = await renderGLTFToPNGFromGLB(glbBuffer, cameraOptions)
     } catch (error) {
       const errorMessage =
         error instanceof Error ? error.message : String(error)

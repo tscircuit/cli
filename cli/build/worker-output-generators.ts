@@ -10,7 +10,7 @@ import {
   convertCircuitJsonToPcbSvg,
   convertCircuitJsonToSchematicSvg,
 } from "circuit-to-svg"
-import { renderGLTFToPNGBufferFromGLBBuffer } from "poppygl"
+import { renderGLTFToPNGFromGLB } from "poppygl"
 import { getCircuitJsonToGltfOptions } from "../../lib/shared/get-circuit-json-to-gltf-options"
 import type { PcbSnapshotSettings } from "../../lib/project-config/project-config-schema"
 import { convertModelUrlsToFileUrls } from "./convert-model-urls-to-file-urls"
@@ -91,7 +91,7 @@ export const writeImageAssetsFromCircuitJson = async (
       getCircuitJsonToGltfOptions({ format: "glb" }),
     )
     const glbArrayBuffer = await normalizeToArrayBuffer(glbBuffer)
-    const pngBuffer = await renderGLTFToPNGBufferFromGLBBuffer(
+    const pngBuffer = await renderGLTFToPNGFromGLB(
       glbArrayBuffer,
       getBestCameraPosition(circuitJson),
     )
