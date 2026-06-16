@@ -3,7 +3,7 @@ import { spawnSync } from "node:child_process"
 import { existsSync } from "node:fs"
 import { createRequire } from "node:module"
 import { dirname, join } from "node:path"
-import { fileURLToPath, pathToFileURL } from "node:url"
+import { fileURLToPath } from "node:url"
 
 const __dirname = dirname(fileURLToPath(import.meta.url))
 const packageRoot = join(__dirname, "..")
@@ -15,7 +15,7 @@ const useGlobal = process.argv.includes("--use-global")
 const args = process.argv.slice(2).filter((arg) => arg !== "--use-global")
 
 let mainPath = join(packageRoot, "dist/cli/main.js")
-let mainPackageRoot = packageRoot
+let tsxLoaderPath = join(packageRoot, "dist/cli/tsx-loader.js")
 
 if (!useGlobal) {
   try {
@@ -26,23 +26,25 @@ if (!useGlobal) {
     const localPackageJson = localRequire(localPackageJsonPath)
     const localPackageRoot = dirname(localPackageJsonPath)
     const localMainPath = join(localPackageRoot, "dist/cli/main.js")
+    const localTsxLoaderPath = join(localPackageRoot, "dist/cli/tsx-loader.js")
 
-    if (localPackageRoot !== packageRoot && existsSync(localMainPath)) {
+    if (
+      localPackageRoot !== packageRoot &&
+      existsSync(localMainPath) &&
+      existsSync(localTsxLoaderPath)
+    ) {
       console.warn(
         `Using local @tscircuit/cli v${localPackageJson.version} instead of global v${globalPackageJson.version}`,
       )
       mainPath = localMainPath
-      mainPackageRoot = localPackageRoot
+      tsxLoaderPath = localTsxLoaderPath
     }
   } catch {}
 }
 
-const mainRequire = createRequire(join(mainPackageRoot, "package.json"))
-const tsxLoaderUrl = pathToFileURL(mainRequire.resolve("tsx")).href
-
 const { status } = spawnSync(
   process.execPath,
-  ["--import", tsxLoaderUrl, mainPath, ...args],
+  ["--import", tsxLoaderPath, mainPath, ...args],
   {
     stdio: "inherit",
   },

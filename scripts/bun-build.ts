@@ -9,6 +9,7 @@ const ALLOW_BUNDLING = ["@tscircuit/runframe"]
 const result = await Bun.build({
   entrypoints: [
     "./cli/main.ts",
+    "./cli/tsx-loader.ts",
     "./cli/build/build.worker.ts",
     "./cli/snapshot/snapshot.worker.ts",
     "./lib/index.ts",
