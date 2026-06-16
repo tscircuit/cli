@@ -1,8 +1,10 @@
 import { expect, test } from "bun:test"
-import { mkdirSync, rmSync, writeFileSync } from "node:fs"
+import { mkdirSync, readFileSync, rmSync, writeFileSync } from "node:fs"
 import { join, resolve } from "node:path"
 import { spawnSync } from "node:child_process"
 import { temporaryDirectory } from "tempy"
+
+const nodeBin = process.env.npm_node_execpath ?? "node"
 
 test("entrypoint uses local version by default when available", async () => {
   const tmpDir = temporaryDirectory()
@@ -28,7 +30,7 @@ test("entrypoint uses local version by default when available", async () => {
 
   const entrypointPath = resolve(process.cwd(), "cli/entrypoint.js")
 
-  const result = spawnSync("bun", [entrypointPath, "--version"], {
+  const result = spawnSync(nodeBin, [entrypointPath, "--version"], {
     cwd: tmpDir,
     encoding: "utf-8",
   })
@@ -36,6 +38,7 @@ test("entrypoint uses local version by default when available", async () => {
   const output = result.stdout + result.stderr
 
   expect(output).toContain("Using local @tscircuit/cli v0.0.999-local")
+  expect(output).toContain("LOCAL_CLI_EXECUTED")
 
   rmSync(tmpDir, { recursive: true, force: true })
 })
@@ -65,7 +68,7 @@ test("entrypoint skips local version when --use-global flag is passed", async ()
   const entrypointPath = resolve(process.cwd(), "cli/entrypoint.js")
 
   const result = spawnSync(
-    "bun",
+    nodeBin,
     [entrypointPath, "--use-global", "--version"],
     {
       cwd: tmpDir,
@@ -79,4 +82,12 @@ test("entrypoint skips local version when --use-global flag is passed", async ()
   expect(output).not.toContain("LOCAL_CLI_EXECUTED")
 
   rmSync(tmpDir, { recursive: true, force: true })
+})
+
+test("entrypoint does not require bun at runtime", () => {
+  const entrypointPath = resolve(process.cwd(), "cli/entrypoint.js")
+  const entrypointSource = readFileSync(entrypointPath, "utf-8")
+
+  expect(entrypointSource).toContain("#!/usr/bin/env node")
+  expect(entrypointSource).not.toContain('"bun"')
 })
