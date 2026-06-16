@@ -58,7 +58,7 @@
         "jszip": "^3.10.1",
         "jwt-decode": "^4.0.0",
         "kicad-component-converter": "^0.1.40",
-        "kicad-to-circuit-json": "^0.0.94",
+        "kicad-to-circuit-json": "^0.0.96",
         "kicadts": "^0.0.45",
         "kleur": "^4.1.5",
         "ky": "^1.7.4",
@@ -833,7 +833,7 @@
 
     "kicad-component-converter": ["kicad-component-converter@0.1.41", "", { "bin": { "kicad-mod-converter": "dist/cli.js", "kicad-component-converter": "dist/cli.js" } }, "sha512-nIvXOYbjW2qzBqy7n+4zL8pfHABFH721U8zWCoTmKNQYuFzSO2ZvKPfiEHH+PSUB3b6Iu8hTg7fCrXft0rHNxw=="],
 
-    "kicad-to-circuit-json": ["kicad-to-circuit-json@0.0.94", "", { "dependencies": { "schematic-symbols": "^0.0.202" }, "peerDependencies": { "typescript": "^5" } }, "sha512-IlRbacTVDiUeLZ9srUCEq7+h2rml3NfW0qXODrFBTrfTc9LLZ2F0hpta2K5pbnWbBDllDWoeAcRPEAfdS6sEUw=="],
+    "kicad-to-circuit-json": ["kicad-to-circuit-json@0.0.96", "", { "dependencies": { "schematic-symbols": "^0.0.202" }, "peerDependencies": { "typescript": "^5" } }, "sha512-dYFjNvT5sdf8T4goODOZk6iPkNJaqEJUQP949Ow9FDhYooJaIWMIxg8dZFtVvi37xHCwGGbdxgqUnA40gjvTvw=="],
 
     "kicadts": ["kicadts@0.0.45", "", { "peerDependencies": { "typescript": "^5" } }, "sha512-32atIU1pqoWyAuAy0O6YtcRMv3SrgWyC8DH3hIdjSFuAfwH1DwZscdYTRletS3XwcbNiFS1RJ0vU9Mk/4Z4U8w=="],
 
@@ -1228,8 +1228,6 @@
     "@tscircuit/runframe/@tscircuit/eval": ["@tscircuit/eval@0.0.925", "", { "peerDependencies": { "@tscircuit/core": "*", "circuit-json": "*", "typescript": "^5.0.0", "zod": "3" } }, "sha512-yMQKfxY3IDHjHBOhJeKoHoY8RQKfVmpaRRS7KXeBSHZp2GTooGmEecGkouydgY1L057zUo5fzz3A6GbmFILOdA=="],
 
     "@tscircuit/runframe/@tscircuit/solver-utils": ["@tscircuit/solver-utils@0.0.7", "", { "peerDependencies": { "typescript": "^5" } }, "sha512-SB5+A92BMsozxOWfi6iXrcVv1UAFfbBAbKlWHG9TXWquEvAVPSukeCZJ08Yhq0b22T4qkMNy5bZWshXwlO+BuQ=="],
-
-    "@tscircuit/ti-parts-engine/kicad-to-circuit-json": ["kicad-to-circuit-json@0.0.96", "", { "dependencies": { "schematic-symbols": "^0.0.202" }, "peerDependencies": { "typescript": "^5" } }, "sha512-dYFjNvT5sdf8T4goODOZk6iPkNJaqEJUQP949Ow9FDhYooJaIWMIxg8dZFtVvi37xHCwGGbdxgqUnA40gjvTvw=="],
 
     "@types/prompts/kleur": ["kleur@3.0.3", "", {}, "sha512-eTIzlVOSUR+JxdDFepEYcBMtZ9Qqdef+rnzWdRZuMbOywu5tO2w2N7rqjoANZ5k9vywhL6Br1VRjUIgTQx4E8w=="],
 
