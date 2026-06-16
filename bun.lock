@@ -21,7 +21,7 @@
         "@tscircuit/runframe": "^0.0.2074",
         "@tscircuit/schematic-match-adapt": "^0.0.22",
         "@tscircuit/solver-utils": "0.0.16",
-        "@tscircuit/ti-parts-engine": "github:tscircuit/ti-parts-engine#8bf0e64",
+        "@tscircuit/ti-parts-engine": "github:tscircuit/ti-parts-engine#cead194495b8fbfb73a88b5995ce86a4b61a9d04",
         "@types/bun": "^1.2.2",
         "@types/configstore": "^6.0.2",
         "@types/debug": "^4.1.12",
@@ -425,7 +425,7 @@
 
     "@tscircuit/soup-util": ["@tscircuit/soup-util@0.0.41", "", { "dependencies": { "parsel-js": "^1.1.2" }, "peerDependencies": { "circuit-json": "*", "transformation-matrix": "*", "zod": "*" } }, "sha512-47JKWBUKkRVHhad0HhBbdOJxB6v/eiac46beiKRBMlJqiZ1gPGI276v9iZfpF7c4hXR69cURcgiwuA5vowrFEg=="],
 
-    "@tscircuit/ti-parts-engine": ["@tscircuit/ti-parts-engine@github:tscircuit/ti-parts-engine#8bf0e64", { "dependencies": { "jszip": "^3.10.1", "kicad-to-circuit-json": "^0.0.92", "kicadts": "^0.0.45" }, "peerDependencies": { "typescript": "^5" } }, "tscircuit-ti-parts-engine-8bf0e64", "sha512-+8+5x7JR5neASmdbrdeVadTefizjSoY00f9AEo6rKaH+jU7dDoUjOlkloGq6xScKRJYW/lf5hcRepMd9EK4Trg=="],
+    "@tscircuit/ti-parts-engine": ["@tscircuit/ti-parts-engine@github:tscircuit/ti-parts-engine#cead194", { "dependencies": { "jszip": "^3.10.1", "kicad-to-circuit-json": "^0.0.96", "kicadts": "^0.0.45" }, "peerDependencies": { "typescript": "^5" } }, "tscircuit-ti-parts-engine-cead194", "sha512-C+LOAWDUPFSPAWp2mSuIUpIXG1GP4T54QQDLkcynH4c1qRRKv1ZItTIswjrIFLpPuiVKQSHEHFGbfNkrSHu8LA=="],
 
     "@types/braces": ["@types/braces@3.0.5", "", {}, "sha512-SQFof9H+LXeWNz8wDe7oN5zu7ket0qwMu5vZubW4GCJ8Kkeh6nBWUz87+KTz/G3Kqsrp0j/W253XJb3KMEeg3w=="],
 
@@ -1229,7 +1229,7 @@
 
     "@tscircuit/runframe/@tscircuit/solver-utils": ["@tscircuit/solver-utils@0.0.7", "", { "peerDependencies": { "typescript": "^5" } }, "sha512-SB5+A92BMsozxOWfi6iXrcVv1UAFfbBAbKlWHG9TXWquEvAVPSukeCZJ08Yhq0b22T4qkMNy5bZWshXwlO+BuQ=="],
 
-    "@tscircuit/ti-parts-engine/kicad-to-circuit-json": ["kicad-to-circuit-json@0.0.92", "", { "dependencies": { "schematic-symbols": "^0.0.202" }, "peerDependencies": { "typescript": "^5" } }, "sha512-ienN8BDmn0nN/ooct6ykPj0zCpR3kJz05i5roLsnTfTHnrv11nYufwt2lnjyibUelwL7drcBgfxfAcqo2+XYFQ=="],
+    "@tscircuit/ti-parts-engine/kicad-to-circuit-json": ["kicad-to-circuit-json@0.0.96", "", { "dependencies": { "schematic-symbols": "^0.0.202" }, "peerDependencies": { "typescript": "^5" } }, "sha512-dYFjNvT5sdf8T4goODOZk6iPkNJaqEJUQP949Ow9FDhYooJaIWMIxg8dZFtVvi37xHCwGGbdxgqUnA40gjvTvw=="],
 
     "@types/prompts/kleur": ["kleur@3.0.3", "", {}, "sha512-eTIzlVOSUR+JxdDFepEYcBMtZ9Qqdef+rnzWdRZuMbOywu5tO2w2N7rqjoANZ5k9vywhL6Br1VRjUIgTQx4E8w=="],
 
