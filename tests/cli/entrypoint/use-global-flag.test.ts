@@ -6,17 +6,12 @@ import { temporaryDirectory } from "tempy"
 
 const nodeBin = process.env.npm_node_execpath ?? "node"
 
-test("entrypoint uses local version by default when available", async () => {
-  const tmpDir = temporaryDirectory()
-  const localCliPath = join(tmpDir, "node_modules", "@tscircuit", "cli")
+const writeFakeLocalCli = (projectDir: string) => {
+  const localCliPath = join(projectDir, "node_modules", "@tscircuit", "cli")
+  const localTsxPath = join(localCliPath, "node_modules", "tsx")
 
-  mkdirSync(localCliPath, { recursive: true })
   mkdirSync(join(localCliPath, "dist", "cli"), { recursive: true })
-
-  writeFileSync(
-    join(tmpDir, "package.json"),
-    JSON.stringify({ name: "test-project", version: "1.0.0" }),
-  )
+  mkdirSync(join(localTsxPath, "dist"), { recursive: true })
 
   writeFileSync(
     join(localCliPath, "package.json"),
@@ -26,6 +21,31 @@ test("entrypoint uses local version by default when available", async () => {
   writeFileSync(
     join(localCliPath, "dist", "cli", "main.js"),
     'console.log("LOCAL_CLI_EXECUTED")',
+  )
+
+  writeFileSync(
+    join(localTsxPath, "package.json"),
+    JSON.stringify({
+      name: "tsx",
+      version: "0.0.0-test",
+      type: "module",
+      exports: {
+        ".": "./dist/loader.mjs",
+      },
+    }),
+  )
+
+  writeFileSync(join(localTsxPath, "dist", "loader.mjs"), "")
+}
+
+test("entrypoint uses local version by default when available", async () => {
+  const tmpDir = temporaryDirectory()
+
+  writeFakeLocalCli(tmpDir)
+
+  writeFileSync(
+    join(tmpDir, "package.json"),
+    JSON.stringify({ name: "test-project", version: "1.0.0" }),
   )
 
   const entrypointPath = resolve(process.cwd(), "cli/entrypoint.js")
@@ -45,24 +65,12 @@ test("entrypoint uses local version by default when available", async () => {
 
 test("entrypoint skips local version when --use-global flag is passed", async () => {
   const tmpDir = temporaryDirectory()
-  const localCliPath = join(tmpDir, "node_modules", "@tscircuit", "cli")
 
-  mkdirSync(localCliPath, { recursive: true })
-  mkdirSync(join(localCliPath, "dist", "cli"), { recursive: true })
+  writeFakeLocalCli(tmpDir)
 
   writeFileSync(
     join(tmpDir, "package.json"),
     JSON.stringify({ name: "test-project", version: "1.0.0" }),
-  )
-
-  writeFileSync(
-    join(localCliPath, "package.json"),
-    JSON.stringify({ name: "@tscircuit/cli", version: "0.0.999-local" }),
-  )
-
-  writeFileSync(
-    join(localCliPath, "dist", "cli", "main.js"),
-    'console.log("LOCAL_CLI_EXECUTED")',
   )
 
   const entrypointPath = resolve(process.cwd(), "cli/entrypoint.js")
@@ -90,4 +98,6 @@ test("entrypoint does not require bun at runtime", () => {
 
   expect(entrypointSource).toContain("#!/usr/bin/env node")
   expect(entrypointSource).not.toContain('"bun"')
+  expect(entrypointSource).toContain('"--import"')
+  expect(entrypointSource).toContain('resolve("tsx")')
 })
