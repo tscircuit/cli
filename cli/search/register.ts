@@ -223,7 +223,6 @@ export const registerSearch = (program: Command) => {
         }
 
         if (tiResults.length) {
-          console.log()
           console.log(
             kleur
               .bold()
