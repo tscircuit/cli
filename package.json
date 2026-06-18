@@ -17,7 +17,6 @@
     "@tscircuit/fake-snippets": "^0.0.182",
     "@tscircuit/fake-ul-kicad-proxy": "github:tscircuit/fake-ul-kicad-proxy#d174c33c1b17a52d7a9dc3c2b5506d6fd593bed7",
     "@tscircuit/file-server": "^0.0.32",
-    "@tscircuit/image-utils": "^0.0.7",
     "@tscircuit/krt-wasm": "^0.1.6",
     "@tscircuit/math-utils": "0.0.36",
     "@tscircuit/runframe": "^0.0.2092",
