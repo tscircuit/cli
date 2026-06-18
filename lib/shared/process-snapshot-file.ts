@@ -16,6 +16,7 @@ import { type CameraPreset, applyCameraPreset } from "lib/shared/camera-presets"
 import { generateCircuitJson } from "lib/shared/generate-circuit-json"
 import { getCircuitJsonToGltfOptions } from "lib/shared/get-circuit-json-to-gltf-options"
 import { getCompletePlatformConfig } from "lib/shared/get-complete-platform-config"
+import { getSimulationSvgAssetsFromCircuitJson } from "lib/shared/simulation-svg-assets"
 import { renderGLTFToPNGFromGLB } from "poppygl"
 import { compareAndCreateDiff } from "./compare-images"
 import { isCircuitJsonFile } from "./is-circuit-json-file"
@@ -67,6 +68,9 @@ export const processSnapshotFile = async ({
   let circuitJson: AnyCircuitElement[]
   let pcbSvg: string
   let schSvg: string
+  let simulationSvgAssets:
+    | ReturnType<typeof getSimulationSvgAssetsFromCircuitJson>
+    | undefined
 
   try {
     if (isCircuitJsonFile(file)) {
@@ -126,6 +130,23 @@ export const processSnapshotFile = async ({
       errorMessage:
         kleur.red(
           `\n❌ Failed to generate schematic SVG for ${relativeFilePath}:\n`,
+        ) + kleur.red(`   ${errorMessage}\n`),
+    }
+  }
+
+  try {
+    simulationSvgAssets = getSimulationSvgAssetsFromCircuitJson(circuitJson)
+  } catch (error) {
+    const errorMessage = error instanceof Error ? error.message : String(error)
+    return {
+      ok: false,
+      didUpdate: false,
+      successPaths,
+      warningMessages,
+      mismatches,
+      errorMessage:
+        kleur.red(
+          `\n❌ Failed to generate simulation SVGs for ${relativeFilePath}:\n`,
         ) + kleur.red(`   ${errorMessage}\n`),
     }
   }
@@ -214,7 +235,11 @@ export const processSnapshotFile = async ({
 
   const base = path.basename(file).replace(/\.[^.]+$/, "")
   const snapshots: Array<
-    | { type: "pcb" | "schematic"; content: string; isBinary: false }
+    | {
+        type: "pcb" | "schematic" | "simulation" | "schematic-simulation"
+        content: string
+        isBinary: false
+      }
     | { type: "3d"; content: Uint8Array; isBinary: true }
   > = []
   if (pcbOnly || !schematicOnly) {
@@ -225,6 +250,18 @@ export const processSnapshotFile = async ({
   }
   if (threeD && png3d) {
     snapshots.push({ type: "3d", content: png3d, isBinary: true })
+  }
+  if (!pcbOnly && !schematicOnly && simulationSvgAssets) {
+    snapshots.push({
+      type: "simulation",
+      content: simulationSvgAssets.simulationSvg,
+      isBinary: false,
+    })
+    snapshots.push({
+      type: "schematic-simulation",
+      content: simulationSvgAssets.schematicSimulationSvg,
+      isBinary: false,
+    })
   }
 
   for (const snapshot of snapshots) {
