@@ -15,6 +15,7 @@ import { renderGLTFToPNGFromGLB } from "poppygl"
 import { convertModelUrlsToFileUrls } from "./convert-model-urls-to-file-urls"
 import type { BuildImageFormatSelection } from "./image-format-selection"
 import { convertSvgToPngBuffer } from "./svg-to-png"
+import { writeSimulationSvgAssetsFromCircuitJson } from "./worker-output-generators"
 
 export interface BuildFileResult {
   sourcePath: string
@@ -140,6 +141,26 @@ const generatePreviewAssets = async ({
       console.log(`${prefix}Written schematic.svg`)
     } catch (error) {
       console.error(`${prefix}Failed to generate schematic SVG:`, error)
+    }
+  }
+
+  if (imageFormats.simulationSvgs || imageFormats.schematicSimulationSvgs) {
+    try {
+      const wroteSimulationSvgs = writeSimulationSvgAssetsFromCircuitJson(
+        circuitJson,
+        outputDir,
+        imageFormats,
+      )
+      if (wroteSimulationSvgs) {
+        if (imageFormats.simulationSvgs) {
+          console.log(`${prefix}Written simulation.svg`)
+        }
+        if (imageFormats.schematicSimulationSvgs) {
+          console.log(`${prefix}Written schematic-simulation.svg`)
+        }
+      }
+    } catch (error) {
+      console.error(`${prefix}Failed to generate simulation SVGs:`, error)
     }
   }
 

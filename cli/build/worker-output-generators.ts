@@ -9,6 +9,10 @@ import {
 import {
   convertCircuitJsonToPcbSvg,
   convertCircuitJsonToSchematicSvg,
+  convertCircuitJsonToSchematicSimulationSvg,
+  convertCircuitJsonToSimulationGraphSvg,
+  isSimulationExperiment,
+  isSimulationTransientVoltageGraph,
 } from "circuit-to-svg"
 import { renderGLTFToPNGFromGLB } from "poppygl"
 import { getCircuitJsonToGltfOptions } from "../../lib/shared/get-circuit-json-to-gltf-options"
@@ -21,6 +25,66 @@ import {
 import type { BuildImageFormatSelection } from "./image-format-selection"
 import { convertSvgToPngBuffer } from "./svg-to-png"
 import { loadLocalStepModelFsMap } from "lib/shared/load-local-step-model-fs-map"
+
+const getSimulationSvgInputs = (circuitJson: AnyCircuitElement[]) => {
+  const simulationExperiment = circuitJson.find(isSimulationExperiment)
+  if (!simulationExperiment) return undefined
+
+  const simulationTransientVoltageGraphIds = circuitJson
+    .filter(
+      (element) =>
+        isSimulationTransientVoltageGraph(element) &&
+        element.simulation_experiment_id ===
+          simulationExperiment.simulation_experiment_id,
+    )
+    .map((element) => element.simulation_transient_voltage_graph_id)
+
+  if (simulationTransientVoltageGraphIds.length === 0) return undefined
+
+  return {
+    simulation_experiment_id: simulationExperiment.simulation_experiment_id,
+    simulation_transient_voltage_graph_ids: simulationTransientVoltageGraphIds,
+  }
+}
+
+export const writeSimulationSvgAssetsFromCircuitJson = (
+  circuitJson: AnyCircuitElement[],
+  outputDir: string,
+  imageFormats: BuildImageFormatSelection,
+) => {
+  if (!imageFormats.simulationSvgs && !imageFormats.schematicSimulationSvgs) {
+    return false
+  }
+
+  const simulationSvgInputs = getSimulationSvgInputs(circuitJson)
+  if (!simulationSvgInputs) return false
+
+  if (imageFormats.simulationSvgs) {
+    const simulationSvg = convertCircuitJsonToSimulationGraphSvg({
+      circuitJson,
+      ...simulationSvgInputs,
+    })
+    fs.writeFileSync(
+      path.join(outputDir, "simulation.svg"),
+      simulationSvg,
+      "utf-8",
+    )
+  }
+
+  if (imageFormats.schematicSimulationSvgs) {
+    const schematicSimulationSvg = convertCircuitJsonToSchematicSimulationSvg({
+      circuitJson,
+      ...simulationSvgInputs,
+    })
+    fs.writeFileSync(
+      path.join(outputDir, "schematic-simulation.svg"),
+      schematicSimulationSvg,
+      "utf-8",
+    )
+  }
+
+  return true
+}
 
 export const writeGlbFromCircuitJson = async (
   circuitJson: AnyCircuitElement[],
@@ -83,6 +147,8 @@ export const writeImageAssetsFromCircuitJson = async (
       "utf-8",
     )
   }
+
+  writeSimulationSvgAssetsFromCircuitJson(circuitJson, outputDir, imageFormats)
 
   if (imageFormats.threeDPngs) {
     const circuitJsonWithFileUrls = convertModelUrlsToFileUrls(circuitJson)
