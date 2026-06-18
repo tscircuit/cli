@@ -1,6 +1,9 @@
 import fs from "node:fs"
 import path from "node:path"
-import type { AnyCircuitElement } from "circuit-json"
+import type {
+  AnyCircuitElement,
+  SimulationTransientVoltageGraph,
+} from "circuit-json"
 import { circuitJsonToStep } from "circuit-json-to-step"
 import {
   convertCircuitJsonToGltf,
@@ -32,7 +35,7 @@ const getSimulationSvgInputs = (circuitJson: AnyCircuitElement[]) => {
 
   const simulationTransientVoltageGraphIds = circuitJson
     .filter(
-      (element) =>
+      (element): element is SimulationTransientVoltageGraph =>
         isSimulationTransientVoltageGraph(element) &&
         element.simulation_experiment_id ===
           simulationExperiment.simulation_experiment_id,

@@ -88,7 +88,7 @@ test(
     expect(spiceContent).toContain("DD1")
     expect(spiceContent).toContain("CC1")
     expect(spiceContent).toContain("RR1")
-    expect(spiceContent).toContain("SM1")
+    expect(spiceContent).toContain("MM1")
     expect(spiceContent).toContain(".END")
 
     const csvContent = await readFile(expectedCsvPath, "utf-8")
