@@ -2,12 +2,14 @@ import looksSame from "@tscircuit/image-utils/looks-same"
 import fs from "node:fs/promises"
 
 export const compareAndCreateDiff = async (
-  buffer1: Buffer,
-  buffer2: Buffer,
+  buffer1: Uint8Array,
+  buffer2: Uint8Array,
   diffPath: string,
   createDiff = true,
 ): Promise<{ equal: boolean }> => {
-  const { equal } = await looksSame(buffer1, buffer2, {
+  const b1 = Buffer.from(buffer1)
+  const b2 = Buffer.from(buffer2)
+  const { equal } = await looksSame(b1, b2, {
     strict: false,
     tolerance: 2,
   })
@@ -15,8 +17,8 @@ export const compareAndCreateDiff = async (
   if (!equal && createDiff) {
     if (diffPath.endsWith(".png")) {
       await looksSame.createDiff({
-        reference: buffer1,
-        current: buffer2,
+        reference: b1,
+        current: b2,
         diff: diffPath,
         highlightColor: "#ff00ff",
         tolerance: 2,

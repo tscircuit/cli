@@ -68,7 +68,7 @@
     "md5": "^2.3.0",
     "perfect-cli": "^1.0.21",
     "playwright": "^1.57.0",
-    "poppygl": "^0.0.20",
+    "poppygl": "^0.0.24",
     "prompts": "^2.4.2",
     "redaxios": "^0.5.1",
     "semver": "^7.6.3",

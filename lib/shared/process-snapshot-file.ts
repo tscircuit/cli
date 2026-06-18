@@ -16,7 +16,7 @@ import { type CameraPreset, applyCameraPreset } from "lib/shared/camera-presets"
 import { generateCircuitJson } from "lib/shared/generate-circuit-json"
 import { getCircuitJsonToGltfOptions } from "lib/shared/get-circuit-json-to-gltf-options"
 import { getCompletePlatformConfig } from "lib/shared/get-complete-platform-config"
-import { renderGLTFToPNGBufferFromGLBBuffer } from "poppygl"
+import { renderGLTFToPNGFromGLB } from "poppygl"
 import { compareAndCreateDiff } from "./compare-images"
 import { isCircuitJsonFile } from "./is-circuit-json-file"
 
@@ -130,7 +130,7 @@ export const processSnapshotFile = async ({
     }
   }
 
-  let png3d: Buffer | null = null
+  let png3d: Uint8Array | null = null
   if (threeD) {
     try {
       const glbBuffer = await convertCircuitJsonToGltf(
@@ -148,7 +148,7 @@ export const processSnapshotFile = async ({
         cameraOptions = applyCameraPreset(cameraPreset, cameraOptions)
       }
 
-      png3d = await renderGLTFToPNGBufferFromGLBBuffer(glbBuffer, cameraOptions)
+      png3d = await renderGLTFToPNGFromGLB(glbBuffer, cameraOptions)
     } catch (error) {
       const errorMessage =
         error instanceof Error ? error.message : String(error)
@@ -215,7 +215,7 @@ export const processSnapshotFile = async ({
   const base = path.basename(file).replace(/\.[^.]+$/, "")
   const snapshots: Array<
     | { type: "pcb" | "schematic"; content: string; isBinary: false }
-    | { type: "3d"; content: Buffer; isBinary: true }
+    | { type: "3d"; content: Uint8Array; isBinary: true }
   > = []
   if (pcbOnly || !schematicOnly) {
     snapshots.push({ type: "pcb", content: pcbSvg, isBinary: false })
