@@ -14,7 +14,9 @@ test("tsci add - adds multiple packages in a single command", async () => {
     }),
   )
 
-  const { stdout } = await runCommand("tsci add @tsci/seveibar.Key @tsci/seveibar.PICO")
+  const { stdout } = await runCommand(
+    "tsci add @tsci/seveibar.Key @tsci/seveibar.PICO",
+  )
   expect(stdout).toContain("Adding @tsci/seveibar.Key @tsci/seveibar.PICO")
   expect(stdout).toContain("successfully")
 
@@ -24,6 +26,10 @@ test("tsci add - adds multiple packages in a single command", async () => {
   expect(pkgJson.dependencies["@tsci/seveibar.Key"]).toBeDefined()
   expect(pkgJson.dependencies["@tsci/seveibar.PICO"]).toBeDefined()
 
-  expect(existsSync(join(tmpDir, "node_modules", "@tsci", "seveibar.Key"))).toBe(true)
-  expect(existsSync(join(tmpDir, "node_modules", "@tsci", "seveibar.PICO"))).toBe(true)
+  expect(
+    existsSync(join(tmpDir, "node_modules", "@tsci", "seveibar.Key")),
+  ).toBe(true)
+  expect(
+    existsSync(join(tmpDir, "node_modules", "@tsci", "seveibar.PICO")),
+  ).toBe(true)
 })

@@ -78,13 +78,14 @@ export async function addPackages(
   packageSpecs: string[],
   projectDir: string = process.cwd(),
 ) {
-
   const normalized = packageSpecs.map((spec) => ({
     original: spec,
     normalized: normalizeTscircuitPackageName(spec),
   }))
 
-  const displayNames = normalized.map((p) => p.normalized || p.original).join(" ")
+  const displayNames = normalized
+    .map((p) => p.normalized || p.original)
+    .join(" ")
   console.log(kleur.cyan(`Adding ${kleur.bold(displayNames)}...`))
 
   const hasTsciPackage = normalized.some((p) =>
