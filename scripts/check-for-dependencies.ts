@@ -3,7 +3,7 @@
 import { readFileSync } from "node:fs"
 import { exit } from "node:process"
 
-const ALLOWED_DEPENDENCIES: string[] = []
+const ALLOWED_DEPENDENCIES: string[] = ["tsx"]
 
 console.log("Checking for non-dev dependencies...")
 

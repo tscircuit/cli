@@ -13,6 +13,7 @@ rmSync("./dist/lib", { recursive: true, force: true })
 const result = await Bun.build({
   entrypoints: [
     "./cli/main.ts",
+    "./cli/tsx-loader.ts",
     "./cli/build/build.worker.ts",
     "./cli/snapshot/snapshot.worker.ts",
     "./lib/index.ts",
@@ -23,6 +24,7 @@ const result = await Bun.build({
     ...tscircuitPackageJsonDeps.filter((dep) => !ALLOW_BUNDLING.includes(dep)),
     "zod",
     "tscircuit",
+    "tsx",
     "typescript",
     "circuit-to-svg",
     "@types/*",

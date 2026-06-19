@@ -4,6 +4,9 @@
   "workspaces": {
     "": {
       "name": "@tscircuit/cli",
+      "dependencies": {
+        "tsx": "^4.7.1",
+      },
       "devDependencies": {
         "@babel/standalone": "^7.26.9",
         "@biomejs/biome": "^1.9.4",
@@ -71,7 +74,6 @@
         "stepts": "^0.0.3",
         "tempy": "^3.1.0",
         "tscircuit": "^0.0.1849-libonly",
-        "tsx": "^4.7.1",
         "typed-ky": "^0.0.4",
         "zod": "^3.23.8",
       },
