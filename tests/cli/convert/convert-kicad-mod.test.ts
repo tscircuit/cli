@@ -4,49 +4,114 @@ import { writeFile, readFile } from "node:fs/promises"
 import path from "node:path"
 
 const kicadMod = `
-(module R_0402_1005Metric (layer F.Cu) (tedit 5F68FEEE)
-  (descr "Resistor SMD 0402 (1005 Metric), square (rectangular) end terminal, IPC_7351 nominal, (Body size source: IPC-SM-782 page 72, https://www.pcb-3d.com/wordpress/wp-content/uploads/ipc-sm-782a_amendment_1_and_2.pdf), generated with kicad-footprint-generator")
-  (tags resistor)
-  (attr smd)
-  (fp_text reference REF** (at 0 -1.17) (layer F.SilkS)
-    (effects (font (size 1 1) (thickness 0.15)))
-  )
-  (fp_text value R_0402_1005Metric (at 0 1.17) (layer F.Fab)
-    (effects (font (size 1 1) (thickness 0.15)))
-  )
-  (fp_line (start -0.525 0.27) (end -0.525 -0.27) (layer F.Fab) (width 0.1))
-  (fp_line (start -0.525 -0.27) (end 0.525 -0.27) (layer F.Fab) (width 0.1))
-  (fp_line (start 0.525 -0.27) (end 0.525 0.27) (layer F.Fab) (width 0.1))
-  (fp_line (start 0.525 0.27) (end -0.525 0.27) (layer F.Fab) (width 0.1))
-  (fp_line (start -0.153641 -0.38) (end 0.153641 -0.38) (layer F.SilkS) (width 0.12))
-  (fp_line (start -0.153641 0.38) (end 0.153641 0.38) (layer F.SilkS) (width 0.12))
-  (fp_line (start -0.93 0.47) (end -0.93 -0.47) (layer F.CrtYd) (width 0.05))
-  (fp_line (start -0.93 -0.47) (end 0.93 -0.47) (layer F.CrtYd) (width 0.05))
-  (fp_line (start 0.93 -0.47) (end 0.93 0.47) (layer F.CrtYd) (width 0.05))
-  (fp_line (start 0.93 0.47) (end -0.93 0.47) (layer F.CrtYd) (width 0.05))
-  (pad 1 smd roundrect (at -0.51 0) (size 0.54 0.64) (layers F.Cu F.Mask F.Paste) (roundrect_rratio 0.25))
-  (pad 2 smd roundrect (at 0.51 0) (size 0.54 0.64) (layers F.Cu F.Mask F.Paste) (roundrect_rratio 0.25))
-  (fp_text user %R (at 0 0) (layer F.Fab)
-    (effects (font (size 0.26 0.26) (thickness 0.04)))
-  )
-  (model \${KISYS3DMOD}/Resistor_SMD.3dshapes/R_0402_1005Metric.wrl
-    (at (xyz 0 0 0))
-    (scale (xyz 1 1 1))
-    (rotate (xyz 0 0 0))
-  )
+(footprint "R_01005_0402Metric"
+	(version 20260206)
+	(generator "kicad-footprint-generator")
+	(layer "F.Cu")
+	(descr "Resistor SMD 01005 (0402 Metric), square (rectangular) end terminal, IPC-7351 nominal, (Body size source: http://www.vishay.com/docs/20056/crcw01005e3.pdf)")
+	(tags "resistor")
+	(property "Reference" "REF**"
+		(at 0 -1 0)
+		(layer "F.SilkS")
+		(effects
+			(font
+				(size 1 1)
+				(thickness 0.15)
+			)
+		)
+	)
+	(property "Value" "R_01005_0402Metric"
+		(at 0 1 0)
+		(layer "F.Fab")
+		(effects
+			(font
+				(size 1 1)
+				(thickness 0.15)
+			)
+		)
+	)
+	(property "KiLib_Generator" "SMD_2terminal_chip_molded"
+		(at 0 0 0)
+		(layer "F.SilkS")
+		(hide yes)
+		(effects
+			(font
+				(size 1 1)
+				(thickness 0.15)
+			)
+		)
+	)
+	(attr smd)
+	(duplicate_pad_numbers_are_jumpers no)
+	(fp_rect
+		(start -0.6 -0.3)
+		(end 0.6 0.3)
+		(stroke
+			(width 0.05)
+			(type solid)
+		)
+		(fill no)
+		(layer "F.CrtYd")
+	)
+	(fp_rect
+		(start -0.2 -0.1)
+		(end 0.2 0.1)
+		(stroke
+			(width 0.1)
+			(type solid)
+		)
+		(fill no)
+		(layer "F.Fab")
+	)
+	(fp_text user "REFERENCE"
+		(at 0 -0.62 0)
+		(layer "F.Fab")
+		(effects
+			(font
+				(size 0.25 0.25)
+				(thickness 0.04)
+			)
+		)
+	)
+	(pad "" smd roundrect
+		(at -0.275 0)
+		(size 0.27 0.27)
+		(layers "F.Paste")
+		(roundrect_rratio 0.25)
+	)
+	(pad "" smd roundrect
+		(at 0.275 0)
+		(size 0.27 0.27)
+		(layers "F.Paste")
+		(roundrect_rratio 0.25)
+	)
+	(pad "1" smd roundrect
+		(at -0.25 0)
+		(size 0.4 0.3)
+		(layers "F.Cu" "F.Mask")
+		(roundrect_rratio 0.25)
+	)
+	(pad "2" smd roundrect
+		(at 0.25 0)
+		(size 0.4 0.3)
+		(layers "F.Cu" "F.Mask")
+		(roundrect_rratio 0.25)
+	)
+	(embedded_fonts no)
 )
+
 `
 
 test("convert kicad_mod to tsx", async () => {
   const { tmpDir, runCommand } = await getCliTestFixture()
-  const modPath = path.join(tmpDir, "R_0402_1005Metric.kicad_mod")
+  const modPath = path.join(tmpDir, "R_01005_0402Metric.kicad_mod")
   await writeFile(modPath, kicadMod)
 
   const { stdout, stderr } = await runCommand(`tsci convert ${modPath}`)
   expect(stderr).toBe("")
   expect(stdout).toContain("Converted")
 
-  const tsxPath = path.join(tmpDir, "R_0402_1005Metric.tsx")
+  const tsxPath = path.join(tmpDir, "R_01005_0402Metric.tsx")
   const tsx = await readFile(tsxPath, "utf-8")
-  expect(tsx).toContain("export const R_0402_1005Metric")
+  expect(tsx).toContain("export const R_01005_0402Metric")
 })
