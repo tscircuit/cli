@@ -1,6 +1,7 @@
 import fs from "node:fs"
 import path from "node:path"
 import type { PlatformConfig } from "@tscircuit/props"
+import type { VisibleLayerRef } from "circuit-json"
 import { snapshotFilesWithWorkerPool } from "cli/snapshot/worker-pool"
 import kleur from "kleur"
 import {
@@ -39,6 +40,8 @@ type SnapshotOptions = {
   createDiff?: boolean
   /** Camera preset name for 3D snapshots (implies --3d) */
   cameraPreset?: CameraPreset
+  /** Limit PCB snapshots to one layer */
+  pcbLayer?: VisibleLayerRef
   /** Number of files to process in parallel (default: 1) */
   concurrency?: number
   onExit?: (code: number) => void
@@ -71,6 +74,7 @@ export const snapshotProject = async ({
   pcbSnapshotSettingsOverride,
   createDiff = false,
   cameraPreset,
+  pcbLayer,
   concurrency = 1,
 }: SnapshotOptions = {}) => {
   // --camera-preset implies --3d
@@ -179,6 +183,7 @@ export const snapshotProject = async ({
           pcbSnapshotSettings,
           createDiff,
           cameraPreset,
+          pcbLayer,
         },
         stopOnFailure: true,
         onLog: (lines) => {
@@ -221,6 +226,7 @@ export const snapshotProject = async ({
         pcbSnapshotSettings,
         createDiff,
         cameraPreset,
+        pcbLayer,
       })
 
       processResult(result)

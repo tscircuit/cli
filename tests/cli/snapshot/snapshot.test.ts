@@ -212,7 +212,7 @@ test("snapshot respects includeBoardFiles config", async () => {
   expect(rootSnapExists).toBe(false)
 }, 30_000)
 
-test("snapshot command --pcb-only", async () => {
+test("snapshot command --pcb-only with --layer", async () => {
   const { tmpDir, runCommand } = await getCliTestFixture()
 
   await Bun.write(
@@ -226,11 +226,11 @@ test("snapshot command --pcb-only", async () => {
   `,
   )
 
-  await runCommand("tsci snapshot --update --pcb-only")
+  await runCommand("tsci snapshot --update --pcb-only --layer top")
 
   const snapDir = join(tmpDir, "__snapshots__")
   const pcbExists = await Bun.file(
-    join(snapDir, "only.board-pcb.snap.svg"),
+    join(snapDir, "only.board-top.snap.svg"),
   ).exists()
   const schExists = await Bun.file(
     join(snapDir, "only.board-schematic.snap.svg"),
@@ -238,6 +238,9 @@ test("snapshot command --pcb-only", async () => {
 
   expect(pcbExists).toBe(true)
   expect(schExists).toBe(false)
+  expect(
+    await Bun.file(join(snapDir, "only.board-top.snap.svg")).text(),
+  ).toMatchSvgSnapshot(import.meta.path, "pcb-top")
 }, 30_000)
 
 test("snapshot command --schematic-only", async () => {

@@ -1,4 +1,5 @@
 import type { PlatformConfig } from "@tscircuit/props"
+import type { VisibleLayerRef } from "circuit-json"
 import type { CameraPreset } from "lib/shared/camera-presets"
 import type { PcbSnapshotSettings } from "lib/project-config/project-config-schema"
 import type { ProcessSnapshotFileResult } from "lib/shared/process-snapshot-file"
@@ -18,6 +19,7 @@ export type SnapshotFileMessage = {
     pcbSnapshotSettings?: PcbSnapshotSettings
     createDiff: boolean
     cameraPreset?: CameraPreset
+    pcbLayer?: VisibleLayerRef
   }
 }
 
