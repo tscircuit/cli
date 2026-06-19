@@ -27,8 +27,6 @@ test("entrypoint uses local version by default when available", async () => {
     join(localCliPath, "dist", "cli", "main.js"),
     'console.log("LOCAL_CLI_EXECUTED")',
   )
-  writeFileSync(join(localCliPath, "dist", "cli", "tsx-loader.js"), "")
-
   const entrypointPath = resolve(process.cwd(), "cli/entrypoint.js")
 
   const result = spawnSync(nodeBin, [entrypointPath, "--version"], {
@@ -65,8 +63,6 @@ test("entrypoint skips local version when --use-global flag is passed", async ()
     join(localCliPath, "dist", "cli", "main.js"),
     'console.log("LOCAL_CLI_EXECUTED")',
   )
-  writeFileSync(join(localCliPath, "dist", "cli", "tsx-loader.js"), "")
-
   const entrypointPath = resolve(process.cwd(), "cli/entrypoint.js")
 
   const result = spawnSync(
@@ -92,6 +88,6 @@ test("entrypoint does not require bun at runtime", () => {
 
   expect(entrypointSource).toContain("#!/usr/bin/env node")
   expect(entrypointSource).not.toContain('"bun"')
-  expect(entrypointSource).toContain('"--import"')
-  expect(entrypointSource).toContain("tsx-loader.js")
+  expect(entrypointSource).not.toContain('"--import"')
+  expect(entrypointSource).not.toContain("tsx-loader.js")
 })

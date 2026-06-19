@@ -1,4 +1,4 @@
-import { cpSync } from "node:fs"
+import { rmSync } from "node:fs"
 import { basename } from "node:path"
 // @ts-ignore
 import tscircuitPackageJson from "tscircuit/package.json"
@@ -7,10 +7,12 @@ const tscircuitPackageJsonDeps = Object.keys(tscircuitPackageJson.dependencies)
 
 const ALLOW_BUNDLING = ["@tscircuit/runframe"]
 
+rmSync("./dist/cli", { recursive: true, force: true })
+rmSync("./dist/lib", { recursive: true, force: true })
+
 const result = await Bun.build({
   entrypoints: [
     "./cli/main.ts",
-    "./cli/tsx-loader.ts",
     "./cli/build/build.worker.ts",
     "./cli/snapshot/snapshot.worker.ts",
     "./lib/index.ts",
@@ -36,8 +38,6 @@ if (!success) {
   console.error("Build failed", result.logs)
   process.exit(1)
 }
-
-cpSync("./node_modules/tsx/dist", "./dist/cli", { recursive: true })
 
 for (const output of outputs) {
   console.log(
