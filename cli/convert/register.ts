@@ -2,7 +2,7 @@ import type { Command } from "commander"
 import fs from "node:fs/promises"
 import path from "node:path"
 import kleur from "kleur"
-import { parseKicadModToCircuitJson } from "kicad-component-converter"
+import { KicadFootprintToCircuitJsonConverter } from "kicad-to-circuit-json"
 import { convertCircuitJsonToTscircuit } from "circuit-json-to-tscircuit"
 
 export const registerConvert = (program: Command) => {
@@ -17,7 +17,10 @@ export const registerConvert = (program: Command) => {
         try {
           const inputPath = path.resolve(file)
           const modContent = await fs.readFile(inputPath, "utf-8")
-          const circuitJson = await parseKicadModToCircuitJson(modContent)
+          const converter = new KicadFootprintToCircuitJsonConverter()
+          converter.addFile(path.basename(inputPath), modContent)
+          converter.runUntilFinished()
+          const circuitJson = converter.getOutput()
           const componentName =
             options.name ?? path.basename(inputPath, ".kicad_mod")
           const tsx = convertCircuitJsonToTscircuit(circuitJson, {
