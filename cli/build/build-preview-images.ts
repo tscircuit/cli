@@ -11,7 +11,7 @@ import {
 } from "circuit-to-svg"
 import { getCircuitJsonToGltfOptions } from "lib/shared/get-circuit-json-to-gltf-options"
 import type { PcbSnapshotSettings } from "lib/project-config/project-config-schema"
-import { renderGLTFToPNGBufferFromGLBBuffer } from "poppygl"
+import { renderGLTFToPNGFromGLB } from "poppygl"
 import { convertModelUrlsToFileUrls } from "./convert-model-urls-to-file-urls"
 import type { BuildImageFormatSelection } from "./image-format-selection"
 import { convertSvgToPngBuffer } from "./svg-to-png"
@@ -153,7 +153,7 @@ const generatePreviewAssets = async ({
       )
       console.log(`${prefix}Rendering GLB to PNG buffer...`)
       const glbArrayBuffer = await normalizeToArrayBuffer(glbBuffer)
-      const pngBuffer = await renderGLTFToPNGBufferFromGLBBuffer(
+      const pngBuffer = await renderGLTFToPNGFromGLB(
         glbArrayBuffer,
         getBestCameraPosition(circuitJson),
       )
