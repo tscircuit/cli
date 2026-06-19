@@ -59,29 +59,40 @@ export function normalizeTscircuitPackageName(
   return null
 }
 
-/**
- * Adds a package to the project (works like bun add).
- * Detects tscircuit component formats and handles @tsci registry setup.
- * All other package specs are passed directly to the package manager.
- *
- * @param packageSpec - Any package specifier (e.g., package-name, author/component, https://github.com/user/repo, package@version)
- * @param projectDir - The root directory of the project (defaults to process.cwd())
- */
 export async function addPackage(
   packageSpec: string,
   projectDir: string = process.cwd(),
 ) {
-  // Check if this is a tscircuit component format
-  const normalizedName = normalizeTscircuitPackageName(packageSpec)
+  return addPackages([packageSpec], projectDir)
+}
 
-  // Determine what to display and what to install
-  const displayName = normalizedName || packageSpec
-  let installTarget = normalizedName || packageSpec
+/**
+ * Adds packages to the project (works like bun add).
+ * Detects tscircuit component formats and handles @tsci registry setup.
+ * All other package specs are passed directly to the package manager.
+ *
+ * @param packageSpecs - Array of package specifiers
+ * @param projectDir - The root directory of the project (defaults to process.cwd())
+ */
+export async function addPackages(
+  packageSpecs: string[],
+  projectDir: string = process.cwd(),
+) {
 
-  console.log(kleur.cyan(`Adding ${kleur.bold(displayName)}...`))
+  const normalized = packageSpecs.map((spec) => ({
+    original: spec,
+    normalized: normalizeTscircuitPackageName(spec),
+  }))
 
-  // Only handle @tsci registry setup if it's a tscircuit component
-  if (normalizedName?.startsWith("@tsci/")) {
+  const displayNames = normalized.map((p) => p.normalized || p.original).join(" ")
+  console.log(kleur.cyan(`Adding ${kleur.bold(displayNames)}...`))
+
+  const hasTsciPackage = normalized.some((p) =>
+    p.normalized?.startsWith("@tsci/"),
+  )
+
+  let useTarball = false
+  if (hasTsciPackage) {
     const npmrcPath = path.join(projectDir, ".npmrc")
     const npmrcContent = fs.existsSync(npmrcPath)
       ? fs.readFileSync(npmrcPath, "utf-8")
@@ -108,27 +119,32 @@ export async function addPackage(
         console.log(
           "Continuing without updating .npmrc; will fetch package directly from registry tarball.",
         )
+        useTarball = true
       }
     }
-
-    if (!hasTsciRegistry) {
-      installTarget = await resolveTarballUrlFromRegistry(normalizedName)
-    }
   }
-  // For all other cases (URLs, scoped packages, regular npm packages), use packageSpec as-is
 
-  // Install the package using the detected package manager
+  const installTargets = await Promise.all(
+    normalized.map(async ({ original, normalized: norm }) => {
+      if (norm?.startsWith("@tsci/") && useTarball) {
+        return resolveTarballUrlFromRegistry(norm)
+      }
+      return norm || original
+    }),
+  )
+
   const packageManager = getPackageManager()
   try {
-    packageManager.install({ name: installTarget, cwd: projectDir })
-    console.log(kleur.green(`✓ Added ${kleur.bold(displayName)} successfully`))
+    packageManager.install({ name: installTargets.join(" "), cwd: projectDir })
+    console.log(kleur.green(`✓ Added ${kleur.bold(displayNames)} successfully`))
 
-    // After installation, check if it's a KiCad library and setup types if needed
-    await detectAndSetupKicadLibrary(packageSpec, projectDir)
+    await Promise.all(
+      packageSpecs.map((spec) => detectAndSetupKicadLibrary(spec, projectDir)),
+    )
   } catch (error) {
     const errorMessage = error instanceof Error ? error.message : String(error)
-    console.error(kleur.red(`✗ Failed to add ${displayName}:`), errorMessage)
+    console.error(kleur.red(`✗ Failed to add ${displayNames}:`), errorMessage)
     handleRegistryAuthError({ error, projectDir })
-    throw new Error(`Failed to add ${displayName}: ${errorMessage}`)
+    throw new Error(`Failed to add ${displayNames}: ${errorMessage}`)
   }
 }

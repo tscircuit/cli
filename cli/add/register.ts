@@ -1,17 +1,17 @@
 import type { Command } from "commander"
-import { addPackage } from "lib/shared/add-package"
+import { addPackages } from "lib/shared/add-package"
 
 export const registerAdd = (program: Command) => {
   program
     .command("add")
-    .description("Add a tscircuit component package to your project")
+    .description("Add tscircuit component packages to your project")
     .argument(
-      "<packageSpec>",
-      "Package to add (e.g. package-name, author/component, https://github.com/user/repo, package@version)",
+      "<packageSpecs...>",
+      "Packages to add (e.g. package-name, author/component, https://github.com/user/repo, package@version)",
     )
-    .action(async (packageSpec: string) => {
+    .action(async (packageSpecs: string[]) => {
       try {
-        await addPackage(packageSpec)
+        await addPackages(packageSpecs)
       } catch (error) {
         process.exit(1)
       }
