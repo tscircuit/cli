@@ -5,6 +5,8 @@ export type BuildImageFormatSelection = {
   pcbPngs: boolean
   pcbSvgs: boolean
   schematicSvgs: boolean
+  simulationSvgs: boolean
+  simulationSchematicSvgs: boolean
 }
 
 export const DEFAULT_IMAGE_FORMAT_SELECTION: BuildImageFormatSelection = {
@@ -12,6 +14,8 @@ export const DEFAULT_IMAGE_FORMAT_SELECTION: BuildImageFormatSelection = {
   pcbPngs: false,
   pcbSvgs: true,
   schematicSvgs: true,
+  simulationSvgs: false,
+  simulationSchematicSvgs: false,
 }
 
 export const EMPTY_IMAGE_FORMAT_SELECTION: BuildImageFormatSelection = {
@@ -19,6 +23,8 @@ export const EMPTY_IMAGE_FORMAT_SELECTION: BuildImageFormatSelection = {
   pcbPngs: false,
   pcbSvgs: false,
   schematicSvgs: false,
+  simulationSvgs: false,
+  simulationSchematicSvgs: false,
 }
 
 export const hasAnyImageFormatSelected = (
@@ -27,7 +33,9 @@ export const hasAnyImageFormatSelected = (
   selection.threeDPngs ||
   selection.pcbPngs ||
   selection.pcbSvgs ||
-  selection.schematicSvgs
+  selection.schematicSvgs ||
+  selection.simulationSvgs ||
+  selection.simulationSchematicSvgs
 
 const hasNewOutputFlags = (options?: BuildCommandOptions) =>
   Boolean(
@@ -35,6 +43,8 @@ const hasNewOutputFlags = (options?: BuildCommandOptions) =>
       options?.pcbPng ||
       options?.svgs ||
       options?.pcbSvgs ||
+      options?.simulationSvgs ||
+      options?.simulationSchematicSvgs ||
       options?.schematicSvgs,
   )
 
@@ -69,6 +79,8 @@ export const resolveImageFormatSelection = (
       pcbPngs: false,
       pcbSvgs: true,
       schematicSvgs: true,
+      simulationSvgs: false,
+      simulationSchematicSvgs: false,
     }
 
     if (options?.pcbOnly && !options?.schematicOnly) {
@@ -89,6 +101,8 @@ export const resolveImageFormatSelection = (
   if (options?.svgs) {
     selection.pcbSvgs = true
     selection.schematicSvgs = true
+    selection.simulationSvgs = true
+    selection.simulationSchematicSvgs = true
   }
   if (options?.pcbSvgs) {
     selection.pcbSvgs = true
@@ -98,6 +112,12 @@ export const resolveImageFormatSelection = (
   }
   if (options?.schematicSvgs) {
     selection.schematicSvgs = true
+  }
+  if (options?.simulationSvgs) {
+    selection.simulationSvgs = true
+  }
+  if (options?.simulationSchematicSvgs) {
+    selection.simulationSchematicSvgs = true
   }
   if (options?.pngs || options?.["3d"] || options?.["3dPng"]) {
     selection.threeDPngs = true

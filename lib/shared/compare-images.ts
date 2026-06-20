@@ -16,13 +16,13 @@ export const compareAndCreateDiff = async (
 
   if (!equal && createDiff) {
     if (diffPath.endsWith(".png")) {
-      await looksSame.createDiff({
+      const diffBuffer = await looksSame.createDiff({
         reference: b1,
         current: b2,
-        diff: diffPath,
         highlightColor: "#ff00ff",
         tolerance: 2,
       })
+      await fs.writeFile(diffPath, diffBuffer)
     } else {
       await fs.writeFile(diffPath, buffer2)
     }

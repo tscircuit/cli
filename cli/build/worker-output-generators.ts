@@ -21,6 +21,38 @@ import {
 import type { BuildImageFormatSelection } from "./image-format-selection"
 import { convertSvgToPngBuffer } from "./svg-to-png"
 import { loadLocalStepModelFsMap } from "lib/shared/load-local-step-model-fs-map"
+import { getSimulationSvgAssetsFromCircuitJson } from "lib/shared/simulation-svg-assets"
+
+export const writeSimulationSvgAssetsFromCircuitJson = (
+  circuitJson: AnyCircuitElement[],
+  outputDir: string,
+  imageFormats: BuildImageFormatSelection,
+) => {
+  if (!imageFormats.simulationSvgs && !imageFormats.simulationSchematicSvgs) {
+    return false
+  }
+
+  const simulationSvgAssets = getSimulationSvgAssetsFromCircuitJson(circuitJson)
+  if (!simulationSvgAssets) return false
+
+  if (imageFormats.simulationSvgs) {
+    fs.writeFileSync(
+      path.join(outputDir, "simulation.svg"),
+      simulationSvgAssets.simulationSvg,
+      "utf-8",
+    )
+  }
+
+  if (imageFormats.simulationSchematicSvgs) {
+    fs.writeFileSync(
+      path.join(outputDir, "simulation-schematic.svg"),
+      simulationSvgAssets.schematicSimulationSvg,
+      "utf-8",
+    )
+  }
+
+  return true
+}
 
 export const writeGlbFromCircuitJson = async (
   circuitJson: AnyCircuitElement[],
@@ -83,6 +115,8 @@ export const writeImageAssetsFromCircuitJson = async (
       "utf-8",
     )
   }
+
+  writeSimulationSvgAssetsFromCircuitJson(circuitJson, outputDir, imageFormats)
 
   if (imageFormats.threeDPngs) {
     const circuitJsonWithFileUrls = convertModelUrlsToFileUrls(circuitJson)

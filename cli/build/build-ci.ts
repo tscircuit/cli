@@ -37,6 +37,8 @@ export interface BuildCommandOptions {
   pcbSvgs?: boolean
   pcbPng?: boolean
   schematicSvgs?: boolean
+  simulationSvgs?: boolean
+  simulationSchematicSvgs?: boolean
   "3d"?: boolean
   "3dPng"?: boolean
   pcbOnly?: boolean
