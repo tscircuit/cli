@@ -6,7 +6,7 @@ export type BuildImageFormatSelection = {
   pcbSvgs: boolean
   schematicSvgs: boolean
   simulationSvgs: boolean
-  schematicSimulationSvgs: boolean
+  simulationSchematicSvgs: boolean
 }
 
 export const DEFAULT_IMAGE_FORMAT_SELECTION: BuildImageFormatSelection = {
@@ -15,7 +15,7 @@ export const DEFAULT_IMAGE_FORMAT_SELECTION: BuildImageFormatSelection = {
   pcbSvgs: true,
   schematicSvgs: true,
   simulationSvgs: false,
-  schematicSimulationSvgs: false,
+  simulationSchematicSvgs: false,
 }
 
 export const EMPTY_IMAGE_FORMAT_SELECTION: BuildImageFormatSelection = {
@@ -24,7 +24,7 @@ export const EMPTY_IMAGE_FORMAT_SELECTION: BuildImageFormatSelection = {
   pcbSvgs: false,
   schematicSvgs: false,
   simulationSvgs: false,
-  schematicSimulationSvgs: false,
+  simulationSchematicSvgs: false,
 }
 
 export const hasAnyImageFormatSelected = (
@@ -35,7 +35,7 @@ export const hasAnyImageFormatSelected = (
   selection.pcbSvgs ||
   selection.schematicSvgs ||
   selection.simulationSvgs ||
-  selection.schematicSimulationSvgs
+  selection.simulationSchematicSvgs
 
 const hasNewOutputFlags = (options?: BuildCommandOptions) =>
   Boolean(
@@ -44,7 +44,7 @@ const hasNewOutputFlags = (options?: BuildCommandOptions) =>
       options?.svgs ||
       options?.pcbSvgs ||
       options?.simulationSvgs ||
-      options?.schematicSimulationSvgs ||
+      options?.simulationSchematicSvgs ||
       options?.schematicSvgs,
   )
 
@@ -80,7 +80,7 @@ export const resolveImageFormatSelection = (
       pcbSvgs: true,
       schematicSvgs: true,
       simulationSvgs: false,
-      schematicSimulationSvgs: false,
+      simulationSchematicSvgs: false,
     }
 
     if (options?.pcbOnly && !options?.schematicOnly) {
@@ -102,7 +102,7 @@ export const resolveImageFormatSelection = (
     selection.pcbSvgs = true
     selection.schematicSvgs = true
     selection.simulationSvgs = true
-    selection.schematicSimulationSvgs = true
+    selection.simulationSchematicSvgs = true
   }
   if (options?.pcbSvgs) {
     selection.pcbSvgs = true
@@ -116,8 +116,8 @@ export const resolveImageFormatSelection = (
   if (options?.simulationSvgs) {
     selection.simulationSvgs = true
   }
-  if (options?.schematicSimulationSvgs) {
-    selection.schematicSimulationSvgs = true
+  if (options?.simulationSchematicSvgs) {
+    selection.simulationSchematicSvgs = true
   }
   if (options?.pngs || options?.["3d"] || options?.["3dPng"]) {
     selection.threeDPngs = true

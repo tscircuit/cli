@@ -144,7 +144,7 @@ const generatePreviewAssets = async ({
     }
   }
 
-  if (imageFormats.simulationSvgs || imageFormats.schematicSimulationSvgs) {
+  if (imageFormats.simulationSvgs || imageFormats.simulationSchematicSvgs) {
     try {
       const wroteSimulationSvgs = writeSimulationSvgAssetsFromCircuitJson(
         circuitJson,
@@ -155,8 +155,8 @@ const generatePreviewAssets = async ({
         if (imageFormats.simulationSvgs) {
           console.log(`${prefix}Written simulation.svg`)
         }
-        if (imageFormats.schematicSimulationSvgs) {
-          console.log(`${prefix}Written schematic-simulation.svg`)
+        if (imageFormats.simulationSchematicSvgs) {
+          console.log(`${prefix}Written simulation-schematic.svg`)
         }
       }
     } catch (error) {

@@ -199,7 +199,7 @@ test("build --simulation-svgs generates only simulation.svg", async () => {
   expect(simulationSvg).toContain("<svg")
 
   expect(
-    stat(path.join(tmpDir, "dist", "simulation", "schematic-simulation.svg")),
+    stat(path.join(tmpDir, "dist", "simulation", "simulation-schematic.svg")),
   ).rejects.toBeTruthy()
   expect(
     stat(path.join(tmpDir, "dist", "simulation", "pcb.svg")),
@@ -212,14 +212,14 @@ test("build --simulation-svgs generates only simulation.svg", async () => {
   ).rejects.toBeTruthy()
 }, 60_000)
 
-test("build --schematic-simulation-svgs generates only schematic-simulation.svg", async () => {
+test("build --simulation-schematic-svgs generates only simulation-schematic.svg", async () => {
   const { tmpDir, runCommand } = await getCliTestFixture()
   const circuitPath = await writeBoostSimulationCircuit(tmpDir)
 
-  await runCommand(`tsci build --schematic-simulation-svgs ${circuitPath}`)
+  await runCommand(`tsci build --simulation-schematic-svgs ${circuitPath}`)
 
   const schematicSimulationSvg = await readFile(
-    path.join(tmpDir, "dist", "simulation", "schematic-simulation.svg"),
+    path.join(tmpDir, "dist", "simulation", "simulation-schematic.svg"),
     "utf-8",
   )
   expect(schematicSimulationSvg).toContain("<svg")

@@ -28,7 +28,7 @@ export const writeSimulationSvgAssetsFromCircuitJson = (
   outputDir: string,
   imageFormats: BuildImageFormatSelection,
 ) => {
-  if (!imageFormats.simulationSvgs && !imageFormats.schematicSimulationSvgs) {
+  if (!imageFormats.simulationSvgs && !imageFormats.simulationSchematicSvgs) {
     return false
   }
 
@@ -43,9 +43,9 @@ export const writeSimulationSvgAssetsFromCircuitJson = (
     )
   }
 
-  if (imageFormats.schematicSimulationSvgs) {
+  if (imageFormats.simulationSchematicSvgs) {
     fs.writeFileSync(
-      path.join(outputDir, "schematic-simulation.svg"),
+      path.join(outputDir, "simulation-schematic.svg"),
       simulationSvgAssets.schematicSimulationSvg,
       "utf-8",
     )
