@@ -21,6 +21,7 @@ export const registerSnapshot = (program: Command) => {
     .option("--3d", "Generate 3d preview snapshots")
     .option("--pcb-only", "Generate only PCB snapshots")
     .option("--schematic-only", "Generate only schematic snapshots")
+    .option("--simulation-only", "Generate only simulation snapshots")
     .option(
       "--layer <layer>",
       "Generate a PCB snapshot for one layer: top or bottom (implies --pcb-only)",
@@ -46,6 +47,7 @@ export const registerSnapshot = (program: Command) => {
           "3d"?: boolean
           pcbOnly?: boolean
           schematicOnly?: boolean
+          simulationOnly?: boolean
           forceUpdate?: boolean
           disablePartsEngine?: boolean
           showCourtyards?: boolean
@@ -83,6 +85,20 @@ export const registerSnapshot = (program: Command) => {
           process.exit(1)
         }
 
+        if (
+          options.simulationOnly &&
+          (options.pcbOnly ||
+            options.schematicOnly ||
+            Boolean(pcbLayer) ||
+            options["3d"] ||
+            options.cameraPreset)
+        ) {
+          console.error(
+            "--simulation-only cannot be combined with --pcb-only, --schematic-only, --layer, --3d, or --camera-preset.",
+          )
+          process.exit(1)
+        }
+
         let pcbOnly = options.pcbOnly ?? false
         if (pcbLayer) {
           pcbOnly = true
@@ -97,6 +113,7 @@ export const registerSnapshot = (program: Command) => {
           threeD: options["3d"] ?? false,
           pcbOnly,
           schematicOnly: options.schematicOnly ?? false,
+          simulationOnly: options.simulationOnly ?? false,
           pcbLayer,
           forceUpdate: options.forceUpdate ?? false,
           filePaths: target ? [target] : [],

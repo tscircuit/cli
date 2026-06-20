@@ -74,6 +74,7 @@ export const snapshotFilesWithWorkerPool = async (options: {
         threeD: job.options.threeD,
         pcbOnly: job.options.pcbOnly,
         schematicOnly: job.options.schematicOnly,
+        simulationOnly: job.options.simulationOnly,
         forceUpdate: job.options.forceUpdate,
         platformConfig: job.options.platformConfig,
         pcbSnapshotSettings: job.options.pcbSnapshotSettings,

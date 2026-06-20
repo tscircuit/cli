@@ -28,6 +28,8 @@ type SnapshotOptions = {
   pcbOnly?: boolean
   /** Only generate schematic snapshots */
   schematicOnly?: boolean
+  /** Only generate simulation snapshots */
+  simulationOnly?: boolean
   /** Snapshot only the specified files */
   filePaths?: string[]
   /** Force updating snapshots even if they match */
@@ -65,6 +67,7 @@ export const snapshotProject = async ({
   threeD = false,
   pcbOnly = false,
   schematicOnly = false,
+  simulationOnly = false,
   filePaths = [],
   forceUpdate = false,
   onExit = (code) => process.exit(code),
@@ -178,6 +181,7 @@ export const snapshotProject = async ({
           threeD,
           pcbOnly,
           schematicOnly,
+          simulationOnly,
           forceUpdate,
           platformConfig,
           pcbSnapshotSettings,
@@ -221,6 +225,7 @@ export const snapshotProject = async ({
         threeD,
         pcbOnly,
         schematicOnly,
+        simulationOnly,
         forceUpdate,
         platformConfig: mergedPlatformConfig,
         pcbSnapshotSettings,

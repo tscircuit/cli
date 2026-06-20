@@ -13,6 +13,7 @@ type SnapshotWorkerOptions = {
   threeD: boolean
   pcbOnly: boolean
   schematicOnly: boolean
+  simulationOnly: boolean
   forceUpdate: boolean
   platformConfig?: PlatformConfig
   pcbSnapshotSettings?: PcbSnapshotSettings
@@ -43,6 +44,7 @@ export const handleSnapshotFile = async (
     threeD: options.threeD,
     pcbOnly: options.pcbOnly,
     schematicOnly: options.schematicOnly,
+    simulationOnly: options.simulationOnly,
     forceUpdate: options.forceUpdate,
     platformConfig,
     pcbSnapshotSettings: options.pcbSnapshotSettings,
