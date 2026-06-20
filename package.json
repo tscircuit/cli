@@ -20,7 +20,7 @@
     "@tscircuit/krt-wasm": "^0.1.6",
     "@tscircuit/math-utils": "0.0.36",
     "@tscircuit/props": "^0.0.551",
-    "@tscircuit/runframe": "^0.0.2103",
+    "@tscircuit/runframe": "^0.0.2104",
     "@tscircuit/schematic-match-adapt": "^0.0.22",
     "@tscircuit/ti-parts-engine": "github:tscircuit/ti-parts-engine#cead194495b8fbfb73a88b5995ce86a4b61a9d04",
     "@tscircuit/solver-utils": "0.0.16",
