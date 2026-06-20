@@ -2,7 +2,7 @@ import fs from "node:fs"
 import path from "node:path"
 import type { PlatformConfig } from "@tscircuit/props"
 import type { PcbSnapshotSettings } from "lib/project-config/project-config-schema"
-import type { AnyCircuitElement } from "circuit-json"
+import type { AnyCircuitElement, VisibleLayerRef } from "circuit-json"
 import {
   convertCircuitJsonToGltf,
   getBestCameraPosition,
@@ -34,6 +34,7 @@ export type ProcessSnapshotFileOptions = {
   pcbSnapshotSettings?: PcbSnapshotSettings
   createDiff: boolean
   cameraPreset?: CameraPreset
+  pcbLayer?: VisibleLayerRef
 }
 
 export type ProcessSnapshotFileResult = {
@@ -58,6 +59,7 @@ export const processSnapshotFile = async ({
   pcbSnapshotSettings,
   createDiff,
   cameraPreset,
+  pcbLayer,
 }: ProcessSnapshotFileOptions): Promise<ProcessSnapshotFileResult> => {
   const relativeFilePath = path.relative(projectDir, file)
   const successPaths: string[] = []
@@ -101,7 +103,10 @@ export const processSnapshotFile = async ({
   }
 
   try {
-    pcbSvg = convertCircuitJsonToPcbSvg(circuitJson, pcbSnapshotSettings)
+    pcbSvg = convertCircuitJsonToPcbSvg(circuitJson, {
+      ...pcbSnapshotSettings,
+      layer: pcbLayer,
+    })
   } catch (error) {
     const errorMessage = error instanceof Error ? error.message : String(error)
     return {
@@ -236,14 +241,27 @@ export const processSnapshotFile = async ({
   const base = path.basename(file).replace(/\.[^.]+$/, "")
   const snapshots: Array<
     | {
-        type: "pcb" | "schematic" | "simulation" | "schematic-simulation"
+        type:
+          | "pcb"
+          | "schematic"
+          | "simulation"
+          | "schematic-simulation"
+          | VisibleLayerRef
         content: string
         isBinary: false
       }
     | { type: "3d"; content: Uint8Array; isBinary: true }
   > = []
   if (pcbOnly || !schematicOnly) {
-    snapshots.push({ type: "pcb", content: pcbSvg, isBinary: false })
+    let pcbSnapshotType: "pcb" | VisibleLayerRef = "pcb"
+    if (pcbLayer) {
+      pcbSnapshotType = pcbLayer
+    }
+    snapshots.push({
+      type: pcbSnapshotType,
+      content: pcbSvg,
+      isBinary: false,
+    })
   }
   if (schematicOnly || !pcbOnly) {
     snapshots.push({ type: "schematic", content: schSvg, isBinary: false })
