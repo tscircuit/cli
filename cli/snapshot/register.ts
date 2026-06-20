@@ -1,4 +1,5 @@
 import type { Command } from "commander"
+import type { VisibleLayerRef } from "circuit-json"
 import {
   CAMERA_PRESET_NAMES,
   type CameraPreset,
@@ -20,6 +21,10 @@ export const registerSnapshot = (program: Command) => {
     .option("--3d", "Generate 3d preview snapshots")
     .option("--pcb-only", "Generate only PCB snapshots")
     .option("--schematic-only", "Generate only schematic snapshots")
+    .option(
+      "--layer <layer>",
+      "Generate a PCB snapshot for one layer: top or bottom (implies --pcb-only)",
+    )
     .option("--disable-parts-engine", "Disable the parts engine")
     .option("--show-courtyards", "Show courtyard outlines in PCB snapshots")
     .option(
@@ -44,6 +49,7 @@ export const registerSnapshot = (program: Command) => {
           forceUpdate?: boolean
           disablePartsEngine?: boolean
           showCourtyards?: boolean
+          layer?: string
           cameraPreset?: string
           ci?: boolean
           test?: boolean
@@ -60,6 +66,28 @@ export const registerSnapshot = (program: Command) => {
           process.exit(1)
         }
 
+        let pcbLayer: VisibleLayerRef | undefined
+        if (options.layer === "top" || options.layer === "bottom") {
+          pcbLayer = options.layer
+        } else if (options.layer) {
+          console.error(
+            `Unknown PCB layer "${options.layer}". Valid layers: top, bottom`,
+          )
+          process.exit(1)
+        }
+
+        if (pcbLayer && options.schematicOnly) {
+          console.error(
+            "A PCB layer snapshot cannot be combined with --schematic-only.",
+          )
+          process.exit(1)
+        }
+
+        let pcbOnly = options.pcbOnly ?? false
+        if (pcbLayer) {
+          pcbOnly = true
+        }
+
         await snapshotProject({
           concurrency: Math.max(
             1,
@@ -67,8 +95,9 @@ export const registerSnapshot = (program: Command) => {
           ),
           update: options.update ?? false,
           threeD: options["3d"] ?? false,
-          pcbOnly: options.pcbOnly ?? false,
+          pcbOnly,
           schematicOnly: options.schematicOnly ?? false,
+          pcbLayer,
           forceUpdate: options.forceUpdate ?? false,
           filePaths: target ? [target] : [],
           platformConfig: options.disablePartsEngine
