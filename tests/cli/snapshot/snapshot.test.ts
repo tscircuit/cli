@@ -174,6 +174,60 @@ test("snapshot command creates simulation SVG snapshots when analog simulation e
   expect(testStdout).toContain("All snapshots match")
 }, 60_000)
 
+test("snapshot command --simulation-only creates only simulation SVG snapshots", async () => {
+  const { tmpDir, runCommand } = await getCliTestFixture()
+
+  await Bun.write(join(tmpDir, "boost.circuit.tsx"), boostSimulationCircuitCode)
+
+  const { stdout: updateStdout } = await runCommand(
+    "tsci snapshot --update --simulation-only",
+  )
+  expect(updateStdout).toContain("Created snapshots")
+  expect(updateStdout).toContain(
+    `✅ ${join("__snapshots__", "boost.circuit-simulation.snap.svg")}`,
+  )
+  expect(updateStdout).toContain(
+    `✅ ${join("__snapshots__", "boost.circuit-schematic-simulation.snap.svg")}`,
+  )
+
+  const snapshotDir = join(tmpDir, "__snapshots__")
+  expect(
+    fs.existsSync(join(snapshotDir, "boost.circuit-simulation.snap.svg")),
+  ).toBe(true)
+  expect(
+    fs.existsSync(
+      join(snapshotDir, "boost.circuit-schematic-simulation.snap.svg"),
+    ),
+  ).toBe(true)
+  expect(fs.existsSync(join(snapshotDir, "boost.circuit-pcb.snap.svg"))).toBe(
+    false,
+  )
+  expect(
+    fs.existsSync(join(snapshotDir, "boost.circuit-schematic.snap.svg")),
+  ).toBe(false)
+  expect(fs.existsSync(join(snapshotDir, "boost.circuit-3d.snap.png"))).toBe(
+    false,
+  )
+
+  const { stdout: testStdout } = await runCommand(
+    "tsci snapshot --simulation-only",
+  )
+  expect(testStdout).toContain("All snapshots match")
+}, 60_000)
+
+test("snapshot command --simulation-only rejects other snapshot type filters", async () => {
+  const { runCommand } = await getCliTestFixture()
+
+  const { stderr, exitCode } = await runCommand(
+    "tsci snapshot --simulation-only --pcb-only",
+  )
+
+  expect(exitCode).toBe(1)
+  expect(stderr).toContain(
+    "--simulation-only cannot be combined with --pcb-only, --schematic-only, --layer, --3d, or --camera-preset.",
+  )
+})
+
 test("snapshot command snapshots circuit files", async () => {
   const { tmpDir, runCommand } = await getCliTestFixture()
 

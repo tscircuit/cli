@@ -14,6 +14,7 @@ export type SnapshotFileMessage = {
     threeD: boolean
     pcbOnly: boolean
     schematicOnly: boolean
+    simulationOnly: boolean
     forceUpdate: boolean
     platformConfig?: PlatformConfig
     pcbSnapshotSettings?: PcbSnapshotSettings

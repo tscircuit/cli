@@ -29,6 +29,7 @@ export type ProcessSnapshotFileOptions = {
   threeD: boolean
   pcbOnly: boolean
   schematicOnly: boolean
+  simulationOnly: boolean
   forceUpdate: boolean
   platformConfig?: PlatformConfig
   pcbSnapshotSettings?: PcbSnapshotSettings
@@ -54,6 +55,7 @@ export const processSnapshotFile = async ({
   threeD,
   pcbOnly,
   schematicOnly,
+  simulationOnly,
   forceUpdate,
   platformConfig,
   pcbSnapshotSettings,
@@ -68,8 +70,8 @@ export const processSnapshotFile = async ({
   let didUpdate = false
 
   let circuitJson: AnyCircuitElement[]
-  let pcbSvg: string
-  let schSvg: string
+  let pcbSvg: string | undefined
+  let schSvg: string | undefined
   let simulationSvgAssets:
     | ReturnType<typeof getSimulationSvgAssetsFromCircuitJson>
     | undefined
@@ -102,40 +104,44 @@ export const processSnapshotFile = async ({
     }
   }
 
-  try {
-    pcbSvg = convertCircuitJsonToPcbSvg(circuitJson, {
-      ...pcbSnapshotSettings,
-      layer: pcbLayer,
-    })
-  } catch (error) {
-    const errorMessage = error instanceof Error ? error.message : String(error)
-    return {
-      ok: false,
-      didUpdate: false,
-      successPaths,
-      warningMessages,
-      mismatches,
-      errorMessage:
-        kleur.red(
-          `\n❌ Failed to generate PCB SVG for ${relativeFilePath}:\n`,
-        ) + kleur.red(`   ${errorMessage}\n`),
+  if (!simulationOnly) {
+    try {
+      pcbSvg = convertCircuitJsonToPcbSvg(circuitJson, {
+        ...pcbSnapshotSettings,
+        layer: pcbLayer,
+      })
+    } catch (error) {
+      const errorMessage =
+        error instanceof Error ? error.message : String(error)
+      return {
+        ok: false,
+        didUpdate: false,
+        successPaths,
+        warningMessages,
+        mismatches,
+        errorMessage:
+          kleur.red(
+            `\n❌ Failed to generate PCB SVG for ${relativeFilePath}:\n`,
+          ) + kleur.red(`   ${errorMessage}\n`),
+      }
     }
-  }
 
-  try {
-    schSvg = convertCircuitJsonToSchematicSvg(circuitJson)
-  } catch (error) {
-    const errorMessage = error instanceof Error ? error.message : String(error)
-    return {
-      ok: false,
-      didUpdate: false,
-      successPaths,
-      warningMessages,
-      mismatches,
-      errorMessage:
-        kleur.red(
-          `\n❌ Failed to generate schematic SVG for ${relativeFilePath}:\n`,
-        ) + kleur.red(`   ${errorMessage}\n`),
+    try {
+      schSvg = convertCircuitJsonToSchematicSvg(circuitJson)
+    } catch (error) {
+      const errorMessage =
+        error instanceof Error ? error.message : String(error)
+      return {
+        ok: false,
+        didUpdate: false,
+        successPaths,
+        warningMessages,
+        mismatches,
+        errorMessage:
+          kleur.red(
+            `\n❌ Failed to generate schematic SVG for ${relativeFilePath}:\n`,
+          ) + kleur.red(`   ${errorMessage}\n`),
+      }
     }
   }
 
@@ -157,7 +163,7 @@ export const processSnapshotFile = async ({
   }
 
   let png3d: Uint8Array | null = null
-  if (threeD) {
+  if (threeD && !simulationOnly) {
     try {
       const glbBuffer = await convertCircuitJsonToGltf(
         circuitJson,
@@ -252,24 +258,24 @@ export const processSnapshotFile = async ({
       }
     | { type: "3d"; content: Uint8Array; isBinary: true }
   > = []
-  if (pcbOnly || !schematicOnly) {
+  if (!simulationOnly && (pcbOnly || !schematicOnly)) {
     let pcbSnapshotType: "pcb" | VisibleLayerRef = "pcb"
     if (pcbLayer) {
       pcbSnapshotType = pcbLayer
     }
     snapshots.push({
       type: pcbSnapshotType,
-      content: pcbSvg,
+      content: pcbSvg!,
       isBinary: false,
     })
   }
-  if (schematicOnly || !pcbOnly) {
-    snapshots.push({ type: "schematic", content: schSvg, isBinary: false })
+  if (!simulationOnly && (schematicOnly || !pcbOnly)) {
+    snapshots.push({ type: "schematic", content: schSvg!, isBinary: false })
   }
   if (threeD && png3d) {
     snapshots.push({ type: "3d", content: png3d, isBinary: true })
   }
-  if (!pcbOnly && !schematicOnly && simulationSvgAssets) {
+  if ((simulationOnly || (!pcbOnly && !schematicOnly)) && simulationSvgAssets) {
     snapshots.push({
       type: "simulation",
       content: simulationSvgAssets.simulationSvg,
