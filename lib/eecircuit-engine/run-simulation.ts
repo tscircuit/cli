@@ -16,14 +16,17 @@ const fetchSimulation = async (): Promise<
 > => {
   // Using a predictable path in tmp to avoid re-downloading.
   // This is a workaround for Bun's test environment not handling URL imports.
-  const tempFilePath = path.join(os.tmpdir(), "eecircuit-engine-1.5.2.mjs")
+  const tempFilePath = path.join(
+    os.tmpdir(),
+    `tscircuit-eecircuit-engine-1.7.4.mjs`,
+  )
 
   if (!existsSync(tempFilePath)) {
-    const url = "https://cdn.jsdelivr.net/npm/eecircuit-engine@1.5.2/+esm"
+    const url = `https://jscdn.tscircuit.com/@tscircuit/eecircuit-engine/1.7.4/dist/eecircuit-engine.mjs`
     const response = await fetch(url)
     if (!response.ok) {
       throw new Error(
-        `Failed to fetch eecircuit-engine from ${url}: ${response.statusText}`,
+        `Failed to fetch @tscircuit/eecircuit-engine from ${url}: ${response.statusText}`,
       )
     }
     const scriptContent = await response.text()
