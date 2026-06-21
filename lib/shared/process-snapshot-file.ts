@@ -3,21 +3,16 @@ import path from "node:path"
 import type { PlatformConfig } from "@tscircuit/props"
 import type { PcbSnapshotSettings } from "lib/project-config/project-config-schema"
 import type { AnyCircuitElement, VisibleLayerRef } from "circuit-json"
-import {
-  convertCircuitJsonToGltf,
-  getBestCameraPosition,
-} from "circuit-json-to-gltf"
+import { renderCircuitJsonTo3dPng } from "circuit-json-to-3d-png"
 import {
   convertCircuitJsonToPcbSvg,
   convertCircuitJsonToSchematicSvg,
 } from "circuit-to-svg"
 import kleur from "kleur"
-import { type CameraPreset, applyCameraPreset } from "lib/shared/camera-presets"
+import type { CameraPreset } from "circuit-json-to-3d-png"
 import { generateCircuitJson } from "lib/shared/generate-circuit-json"
-import { getCircuitJsonToGltfOptions } from "lib/shared/get-circuit-json-to-gltf-options"
 import { getCompletePlatformConfig } from "lib/shared/get-complete-platform-config"
 import { getSimulationSvgAssetsFromCircuitJson } from "lib/shared/simulation-svg-assets"
-import { renderGLTFToPNGFromGLB } from "poppygl"
 import { compareAndCreateDiff } from "./compare-images"
 import { isCircuitJsonFile } from "./is-circuit-json-file"
 
@@ -165,22 +160,7 @@ export const processSnapshotFile = async ({
   let png3d: Uint8Array | null = null
   if (threeD && !simulationOnly) {
     try {
-      const glbBuffer = await convertCircuitJsonToGltf(
-        circuitJson,
-        getCircuitJsonToGltfOptions({ format: "glb" }),
-      )
-      if (!(glbBuffer instanceof ArrayBuffer)) {
-        throw new Error(
-          "Expected ArrayBuffer from convertCircuitJsonToGltf with glb format",
-        )
-      }
-
-      let cameraOptions = getBestCameraPosition(circuitJson)
-      if (cameraPreset) {
-        cameraOptions = applyCameraPreset(cameraPreset, cameraOptions)
-      }
-
-      png3d = await renderGLTFToPNGFromGLB(glbBuffer, cameraOptions)
+      png3d = await renderCircuitJsonTo3dPng(circuitJson, { cameraPreset })
     } catch (error) {
       const errorMessage =
         error instanceof Error ? error.message : String(error)

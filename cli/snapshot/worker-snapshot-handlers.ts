@@ -1,6 +1,6 @@
 import type { PlatformConfig } from "@tscircuit/props"
 import type { VisibleLayerRef } from "circuit-json"
-import type { CameraPreset } from "lib/shared/camera-presets"
+import type { CameraPreset } from "circuit-json-to-3d-png"
 import type { PcbSnapshotSettings } from "lib/project-config/project-config-schema"
 import { processSnapshotFile } from "lib/shared/process-snapshot-file"
 import { registerStaticAssetLoaders } from "lib/shared/register-static-asset-loaders"

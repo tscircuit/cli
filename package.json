@@ -35,6 +35,7 @@
     "bun-match-svg": "^0.0.12",
     "chokidar": "4.0.1",
     "circuit-json": "^0.0.437",
+    "circuit-json-to-3d-png": "^0.0.6",
     "circuit-json-to-bom-csv": "^0.0.7",
     "circuit-json-to-gerber": "^0.0.51",
     "circuit-json-to-kicad": "0.0.153",
