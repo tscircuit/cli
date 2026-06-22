@@ -1,7 +1,7 @@
-import { test, expect } from "bun:test"
-import { getCliTestFixture } from "../../fixtures/get-cli-test-fixture"
+import { expect, test } from "bun:test"
 import * as fs from "node:fs"
 import * as path from "node:path"
+import { getCliTestFixture } from "../../fixtures/get-cli-test-fixture"
 
 test("should fail if no package.json is found", async () => {
   const { runCommand } = await getCliTestFixture({ loggedIn: true })
@@ -39,4 +39,31 @@ test("should push a package without an entrypoint", async () => {
   expect(stdout).toContain("⬆︎ prebuilt.circuit.json")
   expect(stdout).toContain("⬆︎ tscircuit.config.json")
   expect(stdout).toContain('"@tsci/test-user.test-package@1.0.0" published!')
+}, 30_000)
+
+test("should push when the project only has a circuit file", async () => {
+  const { tmpDir, runCommand } = await getCliTestFixture({
+    loggedIn: true,
+  })
+
+  fs.writeFileSync(
+    path.resolve(tmpDir, "package.json"),
+    JSON.stringify({
+      name: "@tsci/test-user.circuit-only-package",
+      version: "1.0.0",
+    }),
+  )
+  fs.writeFileSync(
+    path.resolve(tmpDir, "my-board.circuit.tsx"),
+    'export default () => <board width="10mm" height="10mm" />\n',
+  )
+
+  const { stdout, stderr, exitCode } = await runCommand("tsci push")
+
+  expect(exitCode).toBe(0)
+  expect(stderr).toBe("")
+  expect(stdout).toContain("my-board.circuit.tsx")
+  expect(stdout).toContain(
+    '"@tsci/test-user.circuit-only-package@1.0.0" published!',
+  )
 }, 30_000)
