@@ -1,18 +1,12 @@
 import fs from "node:fs"
 import path from "node:path"
 import type { AnyCircuitElement } from "circuit-json"
-import {
-  convertCircuitJsonToGltf,
-  getBestCameraPosition,
-} from "circuit-json-to-gltf"
+import { renderCircuitJsonTo3dPng } from "circuit-json-to-3d-png"
 import {
   convertCircuitJsonToPcbSvg,
   convertCircuitJsonToSchematicSvg,
 } from "circuit-to-svg"
-import { getCircuitJsonToGltfOptions } from "lib/shared/get-circuit-json-to-gltf-options"
 import type { PcbSnapshotSettings } from "lib/project-config/project-config-schema"
-import { renderGLTFToPNGFromGLB } from "poppygl"
-import { convertModelUrlsToFileUrls } from "./convert-model-urls-to-file-urls"
 import type { BuildImageFormatSelection } from "./image-format-selection"
 import { convertSvgToPngBuffer } from "./svg-to-png"
 import { writeSimulationSvgAssetsFromCircuitJson } from "./worker-output-generators"
@@ -21,54 +15,6 @@ export interface BuildFileResult {
   sourcePath: string
   outputPath: string
   ok: boolean
-}
-
-const viewToArrayBuffer = (view: ArrayBufferView): ArrayBuffer => {
-  const copy = new Uint8Array(view.byteLength)
-  copy.set(new Uint8Array(view.buffer, view.byteOffset, view.byteLength))
-  return copy.buffer
-}
-
-const normalizeToArrayBuffer = async (value: unknown): Promise<ArrayBuffer> => {
-  if (value instanceof ArrayBuffer) {
-    return value
-  }
-
-  if (ArrayBuffer.isView(value)) {
-    return viewToArrayBuffer(value as ArrayBufferView)
-  }
-
-  if (value && typeof value === "object") {
-    const maybeArrayBufferLike = value as {
-      arrayBuffer?: () => Promise<ArrayBuffer> | ArrayBuffer
-    }
-    if (typeof maybeArrayBufferLike.arrayBuffer === "function") {
-      const result = maybeArrayBufferLike.arrayBuffer()
-      return result instanceof Promise ? await result : result
-    }
-  }
-
-  throw new Error(
-    "Expected ArrayBuffer, ArrayBufferView, or Buffer-compatible object",
-  )
-}
-
-const normalizeToUint8Array = (value: unknown): Uint8Array => {
-  if (value instanceof Uint8Array) {
-    return value
-  }
-
-  if (value instanceof ArrayBuffer) {
-    return new Uint8Array(value)
-  }
-
-  if (ArrayBuffer.isView(value)) {
-    return new Uint8Array(viewToArrayBuffer(value as ArrayBufferView))
-  }
-
-  throw new Error(
-    "Expected Uint8Array, ArrayBuffer, or ArrayBufferView for PNG",
-  )
 }
 
 const generatePreviewAssets = async ({
@@ -166,22 +112,9 @@ const generatePreviewAssets = async ({
 
   if (imageFormats.threeDPngs) {
     try {
-      console.log(`${prefix}Converting circuit to GLB...`)
-      const circuitJsonWithFileUrls = convertModelUrlsToFileUrls(circuitJson)
-      const glbBuffer = await convertCircuitJsonToGltf(
-        circuitJsonWithFileUrls,
-        getCircuitJsonToGltfOptions({ format: "glb" }),
-      )
-      console.log(`${prefix}Rendering GLB to PNG buffer...`)
-      const glbArrayBuffer = await normalizeToArrayBuffer(glbBuffer)
-      const pngBuffer = await renderGLTFToPNGFromGLB(
-        glbArrayBuffer,
-        getBestCameraPosition(circuitJson),
-      )
-      fs.writeFileSync(
-        path.join(outputDir, "3d.png"),
-        Buffer.from(normalizeToUint8Array(pngBuffer)),
-      )
+      console.log(`${prefix}Generating 3D PNG...`)
+      const pngBuffer = await renderCircuitJsonTo3dPng(circuitJson)
+      fs.writeFileSync(path.join(outputDir, "3d.png"), Buffer.from(pngBuffer))
       console.log(`${prefix}Written 3d.png`)
     } catch (error) {
       console.error(`${prefix}Failed to generate 3D PNG:`, error)

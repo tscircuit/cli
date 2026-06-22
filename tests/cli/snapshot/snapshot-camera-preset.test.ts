@@ -2,7 +2,7 @@ import { test, expect } from "bun:test"
 import { join } from "node:path"
 import fs from "node:fs"
 import { getCliTestFixture } from "../../fixtures/get-cli-test-fixture"
-import { CAMERA_PRESET_NAMES } from "lib/shared/camera-presets"
+import { CAMERA_PRESET_NAMES } from "circuit-json-to-3d-png"
 
 const BOARD_TSX = `
 export const TestBoard = () => (

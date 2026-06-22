@@ -1,23 +1,17 @@
 import fs from "node:fs"
 import path from "node:path"
 import type { AnyCircuitElement } from "circuit-json"
+import { renderCircuitJsonTo3dPng } from "circuit-json-to-3d-png"
 import { circuitJsonToStep } from "circuit-json-to-step"
-import {
-  convertCircuitJsonToGltf,
-  getBestCameraPosition,
-} from "circuit-json-to-gltf"
+import { convertCircuitJsonToGltf } from "circuit-json-to-gltf"
 import {
   convertCircuitJsonToPcbSvg,
   convertCircuitJsonToSchematicSvg,
 } from "circuit-to-svg"
-import { renderGLTFToPNGFromGLB } from "poppygl"
 import { getCircuitJsonToGltfOptions } from "../../lib/shared/get-circuit-json-to-gltf-options"
 import type { PcbSnapshotSettings } from "../../lib/project-config/project-config-schema"
 import { convertModelUrlsToFileUrls } from "./convert-model-urls-to-file-urls"
-import {
-  normalizeToArrayBuffer,
-  normalizeToUint8Array,
-} from "./worker-binary-utils"
+import { normalizeToUint8Array } from "./worker-binary-utils"
 import type { BuildImageFormatSelection } from "./image-format-selection"
 import { convertSvgToPngBuffer } from "./svg-to-png"
 import { loadLocalStepModelFsMap } from "lib/shared/load-local-step-model-fs-map"
@@ -119,20 +113,8 @@ export const writeImageAssetsFromCircuitJson = async (
   writeSimulationSvgAssetsFromCircuitJson(circuitJson, outputDir, imageFormats)
 
   if (imageFormats.threeDPngs) {
-    const circuitJsonWithFileUrls = convertModelUrlsToFileUrls(circuitJson)
-    const glbBuffer = await convertCircuitJsonToGltf(
-      circuitJsonWithFileUrls,
-      getCircuitJsonToGltfOptions({ format: "glb" }),
-    )
-    const glbArrayBuffer = await normalizeToArrayBuffer(glbBuffer)
-    const pngBuffer = await renderGLTFToPNGFromGLB(
-      glbArrayBuffer,
-      getBestCameraPosition(circuitJson),
-    )
+    const pngBuffer = await renderCircuitJsonTo3dPng(circuitJson)
 
-    fs.writeFileSync(
-      path.join(outputDir, "3d.png"),
-      Buffer.from(normalizeToUint8Array(pngBuffer)),
-    )
+    fs.writeFileSync(path.join(outputDir, "3d.png"), Buffer.from(pngBuffer))
   }
 }

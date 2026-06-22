@@ -10,7 +10,7 @@ import {
   loadRuntimeProjectConfig,
 } from "lib/project-config"
 import type { PcbSnapshotSettings } from "lib/project-config/project-config-schema"
-import type { CameraPreset } from "lib/shared/camera-presets"
+import type { CameraPreset } from "circuit-json-to-3d-png"
 import { findBoardFilesAsync } from "lib/shared/find-board-files"
 import { mergePlatformConfigs } from "lib/shared/platform-config-utils"
 import { processSnapshotFile } from "lib/shared/process-snapshot-file"

@@ -1,9 +1,6 @@
 import type { Command } from "commander"
 import type { VisibleLayerRef } from "circuit-json"
-import {
-  CAMERA_PRESET_NAMES,
-  type CameraPreset,
-} from "lib/shared/camera-presets"
+import { CAMERA_PRESET_NAMES, type CameraPreset } from "circuit-json-to-3d-png"
 import { snapshotProject } from "lib/shared/snapshot-project"
 
 export const registerSnapshot = (program: Command) => {
