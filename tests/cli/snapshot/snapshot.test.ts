@@ -75,6 +75,30 @@ export const BoostConverter = () => (
   </board>
 )`
 
+const currentSimulationCircuitJson = [
+  {
+    type: "simulation_experiment",
+    simulation_experiment_id: "simulation_experiment_0",
+    name: "Transient",
+    experiment_type: "spice_transient_analysis",
+    time_per_step: 0.25,
+    start_time_ms: 0,
+    end_time_ms: 1,
+  },
+  {
+    type: "simulation_transient_current_graph",
+    simulation_transient_current_graph_id:
+      "simulation_transient_current_graph_0",
+    simulation_experiment_id: "simulation_experiment_0",
+    current_levels: [0, 0.001, 0.002, 0.001, 0],
+    time_per_step: 0.25,
+    start_time_ms: 0,
+    end_time_ms: 1,
+    name: "I(R1)",
+    color: "#ff6600",
+  },
+]
+
 test("snapshot command creates SVG snapshots", async () => {
   const { tmpDir, runCommand } = await getCliTestFixture()
 
@@ -214,6 +238,39 @@ test("snapshot command --simulation-only creates only simulation SVG snapshots",
   )
   expect(testStdout).toContain("All snapshots match")
 }, 60_000)
+
+test("snapshot command creates simulation SVG snapshots for current graphs", async () => {
+  const { tmpDir, runCommand } = await getCliTestFixture()
+
+  await Bun.write(
+    join(tmpDir, "current-sim.circuit.json"),
+    JSON.stringify(currentSimulationCircuitJson),
+  )
+
+  const { stdout: updateStdout } = await runCommand(
+    "tsci snapshot current-sim.circuit.json --update --simulation-only",
+  )
+  expect(updateStdout).toContain("Created snapshots")
+  expect(updateStdout).toContain(
+    `✅ ${join("__snapshots__", "current-sim.circuit-simulation.snap.svg")}`,
+  )
+  expect(updateStdout).toContain(
+    `✅ ${join("__snapshots__", "current-sim.circuit-schematic-simulation.snap.svg")}`,
+  )
+
+  const snapshotDir = join(tmpDir, "__snapshots__")
+  const simulationSnapshot = await Bun.file(
+    join(snapshotDir, "current-sim.circuit-simulation.snap.svg"),
+  ).text()
+  const schematicSimulationSnapshot = await Bun.file(
+    join(snapshotDir, "current-sim.circuit-schematic-simulation.snap.svg"),
+  ).text()
+
+  expect(simulationSnapshot).toContain("<svg")
+  expect(simulationSnapshot).toContain("I(R1)")
+  expect(schematicSimulationSnapshot).toContain("<svg")
+  expect(schematicSimulationSnapshot).toContain("I(R1)")
+}, 30_000)
 
 test("snapshot command --simulation-only rejects other snapshot type filters", async () => {
   const { runCommand } = await getCliTestFixture()
