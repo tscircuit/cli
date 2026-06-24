@@ -81,6 +81,30 @@ export default () => (
   </board>
 )`
 
+const currentSimulationCircuitJson = [
+  {
+    type: "simulation_experiment",
+    simulation_experiment_id: "simulation_experiment_0",
+    name: "Transient",
+    experiment_type: "spice_transient_analysis",
+    time_per_step: 0.25,
+    start_time_ms: 0,
+    end_time_ms: 1,
+  },
+  {
+    type: "simulation_transient_current_graph",
+    simulation_transient_current_graph_id:
+      "simulation_transient_current_graph_0",
+    simulation_experiment_id: "simulation_experiment_0",
+    current_levels: [0, 0.001, 0.002, 0.001, 0],
+    time_per_step: 0.25,
+    start_time_ms: 0,
+    end_time_ms: 1,
+    name: "I(R1)",
+    color: "#ff6600",
+  },
+]
+
 const writeBoostSimulationCircuit = async (tmpDir: string) => {
   const circuitPath = path.join(tmpDir, "simulation.circuit.tsx")
   await writeFile(circuitPath, boostSimulationCircuitCode)
@@ -211,6 +235,21 @@ test("build --simulation-svgs generates only simulation.svg", async () => {
     stat(path.join(tmpDir, "dist", "simulation", "3d.png")),
   ).rejects.toBeTruthy()
 }, 60_000)
+
+test("build --simulation-svgs includes current graphs", async () => {
+  const { tmpDir, runCommand } = await getCliTestFixture()
+  const circuitPath = path.join(tmpDir, "current-sim.circuit.json")
+  await writeFile(circuitPath, JSON.stringify(currentSimulationCircuitJson))
+
+  await runCommand(`tsci build --simulation-svgs ${circuitPath}`)
+
+  const simulationSvg = await readFile(
+    path.join(tmpDir, "dist", "current-sim", "simulation.svg"),
+    "utf-8",
+  )
+  expect(simulationSvg).toContain("<svg")
+  expect(simulationSvg).toContain("I(R1)")
+}, 30_000)
 
 test("build --simulation-schematic-svgs generates only simulation-schematic.svg", async () => {
   const { tmpDir, runCommand } = await getCliTestFixture()
