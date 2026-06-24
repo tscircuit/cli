@@ -55,7 +55,6 @@ export default () => (
       }}
     />
     <analogsimulation
-      name="multi channel scope"
       duration="4ms"
       timePerStep="1ms"
       spiceEngine="ngspice"
