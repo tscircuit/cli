@@ -1,0 +1,4 @@
+{
+  "mainEntrypoint": "index.circuit.tsx",
+  "kicadLibraryEntrypointPath": "index.circuit.tsx"
+}
