@@ -1,10 +1,5 @@
 export default () => (
-  <board
-    width="10mm"
-    height="10mm"
-    schMaxTraceDistance={10}
-    routingDisabled
-  >
+  <board width="10mm" height="10mm" schMaxTraceDistance={10} routingDisabled>
     <voltagesource name="V1" voltage="5V" schX={-4} />
     <ammeter
       name="IIN"
