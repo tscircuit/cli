@@ -54,10 +54,6 @@ export default () => (
         unitsPerDiv: 0.05,
       }}
     />
-    <analogsimulation
-      duration="4ms"
-      timePerStep="1ms"
-      spiceEngine="ngspice"
-    />
+    <analogsimulation duration="4ms" timePerStep="1ms" spiceEngine="ngspice" />
   </board>
 )
