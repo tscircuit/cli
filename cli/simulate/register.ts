@@ -6,6 +6,7 @@ import { getSpiceWithPaddedSim } from "lib/shared/get-spice-with-sim"
 import type { PlatformConfig } from "@tscircuit/props"
 import { loadRuntimeProjectConfig } from "lib/project-config"
 import { mergePlatformConfigs } from "lib/shared/platform-config-utils"
+import { getCompletePlatformConfig } from "lib/shared/get-complete-platform-config"
 
 export const registerSimulate = (program: Command) => {
   const simulateCommand = program
@@ -31,7 +32,7 @@ export const registerSimulate = (program: Command) => {
       const { circuitJson } = await generateCircuitJson({
         filePath: file,
         saveToFile: false,
-        platformConfig,
+        platformConfig: getCompletePlatformConfig(platformConfig),
       })
       if (!circuitJson) {
         console.log("error: Failed to generate circuit JSON")
