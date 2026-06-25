@@ -3,7 +3,7 @@ import { rm, writeFile } from "node:fs/promises"
 import path from "node:path"
 import { CircuitJsonToKicadPcbConverter } from "circuit-json-to-kicad"
 import { generateCircuitJson } from "lib/shared/generate-circuit-json"
-import { getCompletePlatformConfig } from "lib/shared/get-complete-platform-config"
+import { getPlatformConfigWithCliDefaults } from "lib/shared/get-platform-config-with-cli-defaults"
 import { temporaryDirectory } from "tempy"
 
 test("generateCircuitJson uses the default kicad_pcb static file loader", async () => {
@@ -58,7 +58,7 @@ export default function NativeKicadLoaderCircuit() {
 `,
   )
 
-  const platformConfig = getCompletePlatformConfig()
+  const platformConfig = getPlatformConfigWithCliDefaults()
   expect(typeof platformConfig.staticFileLoaderMap?.kicad_pcb).toBe("function")
 
   const { circuitJson } = await generateCircuitJson({

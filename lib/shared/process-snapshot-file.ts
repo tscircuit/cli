@@ -11,7 +11,7 @@ import {
 import kleur from "kleur"
 import type { CameraPreset } from "circuit-json-to-3d-png"
 import { generateCircuitJson } from "lib/shared/generate-circuit-json"
-import { getCompletePlatformConfig } from "lib/shared/get-complete-platform-config"
+import { getPlatformConfigWithCliDefaults } from "lib/shared/get-platform-config-with-cli-defaults"
 import { getSimulationSvgAssetsFromCircuitJson } from "lib/shared/simulation-svg-assets"
 import { compareAndCreateDiff } from "./compare-images"
 import { isCircuitJsonFile } from "./is-circuit-json-file"
@@ -76,11 +76,12 @@ export const processSnapshotFile = async ({
       const parsed = JSON.parse(fs.readFileSync(file, "utf-8"))
       circuitJson = Array.isArray(parsed) ? parsed : []
     } else {
-      const completePlatformConfig = getCompletePlatformConfig(platformConfig)
+      const platformConfigWithCliDefaults =
+        getPlatformConfigWithCliDefaults(platformConfig)
 
       const result = await generateCircuitJson({
         filePath: file,
-        platformConfig: completePlatformConfig,
+        platformConfig: platformConfigWithCliDefaults,
       })
       circuitJson = result.circuitJson
     }

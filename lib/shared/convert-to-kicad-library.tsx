@@ -8,7 +8,7 @@ import type {
   KicadLibraryConverterOutput,
 } from "circuit-json-to-kicad"
 import { importFromUserLand } from "./importFromUserLand"
-import { getCompletePlatformConfig } from "./get-complete-platform-config"
+import { getPlatformConfigWithCliDefaults } from "./get-platform-config-with-cli-defaults"
 
 /**
  * Interface for a circuit-json-to-kicad module that provides the KicadLibraryConverter.
@@ -52,7 +52,7 @@ export async function convertToKicadLibrary({
   kicadPcmPackageId,
   circuitJsonToKicadModule,
 }: ConvertToKicadLibraryOptions) {
-  const platformConfig = getCompletePlatformConfig()
+  const platformConfig = getPlatformConfigWithCliDefaults()
   const platformFetch = platformConfig.platformFetch ?? globalThis.fetch
   const absoluteFilePath = path.isAbsolute(filePath)
     ? filePath

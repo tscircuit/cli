@@ -7,7 +7,7 @@ import type { PlatformConfig } from "@tscircuit/props"
 import type { AnyCircuitElement } from "circuit-json"
 import type { Command } from "commander"
 import { generateCircuitJson } from "lib/shared/generate-circuit-json"
-import { getCompletePlatformConfig } from "lib/shared/get-complete-platform-config"
+import { getPlatformConfigWithCliDefaults } from "lib/shared/get-platform-config-with-cli-defaults"
 import { getEntrypoint } from "lib/shared/get-entrypoint"
 import {
   analyzeCircuitJson,
@@ -45,7 +45,7 @@ const resolveInputFilePath = async (file?: string) => {
 export const checkNetlist = async (file?: string) => {
   const resolvedInputFilePath = await resolveInputFilePath(file)
 
-  const completePlatformConfig = getCompletePlatformConfig({
+  const platformConfigWithCliDefaults = getPlatformConfigWithCliDefaults({
     pcbDisabled: true,
     routingDisabled: true,
     placementDrcChecksDisabled: true,
@@ -53,7 +53,7 @@ export const checkNetlist = async (file?: string) => {
 
   const { circuitJson } = await generateCircuitJson({
     filePath: resolvedInputFilePath,
-    platformConfig: completePlatformConfig,
+    platformConfig: platformConfigWithCliDefaults,
   })
 
   const typedCircuitJson = circuitJson as AnyCircuitElement[]
