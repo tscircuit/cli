@@ -11,7 +11,7 @@ import { promises as fs } from "node:fs"
 import type { PlatformConfig } from "@tscircuit/props"
 import { loadRuntimeProjectConfig } from "lib/project-config"
 import { mergePlatformConfigs } from "lib/shared/platform-config-utils"
-import { getCompletePlatformConfig } from "lib/shared/get-complete-platform-config"
+import { getPlatformConfigWithCliDefaults } from "lib/shared/get-platform-config-with-cli-defaults"
 
 export const registerExport = (program: Command) => {
   program
@@ -50,7 +50,7 @@ export const registerExport = (program: Command) => {
         if (formatOption === "spice") {
           const { circuitJson } = await generateCircuitJson({
             filePath: file,
-            platformConfig: getCompletePlatformConfig(platformConfig),
+            platformConfig: getPlatformConfigWithCliDefaults(platformConfig),
           })
           if (circuitJson) {
             const spiceString = getSpiceWithPaddedSim(circuitJson as any)

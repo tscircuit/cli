@@ -6,7 +6,7 @@ import {
 } from "easyeda"
 import fs from "node:fs/promises"
 import path from "node:path"
-import { getCompletePlatformConfig } from "lib/shared/get-complete-platform-config"
+import { getPlatformConfigWithCliDefaults } from "lib/shared/get-platform-config-with-cli-defaults"
 
 export const importComponentFromJlcpcb = async (
   jlcpcbPartNumber: string,
@@ -29,7 +29,7 @@ export const importComponentFromJlcpcb = async (
   await fs.mkdir(componentDir, { recursive: true })
 
   if (options.download) {
-    const platformConfig = getCompletePlatformConfig()
+    const platformConfig = getPlatformConfigWithCliDefaults()
     const platformFetch = platformConfig.platformFetch ?? globalThis.fetch
     const circuitJson = convertEasyEdaJsonToCircuitJson(betterEasy, {
       useModelCdn: true,

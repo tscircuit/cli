@@ -5,7 +5,7 @@ import type { AnyCircuitElement } from "circuit-json"
 import kleur from "kleur"
 import { analyzeCircuitJson } from "lib/shared/circuit-json-diagnostics"
 import { generateCircuitJson } from "lib/shared/generate-circuit-json"
-import { getCompletePlatformConfig } from "lib/shared/get-complete-platform-config"
+import { getPlatformConfigWithCliDefaults } from "lib/shared/get-platform-config-with-cli-defaults"
 import {
   type DrcIgnoreCounts,
   type DrcIgnoreOptions,
@@ -49,14 +49,14 @@ export const buildFile = async (
     }
 
     // Get complete platform config with kicad_mod support
-    const completePlatformConfig = getCompletePlatformConfig(
+    const platformConfigWithCliDefaults = getPlatformConfigWithCliDefaults(
       options?.platformConfig,
     )
 
     if (!isPrebuiltCircuitJson) {
       const result = await generateCircuitJson({
         filePath: input,
-        platformConfig: completePlatformConfig,
+        platformConfig: platformConfigWithCliDefaults,
         injectedProps: options?.injectedProps,
       })
       circuitJson = result.circuitJson

@@ -4,7 +4,7 @@ import type { PlatformConfig } from "@tscircuit/props"
 import type { AnyCircuitElement } from "circuit-json"
 import { analyzeCircuitJson } from "../../lib/shared/circuit-json-diagnostics"
 import { generateCircuitJson } from "../../lib/shared/generate-circuit-json"
-import { getCompletePlatformConfig } from "../../lib/shared/get-complete-platform-config"
+import { getPlatformConfigWithCliDefaults } from "../../lib/shared/get-platform-config-with-cli-defaults"
 import { registerStaticAssetLoaders } from "../../lib/shared/register-static-asset-loaders"
 import { filterDiagnosticsByDrcCategory } from "./drc-diagnostic-filter"
 import { DEFAULT_IMAGE_FORMAT_SELECTION } from "./image-format-selection"
@@ -49,7 +49,7 @@ export const handleBuildFile = async (
 
     await registerStaticAssetLoaders()
 
-    const completePlatformConfig = getCompletePlatformConfig(
+    const platformConfigWithCliDefaults = getPlatformConfigWithCliDefaults(
       options?.platformConfig as PlatformConfig,
     )
 
@@ -63,7 +63,7 @@ export const handleBuildFile = async (
       : (
           await generateCircuitJson({
             filePath,
-            platformConfig: completePlatformConfig,
+            platformConfig: platformConfigWithCliDefaults,
             injectedProps: options?.injectedProps,
             onAsyncEffectStatus: (asyncEffectName) => {
               workerStatus(`waiting on ${asyncEffectName}…`)

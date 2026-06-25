@@ -1,5 +1,5 @@
 import { test, expect } from "bun:test"
-import { createLocalCacheEngine } from "lib/shared/get-complete-platform-config"
+import { createLocalCacheEngine } from "lib/shared/get-platform-config-with-cli-defaults"
 import { createHash } from "node:crypto"
 import { temporaryDirectory } from "tempy"
 import fs from "node:fs"

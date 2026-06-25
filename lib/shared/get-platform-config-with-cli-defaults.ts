@@ -39,13 +39,13 @@ export function createLocalCacheEngine(
 }
 
 /**
- * Get a complete platform config with KiCad parsing support and any user overrides.
+ * Get a platform config with CLI defaults, KiCad parsing support, and any user overrides.
  * This handles the conversion of absolute file paths to file:// URLs for Bun's fetch.
  * When Bun imports a .kicad_mod file, it returns an absolute path like "/path/to/file.kicad_mod".
  * The default loadFromUrl expects a URL, so we wrap it to convert paths to file:// URLs.
  * This should be used by command handlers before passing config to generateCircuitJson.
  */
-export function getCompletePlatformConfig(
+export function getPlatformConfigWithCliDefaults(
   userConfig?: PlatformConfig,
 ): PlatformConfig {
   const basePlatformConfig = getPlatformConfig()
