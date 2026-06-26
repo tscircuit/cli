@@ -258,6 +258,16 @@ export async function runBrowserTest(
     )
   }
 
+  // This harness verifies the circuit against the CLI's current runframe/eval,
+  // not the tscircuit version pinned by the downloaded project (which can be old
+  // and incompatible with the dev server's file-server protocol). Remove any
+  // locally installed tscircuit so the dev server serves the CLI-bundled runframe
+  // instead of the project's `tscircuit/dist/browser.min.js`.
+  fs.rmSync(path.join(tmpDir, "node_modules", "tscircuit"), {
+    recursive: true,
+    force: true,
+  })
+
   // Start DevServer
   const port = await getPort()
   const devServer = new DevServer({

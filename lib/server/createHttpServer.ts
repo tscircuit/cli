@@ -1,5 +1,7 @@
 import * as fs from "node:fs"
 import * as http from "node:http"
+import { createRequire } from "node:module"
+import * as path from "node:path"
 // @ts-ignore
 import runFrameStandaloneBundleContent from "@tscircuit/runframe/standalone" with {
   type: "text",
@@ -11,6 +13,31 @@ import pkg from "../../package.json"
 import winterspecBundle from "@tscircuit/file-server/dist/bundle.js"
 import { getIndex } from "../site/getIndex"
 import { createKicadPcmProxy } from "./kicad-pcm-proxy"
+
+/**
+ * Resolves the standalone runframe + eval bundle (`dist/browser.min.js`) shipped
+ * by the `tscircuit` version installed in the user's project, so `tsci dev` uses
+ * the version pinned in the project (like `bun run dev` would). Returns undefined
+ * when it isn't installed locally, in which case the caller falls back to the
+ * runframe bundled into the CLI.
+ */
+const resolveLocalTscircuitStandalonePath = (
+  projectDir?: string,
+): string | undefined => {
+  if (!projectDir) return undefined
+  try {
+    const projectRequire = createRequire(path.join(projectDir, "package.json"))
+    const browserBundlePath = path.join(
+      path.dirname(projectRequire.resolve("tscircuit/package.json")),
+      "dist",
+      "browser.min.js",
+    )
+    if (fs.existsSync(browserBundlePath)) return browserBundlePath
+  } catch {
+    // `tscircuit` isn't installed locally; fall back to the CLI-bundled runframe
+  }
+  return undefined
+}
 
 export const createHttpServer = async ({
   port = 3020,
@@ -107,9 +134,26 @@ export const createHttpServer = async ({
     }
 
     if (url.pathname === "/standalone.min.js") {
-      const standaloneFilePath = process.env.RUNFRAME_STANDALONE_FILE_PATH
+      const explicitStandalonePath = process.env.RUNFRAME_STANDALONE_FILE_PATH
 
-      if (!standaloneFilePath) {
+      if (!explicitStandalonePath) {
+        // Prefer the locally installed tscircuit version's bundle so `tsci dev`
+        // automatically uses the version pinned in the project when available.
+        const localStandalonePath =
+          resolveLocalTscircuitStandalonePath(projectDir)
+        if (localStandalonePath) {
+          try {
+            const content = fs.readFileSync(localStandalonePath, "utf8")
+            res.writeHead(200, {
+              "Content-Type": "application/javascript; charset=utf-8",
+            })
+            res.end(content)
+            return
+          } catch {
+            // fall back to the CLI-bundled runframe standalone below
+          }
+        }
+
         res.writeHead(200, {
           "Content-Type": "application/javascript; charset=utf-8",
         })
@@ -118,7 +162,7 @@ export const createHttpServer = async ({
       }
 
       try {
-        const content = fs.readFileSync(standaloneFilePath, "utf8")
+        const content = fs.readFileSync(explicitStandalonePath, "utf8")
         res.writeHead(200, {
           "Content-Type": "application/javascript; charset=utf-8",
         })
