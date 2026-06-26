@@ -150,6 +150,23 @@ export const createHttpServer = async ({
             res.end(content)
             return
           } catch {
+            // fall back to the global tscircuit bundle, then the CLI
+          }
+        }
+
+        // Otherwise use the bundle from the globally installed tscircuit (the one
+        // that provides the `tsci` binary, set by tscircuit's cli.mjs).
+        const globalStandalonePath =
+          process.env.TSCIRCUIT_GLOBAL_STANDALONE_FILE_PATH
+        if (globalStandalonePath) {
+          try {
+            const content = fs.readFileSync(globalStandalonePath, "utf8")
+            res.writeHead(200, {
+              "Content-Type": "application/javascript; charset=utf-8",
+            })
+            res.end(content)
+            return
+          } catch {
             // fall back to the CLI-bundled runframe standalone below
           }
         }
