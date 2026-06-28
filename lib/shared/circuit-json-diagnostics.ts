@@ -1,9 +1,47 @@
+import { categorizeErrorOrWarning } from "@tscircuit/circuit-json-util"
+
 export type CircuitJsonIssue = {
   type?: string
   error_type?: string
   warning_type?: string
   message?: string
 } & Record<string, any>
+
+export type CircuitJsonIssueCategory =
+  | "schematic"
+  | "source"
+  | "pcb"
+  | "simulation"
+  | "netlist"
+  | "pin_specification"
+  | "placement"
+  | "routing"
+  | "unknown"
+
+const getIssueType = (issue: CircuitJsonIssue) =>
+  issue.error_type ?? issue.warning_type ?? issue.type ?? ""
+
+export function classifyCircuitJsonIssue(
+  issue: CircuitJsonIssue,
+): CircuitJsonIssueCategory {
+  const drcCategory = categorizeErrorOrWarning(issue)
+  if (
+    drcCategory === "netlist" ||
+    drcCategory === "pin_specification" ||
+    drcCategory === "placement" ||
+    drcCategory === "routing"
+  ) {
+    return drcCategory
+  }
+
+  const issueType = getIssueType(issue)
+  if (issueType.startsWith("schematic_")) return "schematic"
+  if (issueType.startsWith("source_")) return "source"
+  if (issueType.startsWith("pcb_")) return "pcb"
+  if (issueType.startsWith("simulation_")) return "simulation"
+
+  return "unknown"
+}
 
 export function analyzeCircuitJson(circuitJson: any[]): {
   errors: CircuitJsonIssue[]

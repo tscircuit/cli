@@ -5,6 +5,7 @@ import type { PlatformConfig } from "@tscircuit/props"
 import type { Command } from "commander"
 import kleur from "kleur"
 import { loadRuntimeProjectConfig } from "lib/project-config"
+import type { CircuitJsonIssueCategory } from "lib/shared/circuit-json-diagnostics"
 import { convertToKicadLibrary } from "lib/shared/convert-to-kicad-library"
 import { getEntrypoint } from "lib/shared/get-entrypoint"
 import { mergePlatformConfigs } from "lib/shared/platform-config-utils"
@@ -123,6 +124,10 @@ export const registerBuild = (program: Command) => {
     )
     .option("--ignore-errors", "Do not exit with code 1 on errors")
     .option("--ignore-warnings", "Do not log warnings")
+    .option(
+      "--status",
+      "Print a summary of build errors and warnings without generating artifacts",
+    )
     .option("--ignore-netlist-drc", "Ignore netlist DRC errors/warnings")
     .option(
       "--ignore-pin-specification-drc",
@@ -253,6 +258,7 @@ export const registerBuild = (program: Command) => {
           projectDir,
           options: optionsWithConfig,
         })
+        const statusMode = Boolean(resolvedOptions?.status)
 
         if (handled) {
           return
@@ -310,17 +316,20 @@ export const registerBuild = (program: Command) => {
         )
 
         const distDir = path.join(projectDir, "dist")
-        fs.mkdirSync(distDir, { recursive: true })
+        if (!statusMode) {
+          fs.mkdirSync(distDir, { recursive: true })
+        }
 
         // Parse concurrency option
         const concurrencyValue = Math.max(
           1,
           Number.parseInt(resolvedOptions?.concurrency || "1", 10),
         )
+        const effectiveConcurrencyValue = statusMode ? 1 : concurrencyValue
 
-        if (concurrencyValue > 1) {
+        if (effectiveConcurrencyValue > 1) {
           console.log(
-            `Building ${circuitFiles.length} file(s) with concurrency ${concurrencyValue}...`,
+            `Building ${circuitFiles.length} file(s) with concurrency ${effectiveConcurrencyValue}...`,
           )
         } else {
           console.log(`Building ${circuitFiles.length} file(s)...`)
@@ -336,6 +345,12 @@ export const registerBuild = (program: Command) => {
           unknown: 0,
         }
         const staticFileReferences: StaticBuildFileReference[] = []
+        const statusIssues: Array<{
+          filePath: string
+          severity: "error" | "warning"
+          message: string
+          category: CircuitJsonIssueCategory
+        }> = []
 
         const builtFiles: BuildFileResult[] = []
         const kicadProjects: Array<
@@ -345,9 +360,10 @@ export const registerBuild = (program: Command) => {
           []
 
         const shouldGenerateKicadProject =
-          resolvedOptions?.kicadProject ||
-          resolvedOptions?.kicadProjectZip ||
-          resolvedOptions?.kicadLibrary
+          !statusMode &&
+          (resolvedOptions?.kicadProject ||
+            resolvedOptions?.kicadProjectZip ||
+            resolvedOptions?.kicadLibrary)
 
         const injectedProps = parseInjectedProps({
           injectProps: resolvedOptions?.injectProps,
@@ -372,6 +388,8 @@ export const registerBuild = (program: Command) => {
           profile: resolvedOptions?.profile,
           injectedProps,
           generatePreviewAssets: false,
+          writeOutput: !statusMode,
+          logDiagnostics: !statusMode,
           imageFormats: imageFormatSelection,
           pcbSnapshotSettings: resolvedOptions?.showCourtyards
             ? { ...projectConfig?.pcbSnapshotSettings, showCourtyards: true }
@@ -379,9 +397,10 @@ export const registerBuild = (program: Command) => {
         }
 
         const shouldGeneratePreviewImages = Boolean(
-          (resolvedOptions?.previewImages ||
-            resolvedOptions?.allImages ||
-            hasExplicitImageFormatSelection) &&
+          !statusMode &&
+            (resolvedOptions?.previewImages ||
+              resolvedOptions?.allImages ||
+              hasExplicitImageFormatSelection) &&
             hasAnyImageFormatSelected(imageFormatSelection),
         )
         const shouldGenerateAllPreviewImages = Boolean(
@@ -410,6 +429,16 @@ export const registerBuild = (program: Command) => {
             hasErrors?: boolean
             ignoredDrcByCategory?: DrcIgnoreCounts
             isFatalError?: { errorType: string; message: string }
+            errors?: string[]
+            warnings?: string[]
+            errorDiagnostics?: Array<{
+              message: string
+              category: CircuitJsonIssueCategory
+            }>
+            warningDiagnostics?: Array<{
+              message: string
+              category: CircuitJsonIssueCategory
+            }>
           },
         ) => {
           const relative = path.relative(projectDir, filePath)
@@ -423,6 +452,34 @@ export const registerBuild = (program: Command) => {
 
           if (buildOutcome.hasErrors) {
             hasErrors = true
+          }
+          const errorDiagnostics =
+            buildOutcome.errorDiagnostics ??
+            (buildOutcome.errors ?? []).map((message) => ({
+              message,
+              category: "unknown" as const,
+            }))
+          const warningDiagnostics =
+            buildOutcome.warningDiagnostics ??
+            (buildOutcome.warnings ?? []).map((message) => ({
+              message,
+              category: "unknown" as const,
+            }))
+          for (const error of errorDiagnostics) {
+            statusIssues.push({
+              filePath: relative,
+              severity: "error",
+              message: error.message,
+              category: error.category,
+            })
+          }
+          for (const warning of warningDiagnostics) {
+            statusIssues.push({
+              filePath: relative,
+              severity: "warning",
+              message: warning.message,
+              category: warning.category,
+            })
           }
           if (buildOutcome.ignoredDrcByCategory) {
             ignoredDrcByCategory.netlist +=
@@ -547,7 +604,7 @@ export const registerBuild = (program: Command) => {
             }
             await processBuildResult(filePath, outputPath, buildOutcome)
 
-            if (buildOutcome.isFatalError) {
+            if (buildOutcome.isFatalError && !statusMode) {
               break
             }
           }
@@ -651,6 +708,8 @@ export const registerBuild = (program: Command) => {
                 hasErrors: result.hasErrors,
                 ignoredDrcByCategory: result.ignoredDrcByCategory,
                 isFatalError: result.isFatalError,
+                errors: result.errors,
+                warnings: result.warnings,
               })
 
               if (resolvedOptions?.glbs && result.ok) {
@@ -686,7 +745,7 @@ export const registerBuild = (program: Command) => {
           })
         }
 
-        if (concurrencyValue > 1) {
+        if (effectiveConcurrencyValue > 1) {
           await buildWithWorkers()
         } else {
           await buildSequentially()
@@ -722,7 +781,7 @@ export const registerBuild = (program: Command) => {
           }
         }
 
-        if (resolvedOptions?.previewGltf) {
+        if (!statusMode && resolvedOptions?.previewGltf) {
           console.log("Generating preview GLTF...")
           await buildPreviewGltf({
             builtFiles,
@@ -732,7 +791,7 @@ export const registerBuild = (program: Command) => {
           })
         }
 
-        if (resolvedOptions?.glbs && concurrencyValue === 1) {
+        if (!statusMode && resolvedOptions?.glbs && concurrencyValue === 1) {
           console.log("Generating GLB models for all builds...")
           await buildGlbs({
             builtFiles,
@@ -740,7 +799,7 @@ export const registerBuild = (program: Command) => {
           })
         }
 
-        if (resolvedOptions?.step && concurrencyValue === 1) {
+        if (!statusMode && resolvedOptions?.step && concurrencyValue === 1) {
           console.log("Generating STEP models for all builds...")
           await buildStepFiles({
             builtFiles,
@@ -748,7 +807,7 @@ export const registerBuild = (program: Command) => {
           })
         }
 
-        if (resolvedOptions?.transpile) {
+        if (!statusMode && resolvedOptions?.transpile) {
           const includeBoardPatterns =
             projectConfig?.includeBoardFiles?.filter((pattern) =>
               pattern.trim(),
@@ -803,7 +862,7 @@ export const registerBuild = (program: Command) => {
           }
         }
 
-        if (resolvedOptions?.site) {
+        if (!statusMode && resolvedOptions?.site) {
           let standaloneScriptSrc = "./standalone.min.js"
           if (resolvedOptions?.useCdnJavascript) {
             standaloneScriptSrc = await getLatestTscircuitCdnUrl()
@@ -828,7 +887,7 @@ export const registerBuild = (program: Command) => {
           fs.writeFileSync(path.join(distDir, "index.html"), indexHtml)
         }
 
-        if (resolvedOptions?.kicadLibrary) {
+        if (!statusMode && resolvedOptions?.kicadLibrary) {
           console.log("Generating KiCad library...")
           // Find the main library entrypoint for KiCad library generation
           const { mainEntrypoint: kicadEntrypoint } = await getBuildEntrypoints(
@@ -876,7 +935,7 @@ export const registerBuild = (program: Command) => {
           }
         }
 
-        if (resolvedOptions?.kicadPcm) {
+        if (!statusMode && resolvedOptions?.kicadPcm) {
           console.log("Generating KiCad PCM assets...")
           const { mainEntrypoint: kicadEntrypoint } = await getBuildEntrypoints(
             {
@@ -925,35 +984,40 @@ export const registerBuild = (program: Command) => {
         const successCount = builtFiles.filter((f) => f.ok).length
         const failCount = builtFiles.length - successCount
         const enabledOpts = [
-          resolvedOptions?.site && "site",
-          resolvedOptions?.transpile && "transpile",
+          resolvedOptions?.status && "status",
+          !statusMode && resolvedOptions?.site && "site",
+          !statusMode && resolvedOptions?.transpile && "transpile",
           resolvedOptions?.ignoreNetlistDrc && "ignore-netlist-drc",
           resolvedOptions?.ignorePinSpecificationDrc &&
             "ignore-pin-specification-drc",
           resolvedOptions?.ignorePlacementDrc && "ignore-placement-drc",
           resolvedOptions?.ignoreRoutingDrc && "ignore-routing-drc",
-          resolvedOptions?.previewImages && "preview-images",
-          resolvedOptions?.allImages && "all-images",
-          resolvedOptions?.pngs && "pngs",
-          resolvedOptions?.pcbPng && "pcb-png",
-          resolvedOptions?.svgs && "svgs",
-          resolvedOptions?.pcbSvgs && "pcb-svgs",
-          resolvedOptions?.schematicSvgs && "schematic-svgs",
-          resolvedOptions?.simulationSvgs && "simulation-svgs",
-          resolvedOptions?.simulationSchematicSvgs &&
+          !statusMode && resolvedOptions?.previewImages && "preview-images",
+          !statusMode && resolvedOptions?.allImages && "all-images",
+          !statusMode && resolvedOptions?.pngs && "pngs",
+          !statusMode && resolvedOptions?.pcbPng && "pcb-png",
+          !statusMode && resolvedOptions?.svgs && "svgs",
+          !statusMode && resolvedOptions?.pcbSvgs && "pcb-svgs",
+          !statusMode && resolvedOptions?.schematicSvgs && "schematic-svgs",
+          !statusMode && resolvedOptions?.simulationSvgs && "simulation-svgs",
+          !statusMode &&
+            resolvedOptions?.simulationSchematicSvgs &&
             "simulation-schematic-svgs",
-          resolvedOptions?.["3dPng"] && "3d-png",
-          resolvedOptions?.["3d"] && "3d",
-          resolvedOptions?.pcbOnly && "pcb-only",
-          resolvedOptions?.schematicOnly && "schematic-only",
-          resolvedOptions?.glbs && "glbs",
-          resolvedOptions?.step && "step",
-          resolvedOptions?.kicadProject && "kicad-project",
-          resolvedOptions?.kicadLibrary && "kicad-library",
-          resolvedOptions?.kicadPcm && "kicad-pcm",
-          resolvedOptions?.previewGltf && "preview-gltf",
+          !statusMode && resolvedOptions?.["3dPng"] && "3d-png",
+          !statusMode && resolvedOptions?.["3d"] && "3d",
+          !statusMode && resolvedOptions?.pcbOnly && "pcb-only",
+          !statusMode && resolvedOptions?.schematicOnly && "schematic-only",
+          !statusMode && resolvedOptions?.glbs && "glbs",
+          !statusMode && resolvedOptions?.step && "step",
+          !statusMode && resolvedOptions?.kicadProject && "kicad-project",
+          !statusMode && resolvedOptions?.kicadLibrary && "kicad-library",
+          !statusMode && resolvedOptions?.kicadPcm && "kicad-pcm",
+          !statusMode && resolvedOptions?.previewGltf && "preview-gltf",
           resolvedOptions?.profile && "profile",
         ].filter(Boolean) as string[]
+        const displayedConfigAppliedOpts = statusMode
+          ? configAppliedOpts.filter((opt) => opt === "routing-disabled")
+          : configAppliedOpts
 
         if (resolvedOptions?.profile && profileEntries.length > 0) {
           console.log("")
@@ -968,6 +1032,92 @@ export const registerBuild = (program: Command) => {
           }
         }
 
+        const totalIgnoredDrc = Object.values(ignoredDrcByCategory).reduce(
+          (sum, count) => sum + count,
+          0,
+        )
+
+        if (statusMode) {
+          const errorCount = statusIssues.filter(
+            (issue) => issue.severity === "error",
+          ).length
+          const warningCount = statusIssues.length - errorCount
+          const issueCountByCategory = new Map<
+            CircuitJsonIssueCategory,
+            number
+          >()
+          for (const issue of statusIssues) {
+            issueCountByCategory.set(
+              issue.category,
+              (issueCountByCategory.get(issue.category) ?? 0) + 1,
+            )
+          }
+          const getCategoryCount = (category: CircuitJsonIssueCategory) =>
+            issueCountByCategory.get(category) ?? 0
+
+          console.log("")
+          console.log(kleur.bold("Build status"))
+          console.log(
+            `  Circuits  ${kleur.green(`${successCount} passed`)}${failCount > 0 ? kleur.red(` ${failCount} failed`) : ""}`,
+          )
+          console.log(
+            `  Errors    ${errorCount > 0 ? kleur.red(String(errorCount)) : kleur.green("0")}`,
+          )
+          console.log(
+            `  Warnings  ${warningCount > 0 ? kleur.yellow(String(warningCount)) : kleur.green("0")}`,
+          )
+          console.log(`  Schematic issues ${getCategoryCount("schematic")}`)
+          console.log(`  Source issues    ${getCategoryCount("source")}`)
+          console.log(`  PCB issues       ${getCategoryCount("pcb")}`)
+          console.log(`  Netlist issues   ${getCategoryCount("netlist")}`)
+          console.log(
+            `  Pin spec issues  ${getCategoryCount("pin_specification")}`,
+          )
+          console.log(`  Placement issues ${getCategoryCount("placement")}`)
+          console.log(`  Routing issues   ${getCategoryCount("routing")}`)
+          console.log(`  Simulation issues ${getCategoryCount("simulation")}`)
+          console.log(`  Unknown issues   ${getCategoryCount("unknown")}`)
+          if (enabledOpts.length > 0) {
+            console.log(`  Options   ${kleur.cyan(enabledOpts.join(", "))}`)
+          }
+          if (displayedConfigAppliedOpts.length > 0) {
+            console.log(
+              `  Config    ${kleur.magenta(displayedConfigAppliedOpts.join(", "))} ${kleur.dim("(from tscircuit.config.json)")}`,
+            )
+          }
+          if (totalIgnoredDrc > 0) {
+            console.log(
+              `  Ignored DRC ${kleur.yellow(`${totalIgnoredDrc}`)} ${kleur.dim(`(${formatIgnoredDrcCounts(ignoredDrcByCategory)})`)}`,
+            )
+          }
+
+          if (statusIssues.length > 0) {
+            console.log("")
+            console.log(kleur.bold("Issues"))
+            let lastFilePath: string | undefined
+            for (const issue of statusIssues) {
+              if (issue.filePath !== lastFilePath) {
+                console.log(`  ${kleur.dim(issue.filePath)}`)
+                lastFilePath = issue.filePath
+              }
+              const label =
+                issue.severity === "error"
+                  ? kleur.red("error")
+                  : kleur.yellow("warning")
+              console.log(`    ${label} [${issue.category}] ${issue.message}`)
+            }
+          } else {
+            console.log("")
+            console.log(kleur.green("✓ No errors or warnings"))
+          }
+
+          if (shouldExitNonZero) {
+            exitBuild(1, "fatal circuit build errors occurred")
+          }
+
+          exitBuild(0, "build status finished successfully")
+        }
+
         console.log("")
         console.log(kleur.bold("Build complete"))
         console.log(
@@ -976,17 +1126,13 @@ export const registerBuild = (program: Command) => {
         if (enabledOpts.length > 0) {
           console.log(`  Options   ${kleur.cyan(enabledOpts.join(", "))}`)
         }
-        if (configAppliedOpts.length > 0) {
+        if (displayedConfigAppliedOpts.length > 0) {
           console.log(
-            `  Config    ${kleur.magenta(configAppliedOpts.join(", "))} ${kleur.dim("(from tscircuit.config.json)")}`,
+            `  Config    ${kleur.magenta(displayedConfigAppliedOpts.join(", "))} ${kleur.dim("(from tscircuit.config.json)")}`,
           )
         }
         console.log(
           `  Output    ${kleur.dim(path.relative(process.cwd(), distDir) || "dist")}`,
-        )
-        const totalIgnoredDrc = Object.values(ignoredDrcByCategory).reduce(
-          (sum, count) => sum + count,
-          0,
         )
         if (totalIgnoredDrc > 0) {
           console.log(
