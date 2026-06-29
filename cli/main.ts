@@ -4,6 +4,7 @@ import { registerStaticAssetLoaders } from "lib/shared/register-static-asset-loa
 import { perfectCli } from "perfect-cli"
 import { getVersion } from "./../lib/getVersion"
 import { registerAdd } from "./add/register"
+import { registerAgent } from "./agent/register"
 import { registerAuthLogin } from "./auth/login/register"
 import { registerAuthLogout } from "./auth/logout/register"
 import { registerAuthPrintToken } from "./auth/print-token/register"
@@ -72,6 +73,7 @@ registerExport(program)
 registerBuild(program)
 registerTranspile(program)
 registerAdd(program)
+registerAgent(program)
 registerRemove(program)
 registerSnapshot(program)
 registerSetup(program)
@@ -97,13 +99,19 @@ registerImport(program)
 registerConvert(program)
 registerSimulate(program)
 
-// Manually handle --version, -v, and -V flags
+// Manually handle top-level --version, -v, and -V flags.
+// Do not intercept subcommand arguments, e.g. `tsci agent --version` should
+// forward `--version` to tsci-agent.
+const cliArgs = process.argv.slice(2)
+const firstCommandIndex = cliArgs.findIndex((arg) => !arg.startsWith("-"))
+const topLevelArgs =
+  firstCommandIndex === -1 ? cliArgs : cliArgs.slice(0, firstCommandIndex)
 if (
-  process.argv.includes("--version") ||
-  process.argv.includes("-v") ||
-  process.argv.includes("-V")
+  topLevelArgs.includes("--version") ||
+  topLevelArgs.includes("-v") ||
+  topLevelArgs.includes("-V")
 ) {
-  console.log(getVersion({ verbose: process.argv.includes("--verbose") }))
+  console.log(getVersion({ verbose: topLevelArgs.includes("--verbose") }))
   process.exit(0)
 }
 
