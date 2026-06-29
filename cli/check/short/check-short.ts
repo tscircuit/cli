@@ -40,6 +40,14 @@ type GerberCopperShape = CopperShape & {
   gerberGeometry: CopperShapeGeometry
 }
 
+type GerberPrimitiveShape = {
+  layer: LayerName
+  geometry: CopperShapeGeometry
+  commandStartIndex: number
+  commandEndIndex: number
+  metadataNetKey?: string
+}
+
 export type ShortCheckIssue = {
   layer: LayerName
   firstId: string
@@ -260,6 +268,9 @@ const getShapeCenter = (shape: CopperShapeGeometry): Point => {
 
 const pointDistance = (first: Point, second: Point) =>
   Math.hypot(first.x - second.x, first.y - second.y)
+
+const sanitizeGerberAttributeValue = (value: string) =>
+  value.replace(/[,*%\r\n]/g, "_")
 
 const getShapeMatchScore = (
   gerberShape: CopperShapeGeometry,
@@ -627,34 +638,54 @@ const shapeFromGerberAperture = (
 
 const buildGerberPrimitiveShapes = (
   gerberLayerCmds: Record<string, CircuitJsonRecord[]>,
-) => {
-  const shapes: Array<{
-    layer: LayerName
-    geometry: CopperShapeGeometry
-  }> = []
+): GerberPrimitiveShape[] => {
+  const shapes: GerberPrimitiveShape[] = []
 
   for (const [gerberLayerName, commands] of Object.entries(gerberLayerCmds)) {
     const layer = getLayerFromGerberLayerName(gerberLayerName)
     if (!layer) continue
 
     const apertures = new Map<number, CircuitJsonRecord>()
-    const darkShapes: CopperShapeGeometry[] = []
+    const darkShapes: GerberPrimitiveShape[] = []
     const clearPolygons: Point[][] = []
     let selectedAperture: CircuitJsonRecord | undefined
     let currentPoint: Point | undefined
+    let currentPointCommandIndex: number | undefined
     let currentPolarity: "D" | "C" = "D"
     let currentRotation = 0
     let regionPoints: Point[] | undefined
+    let regionStartIndex: number | undefined
+    let currentMetadataNetKey: string | undefined
 
-    const pushGerberShape = (geometry: CopperShapeGeometry) => {
+    const pushGerberShape = (
+      geometry: CopperShapeGeometry,
+      commandStartIndex: number,
+      commandEndIndex: number,
+    ) => {
       if (currentPolarity === "C") {
         if (geometry.kind === "polygon") clearPolygons.push(geometry.points)
         return
       }
-      darkShapes.push(geometry)
+      darkShapes.push({
+        layer,
+        geometry,
+        commandStartIndex,
+        commandEndIndex,
+        metadataNetKey: currentMetadataNetKey,
+      })
     }
 
-    for (const command of commands) {
+    for (const [commandIndex, command] of commands.entries()) {
+      if (command.command_code === "TO" && command.attribute_name === ".N") {
+        currentMetadataNetKey = command.attribute_value
+        continue
+      }
+      if (command.command_code === "TD") {
+        if (!command.attribute || command.attribute === ".N") {
+          currentMetadataNetKey = undefined
+        }
+        continue
+      }
       if (command.command_code === "ADD") {
         apertures.set(command.aperture_number, command)
         continue
@@ -673,20 +704,27 @@ const buildGerberPrimitiveShapes = (
       }
       if (command.command_code === "G36") {
         regionPoints = []
+        regionStartIndex = commandIndex
         continue
       }
       if (command.command_code === "G37") {
         if (regionPoints && regionPoints.length >= 3) {
-          pushGerberShape({
-            kind: "polygon",
-            points: regionPoints,
-          })
+          pushGerberShape(
+            {
+              kind: "polygon",
+              points: regionPoints,
+            },
+            regionStartIndex ?? commandIndex,
+            commandIndex,
+          )
         }
         regionPoints = undefined
+        regionStartIndex = undefined
         continue
       }
       if (command.command_code === "D02") {
         currentPoint = { x: command.x, y: command.y }
+        currentPointCommandIndex = commandIndex
         if (regionPoints) regionPoints.push(currentPoint)
         continue
       }
@@ -698,14 +736,19 @@ const buildGerberPrimitiveShapes = (
           currentPoint &&
           selectedAperture?.standard_template_code === "C"
         ) {
-          pushGerberShape({
-            kind: "segment",
-            start: currentPoint,
-            end: nextPoint,
-            radius: selectedAperture.diameter / 2,
-          })
+          pushGerberShape(
+            {
+              kind: "segment",
+              start: currentPoint,
+              end: nextPoint,
+              radius: selectedAperture.diameter / 2,
+            },
+            currentPointCommandIndex ?? commandIndex,
+            commandIndex,
+          )
         }
         currentPoint = nextPoint
+        currentPointCommandIndex = commandIndex
         continue
       }
       if (command.command_code === "D03") {
@@ -714,27 +757,27 @@ const buildGerberPrimitiveShapes = (
           { x: command.x, y: command.y },
           currentRotation,
         )
-        if (geometry) pushGerberShape(geometry)
+        if (geometry) pushGerberShape(geometry, commandIndex, commandIndex)
       }
     }
 
     for (const darkShape of darkShapes) {
       const geometry =
-        darkShape.kind === "polygon"
+        darkShape.geometry.kind === "polygon"
           ? {
-              ...darkShape,
+              ...darkShape.geometry,
               holes: [
-                ...(darkShape.holes ?? []),
+                ...(darkShape.geometry.holes ?? []),
                 ...clearPolygons.filter((clearPolygon) =>
-                  shapesTouch(darkShape, {
+                  shapesTouch(darkShape.geometry, {
                     kind: "polygon",
                     points: clearPolygon,
                   }),
                 ),
               ],
             }
-          : darkShape
-      shapes.push({ layer, geometry })
+          : darkShape.geometry
+      shapes.push({ ...darkShape, geometry })
     }
   }
 
@@ -748,43 +791,100 @@ const tagGerberShapesWithNets = (
   const circuitShapes = collectCopperShapes(circuitJson)
   return buildGerberPrimitiveShapes(gerberLayerCmds).flatMap(
     (gerberShape): GerberCopperShape[] => {
-      const matchingShape = circuitShapes
-        .filter(
-          (circuitShape) =>
-            circuitShape.layer === gerberShape.layer &&
-            shapesTouch(circuitShape.geometry, gerberShape.geometry),
-        )
-        .sort((first, second) => {
-          const scoreDelta =
-            getShapeMatchScore(gerberShape.geometry, first.geometry) -
-            getShapeMatchScore(gerberShape.geometry, second.geometry)
-          if (Math.abs(scoreDelta) > 1e-9) return scoreDelta
-          const areaDelta =
-            shapeArea(first.geometry) - shapeArea(second.geometry)
-          if (Math.abs(areaDelta) > 1e-9) return areaDelta
-          const gerberCenter = getShapeCenter(gerberShape.geometry)
-          const firstCenter = getShapeCenter(first.geometry)
-          const secondCenter = getShapeCenter(second.geometry)
-          return (
-            Math.hypot(
-              gerberCenter.x - firstCenter.x,
-              gerberCenter.y - firstCenter.y,
-            ) -
-            Math.hypot(
-              gerberCenter.x - secondCenter.x,
-              gerberCenter.y - secondCenter.y,
-            )
-          )
-        })[0]
+      const matchingShape = findMatchingCircuitShape(gerberShape, circuitShapes)
       if (!matchingShape) return []
       return [
         {
           ...matchingShape,
+          netKey: gerberShape.metadataNetKey ?? matchingShape.netKey,
           gerberGeometry: gerberShape.geometry,
         },
       ]
     },
   )
+}
+
+const findMatchingCircuitShape = (
+  gerberShape: GerberPrimitiveShape,
+  circuitShapes: CopperShape[],
+) =>
+  circuitShapes
+    .filter(
+      (circuitShape) =>
+        circuitShape.layer === gerberShape.layer &&
+        shapesTouch(circuitShape.geometry, gerberShape.geometry),
+    )
+    .sort((first, second) => {
+      const scoreDelta =
+        getShapeMatchScore(gerberShape.geometry, first.geometry) -
+        getShapeMatchScore(gerberShape.geometry, second.geometry)
+      if (Math.abs(scoreDelta) > 1e-9) return scoreDelta
+      const areaDelta = shapeArea(first.geometry) - shapeArea(second.geometry)
+      if (Math.abs(areaDelta) > 1e-9) return areaDelta
+      const gerberCenter = getShapeCenter(gerberShape.geometry)
+      const firstCenter = getShapeCenter(first.geometry)
+      const secondCenter = getShapeCenter(second.geometry)
+      return (
+        Math.hypot(
+          gerberCenter.x - firstCenter.x,
+          gerberCenter.y - firstCenter.y,
+        ) -
+        Math.hypot(
+          gerberCenter.x - secondCenter.x,
+          gerberCenter.y - secondCenter.y,
+        )
+      )
+    })[0]
+
+const addNetAttributesToGerberCommands = (
+  gerberLayerCmds: Record<string, CircuitJsonRecord[]>,
+  circuitJson: AnyCircuitElement[],
+) => {
+  const circuitShapes = collectCopperShapes(circuitJson)
+  const annotatedLayerCmds: Record<string, CircuitJsonRecord[]> = {}
+
+  for (const [gerberLayerName, commands] of Object.entries(gerberLayerCmds)) {
+    const primitives = buildGerberPrimitiveShapes({
+      [gerberLayerName]: commands,
+    })
+    const annotationsByStartIndex = new Map<number, CircuitJsonRecord[]>()
+    const annotationsByEndIndex = new Map<number, CircuitJsonRecord[]>()
+
+    for (const primitive of primitives) {
+      if (primitive.metadataNetKey) continue
+      const matchingShape = findMatchingCircuitShape(primitive, circuitShapes)
+      if (!matchingShape) continue
+      const netAttributeValue = sanitizeGerberAttributeValue(
+        matchingShape.netKey,
+      )
+      const startAnnotations =
+        annotationsByStartIndex.get(primitive.commandStartIndex) ?? []
+      startAnnotations.push({
+        command_code: "TO",
+        attribute_name: ".N",
+        attribute_value: netAttributeValue,
+      })
+      annotationsByStartIndex.set(primitive.commandStartIndex, startAnnotations)
+
+      const endAnnotations =
+        annotationsByEndIndex.get(primitive.commandEndIndex) ?? []
+      endAnnotations.push({
+        command_code: "TD",
+        attribute: ".N",
+      })
+      annotationsByEndIndex.set(primitive.commandEndIndex, endAnnotations)
+    }
+
+    annotatedLayerCmds[gerberLayerName] = commands.flatMap(
+      (command, commandIndex) => [
+        ...(annotationsByStartIndex.get(commandIndex) ?? []),
+        command,
+        ...(annotationsByEndIndex.get(commandIndex) ?? []),
+      ],
+    )
+  }
+
+  return annotatedLayerCmds
 }
 
 export const analyzeShorts = (
@@ -825,12 +925,17 @@ export const analyzeShorts = (
 
 const createGerberZip = async (
   circuitJson: AnyCircuitElement[],
-  gerberLayerCmds = convertSoupToGerberCommands(circuitJson, {
+  gerberLayerCmds: Record<
+    string,
+    CircuitJsonRecord[]
+  > = convertSoupToGerberCommands(circuitJson, {
     flip_y_axis: false,
-  }),
+  }) as Record<string, CircuitJsonRecord[]>,
 ) => {
   const zip = new JSZip()
-  const gerberFileContents = stringifyGerberCommandLayers(gerberLayerCmds)
+  const gerberFileContents = stringifyGerberCommandLayers(
+    gerberLayerCmds as any,
+  )
   let gerberFileCount = 0
 
   for (const [fileName, fileContents] of Object.entries(gerberFileContents)) {
@@ -886,19 +991,20 @@ export const checkShort = async (
     ? path.resolve(process.cwd(), options.output)
     : getDefaultGerberOutputPath(resolvedInputFilePath)
 
-  const gerberLayerCmds = convertSoupToGerberCommands(circuitJson, {
+  const rawGerberLayerCmds = convertSoupToGerberCommands(circuitJson, {
     flip_y_axis: false,
   })
+  const gerberLayerCmds = addNetAttributesToGerberCommands(
+    rawGerberLayerCmds as Record<string, CircuitJsonRecord[]>,
+    circuitJson,
+  )
   const { buffer, gerberFileCount } = await createGerberZip(
     circuitJson,
     gerberLayerCmds,
   )
   await fs.writeFile(gerberOutputPath, buffer)
 
-  const shorts = analyzeShorts(
-    circuitJson,
-    gerberLayerCmds as Record<string, CircuitJsonRecord[]>,
-  )
+  const shorts = analyzeShorts(circuitJson, gerberLayerCmds)
   return {
     gerberOutputPath,
     gerberFileCount,

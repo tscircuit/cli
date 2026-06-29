@@ -2,7 +2,8 @@ import { expect, test } from "bun:test"
 import "bun-match-svg"
 import type { PlatformConfig } from "@tscircuit/props"
 import { convertCircuitJsonToPcbSvg } from "circuit-to-svg"
-import { access, rm, writeFile } from "node:fs/promises"
+import JSZip from "jszip"
+import { access, readFile, rm, writeFile } from "node:fs/promises"
 import path from "node:path"
 import { analyzeShorts } from "../../../cli/check/short/check-short"
 import { getCircuitJsonForCheck } from "../../../cli/check/shared"
@@ -493,6 +494,13 @@ test("tsci check short catches three differently sized post-pour traces shorted 
     for (const short of shorts) {
       expect([short.firstType, short.secondType]).toContain("pcb_copper_pour")
     }
+
+    const gerberZip = await JSZip.loadAsync(await readFile(outputPath))
+    const topCopperGerber = await gerberZip.file("F_Cu.gbr")?.async("string")
+    expect(topCopperGerber).toContain("%TO.N,U2_TXD_STUB*%")
+    expect(topCopperGerber).toContain("%TO.N,LEFT_EDGE_STUB*%")
+    expect(topCopperGerber).toContain("%TO.N,TOP_RIGHT_STUB*%")
+    expect(topCopperGerber).toContain("%TD.N*%")
 
     const circuitRecords = shortedCircuitJson as any[]
     const board = circuitRecords.find((elm) => elm.type === "pcb_board")
