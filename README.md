@@ -46,6 +46,7 @@ Commands:
   transpile [file]             Transpile TypeScript/TSX to JavaScript (ESM,
                                CommonJS, and type declarations)
   add <packageSpecs...>        Add tscircuit component packages to your project
+  agent [args...]              Install/update and run tsci-agent
   remove <component>           Remove a tscircuit component package from your
                                project
   snapshot [options] [path]    Generate schematic and PCB snapshots (add --3d
