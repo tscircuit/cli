@@ -15,6 +15,7 @@ export interface BuildCommandOptions {
   disablePartsEngine?: boolean
   ignoreConfig?: boolean
   ci?: boolean
+  status?: boolean
   site?: boolean
   transpile?: boolean
   previewImages?: boolean

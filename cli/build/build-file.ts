@@ -3,7 +3,12 @@ import path from "node:path"
 import type { PlatformConfig } from "@tscircuit/props"
 import type { AnyCircuitElement } from "circuit-json"
 import kleur from "kleur"
-import { analyzeCircuitJson } from "lib/shared/circuit-json-diagnostics"
+import {
+  type CircuitJsonIssue,
+  type CircuitJsonIssueCategory,
+  analyzeCircuitJson,
+  classifyCircuitJsonIssue,
+} from "lib/shared/circuit-json-diagnostics"
 import { generateCircuitJson } from "lib/shared/generate-circuit-json"
 import { getPlatformConfigWithCliDefaults } from "lib/shared/get-platform-config-with-cli-defaults"
 import {
@@ -12,12 +17,21 @@ import {
   filterDiagnosticsByDrcCategory,
 } from "./drc-diagnostic-filter"
 
+export type BuildDiagnostic = {
+  message: string
+  category: CircuitJsonIssueCategory
+}
+
 export type BuildFileOutcome = {
   ok: boolean
   circuitJson?: AnyCircuitElement[]
   hasErrors?: boolean
   ignoredDrcCount?: number
   ignoredDrcByCategory?: DrcIgnoreCounts
+  errors?: string[]
+  warnings?: string[]
+  errorDiagnostics?: BuildDiagnostic[]
+  warningDiagnostics?: BuildDiagnostic[]
   /** Fatal error that should always cause exit code 1, even with --ignore-errors */
   isFatalError?: { errorType: string; message: string }
 }
@@ -32,6 +46,8 @@ export const buildFile = async (
   } & DrcIgnoreOptions & {
       platformConfig?: PlatformConfig
       injectedProps?: Record<string, unknown>
+      writeOutput?: boolean
+      logDiagnostics?: boolean
     },
 ): Promise<BuildFileOutcome> => {
   try {
@@ -62,9 +78,13 @@ export const buildFile = async (
       circuitJson = result.circuitJson
     }
 
-    fs.mkdirSync(path.dirname(output), { recursive: true })
-    fs.writeFileSync(output, JSON.stringify(circuitJson, null, 2))
-    console.log(`Circuit JSON written to ${path.relative(projectDir, output)}`)
+    if (options?.writeOutput !== false) {
+      fs.mkdirSync(path.dirname(output), { recursive: true })
+      fs.writeFileSync(output, JSON.stringify(circuitJson, null, 2))
+      console.log(
+        `Circuit JSON written to ${path.relative(projectDir, output)}`,
+      )
+    }
 
     const diagnostics = analyzeCircuitJson(circuitJson)
     const filteredDiagnostics = filterDiagnosticsByDrcCategory({
@@ -73,19 +93,29 @@ export const buildFile = async (
       ignoreOptions: options,
     })
 
-    if (!options?.ignoreWarnings) {
-      for (const warn of filteredDiagnostics.warnings) {
-        const msg = warn.message || JSON.stringify(warn)
-        console.log(kleur.yellow(msg))
-      }
-    }
+    const warningDiagnostics = options?.ignoreWarnings
+      ? []
+      : filteredDiagnostics.warnings.map(formatDiagnostic)
+    const errorDiagnostics = options?.ignoreErrors
+      ? []
+      : filteredDiagnostics.errors.map(formatDiagnostic)
+    const warnings = warningDiagnostics.map((diagnostic) => diagnostic.message)
+    const errors = errorDiagnostics.map((diagnostic) => diagnostic.message)
 
-    if (!options?.ignoreErrors) {
-      for (const err of filteredDiagnostics.errors) {
-        const msg = err.message || JSON.stringify(err)
-        console.error(kleur.red(msg))
-        if (err.stack) {
-          console.log(err.stack)
+    if (options?.logDiagnostics !== false) {
+      if (!options?.ignoreWarnings) {
+        for (const msg of warnings) {
+          console.log(kleur.yellow(msg))
+        }
+      }
+
+      if (!options?.ignoreErrors) {
+        for (const err of filteredDiagnostics.errors) {
+          const msg = formatDiagnosticMessage(err)
+          console.error(kleur.red(msg))
+          if (err.stack) {
+            console.log(err.stack)
+          }
         }
       }
     }
@@ -97,6 +127,10 @@ export const buildFile = async (
         filteredDiagnostics.errors.length > 0 && !options?.ignoreErrors,
       ignoredDrcCount: filteredDiagnostics.ignoredCount,
       ignoredDrcByCategory: filteredDiagnostics.ignoredByCategory,
+      errors,
+      warnings,
+      errorDiagnostics,
+      warningDiagnostics,
     }
   } catch (err) {
     console.error(err)
@@ -111,9 +145,19 @@ export const buildFile = async (
         errorType: "circuit_generation_failed",
         message: err instanceof Error ? err.message : String(err),
       },
+      errors: [err instanceof Error ? err.message : String(err)],
+      warnings: [],
     }
   }
 }
+
+const formatDiagnosticMessage = (issue: CircuitJsonIssue) =>
+  issue.message || JSON.stringify(issue)
+
+const formatDiagnostic = (issue: CircuitJsonIssue): BuildDiagnostic => ({
+  message: formatDiagnosticMessage(issue),
+  category: classifyCircuitJsonIssue(issue),
+})
 
 const logTsxExtensionHint = (error: Error, entryFilePath: string) => {
   const lowerPath = entryFilePath.toLowerCase()
