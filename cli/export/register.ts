@@ -87,7 +87,7 @@ export const registerExport = (program: Command) => {
           filePath: file,
           format,
           outputPath: options.output,
-          platformConfig,
+          platformConfig: getPlatformConfigWithCliDefaults(platformConfig),
           pcbSnapshotSettings: options.showCourtyards
             ? { showCourtyards: true }
             : undefined,
