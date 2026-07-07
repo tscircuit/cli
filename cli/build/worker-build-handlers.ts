@@ -2,9 +2,11 @@ import fs from "node:fs"
 import path from "node:path"
 import type { PlatformConfig } from "@tscircuit/props"
 import type { AnyCircuitElement } from "circuit-json"
+import { loadRuntimeProjectConfig } from "lib/project-config"
 import { analyzeCircuitJson } from "../../lib/shared/circuit-json-diagnostics"
 import { generateCircuitJson } from "../../lib/shared/generate-circuit-json"
 import { getPlatformConfigWithCliDefaults } from "../../lib/shared/get-platform-config-with-cli-defaults"
+import { mergePlatformConfigs } from "../../lib/shared/platform-config-utils"
 import { registerStaticAssetLoaders } from "../../lib/shared/register-static-asset-loaders"
 import { filterDiagnosticsByDrcCategory } from "./drc-diagnostic-filter"
 import { DEFAULT_IMAGE_FORMAT_SELECTION } from "./image-format-selection"
@@ -49,9 +51,13 @@ export const handleBuildFile = async (
 
     await registerStaticAssetLoaders()
 
-    const platformConfigWithCliDefaults = getPlatformConfigWithCliDefaults(
+    const projectConfig = await loadRuntimeProjectConfig(projectDir)
+    const platformConfig = mergePlatformConfigs(
+      projectConfig?.platformConfig,
       options?.platformConfig as PlatformConfig,
     )
+    const platformConfigWithCliDefaults =
+      getPlatformConfigWithCliDefaults(platformConfig)
 
     const normalizedInputPath = filePath.toLowerCase().replaceAll("\\", "/")
     const isPrebuiltCircuitJson =
