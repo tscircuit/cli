@@ -603,7 +603,10 @@ export const registerBuild = (program: Command) => {
             files: filesToBuild,
             projectDir,
             concurrency: concurrencyValue,
-            buildOptions,
+            buildOptions: {
+              ...buildOptions,
+              platformConfig: commandPlatformConfig,
+            },
             workerJobTimeoutMs: projectConfig?.build?.workerTimeoutMs,
             stopOnFatal: true,
             onLog: (lines) => {
