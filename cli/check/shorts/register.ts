@@ -1,11 +1,7 @@
 import type { PlatformConfig } from "@tscircuit/props"
-import {
-  appendBitmapLegend,
-  createShortDebugSvg,
-  encodeRgbaPng,
-  renderBitmapShortDebug,
-  type BitmapShort,
-  type FindBitmapShortsOptions,
+import type {
+  BitmapShort,
+  FindBitmapShortsOptions,
 } from "@tscircuit/check-shorts"
 import type { Command } from "commander"
 import { mkdir, writeFile } from "node:fs/promises"
@@ -27,6 +23,10 @@ export interface CheckShortsResult {
     defaultOutputPath: string
   }>
 }
+
+const checkShortsPackageName = ["@tscircuit", "check-shorts"].join("/")
+
+const loadCheckShorts = async () => await import(checkShortsPackageName)
 
 const parsePixelsPerMm = (value?: string): number | undefined => {
   if (!value) return undefined
@@ -87,6 +87,12 @@ export const checkShorts = async (
     } satisfies PlatformConfig,
     allowPrebuiltCircuitJson: true,
   })
+  const {
+    appendBitmapLegend,
+    createShortDebugSvg,
+    encodeRgbaPng,
+    renderBitmapShortDebug,
+  } = await loadCheckShorts()
 
   const debugRenders = await Promise.all(
     layers.map((layer) =>
