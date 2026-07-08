@@ -38,14 +38,14 @@ const parsePixelsPerMm = (value?: string): number | undefined => {
 }
 
 const parseMode = (mode?: string): "pcb" | "gerber" => {
-  if (!mode || mode === "pcb" || mode === "gerber") return mode ?? "gerber"
+  if (!mode) return "gerber"
+  if (mode === "pcb" || mode === "gerber") return mode
   throw new Error("--mode must be either pcb or gerber")
 }
 
 const parseLayer = (layer?: string): "top" | "bottom" | "all" => {
-  if (!layer || layer === "top" || layer === "bottom" || layer === "all") {
-    return layer ?? "all"
-  }
+  if (!layer) return "all"
+  if (layer === "top" || layer === "bottom" || layer === "all") return layer
   throw new Error("--layer must be top, bottom, or all")
 }
 
