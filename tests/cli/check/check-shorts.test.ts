@@ -40,6 +40,22 @@ const linkWorkspaceNodeModules = async (tmpDir: string) => {
   )
 }
 
+const snapshotDir = path.join(
+  process.cwd(),
+  "tests",
+  "cli",
+  "check",
+  "__snapshots__",
+)
+const bitmapSnapshotPath = path.join(
+  snapshotDir,
+  "check-shorts-bitmap.snap.png",
+)
+const pcbSnapshotSnapshotPath = path.join(
+  snapshotDir,
+  "check-shorts-pcb.snap.svg",
+)
+
 test("check shorts reports no shorts for a clean board", async () => {
   const tmpDir = temporaryDirectory()
   const circuitPath = path.join(tmpDir, "clean-board.tsx")
@@ -62,8 +78,13 @@ test("tsci check shorts detects a copper bridge short", async () => {
   const { runCommand, tmpDir } = await getCliTestFixture()
   const circuitPath = path.join(tmpDir, "shorted-board.tsx")
   const circuitJsonPath = path.join(tmpDir, "shorted-board.circuit.json")
-  const bitmapArtifactPath = path.join(tmpDir, "checks", "check-shorts.png")
-  const pcbSnapshotPath = path.join(tmpDir, "checks", "check-shorts-pcb.svg")
+  const bitmapArtifactPath = path.join(
+    tmpDir,
+    "checks",
+    "check-shorts",
+    "bitmap.png",
+  )
+  const pcbSnapshotPath = path.join(tmpDir, "checks", "check-shorts", "pcb.svg")
 
   try {
     await linkWorkspaceNodeModules(tmpDir)
@@ -81,6 +102,8 @@ test("tsci check shorts detects a copper bridge short", async () => {
     const artifactStats = await stat(bitmapArtifactPath)
     const pcbSnapshot = await readFile(pcbSnapshotPath, "utf-8")
     const pcbSnapshotStats = await stat(pcbSnapshotPath)
+    const expectedBitmapSnapshot = await readFile(bitmapSnapshotPath)
+    const expectedPcbSnapshot = await readFile(pcbSnapshotSnapshotPath, "utf-8")
 
     expect(exitCode).toBe(1)
     expect(stderr).toBe("")
@@ -103,6 +126,8 @@ test("tsci check shorts detects a copper bridge short", async () => {
     expect(pcbSnapshotStats.size).toBeGreaterThan("stale pcb snapshot".length)
     expect(pcbSnapshot).toContain("<svg")
     expect(pcbSnapshot).toContain('data-type="short-debug"')
+    expect(artifactPng).toEqual(expectedBitmapSnapshot)
+    expect(pcbSnapshot).toEqual(expectedPcbSnapshot)
   } finally {
     await rm(circuitPath, { force: true })
     await rm(circuitJsonPath, { force: true })

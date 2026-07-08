@@ -62,10 +62,10 @@ const formatShort = (short: BitmapShort, index: number) => {
 }
 
 const getShortArtifactOutputPath = () =>
-  path.resolve(process.cwd(), "checks", "check-shorts.png")
+  path.resolve(process.cwd(), "checks", "check-shorts", "bitmap.png")
 
 const getShortPcbSnapshotOutputPath = () =>
-  path.resolve(process.cwd(), "checks", "check-shorts-pcb.svg")
+  path.resolve(process.cwd(), "checks", "check-shorts", "pcb.svg")
 
 export const checkShorts = async (
   file?: string,
