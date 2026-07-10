@@ -20,6 +20,7 @@ const result = await Bun.build({
     "zod",
     "tscircuit",
     "typescript",
+    "@tscircuit/check-shorts",
     "circuit-to-svg",
     "@types/*",
     "react",
