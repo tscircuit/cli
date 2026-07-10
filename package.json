@@ -33,7 +33,7 @@
     "@types/semver": "^7.5.8",
     "bun-match-svg": "^0.0.12",
     "chokidar": "4.0.1",
-    "circuit-json": "^0.0.438",
+    "circuit-json": "^0.0.446",
     "circuit-json-to-3d-png": "^0.0.6",
     "circuit-json-to-bom-csv": "^0.0.7",
     "circuit-json-to-connectivity-map": "^0.0.25",
