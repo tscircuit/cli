@@ -13,7 +13,15 @@ import {
 class FakeRootCircuit extends EventEmitter {
   constructor(
     private circuitJson: Array<Record<string, unknown>> = [
-      { type: "pcb_board", pcb_board_id: "board_0" },
+      {
+        type: "pcb_board",
+        pcb_board_id: "board_0",
+        center: { x: 0, y: 0 },
+        width: 10,
+        height: 10,
+        thickness: 1.4,
+        num_layers: 2,
+      },
     ],
   ) {
     super()
@@ -28,7 +36,7 @@ const makeTempDir = () =>
   fs.mkdtempSync(path.join(os.tmpdir(), "tsci-autorouter-diagnostics-"))
 
 describe("autorouter diagnostics", () => {
-  test("logs phase start/end and writes SRJ artifacts", () => {
+  test("logs phase start/end and writes SRJ and PNG artifacts", async () => {
     const debugDir = makeTempDir()
     const logs: string[] = []
     const root = new FakeRootCircuit()
@@ -52,16 +60,44 @@ describe("autorouter diagnostics", () => {
       subcircuit_id: "subcircuit_source_group_0",
       componentDisplayName: "board unnamedsubcircuit0",
       simpleRouteJson: {
-        traces: [{ route: [] }],
+        traces: [
+          {
+            type: "pcb_trace",
+            pcb_trace_id: "pcb_trace_0",
+            source_trace_id: "source_trace_0",
+            route: [
+              {
+                route_type: "wire",
+                x: -2,
+                y: 0,
+                width: 0.2,
+                layer: "top",
+              },
+              {
+                route_type: "wire",
+                x: 2,
+                y: 0,
+                width: 0.2,
+                layer: "top",
+              },
+            ],
+          },
+        ],
         jumpers: [],
       },
     })
-    diagnostics.finalize([])
+    await diagnostics.finalize([])
 
     expect(logs.join("\n")).toContain("phase 1 start")
     expect(logs.join("\n")).toContain("connections=1")
     expect(logs.join("\n")).toContain("obstacles=1")
     expect(logs.join("\n")).toContain("phase 1 done")
+    expect(logs).toContain(
+      `Wrote debug artifact: ${path.relative(process.cwd(), path.join(debugDir, "placement-unrouted.png"))}`,
+    )
+    expect(logs).toContain(
+      `Wrote debug artifact: ${path.relative(process.cwd(), path.join(debugDir, "phase-0-routed.png"))}`,
+    )
     expect(
       fs.existsSync(path.join(debugDir, "phase-0.input.simple-route.json")),
     ).toBe(true)
@@ -69,6 +105,19 @@ describe("autorouter diagnostics", () => {
       fs.existsSync(path.join(debugDir, "phase-0.output.traces.json")),
     ).toBe(true)
     expect(fs.existsSync(path.join(debugDir, "board.meta.json"))).toBe(true)
+    expect(
+      fs
+        .readFileSync(path.join(debugDir, "placement-unrouted.png"))
+        .subarray(0, 8),
+    ).toEqual(Buffer.from([137, 80, 78, 71, 13, 10, 26, 10]))
+    expect(
+      fs.readFileSync(path.join(debugDir, "phase-0-routed.png")).subarray(0, 8),
+    ).toEqual(Buffer.from([137, 80, 78, 71, 13, 10, 26, 10]))
+    expect(
+      fs.readFileSync(path.join(debugDir, "phase-0-routed.png")),
+    ).not.toEqual(
+      fs.readFileSync(path.join(debugDir, "placement-unrouted.png")),
+    )
   })
 
   test("logs selectors and names instead of circuit JSON ids", () => {

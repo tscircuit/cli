@@ -165,7 +165,7 @@ export async function generateCircuitJson({
 
   // Get the circuit JSON
   const circuitJson = await runner.getCircuitJson()
-  autorouterDiagnostics.finalize(circuitJson)
+  await autorouterDiagnostics.finalize(circuitJson)
 
   // Save the circuit JSON to a file if requested
   if (saveToFile) {
