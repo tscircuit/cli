@@ -82,6 +82,7 @@
     "zod": "^3.23.8"
   },
   "peerDependencies": {
+    "circuit-json": "^0.0.446",
     "tscircuit": "*"
   },
   "bin": {
