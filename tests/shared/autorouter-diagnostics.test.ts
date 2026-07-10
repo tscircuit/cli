@@ -86,6 +86,10 @@ describe("autorouter diagnostics", () => {
         jumpers: [],
       },
     })
+    expect(fs.existsSync(path.join(debugDir, "placement-unrouted.png"))).toBe(
+      true,
+    )
+    expect(fs.existsSync(path.join(debugDir, "phase-0-routed.png"))).toBe(true)
     await diagnostics.finalize([])
 
     expect(logs.join("\n")).toContain("phase 1 start")
@@ -122,7 +126,17 @@ describe("autorouter diagnostics", () => {
 
   test("logs selectors and names instead of circuit JSON ids", () => {
     const logs: string[] = []
+    const debugDir = makeTempDir()
     const root = new FakeRootCircuit([
+      {
+        type: "pcb_board",
+        pcb_board_id: "board_0",
+        center: { x: 0, y: 0 },
+        width: 10,
+        height: 10,
+        thickness: 1.4,
+        num_layers: 2,
+      },
       {
         type: "source_component",
         source_component_id: "source_component_0",
@@ -166,6 +180,7 @@ describe("autorouter diagnostics", () => {
     ])
     const diagnostics = new AutorouterDiagnostics({
       enabled: true,
+      debugDir,
       log: (message) => logs.push(message),
     })
 
@@ -201,12 +216,16 @@ describe("autorouter diagnostics", () => {
     expect(output).not.toMatch(
       /source_(?:trace|net|port|component)_\d+|subcircuit_source_group_\d+/,
     )
+    expect(fs.existsSync(path.join(debugDir, "placement-unrouted.png"))).toBe(
+      true,
+    )
   })
 
   test("phase timeout writes reproducer artifacts", async () => {
     const debugDir = makeTempDir()
     const root = new FakeRootCircuit()
     const diagnostics = new AutorouterDiagnostics({
+      enabled: true,
       timeoutMs: 1,
       dumpSrj: "failed",
       debugDir,
@@ -222,21 +241,46 @@ describe("autorouter diagnostics", () => {
         obstacles: [{ obstacleId: "pad_1" }],
       },
     })
+    root.emit("autorouting:end", {
+      subcircuit_id: "subcircuit_source_group_0",
+      simpleRouteJson: {
+        traces: [
+          {
+            type: "pcb_trace",
+            pcb_trace_id: "pcb_trace_0",
+            source_trace_id: "source_trace_0",
+            route: [],
+          },
+        ],
+      },
+    })
+    root.emit("autorouting:start", {
+      subcircuit_id: "subcircuit_source_group_0",
+      componentDisplayName: "board unnamedsubcircuit0",
+      simpleRouteJson: {
+        connections: [{ name: "GND" }],
+        obstacles: [{ obstacleId: "pad_1" }],
+      },
+    })
 
     await new Promise((resolve) => setTimeout(resolve, 5))
 
     expect(() => diagnostics.checkTimeout()).toThrow(
       AutorouterPhaseTimeoutError,
     )
-    expect(fs.existsSync(path.join(debugDir, "phase-0.timeout.json"))).toBe(
+    expect(fs.existsSync(path.join(debugDir, "phase-1.timeout.json"))).toBe(
       true,
     )
     expect(
-      fs.existsSync(path.join(debugDir, "phase-0.input.simple-route.json")),
+      fs.existsSync(path.join(debugDir, "phase-1.input.simple-route.json")),
     ).toBe(true)
     expect(
       fs.existsSync(path.join(debugDir, "board.source-and-pcb.circuit.json")),
     ).toBe(true)
+    expect(fs.existsSync(path.join(debugDir, "placement-unrouted.png"))).toBe(
+      true,
+    )
+    expect(fs.existsSync(path.join(debugDir, "phase-0-routed.png"))).toBe(true)
   })
 
   test("parses autorouter flag values", () => {

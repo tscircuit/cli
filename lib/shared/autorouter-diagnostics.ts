@@ -123,11 +123,7 @@ export class AutorouterDiagnostics {
   private traceCountBySubcircuit = new Map<string, number>()
   private activePhase: ActivePhase | null = null
   private completedPhaseTraces: unknown[] = []
-  private placementCircuitJson?: AnyCircuitElement[]
-  private phasePngSnapshots: Array<{
-    fileName: string
-    circuitJson: AnyCircuitElement[]
-  }> = []
+  private hasWrittenPlacementSnapshot = false
   private summary: Array<Record<string, unknown>> = []
   private rootCircuit: any
 
@@ -183,16 +179,13 @@ export class AutorouterDiagnostics {
     throw new AutorouterPhaseTimeoutError(message, artifactPath)
   }
 
-  async finalize(circuitJson?: unknown[]) {
+  finalize(circuitJson?: unknown[]) {
     if (
       !this.isActive ||
       this.summary.length === 0 ||
       (!this.options.enabled && !this.options.dumpSrj)
     ) {
       return
-    }
-    if (this.options.enabled) {
-      await this.writePngSnapshots()
     }
     this.writeJson("board.meta.json", {
       type: "autorouter_debug_summary",
@@ -238,10 +231,12 @@ export class AutorouterDiagnostics {
       longRunningLoggingStarted: false,
     }
 
-    if (this.options.enabled && !this.placementCircuitJson) {
-      this.placementCircuitJson = this.getCurrentCircuitJson().filter(
+    if (this.options.enabled && !this.hasWrittenPlacementSnapshot) {
+      const placementCircuitJson = this.getCurrentCircuitJson().filter(
         (element) => !this.isRouteElement(element),
       ) as AnyCircuitElement[]
+      this.writePngSnapshot("placement-unrouted.png", placementCircuitJson)
+      this.hasWrittenPlacementSnapshot = true
     }
 
     if (this.options.enabled) {
@@ -290,12 +285,6 @@ export class AutorouterDiagnostics {
       cumulativeTraceCount,
     )
     this.completedPhaseTraces.push(...(outputSrj?.traces ?? []))
-    if (this.options.enabled) {
-      this.phasePngSnapshots.push({
-        fileName: `phase-${activePhase.routingPhaseIndex}-routed.png`,
-        circuitJson: this.getCircuitJsonWithCompletedPhaseTraces(),
-      })
-    }
     this.summary.push({
       subcircuit_id: activePhase.subcircuitId,
       componentDisplayName: activePhase.componentDisplayName,
@@ -332,6 +321,13 @@ export class AutorouterDiagnostics {
       this.writeJson(
         this.getPhaseFileName(activePhase, "output.traces.json"),
         outputSrj?.traces ?? [],
+      )
+    }
+
+    if (this.options.enabled) {
+      this.writePngSnapshot(
+        `phase-${activePhase.routingPhaseIndex}-routed.png`,
+        this.getCircuitJsonWithCompletedPhaseTraces(),
       )
     }
 
@@ -579,32 +575,14 @@ export class AutorouterDiagnostics {
     return filePath
   }
 
-  private async writePngSnapshots() {
-    const snapshots = [
-      ...(this.placementCircuitJson
-        ? [
-            {
-              fileName: "placement-unrouted.png",
-              circuitJson: this.placementCircuitJson,
-            },
-          ]
-        : []),
-      ...this.phasePngSnapshots,
-    ]
-
-    await Promise.all(
-      snapshots.map(async ({ fileName, circuitJson }) => {
-        const pcbSvg = convertCircuitJsonToPcbSvg(circuitJson)
-        const png = await convertSvgToPngBuffer(pcbSvg)
-        const debugDir = path.resolve(
-          this.options.debugDir ?? DEFAULT_DEBUG_DIR,
-        )
-        fs.mkdirSync(debugDir, { recursive: true })
-        const filePath = path.join(debugDir, fileName)
-        fs.writeFileSync(filePath, png)
-        this.logArtifact(filePath)
-      }),
-    )
+  private writePngSnapshot(fileName: string, circuitJson: AnyCircuitElement[]) {
+    const pcbSvg = convertCircuitJsonToPcbSvg(circuitJson)
+    const png = convertSvgToPngBuffer(pcbSvg)
+    const debugDir = path.resolve(this.options.debugDir ?? DEFAULT_DEBUG_DIR)
+    fs.mkdirSync(debugDir, { recursive: true })
+    const filePath = path.join(debugDir, fileName)
+    fs.writeFileSync(filePath, png)
+    this.logArtifact(filePath)
   }
 
   private logArtifact(filePath: string) {
