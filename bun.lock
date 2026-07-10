@@ -8,7 +8,7 @@
         "@biomejs/biome": "^1.9.4",
         "@tscircuit/check-shorts": "https://jscdn.tscircuit.com/@tscircuit/check-shorts/0.0.9.tgz",
         "@tscircuit/circuit-json-placement-analysis": "^0.0.6",
-        "@tscircuit/circuit-json-routing-analysis": "^0.0.5",
+        "@tscircuit/circuit-json-routing-analysis": "^0.0.6",
         "@tscircuit/circuit-json-schematic-placement-analysis": "github:tscircuit/circuit-json-schematic-placement-analysis#b6d5fe675adc26a2fc988aa081e6fb51e6bf696a",
         "@tscircuit/eval": "^0.0.978",
         "@tscircuit/fake-snippets": "^0.0.182",
@@ -372,7 +372,7 @@
 
     "@tscircuit/circuit-json-placement-analysis": ["@tscircuit/circuit-json-placement-analysis@0.0.6", "", { "dependencies": { "flatbush": "^4.5.1", "rbush": "^4.0.1" }, "peerDependencies": { "typescript": "^5" } }, "sha512-ICqLrrDIGD+Re+I0knzIxRdYBu3uJgn/k4U474U/A4rg73CqA/W6XnmveiXAixl7mbCUAO2rijiX3XYAQzlLUg=="],
 
-    "@tscircuit/circuit-json-routing-analysis": ["@tscircuit/circuit-json-routing-analysis@0.0.5", "", { "dependencies": { "circuit-json": "^0.0.439", "flatbush": "^4.5.1", "format-si-unit": "^0.0.7" }, "peerDependencies": { "typescript": "^5" } }, "sha512-ajkSvSFB7xnNCPg6IOYpQoOQL7mqMnuQwOlDWh5gyMr0sTzoZaxPR+gISXMNGUv8roy/oejMkIe59barFa8tkw=="],
+    "@tscircuit/circuit-json-routing-analysis": ["@tscircuit/circuit-json-routing-analysis@0.0.6", "", { "peerDependencies": { "circuit-json": "*", "typescript": "^5" } }, "sha512-JRmCqieAV7janGaDvWvwFEbFt8xjf5bf6cBDMb3qM3hgR0tv71Dk8P0ClZLJ1I6FWE/PwtIS8h+24ehDHfgW2A=="],
 
     "@tscircuit/circuit-json-schematic-placement-analysis": ["@tscircuit/circuit-json-schematic-placement-analysis@github:tscircuit/circuit-json-schematic-placement-analysis#b6d5fe6", { "dependencies": { "@tscircuit/circuit-json-util": "^0.0.94" }, "peerDependencies": { "circuit-json": "*", "typescript": "^5" } }, "tscircuit-circuit-json-schematic-placement-analysis-b6d5fe6"],
 
@@ -1243,8 +1243,6 @@
     "zustand-hoist": ["zustand-hoist@2.0.1", "", { "peerDependencies": { "zustand": ">=4.0.0" } }, "sha512-Lhvv3RlLQx1NSUtuhk8jegXe1Wyav9RAOnLd4CRs1SbB5qcFoarAGQTE43vIxXizrm1UQJl1q5uRbOZuXGXGpQ=="],
 
     "@babel/code-frame/picocolors": ["picocolors@1.1.1", "", {}, "sha512-xceH2snhtb5M9liqDsmEw56le376mTZkEX/jEb/RxNFyegNul7eNslCXP9FDj/Lcu0X8KEyMceP2ntpaHrDEVA=="],
-
-    "@tscircuit/circuit-json-routing-analysis/circuit-json": ["circuit-json@0.0.439", "", {}, "sha512-38QVnfvpDrdIquFe61o0JSj5bCqGS7u+ct9YdY1+ZJIMZ1HS3BuXIZPRKYl7qcNAtvjKoRjrBzX30yPt+f2rSg=="],
 
     "@tscircuit/circuit-json-schematic-placement-analysis/@tscircuit/circuit-json-util": ["@tscircuit/circuit-json-util@0.0.94", "", { "dependencies": { "parsel-js": "^1.1.2" }, "peerDependencies": { "circuit-json": "*", "transformation-matrix": "*", "zod": "3" } }, "sha512-kEYV6LzcZbRuw43IxsZ1cZL2pUx4nF07MYAHHhY9s90UzKYaIYfZ1q11s+F2wNwKecCcSyTUoAwWeqazLQEyVQ=="],
 
