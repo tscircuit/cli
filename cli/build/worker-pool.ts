@@ -89,7 +89,7 @@ export async function buildFilesWithWorkerPool(options: {
   )
   const workerJobTimeoutMs = Number.isFinite(envWorkerTimeoutMs)
     ? envWorkerTimeoutMs
-    : options.workerJobTimeoutMs ?? 300000
+    : (options.workerJobTimeoutMs ?? 300000)
   const poolConcurrency = Math.max(
     1,
     Math.min(options.concurrency, options.files.length),
@@ -118,7 +118,7 @@ export async function buildFilesWithWorkerPool(options: {
       message.message_type === "worker_log" ? message.log_lines : [],
     getStatusLine: (message) =>
       message.message_type === "worker_log"
-        ? message.status_line ?? null
+        ? (message.status_line ?? null)
         : null,
     isCompletionMessage: (message) =>
       message.message_type === "build_completed",
