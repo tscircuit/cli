@@ -24,9 +24,7 @@ export interface CheckShortsResult {
   }>
 }
 
-const checkShortsPackageName = ["@tscircuit", "check-shorts"].join("/")
-
-const loadCheckShorts = async () => await import(checkShortsPackageName)
+const loadCheckShorts = async () => await import("@tscircuit/check-shorts")
 
 const parsePixelsPerMm = (value?: string): number | undefined => {
   if (!value) return undefined
