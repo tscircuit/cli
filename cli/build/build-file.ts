@@ -6,6 +6,7 @@ import kleur from "kleur"
 import { analyzeCircuitJson } from "lib/shared/circuit-json-diagnostics"
 import { generateCircuitJson } from "lib/shared/generate-circuit-json"
 import { getPlatformConfigWithCliDefaults } from "lib/shared/get-platform-config-with-cli-defaults"
+import type { AutorouterDiagnosticsOptions } from "lib/shared/autorouter-diagnostics"
 import {
   type DrcIgnoreCounts,
   type DrcIgnoreOptions,
@@ -32,6 +33,7 @@ export const buildFile = async (
   } & DrcIgnoreOptions & {
       platformConfig?: PlatformConfig
       injectedProps?: Record<string, unknown>
+      autorouterDiagnostics?: AutorouterDiagnosticsOptions
     },
 ): Promise<BuildFileOutcome> => {
   try {
@@ -58,6 +60,7 @@ export const buildFile = async (
         filePath: input,
         platformConfig: platformConfigWithCliDefaults,
         injectedProps: options?.injectedProps,
+        autorouterDiagnostics: options?.autorouterDiagnostics,
       })
       circuitJson = result.circuitJson
     }

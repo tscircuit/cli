@@ -2,6 +2,7 @@ import fs from "node:fs"
 import path from "node:path"
 import type { PlatformConfig } from "@tscircuit/props"
 import type { PcbSnapshotSettings } from "lib/project-config/project-config-schema"
+import type { AutorouterDiagnosticsOptions } from "lib/shared/autorouter-diagnostics"
 import { ThreadWorkerPool } from "lib/shared/thread-worker-pool"
 import type { DrcIgnoreOptions } from "./drc-diagnostic-filter"
 import type { BuildImageFormatSelection } from "./image-format-selection"
@@ -26,6 +27,7 @@ type BuildJob = {
       platformConfig?: PlatformConfig
       profile?: boolean
       injectedProps?: Record<string, unknown>
+      autorouterDiagnostics?: AutorouterDiagnosticsOptions
       generatePreviewAssets?: boolean
       imageFormats?: BuildImageFormatSelection
       pcbSnapshotSettings?: PcbSnapshotSettings
@@ -70,6 +72,7 @@ export async function buildFilesWithWorkerPool(options: {
       platformConfig?: PlatformConfig
       profile?: boolean
       injectedProps?: Record<string, unknown>
+      autorouterDiagnostics?: AutorouterDiagnosticsOptions
       generatePreviewAssets?: boolean
       imageFormats?: BuildImageFormatSelection
       pcbSnapshotSettings?: PcbSnapshotSettings
@@ -86,7 +89,7 @@ export async function buildFilesWithWorkerPool(options: {
   )
   const workerJobTimeoutMs = Number.isFinite(envWorkerTimeoutMs)
     ? envWorkerTimeoutMs
-    : (options.workerJobTimeoutMs ?? 300000)
+    : options.workerJobTimeoutMs ?? 300000
   const poolConcurrency = Math.max(
     1,
     Math.min(options.concurrency, options.files.length),
@@ -115,7 +118,7 @@ export async function buildFilesWithWorkerPool(options: {
       message.message_type === "worker_log" ? message.log_lines : [],
     getStatusLine: (message) =>
       message.message_type === "worker_log"
-        ? (message.status_line ?? null)
+        ? message.status_line ?? null
         : null,
     isCompletionMessage: (message) =>
       message.message_type === "build_completed",

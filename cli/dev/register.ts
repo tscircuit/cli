@@ -46,8 +46,34 @@ export const registerDev = (program: Command) => {
     .argument("[file]", "Path to the package file or directory")
     .option("-p, --port <number>", "Port to run server on", "3020")
     .option("--kicad-pcm", "Enable KiCad PCM proxy server at /pcm/*")
+    .option(
+      "--autorouter-debug",
+      "Log autorouting diagnostics emitted by the dev runframe",
+    )
+    .option(
+      "--autorouter-timeout <duration>",
+      "Accepted for parity with build; dev autorouting timeouts are handled in the browser runframe",
+    )
+    .option(
+      "--autorouter-debug-dir <path>",
+      "Accepted for parity with build; dev debug artifacts are handled in the browser runframe",
+    )
+    .option(
+      "--autorouter-dump-srj [mode]",
+      "Accepted for parity with build; dev SRJ downloads are handled in the browser runframe",
+    )
     .action(
-      async (file: string, options: { port: string; kicadPcm?: boolean }) => {
+      async (
+        file: string,
+        options: {
+          port: string
+          kicadPcm?: boolean
+          autorouterDebug?: boolean
+          autorouterTimeout?: string
+          autorouterDebugDir?: string
+          autorouterDumpSrj?: string | boolean
+        },
+      ) => {
         let port = parseInt(options.port)
         const startTime = Date.now()
 
@@ -70,6 +96,7 @@ export const registerDev = (program: Command) => {
           componentFilePath: absolutePath,
           projectDir,
           kicadPcm: options.kicadPcm,
+          autorouterDebug: options.autorouterDebug,
         })
 
         await server.start()
@@ -91,6 +118,18 @@ export const registerDev = (program: Command) => {
         if (options.kicadPcm) {
           console.log(
             `\n  ${kleur.bold("➜ Auto-updating KiCad PCM Server:")} ${kleur.underline(kleur.cyan(`http://localhost:${port}/pcm/repository.json`))}\n`,
+          )
+        }
+
+        if (
+          options.autorouterTimeout ||
+          options.autorouterDebugDir ||
+          options.autorouterDumpSrj
+        ) {
+          console.log(
+            kleur.gray(
+              "Autorouter timeout/debug artifact flags are fully supported by `tsci build`; `tsci dev` currently logs autorouting events emitted by runframe.",
+            ),
           )
         }
       },
