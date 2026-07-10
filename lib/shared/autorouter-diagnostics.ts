@@ -68,6 +68,8 @@ type ActivePhase = {
 
 const DEFAULT_DEBUG_DIR = path.join("dist", "autorouter-debug")
 const PROGRESS_LOG_INTERVAL_MS = 10_000
+const CIRCUIT_JSON_ID_PATTERN =
+  /\b(?:source|pcb|schematic|subcircuit|cad|simulation)_[a-z0-9_]*_\d+\b/gi
 
 export const parseAutorouterTimeout = (duration: string): number => {
   const trimmed = duration.trim()
@@ -212,7 +214,7 @@ export class AutorouterDiagnostics {
 
     this.activePhase = {
       subcircuitId,
-      componentDisplayName: event.componentDisplayName ?? subcircuitId,
+      componentDisplayName: event.componentDisplayName ?? "subcircuit",
       routingPhaseIndex,
       phaseOrdinal,
       phaseCount: event.phaseCount,
@@ -344,7 +346,7 @@ export class AutorouterDiagnostics {
         this.logPhaseStart(activePhase, "failed")
       }
       this.log(
-        `  ${this.getPhaseLabel(activePhase)} error after ${this.formatElapsed(elapsedMs)}: ${error.message}`,
+        `  ${this.getPhaseLabel(activePhase)} error after ${this.formatElapsed(elapsedMs)}: ${this.formatUserFacingText(error.message)}`,
       )
     }
 
@@ -453,7 +455,7 @@ export class AutorouterDiagnostics {
     const reasonText = reason ? ` ${reason}` : ""
     this.log(
       [
-        `Autorouting ${activePhase.componentDisplayName} (${activePhase.subcircuitId}) ${this.getPhaseLabel(activePhase)}${reasonText} start:`,
+        `Autorouting ${this.formatUserFacingText(activePhase.componentDisplayName)} ${this.getPhaseLabel(activePhase)}${reasonText} start:`,
         `connections=${activePhase.connectionCount},`,
         `obstacles=${activePhase.obstacleCount},`,
         `previous_traces=${activePhase.previousTraceCount}`,
@@ -583,15 +585,116 @@ export class AutorouterDiagnostics {
   }
 
   private getConnectionNames(simpleRouteJson?: SimpleRouteJson) {
-    return (simpleRouteJson?.connections ?? [])
-      .map((connection) => {
-        const name =
-          connection.name ??
-          connection.rootConnectionName ??
-          connection.source_trace_id
-        return typeof name === "string" ? name : null
-      })
-      .filter((name): name is string => Boolean(name))
+    return [
+      ...new Set(
+        (simpleRouteJson?.connections ?? [])
+          .map((connection) =>
+            [
+              connection.rootConnectionName,
+              connection.name,
+              connection.source_trace_id,
+            ]
+              .filter((value): value is string => typeof value === "string")
+              .map((value) => this.resolveCircuitJsonId(value))
+              .find((value) => value !== null),
+          )
+          .filter((name): name is string => name !== null),
+      ),
+    ]
+  }
+
+  private resolveCircuitJsonId(value: string): string | null {
+    const circuitJson = this.getCurrentCircuitJson()
+    const element = circuitJson.find((candidate) =>
+      Object.entries(candidate).some(
+        ([key, candidateValue]) =>
+          key.endsWith("_id") && candidateValue === value,
+      ),
+    )
+
+    if (!element) return value
+
+    if (element.type === "source_trace") {
+      if (typeof element.name === "string") return element.name
+      return this.getTraceSelector(element, circuitJson)
+    }
+
+    if (element.type === "source_net" && typeof element.name === "string") {
+      return `net.${element.name}`
+    }
+
+    if (element.type === "source_port") {
+      return this.getPortSelector(element, circuitJson)
+    }
+
+    return null
+  }
+
+  private formatUserFacingText(value: string) {
+    let formattedValue = value
+    for (const element of this.getCurrentCircuitJson()) {
+      for (const [key, id] of Object.entries(element)) {
+        if (!key.endsWith("_id") || typeof id !== "string") continue
+        formattedValue = formattedValue.replaceAll(
+          id,
+          this.resolveCircuitJsonId(id) ?? "internal element",
+        )
+      }
+    }
+    return formattedValue.replace(CIRCUIT_JSON_ID_PATTERN, "internal element")
+  }
+
+  private getTraceSelector(
+    trace: Record<string, unknown>,
+    circuitJson: Array<Record<string, unknown>>,
+  ) {
+    const portIds = trace.connected_source_port_ids
+    if (!Array.isArray(portIds)) return null
+
+    const selectors = portIds
+      .map((portId) =>
+        typeof portId === "string"
+          ? this.getPortSelectorById(portId, circuitJson)
+          : null,
+      )
+      .filter((selector): selector is string => selector !== null)
+
+    return selectors.length >= 2 ? selectors.join(" to ") : null
+  }
+
+  private getPortSelectorById(
+    sourcePortId: string,
+    circuitJson: Array<Record<string, unknown>>,
+  ) {
+    const port = circuitJson.find(
+      (element) =>
+        element.type === "source_port" &&
+        element.source_port_id === sourcePortId,
+    )
+    return port ? this.getPortSelector(port, circuitJson) : null
+  }
+
+  private getPortSelector(
+    port: Record<string, unknown>,
+    circuitJson: Array<Record<string, unknown>>,
+  ) {
+    const portName =
+      typeof port.most_frequently_referenced_by_name === "string"
+        ? port.most_frequently_referenced_by_name
+        : typeof port.name === "string"
+          ? port.name
+          : null
+    if (!portName) return null
+
+    const component = circuitJson.find(
+      (element) =>
+        element.type === "source_component" &&
+        element.source_component_id === port.source_component_id,
+    )
+    const componentName =
+      component && typeof component.name === "string" ? component.name : null
+
+    return componentName ? `${componentName}.${portName}` : portName
   }
 
   private countErrors(simpleRouteJson?: SimpleRouteJson) {
@@ -601,7 +704,10 @@ export class AutorouterDiagnostics {
 
   private getCurrentCircuitJson() {
     try {
-      return this.rootCircuit?.db?.toArray?.() ?? []
+      const circuitJson = this.rootCircuit?.db?.toArray?.()
+      return Array.isArray(circuitJson)
+        ? (circuitJson as Array<Record<string, unknown>>)
+        : []
     } catch {
       return []
     }

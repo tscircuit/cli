@@ -25,6 +25,54 @@ const debug = Debug("tscircuit:devserver")
 
 const BINARY_FILE_EXTENSIONS = new Set([".glb", ".png", ".jpeg", ".jpg"])
 const CONFIG_MODULE_FILENAMES = ["tscircuit.config.ts", "tscircuit.config.js"]
+const CIRCUIT_JSON_ID_PATTERN =
+  /\b(?:source|pcb|schematic|subcircuit|cad|simulation)_[a-z0-9_]*_\d+\b/gi
+
+export const formatAutorouterDebugEvent = (
+  event: Record<string, unknown>,
+): string => {
+  const parts = [
+    typeof event.componentDisplayName === "string"
+      ? `component=${event.componentDisplayName}`
+      : null,
+    typeof event.phase === "string" ? `phase=${event.phase}` : null,
+    typeof event.solverName === "string" ? `solver=${event.solverName}` : null,
+    typeof event.connectionCount === "number"
+      ? `connections=${event.connectionCount}`
+      : null,
+    typeof event.obstacleCount === "number"
+      ? `obstacles=${event.obstacleCount}`
+      : null,
+    typeof event.steps === "number" ? `steps=${event.steps}` : null,
+    typeof event.iteration === "number" ? `iteration=${event.iteration}` : null,
+    typeof event.progress === "number"
+      ? `progress=${Math.round(event.progress * 100)}%`
+      : null,
+    typeof event.iterationsPerSecond === "number"
+      ? `iterations_per_second=${Math.round(event.iterationsPerSecond)}`
+      : null,
+    typeof event.elapsedMs === "number"
+      ? `elapsed=${Math.round(event.elapsedMs)}ms`
+      : null,
+  ].filter((part): part is string => part !== null)
+
+  const error = event.error
+  const errorMessage =
+    error && typeof error === "object" && "message" in error
+      ? (error as { message?: unknown }).message
+      : typeof error === "string"
+        ? error
+        : null
+  if (typeof errorMessage === "string") {
+    parts.push(
+      `error=${errorMessage.replace(CIRCUIT_JSON_ID_PATTERN, "internal element")}`,
+    )
+  }
+
+  const eventType =
+    typeof event.event_type === "string" ? event.event_type : "autorouting"
+  return `[autorouter] ${eventType}${parts.length > 0 ? ` ${parts.join(" ")}` : ""}`
+}
 
 type FileUploadPayload =
   | {
@@ -140,11 +188,7 @@ export class DevServer {
     if (this.autorouterDebug) {
       this.eventsWatcher.on("*", (event) => {
         if (!String(event.event_type).startsWith("autorouting:")) return
-        console.log(
-          kleur.cyan(
-            `[autorouter] ${event.event_type} ${JSON.stringify(event)}`,
-          ),
-        )
+        console.log(kleur.cyan(formatAutorouterDebugEvent(event)))
       })
     }
 
