@@ -1,6 +1,9 @@
 import fs from "node:fs"
 import path from "node:path"
+import type { AnyCircuitElement } from "circuit-json"
+import { convertCircuitJsonToPcbSvg } from "circuit-to-svg"
 import kleur from "kleur"
+import { convertSvgToPngBuffer } from "./convert-svg-to-png"
 
 export type AutorouterDumpSrjMode = "all" | "failed" | `phase:${number}`
 
@@ -120,6 +123,7 @@ export class AutorouterDiagnostics {
   private traceCountBySubcircuit = new Map<string, number>()
   private activePhase: ActivePhase | null = null
   private completedPhaseTraces: unknown[] = []
+  private hasWrittenPlacementSnapshot = false
   private summary: Array<Record<string, unknown>> = []
   private rootCircuit: any
 
@@ -171,9 +175,6 @@ export class AutorouterDiagnostics {
     const phaseLabel = this.getPhaseLabel(this.activePhase)
     const message = `Autorouter timeout after ${this.formatElapsed(elapsedMs)} in ${phaseLabel}.`
     this.log(kleur.red(message))
-    this.log(
-      `Wrote debug artifact: ${path.relative(process.cwd(), artifactPath)}`,
-    )
 
     throw new AutorouterPhaseTimeoutError(message, artifactPath)
   }
@@ -228,6 +229,14 @@ export class AutorouterDiagnostics {
       lastProgressLogAt: 0,
       hasLoggedStart: false,
       longRunningLoggingStarted: false,
+    }
+
+    if (this.options.enabled && !this.hasWrittenPlacementSnapshot) {
+      const placementCircuitJson = this.getCurrentCircuitJson().filter(
+        (element) => !this.isRouteElement(element),
+      ) as AnyCircuitElement[]
+      this.writePngSnapshot("placement-unrouted.png", placementCircuitJson)
+      this.hasWrittenPlacementSnapshot = true
     }
 
     if (this.options.enabled) {
@@ -312,6 +321,13 @@ export class AutorouterDiagnostics {
       this.writeJson(
         this.getPhaseFileName(activePhase, "output.traces.json"),
         outputSrj?.traces ?? [],
+      )
+    }
+
+    if (this.options.enabled) {
+      this.writePngSnapshot(
+        `phase-${activePhase.routingPhaseIndex}-routed.png`,
+        this.getCircuitJsonWithCompletedPhaseTraces(),
       )
     }
 
@@ -555,7 +571,57 @@ export class AutorouterDiagnostics {
     fs.mkdirSync(debugDir, { recursive: true })
     const filePath = path.join(debugDir, fileName)
     fs.writeFileSync(filePath, JSON.stringify(value, null, 2))
+    this.logArtifact(filePath)
     return filePath
+  }
+
+  private writePngSnapshot(fileName: string, circuitJson: AnyCircuitElement[]) {
+    const pcbSvg = convertCircuitJsonToPcbSvg(circuitJson)
+    const png = convertSvgToPngBuffer(pcbSvg)
+    const debugDir = path.resolve(this.options.debugDir ?? DEFAULT_DEBUG_DIR)
+    fs.mkdirSync(debugDir, { recursive: true })
+    const filePath = path.join(debugDir, fileName)
+    fs.writeFileSync(filePath, png)
+    this.logArtifact(filePath)
+  }
+
+  private logArtifact(filePath: string) {
+    this.log(`Wrote debug artifact: ${path.relative(process.cwd(), filePath)}`)
+  }
+
+  private getCircuitJsonWithCompletedPhaseTraces() {
+    const circuitJson = [...this.getCurrentCircuitJson()]
+    const elementIndexById = new Map<string, number>()
+
+    for (const [index, element] of circuitJson.entries()) {
+      const id = this.getCircuitElementId(element)
+      if (id) elementIndexById.set(id, index)
+    }
+
+    for (const trace of this.completedPhaseTraces) {
+      if (!trace || typeof trace !== "object") continue
+      const element = trace as Record<string, unknown>
+      const id = this.getCircuitElementId(element)
+      const existingIndex = id ? elementIndexById.get(id) : undefined
+      if (existingIndex === undefined) {
+        circuitJson.push(element)
+        if (id) elementIndexById.set(id, circuitJson.length - 1)
+      } else {
+        circuitJson[existingIndex] = element
+      }
+    }
+
+    return circuitJson as AnyCircuitElement[]
+  }
+
+  private getCircuitElementId(element: Record<string, unknown>) {
+    if (typeof element.type !== "string") return undefined
+    const id = element[`${element.type}_id`]
+    return typeof id === "string" ? id : undefined
+  }
+
+  private isRouteElement(element: Record<string, unknown>) {
+    return element.type === "pcb_trace" || element.type === "pcb_via"
   }
 
   private getPhaseFileName(activePhase: ActivePhase, suffix: string) {

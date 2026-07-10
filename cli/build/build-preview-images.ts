@@ -7,8 +7,8 @@ import {
   convertCircuitJsonToSchematicSvg,
 } from "circuit-to-svg"
 import type { PcbSnapshotSettings } from "lib/project-config/project-config-schema"
+import { convertSvgToPngBuffer } from "lib/shared/convert-svg-to-png"
 import type { BuildImageFormatSelection } from "./image-format-selection"
-import { convertSvgToPngBuffer } from "./svg-to-png"
 import { writeSimulationSvgAssetsFromCircuitJson } from "./worker-output-generators"
 
 export interface BuildFileResult {

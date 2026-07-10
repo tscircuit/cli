@@ -2,20 +2,20 @@ import fs from "node:fs"
 import path from "node:path"
 import type { AnyCircuitElement } from "circuit-json"
 import { renderCircuitJsonTo3dPng } from "circuit-json-to-3d-png"
-import { circuitJsonToStep } from "circuit-json-to-step"
 import { convertCircuitJsonToGltf } from "circuit-json-to-gltf"
+import { circuitJsonToStep } from "circuit-json-to-step"
 import {
   convertCircuitJsonToPcbSvg,
   convertCircuitJsonToSchematicSvg,
 } from "circuit-to-svg"
-import { getCircuitJsonToGltfOptions } from "../../lib/shared/get-circuit-json-to-gltf-options"
-import type { PcbSnapshotSettings } from "../../lib/project-config/project-config-schema"
-import { convertModelUrlsToFileUrls } from "./convert-model-urls-to-file-urls"
-import { normalizeToUint8Array } from "./worker-binary-utils"
-import type { BuildImageFormatSelection } from "./image-format-selection"
-import { convertSvgToPngBuffer } from "./svg-to-png"
 import { loadLocalStepModelFsMap } from "lib/shared/load-local-step-model-fs-map"
 import { getSimulationSvgAssetsFromCircuitJson } from "lib/shared/simulation-svg-assets"
+import type { PcbSnapshotSettings } from "../../lib/project-config/project-config-schema"
+import { convertSvgToPngBuffer } from "../../lib/shared/convert-svg-to-png"
+import { getCircuitJsonToGltfOptions } from "../../lib/shared/get-circuit-json-to-gltf-options"
+import { convertModelUrlsToFileUrls } from "./convert-model-urls-to-file-urls"
+import type { BuildImageFormatSelection } from "./image-format-selection"
+import { normalizeToUint8Array } from "./worker-binary-utils"
 
 export const writeSimulationSvgAssetsFromCircuitJson = (
   circuitJson: AnyCircuitElement[],

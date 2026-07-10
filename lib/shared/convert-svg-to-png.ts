@@ -1,8 +1,6 @@
 import { Resvg } from "@resvg/resvg-js"
 
-export const convertSvgToPngBuffer = async (
-  svg: string,
-): Promise<Uint8Array> => {
+export const convertSvgToPngBuffer = (svg: string): Uint8Array => {
   const resvg = new Resvg(svg, {
     fitTo: {
       mode: "original",
