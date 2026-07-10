@@ -1,8 +1,8 @@
+import { describe, expect, test } from "bun:test"
 import { EventEmitter } from "node:events"
 import fs from "node:fs"
 import os from "node:os"
 import path from "node:path"
-import { describe, expect, test } from "bun:test"
 import {
   AutorouterDiagnostics,
   AutorouterPhaseTimeoutError,
@@ -11,8 +11,16 @@ import {
 } from "lib/shared/autorouter-diagnostics"
 
 class FakeRootCircuit extends EventEmitter {
+  constructor(
+    private circuitJson: Array<Record<string, unknown>> = [
+      { type: "pcb_board", pcb_board_id: "board_0" },
+    ],
+  ) {
+    super()
+  }
+
   db = {
-    toArray: () => [{ type: "pcb_board", pcb_board_id: "board_0" }],
+    toArray: () => this.circuitJson,
   }
 }
 
@@ -61,6 +69,89 @@ describe("autorouter diagnostics", () => {
       fs.existsSync(path.join(debugDir, "phase-0.output.traces.json")),
     ).toBe(true)
     expect(fs.existsSync(path.join(debugDir, "board.meta.json"))).toBe(true)
+  })
+
+  test("logs selectors and names instead of circuit JSON ids", () => {
+    const logs: string[] = []
+    const root = new FakeRootCircuit([
+      {
+        type: "source_component",
+        source_component_id: "source_component_0",
+        name: "R1",
+      },
+      {
+        type: "source_component",
+        source_component_id: "source_component_1",
+        name: "C1",
+      },
+      {
+        type: "source_port",
+        source_port_id: "source_port_0",
+        source_component_id: "source_component_0",
+        name: "pin1",
+      },
+      {
+        type: "source_port",
+        source_port_id: "source_port_1",
+        source_component_id: "source_component_1",
+        name: "pin2",
+      },
+      {
+        type: "source_trace",
+        source_trace_id: "source_trace_0",
+        connected_source_port_ids: ["source_port_0", "source_port_1"],
+        connected_source_net_ids: [],
+      },
+      {
+        type: "source_trace",
+        source_trace_id: "source_trace_1",
+        name: "reset_filter",
+        connected_source_port_ids: ["source_port_0", "source_port_1"],
+        connected_source_net_ids: [],
+      },
+      {
+        type: "source_net",
+        source_net_id: "source_net_0",
+        name: "GND",
+      },
+    ])
+    const diagnostics = new AutorouterDiagnostics({
+      enabled: true,
+      log: (message) => logs.push(message),
+    })
+
+    diagnostics.attachToRootCircuit(root)
+    root.emit("autorouting:start", {
+      subcircuit_id: "subcircuit_source_group_0",
+      componentDisplayName: "board main",
+      simpleRouteJson: {
+        connections: [
+          { name: "source_trace_0", source_trace_id: "source_trace_0" },
+          { name: "source_trace_1", source_trace_id: "source_trace_1" },
+          { name: "source_net_0" },
+          { name: "source_port_0" },
+        ],
+      },
+    })
+    root.emit("autorouting:error", {
+      subcircuit_id: "subcircuit_source_group_0",
+      error: {
+        message:
+          "Could not route source_trace_0 inside subcircuit_source_group_0",
+      },
+    })
+
+    const output = logs.join("\n")
+    expect(output).toContain("R1.pin1 to C1.pin2")
+    expect(output).toContain("reset_filter")
+    expect(output).toContain("net.GND")
+    expect(output).toContain("R1.pin1")
+    expect(output).toContain(
+      "Could not route R1.pin1 to C1.pin2 inside internal element",
+    )
+    expect(output).not.toMatch(
+      /source_(?:trace|net|port|component)_\d+|subcircuit_source_group_\d+/,
+    )
   })
 
   test("phase timeout writes reproducer artifacts", async () => {
