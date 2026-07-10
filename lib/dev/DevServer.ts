@@ -47,6 +47,7 @@ export class DevServer {
 
   /** Whether to enable the KiCad PCM proxy server */
   kicadPcm: boolean
+  autorouterDebug: boolean
 
   /**
    * The HTTP server that hosts the file server and event bus. You can use
@@ -77,16 +78,19 @@ export class DevServer {
     componentFilePath,
     projectDir,
     kicadPcm,
+    autorouterDebug,
   }: {
     port: number
     componentFilePath: string
     projectDir?: string
     kicadPcm?: boolean
+    autorouterDebug?: boolean
   }) {
     this.port = port
     this.componentFilePath = componentFilePath
     this.projectDir = projectDir ?? path.dirname(componentFilePath)
     this.kicadPcm = kicadPcm ?? false
+    this.autorouterDebug = autorouterDebug ?? false
     const projectConfig = loadProjectConfig(this.projectDir)
     this.ignoredFiles = projectConfig?.ignoredFiles ?? []
     this.fsKy = ky.create({
@@ -132,6 +136,17 @@ export class DevServer {
     this.eventsWatcher.on("TOKEN_UPDATED", (event) =>
       this.handleTokenUpdated(event.registry_token),
     )
+
+    if (this.autorouterDebug) {
+      this.eventsWatcher.on("*", (event) => {
+        if (!String(event.event_type).startsWith("autorouting:")) return
+        console.log(
+          kleur.cyan(
+            `[autorouter] ${event.event_type} ${JSON.stringify(event)}`,
+          ),
+        )
+      })
+    }
 
     this.filesystemWatcher = chokidar.watch(this.projectDir, {
       persistent: true,

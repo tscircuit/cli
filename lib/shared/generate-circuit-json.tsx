@@ -5,6 +5,10 @@ import type { PlatformConfig } from "@tscircuit/props"
 import Debug from "debug"
 import { abbreviateStringifyObject } from "lib/utils/abbreviate-stringify-object"
 import { getVirtualFileSystemFromDirPath } from "make-vfs"
+import {
+  AutorouterDiagnostics,
+  type AutorouterDiagnosticsOptions,
+} from "./autorouter-diagnostics"
 import { importFromUserLand } from "./importFromUserLand"
 import { registerStaticAssetLoaders } from "./register-static-asset-loaders"
 
@@ -33,6 +37,7 @@ type GenerateCircuitJsonOptions = {
   platformConfig?: PlatformConfig
   injectedProps?: Record<string, unknown>
   onAsyncEffectStatus?: (asyncEffectName: string) => void
+  autorouterDiagnostics?: AutorouterDiagnosticsOptions
 }
 
 /**
@@ -49,6 +54,7 @@ export async function generateCircuitJson({
   platformConfig,
   injectedProps,
   onAsyncEffectStatus,
+  autorouterDiagnostics: autorouterDiagnosticsOptions,
 }: GenerateCircuitJsonOptions) {
   debug(`Generating circuit JSON for ${filePath}`)
 
@@ -61,6 +67,10 @@ export async function generateCircuitJson({
   const runner = new userLandTscircuit.RootCircuit({
     platform: platformConfig,
   })
+  const autorouterDiagnostics = new AutorouterDiagnostics(
+    autorouterDiagnosticsOptions,
+  )
+  autorouterDiagnostics.attachToRootCircuit(runner)
   const absoluteFilePath = path.isAbsolute(filePath)
     ? filePath
     : path.resolve(process.cwd(), filePath)
@@ -146,6 +156,7 @@ export async function generateCircuitJson({
       onAsyncEffectStatus?.(asyncEffectName)
     }
 
+    autorouterDiagnostics.checkTimeout()
     await new Promise((resolve) => setTimeout(resolve, 100))
     runner.render()
   }
@@ -154,6 +165,7 @@ export async function generateCircuitJson({
 
   // Get the circuit JSON
   const circuitJson = await runner.getCircuitJson()
+  autorouterDiagnostics.finalize(circuitJson)
 
   // Save the circuit JSON to a file if requested
   if (saveToFile) {

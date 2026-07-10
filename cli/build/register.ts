@@ -5,6 +5,11 @@ import type { PlatformConfig } from "@tscircuit/props"
 import type { Command } from "commander"
 import kleur from "kleur"
 import { loadRuntimeProjectConfig } from "lib/project-config"
+import {
+  parseAutorouterDumpSrjMode,
+  parseAutorouterTimeout,
+  type AutorouterDiagnosticsOptions,
+} from "lib/shared/autorouter-diagnostics"
 import { convertToKicadLibrary } from "lib/shared/convert-to-kicad-library"
 import { getEntrypoint } from "lib/shared/get-entrypoint"
 import { mergePlatformConfigs } from "lib/shared/platform-config-utils"
@@ -192,6 +197,22 @@ export const registerBuild = (program: Command) => {
       "Log per-circuit circuit.json generation time during build",
     )
     .option(
+      "--autorouter-debug",
+      "Log autorouting phase diagnostics during circuit generation",
+    )
+    .option(
+      "--autorouter-timeout <duration>",
+      'Abort an autorouting phase after a duration, e.g. "120s" or "2m"',
+    )
+    .option(
+      "--autorouter-debug-dir <path>",
+      "Directory for autorouting debug artifacts (default: dist/autorouter-debug)",
+    )
+    .option(
+      "--autorouter-dump-srj [mode]",
+      'Dump SimpleRouteJson inputs/outputs: "all", "failed", or "phase:<index>" (default: failed)',
+    )
+    .option(
       "--kicad-pcm",
       "Generate KiCad PCM (Plugin and Content Manager) assets in dist/pcm",
     )
@@ -311,6 +332,24 @@ export const registerBuild = (program: Command) => {
 
         const distDir = path.join(projectDir, "dist")
         fs.mkdirSync(distDir, { recursive: true })
+
+        const autorouterTimeoutMs = resolvedOptions?.autorouterTimeout
+          ? parseAutorouterTimeout(resolvedOptions.autorouterTimeout)
+          : undefined
+        const autorouterDumpSrj = parseAutorouterDumpSrjMode(
+          resolvedOptions?.autorouterDumpSrj,
+        )
+        const autorouterDebugDir = resolvedOptions?.autorouterDebugDir
+          ? path.resolve(projectDir, resolvedOptions.autorouterDebugDir)
+          : path.join(distDir, "autorouter-debug")
+        const autorouterDiagnostics: AutorouterDiagnosticsOptions = {
+          enabled: resolvedOptions?.autorouterDebug,
+          timeoutMs: autorouterTimeoutMs,
+          debugDir: autorouterDebugDir,
+          dumpSrj: autorouterDumpSrj,
+          logOnError: true,
+          longRunningLogThresholdMs: 10_000,
+        }
 
         // Parse concurrency option
         const concurrencyValue = Math.max(
@@ -536,7 +575,10 @@ export const registerBuild = (program: Command) => {
               filePath,
               outputPath,
               projectDir,
-              buildOptions,
+              {
+                ...buildOptions,
+                autorouterDiagnostics,
+              },
             )
             if (resolvedOptions?.profile) {
               const durationMs = performance.now() - startedAt
@@ -606,6 +648,7 @@ export const registerBuild = (program: Command) => {
             buildOptions: {
               ...buildOptions,
               platformConfig: commandPlatformConfig,
+              autorouterDiagnostics,
             },
             workerJobTimeoutMs: projectConfig?.build?.workerTimeoutMs,
             stopOnFatal: true,
@@ -956,6 +999,9 @@ export const registerBuild = (program: Command) => {
           resolvedOptions?.kicadPcm && "kicad-pcm",
           resolvedOptions?.previewGltf && "preview-gltf",
           resolvedOptions?.profile && "profile",
+          resolvedOptions?.autorouterDebug && "autorouter-debug",
+          resolvedOptions?.autorouterTimeout && "autorouter-timeout",
+          resolvedOptions?.autorouterDumpSrj && "autorouter-dump-srj",
         ].filter(Boolean) as string[]
 
         if (resolvedOptions?.profile && profileEntries.length > 0) {

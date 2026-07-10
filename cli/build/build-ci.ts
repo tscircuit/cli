@@ -28,6 +28,10 @@ export interface BuildCommandOptions {
   glbs?: boolean
   step?: boolean
   profile?: boolean
+  autorouterDebug?: boolean
+  autorouterTimeout?: string
+  autorouterDebugDir?: string
+  autorouterDumpSrj?: string | boolean
   useCdnJavascript?: boolean
   concurrency?: string
   injectProps?: string
