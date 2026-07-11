@@ -70,6 +70,7 @@
     "md5": "^2.3.0",
     "perfect-cli": "^1.0.21",
     "playwright": "^1.57.0",
+    "polygon-clipping": "^0.15.7",
     "poppygl": "^0.0.24",
     "prompts": "^2.4.2",
     "redaxios": "^0.5.1",
