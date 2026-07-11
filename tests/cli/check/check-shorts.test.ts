@@ -1,10 +1,10 @@
-import { expect, test } from "bun:test"
-import { appendCopperBridgeTrace } from "@tscircuit/check-shorts"
+import { expect, mock, test } from "bun:test"
 import { mkdir, readFile, rm, stat, symlink, writeFile } from "node:fs/promises"
 import path from "node:path"
+import { appendCopperBridgeTrace } from "@tscircuit/check-shorts"
 import { temporaryDirectory } from "tempy"
-import { checkShorts } from "../../../cli/check/shorts/register"
 import { getCircuitJsonForCheck } from "../../../cli/check/shared"
+import { checkShorts } from "../../../cli/check/shorts/register"
 import { getCliTestFixture } from "../../fixtures/get-cli-test-fixture"
 
 const circuitCode = `
@@ -12,6 +12,16 @@ export default () => (
   <board width="10mm" height="10mm" routingDisabled>
     <resistor resistance="1k" footprint="0402" name="R1" pcbX={-2} pcbY={0} />
     <capacitor capacitance="1000pF" footprint="0402" name="C1" pcbX={2} pcbY={0} />
+  </board>
+)
+`
+
+const routedCircuitCode = `
+export default () => (
+  <board width="10mm" height="10mm">
+    <resistor resistance="1k" footprint="0402" name="R1" pcbX={-2} pcbY={0} />
+    <capacitor capacitance="1000pF" footprint="0402" name="C1" pcbX={2} pcbY={0} />
+    <trace from=".R1 > .pin1" to=".C1 > .pin1" />
   </board>
 )
 `
@@ -62,7 +72,7 @@ test("check shorts reports no shorts for a clean board", async () => {
 
   try {
     await linkWorkspaceNodeModules(tmpDir)
-    await writeFile(circuitPath, circuitCode)
+    await writeFile(circuitPath, routedCircuitCode)
 
     const result = await checkShorts(circuitPath)
 
@@ -133,5 +143,31 @@ test("tsci check shorts detects a copper bridge short", async () => {
     await rm(circuitJsonPath, { force: true })
     await rm(bitmapArtifactPath, { force: true })
     await rm(pcbSnapshotPath, { force: true })
+  }
+}, 20_000)
+
+test("check shorts routes a source board before analyzing it", async () => {
+  const tmpDir = temporaryDirectory()
+  const circuitPath = path.join(tmpDir, "routed-board.tsx")
+  let pcbTraceCount = 0
+
+  try {
+    await linkWorkspaceNodeModules(tmpDir)
+    await writeFile(circuitPath, routedCircuitCode)
+    mock.module("@tscircuit/check-shorts", () => ({
+      renderBitmapShortDebug: (circuitJson: Array<{ type: string }>) => {
+        pcbTraceCount = circuitJson.filter(
+          (element) => element.type === "pcb_trace",
+        ).length
+        return { shorts: [] }
+      },
+    }))
+
+    const result = await checkShorts(circuitPath)
+
+    expect(result.shorts).toHaveLength(0)
+    expect(pcbTraceCount).toBeGreaterThan(0)
+  } finally {
+    await rm(tmpDir, { recursive: true, force: true })
   }
 }, 20_000)

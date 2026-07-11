@@ -81,7 +81,7 @@ export const checkShorts = async (
     filePath: resolvedInputFilePath,
     platformConfig: {
       pcbDisabled: false,
-      routingDisabled: true,
+      routingDisabled: false,
     } satisfies PlatformConfig,
     allowPrebuiltCircuitJson: true,
   })
