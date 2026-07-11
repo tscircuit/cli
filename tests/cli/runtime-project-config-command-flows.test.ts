@@ -258,7 +258,7 @@ test("simulate analog consumes runtime platformConfig from tscircuit.config.ts",
   )
 
   expect(exitCode).toBe(0)
-  expect(stderr).toContain("source_port_id")
+  expect(stderr).toBe("")
   expect(stdout).toContain("Index  time")
 }, 30_000)
 
