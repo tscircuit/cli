@@ -1,6 +1,6 @@
 # tscircuit command line interface (CLI)
 
-A CLI for developing, managing and publishing tscircuit code (the "npm for tscircuit")
+A CLI for developing, managing and publishing tscircuit code (the "npm for tscircuit") `npm install -g tscircuit`
 
 https://github.com/user-attachments/assets/0228e09d-48fc-4bf5-814b-762b60fc35c7
 
