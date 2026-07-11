@@ -2,7 +2,7 @@ import type { Command } from "commander"
 import { exportSnippet } from "lib/shared/export-snippet"
 import type { ExportFormat } from "lib/shared/export-snippet"
 import { ALLOWED_EXPORT_FORMATS } from "lib/shared/export-snippet"
-import { generateCircuitJson } from "lib/shared/generate-circuit-json"
+import { getOrGenerateCircuitJson } from "lib/shared/get-or-generate-circuit-json"
 import { getSpiceWithPaddedSim } from "lib/shared/get-spice-with-sim"
 import { runSimulation } from "lib/eecircuit-engine/run-simulation"
 import { resultToCsv } from "lib/shared/result-to-csv"
@@ -48,7 +48,7 @@ export const registerExport = (program: Command) => {
         )
 
         if (formatOption === "spice") {
-          const { circuitJson } = await generateCircuitJson({
+          const { circuitJson } = await getOrGenerateCircuitJson({
             filePath: file,
             platformConfig: getPlatformConfigWithCliDefaults(platformConfig),
           })

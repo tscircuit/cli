@@ -3,7 +3,7 @@ import path from "node:path"
 import type { PlatformConfig } from "@tscircuit/props"
 import type { AnyCircuitElement } from "circuit-json"
 import type { AutorouterDiagnosticsOptions } from "lib/shared/autorouter-diagnostics"
-import { generateCircuitJson } from "lib/shared/generate-circuit-json"
+import { getOrGenerateCircuitJson } from "lib/shared/get-or-generate-circuit-json"
 import { getPlatformConfigWithCliDefaults } from "lib/shared/get-platform-config-with-cli-defaults"
 import { getEntrypoint } from "lib/shared/get-entrypoint"
 import { isCircuitJsonFile } from "lib/shared/is-circuit-json-file"
@@ -43,7 +43,7 @@ export const getCircuitJsonForCheck = async ({
   const platformConfigWithCliDefaults =
     getPlatformConfigWithCliDefaults(platformConfig)
 
-  const { circuitJson } = await generateCircuitJson({
+  const { circuitJson } = await getOrGenerateCircuitJson({
     filePath,
     platformConfig: platformConfigWithCliDefaults,
     autorouterDiagnostics,

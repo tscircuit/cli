@@ -11,6 +11,10 @@ import {
 } from "./autorouter-diagnostics"
 import { importFromUserLand } from "./importFromUserLand"
 import { registerStaticAssetLoaders } from "./register-static-asset-loaders"
+import {
+  addSourceFilesystemHash,
+  getSourceFilesystemMd5Hash,
+} from "./circuit-json-build-cache"
 
 const debug = Debug("tsci:generate-circuit-json")
 
@@ -38,6 +42,7 @@ type GenerateCircuitJsonOptions = {
   injectedProps?: Record<string, unknown>
   onAsyncEffectStatus?: (asyncEffectName: string) => void
   autorouterDiagnostics?: AutorouterDiagnosticsOptions
+  sourceFilesystemMd5Hash?: string
 }
 
 /**
@@ -55,8 +60,12 @@ export async function generateCircuitJson({
   injectedProps,
   onAsyncEffectStatus,
   autorouterDiagnostics: autorouterDiagnosticsOptions,
+  sourceFilesystemMd5Hash,
 }: GenerateCircuitJsonOptions) {
   debug(`Generating circuit JSON for ${filePath}`)
+
+  const currentSourceFilesystemMd5Hash =
+    sourceFilesystemMd5Hash ?? getSourceFilesystemMd5Hash(filePath)
 
   // Import React and make it globally available for packages referencing it
   const React = await importFromUserLand("react")
@@ -164,7 +173,10 @@ export async function generateCircuitJson({
   runner.emit("renderComplete")
 
   // Get the circuit JSON
-  const circuitJson = await runner.getCircuitJson()
+  const circuitJson = addSourceFilesystemHash(
+    await runner.getCircuitJson(),
+    currentSourceFilesystemMd5Hash,
+  )
   await autorouterDiagnostics.finalize(circuitJson)
 
   // Save the circuit JSON to a file if requested

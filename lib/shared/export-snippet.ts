@@ -21,7 +21,7 @@ import {
 import { convertCircuitJsonToDsnString } from "dsn-converter"
 import JSZip from "jszip"
 import { circuitJsonToStep } from "circuit-json-to-step"
-import { generateCircuitJson } from "lib/shared/generate-circuit-json"
+import { getOrGenerateCircuitJson } from "lib/shared/get-or-generate-circuit-json"
 import { getCircuitJsonToGltfOptions } from "lib/shared/get-circuit-json-to-gltf-options"
 import { loadLocalStepModelFsMap } from "lib/shared/load-local-step-model-fs-map"
 import { convertToKicadLibrary } from "./convert-to-kicad-library"
@@ -175,7 +175,7 @@ export const exportSnippet = async ({
       return onExit(1)
     }
   } else {
-    const circuitData = await generateCircuitJson({
+    const circuitData = await getOrGenerateCircuitJson({
       filePath,
       saveToFile: format === "circuit-json",
       platformConfig,
