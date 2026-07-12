@@ -1,5 +1,5 @@
 import type { Command } from "commander"
-import { generateCircuitJson } from "lib/shared/generate-circuit-json"
+import { getOrGenerateCircuitJson } from "lib/shared/get-or-generate-circuit-json"
 import { runSimulation } from "lib/eecircuit-engine/run-simulation"
 import { resultToTable } from "lib/shared/result-to-table"
 import { getSpiceWithPaddedSim } from "lib/shared/get-spice-with-sim"
@@ -29,7 +29,7 @@ export const registerSimulate = (program: Command) => {
         commandPlatformConfig,
       )
 
-      const { circuitJson } = await generateCircuitJson({
+      const { circuitJson } = await getOrGenerateCircuitJson({
         filePath: file,
         saveToFile: false,
         platformConfig: getPlatformConfigWithCliDefaults(platformConfig),

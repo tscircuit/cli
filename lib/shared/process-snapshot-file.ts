@@ -10,7 +10,7 @@ import {
 } from "circuit-to-svg"
 import kleur from "kleur"
 import type { CameraPreset } from "circuit-json-to-3d-png"
-import { generateCircuitJson } from "lib/shared/generate-circuit-json"
+import { getOrGenerateCircuitJson } from "lib/shared/get-or-generate-circuit-json"
 import { getPlatformConfigWithCliDefaults } from "lib/shared/get-platform-config-with-cli-defaults"
 import { getSimulationSvgAssetsFromCircuitJson } from "lib/shared/simulation-svg-assets"
 import { compareAndCreateDiff } from "./compare-images"
@@ -79,7 +79,7 @@ export const processSnapshotFile = async ({
       const platformConfigWithCliDefaults =
         getPlatformConfigWithCliDefaults(platformConfig)
 
-      const result = await generateCircuitJson({
+      const result = await getOrGenerateCircuitJson({
         filePath: file,
         platformConfig: platformConfigWithCliDefaults,
       })

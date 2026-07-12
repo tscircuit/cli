@@ -6,7 +6,7 @@ import {
 import type { PlatformConfig } from "@tscircuit/props"
 import type { AnyCircuitElement } from "circuit-json"
 import type { Command } from "commander"
-import { generateCircuitJson } from "lib/shared/generate-circuit-json"
+import { getOrGenerateCircuitJson } from "lib/shared/get-or-generate-circuit-json"
 import { getPlatformConfigWithCliDefaults } from "lib/shared/get-platform-config-with-cli-defaults"
 import { getEntrypoint } from "lib/shared/get-entrypoint"
 import {
@@ -51,7 +51,7 @@ export const checkNetlist = async (file?: string) => {
     placementDrcChecksDisabled: true,
   } satisfies PlatformConfig)
 
-  const { circuitJson } = await generateCircuitJson({
+  const { circuitJson } = await getOrGenerateCircuitJson({
     filePath: resolvedInputFilePath,
     platformConfig: platformConfigWithCliDefaults,
   })

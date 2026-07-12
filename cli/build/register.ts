@@ -4,6 +4,7 @@ import JSZip from "jszip"
 import type { PlatformConfig } from "@tscircuit/props"
 import type { Command } from "commander"
 import kleur from "kleur"
+import { getCircuitJsonOutputDirName } from "lib/shared/circuit-json-build-cache"
 import { loadRuntimeProjectConfig } from "lib/project-config"
 import {
   parseAutorouterDumpSrjMode,
@@ -98,23 +99,6 @@ const parseInjectedProps = ({
   }
 
   return parsed as Record<string, unknown>
-}
-
-const getOutputDirName = (relativePath: string) => {
-  const normalizedRelativePath = relativePath
-    .toLowerCase()
-    .replaceAll("\\", "/")
-
-  if (
-    normalizedRelativePath === "circuit.json" ||
-    normalizedRelativePath.endsWith("/circuit.json")
-  ) {
-    return path.dirname(relativePath)
-  }
-
-  return relativePath
-    .replace(/(\.board|\.circuit)?\.tsx$/, "")
-    .replace(/\.circuit\.json$/, "")
 }
 
 export const registerBuild = (program: Command) => {
@@ -452,7 +436,7 @@ export const registerBuild = (program: Command) => {
           },
         ) => {
           const relative = path.relative(projectDir, filePath)
-          const outputDirName = getOutputDirName(relative)
+          const outputDirName = getCircuitJsonOutputDirName(relative)
 
           builtFiles.push({
             sourcePath: filePath,
@@ -568,7 +552,7 @@ export const registerBuild = (program: Command) => {
           for (const filePath of circuitFiles) {
             const relative = path.relative(projectDir, filePath)
             console.log(`Building ${relative}...`)
-            const outputDirName = getOutputDirName(relative)
+            const outputDirName = getCircuitJsonOutputDirName(relative)
             const outputPath = path.join(distDir, outputDirName, "circuit.json")
             const startedAt = resolvedOptions?.profile ? performance.now() : 0
             const buildOutcome = await buildFile(
@@ -599,7 +583,7 @@ export const registerBuild = (program: Command) => {
         const buildWithWorkers = async () => {
           const filesToBuild = circuitFiles.map((filePath) => {
             const relative = path.relative(projectDir, filePath)
-            const outputDirName = getOutputDirName(relative)
+            const outputDirName = getCircuitJsonOutputDirName(relative)
             const outputPath = path.join(distDir, outputDirName, "circuit.json")
             const glbOutputPath = resolvedOptions?.glbs
               ? path.join(distDir, outputDirName, "3d.glb")
