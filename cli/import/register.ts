@@ -1,51 +1,12 @@
 import { getQueryFromParts } from "cli/utils/get-query-from-parts"
 import type { Command } from "commander"
 import kleur from "kleur"
-import { importComponentFromJlcpcb } from "lib/import/import-component-from-jlcpcb"
 import { getRegistryApiKy } from "lib/registry-api/get-ky"
 import { addPackage } from "lib/shared/add-package"
 import { prompts } from "lib/utils/prompts"
 import ora from "ora"
+import { importJlcpcbPart } from "./import-jlcpcb-part"
 import { parseDirectLcscPartNumber } from "./parse-direct-lcsc-part-number"
-
-type FootprintConversion = Awaited<
-  ReturnType<typeof importComponentFromJlcpcb>
->["footprintConversion"]
-
-const logFootprintConversion = (conversion: FootprintConversion) => {
-  if (conversion.mode === "footprinter" && conversion.candidate) {
-    const accuracy = (
-      conversion.candidate.copperIntersectionOverUnion * 100
-    ).toFixed(2)
-    console.log(
-      kleur.dim(
-        `Using footprinter "${conversion.candidate.footprinterString}" (${accuracy}% copper IoU).`,
-      ),
-    )
-    return
-  }
-
-  if (conversion.mode === "exact-low-accuracy") {
-    const accuracy =
-      conversion.accuracy === undefined
-        ? "no compatible match"
-        : `${(conversion.accuracy * 100).toFixed(2)}% copper IoU`
-    console.log(
-      kleur.yellow(
-        `Using the exact EasyEDA footprint because the best footprinter result had ${accuracy}.`,
-      ),
-    )
-    return
-  }
-
-  if (conversion.mode === "exact-discovery-failed") {
-    console.log(
-      kleur.yellow(
-        "Using the exact EasyEDA footprint because a safe footprinter pin mapping was not available.",
-      ),
-    )
-  }
-}
 
 export const registerImport = (program: Command) => {
   program
@@ -136,28 +97,12 @@ export const registerImport = (program: Command) => {
             ? parseDirectLcscPartNumber(query)
             : null
           if (directLcscPartNumber) {
-            const importSpinner = ora({
-              text: `Importing "${directLcscPartNumber}" from JLCPCB...`,
-              stream: process.stdout,
-            }).start()
-            try {
-              const { filePath, footprintConversion } =
-                await importComponentFromJlcpcb(
-                  directLcscPartNumber,
-                  process.cwd(),
-                  {
-                    download: opts.download,
-                    useExactFootprint: opts.useExactFootprint,
-                  },
-                )
-              importSpinner.succeed(kleur.green(`Imported ${filePath}`))
-              logFootprintConversion(footprintConversion)
-              return
-            } catch (error) {
-              importSpinner.fail(kleur.red("Failed to import part"))
-              console.error(error instanceof Error ? error.message : error)
-              return process.exit(1)
-            }
+            await importJlcpcbPart({
+              download: opts.download,
+              partNumber: directLcscPartNumber,
+              useExactFootprint: opts.useExactFootprint,
+            })
+            return
           }
 
           console.log(
@@ -225,27 +170,11 @@ export const registerImport = (program: Command) => {
             return process.exit(1)
           }
         } else {
-          const importSpinner = ora({
-            text: `Importing "C${choice.part}" from JLCPCB...`,
-            stream: process.stdout,
-          }).start()
-          try {
-            const { filePath, footprintConversion } =
-              await importComponentFromJlcpcb(
-                `C${String(choice.part)}`,
-                process.cwd(),
-                {
-                  download: opts.download,
-                  useExactFootprint: opts.useExactFootprint,
-                },
-              )
-            importSpinner.succeed(kleur.green(`Imported ${filePath}`))
-            logFootprintConversion(footprintConversion)
-          } catch (error) {
-            importSpinner.fail(kleur.red("Failed to import part"))
-            console.error(error instanceof Error ? error.message : error)
-            return process.exit(1)
-          }
+          await importJlcpcbPart({
+            download: opts.download,
+            partNumber: `C${String(choice.part)}`,
+            useExactFootprint: opts.useExactFootprint,
+          })
         }
       },
     )

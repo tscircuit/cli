@@ -6,12 +6,16 @@ import {
 } from "easyeda"
 import fs from "node:fs/promises"
 import path from "node:path"
-import { getPlatformConfigWithCliDefaults } from "lib/shared/get-platform-config-with-cli-defaults"
+import {
+  addCadModelToTsx,
+  type ImportedCadComponent,
+} from "./add-cad-model-to-tsx"
+import { downloadCadModelAssets } from "./download-cad-model-assets"
 import {
   convertImportedFootprintToFootprinter,
-  getEasyEdaFootprinterSourceHints,
   type ImportedFootprintConversion,
-} from "./convert-imported-footprint-to-footprinter"
+} from "./footprinter/convert-imported-footprint-to-footprinter"
+import { getEasyEdaFootprinterSourceHints } from "./footprinter/get-easyeda-footprinter-source-hints"
 
 export interface ImportComponentFromJlcpcbOptions {
   download?: boolean
@@ -26,48 +30,6 @@ export interface ImportComponentFromJlcpcbResult {
         mode: "exact-requested"
         tsx: string
       }
-}
-
-interface CadModelExpressions {
-  objUrl?: string
-  stepUrl?: string
-}
-
-interface ImportedCadComponent {
-  model_obj_url?: string
-  model_origin_position?: { x: number; y: number; z: number }
-  model_step_url?: string
-  rotation?: { z?: number }
-}
-
-const addCadModelToTsx = (
-  tsx: string,
-  cadModel: CadModelExpressions,
-  cadComponent: ImportedCadComponent,
-) => {
-  if (tsx.includes("cadModel={{") || (!cadModel.objUrl && !cadModel.stepUrl)) {
-    return tsx
-  }
-
-  const cadModelLines = [
-    cadModel.objUrl ? `        objUrl: ${cadModel.objUrl},` : undefined,
-    cadModel.stepUrl ? `        stepUrl: ${cadModel.stepUrl},` : undefined,
-    `        pcbRotationOffset: ${cadComponent.rotation?.z ?? 0},`,
-    cadComponent.model_origin_position
-      ? `        modelOriginPosition: ${JSON.stringify(cadComponent.model_origin_position)},`
-      : undefined,
-  ]
-    .filter(Boolean)
-    .join("\n")
-
-  const propsSpreadPattern = /^(\s*)\{\.\.\.(props|restProps)\}/m
-  if (!propsSpreadPattern.test(tsx)) return tsx
-
-  return tsx.replace(
-    propsSpreadPattern,
-    (_, indentation: string, propsName: string) =>
-      `${indentation}cadModel={{\n${cadModelLines}\n${indentation}}}\n${indentation}{...${propsName}}`,
-  )
 }
 
 export const importComponentFromJlcpcb = async (
@@ -119,37 +81,12 @@ export const importComponentFromJlcpcb = async (
   await fs.mkdir(componentDir, { recursive: true })
 
   if (options.download) {
-    const platformConfig = getPlatformConfigWithCliDefaults()
-    const platformFetch = platformConfig.platformFetch ?? globalThis.fetch
-    const downloadedCadModel: CadModelExpressions = {}
-
-    if (cadComponent?.model_step_url) {
-      const stepFileName = `${componentName}.step`
-      const stepResp = await platformFetch(cadComponent.model_step_url)
-      await fs.writeFile(
-        path.join(componentDir, stepFileName),
-        Buffer.from(await stepResp.arrayBuffer()),
-      )
-      tsx = `import stepPath from "./${stepFileName}"\n` + tsx
-      tsx = tsx.replace(`"${cadComponent.model_step_url}"`, "stepPath")
-      downloadedCadModel.stepUrl = "stepPath"
-    }
-
-    if (cadComponent?.model_obj_url) {
-      const objFileName = `${componentName}.obj`
-      const objResp = await platformFetch(cadComponent.model_obj_url)
-      await fs.writeFile(
-        path.join(componentDir, objFileName),
-        Buffer.from(await objResp.arrayBuffer()),
-      )
-      tsx = `import objPath from "./${objFileName}"\n` + tsx
-      tsx = tsx.replace(`"${cadComponent.model_obj_url}"`, "objPath")
-      downloadedCadModel.objUrl = "objPath"
-    }
-
-    if (cadComponent) {
-      tsx = addCadModelToTsx(tsx, downloadedCadModel, cadComponent)
-    }
+    tsx = await downloadCadModelAssets({
+      cadComponent,
+      componentDir,
+      componentName,
+      tsx,
+    })
   }
 
   const filePath = path.join(componentDir, `${componentName}.tsx`)

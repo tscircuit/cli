@@ -8,7 +8,7 @@ import type {
 } from "circuit-json"
 import { rm, symlink, writeFile } from "node:fs/promises"
 import path from "node:path"
-import { convertImportedFootprintToFootprinter } from "lib/import/convert-imported-footprint-to-footprinter"
+import { convertImportedFootprintToFootprinter } from "lib/import/footprinter/convert-imported-footprint-to-footprinter"
 import { generateCircuitJson } from "lib/shared/generate-circuit-json"
 import { temporaryDirectory } from "tempy"
 
