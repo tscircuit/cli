@@ -63,8 +63,8 @@ Commands:
                                the tscircuit ecosystem
   import [options] <query...>  Search JLCPCB or the tscircuit registry and
                                import a component
-  convert [options] <file>     Convert a .kicad_mod footprint to a tscircuit
-                               component
+  convert [options] <file>     Convert .kicad_mod to TSX, or discover a
+                               footprinter string with --footprinter
   simulate                     Run a simulation
   version [options]            Print CLI version
   help [command]               display help for command
