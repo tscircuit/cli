@@ -112,33 +112,37 @@ export const registerConvert = (program: Command) => {
   program
     .command("convert")
     .description(
-      "Convert a KiCad footprint to TSX or discover a footprinter string",
+      "Convert .kicad_mod to TSX, or discover a footprinter string with --footprinter",
     )
-    .argument("<file>", "Path to a component or footprint file")
-    .option("-o, --output <path>", "Output TSX file path")
-    .option("-n, --name <component>", "Component name for export")
+    .argument("<file>", "Path to .kicad_mod, TSX component, or Circuit JSON")
+    .option("-o, --output <path>", "Output TSX, footprinter, or JSON path")
+    .option(
+      "-n, --name <component>",
+      "TSX component name for .kicad_mod conversion",
+    )
     .option(
       "--footprinter",
-      "Discover a footprinter string (implied for TSX and Circuit JSON)",
+      "Discover a footprinter string instead of converting to TSX",
     )
-    .option("--json", "Output footprinter discovery details as JSON")
+    .option(
+      "--json",
+      "Output footprinter discovery details as JSON (requires --footprinter)",
+    )
     .action(async (file: string, options: ConvertOptions) => {
       try {
         const inputPath = path.resolve(file)
         const extension = path.extname(inputPath).toLowerCase()
-        const shouldDiscoverFootprinter =
-          options.footprinter ||
-          options.json ||
-          componentExtensions.has(extension) ||
-          inputPath.toLowerCase().endsWith(".circuit.json")
-        if (shouldDiscoverFootprinter) {
+        if (options.json && !options.footprinter) {
+          throw new Error("--json requires --footprinter")
+        }
+        if (options.footprinter) {
           await writeFootprinterResult({ inputPath, options })
           return
         }
 
         if (extension !== ".kicad_mod") {
           throw new Error(
-            "TSX and Circuit JSON inputs can only be converted to footprinter strings",
+            "Only .kicad_mod inputs convert to TSX by default. Use --footprinter to discover a footprinter string from TSX or Circuit JSON.",
           )
         }
 
