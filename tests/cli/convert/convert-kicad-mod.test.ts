@@ -115,3 +115,55 @@ test("convert kicad_mod to tsx", async () => {
   const tsx = await readFile(tsxPath, "utf-8")
   expect(tsx).toContain("export const R_01005_0402Metric")
 })
+
+test("convert kicad_mod to a footprinter string", async () => {
+  const { tmpDir, runCommand } = await getCliTestFixture()
+  const modPath = path.join(tmpDir, "R_01005_0402Metric.kicad_mod")
+  await writeFile(modPath, kicadMod)
+
+  const { stdout, stderr, exitCode } = await runCommand(
+    `tsci convert ${modPath} --footprinter`,
+  )
+
+  expect(exitCode).toBe(0)
+  expect(stderr).toBe("")
+  expect(stdout).toContain("Copper IoU:")
+  expect(stdout).toMatch(/(?:res|cap|01005|0402)/)
+})
+
+test("convert a TSX component to a footprinter string with --footprinter", async () => {
+  const { tmpDir, runCommand } = await getCliTestFixture()
+  const componentPath = path.join(tmpDir, "TestResistor.tsx")
+  await writeFile(
+    componentPath,
+    `
+export default () => (
+  <resistor
+    name="R1"
+    resistance="1k"
+    footprint="res_p1.3mm_pw0.55mm_ph0.7mm"
+  />
+)
+`,
+  )
+
+  const { stdout, stderr, exitCode } = await runCommand(
+    `tsci convert ${componentPath} --footprinter`,
+  )
+
+  expect(exitCode).toBe(0)
+  expect(stderr).toBe("")
+  expect(stdout).toContain("res_p1.3mm_pw0.55mm_ph0.7mm")
+  expect(stdout).toContain("Copper IoU: 100.00%")
+})
+
+test("convert rejects TSX footprinter discovery without --footprinter", async () => {
+  const { tmpDir, runCommand } = await getCliTestFixture()
+  const componentPath = path.join(tmpDir, "TestResistor.tsx")
+  await writeFile(componentPath, "export default () => <resistor />")
+
+  const { stderr, exitCode } = await runCommand(`tsci convert ${componentPath}`)
+
+  expect(exitCode).toBe(1)
+  expect(stderr).toContain("Use --footprinter")
+})

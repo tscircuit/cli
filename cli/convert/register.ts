@@ -1,43 +1,63 @@
 import type { Command } from "commander"
-import fs from "node:fs/promises"
 import path from "node:path"
 import kleur from "kleur"
-import { KicadFootprintToCircuitJsonConverter } from "kicad-to-circuit-json"
-import { convertCircuitJsonToTscircuit } from "circuit-json-to-tscircuit"
+import { convertKicadFootprintToTsx } from "./convert-kicad-footprint-to-tsx"
+import type { ConvertOptions } from "./convert-options"
+import { discoverFootprinterFromFile } from "./discover-footprinter-from-file"
 
 export const registerConvert = (program: Command) => {
   program
     .command("convert")
-    .description("Convert a .kicad_mod footprint to a tscircuit component")
-    .argument("<file>", "Path to the .kicad_mod file")
-    .option("-o, --output <path>", "Output TSX file path")
-    .option("-n, --name <component>", "Component name for export")
-    .action(
-      async (file: string, options: { output?: string; name?: string }) => {
-        try {
-          const inputPath = path.resolve(file)
-          const modContent = await fs.readFile(inputPath, "utf-8")
-          const converter = new KicadFootprintToCircuitJsonConverter()
-          converter.addFile(path.basename(inputPath), modContent)
-          converter.runUntilFinished()
-          const circuitJson = converter.getOutput()
-          const componentName =
-            options.name ?? path.basename(inputPath, ".kicad_mod")
-          const tsx = convertCircuitJsonToTscircuit(circuitJson, {
-            componentName,
-          })
-          const outputPath = options.output
-            ? path.resolve(options.output)
-            : path.join(path.dirname(inputPath), `${componentName}.tsx`)
-          await fs.writeFile(outputPath, tsx)
-          console.log(kleur.green(`Converted ${outputPath}`))
-        } catch (error) {
-          console.error(
-            kleur.red("Failed to convert footprint:"),
-            error instanceof Error ? error.message : error,
-          )
-          process.exit(1)
-        }
-      },
+    .description(
+      "Convert .kicad_mod to TSX, or discover a footprinter string with --footprinter",
     )
+    .argument("<file>", "Path to .kicad_mod, TSX component, or Circuit JSON")
+    .option("-o, --output <path>", "Output TSX, footprinter, or JSON path")
+    .option(
+      "-n, --name <component>",
+      "TSX component name for .kicad_mod conversion",
+    )
+    .option(
+      "--footprinter",
+      "Discover a footprinter string instead of converting to TSX",
+    )
+    .option(
+      "--json",
+      "Output footprinter discovery details as JSON (requires --footprinter)",
+    )
+    .action(async (file: string, options: ConvertOptions) => {
+      try {
+        const inputPath = path.resolve(file)
+        const extension = path.extname(inputPath).toLowerCase()
+        if (options.json && !options.footprinter) {
+          throw new Error("--json requires --footprinter")
+        }
+        if (options.footprinter) {
+          await discoverFootprinterFromFile({
+            inputPath,
+            json: options.json,
+            output: options.output,
+          })
+          return
+        }
+
+        if (extension !== ".kicad_mod") {
+          throw new Error(
+            "Only .kicad_mod inputs convert to TSX by default. Use --footprinter to discover a footprinter string from TSX or Circuit JSON.",
+          )
+        }
+
+        await convertKicadFootprintToTsx({
+          inputPath,
+          name: options.name,
+          output: options.output,
+        })
+      } catch (error) {
+        console.error(
+          kleur.red("Failed to convert footprint:"),
+          error instanceof Error ? error.message : error,
+        )
+        process.exit(1)
+      }
+    })
 }

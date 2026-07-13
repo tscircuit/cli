@@ -1,11 +1,11 @@
 import { getQueryFromParts } from "cli/utils/get-query-from-parts"
 import type { Command } from "commander"
 import kleur from "kleur"
-import { importComponentFromJlcpcb } from "lib/import/import-component-from-jlcpcb"
 import { getRegistryApiKy } from "lib/registry-api/get-ky"
 import { addPackage } from "lib/shared/add-package"
 import { prompts } from "lib/utils/prompts"
 import ora from "ora"
+import { importJlcpcbPart } from "./import-jlcpcb-part"
 import { parseDirectLcscPartNumber } from "./parse-direct-lcsc-part-number"
 
 export const registerImport = (program: Command) => {
@@ -19,6 +19,10 @@ export const registerImport = (program: Command) => {
     .option("--lcsc", "Alias for --jlcpcb")
     .option("--tscircuit", "Search tscircuit registry packages")
     .option("--download", "Download 3D model assets (.step, .obj) locally")
+    .option(
+      "--use-exact-footprint",
+      "Keep the exact EasyEDA footprint instead of using a >98% footprinter match",
+    )
     .action(
       async (
         queryParts: string[],
@@ -27,6 +31,7 @@ export const registerImport = (program: Command) => {
           lcsc?: boolean
           tscircuit?: boolean
           download?: boolean
+          useExactFootprint?: boolean
         },
       ) => {
         const query = getQueryFromParts(queryParts)
@@ -92,23 +97,12 @@ export const registerImport = (program: Command) => {
             ? parseDirectLcscPartNumber(query)
             : null
           if (directLcscPartNumber) {
-            const importSpinner = ora({
-              text: `Importing "${directLcscPartNumber}" from JLCPCB...`,
-              stream: process.stdout,
-            }).start()
-            try {
-              const { filePath } = await importComponentFromJlcpcb(
-                directLcscPartNumber,
-                process.cwd(),
-                { download: opts.download },
-              )
-              importSpinner.succeed(kleur.green(`Imported ${filePath}`))
-              return
-            } catch (error) {
-              importSpinner.fail(kleur.red("Failed to import part"))
-              console.error(error instanceof Error ? error.message : error)
-              return process.exit(1)
-            }
+            await importJlcpcbPart({
+              download: opts.download,
+              partNumber: directLcscPartNumber,
+              useExactFootprint: opts.useExactFootprint,
+            })
+            return
           }
 
           console.log(
@@ -176,22 +170,11 @@ export const registerImport = (program: Command) => {
             return process.exit(1)
           }
         } else {
-          const importSpinner = ora({
-            text: `Importing "C${choice.part}" from JLCPCB...`,
-            stream: process.stdout,
-          }).start()
-          try {
-            const { filePath } = await importComponentFromJlcpcb(
-              `C${String(choice.part)}`,
-              process.cwd(),
-              { download: opts.download },
-            )
-            importSpinner.succeed(kleur.green(`Imported ${filePath}`))
-          } catch (error) {
-            importSpinner.fail(kleur.red("Failed to import part"))
-            console.error(error instanceof Error ? error.message : error)
-            return process.exit(1)
-          }
+          await importJlcpcbPart({
+            download: opts.download,
+            partNumber: `C${String(choice.part)}`,
+            useExactFootprint: opts.useExactFootprint,
+          })
         }
       },
     )
