@@ -8,6 +8,45 @@ import { prompts } from "lib/utils/prompts"
 import ora from "ora"
 import { parseDirectLcscPartNumber } from "./parse-direct-lcsc-part-number"
 
+type FootprintConversion = Awaited<
+  ReturnType<typeof importComponentFromJlcpcb>
+>["footprintConversion"]
+
+const logFootprintConversion = (conversion: FootprintConversion) => {
+  if (conversion.mode === "footprinter" && conversion.candidate) {
+    const accuracy = (
+      conversion.candidate.copperIntersectionOverUnion * 100
+    ).toFixed(2)
+    console.log(
+      kleur.dim(
+        `Using footprinter "${conversion.candidate.footprinterString}" (${accuracy}% copper IoU).`,
+      ),
+    )
+    return
+  }
+
+  if (conversion.mode === "exact-low-accuracy") {
+    const accuracy =
+      conversion.accuracy === undefined
+        ? "no compatible match"
+        : `${(conversion.accuracy * 100).toFixed(2)}% copper IoU`
+    console.log(
+      kleur.yellow(
+        `Using the exact EasyEDA footprint because the best footprinter result had ${accuracy}.`,
+      ),
+    )
+    return
+  }
+
+  if (conversion.mode === "exact-discovery-failed") {
+    console.log(
+      kleur.yellow(
+        "Using the exact EasyEDA footprint because a safe footprinter pin mapping was not available.",
+      ),
+    )
+  }
+}
+
 export const registerImport = (program: Command) => {
   program
     .command("import")
@@ -19,6 +58,10 @@ export const registerImport = (program: Command) => {
     .option("--lcsc", "Alias for --jlcpcb")
     .option("--tscircuit", "Search tscircuit registry packages")
     .option("--download", "Download 3D model assets (.step, .obj) locally")
+    .option(
+      "--use-exact-footprint",
+      "Keep the exact EasyEDA footprint instead of using a >98% footprinter match",
+    )
     .action(
       async (
         queryParts: string[],
@@ -27,6 +70,7 @@ export const registerImport = (program: Command) => {
           lcsc?: boolean
           tscircuit?: boolean
           download?: boolean
+          useExactFootprint?: boolean
         },
       ) => {
         const query = getQueryFromParts(queryParts)
@@ -97,12 +141,17 @@ export const registerImport = (program: Command) => {
               stream: process.stdout,
             }).start()
             try {
-              const { filePath } = await importComponentFromJlcpcb(
-                directLcscPartNumber,
-                process.cwd(),
-                { download: opts.download },
-              )
+              const { filePath, footprintConversion } =
+                await importComponentFromJlcpcb(
+                  directLcscPartNumber,
+                  process.cwd(),
+                  {
+                    download: opts.download,
+                    useExactFootprint: opts.useExactFootprint,
+                  },
+                )
               importSpinner.succeed(kleur.green(`Imported ${filePath}`))
+              logFootprintConversion(footprintConversion)
               return
             } catch (error) {
               importSpinner.fail(kleur.red("Failed to import part"))
@@ -181,12 +230,17 @@ export const registerImport = (program: Command) => {
             stream: process.stdout,
           }).start()
           try {
-            const { filePath } = await importComponentFromJlcpcb(
-              `C${String(choice.part)}`,
-              process.cwd(),
-              { download: opts.download },
-            )
+            const { filePath, footprintConversion } =
+              await importComponentFromJlcpcb(
+                `C${String(choice.part)}`,
+                process.cwd(),
+                {
+                  download: opts.download,
+                  useExactFootprint: opts.useExactFootprint,
+                },
+              )
             importSpinner.succeed(kleur.green(`Imported ${filePath}`))
+            logFootprintConversion(footprintConversion)
           } catch (error) {
             importSpinner.fail(kleur.red("Failed to import part"))
             console.error(error instanceof Error ? error.message : error)
