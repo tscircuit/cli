@@ -99,6 +99,36 @@ const currentSimulationCircuitJson = [
   },
 ]
 
+const multiSimulationCircuitJson = [
+  "Root Fast",
+  "Root Slow",
+  "Input Group",
+  "Output Group",
+].flatMap((name, index) => {
+  const simulationExperimentId = `simulation_experiment_${index}`
+  return [
+    {
+      type: "simulation_experiment",
+      simulation_experiment_id: simulationExperimentId,
+      name,
+      experiment_type: "spice_transient_analysis",
+      time_per_step: 0.25,
+      start_time_ms: 0,
+      end_time_ms: 1,
+    },
+    {
+      type: "simulation_transient_voltage_graph",
+      simulation_transient_voltage_graph_id: `simulation_transient_voltage_graph_${index}`,
+      simulation_experiment_id: simulationExperimentId,
+      voltage_levels: [0, index + 1, 0],
+      time_per_step: 0.5,
+      start_time_ms: 0,
+      end_time_ms: 1,
+      name,
+    },
+  ]
+})
+
 test("snapshot command creates SVG snapshots", async () => {
   const { tmpDir, runCommand } = await getCliTestFixture()
 
@@ -270,6 +300,51 @@ test("snapshot command creates simulation SVG snapshots for current graphs", asy
   expect(simulationSnapshot).toContain("I(R1)")
   expect(schematicSimulationSnapshot).toContain("<svg")
   expect(schematicSimulationSnapshot).toContain("I(R1)")
+}, 30_000)
+
+test("snapshot command creates named snapshots for every simulation", async () => {
+  const { tmpDir, runCommand } = await getCliTestFixture()
+  const circuitFileName = "multi-sim.circuit.json"
+  await Bun.write(
+    join(tmpDir, circuitFileName),
+    JSON.stringify(multiSimulationCircuitJson),
+  )
+
+  const { stdout: updateStdout } = await runCommand(
+    `tsci snapshot ${circuitFileName} --update --simulation-only`,
+  )
+
+  const snapshotDir = join(tmpDir, "__snapshots__")
+  const suffixes = ["root-fast", "root-slow", "input-group", "output-group"]
+  for (const [index, suffix] of suffixes.entries()) {
+    const simulationSnapshotName = `multi-sim.circuit-simulation-${suffix}.snap.svg`
+    const schematicSimulationSnapshotName = `multi-sim.circuit-schematic-simulation-${suffix}.snap.svg`
+    expect(updateStdout).toContain(
+      `✅ ${join("__snapshots__", simulationSnapshotName)}`,
+    )
+    expect(updateStdout).toContain(
+      `✅ ${join("__snapshots__", schematicSimulationSnapshotName)}`,
+    )
+
+    const simulationSnapshot = await Bun.file(
+      join(snapshotDir, simulationSnapshotName),
+    ).text()
+    const schematicSimulationSnapshot = await Bun.file(
+      join(snapshotDir, schematicSimulationSnapshotName),
+    ).text()
+    expect(simulationSnapshot).toContain(
+      `data-simulation-experiment-id="simulation_experiment_${index}"`,
+    )
+    expect(schematicSimulationSnapshot).toContain(
+      `data-simulation-experiment-id="simulation_experiment_${index}"`,
+    )
+  }
+
+  expect(updateStdout).toContain("Created snapshots")
+  const { stdout: testStdout } = await runCommand(
+    `tsci snapshot ${circuitFileName} --simulation-only`,
+  )
+  expect(testStdout).toContain("All snapshots match")
 }, 30_000)
 
 test("snapshot command --simulation-only rejects other snapshot type filters", async () => {

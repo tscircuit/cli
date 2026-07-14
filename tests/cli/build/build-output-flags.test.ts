@@ -105,6 +105,36 @@ const currentSimulationCircuitJson = [
   },
 ]
 
+const multiSimulationCircuitJson = [
+  "Root Fast",
+  "Root Slow",
+  "Input Group",
+  "Input-Group",
+].flatMap((name, index) => {
+  const simulationExperimentId = `simulation_experiment_${index}`
+  return [
+    {
+      type: "simulation_experiment",
+      simulation_experiment_id: simulationExperimentId,
+      name,
+      experiment_type: "spice_transient_analysis",
+      time_per_step: 0.25,
+      start_time_ms: 0,
+      end_time_ms: 1,
+    },
+    {
+      type: "simulation_transient_voltage_graph",
+      simulation_transient_voltage_graph_id: `simulation_transient_voltage_graph_${index}`,
+      simulation_experiment_id: simulationExperimentId,
+      voltage_levels: [0, index + 1, 0],
+      time_per_step: 0.5,
+      start_time_ms: 0,
+      end_time_ms: 1,
+      name,
+    },
+  ]
+})
+
 const writeBoostSimulationCircuit = async (tmpDir: string) => {
   const circuitPath = path.join(tmpDir, "simulation.circuit.tsx")
   await writeFile(circuitPath, boostSimulationCircuitCode)
@@ -249,6 +279,40 @@ test("build --simulation-svgs includes current graphs", async () => {
   )
   expect(simulationSvg).toContain("<svg")
   expect(simulationSvg).toContain("I(R1)")
+}, 30_000)
+
+test("build emits a named simulation SVG for every experiment", async () => {
+  const { tmpDir, runCommand } = await getCliTestFixture()
+  const circuitPath = path.join(tmpDir, "multi-sim.circuit.json")
+  await writeFile(circuitPath, JSON.stringify(multiSimulationCircuitJson))
+
+  await runCommand(
+    `tsci build --simulation-svgs --simulation-schematic-svgs ${circuitPath}`,
+  )
+
+  const outputDir = path.join(tmpDir, "dist", "multi-sim")
+  const suffixes = ["root-fast", "root-slow", "input-group", "input-group-2"]
+  for (const [index, suffix] of suffixes.entries()) {
+    const simulationSvg = await readFile(
+      path.join(outputDir, `simulation-${suffix}.svg`),
+      "utf-8",
+    )
+    const schematicSimulationSvg = await readFile(
+      path.join(outputDir, `simulation-schematic-${suffix}.svg`),
+      "utf-8",
+    )
+    expect(simulationSvg).toContain(
+      `data-simulation-experiment-id="simulation_experiment_${index}"`,
+    )
+    expect(schematicSimulationSvg).toContain(
+      `data-simulation-experiment-id="simulation_experiment_${index}"`,
+    )
+  }
+
+  expect(stat(path.join(outputDir, "simulation.svg"))).rejects.toBeTruthy()
+  expect(
+    stat(path.join(outputDir, "simulation-schematic.svg")),
+  ).rejects.toBeTruthy()
 }, 30_000)
 
 test("build --simulation-schematic-svgs generates only simulation-schematic.svg", async () => {
