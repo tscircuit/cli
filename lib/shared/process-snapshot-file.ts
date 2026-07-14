@@ -67,9 +67,9 @@ export const processSnapshotFile = async ({
   let circuitJson: AnyCircuitElement[]
   let pcbSvg: string | undefined
   let schSvg: string | undefined
-  let simulationSvgAssets:
-    | ReturnType<typeof getSimulationSvgAssetsFromCircuitJson>
-    | undefined
+  let simulationSvgAssets: ReturnType<
+    typeof getSimulationSvgAssetsFromCircuitJson
+  > = []
 
   try {
     if (isCircuitJsonFile(file)) {
@@ -228,12 +228,7 @@ export const processSnapshotFile = async ({
   const base = path.basename(file).replace(/\.[^.]+$/, "")
   const snapshots: Array<
     | {
-        type:
-          | "pcb"
-          | "schematic"
-          | "simulation"
-          | "schematic-simulation"
-          | VisibleLayerRef
+        type: string | VisibleLayerRef
         content: string
         isBinary: false
       }
@@ -256,17 +251,29 @@ export const processSnapshotFile = async ({
   if (threeD && png3d) {
     snapshots.push({ type: "3d", content: png3d, isBinary: true })
   }
-  if ((simulationOnly || (!pcbOnly && !schematicOnly)) && simulationSvgAssets) {
-    snapshots.push({
-      type: "simulation",
-      content: simulationSvgAssets.simulationSvg,
-      isBinary: false,
-    })
-    snapshots.push({
-      type: "schematic-simulation",
-      content: simulationSvgAssets.schematicSimulationSvg,
-      isBinary: false,
-    })
+  if (
+    (simulationOnly || (!pcbOnly && !schematicOnly)) &&
+    simulationSvgAssets.length > 0
+  ) {
+    const hasMultipleSimulations = simulationSvgAssets.length > 1
+    for (const simulationSvgAsset of simulationSvgAssets) {
+      const simulationType = hasMultipleSimulations
+        ? `simulation-${simulationSvgAsset.fileNameSuffix}`
+        : "simulation"
+      const schematicSimulationType = hasMultipleSimulations
+        ? `schematic-simulation-${simulationSvgAsset.fileNameSuffix}`
+        : "schematic-simulation"
+      snapshots.push({
+        type: simulationType,
+        content: simulationSvgAsset.simulationSvg,
+        isBinary: false,
+      })
+      snapshots.push({
+        type: schematicSimulationType,
+        content: simulationSvgAsset.schematicSimulationSvg,
+        isBinary: false,
+      })
+    }
   }
 
   for (const snapshot of snapshots) {

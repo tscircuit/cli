@@ -98,11 +98,11 @@ const generatePreviewAssets = async ({
         imageFormats,
       )
       if (wroteSimulationSvgs) {
-        if (imageFormats.simulationSvgs) {
-          console.log(`${prefix}Written simulation.svg`)
+        for (const fileName of wroteSimulationSvgs.simulationFileNames) {
+          console.log(`${prefix}Written ${fileName}`)
         }
-        if (imageFormats.simulationSchematicSvgs) {
-          console.log(`${prefix}Written simulation-schematic.svg`)
+        for (const fileName of wroteSimulationSvgs.schematicSimulationFileNames) {
+          console.log(`${prefix}Written ${fileName}`)
         }
       }
     } catch (error) {

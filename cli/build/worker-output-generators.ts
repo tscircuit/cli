@@ -27,25 +27,39 @@ export const writeSimulationSvgAssetsFromCircuitJson = (
   }
 
   const simulationSvgAssets = getSimulationSvgAssetsFromCircuitJson(circuitJson)
-  if (!simulationSvgAssets) return false
+  if (simulationSvgAssets.length === 0) return false
 
-  if (imageFormats.simulationSvgs) {
-    fs.writeFileSync(
-      path.join(outputDir, "simulation.svg"),
-      simulationSvgAssets.simulationSvg,
-      "utf-8",
-    )
+  const hasMultipleSimulations = simulationSvgAssets.length > 1
+  const simulationFileNames: string[] = []
+  const schematicSimulationFileNames: string[] = []
+
+  for (const simulationSvgAsset of simulationSvgAssets) {
+    if (imageFormats.simulationSvgs) {
+      const fileName = hasMultipleSimulations
+        ? `simulation-${simulationSvgAsset.fileNameSuffix}.svg`
+        : "simulation.svg"
+      fs.writeFileSync(
+        path.join(outputDir, fileName),
+        simulationSvgAsset.simulationSvg,
+        "utf-8",
+      )
+      simulationFileNames.push(fileName)
+    }
+
+    if (imageFormats.simulationSchematicSvgs) {
+      const fileName = hasMultipleSimulations
+        ? `simulation-schematic-${simulationSvgAsset.fileNameSuffix}.svg`
+        : "simulation-schematic.svg"
+      fs.writeFileSync(
+        path.join(outputDir, fileName),
+        simulationSvgAsset.schematicSimulationSvg,
+        "utf-8",
+      )
+      schematicSimulationFileNames.push(fileName)
+    }
   }
 
-  if (imageFormats.simulationSchematicSvgs) {
-    fs.writeFileSync(
-      path.join(outputDir, "simulation-schematic.svg"),
-      simulationSvgAssets.schematicSimulationSvg,
-      "utf-8",
-    )
-  }
-
-  return true
+  return { simulationFileNames, schematicSimulationFileNames }
 }
 
 export const writeGlbFromCircuitJson = async (
