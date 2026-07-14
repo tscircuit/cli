@@ -13,7 +13,7 @@
     "@tscircuit/circuit-json-placement-analysis": "^0.0.6",
     "@tscircuit/circuit-json-routing-analysis": "^0.0.6",
     "@tscircuit/circuit-json-schematic-placement-analysis": "github:tscircuit/circuit-json-schematic-placement-analysis#b6d5fe675adc26a2fc988aa081e6fb51e6bf696a",
-    "@tscircuit/eval": "^0.0.1004",
+    "@tscircuit/eval": "^0.0.1008",
     "@tscircuit/fake-snippets": "^0.0.182",
     "@tscircuit/file-server": "^0.0.32",
     "@tscircuit/footprinter": "^0.0.374",
@@ -79,7 +79,7 @@
     "semver": "^7.6.3",
     "stepts": "^0.0.3",
     "tempy": "^3.1.0",
-    "tscircuit": "0.0.2046-libonly",
+    "tscircuit": "0.0.2084-libonly",
     "tsx": "^4.7.1",
     "typed-ky": "^0.0.4",
     "zod": "^3.23.8"
