@@ -23,6 +23,7 @@ const SOURCE_FILE_EXTENSIONS = new Set([
   ".kicad_pcb",
   ".kicad_pro",
   ".kicad_sch",
+  ".kicad_sym",
 ])
 
 const IGNORED_DIRECTORY_NAMES = new Set([

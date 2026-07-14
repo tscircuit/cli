@@ -27,6 +27,7 @@ export const STATIC_ASSET_EXTENSIONS = new Set([
   ".kicad_pcb",
   ".kicad_pro",
   ".kicad_sch",
+  ".kicad_sym",
 ])
 
 export const createStaticAssetPlugin = ({

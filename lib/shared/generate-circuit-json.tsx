@@ -31,6 +31,7 @@ const ALLOWED_FILE_EXTENSIONS = [
   ".kicad_pcb",
   ".kicad_pro",
   ".kicad_sch",
+  ".kicad_sym",
 ]
 
 type GenerateCircuitJsonOptions = {
@@ -108,8 +109,11 @@ export async function generateCircuitJson({
       fileMatchFn: (filePath) => {
         const normalizedFilePath = filePath.replace(/\\/g, "/")
 
-        // Allow .kicad_mod files from node_modules
-        if (normalizedFilePath.endsWith(".kicad_mod")) {
+        // Allow imported KiCad library files from node_modules.
+        if (
+          normalizedFilePath.endsWith(".kicad_mod") ||
+          normalizedFilePath.endsWith(".kicad_sym")
+        ) {
           return true
         }
 

@@ -67,3 +67,8 @@ declare module "*.kicad_sch" {
   const src: string
   export default src
 }
+
+declare module "*.kicad_sym" {
+  const src: string
+  export default src
+}

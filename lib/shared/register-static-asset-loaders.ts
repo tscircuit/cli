@@ -11,6 +11,7 @@ const STATIC_ASSET_EXTENSIONS = [
   ".kicad_pcb",
   ".kicad_pro",
   ".kicad_sch",
+  ".kicad_sym",
 ]
 
 const staticAssetFilter = new RegExp(
@@ -32,6 +33,7 @@ const TEXT_STATIC_ASSET_EXTENSIONS = new Set([
   ".kicad_pcb",
   ".kicad_pro",
   ".kicad_sch",
+  ".kicad_sym",
 ])
 
 const readFileContentForStaticLoader = (

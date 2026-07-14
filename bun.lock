@@ -11,7 +11,7 @@
         "@tscircuit/circuit-json-placement-analysis": "^0.0.6",
         "@tscircuit/circuit-json-routing-analysis": "^0.0.6",
         "@tscircuit/circuit-json-schematic-placement-analysis": "github:tscircuit/circuit-json-schematic-placement-analysis#b6d5fe675adc26a2fc988aa081e6fb51e6bf696a",
-        "@tscircuit/eval": "^0.0.992",
+        "@tscircuit/eval": "^0.0.1004",
         "@tscircuit/fake-snippets": "^0.0.182",
         "@tscircuit/file-server": "^0.0.32",
         "@tscircuit/footprinter": "^0.0.374",
@@ -387,7 +387,7 @@
 
     "@tscircuit/core": ["@tscircuit/core@0.0.1414", "", { "dependencies": { "@flatten-js/core": "^1.6.2", "@lume/kiwi": "^0.4.3", "calculate-cell-boundaries": "^0.0.13", "calculate-packing": "0.0.75", "css-select": "5.1.0", "format-si-unit": "^0.0.7", "nanoid": "^5.0.7", "performance-now": "^2.1.0", "react-reconciler": "^0.32.0", "svg-path-commander": "^2.1.11", "transformation-matrix": "^2.16.1", "zod": "^3.25.67" }, "peerDependencies": { "@tscircuit/capacity-autorouter": "*", "@tscircuit/checks": "*", "@tscircuit/circuit-json-util": "*", "@tscircuit/footprinter": "*", "@tscircuit/infgrid-ijump-astar": "*", "@tscircuit/matchpack": "*", "@tscircuit/math-utils": "*", "@tscircuit/props": "*", "@tscircuit/schematic-match-adapt": "*", "bpc-graph": "*", "circuit-json": "*", "circuit-json-to-bpc": "*", "circuit-json-to-connectivity-map": "*", "schematic-symbols": "*", "typescript": "^5.0.0" } }, "sha512-AW8ZYTldtOeJFGIHiP49YIxeb/lICuPMdE22j4k7hRGW0FA0TvbieCv7wvVba9ow3mFPQkqIH0intir3Uh3CaQ=="],
 
-    "@tscircuit/eval": ["@tscircuit/eval@0.0.992", "", { "peerDependencies": { "@tscircuit/core": "*", "circuit-json": "*", "typescript": "^5.0.0", "zod": "3" } }, "sha512-BYfcKKcXvalW/B8N8UglDbmZCh9ts42sAPr67qPU/iir/Rc+Ni6zkafV1g9PJHPAmDcqqTvebouZQDMA3bLp7w=="],
+    "@tscircuit/eval": ["@tscircuit/eval@0.0.1004", "", { "peerDependencies": { "@tscircuit/core": "*", "circuit-json": "*", "typescript": "^5.0.0", "zod": "3" } }, "sha512-IUZIMVJ239Q/qeqAVYOXcY0ImLsYsSj7gmohseILyKRExDKRiV1Io7XbsTf3BDBlbA2QEcXQYZ0YmkMDD1UqgA=="],
 
     "@tscircuit/fake-snippets": ["@tscircuit/fake-snippets@0.0.182", "", {}, "sha512-DHGb1aAUm9KUKhUEiULZbbsUi3xeFnH0w11srz0boV2+Ceu0h8yn2oGvnpsAjlMFq/pmPg3HJayldHHGnw/n4A=="],
 

@@ -1,0 +1,51 @@
+(kicad_symbol_lib
+  (version 20211014)
+  (generator kicad_symbol_editor)
+  (symbol "symbol"
+    (pin_names (offset 1.016))
+    (in_bom yes)
+    (on_board yes)
+    (property "Reference" "U1"
+      (id 0)
+      (at 0 3.81 0)
+      (effects (font (size 1.27 1.27)))
+    )
+    (property "Value" "symbol"
+      (id 1)
+      (at 0 -3.81 0)
+      (effects (font (size 1.27 1.27)))
+    )
+    (property "Footprint" ""
+      (id 2)
+      (at 0 0 0)
+      (effects (font (size 1.27 1.27)) hide)
+    )
+    (property "Datasheet" ""
+      (id 3)
+      (at 0 0 0)
+      (effects (font (size 1.27 1.27)) hide)
+    )
+    (symbol "symbol_0_1"
+      (rectangle
+        (start -2.54 2.54)
+        (end 2.54 -2.54)
+        (stroke (width 0.254) (type default))
+        (fill (type none))
+      )
+    )
+    (symbol "symbol_1_1"
+      (pin input line
+        (at -5.08 0 0)
+        (length 2.54)
+        (name "IN" (effects (font (size 1.27 1.27))))
+        (number "1" (effects (font (size 1.27 1.27))))
+      )
+      (pin output line
+        (at 5.08 0 180)
+        (length 2.54)
+        (name "OUT" (effects (font (size 1.27 1.27))))
+        (number "2" (effects (font (size 1.27 1.27))))
+      )
+    )
+  )
+)
