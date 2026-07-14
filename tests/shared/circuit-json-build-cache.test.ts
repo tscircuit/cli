@@ -30,6 +30,14 @@ test("source filesystem hash tracks source files and ignores build artifacts", (
     path.join(projectDir, "dist", "boards", "main", "circuit.json"),
   )
 
+  const symbolPath = path.join(projectDir, "boards", "part.kicad_sym")
+  fs.writeFileSync(symbolPath, "(kicad_symbol_lib (version 20211014))")
+  const hashWithSymbol = getSourceFilesystemMd5Hash(circuitPath)
+  expect(hashWithSymbol).not.toBe(initialHash)
+
+  fs.writeFileSync(symbolPath, "(kicad_symbol_lib (version 20231120))")
+  expect(getSourceFilesystemMd5Hash(circuitPath)).not.toBe(hashWithSymbol)
+
   fs.writeFileSync(circuitPath, "export default () => <board width={10} />")
   expect(getSourceFilesystemMd5Hash(circuitPath)).not.toBe(initialHash)
 })
