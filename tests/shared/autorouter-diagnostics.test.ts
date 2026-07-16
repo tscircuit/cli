@@ -3,6 +3,7 @@ import { EventEmitter } from "node:events"
 import fs from "node:fs"
 import os from "node:os"
 import path from "node:path"
+import type { CircuitJson } from "circuit-json"
 import {
   AutorouterDiagnostics,
   AutorouterPhaseTimeoutError,
@@ -14,7 +15,7 @@ class FakeRootCircuit extends EventEmitter {
   dbToArrayCallCount = 0
 
   constructor(
-    private circuitJson: Array<Record<string, unknown>> = [
+    private circuitJson: CircuitJson = [
       {
         type: "pcb_board",
         pcb_board_id: "board_0",
@@ -23,6 +24,7 @@ class FakeRootCircuit extends EventEmitter {
         height: 10,
         thickness: 1.4,
         num_layers: 2,
+        material: "fr4",
       },
     ],
   ) {
@@ -141,16 +143,21 @@ describe("autorouter diagnostics", () => {
         height: 10,
         thickness: 1.4,
         num_layers: 2,
+        material: "fr4",
       },
       {
         type: "source_component",
         source_component_id: "source_component_0",
         name: "R1",
+        ftype: "simple_resistor",
+        resistance: 1_000,
       },
       {
         type: "source_component",
         source_component_id: "source_component_1",
         name: "C1",
+        ftype: "simple_resistor",
+        resistance: 1_000,
       },
       {
         type: "source_port",
@@ -181,6 +188,7 @@ describe("autorouter diagnostics", () => {
         type: "source_net",
         source_net_id: "source_net_0",
         name: "GND",
+        member_source_group_ids: [],
       },
     ])
     const diagnostics = new AutorouterDiagnostics({
@@ -231,16 +239,26 @@ describe("autorouter diagnostics", () => {
       {
         type: "pcb_board",
         pcb_board_id: "board_0",
+        center: { x: 0, y: 0 },
+        width: 10,
+        height: 10,
+        thickness: 1.4,
+        num_layers: 2,
+        material: "fr4",
       },
       {
         type: "source_trace",
         source_trace_id: "source_trace_1",
         name: "one",
+        connected_source_port_ids: [],
+        connected_source_net_ids: [],
       },
       {
         type: "source_trace",
         source_trace_id: "source_trace_10",
         name: "ten",
+        connected_source_port_ids: [],
+        connected_source_net_ids: [],
       },
       {
         type: "source_group",
@@ -356,7 +374,15 @@ describe("autorouter diagnostics", () => {
     root.emit("autorouting:end", {
       subcircuit_id: "subcircuit_source_group_0",
       componentDisplayName: "board unnamedsubcircuit0",
-      simpleRouteJson: { traces: [{ route: [] }] },
+      simpleRouteJson: {
+        traces: [
+          {
+            type: "pcb_trace",
+            pcb_trace_id: "pcb_trace_0",
+            route: [],
+          },
+        ],
+      },
     })
 
     expect(logs).toEqual([])

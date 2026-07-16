@@ -3,6 +3,7 @@ import path from "node:path"
 import type {
   AnyCircuitElement,
   CircuitJson,
+  PcbTrace,
   SourcePort,
   SourceTrace,
 } from "circuit-json"
@@ -25,7 +26,7 @@ export type AutorouterDiagnosticsOptions = {
 type SimpleRouteJson = {
   connections?: Array<Record<string, unknown>>
   obstacles?: unknown[]
-  traces?: unknown[]
+  traces?: PcbTrace[]
   jumpers?: unknown[]
   [key: string]: unknown
 }
@@ -132,7 +133,7 @@ export class AutorouterDiagnostics {
   private phaseOrdinalBySubcircuit = new Map<string, number>()
   private traceCountBySubcircuit = new Map<string, number>()
   private activePhase: ActivePhase | null = null
-  private completedPhaseTraces: unknown[] = []
+  private completedPhaseTraces: PcbTrace[] = []
   private hasWrittenPlacementSnapshot = false
   private summary: Array<Record<string, unknown>> = []
   private rootCircuit: any
@@ -610,14 +611,13 @@ export class AutorouterDiagnostics {
 
     for (const trace of this.completedPhaseTraces) {
       if (!trace || typeof trace !== "object") continue
-      const element = trace as AnyCircuitElement
-      const id = this.getCircuitElementId(element)
+      const id = this.getCircuitElementId(trace)
       const existingIndex = id ? elementIndexById.get(id) : undefined
       if (existingIndex === undefined) {
-        circuitJson.push(element)
+        circuitJson.push(trace)
         if (id) elementIndexById.set(id, circuitJson.length - 1)
       } else {
-        circuitJson[existingIndex] = element
+        circuitJson[existingIndex] = trace
       }
     }
 
