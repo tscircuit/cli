@@ -11,6 +11,8 @@ import {
 } from "lib/shared/autorouter-diagnostics"
 
 class FakeRootCircuit extends EventEmitter {
+  dbToArrayCallCount = 0
+
   constructor(
     private circuitJson: Array<Record<string, unknown>> = [
       {
@@ -28,7 +30,10 @@ class FakeRootCircuit extends EventEmitter {
   }
 
   db = {
-    toArray: () => this.circuitJson,
+    toArray: () => {
+      this.dbToArrayCallCount += 1
+      return this.circuitJson
+    },
   }
 }
 
@@ -219,6 +224,44 @@ describe("autorouter diagnostics", () => {
     expect(fs.existsSync(path.join(debugDir, "placement-unrouted.png"))).toBe(
       true,
     )
+  })
+
+  test("ignores empty ids and formats ids with a single database read", () => {
+    const root = new FakeRootCircuit([
+      {
+        type: "pcb_board",
+        pcb_board_id: "board_0",
+      },
+      {
+        type: "source_trace",
+        source_trace_id: "source_trace_1",
+        name: "one",
+      },
+      {
+        type: "source_trace",
+        source_trace_id: "source_trace_10",
+        name: "ten",
+      },
+      {
+        type: "source_group",
+        source_group_id: "",
+      },
+    ])
+    const diagnostics = new AutorouterDiagnostics({ logOnError: true })
+    diagnostics.attachToRootCircuit(root)
+
+    const formatUserFacingText = (
+      diagnostics as unknown as {
+        formatUserFacingText: (value: string) => string
+      }
+    ).formatUserFacingText.bind(diagnostics)
+
+    expect(
+      formatUserFacingText(
+        "source_trace_10 source_trace_1 board_0 subcircuit_missing_0",
+      ),
+    ).toBe("ten one internal element internal element")
+    expect(root.dbToArrayCallCount).toBe(1)
   })
 
   test("phase timeout writes reproducer artifacts", async () => {

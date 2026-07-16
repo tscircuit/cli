@@ -25,6 +25,11 @@ type SimpleRouteJson = {
   [key: string]: unknown
 }
 
+type CircuitJsonLookup = {
+  circuitJson: Array<Record<string, unknown>>
+  elementById: Map<string, Record<string, unknown>>
+}
+
 type AutoroutingEventPayload = {
   subcircuit_id?: string
   subcircuitId?: string
@@ -651,6 +656,8 @@ export class AutorouterDiagnostics {
   }
 
   private getConnectionNames(simpleRouteJson?: SimpleRouteJson) {
+    const circuitJsonLookup = this.createCircuitJsonLookup()
+
     return [
       ...new Set(
         (simpleRouteJson?.connections ?? [])
@@ -661,7 +668,9 @@ export class AutorouterDiagnostics {
               connection.source_trace_id,
             ]
               .filter((value): value is string => typeof value === "string")
-              .map((value) => this.resolveCircuitJsonId(value))
+              .map((value) =>
+                this.resolveCircuitJsonId(value, circuitJsonLookup),
+              )
               .find((value) => value !== null),
           )
           .filter((name): name is string => name !== null),
@@ -669,14 +678,12 @@ export class AutorouterDiagnostics {
     ]
   }
 
-  private resolveCircuitJsonId(value: string): string | null {
-    const circuitJson = this.getCurrentCircuitJson()
-    const element = circuitJson.find((candidate) =>
-      Object.entries(candidate).some(
-        ([key, candidateValue]) =>
-          key.endsWith("_id") && candidateValue === value,
-      ),
-    )
+  private resolveCircuitJsonId(
+    value: string,
+    lookup = this.createCircuitJsonLookup(),
+  ): string | null {
+    const { circuitJson, elementById } = lookup
+    const element = elementById.get(value)
 
     if (!element) return value
 
@@ -697,17 +704,42 @@ export class AutorouterDiagnostics {
   }
 
   private formatUserFacingText(value: string) {
+    const circuitJsonLookup = this.createCircuitJsonLookup()
     let formattedValue = value
-    for (const element of this.getCurrentCircuitJson()) {
+
+    // Resolve only ids that occur in the message. Sorting by length avoids
+    // replacing an id such as source_trace_1 inside source_trace_10.
+    const idsInMessage = [...circuitJsonLookup.elementById.keys()]
+      .filter((id) => formattedValue.includes(id))
+      .sort((a, b) => b.length - a.length)
+
+    for (const id of idsInMessage) {
+      formattedValue = formattedValue.replaceAll(
+        id,
+        this.resolveCircuitJsonId(id, circuitJsonLookup) ?? "internal element",
+      )
+    }
+
+    return formattedValue.replace(CIRCUIT_JSON_ID_PATTERN, "internal element")
+  }
+
+  private createCircuitJsonLookup(): CircuitJsonLookup {
+    const circuitJson = this.getCurrentCircuitJson()
+    const elementById = new Map<string, Record<string, unknown>>()
+
+    for (const element of circuitJson) {
       for (const [key, id] of Object.entries(element)) {
-        if (!key.endsWith("_id") || typeof id !== "string") continue
-        formattedValue = formattedValue.replaceAll(
-          id,
-          this.resolveCircuitJsonId(id) ?? "internal element",
-        )
+        if (!key.endsWith("_id") || typeof id !== "string" || id.length === 0)
+          continue
+        // Preserve the previous Array.find behavior by keeping the first
+        // element that references a given id.
+        if (!elementById.has(id)) {
+          elementById.set(id, element)
+        }
       }
     }
-    return formattedValue.replace(CIRCUIT_JSON_ID_PATTERN, "internal element")
+
+    return { circuitJson, elementById }
   }
 
   private getTraceSelector(
