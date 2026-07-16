@@ -3,6 +3,7 @@ import { EventEmitter } from "node:events"
 import fs from "node:fs"
 import os from "node:os"
 import path from "node:path"
+import type { CircuitJson } from "circuit-json"
 import {
   AutorouterDiagnostics,
   AutorouterPhaseTimeoutError,
@@ -11,8 +12,10 @@ import {
 } from "lib/shared/autorouter-diagnostics"
 
 class FakeRootCircuit extends EventEmitter {
+  dbToArrayCallCount = 0
+
   constructor(
-    private circuitJson: Array<Record<string, unknown>> = [
+    private circuitJson: CircuitJson = [
       {
         type: "pcb_board",
         pcb_board_id: "board_0",
@@ -21,6 +24,7 @@ class FakeRootCircuit extends EventEmitter {
         height: 10,
         thickness: 1.4,
         num_layers: 2,
+        material: "fr4",
       },
     ],
   ) {
@@ -28,7 +32,10 @@ class FakeRootCircuit extends EventEmitter {
   }
 
   db = {
-    toArray: () => this.circuitJson,
+    toArray: () => {
+      this.dbToArrayCallCount += 1
+      return this.circuitJson
+    },
   }
 }
 
@@ -136,16 +143,21 @@ describe("autorouter diagnostics", () => {
         height: 10,
         thickness: 1.4,
         num_layers: 2,
+        material: "fr4",
       },
       {
         type: "source_component",
         source_component_id: "source_component_0",
         name: "R1",
+        ftype: "simple_resistor",
+        resistance: 1_000,
       },
       {
         type: "source_component",
         source_component_id: "source_component_1",
         name: "C1",
+        ftype: "simple_resistor",
+        resistance: 1_000,
       },
       {
         type: "source_port",
@@ -176,6 +188,7 @@ describe("autorouter diagnostics", () => {
         type: "source_net",
         source_net_id: "source_net_0",
         name: "GND",
+        member_source_group_ids: [],
       },
     ])
     const diagnostics = new AutorouterDiagnostics({
@@ -219,6 +232,54 @@ describe("autorouter diagnostics", () => {
     expect(fs.existsSync(path.join(debugDir, "placement-unrouted.png"))).toBe(
       true,
     )
+  })
+
+  test("ignores empty ids and formats ids with a single database read", () => {
+    const root = new FakeRootCircuit([
+      {
+        type: "pcb_board",
+        pcb_board_id: "board_0",
+        center: { x: 0, y: 0 },
+        width: 10,
+        height: 10,
+        thickness: 1.4,
+        num_layers: 2,
+        material: "fr4",
+      },
+      {
+        type: "source_trace",
+        source_trace_id: "source_trace_1",
+        name: "one",
+        connected_source_port_ids: [],
+        connected_source_net_ids: [],
+      },
+      {
+        type: "source_trace",
+        source_trace_id: "source_trace_10",
+        name: "ten",
+        connected_source_port_ids: [],
+        connected_source_net_ids: [],
+      },
+      {
+        type: "source_group",
+        source_group_id: "",
+      },
+    ])
+    const diagnostics = new AutorouterDiagnostics({ logOnError: true })
+    diagnostics.attachToRootCircuit(root)
+
+    const formatUserFacingText = (
+      diagnostics as unknown as {
+        formatUserFacingText: (value: string) => string
+      }
+    ).formatUserFacingText.bind(diagnostics)
+
+    expect(
+      formatUserFacingText(
+        "source_trace_10 source_trace_1 board_0 subcircuit_missing_0",
+      ),
+    ).toBe("ten one internal element internal element")
+    expect(root.dbToArrayCallCount).toBe(1)
   })
 
   test("phase timeout writes reproducer artifacts", async () => {
@@ -313,7 +374,15 @@ describe("autorouter diagnostics", () => {
     root.emit("autorouting:end", {
       subcircuit_id: "subcircuit_source_group_0",
       componentDisplayName: "board unnamedsubcircuit0",
-      simpleRouteJson: { traces: [{ route: [] }] },
+      simpleRouteJson: {
+        traces: [
+          {
+            type: "pcb_trace",
+            pcb_trace_id: "pcb_trace_0",
+            route: [],
+          },
+        ],
+      },
     })
 
     expect(logs).toEqual([])

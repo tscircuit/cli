@@ -1,6 +1,12 @@
 import fs from "node:fs"
 import path from "node:path"
-import type { AnyCircuitElement } from "circuit-json"
+import type {
+  AnyCircuitElement,
+  CircuitJson,
+  PcbTrace,
+  SourcePort,
+  SourceTrace,
+} from "circuit-json"
 import { convertCircuitJsonToPcbSvg } from "circuit-to-svg"
 import kleur from "kleur"
 import { convertSvgToPngBuffer } from "./convert-svg-to-png"
@@ -20,9 +26,14 @@ export type AutorouterDiagnosticsOptions = {
 type SimpleRouteJson = {
   connections?: Array<Record<string, unknown>>
   obstacles?: unknown[]
-  traces?: unknown[]
+  traces?: PcbTrace[]
   jumpers?: unknown[]
   [key: string]: unknown
+}
+
+type CircuitJsonLookup = {
+  circuitJson: CircuitJson
+  elementById: Map<string, AnyCircuitElement>
 }
 
 type AutoroutingEventPayload = {
@@ -122,7 +133,7 @@ export class AutorouterDiagnostics {
   private phaseOrdinalBySubcircuit = new Map<string, number>()
   private traceCountBySubcircuit = new Map<string, number>()
   private activePhase: ActivePhase | null = null
-  private completedPhaseTraces: unknown[] = []
+  private completedPhaseTraces: PcbTrace[] = []
   private hasWrittenPlacementSnapshot = false
   private summary: Array<Record<string, unknown>> = []
   private rootCircuit: any
@@ -179,7 +190,7 @@ export class AutorouterDiagnostics {
     throw new AutorouterPhaseTimeoutError(message, artifactPath)
   }
 
-  finalize(circuitJson?: unknown[]) {
+  finalize(circuitJson?: CircuitJson) {
     if (
       !this.isActive ||
       this.summary.length === 0 ||
@@ -234,7 +245,7 @@ export class AutorouterDiagnostics {
     if (this.options.enabled && !this.hasWrittenPlacementSnapshot) {
       const placementCircuitJson = this.getCurrentCircuitJson().filter(
         (element) => !this.isRouteElement(element),
-      ) as AnyCircuitElement[]
+      )
       this.writePngSnapshot("placement-unrouted.png", placementCircuitJson)
       this.hasWrittenPlacementSnapshot = true
     }
@@ -575,7 +586,7 @@ export class AutorouterDiagnostics {
     return filePath
   }
 
-  private writePngSnapshot(fileName: string, circuitJson: AnyCircuitElement[]) {
+  private writePngSnapshot(fileName: string, circuitJson: CircuitJson) {
     const pcbSvg = convertCircuitJsonToPcbSvg(circuitJson)
     const png = convertSvgToPngBuffer(pcbSvg)
     const debugDir = path.resolve(this.options.debugDir ?? DEFAULT_DEBUG_DIR)
@@ -600,27 +611,29 @@ export class AutorouterDiagnostics {
 
     for (const trace of this.completedPhaseTraces) {
       if (!trace || typeof trace !== "object") continue
-      const element = trace as Record<string, unknown>
-      const id = this.getCircuitElementId(element)
+      const id = this.getCircuitElementId(trace)
       const existingIndex = id ? elementIndexById.get(id) : undefined
       if (existingIndex === undefined) {
-        circuitJson.push(element)
+        circuitJson.push(trace)
         if (id) elementIndexById.set(id, circuitJson.length - 1)
       } else {
-        circuitJson[existingIndex] = element
+        circuitJson[existingIndex] = trace
       }
     }
 
-    return circuitJson as AnyCircuitElement[]
+    return circuitJson
   }
 
-  private getCircuitElementId(element: Record<string, unknown>) {
-    if (typeof element.type !== "string") return undefined
-    const id = element[`${element.type}_id`]
+  private getCircuitElementId(element: AnyCircuitElement) {
+    const idEntry = Object.entries(element).find(
+      ([key, value]) =>
+        key === `${element.type}_id` && typeof value === "string",
+    )
+    const id = idEntry?.[1]
     return typeof id === "string" ? id : undefined
   }
 
-  private isRouteElement(element: Record<string, unknown>) {
+  private isRouteElement(element: AnyCircuitElement) {
     return element.type === "pcb_trace" || element.type === "pcb_via"
   }
 
@@ -651,6 +664,8 @@ export class AutorouterDiagnostics {
   }
 
   private getConnectionNames(simpleRouteJson?: SimpleRouteJson) {
+    const circuitJsonLookup = this.createCircuitJsonLookup()
+
     return [
       ...new Set(
         (simpleRouteJson?.connections ?? [])
@@ -661,7 +676,9 @@ export class AutorouterDiagnostics {
               connection.source_trace_id,
             ]
               .filter((value): value is string => typeof value === "string")
-              .map((value) => this.resolveCircuitJsonId(value))
+              .map((value) =>
+                this.resolveCircuitJsonId(value, circuitJsonLookup),
+              )
               .find((value) => value !== null),
           )
           .filter((name): name is string => name !== null),
@@ -669,14 +686,12 @@ export class AutorouterDiagnostics {
     ]
   }
 
-  private resolveCircuitJsonId(value: string): string | null {
-    const circuitJson = this.getCurrentCircuitJson()
-    const element = circuitJson.find((candidate) =>
-      Object.entries(candidate).some(
-        ([key, candidateValue]) =>
-          key.endsWith("_id") && candidateValue === value,
-      ),
-    )
+  private resolveCircuitJsonId(
+    value: string,
+    lookup = this.createCircuitJsonLookup(),
+  ): string | null {
+    const { circuitJson, elementById } = lookup
+    const element = elementById.get(value)
 
     if (!element) return value
 
@@ -697,23 +712,45 @@ export class AutorouterDiagnostics {
   }
 
   private formatUserFacingText(value: string) {
+    const circuitJsonLookup = this.createCircuitJsonLookup()
     let formattedValue = value
-    for (const element of this.getCurrentCircuitJson()) {
-      for (const [key, id] of Object.entries(element)) {
-        if (!key.endsWith("_id") || typeof id !== "string") continue
-        formattedValue = formattedValue.replaceAll(
-          id,
-          this.resolveCircuitJsonId(id) ?? "internal element",
-        )
-      }
+
+    // Resolve only ids that occur in the message. Sorting by length avoids
+    // replacing an id such as source_trace_1 inside source_trace_10.
+    const idsInMessage = [...circuitJsonLookup.elementById.keys()]
+      .filter((id) => formattedValue.includes(id))
+      .sort((a, b) => b.length - a.length)
+
+    for (const id of idsInMessage) {
+      formattedValue = formattedValue.replaceAll(
+        id,
+        this.resolveCircuitJsonId(id, circuitJsonLookup) ?? "internal element",
+      )
     }
+
     return formattedValue.replace(CIRCUIT_JSON_ID_PATTERN, "internal element")
   }
 
-  private getTraceSelector(
-    trace: Record<string, unknown>,
-    circuitJson: Array<Record<string, unknown>>,
-  ) {
+  private createCircuitJsonLookup(): CircuitJsonLookup {
+    const circuitJson = this.getCurrentCircuitJson()
+    const elementById = new Map<string, AnyCircuitElement>()
+
+    for (const element of circuitJson) {
+      for (const [key, id] of Object.entries(element)) {
+        if (!key.endsWith("_id") || typeof id !== "string" || id.length === 0)
+          continue
+        // Preserve the previous Array.find behavior by keeping the first
+        // element that references a given id.
+        if (!elementById.has(id)) {
+          elementById.set(id, element)
+        }
+      }
+    }
+
+    return { circuitJson, elementById }
+  }
+
+  private getTraceSelector(trace: SourceTrace, circuitJson: CircuitJson) {
     const portIds = trace.connected_source_port_ids
     if (!Array.isArray(portIds)) return null
 
@@ -728,22 +765,16 @@ export class AutorouterDiagnostics {
     return selectors.length >= 2 ? selectors.join(" to ") : null
   }
 
-  private getPortSelectorById(
-    sourcePortId: string,
-    circuitJson: Array<Record<string, unknown>>,
-  ) {
+  private getPortSelectorById(sourcePortId: string, circuitJson: CircuitJson) {
     const port = circuitJson.find(
-      (element) =>
+      (element): element is SourcePort =>
         element.type === "source_port" &&
         element.source_port_id === sourcePortId,
     )
     return port ? this.getPortSelector(port, circuitJson) : null
   }
 
-  private getPortSelector(
-    port: Record<string, unknown>,
-    circuitJson: Array<Record<string, unknown>>,
-  ) {
+  private getPortSelector(port: SourcePort, circuitJson: CircuitJson) {
     const portName =
       typeof port.most_frequently_referenced_by_name === "string"
         ? port.most_frequently_referenced_by_name
@@ -758,7 +789,9 @@ export class AutorouterDiagnostics {
         element.source_component_id === port.source_component_id,
     )
     const componentName =
-      component && typeof component.name === "string" ? component.name : null
+      component && "name" in component && typeof component.name === "string"
+        ? component.name
+        : null
 
     return componentName ? `${componentName}.${portName}` : portName
   }
@@ -768,12 +801,10 @@ export class AutorouterDiagnostics {
     return Array.isArray(errors) ? errors.length : 0
   }
 
-  private getCurrentCircuitJson() {
+  private getCurrentCircuitJson(): CircuitJson {
     try {
       const circuitJson = this.rootCircuit?.db?.toArray?.()
-      return Array.isArray(circuitJson)
-        ? (circuitJson as Array<Record<string, unknown>>)
-        : []
+      return Array.isArray(circuitJson) ? (circuitJson as CircuitJson) : []
     } catch {
       return []
     }
