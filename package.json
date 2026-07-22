@@ -20,8 +20,8 @@
     "@tscircuit/image-utils": "^0.0.8",
     "@tscircuit/krt-wasm": "^0.1.6",
     "@tscircuit/math-utils": "0.0.36",
-    "@tscircuit/props": "^0.0.580",
-    "@tscircuit/runframe": "^0.0.2257",
+    "@tscircuit/props": "github:tscircuit/props#7285ee7858d05b1e9e3218cbd15c0ca7d4c827ab",
+    "@tscircuit/runframe": "github:tscircuit/runframe#1966b39f2e6dc58864ef577e725647764dbaa540",
     "@tscircuit/schematic-match-adapt": "^0.0.22",
     "@tscircuit/solver-utils": "0.0.16",
     "@types/bun": "^1.2.2",
@@ -34,7 +34,7 @@
     "@types/semver": "^7.5.8",
     "bun-match-svg": "^0.0.12",
     "chokidar": "4.0.1",
-    "circuit-json": "^0.0.446",
+    "circuit-json": "github:tscircuit/circuit-json#72b4fd2b88decced344cdf8c28d6d36a73696b1b",
     "circuit-json-to-3d-png": "^0.0.6",
     "circuit-json-to-bom-csv": "^0.0.7",
     "circuit-json-to-connectivity-map": "^0.0.25",
@@ -43,12 +43,12 @@
     "circuit-json-to-kicad": "0.0.157",
     "circuit-json-to-pnp-csv": "^0.0.7",
     "circuit-json-to-readable-netlist": "^0.0.15",
-    "circuit-json-to-spice": "^0.0.40",
+    "circuit-json-to-spice": "github:tscircuit/circuit-json-to-spice#1629264f6a02331880d2aee5be50d9f1fc69fd8b",
     "circuit-json-to-step": "^0.0.38",
     "circuit-json-to-tscircuit": "^0.0.42",
     "circuit-json-trace-length-analysis": "github:tscircuit/circuit-json-trace-length-analysis#2b44792a40df0ca83b6bfb6ac95ed5e35e7168b8",
     "circuit-to-canvas": "^0.0.111",
-    "circuit-to-svg": "^0.0.378",
+    "circuit-to-svg": "github:tscircuit/circuit-to-svg#08d08478b429f6587ef46adff7d79bd31a6e06f8",
     "commander": "^14.0.0",
     "conf": "^13.1.0",
     "configstore": "^7.0.0",
@@ -85,7 +85,7 @@
     "zod": "^3.23.8"
   },
   "peerDependencies": {
-    "circuit-json": "^0.0.446",
+    "circuit-json": "*",
     "tscircuit": "*"
   },
   "bin": {
@@ -102,6 +102,7 @@
     }
   },
   "scripts": {
+    "prepare": "bun run scripts/prepare-git-dependency.ts",
     "start": "bun run dev",
     "dev": "bun --hot ./cli/main.ts dev ./examples/basic/index.circuit.tsx",
     "dev:kicad-pcm": "bun --hot ./cli/main.ts dev ./examples/scaffold --kicad-pcm",
@@ -114,5 +115,13 @@
     "cli": "bun ./cli/main.ts",
     "pkg-pr-new-release": "bunx pkg-pr-new publish --comment=off --peerDeps"
   },
-  "type": "module"
+  "type": "module",
+  "trustedDependencies": [
+    "@tscircuit/props",
+    "@tscircuit/runframe",
+    "circuit-json",
+    "circuit-json-to-spice",
+    "circuit-to-svg",
+    "esbuild"
+  ]
 }
