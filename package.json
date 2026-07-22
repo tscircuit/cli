@@ -21,7 +21,7 @@
     "@tscircuit/krt-wasm": "^0.1.6",
     "@tscircuit/math-utils": "0.0.36",
     "@tscircuit/props": "^0.0.580",
-    "@tscircuit/runframe": "^0.0.2256",
+    "@tscircuit/runframe": "^0.0.2257",
     "@tscircuit/schematic-match-adapt": "^0.0.22",
     "@tscircuit/solver-utils": "0.0.16",
     "@types/bun": "^1.2.2",
