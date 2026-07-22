@@ -37,6 +37,7 @@ import {
   convertBomRowsToCsv,
 } from "circuit-json-to-bom-csv"
 import { convertCircuitJsonToPickAndPlaceCsv } from "circuit-json-to-pnp-csv"
+import { convertCircuitJsonToSchematicPdf } from "circuit-json-to-schematic-pdf"
 
 const writeFileAsync = promisify(fs.writeFile)
 
@@ -44,6 +45,7 @@ export const ALLOWED_EXPORT_FORMATS = [
   "json",
   "circuit-json",
   "schematic-svg",
+  "schematic-pdf",
   "pcb-svg",
   "gerbers",
   "readable-netlist",
@@ -65,6 +67,7 @@ const OUTPUT_EXTENSIONS: Record<ExportFormat, string> = {
   json: ".circuit.json",
   "circuit-json": ".circuit.json",
   "schematic-svg": "-schematic.svg",
+  "schematic-pdf": "-schematic.pdf",
   "pcb-svg": "-pcb.svg",
   "assembly-svg": "-assembly.svg",
   gerbers: "-gerbers.zip",
@@ -193,6 +196,13 @@ export const exportSnippet = async ({
   switch (format) {
     case "schematic-svg":
       outputContent = convertCircuitJsonToSchematicSvg(circuitJson)
+      break
+    case "schematic-pdf":
+      outputContent = Buffer.from(
+        await convertCircuitJsonToSchematicPdf(circuitJson, {
+          title: outputBaseName,
+        }),
+      )
       break
     case "pcb-svg":
       outputContent = convertCircuitJsonToPcbSvg(
