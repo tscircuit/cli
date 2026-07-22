@@ -43,6 +43,7 @@
     "circuit-json-to-kicad": "0.0.157",
     "circuit-json-to-pnp-csv": "^0.0.7",
     "circuit-json-to-readable-netlist": "^0.0.15",
+    "circuit-json-to-schematic-pdf": "github:tscircuit/circuit-json-to-schematic-pdf#fcfb100",
     "circuit-json-to-spice": "^0.0.40",
     "circuit-json-to-step": "^0.0.38",
     "circuit-json-to-tscircuit": "^0.0.42",
