@@ -4,6 +4,58 @@ import type { AnyCircuitElement } from "circuit-json"
 import { getSimulationSvgAssetsFromCircuitJson } from "lib/shared/simulation-svg-assets"
 
 test("creates SVG assets for non-transient simulation analyses", () => {
+  const parameterSweepCircuitElements = [
+    {
+      parameterSweepCoordinate: 100,
+      voltage: 0.45,
+      current: 1.8,
+    },
+    {
+      parameterSweepCoordinate: 1_000,
+      voltage: 2.5,
+      current: 1.2,
+    },
+    {
+      parameterSweepCoordinate: 10_000,
+      voltage: 4.55,
+      current: 0.4,
+    },
+  ].flatMap<AnyCircuitElement>(
+    ({ parameterSweepCoordinate, voltage, current }, parameterSweepIndex) => {
+      const sweepPointId = `simulation_parameter_sweep_point_${parameterSweepIndex}`
+      return [
+        {
+          type: "simulation_parameter_sweep_point",
+          simulation_parameter_sweep_point_id: sweepPointId,
+          simulation_parameter_sweep_id: "simulation_parameter_sweep_load",
+          sweep_index: parameterSweepIndex,
+          parameter_value: parameterSweepCoordinate,
+          parameter_unit: "Ω",
+        },
+        {
+          type: "simulation_dc_operating_point_voltage",
+          simulation_dc_operating_point_voltage_id: `parameter_sweep_vout_${parameterSweepIndex}`,
+          simulation_experiment_id: "simulation_experiment_parameter_sweep",
+          simulation_parameter_sweep_point_id: sweepPointId,
+          simulation_voltage_probe_id: "probe_vout",
+          name: "VOUT",
+          voltage,
+          color: "#315cff",
+        },
+        {
+          type: "simulation_dc_operating_point_current",
+          simulation_dc_operating_point_current_id: `parameter_sweep_load_current_${parameterSweepIndex}`,
+          simulation_experiment_id: "simulation_experiment_parameter_sweep",
+          simulation_parameter_sweep_point_id: sweepPointId,
+          simulation_current_probe_id: "probe_load_current",
+          name: "I(RLOAD)",
+          current,
+          color: "#dc2626",
+        },
+      ]
+    },
+  )
+
   const circuitJson: AnyCircuitElement[] = [
     {
       type: "simulation_experiment",
@@ -123,39 +175,7 @@ test("creates SVG assets for non-transient simulation analyses", () => {
       parameter_values: [100, 1_000, 10_000],
       parameter_unit: "Ω",
     },
-    ...[100, 1_000, 10_000].flatMap((parameterValue, sweepIndex) => {
-      const sweepPointId = `simulation_parameter_sweep_point_${sweepIndex}`
-      return [
-        {
-          type: "simulation_parameter_sweep_point" as const,
-          simulation_parameter_sweep_point_id: sweepPointId,
-          simulation_parameter_sweep_id: "simulation_parameter_sweep_load",
-          sweep_index: sweepIndex,
-          parameter_value: parameterValue,
-          parameter_unit: "Ω",
-        },
-        {
-          type: "simulation_dc_operating_point_voltage" as const,
-          simulation_dc_operating_point_voltage_id: `parameter_sweep_vout_${sweepIndex}`,
-          simulation_experiment_id: "simulation_experiment_parameter_sweep",
-          simulation_parameter_sweep_point_id: sweepPointId,
-          simulation_voltage_probe_id: "probe_vout",
-          name: "VOUT",
-          voltage: [0.45, 2.5, 4.55][sweepIndex]!,
-          color: "#315cff",
-        },
-        {
-          type: "simulation_dc_operating_point_current" as const,
-          simulation_dc_operating_point_current_id: `parameter_sweep_load_current_${sweepIndex}`,
-          simulation_experiment_id: "simulation_experiment_parameter_sweep",
-          simulation_parameter_sweep_point_id: sweepPointId,
-          simulation_current_probe_id: "probe_load_current",
-          name: "I(RLOAD)",
-          current: [1.8, 1.2, 0.4][sweepIndex]!,
-          color: "#dc2626",
-        },
-      ]
-    }),
+    ...parameterSweepCircuitElements,
   ]
 
   const assets = getSimulationSvgAssetsFromCircuitJson(circuitJson)
