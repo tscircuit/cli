@@ -1,0 +1,197 @@
+import "bun-match-svg"
+import { expect, test } from "bun:test"
+import type { AnyCircuitElement } from "circuit-json"
+import { getSimulationSvgAssetsFromCircuitJson } from "lib/shared/simulation-svg-assets"
+
+test("creates SVG assets for non-transient simulation analyses", () => {
+  const parameterSweepCircuitElements = [
+    {
+      parameterSweepCoordinate: 100,
+      voltage: 0.45,
+      current: 1.8,
+    },
+    {
+      parameterSweepCoordinate: 1_000,
+      voltage: 2.5,
+      current: 1.2,
+    },
+    {
+      parameterSweepCoordinate: 10_000,
+      voltage: 4.55,
+      current: 0.4,
+    },
+  ].flatMap<AnyCircuitElement>(
+    ({ parameterSweepCoordinate, voltage, current }, parameterSweepIndex) => {
+      const sweepPointId = `simulation_parameter_sweep_point_${parameterSweepIndex}`
+      return [
+        {
+          type: "simulation_parameter_sweep_point",
+          simulation_parameter_sweep_point_id: sweepPointId,
+          simulation_parameter_sweep_id: "simulation_parameter_sweep_load",
+          sweep_index: parameterSweepIndex,
+          parameter_value: parameterSweepCoordinate,
+          parameter_unit: "Ω",
+        },
+        {
+          type: "simulation_dc_operating_point_voltage",
+          simulation_dc_operating_point_voltage_id: `parameter_sweep_vout_${parameterSweepIndex}`,
+          simulation_experiment_id: "simulation_experiment_parameter_sweep",
+          simulation_parameter_sweep_point_id: sweepPointId,
+          simulation_voltage_probe_id: "probe_vout",
+          name: "VOUT",
+          voltage,
+          color: "#315cff",
+        },
+        {
+          type: "simulation_dc_operating_point_current",
+          simulation_dc_operating_point_current_id: `parameter_sweep_load_current_${parameterSweepIndex}`,
+          simulation_experiment_id: "simulation_experiment_parameter_sweep",
+          simulation_parameter_sweep_point_id: sweepPointId,
+          simulation_current_probe_id: "probe_load_current",
+          name: "I(RLOAD)",
+          current,
+          color: "#dc2626",
+        },
+      ]
+    },
+  )
+
+  const circuitJson: AnyCircuitElement[] = [
+    {
+      type: "simulation_experiment",
+      simulation_experiment_id: "simulation_experiment_dc_op",
+      name: "Bias Point",
+      experiment_type: "spice_dc_operating_point",
+    },
+    {
+      type: "simulation_dc_operating_point_voltage",
+      simulation_dc_operating_point_voltage_id: "dc_op_vout",
+      simulation_experiment_id: "simulation_experiment_dc_op",
+      simulation_voltage_probe_id: "probe_vout",
+      name: "VOUT",
+      voltage: 3.3,
+      color: "#315cff",
+    },
+    {
+      type: "simulation_dc_operating_point_current",
+      simulation_dc_operating_point_current_id: "dc_op_load_current",
+      simulation_experiment_id: "simulation_experiment_dc_op",
+      simulation_current_probe_id: "probe_load_current",
+      name: "I(RLOAD)",
+      current: 1.2,
+      color: "#dc2626",
+    },
+    {
+      type: "simulation_experiment",
+      simulation_experiment_id: "simulation_experiment_dc_sweep",
+      name: "Line Regulation",
+      experiment_type: "spice_dc_sweep",
+      dc_sweep_source_id: "source_component_vin",
+      dc_sweep_source_type: "voltage",
+      dc_sweep_start: 0,
+      dc_sweep_stop: 5,
+      dc_sweep_step: 1,
+      dc_sweep_unit: "V",
+    },
+    {
+      type: "simulation_dc_sweep_voltage_graph",
+      simulation_dc_sweep_voltage_graph_id: "dc_sweep_vout",
+      simulation_experiment_id: "simulation_experiment_dc_sweep",
+      simulation_voltage_probe_id: "probe_vout",
+      name: "VOUT",
+      sweep_values: [0, 1, 2, 3, 4, 5],
+      sweep_unit: "V",
+      voltage_levels: [0, 0.9, 1.8, 2.7, 3.3, 3.3],
+      color: "#315cff",
+    },
+    {
+      type: "simulation_dc_sweep_current_graph",
+      simulation_dc_sweep_current_graph_id: "dc_sweep_load_current",
+      simulation_experiment_id: "simulation_experiment_dc_sweep",
+      simulation_current_probe_id: "probe_load_current",
+      name: "I(RLOAD)",
+      sweep_values: [0, 1, 2, 3, 4, 5],
+      sweep_unit: "V",
+      current_levels: [0, 0.45, 0.9, 1.35, 1.65, 1.65],
+      color: "#dc2626",
+    },
+    {
+      type: "simulation_experiment",
+      simulation_experiment_id: "simulation_experiment_ac_sweep",
+      name: "Frequency Response",
+      experiment_type: "spice_ac_analysis",
+      ac_sweep_type: "decade",
+      ac_samples_per_interval: 10,
+      ac_start_frequency_hz: 10,
+      ac_stop_frequency_hz: 1_000_000,
+    },
+    {
+      type: "simulation_ac_sweep_voltage_graph",
+      simulation_ac_sweep_voltage_graph_id: "ac_sweep_vout",
+      simulation_experiment_id: "simulation_experiment_ac_sweep",
+      simulation_voltage_probe_id: "probe_vout",
+      name: "VOUT",
+      frequencies_hz: [10, 100, 1_000, 10_000, 100_000, 1_000_000],
+      complex_voltages: [
+        { re: 1, im: -0.01 },
+        { re: 0.99, im: -0.05 },
+        { re: 0.9, im: -0.2 },
+        { re: 0.5, im: -0.5 },
+        { re: 0.08, im: -0.25 },
+        { re: 0.005, im: -0.05 },
+      ],
+      color: "#315cff",
+    },
+    {
+      type: "simulation_ac_sweep_current_graph",
+      simulation_ac_sweep_current_graph_id: "ac_sweep_input_current",
+      simulation_experiment_id: "simulation_experiment_ac_sweep",
+      simulation_current_probe_id: "probe_input_current",
+      name: "I(VIN)",
+      frequencies_hz: [10, 100, 1_000, 10_000, 100_000, 1_000_000],
+      complex_currents: [
+        { re: -0.6, im: 0.01 },
+        { re: -0.59, im: 0.04 },
+        { re: -0.52, im: 0.12 },
+        { re: -0.3, im: 0.3 },
+        { re: -0.05, im: 0.15 },
+        { re: -0.003, im: 0.03 },
+      ],
+      color: "#dc2626",
+    },
+    {
+      type: "simulation_experiment",
+      simulation_experiment_id: "simulation_experiment_parameter_sweep",
+      name: "Load Bias Sweep",
+      experiment_type: "spice_dc_operating_point",
+    },
+    {
+      type: "simulation_parameter_sweep",
+      simulation_parameter_sweep_id: "simulation_parameter_sweep_load",
+      simulation_experiment_id: "simulation_experiment_parameter_sweep",
+      name: "Load Resistance",
+      parameter_type: "resistance",
+      resistor_source_component_id: "source_component_rload",
+      parameter_values: [100, 1_000, 10_000],
+      parameter_unit: "Ω",
+    },
+    ...parameterSweepCircuitElements,
+  ]
+
+  const assets = getSimulationSvgAssetsFromCircuitJson(circuitJson)
+
+  expect(assets).toHaveLength(4)
+  expect(assets.map((asset) => asset.fileNameSuffix)).toEqual([
+    "bias-point",
+    "line-regulation",
+    "frequency-response",
+    "load-bias-sweep",
+  ])
+
+  for (const asset of assets) {
+    expect(asset.simulationSvg).toMatchSvgSnapshot(
+      import.meta.path,
+      asset.fileNameSuffix,
+    )
+  }
+})

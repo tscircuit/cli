@@ -1,51 +1,27 @@
-import type {
-  AnyCircuitElement,
-  SimulationTransientCurrentGraph,
-  SimulationTransientVoltageGraph,
-} from "circuit-json"
+import type { AnyCircuitElement } from "circuit-json"
 import {
   convertCircuitJsonToSchematicSimulationSvg,
   convertCircuitJsonToSimulationGraphSvg,
+  isSimulationAnalysisResult,
   isSimulationExperiment,
-  isSimulationTransientVoltageGraph,
 } from "circuit-to-svg"
-
-const isSimulationTransientCurrentGraph = (
-  element: AnyCircuitElement,
-): element is SimulationTransientCurrentGraph =>
-  element.type === "simulation_transient_current_graph"
 
 const getSimulationSvgInputs = (
   circuitJson: AnyCircuitElement[],
   simulationExperimentId: string,
 ) => {
-  const simulationTransientCurrentGraphIds = circuitJson
-    .filter(
-      (element): element is SimulationTransientCurrentGraph =>
-        isSimulationTransientCurrentGraph(element) &&
-        element.simulation_experiment_id === simulationExperimentId,
-    )
-    .map((element) => element.simulation_transient_current_graph_id)
+  const hasAnalysisResult = circuitJson.some(
+    (element) =>
+      isSimulationAnalysisResult(element) &&
+      element.simulation_experiment_id === simulationExperimentId,
+  )
 
-  const simulationTransientVoltageGraphIds = circuitJson
-    .filter(
-      (element): element is SimulationTransientVoltageGraph =>
-        isSimulationTransientVoltageGraph(element) &&
-        element.simulation_experiment_id === simulationExperimentId,
-    )
-    .map((element) => element.simulation_transient_voltage_graph_id)
-
-  if (
-    simulationTransientCurrentGraphIds.length === 0 &&
-    simulationTransientVoltageGraphIds.length === 0
-  ) {
+  if (!hasAnalysisResult) {
     return undefined
   }
 
   return {
     simulation_experiment_id: simulationExperimentId,
-    simulation_transient_current_graph_ids: simulationTransientCurrentGraphIds,
-    simulation_transient_voltage_graph_ids: simulationTransientVoltageGraphIds,
   }
 }
 
