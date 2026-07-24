@@ -1,5 +1,5 @@
-import { circuitJsonToFootprinter } from "circuit-json-to-footprinter"
 import kleur from "kleur"
+import { circuitJsonToFootprinter } from "lib/shared/circuit-json-to-footprinter"
 import fs from "node:fs/promises"
 import path from "node:path"
 import { loadCircuitJsonForFootprinter } from "./load-circuit-json-for-footprinter"
