@@ -20,6 +20,8 @@ type SnapshotWorkerOptions = {
   createDiff: boolean
   cameraPreset?: CameraPreset
   pcbLayer?: VisibleLayerRef
+  pcbComponentName?: string
+  pcbComponentPadding?: number
 }
 
 export const handleSnapshotFile = async (
@@ -51,6 +53,8 @@ export const handleSnapshotFile = async (
     createDiff: options.createDiff,
     cameraPreset: options.cameraPreset,
     pcbLayer: options.pcbLayer,
+    pcbComponentName: options.pcbComponentName,
+    pcbComponentPadding: options.pcbComponentPadding,
   })
 
   return {

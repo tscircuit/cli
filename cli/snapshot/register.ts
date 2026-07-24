@@ -23,6 +23,14 @@ export const registerSnapshot = (program: Command) => {
       "--layer <layer>",
       "Generate a PCB snapshot for one layer: top or bottom (implies --pcb-only)",
     )
+    .option(
+      "--chip <name>",
+      "Crop the PCB snapshot around a named chip/component (implies --pcb-only)",
+    )
+    .option(
+      "--chip-padding <millimeters>",
+      "Padding around a focused chip in millimeters (default: 2)",
+    )
     .option("--disable-parts-engine", "Disable the parts engine")
     .option("--show-courtyards", "Show courtyard outlines in PCB snapshots")
     .option(
@@ -49,6 +57,8 @@ export const registerSnapshot = (program: Command) => {
           disablePartsEngine?: boolean
           showCourtyards?: boolean
           layer?: string
+          chip?: string
+          chipPadding?: string
           cameraPreset?: string
           ci?: boolean
           test?: boolean
@@ -83,6 +93,35 @@ export const registerSnapshot = (program: Command) => {
         }
 
         if (
+          options.chip &&
+          (options.schematicOnly ||
+            options.simulationOnly ||
+            options["3d"] ||
+            options.cameraPreset)
+        ) {
+          console.error(
+            "--chip cannot be combined with --schematic-only, --simulation-only, --3d, or --camera-preset.",
+          )
+          process.exit(1)
+        }
+
+        if (options.chipPadding && !options.chip) {
+          console.error("--chip-padding requires --chip.")
+          process.exit(1)
+        }
+
+        const chipPadding = options.chipPadding
+          ? Number(options.chipPadding)
+          : undefined
+        if (
+          chipPadding !== undefined &&
+          (!Number.isFinite(chipPadding) || chipPadding < 0)
+        ) {
+          console.error("--chip-padding must be a non-negative number.")
+          process.exit(1)
+        }
+
+        if (
           options.simulationOnly &&
           (options.pcbOnly ||
             options.schematicOnly ||
@@ -97,7 +136,7 @@ export const registerSnapshot = (program: Command) => {
         }
 
         let pcbOnly = options.pcbOnly ?? false
-        if (pcbLayer) {
+        if (pcbLayer || options.chip) {
           pcbOnly = true
         }
 
@@ -112,6 +151,8 @@ export const registerSnapshot = (program: Command) => {
           schematicOnly: options.schematicOnly ?? false,
           simulationOnly: options.simulationOnly ?? false,
           pcbLayer,
+          pcbComponentName: options.chip,
+          pcbComponentPadding: chipPadding,
           forceUpdate: options.forceUpdate ?? false,
           filePaths: target ? [target] : [],
           platformConfig: options.disablePartsEngine

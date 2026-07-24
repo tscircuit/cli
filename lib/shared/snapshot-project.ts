@@ -44,6 +44,10 @@ type SnapshotOptions = {
   cameraPreset?: CameraPreset
   /** Limit PCB snapshots to one layer */
   pcbLayer?: VisibleLayerRef
+  /** Crop PCB snapshots to a named component */
+  pcbComponentName?: string
+  /** Padding around a focused PCB component in millimeters */
+  pcbComponentPadding?: number
   /** Number of files to process in parallel (default: 1) */
   concurrency?: number
   onExit?: (code: number) => void
@@ -78,6 +82,8 @@ export const snapshotProject = async ({
   createDiff = false,
   cameraPreset,
   pcbLayer,
+  pcbComponentName,
+  pcbComponentPadding,
   concurrency = 1,
 }: SnapshotOptions = {}) => {
   // --camera-preset implies --3d
@@ -188,6 +194,8 @@ export const snapshotProject = async ({
           createDiff,
           cameraPreset,
           pcbLayer,
+          pcbComponentName,
+          pcbComponentPadding,
         },
         stopOnFailure: true,
         onLog: (lines) => {
@@ -232,6 +240,8 @@ export const snapshotProject = async ({
         createDiff,
         cameraPreset,
         pcbLayer,
+        pcbComponentName,
+        pcbComponentPadding,
       })
 
       processResult(result)

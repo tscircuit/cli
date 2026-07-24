@@ -14,6 +14,7 @@ import { getOrGenerateCircuitJson } from "lib/shared/get-or-generate-circuit-jso
 import { getPlatformConfigWithCliDefaults } from "lib/shared/get-platform-config-with-cli-defaults"
 import { getSimulationSvgAssetsFromCircuitJson } from "lib/shared/simulation-svg-assets"
 import { compareAndCreateDiff } from "./compare-images"
+import { getPcbComponentViewport } from "./get-pcb-component-viewport"
 import { isCircuitJsonFile } from "./is-circuit-json-file"
 
 export type ProcessSnapshotFileOptions = {
@@ -31,6 +32,8 @@ export type ProcessSnapshotFileOptions = {
   createDiff: boolean
   cameraPreset?: CameraPreset
   pcbLayer?: VisibleLayerRef
+  pcbComponentName?: string
+  pcbComponentPadding?: number
 }
 
 export type ProcessSnapshotFileResult = {
@@ -57,6 +60,8 @@ export const processSnapshotFile = async ({
   createDiff,
   cameraPreset,
   pcbLayer,
+  pcbComponentName,
+  pcbComponentPadding,
 }: ProcessSnapshotFileOptions): Promise<ProcessSnapshotFileResult> => {
   const relativeFilePath = path.relative(projectDir, file)
   const successPaths: string[] = []
@@ -102,9 +107,17 @@ export const processSnapshotFile = async ({
 
   if (!simulationOnly) {
     try {
+      const viewport = pcbComponentName
+        ? getPcbComponentViewport(
+            circuitJson,
+            pcbComponentName,
+            pcbComponentPadding,
+          )
+        : undefined
       pcbSvg = convertCircuitJsonToPcbSvg(circuitJson, {
         ...pcbSnapshotSettings,
         layer: pcbLayer,
+        viewport,
       })
     } catch (error) {
       const errorMessage =
@@ -235,9 +248,14 @@ export const processSnapshotFile = async ({
     | { type: "3d"; content: Uint8Array; isBinary: true }
   > = []
   if (!simulationOnly && (pcbOnly || !schematicOnly)) {
-    let pcbSnapshotType: "pcb" | VisibleLayerRef = "pcb"
+    let pcbSnapshotType: string | VisibleLayerRef = "pcb"
     if (pcbLayer) {
       pcbSnapshotType = pcbLayer
+    }
+    if (pcbComponentName) {
+      const safeComponentName =
+        pcbComponentName.replace(/[^a-zA-Z0-9._-]+/g, "_") || "component"
+      pcbSnapshotType = `${pcbSnapshotType}-${safeComponentName}`
     }
     snapshots.push({
       type: pcbSnapshotType,
