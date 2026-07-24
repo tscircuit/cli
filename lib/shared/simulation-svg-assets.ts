@@ -1,10 +1,25 @@
-import type { AnyCircuitElement } from "circuit-json"
+import type { AnyCircuitElement, SimulationAnalysisResult } from "circuit-json"
 import {
   convertCircuitJsonToSchematicSimulationSvg,
   convertCircuitJsonToSimulationGraphSvg,
-  isSimulationAnalysisResult,
   isSimulationExperiment,
 } from "circuit-to-svg"
+
+const SIMULATION_ANALYSIS_RESULT_TYPES = new Set<string>([
+  "simulation_transient_voltage_graph",
+  "simulation_transient_current_graph",
+  "simulation_dc_operating_point_voltage",
+  "simulation_dc_operating_point_current",
+  "simulation_dc_sweep_voltage_graph",
+  "simulation_dc_sweep_current_graph",
+  "simulation_ac_sweep_voltage_graph",
+  "simulation_ac_sweep_current_graph",
+] satisfies SimulationAnalysisResult["type"][])
+
+const isSimulationAnalysisResult = (
+  element: AnyCircuitElement,
+): element is SimulationAnalysisResult =>
+  SIMULATION_ANALYSIS_RESULT_TYPES.has(element.type)
 
 const getSimulationSvgInputs = (
   circuitJson: AnyCircuitElement[],
