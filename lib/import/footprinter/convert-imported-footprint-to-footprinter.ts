@@ -3,7 +3,7 @@ import type { AnyCircuitElement } from "circuit-json"
 import {
   circuitJsonToFootprinter,
   type FootprinterDiscoveryCandidate,
-} from "circuit-json-to-footprinter"
+} from "lib/shared/circuit-json-to-footprinter"
 import { getFootprinterToTargetPinMap } from "./get-footprinter-to-target-pin-map"
 import { replaceExactFootprint } from "./replace-exact-footprint"
 

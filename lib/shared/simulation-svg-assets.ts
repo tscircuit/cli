@@ -1,51 +1,42 @@
-import type {
-  AnyCircuitElement,
-  SimulationTransientCurrentGraph,
-  SimulationTransientVoltageGraph,
-} from "circuit-json"
+import type { AnyCircuitElement, SimulationAnalysisResult } from "circuit-json"
 import {
   convertCircuitJsonToSchematicSimulationSvg,
   convertCircuitJsonToSimulationGraphSvg,
   isSimulationExperiment,
-  isSimulationTransientVoltageGraph,
 } from "circuit-to-svg"
 
-const isSimulationTransientCurrentGraph = (
+const SIMULATION_ANALYSIS_RESULT_TYPES = new Set<string>([
+  "simulation_transient_voltage_graph",
+  "simulation_transient_current_graph",
+  "simulation_dc_operating_point_voltage",
+  "simulation_dc_operating_point_current",
+  "simulation_dc_sweep_voltage_graph",
+  "simulation_dc_sweep_current_graph",
+  "simulation_ac_sweep_voltage_graph",
+  "simulation_ac_sweep_current_graph",
+] satisfies SimulationAnalysisResult["type"][])
+
+const isSimulationAnalysisResult = (
   element: AnyCircuitElement,
-): element is SimulationTransientCurrentGraph =>
-  element.type === "simulation_transient_current_graph"
+): element is SimulationAnalysisResult =>
+  SIMULATION_ANALYSIS_RESULT_TYPES.has(element.type)
 
 const getSimulationSvgInputs = (
   circuitJson: AnyCircuitElement[],
   simulationExperimentId: string,
 ) => {
-  const simulationTransientCurrentGraphIds = circuitJson
-    .filter(
-      (element): element is SimulationTransientCurrentGraph =>
-        isSimulationTransientCurrentGraph(element) &&
-        element.simulation_experiment_id === simulationExperimentId,
-    )
-    .map((element) => element.simulation_transient_current_graph_id)
+  const hasAnalysisResult = circuitJson.some(
+    (element) =>
+      isSimulationAnalysisResult(element) &&
+      element.simulation_experiment_id === simulationExperimentId,
+  )
 
-  const simulationTransientVoltageGraphIds = circuitJson
-    .filter(
-      (element): element is SimulationTransientVoltageGraph =>
-        isSimulationTransientVoltageGraph(element) &&
-        element.simulation_experiment_id === simulationExperimentId,
-    )
-    .map((element) => element.simulation_transient_voltage_graph_id)
-
-  if (
-    simulationTransientCurrentGraphIds.length === 0 &&
-    simulationTransientVoltageGraphIds.length === 0
-  ) {
+  if (!hasAnalysisResult) {
     return undefined
   }
 
   return {
     simulation_experiment_id: simulationExperimentId,
-    simulation_transient_current_graph_ids: simulationTransientCurrentGraphIds,
-    simulation_transient_voltage_graph_ids: simulationTransientVoltageGraphIds,
   }
 }
 
