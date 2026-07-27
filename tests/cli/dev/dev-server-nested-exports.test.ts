@@ -5,6 +5,82 @@ import { join } from "node:path"
 import { mkdir, writeFile } from "node:fs/promises"
 import { getCliTestFixture } from "../../fixtures/get-cli-test-fixture"
 
+test("dev server should upload packages with string-form root exports", async () => {
+  const fixture = await getCliTestFixture()
+  const projectDir = fixture.tmpDir
+
+  await writeFile(
+    join(projectDir, "index.tsx"),
+    `
+import { something } from "string-root-export-pkg"
+
+export const MyCircuit = () => (
+  <board width="10mm" height="10mm">
+    <resistor name="R1" resistance="10k" />
+  </board>
+)
+`,
+  )
+
+  await writeFile(
+    join(projectDir, "package.json"),
+    JSON.stringify(
+      {
+        name: "test-project",
+        version: "1.0.0",
+        dependencies: {
+          "string-root-export-pkg": "1.0.0",
+        },
+      },
+      null,
+      2,
+    ),
+  )
+
+  const pkgDir = join(projectDir, "node_modules", "string-root-export-pkg")
+  const pkgLibDir = join(pkgDir, "lib")
+  await mkdir(pkgLibDir, { recursive: true })
+
+  await writeFile(
+    join(pkgDir, "package.json"),
+    JSON.stringify(
+      {
+        name: "string-root-export-pkg",
+        version: "1.0.0",
+        exports: {
+          ".": "./lib/index.js",
+        },
+      },
+      null,
+      2,
+    ),
+  )
+  await writeFile(
+    join(pkgLibDir, "index.js"),
+    `export const something = "value";`,
+  )
+
+  const devServerPort = await getPort()
+  const devServer = new DevServer({
+    port: devServerPort,
+    componentFilePath: join(projectDir, "index.tsx"),
+  })
+
+  try {
+    await devServer.start()
+
+    const { file_list } = (await devServer.fsKy
+      .get("api/files/list")
+      .json()) as { file_list: Array<{ file_path: string }> }
+
+    expect(file_list.map((file) => file.file_path)).toContain(
+      "node_modules/string-root-export-pkg/lib/index.js",
+    )
+  } finally {
+    await devServer.stop()
+  }
+}, 30_000)
+
 /**
  * This test reproduces a bug where packages with nested conditional exports
  * in their package.json would cause a TypeError when resolving dependencies.

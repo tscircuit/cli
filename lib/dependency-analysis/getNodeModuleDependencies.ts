@@ -235,6 +235,8 @@ export function resolveNodeModuleImport({
   const entryPoints = [
     packageJson.main,
     packageJson.module,
+    resolveExportValue(packageJson.exports),
+    resolveExportValue(packageJson.exports?.["."]),
     resolveExportValue(packageJson.exports?.["."]?.default),
     resolveExportValue(packageJson.exports?.["."]?.import),
     resolveExportValue(packageJson.exports?.["."]?.require),
