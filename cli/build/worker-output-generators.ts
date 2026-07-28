@@ -124,6 +124,14 @@ export const writeImageAssetsFromCircuitJson = async (
     )
   }
 
+  if (imageFormats.schematicPngs) {
+    const schematicSvg = convertCircuitJsonToSchematicSvg(circuitJson)
+    fs.writeFileSync(
+      path.join(outputDir, "schematic.png"),
+      await convertSvgToPngBuffer(schematicSvg),
+    )
+  }
+
   writeSimulationSvgAssetsFromCircuitJson(circuitJson, outputDir, imageFormats)
 
   if (imageFormats.threeDPngs) {
