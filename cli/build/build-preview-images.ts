@@ -90,6 +90,20 @@ const generatePreviewAssets = async ({
     }
   }
 
+  if (imageFormats.schematicPngs) {
+    try {
+      console.log(`${prefix}Generating schematic PNG...`)
+      const schematicSvg = convertCircuitJsonToSchematicSvg(circuitJson)
+      fs.writeFileSync(
+        path.join(outputDir, "schematic.png"),
+        await convertSvgToPngBuffer(schematicSvg),
+      )
+      console.log(`${prefix}Written schematic.png`)
+    } catch (error) {
+      console.error(`${prefix}Failed to generate schematic PNG:`, error)
+    }
+  }
+
   if (imageFormats.simulationSvgs || imageFormats.simulationSchematicSvgs) {
     try {
       const wroteSimulationSvgs = writeSimulationSvgAssetsFromCircuitJson(
