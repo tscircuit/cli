@@ -6,7 +6,7 @@ import type { AnyCircuitElement, VisibleLayerRef } from "circuit-json"
 import { renderCircuitJsonTo3dPng } from "circuit-json-to-3d-png"
 import {
   convertCircuitJsonToPcbSvg,
-  convertCircuitJsonToSchematicSvg,
+  convertCircuitJsonToStackedSchematicSheetsSvg,
 } from "circuit-to-svg"
 import kleur from "kleur"
 import type { CameraPreset } from "circuit-json-to-3d-png"
@@ -123,7 +123,7 @@ export const processSnapshotFile = async ({
     }
 
     try {
-      schSvg = convertCircuitJsonToSchematicSvg(circuitJson)
+      schSvg = convertCircuitJsonToStackedSchematicSheetsSvg(circuitJson)
     } catch (error) {
       const errorMessage =
         error instanceof Error ? error.message : String(error)
