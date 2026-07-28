@@ -519,3 +519,70 @@ test("getEntrypoint warns when multiple common locations exist", async () => {
   expect(warnings[0]).toContain("Choosing 'index.tsx'")
   expect(warnings[0]).toContain("'src/index.tsx'")
 })
+
+test("getEntrypoint falls back to finding available board/tsx files when standard names are missing (Issue #2797)", async () => {
+  const { tmpDir } = await getCliTestFixture()
+
+  await fs.writeFile(
+    path.join(tmpDir, "my-custom-board.circuit.tsx"),
+    'export default () => <board width="10mm" height="10mm"></board>',
+  )
+
+  const messages: string[] = []
+  const entrypoint = await getEntrypoint({
+    projectDir: tmpDir,
+    onSuccess: (msg) => messages.push(msg),
+  })
+
+  expect(entrypoint).toBe(path.join(tmpDir, "my-custom-board.circuit.tsx"))
+  expect(messages[0]).toBe(
+    "Detected fallback entrypoint: 'my-custom-board.circuit.tsx'",
+  )
+})
+
+test("getEntrypoint fallback ignores generic scripts and selects valid circuit files", async () => {
+  const { tmpDir } = await getCliTestFixture()
+
+  // Because fallback relies on findBoardFiles, non-board utility files are automatically ignored.
+  await fs.writeFile(
+    path.join(tmpDir, "a-helper.ts"),
+    "export const helper = 42;",
+  )
+  await fs.writeFile(
+    path.join(tmpDir, "utils.ts"),
+    "export const noop = () => {};",
+  )
+  await fs.writeFile(
+    path.join(tmpDir, "my-circuit.circuit.tsx"),
+    'export default () => <board width="10mm" height="10mm"></board>',
+  )
+
+  const entrypoint = await getEntrypoint({
+    projectDir: tmpDir,
+  })
+
+  expect(entrypoint).toBe(path.join(tmpDir, "my-circuit.circuit.tsx"))
+})
+
+test("getEntrypoint fallback warns when multiple circuit entrypoint files are found", async () => {
+  const { tmpDir } = await getCliTestFixture()
+
+  await fs.writeFile(
+    path.join(tmpDir, "board-a.circuit.tsx"),
+    'export default () => <board width="10mm" height="10mm"></board>',
+  )
+  await fs.writeFile(
+    path.join(tmpDir, "board-b.circuit.tsx"),
+    'export default () => <board width="10mm" height="10mm"></board>',
+  )
+
+  const warnings: string[] = []
+  const entrypoint = await getEntrypoint({
+    projectDir: tmpDir,
+    onWarning: (w) => warnings.push(w),
+  })
+
+  expect(entrypoint).toBe(path.join(tmpDir, "board-a.circuit.tsx"))
+  expect(warnings[0]).toContain("Multiple potential entrypoint files found")
+  expect(warnings[0]).toContain("Choosing 'board-a.circuit.tsx'")
+})

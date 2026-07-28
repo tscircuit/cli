@@ -2,6 +2,7 @@ import * as fs from "node:fs"
 import * as path from "node:path"
 import { loadRuntimeProjectConfig } from "lib/project-config"
 import kleur from "kleur"
+import { findBoardFiles } from "./find-board-files"
 
 type EntrypointOptions = {
   filePath?: string
@@ -107,6 +108,16 @@ const validateFilePath = (
   return fs.existsSync(absolutePath) ? absolutePath : null
 }
 
+const findSelectableFiles = (projectDir: string): string[] => {
+  return findBoardFiles({ projectDir })
+    .filter((file) => {
+      const isTypeScript = file.endsWith(".ts") || file.endsWith(".tsx")
+      const isDist = file.includes("/dist/") || file.includes("\\dist\\")
+      return isTypeScript && !isDist && fs.existsSync(file)
+    })
+    .sort()
+}
+
 export const getEntrypoint = async ({
   filePath,
   projectDir = process.cwd(),
@@ -198,6 +209,26 @@ export const getEntrypoint = async ({
         onSuccess(`Detected entrypoint: '${relativePath}'`)
         return entrypoint
       }
+    }
+
+    // Fallback: match dev behavior by finding available board files via standard findBoardFiles utility
+    const selectableFiles = findSelectableFiles(validatedProjectDir)
+    if (selectableFiles.length > 0) {
+      const chosenEntrypoint = path.relative(
+        validatedProjectDir,
+        selectableFiles[0],
+      )
+      if (selectableFiles.length > 1) {
+        const ignoredEntrypoints = selectableFiles
+          .slice(1)
+          .map((entrypoint) => path.relative(validatedProjectDir, entrypoint))
+        onWarning(
+          `Multiple potential entrypoint files found. Choosing '${chosenEntrypoint}' and ignoring: ${ignoredEntrypoints.map((e) => `'${e}'`).join(", ")}.`,
+        )
+      } else {
+        onSuccess(`Detected fallback entrypoint: '${chosenEntrypoint}'`)
+      }
+      return selectableFiles[0]
     }
 
     onError(
