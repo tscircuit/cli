@@ -9,6 +9,7 @@ import { generatePcmAssets } from "lib/shared/generate-pcm-assets"
 import { getPackageAuthor } from "lib/utils/get-package-author"
 import { loadProjectConfig } from "lib/project-config"
 import { resolveKicadLibraryName } from "lib/utils/resolve-kicad-library-name"
+import { assertValidKicadPcmV1License } from "lib/shared/kicad-pcm-license"
 
 export interface BuildKicadPcmOptions {
   entryFile: string
@@ -49,11 +50,7 @@ export async function buildKicadPcm({
   const license =
     typeof packageJson.license === "string" ? packageJson.license.trim() : ""
 
-  if (!license) {
-    throw new Error(
-      'KiCad PCM generation requires a non-empty "license" in package.json',
-    )
-  }
+  assertValidKicadPcmV1License(license)
 
   const libraryName =
     kicadLibraryNameOption ?? resolveKicadLibraryName({ projectDir })

@@ -2,6 +2,10 @@ import fs from "node:fs"
 import path from "node:path"
 import crypto from "node:crypto"
 import JSZip from "jszip"
+import {
+  assertValidKicadPcmV1License,
+  type KicadPcmV1License,
+} from "./kicad-pcm-license"
 
 export interface GeneratePcmAssetsOptions {
   /** Name of the package (e.g., "a555timer") */
@@ -15,7 +19,7 @@ export interface GeneratePcmAssetsOptions {
   /** Full description of the package */
   descriptionFull?: string
   /** License under which the package is distributed */
-  license: string
+  license: KicadPcmV1License
   /** Path to the kicad-library output directory */
   kicadLibraryPath: string
   /** Output directory for PCM assets (e.g., "dist/pcm") */
@@ -55,9 +59,7 @@ export async function generatePcmAssets(
     displayName = `${author}/${packageName}`,
   } = options
 
-  if (!license.trim()) {
-    throw new Error("KiCad PCM generation requires a non-empty license")
-  }
+  assertValidKicadPcmV1License(license)
 
   // Create PCM identifier (must be alphanumeric with dots/dashes, 2-50 chars)
   const identifier = `com.tscircuit.${author}.${packageName}`
