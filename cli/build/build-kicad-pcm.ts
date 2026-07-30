@@ -9,7 +9,7 @@ import { generatePcmAssets } from "lib/shared/generate-pcm-assets"
 import { getPackageAuthor } from "lib/utils/get-package-author"
 import { loadProjectConfig } from "lib/project-config"
 import { resolveKicadLibraryName } from "lib/utils/resolve-kicad-library-name"
-import { assertValidKicadPcmV1License } from "lib/shared/kicad-pcm-license"
+import { assertValidKicadPcmV2License } from "lib/shared/kicad-pcm-license"
 
 export interface BuildKicadPcmOptions {
   entryFile: string
@@ -47,10 +47,8 @@ export async function buildKicadPcm({
   const version = packageJson.version || "1.0.0"
   const author = getPackageAuthor(packageJson.name || "") || "tscircuit"
   const description = packageJson.description || ""
-  const license =
-    typeof packageJson.license === "string" ? packageJson.license.trim() : ""
-
-  assertValidKicadPcmV1License(license)
+  assertValidKicadPcmV2License(packageJson.license)
+  const license = packageJson.license.trim()
 
   const libraryName =
     kicadLibraryNameOption ?? resolveKicadLibraryName({ projectDir })

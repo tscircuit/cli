@@ -240,6 +240,7 @@ export const MyInductor = () => (
         name: "@tsci/testuser.pcm-custom-module",
         version: "1.0.0",
         description: "A test component for PCM with custom module",
+        license: "CC-BY-ND-4.0",
         type: "module",
         dependencies: {
           react: "^19.1.0",
