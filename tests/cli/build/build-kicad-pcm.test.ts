@@ -59,6 +59,7 @@ export const MyResistor = () => (
       name: "@tsci/testuser.my-resistor",
       version: "1.0.0",
       description: "A test resistor component",
+      license: "CC-BY-ND-4.0",
       type: "module",
       dependencies: {
         react: "^19.1.0",
@@ -113,6 +114,11 @@ export const MyResistor = () => (
     "testuser--my-resistor.tscircuit.app/pcm/packages.json",
   )
 
+  const packagesJson = JSON.parse(
+    await readFile(path.join(pcmDir, "packages.json"), "utf-8"),
+  )
+  expect(packagesJson.packages[0].license).toBe("CC-BY-ND-4.0")
+
   // Verify ZIP exists in pcm folder and check its contents
   const files = await readdir(pcmDir)
   const zipFile = files.find((f) => f.endsWith(".zip"))
@@ -121,6 +127,8 @@ export const MyResistor = () => (
   const zipBuffer = await readFile(path.join(pcmDir, zipFile!))
   const zip = await JSZip.loadAsync(zipBuffer)
   const zipPaths = Object.keys(zip.files).sort()
+  const metadata = JSON.parse(await zip.files["metadata.json"].async("string"))
+  expect(metadata.license).toBe("CC-BY-ND-4.0")
   expect(zipPaths).toMatchInlineSnapshot(`
     [
       "3dmodels/",

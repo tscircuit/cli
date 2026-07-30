@@ -46,6 +46,14 @@ export async function buildKicadPcm({
   const version = packageJson.version || "1.0.0"
   const author = getPackageAuthor(packageJson.name || "") || "tscircuit"
   const description = packageJson.description || ""
+  const license =
+    typeof packageJson.license === "string" ? packageJson.license.trim() : ""
+
+  if (!license) {
+    throw new Error(
+      'KiCad PCM generation requires a non-empty "license" in package.json',
+    )
+  }
 
   const libraryName =
     kicadLibraryNameOption ?? resolveKicadLibraryName({ projectDir })
@@ -88,6 +96,7 @@ export async function buildKicadPcm({
     version,
     author,
     description,
+    license,
     kicadLibraryPath: kicadLibOutputDir,
     outputDir: pcmOutputDir,
     baseUrl,

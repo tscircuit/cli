@@ -14,8 +14,8 @@ export interface GeneratePcmAssetsOptions {
   description?: string
   /** Full description of the package */
   descriptionFull?: string
-  /** License (default: "MIT") */
-  license?: string
+  /** License under which the package is distributed */
+  license: string
   /** Path to the kicad-library output directory */
   kicadLibraryPath: string
   /** Output directory for PCM assets (e.g., "dist/pcm") */
@@ -48,12 +48,16 @@ export async function generatePcmAssets(
     author,
     description = "",
     descriptionFull = `Visit https://tscircuit.com/${author}/${packageName} for more information.`,
-    license = "MIT",
+    license,
     kicadLibraryPath,
     outputDir,
     baseUrl,
     displayName = `${author}/${packageName}`,
   } = options
+
+  if (!license.trim()) {
+    throw new Error("KiCad PCM generation requires a non-empty license")
+  }
 
   // Create PCM identifier (must be alphanumeric with dots/dashes, 2-50 chars)
   const identifier = `com.tscircuit.${author}.${packageName}`

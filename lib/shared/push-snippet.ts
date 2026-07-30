@@ -141,7 +141,12 @@ export const pushSnippet = async ({
     return onExit(1)
   }
 
-  let packageJson: { name?: string; author?: string; version?: string } = {}
+  let packageJson: {
+    name?: string
+    author?: string
+    version?: string
+    license?: string
+  } = {}
   if (fs.existsSync(packageJsonPath)) {
     try {
       packageJson = JSON.parse(fs.readFileSync(packageJsonPath).toString())
@@ -497,6 +502,9 @@ export const pushSnippet = async ({
     json: {
       package_name_with_version: `${scopedPackageName}@${releaseVersion}`,
       ready_to_build: true,
+      ...(typeof packageJson.license === "string" && packageJson.license.trim()
+        ? { license: packageJson.license.trim() }
+        : {}),
     },
   })
 
