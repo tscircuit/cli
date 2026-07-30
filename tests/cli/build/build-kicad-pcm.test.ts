@@ -59,6 +59,7 @@ export const MyResistor = () => (
       name: "@tsci/testuser.my-resistor",
       version: "1.0.0",
       description: "A test resistor component",
+      license: "Unknown",
       type: "module",
       dependencies: {
         react: "^19.1.0",
@@ -112,6 +113,13 @@ export const MyResistor = () => (
   expect(repositoryJson.packages.url).toContain(
     "testuser--my-resistor.tscircuit.app/pcm/packages.json",
   )
+  expect(repositoryJson.$schema).toBe("https://go.kicad.org/pcm/schemas/v2")
+  expect(repositoryJson.schema_version).toBe(2)
+
+  const packagesJson = JSON.parse(
+    await readFile(path.join(pcmDir, "packages.json"), "utf-8"),
+  )
+  expect(packagesJson.packages[0].license).toBe("Unknown")
 
   // Verify ZIP exists in pcm folder and check its contents
   const files = await readdir(pcmDir)
@@ -121,6 +129,9 @@ export const MyResistor = () => (
   const zipBuffer = await readFile(path.join(pcmDir, zipFile!))
   const zip = await JSZip.loadAsync(zipBuffer)
   const zipPaths = Object.keys(zip.files).sort()
+  const metadata = JSON.parse(await zip.files["metadata.json"].async("string"))
+  expect(metadata.$schema).toBe("https://go.kicad.org/pcm/schemas/v2")
+  expect(metadata.license).toBe("Unknown")
   expect(zipPaths).toMatchInlineSnapshot(`
     [
       "3dmodels/",

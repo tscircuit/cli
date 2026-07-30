@@ -2,6 +2,11 @@ import fs from "node:fs"
 import path from "node:path"
 import crypto from "node:crypto"
 import JSZip from "jszip"
+import {
+  assertValidKicadPcmV2License,
+  KICAD_PCM_SCHEMA_URL,
+  KICAD_PCM_SCHEMA_VERSION,
+} from "./kicad-pcm-license"
 
 export interface GeneratePcmAssetsOptions {
   /** Name of the package (e.g., "a555timer") */
@@ -14,8 +19,8 @@ export interface GeneratePcmAssetsOptions {
   description?: string
   /** Full description of the package */
   descriptionFull?: string
-  /** License (default: "MIT") */
-  license?: string
+  /** License under which the package is distributed */
+  license: string
   /** Path to the kicad-library output directory */
   kicadLibraryPath: string
   /** Output directory for PCM assets (e.g., "dist/pcm") */
@@ -48,12 +53,15 @@ export async function generatePcmAssets(
     author,
     description = "",
     descriptionFull = `Visit https://tscircuit.com/${author}/${packageName} for more information.`,
-    license = "MIT",
+    license,
     kicadLibraryPath,
     outputDir,
     baseUrl,
     displayName = `${author}/${packageName}`,
   } = options
+
+  assertValidKicadPcmV2License(license)
+  const normalizedLicense = license.trim()
 
   // Create PCM identifier (must be alphanumeric with dots/dashes, 2-50 chars)
   const identifier = `com.tscircuit.${author}.${packageName}`
@@ -67,7 +75,7 @@ export async function generatePcmAssets(
   console.log("Creating metadata.json...")
   // Create metadata.json for inside the ZIP
   const metadata = {
-    $schema: "https://go.kicad.org/pcm/schemas/v1",
+    $schema: KICAD_PCM_SCHEMA_URL,
     name: displayName,
     description: description.slice(0, 500),
     description_full: descriptionFull.slice(0, 5000),
@@ -79,7 +87,7 @@ export async function generatePcmAssets(
         web: `https://tscircuit.com/${author}`,
       },
     },
-    license,
+    license: normalizedLicense,
     resources: {},
     versions: [
       {
@@ -125,7 +133,7 @@ export async function generatePcmAssets(
             web: `https://tscircuit.com/${author}`,
           },
         },
-        license,
+        license: normalizedLicense,
         resources: {},
         versions: [
           {
@@ -158,7 +166,8 @@ export async function generatePcmAssets(
     : "./packages.json"
 
   const repositoryJson = {
-    $schema: "https://go.kicad.org/pcm/schemas/v1",
+    $schema: KICAD_PCM_SCHEMA_URL,
+    schema_version: KICAD_PCM_SCHEMA_VERSION,
     name: displayName,
     maintainer: {
       name: author,

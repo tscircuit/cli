@@ -80,6 +80,7 @@ export const MySwitch = () => (
       name: "@tsci/testauthor.my-switch-lib",
       version: "1.0.0",
       description: "A test switch component",
+      license: "CC-BY-ND-4.0",
       type: "module",
       dependencies: {
         react: "^19.1.0",

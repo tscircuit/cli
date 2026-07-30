@@ -55,7 +55,10 @@ test("build uses config build.kicadPcm setting", async () => {
   await writeFile(path.join(tmpDir, "lib", "index.tsx"), libraryCode)
   await writeFile(
     path.join(tmpDir, "package.json"),
-    JSON.stringify({ name: "test-kicad-library" }),
+    JSON.stringify({
+      name: "test-kicad-library",
+      license: "CC-BY-ND-4.0",
+    }),
   )
   await writeFile(
     path.join(tmpDir, "tscircuit.config.json"),
