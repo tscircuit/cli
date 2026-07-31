@@ -4,6 +4,7 @@ import type {
   AnyCircuitElement,
   CircuitJson,
   PcbTrace,
+  PcbTraceRoutePointThroughPad,
   SourcePort,
   SourceTrace,
 } from "circuit-json"
@@ -35,8 +36,8 @@ type ThroughObstacleRoutePoint = {
   route_type: "through_obstacle"
   start: { x: number; y: number }
   end: { x: number; y: number }
-  from_layer: string
-  to_layer: string
+  from_layer: PcbTraceRoutePointThroughPad["start_layer"]
+  to_layer: PcbTraceRoutePointThroughPad["end_layer"]
   width: number
 }
 
