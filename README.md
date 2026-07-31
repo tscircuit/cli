@@ -80,6 +80,28 @@ The `build` command also accepts the following options:
 - `--ignore-placement-drc` - suppress placement DRC diagnostics
 - `--ignore-routing-drc` - suppress routing DRC diagnostics
 
+### KiCad PCM compatibility
+
+`tsci build --kicad-pcm` uses the package license from `package.json` and
+selects the oldest compatible PCM schema by default. Licenses accepted by PCM
+schema v1 produce a feed for KiCad 6–10. Other non-empty license strings use
+schema v2 and require KiCad 10 or newer.
+
+Projects can select a schema or declare a distribution-specific PCM license in
+`tscircuit.config.json`:
+
+```json
+{
+  "kicadPcm": {
+    "schemaVersion": "auto",
+    "license": "CC-BY-ND-4.0"
+  }
+}
+```
+
+Set `schemaVersion` to `1` or `2` to force a schema. Forcing v1 rejects licenses
+that are not in KiCad's v1 license list instead of substituting another license.
+
 ### Debug autorouting stages
 
 Use `--autorouter-debug` to log each autorouting stage and write visual

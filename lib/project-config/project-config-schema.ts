@@ -6,6 +6,13 @@ export const pcbSnapshotSettingsSchema = z.object({
   showFabricationNotes: z.boolean().optional(),
 })
 
+export const kicadPcmSettingsSchema = z.object({
+  schemaVersion: z
+    .union([z.literal("auto"), z.literal(1), z.literal(2)])
+    .optional(),
+  license: z.string().trim().min(1).optional(),
+})
+
 export type PcbSnapshotSettings = z.infer<typeof pcbSnapshotSettingsSchema>
 
 export const projectConfigSchema = z.object({
@@ -22,6 +29,7 @@ export const projectConfigSchema = z.object({
   kicadProjectEntrypointPath: z.string().optional(),
   kicadLibraryEntrypointPath: z.string().optional(),
   kicadLibraryName: z.string().optional(),
+  kicadPcm: kicadPcmSettingsSchema.optional(),
   alwaysUseLatestTscircuitOnCloud: z.boolean().optional(),
   build: z
     .object({

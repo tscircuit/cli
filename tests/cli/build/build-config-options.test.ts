@@ -1,6 +1,7 @@
 import { expect, test } from "bun:test"
 import { mkdir, readFile, readdir, stat, writeFile } from "node:fs/promises"
 import path from "node:path"
+import JSZip from "jszip"
 import { getCliTestFixture } from "../../fixtures/get-cli-test-fixture"
 
 const circuitCode = `
@@ -49,7 +50,7 @@ test("build uses config build.kicadLibrary setting", async () => {
   expect(fileList.some((f) => f.includes("footprints"))).toBe(true)
 }, 60_000)
 
-test("build uses config build.kicadPcm setting", async () => {
+test("build uses config build.kicadPcm and kicadPcm settings", async () => {
   const { tmpDir, runCommand } = await getCliTestFixture()
   await mkdir(path.join(tmpDir, "lib"), { recursive: true })
   await writeFile(path.join(tmpDir, "lib", "index.tsx"), libraryCode)
@@ -57,13 +58,17 @@ test("build uses config build.kicadPcm setting", async () => {
     path.join(tmpDir, "package.json"),
     JSON.stringify({
       name: "test-kicad-library",
-      license: "CC-BY-ND-4.0",
+      license: "MIT",
     }),
   )
   await writeFile(
     path.join(tmpDir, "tscircuit.config.json"),
     JSON.stringify({
       mainEntrypoint: "./lib/index.tsx",
+      kicadPcm: {
+        schemaVersion: 1,
+        license: "CC-BY-ND-4.0",
+      },
       build: {
         kicadPcm: true,
       },
@@ -75,6 +80,23 @@ test("build uses config build.kicadPcm setting", async () => {
   const pcmDir = path.join(tmpDir, "dist", "pcm")
   const pcmDirStat = await stat(pcmDir)
   expect(pcmDirStat.isDirectory()).toBe(true)
+
+  const repositoryJson = JSON.parse(
+    await readFile(path.join(pcmDir, "repository.json"), "utf-8"),
+  )
+  const packagesJson = JSON.parse(
+    await readFile(path.join(pcmDir, "packages.json"), "utf-8"),
+  )
+  expect(repositoryJson.$schema).toBe("https://go.kicad.org/pcm/schemas/v1")
+  expect(repositoryJson.schema_version).toBeUndefined()
+  expect(packagesJson.packages[0].license).toBe("CC-BY-ND-4.0")
+
+  const zipName = (await readdir(pcmDir)).find((file) => file.endsWith(".zip"))
+  expect(zipName).toBeDefined()
+  const zip = await JSZip.loadAsync(await readFile(path.join(pcmDir, zipName!)))
+  const metadata = JSON.parse(await zip.files["metadata.json"].async("string"))
+  expect(metadata.$schema).toBe("https://go.kicad.org/pcm/schemas/v1")
+  expect(metadata.license).toBe("CC-BY-ND-4.0")
 }, 60_000)
 
 test("build uses config build.previewImages setting", async () => {
