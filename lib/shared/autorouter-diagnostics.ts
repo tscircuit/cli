@@ -4,6 +4,7 @@ import type {
   AnyCircuitElement,
   CircuitJson,
   PcbTrace,
+  PcbTraceRoutePointThroughPad,
   SourcePort,
   SourceTrace,
 } from "circuit-json"
@@ -26,9 +27,22 @@ export type AutorouterDiagnosticsOptions = {
 type SimpleRouteJson = {
   connections?: Array<Record<string, unknown>>
   obstacles?: unknown[]
-  traces?: PcbTrace[]
+  traces?: AutorouterTrace[]
   jumpers?: unknown[]
   [key: string]: unknown
+}
+
+type ThroughObstacleRoutePoint = {
+  route_type: "through_obstacle"
+  start: { x: number; y: number }
+  end: { x: number; y: number }
+  from_layer: PcbTraceRoutePointThroughPad["start_layer"]
+  to_layer: PcbTraceRoutePointThroughPad["end_layer"]
+  width: number
+}
+
+type AutorouterTrace = Omit<PcbTrace, "route"> & {
+  route: Array<PcbTrace["route"][number] | ThroughObstacleRoutePoint>
 }
 
 type CircuitJsonLookup = {
@@ -133,7 +147,7 @@ export class AutorouterDiagnostics {
   private phaseOrdinalBySubcircuit = new Map<string, number>()
   private traceCountBySubcircuit = new Map<string, number>()
   private activePhase: ActivePhase | null = null
-  private completedPhaseTraces: PcbTrace[] = []
+  private completedPhaseTraces: AutorouterTrace[] = []
   private hasWrittenPlacementSnapshot = false
   private summary: Array<Record<string, unknown>> = []
   private rootCircuit: any
@@ -587,13 +601,24 @@ export class AutorouterDiagnostics {
   }
 
   private writePngSnapshot(fileName: string, circuitJson: CircuitJson) {
-    const pcbSvg = convertCircuitJsonToPcbSvg(circuitJson)
-    const png = convertSvgToPngBuffer(pcbSvg)
-    const debugDir = path.resolve(this.options.debugDir ?? DEFAULT_DEBUG_DIR)
-    fs.mkdirSync(debugDir, { recursive: true })
-    const filePath = path.join(debugDir, fileName)
-    fs.writeFileSync(filePath, png)
-    this.logArtifact(filePath)
+    try {
+      const pcbSvg = convertCircuitJsonToPcbSvg(circuitJson)
+      const png = convertSvgToPngBuffer(pcbSvg)
+      const debugDir = path.resolve(this.options.debugDir ?? DEFAULT_DEBUG_DIR)
+      fs.mkdirSync(debugDir, { recursive: true })
+      const filePath = path.join(debugDir, fileName)
+      fs.writeFileSync(filePath, png)
+      this.logArtifact(filePath)
+    } catch (error) {
+      const serializedError = this.serializeError(
+        error instanceof Error ? error : String(error),
+      )
+      this.log(
+        kleur.yellow(
+          `Could not write autorouter debug image ${fileName}: ${serializedError.message}`,
+        ),
+      )
+    }
   }
 
   private logArtifact(filePath: string) {
@@ -609,7 +634,8 @@ export class AutorouterDiagnostics {
       if (id) elementIndexById.set(id, index)
     }
 
-    for (const trace of this.completedPhaseTraces) {
+    for (const autorouterTrace of this.completedPhaseTraces) {
+      const trace = this.normalizeTraceForPcbSnapshot(autorouterTrace)
       if (!trace || typeof trace !== "object") continue
       const id = this.getCircuitElementId(trace)
       const existingIndex = id ? elementIndexById.get(id) : undefined
@@ -622,6 +648,23 @@ export class AutorouterDiagnostics {
     }
 
     return circuitJson
+  }
+
+  private normalizeTraceForPcbSnapshot(trace: AutorouterTrace): PcbTrace {
+    return {
+      ...trace,
+      route: trace.route.map((point) => {
+        if (point.route_type !== "through_obstacle") return point
+        return {
+          route_type: "through_pad",
+          start: point.start,
+          end: point.end,
+          start_layer: point.from_layer,
+          end_layer: point.to_layer,
+          width: point.width,
+        }
+      }),
+    }
   }
 
   private getCircuitElementId(element: AnyCircuitElement) {
