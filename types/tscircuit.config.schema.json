@@ -83,6 +83,22 @@
       "type": "string",
       "description": "Name for the generated KiCad library. Falls back to package.json name, then directory name."
     },
+    "kicadPcm": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "schemaVersion": {
+          "enum": ["auto", 1, 2],
+          "description": "KiCad PCM schema version. Auto uses v1 when compatible for KiCad 6-10 support, otherwise v2 for KiCad 10+."
+        },
+        "license": {
+          "type": "string",
+          "minLength": 1,
+          "description": "Distribution-specific license for KiCad PCM output. Falls back to package.json license."
+        }
+      },
+      "description": "KiCad PCM output settings."
+    },
     "alwaysUseLatestTscircuitOnCloud": {
       "type": "boolean",
       "description": "Always use the latest TSCircuit version when building on the cloud."

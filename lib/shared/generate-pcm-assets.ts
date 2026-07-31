@@ -3,9 +3,10 @@ import path from "node:path"
 import crypto from "node:crypto"
 import JSZip from "jszip"
 import {
-  assertValidKicadPcmV2License,
-  KICAD_PCM_SCHEMA_URL,
-  KICAD_PCM_SCHEMA_VERSION,
+  KICAD_PCM_SCHEMA_URLS,
+  type KicadPcmSchemaVersion,
+  type KicadPcmSchemaVersionPreference,
+  resolveKicadPcmSchemaVersion,
 } from "./kicad-pcm-license"
 
 export interface GeneratePcmAssetsOptions {
@@ -21,6 +22,8 @@ export interface GeneratePcmAssetsOptions {
   descriptionFull?: string
   /** License under which the package is distributed */
   license: string
+  /** PCM schema to emit. Auto selects v1 when the package license supports it. */
+  schemaVersion?: KicadPcmSchemaVersionPreference
   /** Path to the kicad-library output directory */
   kicadLibraryPath: string
   /** Output directory for PCM assets (e.g., "dist/pcm") */
@@ -38,6 +41,7 @@ export interface GeneratePcmAssetsResult {
   packageZipPath: string
   packageZipSha256: string
   packageZipSize: number
+  schemaVersion: KicadPcmSchemaVersion
 }
 
 /**
@@ -54,13 +58,18 @@ export async function generatePcmAssets(
     description = "",
     descriptionFull = `Visit https://tscircuit.com/${author}/${packageName} for more information.`,
     license,
+    schemaVersion: schemaVersionPreference = "auto",
     kicadLibraryPath,
     outputDir,
     baseUrl,
     displayName = `${author}/${packageName}`,
   } = options
 
-  assertValidKicadPcmV2License(license)
+  const schemaVersion = resolveKicadPcmSchemaVersion({
+    license,
+    preference: schemaVersionPreference,
+  })
+  const schemaUrl = KICAD_PCM_SCHEMA_URLS[schemaVersion]
   const normalizedLicense = license.trim()
 
   // Create PCM identifier (must be alphanumeric with dots/dashes, 2-50 chars)
@@ -75,7 +84,7 @@ export async function generatePcmAssets(
   console.log("Creating metadata.json...")
   // Create metadata.json for inside the ZIP
   const metadata = {
-    $schema: KICAD_PCM_SCHEMA_URL,
+    $schema: schemaUrl,
     name: displayName,
     description: description.slice(0, 500),
     description_full: descriptionFull.slice(0, 5000),
@@ -166,8 +175,8 @@ export async function generatePcmAssets(
     : "./packages.json"
 
   const repositoryJson = {
-    $schema: KICAD_PCM_SCHEMA_URL,
-    schema_version: KICAD_PCM_SCHEMA_VERSION,
+    $schema: schemaUrl,
+    ...(schemaVersion === 2 ? { schema_version: 2 } : {}),
     name: displayName,
     maintainer: {
       name: author,
@@ -192,6 +201,7 @@ export async function generatePcmAssets(
     packageZipPath: zipFilePath,
     packageZipSha256: sha256,
     packageZipSize: zipSize,
+    schemaVersion,
   }
 }
 
