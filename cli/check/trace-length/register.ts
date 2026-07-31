@@ -85,7 +85,7 @@ export const registerCheckTraceLength = (program: Command) => {
     .argument("[file]", "Path to the entry file")
     .option(
       "--autorouter-debug",
-      "Log autorouting phase diagnostics during circuit generation",
+      "Log autorouting phases and write unrouted/per-phase PNG artifacts",
     )
     .option(
       "--autorouter-timeout <duration>",

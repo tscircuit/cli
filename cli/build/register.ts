@@ -186,7 +186,7 @@ export const registerBuild = (program: Command) => {
     )
     .option(
       "--autorouter-debug",
-      "Log autorouting phase diagnostics during circuit generation",
+      "Log autorouting phases and write unrouted/per-phase PNG artifacts",
     )
     .option(
       "--autorouter-timeout <duration>",

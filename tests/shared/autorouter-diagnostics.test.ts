@@ -81,6 +81,14 @@ describe("autorouter diagnostics", () => {
                 layer: "top",
               },
               {
+                route_type: "through_obstacle",
+                start: { x: 0, y: 0 },
+                end: { x: 0, y: 0 },
+                from_layer: "top",
+                to_layer: "bottom",
+                width: 0.2,
+              },
+              {
                 route_type: "wire",
                 x: 2,
                 y: 0,
@@ -128,6 +136,41 @@ describe("autorouter diagnostics", () => {
       fs.readFileSync(path.join(debugDir, "phase-0-routed.png")),
     ).not.toEqual(
       fs.readFileSync(path.join(debugDir, "placement-unrouted.png")),
+    )
+  })
+
+  test("debug image failures do not abort autorouting events", () => {
+    const debugDir = makeTempDir()
+    const logs: string[] = []
+    const root = new FakeRootCircuit()
+    const diagnostics = new AutorouterDiagnostics({
+      enabled: true,
+      debugDir,
+      log: (message) => logs.push(message),
+    })
+
+    diagnostics.attachToRootCircuit(root)
+    root.emit("autorouting:start", {
+      subcircuit_id: "subcircuit_source_group_0",
+      simpleRouteJson: { connections: [{ name: "GND" }] },
+    })
+
+    expect(() =>
+      root.emit("autorouting:end", {
+        subcircuit_id: "subcircuit_source_group_0",
+        simpleRouteJson: {
+          traces: [
+            {
+              type: "pcb_trace",
+              pcb_trace_id: "pcb_trace_invalid",
+              route: [{ route_type: "unsupported_debug_route_point" }],
+            },
+          ],
+        },
+      }),
+    ).not.toThrow()
+    expect(logs.join("\n")).toContain(
+      "Could not write autorouter debug image phase-0-routed.png",
     )
   })
 

@@ -80,6 +80,30 @@ The `build` command also accepts the following options:
 - `--ignore-placement-drc` - suppress placement DRC diagnostics
 - `--ignore-routing-drc` - suppress routing DRC diagnostics
 
+### Debug autorouting stages
+
+Use `--autorouter-debug` to log each autorouting stage and write visual
+artifacts while the circuit is being routed:
+
+```bash
+tsci build index.circuit.tsx \
+  --autorouter-debug \
+  --autorouter-debug-dir dist/autorouter-debug \
+  --autorouter-dump-srj all
+```
+
+The debug directory contains:
+
+- `placement-unrouted.png` — PCB placement before routing starts.
+- `phase-N-routed.png` — cumulative PCB routing after each zero-indexed stage.
+  A fanout router and its downstream router appear as separate stages.
+- `phase-N.input.simple-route.json` and `phase-N.output.traces.json` when
+  `--autorouter-dump-srj all` is enabled.
+- `board.meta.json` — phase timing and connection-count summary.
+
+Use `--autorouter-dump-srj failed` to keep only failed-stage routing data, or
+`--autorouter-dump-srj phase:N` to capture a single stage.
+
 ## Development
 
 This command will open the `index.tsx` file for editing.
