@@ -15,6 +15,10 @@ import {
   addSourceFilesystemHash,
   getSourceFilesystemMd5Hash,
 } from "./circuit-json-build-cache"
+import {
+  SolverDiagnostics,
+  type SolverDiagnosticsOptions,
+} from "./solver-diagnostics"
 
 const debug = Debug("tsci:generate-circuit-json")
 
@@ -43,6 +47,7 @@ type GenerateCircuitJsonOptions = {
   injectedProps?: Record<string, unknown>
   onAsyncEffectStatus?: (asyncEffectName: string) => void
   autorouterDiagnostics?: AutorouterDiagnosticsOptions
+  solverDiagnostics?: SolverDiagnosticsOptions
   sourceFilesystemMd5Hash?: string
 }
 
@@ -61,6 +66,7 @@ export async function generateCircuitJson({
   injectedProps,
   onAsyncEffectStatus,
   autorouterDiagnostics: autorouterDiagnosticsOptions,
+  solverDiagnostics: solverDiagnosticsOptions,
   sourceFilesystemMd5Hash,
 }: GenerateCircuitJsonOptions) {
   debug(`Generating circuit JSON for ${filePath}`)
@@ -81,6 +87,10 @@ export async function generateCircuitJson({
     autorouterDiagnosticsOptions,
   )
   autorouterDiagnostics.attachToRootCircuit(runner)
+  const solverDiagnostics = solverDiagnosticsOptions
+    ? new SolverDiagnostics(solverDiagnosticsOptions)
+    : null
+  solverDiagnostics?.attachToRootCircuit(runner)
   const absoluteFilePath = path.isAbsolute(filePath)
     ? filePath
     : path.resolve(process.cwd(), filePath)
@@ -175,6 +185,7 @@ export async function generateCircuitJson({
   }
 
   runner.emit("renderComplete")
+  solverDiagnostics?.finalize()
 
   // Get the circuit JSON
   const circuitJson = addSourceFilesystemHash(

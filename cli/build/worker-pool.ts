@@ -3,6 +3,7 @@ import path from "node:path"
 import type { PlatformConfig } from "@tscircuit/props"
 import type { PcbSnapshotSettings } from "lib/project-config/project-config-schema"
 import type { AutorouterDiagnosticsOptions } from "lib/shared/autorouter-diagnostics"
+import type { SolverDiagnosticsOptions } from "lib/shared/solver-diagnostics"
 import { ThreadWorkerPool } from "lib/shared/thread-worker-pool"
 import type { DrcIgnoreOptions } from "./drc-diagnostic-filter"
 import type { BuildImageFormatSelection } from "./image-format-selection"
@@ -19,6 +20,7 @@ type BuildJob = {
   glbOutputPath?: string
   stepOutputPath?: string
   previewOutputDir?: string
+  solverDiagnostics?: SolverDiagnosticsOptions
   projectDir: string
   options?: {
     ignoreErrors?: boolean
@@ -28,6 +30,7 @@ type BuildJob = {
       profile?: boolean
       injectedProps?: Record<string, unknown>
       autorouterDiagnostics?: AutorouterDiagnosticsOptions
+      solverDiagnostics?: SolverDiagnosticsOptions
       generatePreviewAssets?: boolean
       imageFormats?: BuildImageFormatSelection
       pcbSnapshotSettings?: PcbSnapshotSettings
@@ -61,6 +64,7 @@ export async function buildFilesWithWorkerPool(options: {
     glbOutputPath?: string
     stepOutputPath?: string
     previewOutputDir?: string
+    solverDiagnostics?: SolverDiagnosticsOptions
     generatePreviewAssets?: boolean
   }>
   projectDir: string
@@ -73,6 +77,7 @@ export async function buildFilesWithWorkerPool(options: {
       profile?: boolean
       injectedProps?: Record<string, unknown>
       autorouterDiagnostics?: AutorouterDiagnosticsOptions
+      solverDiagnostics?: SolverDiagnosticsOptions
       generatePreviewAssets?: boolean
       imageFormats?: BuildImageFormatSelection
       pcbSnapshotSettings?: PcbSnapshotSettings
@@ -171,9 +176,12 @@ export async function buildFilesWithWorkerPool(options: {
         glbOutputPath: file.glbOutputPath,
         stepOutputPath: file.stepOutputPath,
         previewOutputDir: file.previewOutputDir,
+        solverDiagnostics: file.solverDiagnostics,
         projectDir: options.projectDir,
         options: {
           ...options.buildOptions,
+          solverDiagnostics:
+            file.solverDiagnostics ?? options.buildOptions?.solverDiagnostics,
           generatePreviewAssets:
             file.generatePreviewAssets ??
             options.buildOptions?.generatePreviewAssets,

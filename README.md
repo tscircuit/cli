@@ -126,6 +126,24 @@ The debug directory contains:
 Use `--autorouter-dump-srj failed` to keep only failed-stage routing data, or
 `--autorouter-dump-srj phase:N` to capture a single stage.
 
+### Debug solver inputs
+
+Use `--solver-debug` to record the constructor inputs for every solver that
+the circuit reports while it renders:
+
+```bash
+tsci build index.circuit.tsx \
+  --solver-debug \
+  --solver-debug-dir dist/solver-debug
+```
+
+Each circuit writes a `solver-inputs.json` artifact beneath the debug
+directory. The file preserves solver event order, identifies the component
+that started each solver, and contains the full constructor argument tuple so
+the solver can be reproduced independently. Values that JSON cannot represent
+directly, such as `undefined`, `NaN`, maps, sets, or circular references, use
+explicit `value_type` records instead of being silently discarded.
+
 ## Development
 
 This command will open the `index.tsx` file for editing.
