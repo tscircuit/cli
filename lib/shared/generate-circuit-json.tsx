@@ -10,6 +10,7 @@ import {
   type AutorouterDiagnosticsOptions,
 } from "./autorouter-diagnostics"
 import { importFromUserLand } from "./importFromUserLand"
+import { registerEsmOnlyCoreRequireBridge } from "./register-esm-only-core-require-bridge"
 import { registerStaticAssetLoaders } from "./register-static-asset-loaders"
 import {
   addSourceFilesystemHash,
@@ -95,6 +96,7 @@ export async function generateCircuitJson({
     ? filePath
     : path.resolve(process.cwd(), filePath)
   const projectDir = path.dirname(absoluteFilePath)
+  registerEsmOnlyCoreRequireBridge(projectDir)
   const resolvedOutputDir = outputDir ?? projectDir
 
   // Get the relative path to the component from the project directory
