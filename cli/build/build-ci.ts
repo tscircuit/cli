@@ -32,6 +32,8 @@ export interface BuildCommandOptions {
   autorouterTimeout?: string
   autorouterDebugDir?: string
   autorouterDumpSrj?: string | boolean
+  solverDebug?: boolean
+  solverDebugDir?: string
   useCdnJavascript?: boolean
   concurrency?: string
   injectProps?: string

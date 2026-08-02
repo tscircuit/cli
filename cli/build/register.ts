@@ -11,6 +11,7 @@ import {
   parseAutorouterTimeout,
   type AutorouterDiagnosticsOptions,
 } from "lib/shared/autorouter-diagnostics"
+import type { SolverDiagnosticsOptions } from "lib/shared/solver-diagnostics"
 import { convertToKicadLibrary } from "lib/shared/convert-to-kicad-library"
 import { getEntrypoint } from "lib/shared/get-entrypoint"
 import { mergePlatformConfigs } from "lib/shared/platform-config-utils"
@@ -201,6 +202,14 @@ export const registerBuild = (program: Command) => {
       'Dump SimpleRouteJson inputs/outputs: "all", "failed", or "phase:<index>" (default: failed)',
     )
     .option(
+      "--solver-debug",
+      "Write constructor inputs for every solver event emitted during the build",
+    )
+    .option(
+      "--solver-debug-dir <path>",
+      "Directory for solver input artifacts (default: dist/solver-debug)",
+    )
+    .option(
       "--kicad-pcm",
       "Generate KiCad PCM (Plugin and Content Manager) assets in dist/pcm",
     )
@@ -338,6 +347,30 @@ export const registerBuild = (program: Command) => {
           logOnError: true,
           longRunningLogThresholdMs: 10_000,
         }
+        const solverDebugDir = resolvedOptions?.solverDebugDir
+          ? path.resolve(projectDir, resolvedOptions.solverDebugDir)
+          : path.join(distDir, "solver-debug")
+        const getSolverDiagnostics = ({
+          relativeEntrypoint,
+          outputDirName,
+          log,
+        }: {
+          relativeEntrypoint: string
+          outputDirName: string
+          log?: (message: string) => void
+        }): SolverDiagnosticsOptions | undefined =>
+          resolvedOptions?.solverDebug
+            ? {
+                enabled: true,
+                outputPath: path.join(
+                  solverDebugDir,
+                  outputDirName,
+                  "solver-inputs.json",
+                ),
+                entrypoint: relativeEntrypoint.split(path.sep).join("/"),
+                log,
+              }
+            : undefined
 
         // Parse concurrency option
         const concurrencyValue = Math.max(
@@ -566,6 +599,11 @@ export const registerBuild = (program: Command) => {
               {
                 ...buildOptions,
                 autorouterDiagnostics,
+                solverDiagnostics: getSolverDiagnostics({
+                  relativeEntrypoint: relative,
+                  outputDirName,
+                  log: (message) => console.log(kleur.cyan(message)),
+                }),
               },
             )
             if (resolvedOptions?.profile) {
@@ -625,6 +663,10 @@ export const registerBuild = (program: Command) => {
               glbOutputPath,
               stepOutputPath,
               previewOutputDir,
+              solverDiagnostics: getSolverDiagnostics({
+                relativeEntrypoint: relative,
+                outputDirName,
+              }),
               generatePreviewAssets,
             }
           })
@@ -991,6 +1033,7 @@ export const registerBuild = (program: Command) => {
           resolvedOptions?.autorouterDebug && "autorouter-debug",
           resolvedOptions?.autorouterTimeout && "autorouter-timeout",
           resolvedOptions?.autorouterDumpSrj && "autorouter-dump-srj",
+          resolvedOptions?.solverDebug && "solver-debug",
         ].filter(Boolean) as string[]
 
         if (resolvedOptions?.profile && profileEntries.length > 0) {

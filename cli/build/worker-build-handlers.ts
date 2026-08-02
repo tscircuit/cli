@@ -77,6 +77,12 @@ export const handleBuildFile = async (
                   log: (message) => workerLog(message),
                 }
               : undefined,
+            solverDiagnostics: options?.solverDiagnostics
+              ? {
+                  ...options.solverDiagnostics,
+                  log: (message) => workerLog(message),
+                }
+              : undefined,
             onAsyncEffectStatus: (asyncEffectName) => {
               workerStatus(`waiting on ${asyncEffectName}…`)
             },

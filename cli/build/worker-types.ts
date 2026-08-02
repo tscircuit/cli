@@ -1,5 +1,6 @@
 import type { PlatformConfig } from "@tscircuit/props"
 import type { AutorouterDiagnosticsOptions } from "lib/shared/autorouter-diagnostics"
+import type { SolverDiagnosticsOptions } from "lib/shared/solver-diagnostics"
 import type { PcbSnapshotSettings } from "lib/project-config/project-config-schema"
 import type { DrcIgnoreCounts, DrcIgnoreOptions } from "./drc-diagnostic-filter"
 import type { BuildImageFormatSelection } from "./image-format-selection"
@@ -23,6 +24,7 @@ export type BuildFileMessage = {
       profile?: boolean
       injectedProps?: Record<string, unknown>
       autorouterDiagnostics?: AutorouterDiagnosticsOptions
+      solverDiagnostics?: SolverDiagnosticsOptions
       generatePreviewAssets?: boolean
       imageFormats?: BuildImageFormatSelection
       pcbSnapshotSettings?: PcbSnapshotSettings
