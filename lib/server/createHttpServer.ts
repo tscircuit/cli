@@ -15,66 +15,7 @@ import { createLocalCacheEngine } from "../shared/get-platform-config-with-cli-d
 import { getIndex } from "../site/getIndex"
 import { createKicadPcmProxy } from "./kicad-pcm-proxy"
 
-const RUNFRAME_CACHE_PATH = "/__tscircuit/cache"
-const RUNFRAME_EVAL_WORKER_PATH = "/__tscircuit/eval-webworker.js"
-const INHERITED_LOCAL_CACHE_ENGINE_SYMBOL_KEY =
-  "tscircuit.inheritedLocalCacheEngine"
-const cliRequire = createRequire(import.meta.url)
-
-const injectEvalWorkerPath = (standaloneContent: string): string => {
-  const propertyMarker = "evalWebWorkerBlobUrl:"
-  const propertyIndex = standaloneContent.lastIndexOf(propertyMarker)
-  if (propertyIndex === -1) return standaloneContent
-
-  const valueStart = propertyIndex + propertyMarker.length
-  const nextPropertyMatch = standaloneContent
-    .slice(valueStart)
-    .match(/,\s*enableFetchProxy\s*:/)
-  if (nextPropertyMatch?.index === undefined) return standaloneContent
-
-  const valueEnd = valueStart + nextPropertyMatch.index
-  return `${standaloneContent.slice(0, valueStart)}${JSON.stringify(
-    RUNFRAME_EVAL_WORKER_PATH,
-  )}${standaloneContent.slice(valueEnd)}`
-}
-
-const getCacheWorkerPrelude = (): string => `
-const tscircuitCacheFetch = globalThis.fetch.bind(globalThis)
-const tscircuitCacheApiUrl = new URL(${JSON.stringify(RUNFRAME_CACHE_PATH)}, globalThis.location.href)
-Reflect.set(globalThis, Symbol.for(${JSON.stringify(INHERITED_LOCAL_CACHE_ENGINE_SYMBOL_KEY)}), {
-  getItem: async (key) => {
-    try {
-      const url = new URL(tscircuitCacheApiUrl)
-      url.searchParams.set("key", key)
-      const response = await tscircuitCacheFetch(url)
-      if (response.status === 404) return null
-      if (!response.ok) return null
-      return await response.text()
-    } catch {
-      return null
-    }
-  },
-  setItem: async (key, value) => {
-    try {
-      const url = new URL(tscircuitCacheApiUrl)
-      url.searchParams.set("key", key)
-      await tscircuitCacheFetch(url, {
-        method: "POST",
-        headers: { "Content-Type": "text/plain; charset=utf-8" },
-        body: value,
-      })
-    } catch {}
-  },
-});
-`
-
-const resolveSiblingEvalWorkerPath = (
-  standalonePath?: string,
-): string | undefined => {
-  if (!standalonePath) return undefined
-  const workerPath = path.join(path.dirname(standalonePath), "webworker.min.js")
-  return fs.existsSync(workerPath) ? workerPath : undefined
-}
+const RUNFRAME_CACHE_PATH = "/api/cache"
 
 /**
  * Resolves the standalone runframe + eval bundle (`dist/browser.min.js`) shipped
@@ -168,32 +109,6 @@ export const createHttpServer = async ({
       return
     }
 
-    if (url.pathname === RUNFRAME_EVAL_WORKER_PATH) {
-      const localStandalonePath =
-        resolveLocalTscircuitStandalonePath(projectDir)
-      const evalWorkerPath =
-        resolveSiblingEvalWorkerPath(localStandalonePath) ??
-        resolveSiblingEvalWorkerPath(
-          process.env.TSCIRCUIT_GLOBAL_STANDALONE_FILE_PATH,
-        ) ??
-        resolveSiblingEvalWorkerPath(
-          process.env.RUNFRAME_STANDALONE_FILE_PATH,
-        ) ??
-        cliRequire.resolve("@tscircuit/eval/worker-entrypoint")
-
-      try {
-        const workerContent = fs.readFileSync(evalWorkerPath, "utf8")
-        res.writeHead(200, {
-          "Content-Type": "application/javascript; charset=utf-8",
-        })
-        res.end(`${getCacheWorkerPrelude()}\n${workerContent}`)
-      } catch {
-        res.writeHead(404)
-        res.end("Eval worker not found")
-      }
-      return
-    }
-
     if (
       url.pathname === "/api/files/upsert-multipart" &&
       req.method === "POST"
@@ -277,7 +192,7 @@ export const createHttpServer = async ({
             res.writeHead(200, {
               "Content-Type": "application/javascript; charset=utf-8",
             })
-            res.end(injectEvalWorkerPath(content))
+            res.end(content)
             return
           } catch {
             // fall back to the global tscircuit bundle, then the CLI
@@ -294,7 +209,7 @@ export const createHttpServer = async ({
             res.writeHead(200, {
               "Content-Type": "application/javascript; charset=utf-8",
             })
-            res.end(injectEvalWorkerPath(content))
+            res.end(content)
             return
           } catch {
             // fall back to the CLI-bundled runframe standalone below
@@ -304,7 +219,7 @@ export const createHttpServer = async ({
         res.writeHead(200, {
           "Content-Type": "application/javascript; charset=utf-8",
         })
-        res.end(injectEvalWorkerPath(runFrameStandaloneBundleContent))
+        res.end(runFrameStandaloneBundleContent)
         return
       }
 
@@ -313,7 +228,7 @@ export const createHttpServer = async ({
         res.writeHead(200, {
           "Content-Type": "application/javascript; charset=utf-8",
         })
-        res.end(injectEvalWorkerPath(content))
+        res.end(content)
         return
       } catch (error) {
         console.info(
