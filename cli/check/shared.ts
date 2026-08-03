@@ -7,6 +7,7 @@ import { getOrGenerateCircuitJson } from "lib/shared/get-or-generate-circuit-jso
 import { getPlatformConfigWithCliDefaults } from "lib/shared/get-platform-config-with-cli-defaults"
 import { getEntrypoint } from "lib/shared/get-entrypoint"
 import { isCircuitJsonFile } from "lib/shared/is-circuit-json-file"
+import { findCircuitProjectDir } from "lib/shared/circuit-json-build-cache"
 
 export const resolveCheckInputFilePath = async (file?: string) => {
   if (file) {
@@ -40,8 +41,12 @@ export const getCircuitJsonForCheck = async ({
     return Array.isArray(parsedJson) ? parsedJson : []
   }
 
-  const platformConfigWithCliDefaults =
-    getPlatformConfigWithCliDefaults(platformConfig)
+  const platformConfigWithCliDefaults = getPlatformConfigWithCliDefaults(
+    platformConfig,
+    {
+      projectDir: findCircuitProjectDir(filePath),
+    },
+  )
 
   const { circuitJson } = await getOrGenerateCircuitJson({
     filePath,

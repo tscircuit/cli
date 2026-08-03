@@ -1,8 +1,9 @@
 import { expect, test } from "bun:test"
+import { mkdir, writeFile } from "node:fs/promises"
+import { join } from "node:path"
 import { DevServer } from "cli/dev/DevServer"
 import getPort from "get-port"
-import { join } from "node:path"
-import { mkdir, writeFile } from "node:fs/promises"
+import { createLocalCacheEngine } from "lib/shared/get-platform-config-with-cli-defaults"
 import { getCliTestFixture } from "../../fixtures/get-cli-test-fixture"
 
 const LOCAL_BUNDLE = "LOCAL_TSCIRCUIT_BUNDLE_SENTINEL"
@@ -68,7 +69,7 @@ test("dev server serves the project-local tscircuit bundle, even when a global b
   try {
     expect(await fetchStandalone(tmpDir)).toBe(LOCAL_BUNDLE)
   } finally {
-    delete process.env.TSCIRCUIT_GLOBAL_STANDALONE_FILE_PATH
+    process.env.TSCIRCUIT_GLOBAL_STANDALONE_FILE_PATH = undefined
   }
 }, 30_000)
 
@@ -88,6 +89,39 @@ test("dev server falls back to TSCIRCUIT_GLOBAL_STANDALONE_FILE_PATH when no loc
   try {
     expect(await fetchStandalone(tmpDir)).toBe(GLOBAL_BUNDLE)
   } finally {
-    delete process.env.TSCIRCUIT_GLOBAL_STANDALONE_FILE_PATH
+    process.env.TSCIRCUIT_GLOBAL_STANDALONE_FILE_PATH = undefined
+  }
+}, 30_000)
+
+test("RunFrame's cache API reads and writes the CLI project cache", async () => {
+  const { tmpDir } = await getCliTestFixture()
+  await writeProject(tmpDir)
+  await installLocalTscircuit(tmpDir, LOCAL_BUNDLE)
+
+  const port = await getPort()
+  const devServer = new DevServer({
+    port,
+    componentFilePath: join(tmpDir, "index.tsx"),
+    projectDir: tmpDir,
+  })
+
+  try {
+    await devServer.start()
+    const origin = `http://localhost:${port}`
+    const cache = createLocalCacheEngine(join(tmpDir, ".tscircuit", "cache"))
+    cache.setItem("written-by-cli", '{"source":"cli"}')
+
+    const cliValue = await fetch(`${origin}/api/cache?key=written-by-cli`).then(
+      (res) => res.text(),
+    )
+    expect(cliValue).toBe('{"source":"cli"}')
+
+    await fetch(`${origin}/api/cache?key=written-by-runframe`, {
+      method: "POST",
+      body: '{"source":"runframe"}',
+    })
+    expect(cache.getItem("written-by-runframe")).toBe('{"source":"runframe"}')
+  } finally {
+    await devServer.stop()
   }
 }, 30_000)

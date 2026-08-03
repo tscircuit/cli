@@ -14,6 +14,7 @@ import {
   type CircuitJsonIssue,
 } from "lib/shared/circuit-json-diagnostics"
 import path from "node:path"
+import { findCircuitProjectDir } from "lib/shared/circuit-json-build-cache"
 
 const normalizeCategory = (category: string): DrcCategory =>
   category === "netlist" ||
@@ -45,11 +46,14 @@ const resolveInputFilePath = async (file?: string) => {
 export const checkNetlist = async (file?: string) => {
   const resolvedInputFilePath = await resolveInputFilePath(file)
 
-  const platformConfigWithCliDefaults = getPlatformConfigWithCliDefaults({
-    pcbDisabled: true,
-    routingDisabled: true,
-    placementDrcChecksDisabled: true,
-  } satisfies PlatformConfig)
+  const platformConfigWithCliDefaults = getPlatformConfigWithCliDefaults(
+    {
+      pcbDisabled: true,
+      routingDisabled: true,
+      placementDrcChecksDisabled: true,
+    } satisfies PlatformConfig,
+    { projectDir: findCircuitProjectDir(resolvedInputFilePath) },
+  )
 
   const { circuitJson } = await getOrGenerateCircuitJson({
     filePath: resolvedInputFilePath,

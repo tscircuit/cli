@@ -7,6 +7,7 @@ import type { PlatformConfig } from "@tscircuit/props"
 import { loadRuntimeProjectConfig } from "lib/project-config"
 import { mergePlatformConfigs } from "lib/shared/platform-config-utils"
 import { getPlatformConfigWithCliDefaults } from "lib/shared/get-platform-config-with-cli-defaults"
+import { findCircuitProjectDir } from "lib/shared/circuit-json-build-cache"
 
 export const registerSimulate = (program: Command) => {
   const simulateCommand = program
@@ -32,7 +33,9 @@ export const registerSimulate = (program: Command) => {
       const { circuitJson } = await getOrGenerateCircuitJson({
         filePath: file,
         saveToFile: false,
-        platformConfig: getPlatformConfigWithCliDefaults(platformConfig),
+        platformConfig: getPlatformConfigWithCliDefaults(platformConfig, {
+          projectDir: findCircuitProjectDir(file),
+        }),
       })
       if (!circuitJson) {
         console.log("error: Failed to generate circuit JSON")

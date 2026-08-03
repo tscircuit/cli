@@ -76,8 +76,10 @@ export const processSnapshotFile = async ({
       const parsed = JSON.parse(fs.readFileSync(file, "utf-8"))
       circuitJson = Array.isArray(parsed) ? parsed : []
     } else {
-      const platformConfigWithCliDefaults =
-        getPlatformConfigWithCliDefaults(platformConfig)
+      const platformConfigWithCliDefaults = getPlatformConfigWithCliDefaults(
+        platformConfig,
+        { projectDir },
+      )
 
       const result = await getOrGenerateCircuitJson({
         filePath: file,

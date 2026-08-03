@@ -55,6 +55,7 @@ export const buildFile = async (
     // Get complete platform config with kicad_mod support
     const platformConfigWithCliDefaults = getPlatformConfigWithCliDefaults(
       options?.platformConfig,
+      { projectDir },
     )
 
     if (!isPrebuiltCircuitJson) {
