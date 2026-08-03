@@ -182,7 +182,7 @@ export const exportSnippet = async ({
     const fabricationPlatformConfig = isJlcpcbFabricationExport
       ? getPlatformConfigWithCliDefaults(
           mergePlatformConfigs(platformConfig, {
-            usePartOrientationAnalysis: true,
+            enablePartOrientationAnalysis: true,
           }),
         )
       : platformConfig
