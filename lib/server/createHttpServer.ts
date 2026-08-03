@@ -11,8 +11,69 @@ import pkg from "../../package.json"
 
 // @ts-ignore
 import winterspecBundle from "@tscircuit/file-server/dist/bundle.js"
+import { createLocalCacheEngine } from "../shared/get-platform-config-with-cli-defaults"
 import { getIndex } from "../site/getIndex"
 import { createKicadPcmProxy } from "./kicad-pcm-proxy"
+
+const RUNFRAME_CACHE_PATH = "/__tscircuit/cache"
+const RUNFRAME_EVAL_WORKER_PATH = "/__tscircuit/eval-webworker.js"
+const GLOBAL_LOCAL_CACHE_ENGINE_SYMBOL_KEY = "tscircuit.localCacheEngine"
+const cliRequire = createRequire(import.meta.url)
+
+const injectEvalWorkerPath = (standaloneContent: string): string => {
+  const propertyMarker = "evalWebWorkerBlobUrl:"
+  const propertyIndex = standaloneContent.lastIndexOf(propertyMarker)
+  if (propertyIndex === -1) return standaloneContent
+
+  const valueStart = propertyIndex + propertyMarker.length
+  const nextPropertyMatch = standaloneContent
+    .slice(valueStart)
+    .match(/,\s*enableFetchProxy\s*:/)
+  if (nextPropertyMatch?.index === undefined) return standaloneContent
+
+  const valueEnd = valueStart + nextPropertyMatch.index
+  return `${standaloneContent.slice(0, valueStart)}${JSON.stringify(
+    RUNFRAME_EVAL_WORKER_PATH,
+  )}${standaloneContent.slice(valueEnd)}`
+}
+
+const getCacheWorkerPrelude = (): string => `
+const tscircuitCacheFetch = globalThis.fetch.bind(globalThis)
+const tscircuitCacheApiUrl = new URL(${JSON.stringify(RUNFRAME_CACHE_PATH)}, globalThis.location.href)
+Reflect.set(globalThis, Symbol.for(${JSON.stringify(GLOBAL_LOCAL_CACHE_ENGINE_SYMBOL_KEY)}), {
+  getItem: async (key) => {
+    try {
+      const url = new URL(tscircuitCacheApiUrl)
+      url.searchParams.set("key", key)
+      const response = await tscircuitCacheFetch(url)
+      if (response.status === 404) return null
+      if (!response.ok) return null
+      return await response.text()
+    } catch {
+      return null
+    }
+  },
+  setItem: async (key, value) => {
+    try {
+      const url = new URL(tscircuitCacheApiUrl)
+      url.searchParams.set("key", key)
+      await tscircuitCacheFetch(url, {
+        method: "POST",
+        headers: { "Content-Type": "text/plain; charset=utf-8" },
+        body: value,
+      })
+    } catch {}
+  },
+});
+`
+
+const resolveSiblingEvalWorkerPath = (
+  standalonePath?: string,
+): string | undefined => {
+  if (!standalonePath) return undefined
+  const workerPath = path.join(path.dirname(standalonePath), "webworker.min.js")
+  return fs.existsSync(workerPath) ? workerPath : undefined
+}
 
 /**
  * Resolves the standalone runframe + eval bundle (`dist/browser.min.js`) shipped
@@ -27,16 +88,20 @@ const resolveLocalTscircuitStandalonePath = (
   if (!projectDir) return undefined
   try {
     const projectRequire = createRequire(path.join(projectDir, "package.json"))
-    const browserBundlePath = path.join(
-      path.dirname(projectRequire.resolve("tscircuit/package.json")),
-      "dist",
-      "browser.min.js",
-    )
+    const browserBundlePath = projectRequire.resolve("tscircuit/browser")
     if (fs.existsSync(browserBundlePath)) return browserBundlePath
   } catch {
     // `tscircuit` isn't installed locally; fall back to the CLI-bundled runframe
   }
   return undefined
+}
+
+const readRequestBody = async (req: http.IncomingMessage): Promise<string> => {
+  const chunks: Buffer[] = []
+  for await (const chunk of req) {
+    chunks.push(Buffer.isBuffer(chunk) ? chunk : Buffer.from(chunk))
+  }
+  return Buffer.concat(chunks).toString("utf8")
 }
 
 export const createHttpServer = async ({
@@ -53,6 +118,9 @@ export const createHttpServer = async ({
   entryFile?: string
 }) => {
   const fileServerHandler = getNodeHandler(winterspecBundle as any, {})
+  const localCacheEngine = projectDir
+    ? createLocalCacheEngine(path.join(projectDir, ".tscircuit", "cache"))
+    : undefined
 
   // Create PCM proxy if enabled
   const pcmProxy =
@@ -63,6 +131,67 @@ export const createHttpServer = async ({
   const server = http.createServer(async (req, res) => {
     const requestHost = req.headers.host ?? `localhost:${port}`
     const url = new URL(req.url!, `http://${requestHost}`)
+
+    if (url.pathname === RUNFRAME_CACHE_PATH) {
+      const key = url.searchParams.get("key")
+      if (!localCacheEngine || !key) {
+        res.writeHead(400, { "Content-Type": "text/plain; charset=utf-8" })
+        res.end("A project directory and cache key are required")
+        return
+      }
+
+      if (req.method === "GET") {
+        const value = await localCacheEngine.getItem(key)
+        if (value === null) {
+          res.writeHead(404)
+          res.end()
+          return
+        }
+        res.writeHead(200, {
+          "Content-Type": "text/plain; charset=utf-8",
+          "Cache-Control": "no-store",
+        })
+        res.end(value)
+        return
+      }
+
+      if (req.method === "POST") {
+        await localCacheEngine.setItem(key, await readRequestBody(req))
+        res.writeHead(204)
+        res.end()
+        return
+      }
+
+      res.writeHead(405, { Allow: "GET, POST" })
+      res.end()
+      return
+    }
+
+    if (url.pathname === RUNFRAME_EVAL_WORKER_PATH) {
+      const localStandalonePath =
+        resolveLocalTscircuitStandalonePath(projectDir)
+      const evalWorkerPath =
+        resolveSiblingEvalWorkerPath(localStandalonePath) ??
+        resolveSiblingEvalWorkerPath(
+          process.env.TSCIRCUIT_GLOBAL_STANDALONE_FILE_PATH,
+        ) ??
+        resolveSiblingEvalWorkerPath(
+          process.env.RUNFRAME_STANDALONE_FILE_PATH,
+        ) ??
+        cliRequire.resolve("@tscircuit/eval/worker-entrypoint")
+
+      try {
+        const workerContent = fs.readFileSync(evalWorkerPath, "utf8")
+        res.writeHead(200, {
+          "Content-Type": "application/javascript; charset=utf-8",
+        })
+        res.end(`${getCacheWorkerPrelude()}\n${workerContent}`)
+      } catch {
+        res.writeHead(404)
+        res.end("Eval worker not found")
+      }
+      return
+    }
 
     if (
       url.pathname === "/api/files/upsert-multipart" &&
@@ -147,7 +276,7 @@ export const createHttpServer = async ({
             res.writeHead(200, {
               "Content-Type": "application/javascript; charset=utf-8",
             })
-            res.end(content)
+            res.end(injectEvalWorkerPath(content))
             return
           } catch {
             // fall back to the global tscircuit bundle, then the CLI
@@ -164,7 +293,7 @@ export const createHttpServer = async ({
             res.writeHead(200, {
               "Content-Type": "application/javascript; charset=utf-8",
             })
-            res.end(content)
+            res.end(injectEvalWorkerPath(content))
             return
           } catch {
             // fall back to the CLI-bundled runframe standalone below
@@ -174,7 +303,7 @@ export const createHttpServer = async ({
         res.writeHead(200, {
           "Content-Type": "application/javascript; charset=utf-8",
         })
-        res.end(runFrameStandaloneBundleContent)
+        res.end(injectEvalWorkerPath(runFrameStandaloneBundleContent))
         return
       }
 
@@ -183,7 +312,7 @@ export const createHttpServer = async ({
         res.writeHead(200, {
           "Content-Type": "application/javascript; charset=utf-8",
         })
-        res.end(content)
+        res.end(injectEvalWorkerPath(content))
         return
       } catch (error) {
         console.info(
