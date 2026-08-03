@@ -17,7 +17,8 @@ import { createKicadPcmProxy } from "./kicad-pcm-proxy"
 
 const RUNFRAME_CACHE_PATH = "/__tscircuit/cache"
 const RUNFRAME_EVAL_WORKER_PATH = "/__tscircuit/eval-webworker.js"
-const GLOBAL_LOCAL_CACHE_ENGINE_SYMBOL_KEY = "tscircuit.localCacheEngine"
+const INHERITED_LOCAL_CACHE_ENGINE_SYMBOL_KEY =
+  "tscircuit.inheritedLocalCacheEngine"
 const cliRequire = createRequire(import.meta.url)
 
 const injectEvalWorkerPath = (standaloneContent: string): string => {
@@ -40,7 +41,7 @@ const injectEvalWorkerPath = (standaloneContent: string): string => {
 const getCacheWorkerPrelude = (): string => `
 const tscircuitCacheFetch = globalThis.fetch.bind(globalThis)
 const tscircuitCacheApiUrl = new URL(${JSON.stringify(RUNFRAME_CACHE_PATH)}, globalThis.location.href)
-Reflect.set(globalThis, Symbol.for(${JSON.stringify(GLOBAL_LOCAL_CACHE_ENGINE_SYMBOL_KEY)}), {
+Reflect.set(globalThis, Symbol.for(${JSON.stringify(INHERITED_LOCAL_CACHE_ENGINE_SYMBOL_KEY)}), {
   getItem: async (key) => {
     try {
       const url = new URL(tscircuitCacheApiUrl)

@@ -123,7 +123,9 @@ test("RunFrame's worker reads and writes the CLI project cache", async () => {
     const worker = await fetch(`${origin}/__tscircuit/eval-webworker.js`).then(
       (res) => res.text(),
     )
-    expect(worker).toContain('Symbol.for("tscircuit.localCacheEngine")')
+    expect(worker).toContain(
+      'Symbol.for("tscircuit.inheritedLocalCacheEngine")',
+    )
     expect(worker).toContain("LOCAL_TSCIRCUIT_WORKER_SENTINEL")
 
     const cache = createLocalCacheEngine(join(tmpDir, ".tscircuit", "cache"))
