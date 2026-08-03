@@ -2,9 +2,17 @@ import fs from "node:fs"
 import path from "node:path"
 import { promisify } from "node:util"
 import type { PlatformConfig } from "@tscircuit/props"
-import type { PcbSnapshotSettings } from "lib/project-config/project-config-schema"
-import { importFromUserLand } from "./importFromUserLand"
 import type { AnyCircuitElement } from "circuit-json"
+import {
+  convertBomRowsToCsv,
+  convertCircuitJsonToBomRows,
+} from "circuit-json-to-bom-csv"
+import {
+  convertSoupToExcellonDrillCommands,
+  convertSoupToGerberCommands,
+  stringifyExcellonDrill,
+  stringifyGerberCommandLayers,
+} from "circuit-json-to-gerber"
 import { convertCircuitJsonToGltf } from "circuit-json-to-gltf"
 import {
   CircuitJsonToKicadPcbConverter,
@@ -12,31 +20,26 @@ import {
   CircuitJsonToKicadSchConverter,
   resolveAndLoadKicad3dModelFiles,
 } from "circuit-json-to-kicad"
+import { convertCircuitJsonToPickAndPlaceCsv } from "circuit-json-to-pnp-csv"
 import { convertCircuitJsonToReadableNetlist } from "circuit-json-to-readable-netlist"
+import { circuitJsonToStep } from "circuit-json-to-step"
 import {
+  convertCircuitJsonToAssemblySvg,
   convertCircuitJsonToPcbSvg,
   convertCircuitJsonToSchematicSvg,
-  convertCircuitJsonToAssemblySvg,
 } from "circuit-to-svg"
 import { convertCircuitJsonToDsnString } from "dsn-converter"
 import JSZip from "jszip"
-import { circuitJsonToStep } from "circuit-json-to-step"
-import { getOrGenerateCircuitJson } from "lib/shared/get-or-generate-circuit-json"
+import type { PcbSnapshotSettings } from "lib/project-config/project-config-schema"
+import { generateCircuitJson } from "lib/shared/generate-circuit-json"
 import { getCircuitJsonToGltfOptions } from "lib/shared/get-circuit-json-to-gltf-options"
+import { getOrGenerateCircuitJson } from "lib/shared/get-or-generate-circuit-json"
+import { getPlatformConfigWithCliDefaults } from "lib/shared/get-platform-config-with-cli-defaults"
 import { loadLocalStepModelFsMap } from "lib/shared/load-local-step-model-fs-map"
+import { mergePlatformConfigs } from "lib/shared/platform-config-utils"
 import { convertToKicadLibrary } from "./convert-to-kicad-library"
+import { importFromUserLand } from "./importFromUserLand"
 import { isCircuitJsonFile } from "./is-circuit-json-file"
-import {
-  convertSoupToGerberCommands,
-  stringifyGerberCommandLayers,
-  convertSoupToExcellonDrillCommands,
-  stringifyExcellonDrill,
-} from "circuit-json-to-gerber"
-import {
-  convertCircuitJsonToBomRows,
-  convertBomRowsToCsv,
-} from "circuit-json-to-bom-csv"
-import { convertCircuitJsonToPickAndPlaceCsv } from "circuit-json-to-pnp-csv"
 
 const writeFileAsync = promisify(fs.writeFile)
 
@@ -175,10 +178,21 @@ export const exportSnippet = async ({
       return onExit(1)
     }
   } else {
-    const circuitData = await getOrGenerateCircuitJson({
+    const isJlcpcbFabricationExport = format === "gerbers"
+    const fabricationPlatformConfig = isJlcpcbFabricationExport
+      ? getPlatformConfigWithCliDefaults(
+          mergePlatformConfigs(platformConfig, {
+            enablePartOrientationAnalysis: true,
+          }),
+        )
+      : platformConfig
+    const generateCircuitData = isJlcpcbFabricationExport
+      ? generateCircuitJson
+      : getOrGenerateCircuitJson
+    const circuitData = await generateCircuitData({
       filePath,
       saveToFile: format === "circuit-json",
-      platformConfig,
+      platformConfig: fabricationPlatformConfig,
     }).catch((err) => {
       onError(`Error generating circuit JSON: ${err}`)
       return null
@@ -320,7 +334,9 @@ export const exportSnippet = async ({
       const bomCsv = await convertBomRowsToCsv(bomRows)
       zip.file("bom.csv", bomCsv)
 
-      const pnpCsv = await convertCircuitJsonToPickAndPlaceCsv(circuitJson)
+      const pnpCsv = await convertCircuitJsonToPickAndPlaceCsv(circuitJson, {
+        supplier: "jlcpcb",
+      })
       zip.file("pick_and_place.csv", pnpCsv)
 
       outputContent = await zip.generateAsync({ type: "nodebuffer" })
