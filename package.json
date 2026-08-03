@@ -70,6 +70,7 @@
     "ky": "^1.7.4",
     "make-vfs": "^1.0.15",
     "md5": "^2.3.0",
+    "pdf-lib": "^1.17.1",
     "perfect-cli": "^1.0.21",
     "playwright": "^1.57.0",
     "polygon-clipping": "^0.15.7",

@@ -37,6 +37,7 @@ import { getOrGenerateCircuitJson } from "lib/shared/get-or-generate-circuit-jso
 import { getPlatformConfigWithCliDefaults } from "lib/shared/get-platform-config-with-cli-defaults"
 import { loadLocalStepModelFsMap } from "lib/shared/load-local-step-model-fs-map"
 import { mergePlatformConfigs } from "lib/shared/platform-config-utils"
+import { convertCircuitJsonToSchematicPdf } from "./convert-circuit-json-to-schematic-pdf"
 import { convertToKicadLibrary } from "./convert-to-kicad-library"
 import { importFromUserLand } from "./importFromUserLand"
 import { isCircuitJsonFile } from "./is-circuit-json-file"
@@ -47,6 +48,7 @@ export const ALLOWED_EXPORT_FORMATS = [
   "json",
   "circuit-json",
   "schematic-svg",
+  "schematic-pdf",
   "pcb-svg",
   "gerbers",
   "readable-netlist",
@@ -68,6 +70,7 @@ const OUTPUT_EXTENSIONS: Record<ExportFormat, string> = {
   json: ".circuit.json",
   "circuit-json": ".circuit.json",
   "schematic-svg": "-schematic.svg",
+  "schematic-pdf": "-schematic.pdf",
   "pcb-svg": "-pcb.svg",
   "assembly-svg": "-assembly.svg",
   gerbers: "-gerbers.zip",
@@ -207,6 +210,9 @@ export const exportSnippet = async ({
   switch (format) {
     case "schematic-svg":
       outputContent = convertCircuitJsonToSchematicSvg(circuitJson)
+      break
+    case "schematic-pdf":
+      outputContent = await convertCircuitJsonToSchematicPdf(circuitJson)
       break
     case "pcb-svg":
       outputContent = convertCircuitJsonToPcbSvg(
