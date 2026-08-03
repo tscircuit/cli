@@ -56,8 +56,10 @@ export const handleBuildFile = async (
       projectConfig?.platformConfig,
       options?.platformConfig as PlatformConfig,
     )
-    const platformConfigWithCliDefaults =
-      getPlatformConfigWithCliDefaults(platformConfig)
+    const platformConfigWithCliDefaults = getPlatformConfigWithCliDefaults(
+      platformConfig,
+      { projectDir },
+    )
 
     const normalizedInputPath = filePath.toLowerCase().replaceAll("\\", "/")
     const isPrebuiltCircuitJson =

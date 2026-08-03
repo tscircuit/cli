@@ -40,6 +40,8 @@ export function createLocalCacheEngine(
 
 /**
  * Get a platform config with CLI defaults, KiCad parsing support, and any user overrides.
+ * The project directory keeps persistent caches stable across CLI commands and
+ * worker modes, even when they run with different working directories.
  * This handles the conversion of absolute file paths to file:// URLs for Bun's fetch.
  * When Bun imports a .kicad_mod file, it returns an absolute path like "/path/to/file.kicad_mod".
  * The default loadFromUrl expects a URL, so we wrap it to convert paths to file:// URLs.
@@ -47,12 +49,16 @@ export function createLocalCacheEngine(
  */
 export function getPlatformConfigWithCliDefaults(
   userConfig?: PlatformConfig,
+  options?: { projectDir?: string },
 ): PlatformConfig {
   const basePlatformConfig = getPlatformConfig()
+  const cacheDir = options?.projectDir
+    ? path.join(options.projectDir, ".tscircuit", "cache")
+    : undefined
 
   const defaultConfig: PlatformConfig = {
     ...basePlatformConfig,
-    localCacheEngine: createLocalCacheEngine(),
+    localCacheEngine: createLocalCacheEngine(cacheDir),
     // Override footprintFileParserMap to handle file paths from native imports
     footprintFileParserMap: {
       ...basePlatformConfig.footprintFileParserMap,

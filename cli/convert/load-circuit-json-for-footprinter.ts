@@ -4,6 +4,7 @@ import { getPlatformConfigWithCliDefaults } from "lib/shared/get-platform-config
 import fs from "node:fs/promises"
 import path from "node:path"
 import { convertKicadFootprintToCircuitJson } from "./convert-kicad-footprint-to-circuit-json"
+import { findCircuitProjectDir } from "lib/shared/circuit-json-build-cache"
 
 const componentExtensions = new Set([".js", ".jsx", ".ts", ".tsx"])
 
@@ -25,7 +26,9 @@ export const loadCircuitJsonForFootprinter = async (inputPath: string) => {
     const { circuitJson } = await generateCircuitJson({
       filePath: inputPath,
       injectedProps: { name: "CONVERT" },
-      platformConfig: getPlatformConfigWithCliDefaults(),
+      platformConfig: getPlatformConfigWithCliDefaults(undefined, {
+        projectDir: findCircuitProjectDir(inputPath),
+      }),
     })
     const pcbComponentCount = circuitJson.filter(
       (element) => element.type === "pcb_component",

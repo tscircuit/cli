@@ -1,5 +1,8 @@
 import { test, expect } from "bun:test"
-import { createLocalCacheEngine } from "lib/shared/get-platform-config-with-cli-defaults"
+import {
+  createLocalCacheEngine,
+  getPlatformConfigWithCliDefaults,
+} from "lib/shared/get-platform-config-with-cli-defaults"
 import { createHash } from "node:crypto"
 import { temporaryDirectory } from "tempy"
 import fs from "node:fs"
@@ -75,4 +78,19 @@ test("filesystem cache different keys produce different files", () => {
 
   const files = fs.readdirSync(cacheDir)
   expect(files.length).toBe(2)
+})
+
+test("CLI defaults keep the cache in the resolved project directory", async () => {
+  const projectDir = temporaryDirectory()
+  const projectCacheDir = path.join(projectDir, ".tscircuit", "cache")
+  const platformConfig = getPlatformConfigWithCliDefaults(undefined, {
+    projectDir,
+  })
+
+  await platformConfig.localCacheEngine!.setItem(
+    "routes:core@test:srj:translated",
+    '{"traces":[]}',
+  )
+
+  expect(fs.readdirSync(projectCacheDir)).toHaveLength(1)
 })

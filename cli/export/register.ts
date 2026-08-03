@@ -12,6 +12,7 @@ import type { PlatformConfig } from "@tscircuit/props"
 import { loadRuntimeProjectConfig } from "lib/project-config"
 import { mergePlatformConfigs } from "lib/shared/platform-config-utils"
 import { getPlatformConfigWithCliDefaults } from "lib/shared/get-platform-config-with-cli-defaults"
+import { findCircuitProjectDir } from "lib/shared/circuit-json-build-cache"
 
 export const registerExport = (program: Command) => {
   program
@@ -46,11 +47,17 @@ export const registerExport = (program: Command) => {
           projectConfig?.platformConfig,
           commandPlatformConfig,
         )
+        const platformConfigWithCliDefaults = getPlatformConfigWithCliDefaults(
+          platformConfig,
+          {
+            projectDir: findCircuitProjectDir(file),
+          },
+        )
 
         if (formatOption === "spice") {
           const { circuitJson } = await getOrGenerateCircuitJson({
             filePath: file,
-            platformConfig: getPlatformConfigWithCliDefaults(platformConfig),
+            platformConfig: platformConfigWithCliDefaults,
           })
           if (circuitJson) {
             const spiceString = getSpiceWithPaddedSim(circuitJson as any)
@@ -87,7 +94,7 @@ export const registerExport = (program: Command) => {
           filePath: file,
           format,
           outputPath: options.output,
-          platformConfig,
+          platformConfig: platformConfigWithCliDefaults,
           pcbSnapshotSettings: options.showCourtyards
             ? { showCourtyards: true }
             : undefined,
