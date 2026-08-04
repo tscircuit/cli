@@ -4,7 +4,11 @@ import path from "node:path"
 import { appendCopperBridgeTrace } from "@tscircuit/check-shorts"
 import { temporaryDirectory } from "tempy"
 import { getCircuitJsonForCheck } from "../../../cli/check/shared"
-import { checkShorts } from "../../../cli/check/shorts/register"
+import {
+  CHECK_SHORTS_CDN_URL,
+  checkShorts,
+  loadCheckShorts,
+} from "../../../cli/check/shorts/register"
 import { getCliTestFixture } from "../../fixtures/get-cli-test-fixture"
 
 const circuitCode = `
@@ -65,6 +69,36 @@ const pcbSnapshotSnapshotPath = path.join(
   snapshotDir,
   "check-shorts-pcb.snap.svg",
 )
+
+test("check shorts loads the latest checker from jscdn", async () => {
+  let requestedUrl: string | undefined
+  const expectedModule = {
+    renderBitmapShortDebug: () => ({ shorts: [] }),
+  } as unknown as typeof import("@tscircuit/check-shorts")
+
+  const loadedModule = await loadCheckShorts({
+    preferCdn: true,
+    importFromCdn: async (url) => {
+      requestedUrl = url
+      return expectedModule
+    },
+  })
+
+  expect(requestedUrl).toBe(CHECK_SHORTS_CDN_URL)
+  expect(requestedUrl).toContain("/latest/+esm")
+  expect(loadedModule).toBe(expectedModule)
+})
+
+test("check shorts falls back to the packaged checker when jscdn is unavailable", async () => {
+  const loadedModule = await loadCheckShorts({
+    preferCdn: true,
+    importFromCdn: async () => {
+      throw new Error("jscdn unavailable")
+    },
+  })
+
+  expect(loadedModule.renderBitmapShortDebug).toBeFunction()
+})
 
 test("check shorts reports no shorts for a clean board", async () => {
   const tmpDir = temporaryDirectory()
