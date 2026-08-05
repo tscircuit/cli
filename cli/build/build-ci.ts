@@ -29,6 +29,7 @@ export interface BuildCommandOptions {
   step?: boolean
   profile?: boolean
   autorouterDebug?: boolean
+  autorouterPhase?: string
   autorouterTimeout?: string
   autorouterDebugDir?: string
   autorouterDumpSrj?: string | boolean

@@ -35,6 +35,9 @@ export const formatAutorouterDebugEvent = (
     typeof event.componentDisplayName === "string"
       ? `component=${event.componentDisplayName}`
       : null,
+    typeof event.phaseName === "string"
+      ? `autorouter_phase=${event.phaseName}`
+      : null,
     typeof event.phase === "string" ? `phase=${event.phase}` : null,
     typeof event.solverName === "string" ? `solver=${event.solverName}` : null,
     typeof event.connectionCount === "number"
@@ -96,6 +99,7 @@ export class DevServer {
   /** Whether to enable the KiCad PCM proxy server */
   kicadPcm: boolean
   autorouterDebug: boolean
+  autorouterPhase?: string
 
   /**
    * The HTTP server that hosts the file server and event bus. You can use
@@ -120,6 +124,7 @@ export class DevServer {
    * Cache of node_modules that have already been uploaded to avoid re-uploading
    */
   private uploadedNodeModules: Set<string> = new Set()
+  private autorouterPhaseReached = false
 
   constructor({
     port,
@@ -127,18 +132,21 @@ export class DevServer {
     projectDir,
     kicadPcm,
     autorouterDebug,
+    autorouterPhase,
   }: {
     port: number
     componentFilePath: string
     projectDir?: string
     kicadPcm?: boolean
     autorouterDebug?: boolean
+    autorouterPhase?: string
   }) {
     this.port = port
     this.componentFilePath = componentFilePath
     this.projectDir = projectDir ?? path.dirname(componentFilePath)
     this.kicadPcm = kicadPcm ?? false
     this.autorouterDebug = autorouterDebug ?? false
+    this.autorouterPhase = autorouterPhase?.trim() || undefined
     const projectConfig = loadProjectConfig(this.projectDir)
     this.ignoredFiles = projectConfig?.ignoredFiles ?? []
     this.fsKy = ky.create({
@@ -188,7 +196,17 @@ export class DevServer {
     if (this.autorouterDebug) {
       this.eventsWatcher.on("*", (event) => {
         if (!String(event.event_type).startsWith("autorouting:")) return
+        if (this.autorouterPhaseReached) return
         console.log(kleur.cyan(formatAutorouterDebugEvent(event)))
+        if (
+          event.event_type === "autorouting:end" &&
+          event.phaseName === this.autorouterPhase &&
+          (event.phaseStageIndex === undefined ||
+            event.phaseStageCount === undefined ||
+            event.phaseStageIndex >= event.phaseStageCount - 1)
+        ) {
+          this.autorouterPhaseReached = true
+        }
       })
     }
 
@@ -220,6 +238,7 @@ export class DevServer {
 
   async handleFileUpdatedEventFromServer(ev: FileUpdatedEvent) {
     if (ev.initiator === "filesystem_change") return
+    this.autorouterPhaseReached = false
 
     const { file } = await this.fsKy
       .get("api/files/get", {
@@ -258,6 +277,7 @@ export class DevServer {
     if (relativeFilePath.includes("manual-edits.json")) return
     // Skip files inside the .git directory
     if (shouldIgnorePath(relativeFilePath, this.ignoredFiles)) return
+    this.autorouterPhaseReached = false
 
     const filePayload = this.createFileUploadPayload(
       absoluteFilePath,
@@ -320,6 +340,7 @@ export class DevServer {
     const relativeFilePath = path.relative(this.projectDir, absoluteFilePath)
 
     if (shouldIgnorePath(relativeFilePath, this.ignoredFiles)) return
+    this.autorouterPhaseReached = false
 
     // Check if the path is empty or just whitespace
     if (!relativeFilePath || relativeFilePath.trim() === "") {

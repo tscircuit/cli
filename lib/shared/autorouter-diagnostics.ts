@@ -16,6 +16,8 @@ export type AutorouterDumpSrjMode = "all" | "failed" | `phase:${number}`
 
 export type AutorouterDiagnosticsOptions = {
   enabled?: boolean
+  /** Enable debugging through the autorouting phase with this name. */
+  phaseName?: string
   timeoutMs?: number
   debugDir?: string
   dumpSrj?: AutorouterDumpSrjMode
@@ -54,6 +56,9 @@ type AutoroutingEventPayload = {
   subcircuit_id?: string
   subcircuitId?: string
   componentDisplayName?: string
+  phaseName?: string
+  phaseStageIndex?: number
+  phaseStageCount?: number
   routingPhaseIndex?: number | null
   phaseOrdinal?: number
   phaseCount?: number
@@ -78,6 +83,9 @@ type AutoroutingEventPayload = {
 type ActivePhase = {
   subcircuitId: string
   componentDisplayName: string
+  phaseName?: string
+  phaseStageIndex?: number
+  phaseStageCount?: number
   routingPhaseIndex: number
   phaseOrdinal: number
   phaseCount?: number
@@ -118,6 +126,16 @@ export const parseAutorouterTimeout = (duration: string): number => {
   return timeoutMs
 }
 
+export const parseAutorouterPhaseName = (value: string): string => {
+  const phaseName = value.trim()
+  if (!phaseName) {
+    throw new Error(
+      "Invalid --autorouter-phase value. The phase name must not be empty.",
+    )
+  }
+  return phaseName
+}
+
 export const parseAutorouterDumpSrjMode = (
   value: string | boolean | undefined,
 ): AutorouterDumpSrjMode | undefined => {
@@ -149,12 +167,16 @@ export class AutorouterDiagnostics {
   private activePhase: ActivePhase | null = null
   private completedPhaseTraces: AutorouterTrace[] = []
   private hasWrittenPlacementSnapshot = false
+  private targetPhaseReached = false
   private summary: Array<Record<string, unknown>> = []
   private rootCircuit: any
 
   constructor(options: AutorouterDiagnosticsOptions = {}) {
+    const phaseName = options.phaseName?.trim() || undefined
     this.options = {
       ...options,
+      enabled: options.enabled || phaseName !== undefined,
+      phaseName,
       debugDir: options.debugDir ?? DEFAULT_DEBUG_DIR,
       log: options.log ?? console.log,
     }
@@ -163,6 +185,7 @@ export class AutorouterDiagnostics {
   get isActive() {
     return Boolean(
       this.options.enabled ||
+        this.options.phaseName ||
         this.options.timeoutMs ||
         this.options.dumpSrj ||
         this.options.logOnError ||
@@ -218,10 +241,14 @@ export class AutorouterDiagnostics {
       phaseCount: this.summary.length,
       phases: this.summary,
       circuitJsonElementCount: circuitJson?.length,
+      targetPhaseName: this.options.phaseName,
+      targetPhaseReached: this.targetPhaseReached,
     })
   }
 
   private handleStart(event: AutoroutingEventPayload) {
+    if (this.targetPhaseReached) return
+
     const simpleRouteJson = event.simpleRouteJson
     const subcircuitId =
       event.subcircuit_id ?? event.subcircuitId ?? "unknown-subcircuit"
@@ -241,6 +268,9 @@ export class AutorouterDiagnostics {
     this.activePhase = {
       subcircuitId,
       componentDisplayName: event.componentDisplayName ?? "subcircuit",
+      phaseName: event.phaseName,
+      phaseStageIndex: event.phaseStageIndex,
+      phaseStageCount: event.phaseStageCount,
       routingPhaseIndex,
       phaseOrdinal,
       phaseCount: event.phaseCount,
@@ -313,6 +343,9 @@ export class AutorouterDiagnostics {
     this.summary.push({
       subcircuit_id: activePhase.subcircuitId,
       componentDisplayName: activePhase.componentDisplayName,
+      phaseName: activePhase.phaseName,
+      phaseStageIndex: activePhase.phaseStageIndex,
+      phaseStageCount: activePhase.phaseStageCount,
       routingPhaseIndex: activePhase.routingPhaseIndex,
       phaseOrdinal: activePhase.phaseOrdinal,
       phaseCount: activePhase.phaseCount,
@@ -356,6 +389,10 @@ export class AutorouterDiagnostics {
       )
     }
 
+    if (this.isFinalTargetPhaseStage(activePhase)) {
+      this.targetPhaseReached = true
+    }
+
     if (this.activePhase === activePhase) {
       this.activePhase = null
     }
@@ -370,6 +407,9 @@ export class AutorouterDiagnostics {
     this.summary.push({
       subcircuit_id: activePhase.subcircuitId,
       componentDisplayName: activePhase.componentDisplayName,
+      phaseName: activePhase.phaseName,
+      phaseStageIndex: activePhase.phaseStageIndex,
+      phaseStageCount: activePhase.phaseStageCount,
       routingPhaseIndex: activePhase.routingPhaseIndex,
       phaseOrdinal: activePhase.phaseOrdinal,
       phaseCount: activePhase.phaseCount,
@@ -400,6 +440,9 @@ export class AutorouterDiagnostics {
         type: "autorouter_phase_error",
         subcircuit_id: activePhase.subcircuitId,
         routingPhaseIndex: activePhase.routingPhaseIndex,
+        phaseName: activePhase.phaseName,
+        phaseStageIndex: activePhase.phaseStageIndex,
+        phaseStageCount: activePhase.phaseStageCount,
         phaseOrdinal: activePhase.phaseOrdinal,
         phaseCount: activePhase.phaseCount,
         elapsedMs: Math.round(elapsedMs),
@@ -408,6 +451,10 @@ export class AutorouterDiagnostics {
         previousTraceCount: activePhase.previousTraceCount,
         error,
       })
+    }
+
+    if (this.isFinalTargetPhaseStage(activePhase)) {
+      this.targetPhaseReached = true
     }
 
     if (this.activePhase === activePhase) {
@@ -436,6 +483,9 @@ export class AutorouterDiagnostics {
       subcircuit_id: activePhase.subcircuitId,
       componentDisplayName: activePhase.componentDisplayName,
       routingPhaseIndex: activePhase.routingPhaseIndex,
+      phaseName: activePhase.phaseName,
+      phaseStageIndex: activePhase.phaseStageIndex,
+      phaseStageCount: activePhase.phaseStageCount,
       phaseOrdinal: activePhase.phaseOrdinal,
       phaseCount: activePhase.phaseCount,
       elapsedMs: Math.round(elapsedMs),
@@ -686,10 +736,29 @@ export class AutorouterDiagnostics {
   }
 
   private getPhaseLabel(activePhase: ActivePhase) {
+    const phaseName = activePhase.phaseName ? ` "${activePhase.phaseName}"` : ""
+    const stageLabel =
+      activePhase.phaseStageIndex !== undefined &&
+      activePhase.phaseStageCount !== undefined &&
+      activePhase.phaseStageCount > 1
+        ? ` stage ${activePhase.phaseStageIndex + 1}/${activePhase.phaseStageCount}`
+        : ""
     if (activePhase.phaseCount) {
-      return `phase ${activePhase.phaseOrdinal}/${activePhase.phaseCount}`
+      return `phase ${activePhase.phaseOrdinal}/${activePhase.phaseCount}${phaseName}${stageLabel}`
     }
-    return `phase ${activePhase.phaseOrdinal}`
+    return `phase ${activePhase.phaseOrdinal}${phaseName}${stageLabel}`
+  }
+
+  private isFinalTargetPhaseStage(activePhase: ActivePhase) {
+    if (!this.options.phaseName) return false
+    if (activePhase.phaseName !== this.options.phaseName) return false
+    if (
+      activePhase.phaseStageIndex === undefined ||
+      activePhase.phaseStageCount === undefined
+    ) {
+      return true
+    }
+    return activePhase.phaseStageIndex >= activePhase.phaseStageCount - 1
   }
 
   private formatElapsed(elapsedMs: number) {

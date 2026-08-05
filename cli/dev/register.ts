@@ -2,6 +2,7 @@ import type { Command } from "commander"
 import * as fs from "node:fs"
 import * as net from "node:net"
 import * as path from "node:path"
+import { parseAutorouterPhaseName } from "lib/shared/autorouter-diagnostics"
 import { resolveDevTarget } from "./resolve-dev-target"
 import kleur from "kleur"
 import { DevServer } from "lib/dev/DevServer"
@@ -51,6 +52,10 @@ export const registerDev = (program: Command) => {
       "Log autorouting diagnostics emitted by the dev runframe",
     )
     .option(
+      "--autorouter-phase <name>",
+      "Log autorouting diagnostics through the named phase",
+    )
+    .option(
       "--autorouter-timeout <duration>",
       "Accepted for parity with build; dev autorouting timeouts are handled in the browser runframe",
     )
@@ -69,6 +74,7 @@ export const registerDev = (program: Command) => {
           port: string
           kicadPcm?: boolean
           autorouterDebug?: boolean
+          autorouterPhase?: string
           autorouterTimeout?: string
           autorouterDebugDir?: string
           autorouterDumpSrj?: string | boolean
@@ -88,6 +94,10 @@ export const registerDev = (program: Command) => {
         if (!target) return
 
         const { absolutePath, projectDir } = target
+        const autorouterPhase =
+          options.autorouterPhase !== undefined
+            ? parseAutorouterPhaseName(options.autorouterPhase)
+            : undefined
 
         warnIfTsconfigMissingTscircuitType(projectDir)
 
@@ -96,7 +106,9 @@ export const registerDev = (program: Command) => {
           componentFilePath: absolutePath,
           projectDir,
           kicadPcm: options.kicadPcm,
-          autorouterDebug: options.autorouterDebug,
+          autorouterDebug:
+            options.autorouterDebug || autorouterPhase !== undefined,
+          autorouterPhase,
         })
 
         await server.start()
@@ -124,7 +136,8 @@ export const registerDev = (program: Command) => {
         if (
           options.autorouterTimeout ||
           options.autorouterDebugDir ||
-          options.autorouterDumpSrj
+          options.autorouterDumpSrj ||
+          autorouterPhase
         ) {
           console.log(
             kleur.gray(
