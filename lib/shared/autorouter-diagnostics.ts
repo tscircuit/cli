@@ -289,8 +289,10 @@ export class AutorouterDiagnostics {
     if (this.options.enabled && !this.hasWrittenPlacementSnapshot) {
       const placementCircuitJson = this.getCurrentCircuitJson().filter(
         (element) => !this.isRouteElement(element),
-      )
-      this.writePngSnapshot("placement-unrouted.png", placementCircuitJson)
+      ) as AnyCircuitElement[]
+      this.writePngSnapshot("placement-unrouted.png", placementCircuitJson, {
+        shouldDrawRatsNest: true,
+      })
       this.hasWrittenPlacementSnapshot = true
     }
 
@@ -650,9 +652,13 @@ export class AutorouterDiagnostics {
     return filePath
   }
 
-  private writePngSnapshot(fileName: string, circuitJson: CircuitJson) {
+  private writePngSnapshot(
+    fileName: string,
+    circuitJson: CircuitJson,
+    options?: { shouldDrawRatsNest?: boolean },
+  ) {
     try {
-      const pcbSvg = convertCircuitJsonToPcbSvg(circuitJson)
+      const pcbSvg = convertCircuitJsonToPcbSvg(circuitJson, options)
       const png = convertSvgToPngBuffer(pcbSvg)
       const debugDir = path.resolve(this.options.debugDir ?? DEFAULT_DEBUG_DIR)
       fs.mkdirSync(debugDir, { recursive: true })
