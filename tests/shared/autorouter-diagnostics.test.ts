@@ -8,6 +8,7 @@ import {
   AutorouterDiagnostics,
   AutorouterPhaseTimeoutError,
   parseAutorouterDumpSrjMode,
+  parseAutorouterPhaseName,
   parseAutorouterTimeout,
 } from "lib/shared/autorouter-diagnostics"
 
@@ -43,6 +44,96 @@ const makeTempDir = () =>
   fs.mkdtempSync(path.join(os.tmpdir(), "tsci-autorouter-diagnostics-"))
 
 describe("autorouter diagnostics", () => {
+  test("phase targeting enables debugging through the named phase", () => {
+    const debugDir = makeTempDir()
+    const logs: string[] = []
+    const root = new FakeRootCircuit()
+    const diagnostics = new AutorouterDiagnostics({
+      phaseName: "route-power",
+      debugDir,
+      log: (message) => logs.push(message),
+    })
+
+    diagnostics.attachToRootCircuit(root)
+
+    root.emit("autorouting:start", {
+      subcircuit_id: "subcircuit_source_group_0",
+      componentDisplayName: "board main",
+      phaseName: "route-power",
+      phaseStageIndex: 0,
+      phaseStageCount: 2,
+      routingPhaseIndex: 0,
+      simpleRouteJson: { connections: [{ name: "VCC" }] },
+    })
+    root.emit("autorouting:end", {
+      subcircuit_id: "subcircuit_source_group_0",
+      phaseName: "route-power",
+      phaseStageIndex: 0,
+      phaseStageCount: 2,
+      routingPhaseIndex: 0,
+      simpleRouteJson: { traces: [] },
+    })
+    root.emit("autorouting:start", {
+      subcircuit_id: "subcircuit_source_group_0",
+      componentDisplayName: "board main",
+      phaseName: "route-power",
+      phaseStageIndex: 1,
+      phaseStageCount: 2,
+      routingPhaseIndex: 1,
+      simpleRouteJson: { connections: [{ name: "VCC" }] },
+    })
+    root.emit("autorouting:end", {
+      subcircuit_id: "subcircuit_source_group_0",
+      phaseName: "route-power",
+      phaseStageIndex: 1,
+      phaseStageCount: 2,
+      routingPhaseIndex: 1,
+      simpleRouteJson: { traces: [] },
+    })
+    root.emit("autorouting:start", {
+      subcircuit_id: "subcircuit_source_group_0",
+      componentDisplayName: "board main",
+      phaseName: "route-signal",
+      phaseStageIndex: 0,
+      phaseStageCount: 1,
+      routingPhaseIndex: 2,
+      simpleRouteJson: { connections: [{ name: "DATA" }] },
+    })
+    root.emit("autorouting:end", {
+      subcircuit_id: "subcircuit_source_group_0",
+      phaseName: "route-signal",
+      phaseStageIndex: 0,
+      phaseStageCount: 1,
+      routingPhaseIndex: 2,
+      simpleRouteJson: { traces: [] },
+    })
+
+    diagnostics.finalize([])
+
+    expect(logs.join("\n")).toContain('phase 1 "route-power"')
+    expect(logs.join("\n")).toContain('phase 2 "route-power"')
+    expect(logs.join("\n")).not.toContain("route-signal")
+    expect(fs.existsSync(path.join(debugDir, "placement-unrouted.png"))).toBe(
+      true,
+    )
+    expect(fs.existsSync(path.join(debugDir, "phase-0-routed.png"))).toBe(true)
+    expect(fs.existsSync(path.join(debugDir, "phase-1-routed.png"))).toBe(true)
+    expect(fs.existsSync(path.join(debugDir, "phase-2-routed.png"))).toBe(false)
+
+    const summary = JSON.parse(
+      fs.readFileSync(path.join(debugDir, "board.meta.json"), "utf8"),
+    )
+    expect(summary.targetPhaseName).toBe("route-power")
+    expect(summary.targetPhaseReached).toBe(true)
+    expect(summary.phases).toHaveLength(2)
+  })
+
+  test("phase names cannot be empty", () => {
+    expect(() => parseAutorouterPhaseName("  ")).toThrow(
+      "The phase name must not be empty",
+    )
+  })
+
   test("logs phase start/end and writes SRJ and PNG artifacts", async () => {
     const debugDir = makeTempDir()
     const logs: string[] = []

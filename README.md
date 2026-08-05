@@ -126,6 +126,10 @@ The debug directory contains:
 Use `--autorouter-dump-srj failed` to keep only failed-stage routing data, or
 `--autorouter-dump-srj phase:N` to capture a single stage.
 
+Use `--autorouter-phase <name>` to enable the debugger automatically and keep
+debugging through the named `<autoroutingphase name="..." />`. Later phases
+are left out of the debug artifacts.
+
 ### Debug solver inputs
 
 Use `--solver-debug` to record the constructor inputs for every solver that

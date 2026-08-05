@@ -8,6 +8,7 @@ import { getCircuitJsonOutputDirName } from "lib/shared/circuit-json-build-cache
 import { loadRuntimeProjectConfig } from "lib/project-config"
 import {
   parseAutorouterDumpSrjMode,
+  parseAutorouterPhaseName,
   parseAutorouterTimeout,
   type AutorouterDiagnosticsOptions,
 } from "lib/shared/autorouter-diagnostics"
@@ -190,6 +191,10 @@ export const registerBuild = (program: Command) => {
       "Log autorouting phases and write unrouted/per-phase PNG artifacts",
     )
     .option(
+      "--autorouter-phase <name>",
+      "Enable autorouting debugging through the named phase",
+    )
+    .option(
       "--autorouter-timeout <duration>",
       'Abort an autorouting phase after a duration, e.g. "120s" or "2m"',
     )
@@ -333,6 +338,10 @@ export const registerBuild = (program: Command) => {
         const autorouterTimeoutMs = resolvedOptions?.autorouterTimeout
           ? parseAutorouterTimeout(resolvedOptions.autorouterTimeout)
           : undefined
+        const autorouterPhaseName =
+          resolvedOptions?.autorouterPhase !== undefined
+            ? parseAutorouterPhaseName(resolvedOptions.autorouterPhase)
+            : undefined
         const autorouterDumpSrj = parseAutorouterDumpSrjMode(
           resolvedOptions?.autorouterDumpSrj,
         )
@@ -340,7 +349,10 @@ export const registerBuild = (program: Command) => {
           ? path.resolve(projectDir, resolvedOptions.autorouterDebugDir)
           : path.join(distDir, "autorouter-debug")
         const autorouterDiagnostics: AutorouterDiagnosticsOptions = {
-          enabled: resolvedOptions?.autorouterDebug,
+          enabled:
+            resolvedOptions?.autorouterDebug ||
+            autorouterPhaseName !== undefined,
+          phaseName: autorouterPhaseName,
           timeoutMs: autorouterTimeoutMs,
           debugDir: autorouterDebugDir,
           dumpSrj: autorouterDumpSrj,
@@ -1031,6 +1043,7 @@ export const registerBuild = (program: Command) => {
           resolvedOptions?.previewGltf && "preview-gltf",
           resolvedOptions?.profile && "profile",
           resolvedOptions?.autorouterDebug && "autorouter-debug",
+          resolvedOptions?.autorouterPhase && "autorouter-phase",
           resolvedOptions?.autorouterTimeout && "autorouter-timeout",
           resolvedOptions?.autorouterDumpSrj && "autorouter-dump-srj",
           resolvedOptions?.solverDebug && "solver-debug",
