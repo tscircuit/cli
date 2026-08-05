@@ -1,20 +1,16 @@
-import { convertCircuitJsonToReadableNetlist } from "circuit-json-to-readable-netlist"
 import {
-  categorizeErrorOrWarning,
   type DrcCategory,
+  categorizeErrorOrWarning,
 } from "@tscircuit/circuit-json-util"
 import type { PlatformConfig } from "@tscircuit/props"
 import type { AnyCircuitElement } from "circuit-json"
+import { convertCircuitJsonToReadableNetlist } from "circuit-json-to-readable-netlist"
 import type { Command } from "commander"
-import { getOrGenerateCircuitJson } from "lib/shared/get-or-generate-circuit-json"
-import { getPlatformConfigWithCliDefaults } from "lib/shared/get-platform-config-with-cli-defaults"
-import { getEntrypoint } from "lib/shared/get-entrypoint"
 import {
-  analyzeCircuitJson,
   type CircuitJsonIssue,
+  analyzeCircuitJson,
 } from "lib/shared/circuit-json-diagnostics"
-import path from "node:path"
-import { findCircuitProjectDir } from "lib/shared/circuit-json-build-cache"
+import { getCircuitJsonForCheck, resolveCheckInputFilePath } from "../shared"
 
 const normalizeCategory = (category: string): DrcCategory =>
   category === "netlist" ||
@@ -24,43 +20,28 @@ const normalizeCategory = (category: string): DrcCategory =>
     ? category
     : "unknown"
 
+const isDifferentialPairConnectionWarning = (issue: CircuitJsonIssue) =>
+  [issue.type, issue.error_type, issue.warning_type].includes(
+    "source_property_ignored_warning",
+  ) &&
+  (issue.property_name === "positiveConnection" ||
+    issue.property_name === "negativeConnection")
+
 const isNetlistDiagnostic = (issue: CircuitJsonIssue) =>
+  isDifferentialPairConnectionWarning(issue) ||
   normalizeCategory(categorizeErrorOrWarning(issue)) === "netlist"
 
-const resolveInputFilePath = async (file?: string) => {
-  if (file) {
-    return path.isAbsolute(file) ? file : path.resolve(process.cwd(), file)
-  }
-
-  const entrypoint = await getEntrypoint({
-    projectDir: process.cwd(),
-  })
-
-  if (!entrypoint) {
-    throw new Error("No input file provided and no entrypoint found")
-  }
-
-  return entrypoint
-}
-
 export const checkNetlist = async (file?: string) => {
-  const resolvedInputFilePath = await resolveInputFilePath(file)
-
-  const platformConfigWithCliDefaults = getPlatformConfigWithCliDefaults(
-    {
+  const resolvedInputFilePath = await resolveCheckInputFilePath(file)
+  const typedCircuitJson = (await getCircuitJsonForCheck({
+    filePath: resolvedInputFilePath,
+    platformConfig: {
       pcbDisabled: true,
       routingDisabled: true,
       placementDrcChecksDisabled: true,
     } satisfies PlatformConfig,
-    { projectDir: findCircuitProjectDir(resolvedInputFilePath) },
-  )
-
-  const { circuitJson } = await getOrGenerateCircuitJson({
-    filePath: resolvedInputFilePath,
-    platformConfig: platformConfigWithCliDefaults,
-  })
-
-  const typedCircuitJson = circuitJson as AnyCircuitElement[]
+    allowPrebuiltCircuitJson: true,
+  })) as AnyCircuitElement[]
   const diagnostics = analyzeCircuitJson(typedCircuitJson)
   const netlistErrors = diagnostics.errors.filter(isNetlistDiagnostic)
   const netlistWarnings = diagnostics.warnings.filter(isNetlistDiagnostic)

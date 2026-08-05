@@ -1,6 +1,6 @@
 import { expect, test } from "bun:test"
-import path from "node:path"
 import { writeFile } from "node:fs/promises"
+import path from "node:path"
 import { getCliTestFixture } from "../../fixtures/get-cli-test-fixture"
 
 const circuitCode = `
@@ -74,4 +74,39 @@ test("check netlist filters out placement diagnostics", async () => {
   expect(stdout).not.toContain("placement")
   expect(stdout).not.toContain("pcb_component_outside_board_error")
   expect(stdout).not.toContain("Component R1 extends outside board boundaries")
+}, 20_000)
+
+test("check netlist displays ambiguous differential-pair trace warnings", async () => {
+  const { tmpDir, runCommand } = await getCliTestFixture()
+  const circuitPath = path.join(tmpDir, "differential-pair.circuit.json")
+  const warningMessage =
+    'Differential pair "USB_DATA" positiveConnection references trace "DP_FROM_J1", which is ambiguous because it connects to 3 terminal pins: .J1 > .DP, .TP1 > .pin1, and .U1 > .DP.'
+
+  await writeFile(
+    circuitPath,
+    JSON.stringify([
+      {
+        type: "source_property_ignored_warning",
+        source_property_ignored_warning_id: "source_property_ignored_warning_0",
+        source_component_id: "source_component_j1",
+        property_name: "positiveConnection",
+        error_type: "source_property_ignored_warning",
+        message: warningMessage,
+      },
+    ]),
+  )
+
+  const { stdout, stderr, exitCode } = await runCommand(
+    `tsci check netlist ${circuitPath}`,
+  )
+
+  expect(exitCode).toBe(0)
+  expect(stderr).toBe("")
+  expect(stdout).toContain("Errors: 0")
+  expect(stdout).toContain("Warnings: 1")
+  expect(stdout).toContain(
+    `- source_property_ignored_warning: ${warningMessage}`,
+  )
+  expect(stdout).not.toContain("Remove the extra connection")
+  expect(stdout).not.toContain("prefer a pin selector")
 }, 20_000)
