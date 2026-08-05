@@ -40,7 +40,7 @@ test("analyzeCircuitJson does not double-count items with both type and error me
   expect(warnings).toHaveLength(1)
 })
 
-test("analyzeCircuitJson treats warning-shaped error_type metadata as a warning", () => {
+test("analyzeCircuitJson prefers a warning type over error_type metadata", () => {
   const { errors, warnings } = analyzeCircuitJson([
     {
       type: "source_property_ignored_warning",

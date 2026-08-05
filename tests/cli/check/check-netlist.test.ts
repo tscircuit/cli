@@ -79,8 +79,9 @@ test("check netlist filters out placement diagnostics", async () => {
 test("check netlist displays ambiguous differential-pair trace warnings", async () => {
   const { tmpDir, runCommand } = await getCliTestFixture()
   const circuitPath = path.join(tmpDir, "differential-pair.circuit.json")
-  const warningMessage =
-    'Differential pair "USB_DATA" positiveConnection references trace "DP_FROM_J1", which is ambiguous because it connects to 3 terminal pins: .J1 > .DP, .TP1 > .pin1, and .U1 > .DP.'
+  const positiveConnectionMessage = "ambiguous positive differential-pair trace"
+  const negativeConnectionMessage = "ambiguous negative differential-pair trace"
+  const unrelatedWarningMessage = "ignored footprint property"
 
   await writeFile(
     circuitPath,
@@ -91,7 +92,23 @@ test("check netlist displays ambiguous differential-pair trace warnings", async 
         source_component_id: "source_component_j1",
         property_name: "positiveConnection",
         error_type: "source_property_ignored_warning",
-        message: warningMessage,
+        message: positiveConnectionMessage,
+      },
+      {
+        type: "source_property_ignored_warning",
+        source_property_ignored_warning_id: "source_property_ignored_warning_1",
+        source_component_id: "source_component_j1",
+        property_name: "negativeConnection",
+        error_type: "source_property_ignored_warning",
+        message: negativeConnectionMessage,
+      },
+      {
+        type: "source_property_ignored_warning",
+        source_property_ignored_warning_id: "source_property_ignored_warning_2",
+        source_component_id: "source_component_j1",
+        property_name: "footprint",
+        error_type: "source_property_ignored_warning",
+        message: unrelatedWarningMessage,
       },
     ]),
   )
@@ -103,10 +120,12 @@ test("check netlist displays ambiguous differential-pair trace warnings", async 
   expect(exitCode).toBe(0)
   expect(stderr).toBe("")
   expect(stdout).toContain("Errors: 0")
-  expect(stdout).toContain("Warnings: 1")
+  expect(stdout).toContain("Warnings: 2")
   expect(stdout).toContain(
-    `- source_property_ignored_warning: ${warningMessage}`,
+    `- source_property_ignored_warning: ${positiveConnectionMessage}`,
   )
-  expect(stdout).not.toContain("Remove the extra connection")
-  expect(stdout).not.toContain("prefer a pin selector")
+  expect(stdout).toContain(
+    `- source_property_ignored_warning: ${negativeConnectionMessage}`,
+  )
+  expect(stdout).not.toContain(unrelatedWarningMessage)
 }, 20_000)

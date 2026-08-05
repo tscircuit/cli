@@ -3,7 +3,6 @@ import {
   categorizeErrorOrWarning,
 } from "@tscircuit/circuit-json-util"
 import type { PlatformConfig } from "@tscircuit/props"
-import type { AnyCircuitElement } from "circuit-json"
 import { convertCircuitJsonToReadableNetlist } from "circuit-json-to-readable-netlist"
 import type { Command } from "commander"
 import {
@@ -21,9 +20,7 @@ const normalizeCategory = (category: string): DrcCategory =>
     : "unknown"
 
 const isDifferentialPairConnectionWarning = (issue: CircuitJsonIssue) =>
-  [issue.type, issue.error_type, issue.warning_type].includes(
-    "source_property_ignored_warning",
-  ) &&
+  issue.type === "source_property_ignored_warning" &&
   (issue.property_name === "positiveConnection" ||
     issue.property_name === "negativeConnection")
 
@@ -33,7 +30,7 @@ const isNetlistDiagnostic = (issue: CircuitJsonIssue) =>
 
 export const checkNetlist = async (file?: string) => {
   const resolvedInputFilePath = await resolveCheckInputFilePath(file)
-  const typedCircuitJson = (await getCircuitJsonForCheck({
+  const typedCircuitJson = await getCircuitJsonForCheck({
     filePath: resolvedInputFilePath,
     platformConfig: {
       pcbDisabled: true,
@@ -41,7 +38,7 @@ export const checkNetlist = async (file?: string) => {
       placementDrcChecksDisabled: true,
     } satisfies PlatformConfig,
     allowPrebuiltCircuitJson: true,
-  })) as AnyCircuitElement[]
+  })
   const diagnostics = analyzeCircuitJson(typedCircuitJson)
   const netlistErrors = diagnostics.errors.filter(isNetlistDiagnostic)
   const netlistWarnings = diagnostics.warnings.filter(isNetlistDiagnostic)
@@ -76,7 +73,7 @@ export const registerCheckNetlist = (program: Command) => {
     .find((c) => c.name() === "check")!
     .command("netlist")
     .description("Partially build and validate the netlist")
-    .argument("[file]", "Path to the entry file")
+    .argument("[file]", "Path to the entry file or prebuilt Circuit JSON")
     .action(async (file?: string) => {
       try {
         const output = await checkNetlist(file)

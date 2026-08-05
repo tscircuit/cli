@@ -20,11 +20,8 @@ export function analyzeCircuitJson(circuitJson: any[]): {
     const hasWarningType = typeof item.warning_type === "string"
     const isTypedError = typeof t === "string" && t.endsWith("_error")
     const isTypedWarning = typeof t === "string" && t.endsWith("_warning")
-    const hasWarningInErrorType =
-      typeof item.error_type === "string" &&
-      item.error_type.endsWith("_warning")
 
-    if (hasWarningType || isTypedWarning || hasWarningInErrorType) {
+    if (hasWarningType || isTypedWarning) {
       warnings.push(item as CircuitJsonIssue)
       continue
     }
