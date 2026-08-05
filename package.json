@@ -1,6 +1,6 @@
 {
   "name": "@tscircuit/cli",
-  "version": "0.1.1829",
+  "version": "0.1.1831",
   "main": "dist/cli/main.js",
   "exports": {
     ".": "./dist/cli/main.js",
@@ -21,7 +21,7 @@
     "@tscircuit/krt-wasm": "^0.1.6",
     "@tscircuit/math-utils": "0.0.36",
     "@tscircuit/props": "^0.0.612",
-    "@tscircuit/runframe": "^0.0.2364",
+    "@tscircuit/runframe": "^0.0.2366",
     "@tscircuit/schematic-match-adapt": "^0.0.22",
     "@tscircuit/solver-utils": "0.0.16",
     "@types/bun": "^1.2.2",
@@ -81,7 +81,7 @@
     "spicets": "^0.0.4",
     "stepts": "^0.0.3",
     "tempy": "^3.1.0",
-    "tscircuit": "0.0.2232-libonly",
+    "tscircuit": "0.0.2233-libonly",
     "tsx": "^4.7.1",
     "typed-ky": "^0.0.4",
     "zod": "^3.23.8"
