@@ -1,6 +1,6 @@
 import { expect, test } from "bun:test"
-import { writeFile } from "node:fs/promises"
 import path from "node:path"
+import { writeFile } from "node:fs/promises"
 import { getCliTestFixture } from "../../fixtures/get-cli-test-fixture"
 
 const circuitCode = `
@@ -74,58 +74,4 @@ test("check netlist filters out placement diagnostics", async () => {
   expect(stdout).not.toContain("placement")
   expect(stdout).not.toContain("pcb_component_outside_board_error")
   expect(stdout).not.toContain("Component R1 extends outside board boundaries")
-}, 20_000)
-
-test("check netlist displays ambiguous differential-pair trace warnings", async () => {
-  const { tmpDir, runCommand } = await getCliTestFixture()
-  const circuitPath = path.join(tmpDir, "differential-pair.circuit.json")
-  const positiveConnectionMessage = "ambiguous positive differential-pair trace"
-  const negativeConnectionMessage = "ambiguous negative differential-pair trace"
-  const unrelatedWarningMessage = "ignored footprint property"
-
-  await writeFile(
-    circuitPath,
-    JSON.stringify([
-      {
-        type: "source_property_ignored_warning",
-        source_property_ignored_warning_id: "source_property_ignored_warning_0",
-        source_component_id: "source_component_j1",
-        property_name: "positiveConnection",
-        error_type: "source_property_ignored_warning",
-        message: positiveConnectionMessage,
-      },
-      {
-        type: "source_property_ignored_warning",
-        source_property_ignored_warning_id: "source_property_ignored_warning_1",
-        source_component_id: "source_component_j1",
-        property_name: "negativeConnection",
-        error_type: "source_property_ignored_warning",
-        message: negativeConnectionMessage,
-      },
-      {
-        type: "source_property_ignored_warning",
-        source_property_ignored_warning_id: "source_property_ignored_warning_2",
-        source_component_id: "source_component_j1",
-        property_name: "footprint",
-        error_type: "source_property_ignored_warning",
-        message: unrelatedWarningMessage,
-      },
-    ]),
-  )
-
-  const { stdout, stderr, exitCode } = await runCommand(
-    `tsci check netlist ${circuitPath}`,
-  )
-
-  expect(exitCode).toBe(0)
-  expect(stderr).toBe("")
-  expect(stdout).toContain("Errors: 0")
-  expect(stdout).toContain("Warnings: 2")
-  expect(stdout).toContain(
-    `- source_property_ignored_warning: ${positiveConnectionMessage}`,
-  )
-  expect(stdout).toContain(
-    `- source_property_ignored_warning: ${negativeConnectionMessage}`,
-  )
-  expect(stdout).not.toContain(unrelatedWarningMessage)
 }, 20_000)
