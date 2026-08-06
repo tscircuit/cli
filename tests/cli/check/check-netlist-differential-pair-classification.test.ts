@@ -1,17 +1,17 @@
 import { expect, test } from "bun:test"
 import { isNetlistDiagnostic } from "cli/check/netlist/register"
 
-test("only differential-pair connection properties are netlist warnings", () => {
-  const createPropertyWarning = (property_name: string) => ({
+test("netlist diagnostics use explicit shared classification metadata", () => {
+  const annotatedPropertyWarning = {
     type: "source_property_ignored_warning",
-    property_name,
-  })
+    property_name: "positiveConnection",
+    drc_category: "netlist",
+  }
+  const unannotatedPropertyWarning = {
+    type: "source_property_ignored_warning",
+    property_name: "positiveConnection",
+  }
 
-  expect(isNetlistDiagnostic(createPropertyWarning("positiveConnection"))).toBe(
-    true,
-  )
-  expect(isNetlistDiagnostic(createPropertyWarning("negativeConnection"))).toBe(
-    true,
-  )
-  expect(isNetlistDiagnostic(createPropertyWarning("footprint"))).toBe(false)
+  expect(isNetlistDiagnostic(annotatedPropertyWarning)).toBe(true)
+  expect(isNetlistDiagnostic(unannotatedPropertyWarning)).toBe(false)
 })

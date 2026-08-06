@@ -14,21 +14,7 @@ import { getOrGenerateCircuitJson } from "lib/shared/get-or-generate-circuit-jso
 import { getPlatformConfigWithCliDefaults } from "lib/shared/get-platform-config-with-cli-defaults"
 
 export function isNetlistDiagnostic(issue: CircuitJsonIssue) {
-  if (categorizeErrorOrWarning(issue) === "netlist") {
-    return true
-  }
-
-  if (issue.type !== "source_property_ignored_warning") {
-    return false
-  }
-
-  switch (issue.property_name) {
-    case "positiveConnection":
-    case "negativeConnection":
-      return true
-    default:
-      return false
-  }
+  return categorizeErrorOrWarning(issue) === "netlist"
 }
 
 const resolveInputFilePath = async (file?: string) => {
