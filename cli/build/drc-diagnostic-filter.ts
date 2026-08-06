@@ -18,6 +18,7 @@ const EMPTY_IGNORE_COUNTS = (): DrcIgnoreCounts => ({
   pin_specification: 0,
   placement: 0,
   routing: 0,
+  source: 0,
   unknown: 0,
 })
 
@@ -25,7 +26,8 @@ const normalizeCategory = (category: string): DrcCategory =>
   category === "netlist" ||
   category === "pin_specification" ||
   category === "placement" ||
-  category === "routing"
+  category === "routing" ||
+  category === "source"
     ? category
     : "unknown"
 
@@ -112,6 +114,7 @@ export const formatIgnoredDrcCounts = (counts: DrcIgnoreCounts): string =>
       ["pin_specification", counts.pin_specification],
       ["placement", counts.placement],
       ["routing", counts.routing],
+      ["source", counts.source],
       ["unknown", counts.unknown],
     ] as const
   )

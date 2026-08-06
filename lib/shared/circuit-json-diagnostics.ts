@@ -21,15 +21,33 @@ export function analyzeCircuitJson(circuitJson: any[]): {
     const isTypedError = typeof t === "string" && t.endsWith("_error")
     const isTypedWarning = typeof t === "string" && t.endsWith("_warning")
 
-    if (hasErrorType || isTypedError) {
-      errors.push(item as CircuitJsonIssue)
+    if (hasWarningType || isTypedWarning) {
+      warnings.push(item as CircuitJsonIssue)
       continue
     }
 
-    if (hasWarningType || isTypedWarning) {
-      warnings.push(item as CircuitJsonIssue)
+    if (hasErrorType || isTypedError) {
+      errors.push(item as CircuitJsonIssue)
     }
   }
 
   return { errors, warnings }
+}
+
+export function formatCircuitJsonDiagnostics({
+  errors,
+  warnings,
+}: {
+  errors: CircuitJsonIssue[]
+  warnings: CircuitJsonIssue[]
+}): string {
+  const lines = [`Errors: ${errors.length}`, `Warnings: ${warnings.length}`]
+
+  for (const issue of [...errors, ...warnings]) {
+    const issueType =
+      issue.warning_type ?? issue.error_type ?? issue.type ?? "unknown_issue"
+    lines.push(`- ${issueType}: ${issue.message ?? ""}`)
+  }
+
+  return lines.join("\n")
 }
