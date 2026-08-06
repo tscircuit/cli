@@ -405,6 +405,7 @@ export const registerBuild = (program: Command) => {
           pin_specification: 0,
           placement: 0,
           routing: 0,
+          source: 0,
           unknown: 0,
         }
         const staticFileReferences: StaticBuildFileReference[] = []
