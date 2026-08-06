@@ -1,17 +1,17 @@
-import path from "node:path"
+import { convertCircuitJsonToReadableNetlist } from "circuit-json-to-readable-netlist"
 import { categorizeErrorOrWarning } from "@tscircuit/circuit-json-util"
 import type { PlatformConfig } from "@tscircuit/props"
 import type { AnyCircuitElement } from "circuit-json"
-import { convertCircuitJsonToReadableNetlist } from "circuit-json-to-readable-netlist"
 import type { Command } from "commander"
-import { findCircuitProjectDir } from "lib/shared/circuit-json-build-cache"
-import {
-  type CircuitJsonIssue,
-  analyzeCircuitJson,
-} from "lib/shared/circuit-json-diagnostics"
-import { getEntrypoint } from "lib/shared/get-entrypoint"
 import { getOrGenerateCircuitJson } from "lib/shared/get-or-generate-circuit-json"
 import { getPlatformConfigWithCliDefaults } from "lib/shared/get-platform-config-with-cli-defaults"
+import { getEntrypoint } from "lib/shared/get-entrypoint"
+import {
+  analyzeCircuitJson,
+  type CircuitJsonIssue,
+} from "lib/shared/circuit-json-diagnostics"
+import path from "node:path"
+import { findCircuitProjectDir } from "lib/shared/circuit-json-build-cache"
 
 export function isNetlistDiagnostic(issue: CircuitJsonIssue) {
   return categorizeErrorOrWarning(issue) === "netlist"
