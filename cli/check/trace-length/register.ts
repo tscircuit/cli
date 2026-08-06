@@ -4,6 +4,7 @@ import type { Command } from "commander"
 import path from "node:path"
 import {
   parseAutorouterDumpSrjMode,
+  parseAutorouterPhaseName,
   parseAutorouterTimeout,
   type AutorouterDiagnosticsOptions,
 } from "lib/shared/autorouter-diagnostics"
@@ -26,6 +27,7 @@ const loadTraceLengthAnalyzer = async (): Promise<TraceLengthAnalyzer> => {
 
 type CheckTraceLengthOptions = {
   autorouterDebug?: boolean
+  autorouterPhase?: string
   autorouterTimeout?: string
   autorouterDebugDir?: string
   autorouterDumpSrj?: string | boolean
@@ -37,13 +39,18 @@ const getAutorouterDiagnosticsOptions = (
   const timeoutMs = options.autorouterTimeout
     ? parseAutorouterTimeout(options.autorouterTimeout)
     : undefined
+  const phaseName =
+    options.autorouterPhase !== undefined
+      ? parseAutorouterPhaseName(options.autorouterPhase)
+      : undefined
   const dumpSrj = parseAutorouterDumpSrjMode(options.autorouterDumpSrj)
   const debugDir = options.autorouterDebugDir
     ? path.resolve(process.cwd(), options.autorouterDebugDir)
     : path.resolve(process.cwd(), "dist", "autorouter-debug")
 
   return {
-    enabled: options.autorouterDebug,
+    enabled: options.autorouterDebug || phaseName !== undefined,
+    phaseName,
     timeoutMs,
     debugDir,
     dumpSrj,
@@ -86,6 +93,10 @@ export const registerCheckTraceLength = (program: Command) => {
     .option(
       "--autorouter-debug",
       "Log autorouting phases and write unrouted/per-phase PNG artifacts",
+    )
+    .option(
+      "--autorouter-phase <name>",
+      "Enable autorouting debugging through the named phase",
     )
     .option(
       "--autorouter-timeout <duration>",

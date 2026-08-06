@@ -6,6 +6,7 @@ test("dev autorouter debug events omit circuit JSON ids", () => {
     event_type: "autorouting:progress",
     subcircuit_id: "subcircuit_source_group_0",
     componentDisplayName: "board main",
+    phaseName: "route-power",
     phase: "capacity-depth",
     steps: 12,
     progress: 0.25,
@@ -23,6 +24,7 @@ test("dev autorouter debug events omit circuit JSON ids", () => {
   })
 
   expect(output).toContain("component=board main")
+  expect(output).toContain("autorouter_phase=route-power")
   expect(output).toContain("phase=capacity-depth")
   expect(output).toContain("steps=12")
   expect(output).toContain("progress=25%")

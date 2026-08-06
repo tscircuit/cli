@@ -4,12 +4,16 @@ import fs from "node:fs"
 import os from "node:os"
 import path from "node:path"
 import type { CircuitJson } from "circuit-json"
+import { convertCircuitJsonToPcbSvg } from "circuit-to-svg"
 import {
   AutorouterDiagnostics,
   AutorouterPhaseTimeoutError,
   parseAutorouterDumpSrjMode,
+  parseAutorouterPhaseName,
   parseAutorouterTimeout,
 } from "lib/shared/autorouter-diagnostics"
+import { convertSvgToPngBuffer } from "lib/shared/convert-svg-to-png"
+import "bun-match-svg"
 
 class FakeRootCircuit extends EventEmitter {
   dbToArrayCallCount = 0
@@ -43,10 +47,232 @@ const makeTempDir = () =>
   fs.mkdtempSync(path.join(os.tmpdir(), "tsci-autorouter-diagnostics-"))
 
 describe("autorouter diagnostics", () => {
-  test("logs phase start/end and writes SRJ and PNG artifacts", async () => {
+  test("phase targeting enables debugging through the named phase", () => {
     const debugDir = makeTempDir()
     const logs: string[] = []
     const root = new FakeRootCircuit()
+    const diagnostics = new AutorouterDiagnostics({
+      phaseName: "route-power",
+      debugDir,
+      log: (message) => logs.push(message),
+    })
+
+    diagnostics.attachToRootCircuit(root)
+
+    root.emit("autorouting:start", {
+      subcircuit_id: "subcircuit_source_group_0",
+      componentDisplayName: "board main",
+      phaseName: "route-power",
+      phaseStageIndex: 0,
+      phaseStageCount: 2,
+      routingPhaseIndex: 0,
+      simpleRouteJson: { connections: [{ name: "VCC" }] },
+    })
+    root.emit("autorouting:end", {
+      subcircuit_id: "subcircuit_source_group_0",
+      phaseName: "route-power",
+      phaseStageIndex: 0,
+      phaseStageCount: 2,
+      routingPhaseIndex: 0,
+      simpleRouteJson: { traces: [] },
+    })
+    root.emit("autorouting:start", {
+      subcircuit_id: "subcircuit_source_group_0",
+      componentDisplayName: "board main",
+      phaseName: "route-power",
+      phaseStageIndex: 1,
+      phaseStageCount: 2,
+      routingPhaseIndex: 1,
+      simpleRouteJson: { connections: [{ name: "VCC" }] },
+    })
+    root.emit("autorouting:end", {
+      subcircuit_id: "subcircuit_source_group_0",
+      phaseName: "route-power",
+      phaseStageIndex: 1,
+      phaseStageCount: 2,
+      routingPhaseIndex: 1,
+      simpleRouteJson: { traces: [] },
+    })
+    root.emit("autorouting:start", {
+      subcircuit_id: "subcircuit_source_group_0",
+      componentDisplayName: "board main",
+      phaseName: "route-signal",
+      phaseStageIndex: 0,
+      phaseStageCount: 1,
+      routingPhaseIndex: 2,
+      simpleRouteJson: { connections: [{ name: "DATA" }] },
+    })
+    root.emit("autorouting:end", {
+      subcircuit_id: "subcircuit_source_group_0",
+      phaseName: "route-signal",
+      phaseStageIndex: 0,
+      phaseStageCount: 1,
+      routingPhaseIndex: 2,
+      simpleRouteJson: { traces: [] },
+    })
+
+    diagnostics.finalize([])
+
+    expect(logs.join("\n")).toContain('phase 1 "route-power"')
+    expect(logs.join("\n")).toContain('phase 2 "route-power"')
+    expect(logs.join("\n")).not.toContain("route-signal")
+    expect(fs.existsSync(path.join(debugDir, "placement-unrouted.png"))).toBe(
+      true,
+    )
+    expect(fs.existsSync(path.join(debugDir, "phase-0-routed.png"))).toBe(true)
+    expect(fs.existsSync(path.join(debugDir, "phase-1-routed.png"))).toBe(true)
+    expect(fs.existsSync(path.join(debugDir, "phase-2-routed.png"))).toBe(false)
+
+    const summary = JSON.parse(
+      fs.readFileSync(path.join(debugDir, "board.meta.json"), "utf8"),
+    )
+    expect(summary.targetPhaseName).toBe("route-power")
+    expect(summary.targetPhaseReached).toBe(true)
+    expect(summary.phases).toHaveLength(2)
+  })
+
+  test("phase names cannot be empty", () => {
+    expect(() => parseAutorouterPhaseName("  ")).toThrow(
+      "The phase name must not be empty",
+    )
+  })
+
+  test("logs phase start/end and writes SRJ and PNG artifacts", async () => {
+    const debugDir = makeTempDir()
+    const logs: string[] = []
+    const circuitJson: CircuitJson = [
+      {
+        type: "pcb_board",
+        pcb_board_id: "board_0",
+        center: { x: 0, y: 0 },
+        width: 10,
+        height: 10,
+        thickness: 1.4,
+        num_layers: 2,
+        material: "fr4",
+      },
+      {
+        type: "source_net",
+        source_net_id: "source_net_0",
+        name: "N1",
+        member_source_group_ids: [],
+      },
+      {
+        type: "source_net",
+        source_net_id: "source_net_1",
+        name: "N2",
+        member_source_group_ids: [],
+      },
+      {
+        type: "source_port",
+        source_port_id: "source_port_a",
+        name: "A",
+      },
+      {
+        type: "source_port",
+        source_port_id: "source_port_b",
+        name: "B",
+      },
+      {
+        type: "source_port",
+        source_port_id: "source_port_c",
+        name: "C",
+      },
+      {
+        type: "source_port",
+        source_port_id: "source_port_d",
+        name: "D",
+      },
+      {
+        type: "pcb_port",
+        pcb_port_id: "pcb_port_a",
+        source_port_id: "source_port_a",
+        x: -2,
+        y: -2,
+        layers: ["top"],
+      },
+      {
+        type: "pcb_port",
+        pcb_port_id: "pcb_port_b",
+        source_port_id: "source_port_b",
+        x: 2,
+        y: 2,
+        layers: ["top"],
+      },
+      {
+        type: "pcb_port",
+        pcb_port_id: "pcb_port_c",
+        source_port_id: "source_port_c",
+        x: -2,
+        y: 2,
+        layers: ["top"],
+      },
+      {
+        type: "pcb_port",
+        pcb_port_id: "pcb_port_d",
+        source_port_id: "source_port_d",
+        x: 2,
+        y: -2,
+        layers: ["top"],
+      },
+      {
+        type: "pcb_plated_hole",
+        pcb_plated_hole_id: "pcb_plated_hole_a",
+        pcb_port_id: "pcb_port_a",
+        x: -2,
+        y: -2,
+        shape: "circle",
+        outer_diameter: 1,
+        hole_diameter: 0.5,
+        layers: ["top", "bottom"],
+      },
+      {
+        type: "pcb_plated_hole",
+        pcb_plated_hole_id: "pcb_plated_hole_b",
+        pcb_port_id: "pcb_port_b",
+        x: 2,
+        y: 2,
+        shape: "circle",
+        outer_diameter: 1,
+        hole_diameter: 0.5,
+        layers: ["top", "bottom"],
+      },
+      {
+        type: "pcb_plated_hole",
+        pcb_plated_hole_id: "pcb_plated_hole_c",
+        pcb_port_id: "pcb_port_c",
+        x: -2,
+        y: 2,
+        shape: "circle",
+        outer_diameter: 1,
+        hole_diameter: 0.5,
+        layers: ["top", "bottom"],
+      },
+      {
+        type: "pcb_plated_hole",
+        pcb_plated_hole_id: "pcb_plated_hole_d",
+        pcb_port_id: "pcb_port_d",
+        x: 2,
+        y: -2,
+        shape: "circle",
+        outer_diameter: 1,
+        hole_diameter: 0.5,
+        layers: ["top", "bottom"],
+      },
+      {
+        type: "source_trace",
+        source_trace_id: "source_trace_0",
+        connected_source_port_ids: ["source_port_a", "source_port_b"],
+        connected_source_net_ids: ["source_net_0"],
+      },
+      {
+        type: "source_trace",
+        source_trace_id: "source_trace_1",
+        connected_source_port_ids: ["source_port_c", "source_port_d"],
+        connected_source_net_ids: ["source_net_1"],
+      },
+    ]
+    const root = new FakeRootCircuit(circuitJson)
     const diagnostics = new AutorouterDiagnostics({
       enabled: true,
       dumpSrj: "all",
@@ -132,6 +358,24 @@ describe("autorouter diagnostics", () => {
     expect(
       fs.readFileSync(path.join(debugDir, "phase-0-routed.png")).subarray(0, 8),
     ).toEqual(Buffer.from([137, 80, 78, 71, 13, 10, 26, 10]))
+    const startPng = fs.readFileSync(
+      path.join(debugDir, "placement-unrouted.png"),
+    )
+    const expectedPngWithRatsNest = convertSvgToPngBuffer(
+      convertCircuitJsonToPcbSvg(circuitJson as any, {
+        shouldDrawRatsNest: true,
+      }),
+    )
+    const expectedPngWithoutRatsNest = convertSvgToPngBuffer(
+      convertCircuitJsonToPcbSvg(circuitJson as any),
+    )
+    expect(startPng).toEqual(Buffer.from(expectedPngWithRatsNest))
+    expect(startPng).not.toEqual(Buffer.from(expectedPngWithoutRatsNest))
+    expect(
+      convertCircuitJsonToPcbSvg(circuitJson as any, {
+        shouldDrawRatsNest: true,
+      }),
+    ).toMatchSvgSnapshot(import.meta.path, "autorouter-start-rats-nest")
     expect(
       fs.readFileSync(path.join(debugDir, "phase-0-routed.png")),
     ).not.toEqual(
