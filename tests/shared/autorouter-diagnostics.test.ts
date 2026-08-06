@@ -3,7 +3,6 @@ import { EventEmitter } from "node:events"
 import fs from "node:fs"
 import os from "node:os"
 import path from "node:path"
-<<<<<<< HEAD
 import type { CircuitJson } from "circuit-json"
 import { convertCircuitJsonToPcbSvg } from "circuit-to-svg"
 import {
@@ -14,6 +13,7 @@ import {
   parseAutorouterTimeout,
 } from "lib/shared/autorouter-diagnostics"
 import { convertSvgToPngBuffer } from "lib/shared/convert-svg-to-png"
+import "bun-match-svg"
 
 class FakeRootCircuit extends EventEmitter {
   dbToArrayCallCount = 0
@@ -156,6 +156,11 @@ describe("autorouter diagnostics", () => {
         name: "N1",
       },
       {
+        type: "source_net",
+        source_net_id: "source_net_1",
+        name: "N2",
+      },
+      {
         type: "source_port",
         source_port_id: "source_port_a",
         name: "A",
@@ -166,11 +171,21 @@ describe("autorouter diagnostics", () => {
         name: "B",
       },
       {
+        type: "source_port",
+        source_port_id: "source_port_c",
+        name: "C",
+      },
+      {
+        type: "source_port",
+        source_port_id: "source_port_d",
+        name: "D",
+      },
+      {
         type: "pcb_port",
         pcb_port_id: "pcb_port_a",
         source_port_id: "source_port_a",
         x: -2,
-        y: 0,
+        y: -2,
         layers: ["top"],
       },
       {
@@ -178,7 +193,23 @@ describe("autorouter diagnostics", () => {
         pcb_port_id: "pcb_port_b",
         source_port_id: "source_port_b",
         x: 2,
-        y: 0,
+        y: 2,
+        layers: ["top"],
+      },
+      {
+        type: "pcb_port",
+        pcb_port_id: "pcb_port_c",
+        source_port_id: "source_port_c",
+        x: -2,
+        y: 2,
+        layers: ["top"],
+      },
+      {
+        type: "pcb_port",
+        pcb_port_id: "pcb_port_d",
+        source_port_id: "source_port_d",
+        x: 2,
+        y: -2,
         layers: ["top"],
       },
       {
@@ -186,7 +217,7 @@ describe("autorouter diagnostics", () => {
         pcb_plated_hole_id: "pcb_plated_hole_a",
         pcb_port_id: "pcb_port_a",
         x: -2,
-        y: 0,
+        y: -2,
         shape: "circle",
         outer_diameter: 1,
         hole_diameter: 0.5,
@@ -197,7 +228,29 @@ describe("autorouter diagnostics", () => {
         pcb_plated_hole_id: "pcb_plated_hole_b",
         pcb_port_id: "pcb_port_b",
         x: 2,
-        y: 0,
+        y: 2,
+        shape: "circle",
+        outer_diameter: 1,
+        hole_diameter: 0.5,
+        layers: ["top", "bottom"],
+      },
+      {
+        type: "pcb_plated_hole",
+        pcb_plated_hole_id: "pcb_plated_hole_c",
+        pcb_port_id: "pcb_port_c",
+        x: -2,
+        y: 2,
+        shape: "circle",
+        outer_diameter: 1,
+        hole_diameter: 0.5,
+        layers: ["top", "bottom"],
+      },
+      {
+        type: "pcb_plated_hole",
+        pcb_plated_hole_id: "pcb_plated_hole_d",
+        pcb_port_id: "pcb_port_d",
+        x: 2,
+        y: -2,
         shape: "circle",
         outer_diameter: 1,
         hole_diameter: 0.5,
@@ -208,6 +261,12 @@ describe("autorouter diagnostics", () => {
         source_trace_id: "source_trace_0",
         connected_source_port_ids: ["source_port_a", "source_port_b"],
         connected_source_net_ids: ["source_net_0"],
+      },
+      {
+        type: "source_trace",
+        source_trace_id: "source_trace_1",
+        connected_source_port_ids: ["source_port_c", "source_port_d"],
+        connected_source_net_ids: ["source_net_1"],
       },
     ]
     const root = new FakeRootCircuit(circuitJson)
@@ -309,6 +368,11 @@ describe("autorouter diagnostics", () => {
     )
     expect(startPng).toEqual(Buffer.from(expectedPngWithRatsNest))
     expect(startPng).not.toEqual(Buffer.from(expectedPngWithoutRatsNest))
+    expect(
+      convertCircuitJsonToPcbSvg(circuitJson as any, {
+        shouldDrawRatsNest: true,
+      }),
+    ).toMatchSvgSnapshot(import.meta.path, "autorouter-start-rats-nest")
     expect(
       fs.readFileSync(path.join(debugDir, "phase-0-routed.png")),
     ).not.toEqual(
