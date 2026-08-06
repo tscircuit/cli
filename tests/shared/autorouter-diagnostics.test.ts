@@ -140,7 +140,7 @@ describe("autorouter diagnostics", () => {
   test("logs phase start/end and writes SRJ and PNG artifacts", async () => {
     const debugDir = makeTempDir()
     const logs: string[] = []
-    const circuitJson = [
+    const circuitJson: CircuitJson = [
       {
         type: "pcb_board",
         pcb_board_id: "board_0",
@@ -149,16 +149,19 @@ describe("autorouter diagnostics", () => {
         height: 10,
         thickness: 1.4,
         num_layers: 2,
+        material: "fr4",
       },
       {
         type: "source_net",
         source_net_id: "source_net_0",
         name: "N1",
+        member_source_group_ids: [],
       },
       {
         type: "source_net",
         source_net_id: "source_net_1",
         name: "N2",
+        member_source_group_ids: [],
       },
       {
         type: "source_port",
