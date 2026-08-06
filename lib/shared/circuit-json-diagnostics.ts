@@ -33,3 +33,21 @@ export function analyzeCircuitJson(circuitJson: any[]): {
 
   return { errors, warnings }
 }
+
+export function formatCircuitJsonDiagnostics({
+  errors,
+  warnings,
+}: {
+  errors: CircuitJsonIssue[]
+  warnings: CircuitJsonIssue[]
+}): string {
+  const lines = [`Errors: ${errors.length}`, `Warnings: ${warnings.length}`]
+
+  for (const issue of [...errors, ...warnings]) {
+    const issueType =
+      issue.warning_type ?? issue.error_type ?? issue.type ?? "unknown_issue"
+    lines.push(`- ${issueType}: ${issue.message ?? ""}`)
+  }
+
+  return lines.join("\n")
+}

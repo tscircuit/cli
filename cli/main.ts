@@ -20,6 +20,7 @@ import { registerCheck } from "./check/register"
 import { registerCheckRoutingDifficulty } from "./check/routing-difficulty/register"
 import { registerCheckSchematicPlacement } from "./check/schematic-placement/register"
 import { registerCheckShorts } from "./check/shorts/register"
+import { registerCheckSource } from "./check/source/register"
 import { registerCheckTraceLength } from "./check/trace-length/register"
 import { registerClone } from "./clone/register"
 import { registerConfigPrint } from "./config/print/register"
@@ -89,6 +90,7 @@ registerCheckPlacement(program)
 registerCheckRoutingDifficulty(program)
 registerCheckSchematicPlacement(program)
 registerCheckShorts(program)
+registerCheckSource(program)
 registerCheckTraceLength(program)
 
 registerRegistry(program)

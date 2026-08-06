@@ -8,6 +8,7 @@ import { findCircuitProjectDir } from "lib/shared/circuit-json-build-cache"
 import {
   type CircuitJsonIssue,
   analyzeCircuitJson,
+  formatCircuitJsonDiagnostics,
 } from "lib/shared/circuit-json-diagnostics"
 import { getEntrypoint } from "lib/shared/get-entrypoint"
 import { getOrGenerateCircuitJson } from "lib/shared/get-or-generate-circuit-json"
@@ -56,28 +57,12 @@ export const checkNetlist = async (file?: string) => {
   const netlistWarnings = diagnostics.warnings.filter(isNetlistDiagnostic)
   const readableNetlist = convertCircuitJsonToReadableNetlist(typedCircuitJson)
 
-  const diagnosticsLines = [
-    `Errors: ${netlistErrors.length}`,
-    `Warnings: ${netlistWarnings.length}`,
-  ]
+  const formattedDiagnostics = formatCircuitJsonDiagnostics({
+    errors: netlistErrors,
+    warnings: netlistWarnings,
+  })
 
-  if (netlistErrors.length > 0) {
-    diagnosticsLines.push(
-      ...netlistErrors.map((err) => `- ${err.type}: ${err.message ?? ""}`),
-    )
-  }
-
-  if (netlistWarnings.length > 0) {
-    diagnosticsLines.push(
-      ...netlistWarnings.map((warning) => {
-        const issueType =
-          warning.warning_type ?? warning.error_type ?? warning.type
-        return `- ${issueType}: ${warning.message ?? ""}`
-      }),
-    )
-  }
-
-  return `${diagnosticsLines.join("\n")}\n\nReadable Netlist:\n${readableNetlist}`
+  return `${formattedDiagnostics}\n\nReadable Netlist:\n${readableNetlist}`
 }
 
 export const registerCheckNetlist = (program: Command) => {
