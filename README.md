@@ -57,7 +57,7 @@ Commands:
                                latest version
   upgrade                      Upgrade CLI to the latest version
   doctor                       Run diagnostic checks for your tscircuit setup
-  check                        Partially build and validate circuit artifacts
+  check [file]                 Partially build and validate circuit artifacts
   registry                     Manage tscircuit registry resources
   search [options] <query...>  Search for footprints, CAD models or packages in
                                the tscircuit ecosystem
