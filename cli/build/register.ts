@@ -305,7 +305,8 @@ export const registerBuild = (program: Command) => {
           if (
             !resolvedOptions?.disablePcb &&
             !resolvedOptions?.routingDisabled &&
-            !resolvedOptions?.disablePartsEngine
+            !resolvedOptions?.disablePartsEngine &&
+            !resolvedOptions?.ignorePlacementDrc
           ) {
             return
           }
@@ -322,6 +323,13 @@ export const registerBuild = (program: Command) => {
 
           if (resolvedOptions?.disablePartsEngine) {
             config.partsEngineDisabled = true
+          }
+
+          // Placement DRC is not just a report: core skips autorouting for any
+          // subcircuit that has a pcb_placement_error, so filtering the
+          // diagnostics alone would still leave the board unrouted.
+          if (resolvedOptions?.ignorePlacementDrc) {
+            config.placementDrcChecksDisabled = true
           }
 
           return config
