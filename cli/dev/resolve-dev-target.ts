@@ -3,6 +3,7 @@ import * as path from "node:path"
 import { globbySync } from "globby"
 import { findBoardFiles } from "lib/shared/find-board-files"
 import { getEntrypoint } from "lib/shared/get-entrypoint"
+import { isCircuitJsonFile } from "lib/shared/is-circuit-json-file"
 import { DEFAULT_IGNORED_PATTERNS } from "lib/shared/should-ignore-path"
 
 export interface DevTargetResult {
@@ -19,10 +20,13 @@ const findSelectableFiles = (projectDir: string): string[] => {
     return boardFiles
   }
 
-  const files = globbySync(["**/*.tsx", "**/*.ts", "**/*.circuit.json"], {
-    cwd: projectDir,
-    ignore: DEFAULT_IGNORED_PATTERNS,
-  })
+  const files = globbySync(
+    ["**/*.tsx", "**/*.ts", "**/*.circuit.json", "**/circuit.json"],
+    {
+      cwd: projectDir,
+      ignore: DEFAULT_IGNORED_PATTERNS,
+    },
+  )
 
   return files
     .map((file) => path.resolve(projectDir, file))
@@ -34,17 +38,18 @@ const isValidDevFile = (filePath: string): boolean => {
   return (
     filePath.endsWith(".tsx") ||
     filePath.endsWith(".ts") ||
-    filePath.endsWith(".circuit.json")
+    isCircuitJsonFile(filePath)
   )
 }
 
 export const resolveDevTarget = async (
   file: string | undefined,
+  cwd: string = process.cwd(),
 ): Promise<DevTargetResult | null> => {
-  let projectDir = process.cwd()
+  let projectDir = path.resolve(cwd)
 
   if (file) {
-    const resolvedPath = path.resolve(file)
+    const resolvedPath = path.resolve(projectDir, file)
 
     // Check if the argument is a directory
     if (
@@ -56,7 +61,7 @@ export const resolveDevTarget = async (
 
       if (availableFiles.length === 0) {
         console.log(
-          `No .tsx, .ts, or .circuit.json files found in ${projectDir}. Run 'tsci init' to bootstrap a basic project.`,
+          `No .tsx, .ts, .circuit.json, or circuit.json files found in ${projectDir}. Run 'tsci init' to bootstrap a basic project.`,
         )
         return null
       }
@@ -76,7 +81,7 @@ export const resolveDevTarget = async (
 
     if (!isValidDevFile(resolvedPath)) {
       console.error(
-        "Error: Only .tsx, .ts, and .circuit.json files are supported",
+        "Error: Only .tsx, .ts, .circuit.json, and circuit.json files are supported",
       )
       return null
     }
@@ -85,7 +90,10 @@ export const resolveDevTarget = async (
   }
 
   // No file argument - try to find entrypoint
-  const entrypointPath = await getEntrypoint({ onError: () => {} })
+  const entrypointPath = await getEntrypoint({
+    projectDir,
+    onError: () => {},
+  })
   if (entrypointPath && fs.existsSync(entrypointPath)) {
     console.log("Found entrypoint at:", entrypointPath)
     return { absolutePath: entrypointPath, projectDir }
@@ -95,7 +103,7 @@ export const resolveDevTarget = async (
   const availableFiles = findSelectableFiles(projectDir)
   if (availableFiles.length === 0) {
     console.log(
-      "No .tsx, .ts, or .circuit.json files found in the project. Run 'tsci init' to bootstrap a basic project.",
+      "No .tsx, .ts, .circuit.json, or circuit.json files found in the project. Run 'tsci init' to bootstrap a basic project.",
     )
     return null
   }
