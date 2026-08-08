@@ -4,6 +4,24 @@ import Fuse from "fuse.js"
 import kleur from "kleur"
 import { getQueryFromParts } from "cli/utils/get-query-from-parts"
 
+export type MouserSearchResult = {
+  mouser_product_number: string
+  supplier_part_number?: string
+  mfr: string
+  manufacturer?: string
+  package?: string
+  description: string
+  stock: number
+  price?: number
+  product_url?: string
+}
+
+export const formatMouserSearchResult = (
+  component: MouserSearchResult,
+  index: number,
+): string =>
+  `${index + 1}. ${component.mfr} (${component.mouser_product_number}) - ${component.description} (stock: ${component.stock.toLocaleString("en-US")})`
+
 export const registerSearch = (program: Command) => {
   program
     .command("search")
@@ -17,6 +35,7 @@ export const registerSearch = (program: Command) => {
     .option("--kicad", "Search KiCad footprints")
     .option("--jlcpcb", "Search JLCPCB components")
     .option("--lcsc", "Alias for --jlcpcb")
+    .option("--mouser", "Search Mouser components")
     .option("--tscircuit", "Search tscircuit registry packages")
     .option("--json", "Output search results as JSON")
     .action(
@@ -26,15 +45,21 @@ export const registerSearch = (program: Command) => {
           kicad?: boolean
           jlcpcb?: boolean
           lcsc?: boolean
+          mouser?: boolean
           tscircuit?: boolean
           json?: boolean
         },
       ) => {
         const query = getQueryFromParts(queryParts)
         const hasFilters =
-          opts.kicad || opts.jlcpcb || opts.lcsc || opts.tscircuit
+          opts.kicad ||
+          opts.jlcpcb ||
+          opts.lcsc ||
+          opts.mouser ||
+          opts.tscircuit
         const searchKicad = opts.kicad
         const searchJlc = opts.jlcpcb || opts.lcsc || !hasFilters
+        const searchMouser = opts.mouser
         const searchTscircuit = opts.tscircuit
 
         let results: {
@@ -55,6 +80,8 @@ export const registerSearch = (program: Command) => {
           price: number
         }> = []
 
+        let mouserResults: MouserSearchResult[] = []
+
         let kicadResults: string[] = []
 
         try {
@@ -73,6 +100,22 @@ export const registerSearch = (program: Command) => {
               encodeURIComponent(query)
             const jlcResponse = await fetch(jlcSearchUrl).then((r) => r.json())
             jlcResults = jlcResponse?.components ?? []
+          }
+
+          if (searchMouser) {
+            const mouserSearchUrl =
+              "https://mousersearch.tscircuit.com/api/search?limit=10&q=" +
+              encodeURIComponent(query)
+            const mouserResponse = await fetch(mouserSearchUrl, {
+              headers: { accept: "application/json" },
+            })
+            if (!mouserResponse.ok) {
+              throw new Error(
+                `Mouser search returned ${mouserResponse.status}: ${await mouserResponse.text()}`,
+              )
+            }
+            const mouserJson = await mouserResponse.json()
+            mouserResults = mouserJson?.components ?? []
           }
 
           if (searchKicad) {
@@ -107,6 +150,10 @@ export const registerSearch = (program: Command) => {
               source: "jlcpcb" as const,
               ...comp,
             })),
+            ...mouserResults.map((comp) => ({
+              source: "mouser" as const,
+              ...comp,
+            })),
           ]
 
           console.log(
@@ -125,11 +172,13 @@ export const registerSearch = (program: Command) => {
         if (
           !kicadResults.length &&
           !results.packages.length &&
-          !jlcResults.length
+          !jlcResults.length &&
+          !mouserResults.length
         ) {
           const sources = [
             searchTscircuit && "tscircuit registry",
             searchJlc && "JLCPCB",
+            searchMouser && "Mouser",
             searchKicad && "KiCad",
           ].filter(Boolean)
           console.log(
@@ -192,6 +241,21 @@ export const registerSearch = (program: Command) => {
             console.log(
               `${idx + 1}. ${comp.mfr} (C${comp.lcsc}) - ${comp.description} (stock: ${comp.stock.toLocaleString("en-US")})`,
             )
+          })
+        }
+
+        if (mouserResults.length) {
+          console.log()
+          console.log(
+            kleur
+              .bold()
+              .underline(
+                `Found ${mouserResults.length} component(s) in Mouser search:`,
+              ),
+          )
+
+          mouserResults.forEach((component, index) => {
+            console.log(formatMouserSearchResult(component, index))
           })
         }
         console.log("\n")
