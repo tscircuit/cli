@@ -4,6 +4,24 @@ import Fuse from "fuse.js"
 import kleur from "kleur"
 import { getQueryFromParts } from "cli/utils/get-query-from-parts"
 
+export type DigiKeySearchResult = {
+  digikey_product_number: string
+  supplier_part_number?: string
+  mfr: string
+  manufacturer?: string
+  package?: string
+  description: string
+  stock: number
+  price?: number
+  product_url?: string
+}
+
+export const formatDigiKeySearchResult = (
+  component: DigiKeySearchResult,
+  index: number,
+): string =>
+  `${index + 1}. ${component.mfr} (${component.digikey_product_number}) - ${component.description} (stock: ${component.stock.toLocaleString("en-US")})`
+
 export const registerSearch = (program: Command) => {
   program
     .command("search")
@@ -17,6 +35,7 @@ export const registerSearch = (program: Command) => {
     .option("--kicad", "Search KiCad footprints")
     .option("--jlcpcb", "Search JLCPCB components")
     .option("--lcsc", "Alias for --jlcpcb")
+    .option("--digikey", "Search DigiKey components")
     .option("--tscircuit", "Search tscircuit registry packages")
     .option("--json", "Output search results as JSON")
     .action(
@@ -26,15 +45,21 @@ export const registerSearch = (program: Command) => {
           kicad?: boolean
           jlcpcb?: boolean
           lcsc?: boolean
+          digikey?: boolean
           tscircuit?: boolean
           json?: boolean
         },
       ) => {
         const query = getQueryFromParts(queryParts)
         const hasFilters =
-          opts.kicad || opts.jlcpcb || opts.lcsc || opts.tscircuit
+          opts.kicad ||
+          opts.jlcpcb ||
+          opts.lcsc ||
+          opts.digikey ||
+          opts.tscircuit
         const searchKicad = opts.kicad
         const searchJlc = opts.jlcpcb || opts.lcsc || !hasFilters
+        const searchDigiKey = opts.digikey
         const searchTscircuit = opts.tscircuit
 
         let results: {
@@ -55,6 +80,8 @@ export const registerSearch = (program: Command) => {
           price: number
         }> = []
 
+        let digikeyResults: DigiKeySearchResult[] = []
+
         let kicadResults: string[] = []
 
         try {
@@ -73,6 +100,20 @@ export const registerSearch = (program: Command) => {
               encodeURIComponent(query)
             const jlcResponse = await fetch(jlcSearchUrl).then((r) => r.json())
             jlcResults = jlcResponse?.components ?? []
+          }
+
+          if (searchDigiKey) {
+            const digikeySearchUrl =
+              "https://digikeysearch.tscircuit.com/api/search?limit=10&q=" +
+              encodeURIComponent(query)
+            const digikeyResponse = await fetch(digikeySearchUrl)
+            if (!digikeyResponse.ok) {
+              throw new Error(
+                `DigiKey search returned ${digikeyResponse.status}: ${await digikeyResponse.text()}`,
+              )
+            }
+            const digikeyJson = await digikeyResponse.json()
+            digikeyResults = digikeyJson?.components ?? []
           }
 
           if (searchKicad) {
@@ -107,6 +148,10 @@ export const registerSearch = (program: Command) => {
               source: "jlcpcb" as const,
               ...comp,
             })),
+            ...digikeyResults.map((comp) => ({
+              source: "digikey" as const,
+              ...comp,
+            })),
           ]
 
           console.log(
@@ -125,11 +170,13 @@ export const registerSearch = (program: Command) => {
         if (
           !kicadResults.length &&
           !results.packages.length &&
-          !jlcResults.length
+          !jlcResults.length &&
+          !digikeyResults.length
         ) {
           const sources = [
             searchTscircuit && "tscircuit registry",
             searchJlc && "JLCPCB",
+            searchDigiKey && "DigiKey",
             searchKicad && "KiCad",
           ].filter(Boolean)
           console.log(
@@ -192,6 +239,21 @@ export const registerSearch = (program: Command) => {
             console.log(
               `${idx + 1}. ${comp.mfr} (C${comp.lcsc}) - ${comp.description} (stock: ${comp.stock.toLocaleString("en-US")})`,
             )
+          })
+        }
+
+        if (digikeyResults.length) {
+          console.log()
+          console.log(
+            kleur
+              .bold()
+              .underline(
+                `Found ${digikeyResults.length} component(s) in DigiKey search:`,
+              ),
+          )
+
+          digikeyResults.forEach((component, index) => {
+            console.log(formatDigiKeySearchResult(component, index))
           })
         }
         console.log("\n")
