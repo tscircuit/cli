@@ -106,7 +106,9 @@ export const registerSearch = (program: Command) => {
             const mouserSearchUrl =
               "https://mousersearch.tscircuit.com/api/search?limit=10&q=" +
               encodeURIComponent(query)
-            const mouserResponse = await fetch(mouserSearchUrl)
+            const mouserResponse = await fetch(mouserSearchUrl, {
+              headers: { accept: "application/json" },
+            })
             if (!mouserResponse.ok) {
               throw new Error(
                 `Mouser search returned ${mouserResponse.status}: ${await mouserResponse.text()}`,
