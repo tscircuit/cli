@@ -6,12 +6,49 @@ import type {
 } from "@tscircuit/check-shorts"
 import type { PlatformConfig } from "@tscircuit/props"
 import type { Command } from "commander"
-import { getCircuitJsonForCheck, resolveCheckInputFilePath } from "../shared"
+import {
+  getCircuitJsonForCheck,
+  type GetCircuitJsonForCheckProgressEvent,
+  resolveCheckInputFilePath,
+} from "../shared"
 
-interface CheckShortsOptions {
+export interface CheckShortsOptions {
   mode?: "pcb" | "gerber"
   layer?: "top" | "bottom" | "all"
   pixelsPerMm?: string
+  onProgress?: (message: string) => void
+}
+
+type BitmapShortProgressEvent =
+  | {
+      phase: "preparing"
+      mode: "pcb" | "gerber"
+      layer: string
+    }
+  | {
+      phase: "rasterizing"
+      mode: "pcb" | "gerber"
+      layer: string
+      width: number
+      height: number
+      completedGroups: number
+      totalGroups: number
+      currentConnectivityKey?: string
+    }
+  | {
+      phase: "detecting"
+      mode: "pcb" | "gerber"
+      layer: string
+    }
+  | {
+      phase: "complete"
+      mode: "pcb" | "gerber"
+      layer: string
+      shortsFound: number
+    }
+
+type ProgressCapableFindBitmapShortsOptions = FindBitmapShortsOptions & {
+  onProgress?: (event: BitmapShortProgressEvent) => void
 }
 
 export interface CheckShortsResult {
@@ -102,10 +139,76 @@ const getShortArtifactOutputPath = () =>
 const getShortPcbSnapshotOutputPath = () =>
   path.resolve(process.cwd(), "checks", "check-shorts", "pcb.svg")
 
+const formatCircuitJsonProgress = (
+  event: GetCircuitJsonForCheckProgressEvent,
+): string => {
+  const filename = path.basename(event.filePath)
+
+  switch (event.phase) {
+    case "reading-prebuilt":
+      return `Reading prebuilt circuit JSON from ${filename}...`
+    case "preparing-source":
+      return `Preparing circuit JSON for ${filename} (using the current build when available)...`
+    case "waiting-on-async-effect":
+      return `Rendering circuit: waiting on ${event.asyncEffectName}...`
+    case "ready":
+      if (event.source === "cache") {
+        return `Circuit JSON ready from the current build.`
+      }
+      if (event.source === "prebuilt") {
+        return `Prebuilt circuit JSON ready.`
+      }
+      return `Circuit JSON rendered from source.`
+  }
+}
+
+const createBitmapProgressReporter = (
+  onProgress?: (message: string) => void,
+) => {
+  const lastReportedPercent = new Map<string, number>()
+
+  return (event: BitmapShortProgressEvent) => {
+    if (!onProgress) return
+
+    const checkName = `${event.layer}/${event.mode}`
+    if (event.phase === "preparing") {
+      onProgress(`Preparing ${checkName} short-check bitmap...`)
+      return
+    }
+    if (event.phase === "detecting") {
+      onProgress(`Finding connected short regions on ${checkName}...`)
+      return
+    }
+    if (event.phase === "complete") {
+      onProgress(
+        `Finished ${checkName}: ${event.shortsFound} short${event.shortsFound === 1 ? "" : "s"} found.`,
+      )
+      return
+    }
+
+    const percent =
+      event.totalGroups === 0
+        ? 100
+        : Math.floor((event.completedGroups / event.totalGroups) * 100)
+    const previousPercent = lastReportedPercent.get(checkName)
+    const shouldReport =
+      previousPercent === undefined ||
+      event.completedGroups === event.totalGroups ||
+      percent >= previousPercent + 10
+
+    if (!shouldReport) return
+    lastReportedPercent.set(checkName, percent)
+    onProgress(
+      `Rasterizing ${checkName} copper groups: ${event.completedGroups}/${event.totalGroups} (${percent}%)...`,
+    )
+  }
+}
+
 export const checkShorts = async (
   file?: string,
   options: CheckShortsOptions = {},
 ): Promise<CheckShortsResult> => {
+  options.onProgress?.("Resolving check input...")
   const resolvedInputFilePath = await resolveCheckInputFilePath(file)
   const mode = parseMode(options.mode)
   const layerOption = parseLayer(options.layer)
@@ -121,7 +224,10 @@ export const checkShorts = async (
       routingDisabled: false,
     } satisfies PlatformConfig,
     allowPrebuiltCircuitJson: true,
+    onProgress: (event) =>
+      options.onProgress?.(formatCircuitJsonProgress(event)),
   })
+  options.onProgress?.("Loading short-check engine...")
   const {
     appendBitmapLegend,
     createShortDebugSvg,
@@ -129,14 +235,21 @@ export const checkShorts = async (
     renderBitmapShortDebug,
   } = await loadCheckShorts()
 
+  options.onProgress?.(
+    `Checking ${layers.length === 1 ? layers[0] : "top and bottom"} ${mode} copper for shorts...`,
+  )
+  const reportBitmapProgress = createBitmapProgressReporter(options.onProgress)
+
   const debugRenders = await Promise.all(
-    layers.map((layer) =>
-      renderBitmapShortDebug(circuitJson, {
+    layers.map((layer) => {
+      const renderOptions: ProgressCapableFindBitmapShortsOptions = {
         mode,
         layer,
         pixelsPerMm,
-      } satisfies FindBitmapShortsOptions),
-    ),
+        onProgress: reportBitmapProgress,
+      }
+      return renderBitmapShortDebug(circuitJson, renderOptions)
+    }),
   )
   const shorts = debugRenders.flatMap((debugRender) => debugRender.shorts)
   const filename = path.basename(resolvedInputFilePath)
@@ -151,6 +264,7 @@ export const checkShorts = async (
   const debugRenderWithShorts =
     debugRenders.find((debugRender) => debugRender.shorts.length > 0) ??
     debugRenders[0]!
+  options.onProgress?.("Creating short debug artifacts...")
   const debugRenderWithLegend = appendBitmapLegend(debugRenderWithShorts)
   const artifacts = [
     {
@@ -190,7 +304,10 @@ export const registerCheckShorts = (program: Command) => {
     .option("--pixels-per-mm <number>", "Bitmap resolution for short detection")
     .action(async (file?: string, options?: CheckShortsOptions) => {
       try {
-        const result = await checkShorts(file, options)
+        const result = await checkShorts(file, {
+          ...options,
+          onProgress: (message) => console.log(message),
+        })
         console.log(result.output)
         if (result.artifacts) {
           for (const artifact of result.artifacts) {

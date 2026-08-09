@@ -152,6 +152,11 @@ test("tsci check shorts detects a copper bridge short", async () => {
     expect(exitCode).toBe(1)
     expect(stderr).toBe("")
     expect(stdout).toContain("Detected")
+    expect(stdout).toContain("Resolving check input")
+    expect(stdout).toContain("Reading prebuilt circuit JSON")
+    expect(stdout).toContain("Prebuilt circuit JSON ready")
+    expect(stdout).toContain("Loading short-check engine")
+    expect(stdout).toContain("Checking top and bottom gerber copper")
     expect(stdout).toContain("short")
     expect(stdout).toContain("top/gerber")
     expect(stdout).toContain("R1.pin")
@@ -184,23 +189,68 @@ test("check shorts routes a source board before analyzing it", async () => {
   const tmpDir = temporaryDirectory()
   const circuitPath = path.join(tmpDir, "routed-board.tsx")
   let pcbTraceCount = 0
+  const progressMessages: string[] = []
 
   try {
     await linkWorkspaceNodeModules(tmpDir)
     await writeFile(circuitPath, routedCircuitCode)
     mock.module("@tscircuit/check-shorts", () => ({
-      renderBitmapShortDebug: (circuitJson: Array<{ type: string }>) => {
+      renderBitmapShortDebug: (
+        circuitJson: Array<{ type: string }>,
+        options: {
+          mode: "pcb" | "gerber"
+          layer: "top" | "bottom"
+          onProgress?: (event: Record<string, unknown>) => void
+        },
+      ) => {
         pcbTraceCount = circuitJson.filter(
           (element) => element.type === "pcb_trace",
         ).length
+        const baseEvent = { mode: options.mode, layer: options.layer }
+        options.onProgress?.({ phase: "preparing", ...baseEvent })
+        options.onProgress?.({
+          phase: "rasterizing",
+          ...baseEvent,
+          width: 100,
+          height: 100,
+          completedGroups: 0,
+          totalGroups: 2,
+        })
+        options.onProgress?.({
+          phase: "rasterizing",
+          ...baseEvent,
+          width: 100,
+          height: 100,
+          completedGroups: 2,
+          totalGroups: 2,
+        })
+        options.onProgress?.({ phase: "detecting", ...baseEvent })
+        options.onProgress?.({
+          phase: "complete",
+          ...baseEvent,
+          shortsFound: 0,
+        })
         return { shorts: [] }
       },
     }))
 
-    const result = await checkShorts(circuitPath)
+    const result = await checkShorts(circuitPath, {
+      onProgress: (message) => progressMessages.push(message),
+    })
 
     expect(result.shorts).toHaveLength(0)
     expect(pcbTraceCount).toBeGreaterThan(0)
+    expect(progressMessages).toContain("Resolving check input...")
+    expect(progressMessages.join("\n")).toContain("Preparing circuit JSON")
+    expect(progressMessages).toContain("Circuit JSON rendered from source.")
+    expect(progressMessages).toContain("Loading short-check engine...")
+    expect(progressMessages).toContain(
+      "Rasterizing top/gerber copper groups: 0/2 (0%)...",
+    )
+    expect(progressMessages).toContain(
+      "Rasterizing top/gerber copper groups: 2/2 (100%)...",
+    )
+    expect(progressMessages).toContain("Finished top/gerber: 0 shorts found.")
   } finally {
     await rm(tmpDir, { recursive: true, force: true })
   }

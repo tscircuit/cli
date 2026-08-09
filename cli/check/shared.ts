@@ -9,6 +9,26 @@ import { getEntrypoint } from "lib/shared/get-entrypoint"
 import { isCircuitJsonFile } from "lib/shared/is-circuit-json-file"
 import { findCircuitProjectDir } from "lib/shared/circuit-json-build-cache"
 
+export type GetCircuitJsonForCheckProgressEvent =
+  | {
+      phase: "reading-prebuilt"
+      filePath: string
+    }
+  | {
+      phase: "preparing-source"
+      filePath: string
+    }
+  | {
+      phase: "waiting-on-async-effect"
+      filePath: string
+      asyncEffectName: string
+    }
+  | {
+      phase: "ready"
+      filePath: string
+      source: "prebuilt" | "cache" | "render"
+    }
+
 export const resolveCheckInputFilePath = async (file?: string) => {
   if (file) {
     return path.isAbsolute(file) ? file : path.resolve(process.cwd(), file)
@@ -30,16 +50,22 @@ export const getCircuitJsonForCheck = async ({
   platformConfig,
   allowPrebuiltCircuitJson = false,
   autorouterDiagnostics,
+  onProgress,
 }: {
   filePath: string
   platformConfig: PlatformConfig
   allowPrebuiltCircuitJson?: boolean
   autorouterDiagnostics?: AutorouterDiagnosticsOptions
+  onProgress?: (event: GetCircuitJsonForCheckProgressEvent) => void
 }): Promise<AnyCircuitElement[]> => {
   if (allowPrebuiltCircuitJson && isCircuitJsonFile(filePath)) {
+    onProgress?.({ phase: "reading-prebuilt", filePath })
     const parsedJson = JSON.parse(fs.readFileSync(filePath, "utf-8"))
+    onProgress?.({ phase: "ready", filePath, source: "prebuilt" })
     return Array.isArray(parsedJson) ? parsedJson : []
   }
+
+  onProgress?.({ phase: "preparing-source", filePath })
 
   const platformConfigWithCliDefaults = getPlatformConfigWithCliDefaults(
     platformConfig,
@@ -48,10 +74,22 @@ export const getCircuitJsonForCheck = async ({
     },
   )
 
-  const { circuitJson } = await getOrGenerateCircuitJson({
+  const { circuitJson, cacheHit } = await getOrGenerateCircuitJson({
     filePath,
     platformConfig: platformConfigWithCliDefaults,
     autorouterDiagnostics,
+    onAsyncEffectStatus: (asyncEffectName) =>
+      onProgress?.({
+        phase: "waiting-on-async-effect",
+        filePath,
+        asyncEffectName,
+      }),
+  })
+
+  onProgress?.({
+    phase: "ready",
+    filePath,
+    source: cacheHit ? "cache" : "render",
   })
 
   return circuitJson as AnyCircuitElement[]
