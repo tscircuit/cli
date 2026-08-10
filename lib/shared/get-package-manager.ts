@@ -1,6 +1,6 @@
 import fs from "fs"
 import kleur from "kleur"
-import { execSync } from "node:child_process"
+import { spawnSync } from "node:child_process"
 
 function detectPackageManager(): "npm" | "yarn" | "pnpm" | "bun" {
   const userAgent = process.env.npm_config_user_agent || ""
@@ -45,82 +45,132 @@ export interface PackageManager {
   getInstallAllCommand: () => string
 }
 
+function validatePackageNames(names: string[]) {
+  for (const n of names) {
+    const specIsSafe = /^[a-z0-9@.\-_/:]+$/i.test(n) && !n.includes("..")
+    if (!specIsSafe) {
+      throw new Error(`Refusing to process invalid package spec: ${n}`)
+    }
+  }
+}
+
 export function getPackageManager(): PackageManager {
   const pm = detectPackageManager()
   return {
     name: pm,
     uninstall: ({ name, cwd }) => {
-      let uninstallCommand: string
-      if (pm === "yarn") {
-        uninstallCommand = `yarn remove ${name}`
-      } else if (pm === "pnpm") {
-        uninstallCommand = `pnpm remove ${name}`
-      } else if (pm === "bun") {
-        uninstallCommand = `bun remove ${name}`
-      } else {
-        uninstallCommand = `npm uninstall ${name}`
+      const names = name.split(/\s+/).filter(Boolean)
+      if (names.length === 0) return
+      validatePackageNames(names)
+
+      let args: string[]
+      if (pm === "yarn") args = ["remove", ...names]
+      else if (pm === "pnpm") args = ["remove", ...names]
+      else if (pm === "bun") args = ["remove", ...names]
+      else args = ["uninstall", ...names]
+
+      const output = spawnSync(pm, args, { stdio: "pipe", cwd })
+      if (output.error) throw output.error
+      if (output.status !== 0) {
+        throw new Error(`Command failed with exit code ${output.status}`)
       }
-      execSync(uninstallCommand, { stdio: "pipe", cwd })
     },
     install: ({ name, cwd }) => {
-      let installCommand: string
-      if (pm === "yarn") {
-        installCommand = `yarn add ${name}`
-      } else if (pm === "pnpm") {
-        installCommand = `pnpm add ${name}`
-      } else if (pm === "bun") {
-        installCommand = `bun add ${name}`
-      } else {
-        installCommand = `npm install ${name}`
-      }
-      console.log(kleur.gray(`> ${installCommand}`))
-      const output = execSync(installCommand, {
+      const names = name.split(/\s+/).filter(Boolean)
+      if (names.length === 0) return
+      validatePackageNames(names)
+
+      let args: string[]
+      if (pm === "yarn") args = ["add", ...names]
+      else if (pm === "pnpm") args = ["add", ...names]
+      else if (pm === "bun") args = ["add", ...names]
+      else args = ["install", ...names]
+
+      console.log(kleur.gray(`> ${pm} ${args.join(" ")}`))
+      const output = spawnSync(pm, args, {
         stdio: ["inherit", "pipe", "pipe"],
         cwd,
       })
-      if (output) {
-        process.stdout.write(output)
+      if (output.stdout) process.stdout.write(output.stdout)
+      if (output.stderr) process.stderr.write(output.stderr)
+      if (output.error) throw output.error
+      if (output.status !== 0) {
+        throw new Error(`Command failed with exit code ${output.status}`)
       }
     },
     update: ({ name, cwd }) => {
-      let updateCommand: string
-      if (pm === "yarn") {
-        updateCommand = `yarn upgrade ${name}`
-      } else if (pm === "pnpm") {
-        updateCommand = `pnpm update ${name}`
-      } else if (pm === "bun") {
-        updateCommand = `bun update ${name}`
-      } else {
-        updateCommand = `npm update ${name}`
-      }
-      console.log(kleur.gray(`> ${updateCommand}`))
-      const output = execSync(updateCommand, {
+      const names = name.split(/\s+/).filter(Boolean)
+      if (names.length === 0) return
+      validatePackageNames(names)
+
+      let args: string[]
+      if (pm === "yarn") args = ["upgrade", ...names]
+      else if (pm === "pnpm") args = ["update", ...names]
+      else if (pm === "bun") args = ["update", ...names]
+      else args = ["update", ...names]
+
+      console.log(kleur.gray(`> ${pm} ${args.join(" ")}`))
+      const output = spawnSync(pm, args, {
         stdio: ["inherit", "pipe", "pipe"],
         cwd,
       })
-      if (output) {
-        process.stdout.write(output)
+      if (output.stdout) process.stdout.write(output.stdout)
+      if (output.stderr) process.stderr.write(output.stderr)
+      if (output.error) throw output.error
+      if (output.status !== 0) {
+        throw new Error(`Command failed with exit code ${output.status}`)
       }
     },
     init: ({ cwd }) => {
-      const initCommand = getInitCommand()
-      execSync(initCommand, { stdio: "inherit", cwd })
+      let args: string[]
+      if (pm === "yarn") args = ["init", "-y"]
+      else if (pm === "pnpm") args = ["init"]
+      else if (pm === "bun") args = ["init", "-y"]
+      else args = ["init", "-y"]
+
+      const output = spawnSync(pm, args, { stdio: "inherit", cwd })
+      if (output.error) throw output.error
+      if (output.status !== 0) {
+        throw new Error(`Command failed with exit code ${output.status}`)
+      }
     },
     installDeps: ({ deps, cwd, dev }) => {
-      const installCommand = getInstallDepsCommand(deps, dev)
-      execSync(installCommand, { stdio: "inherit", cwd })
+      if (deps.length === 0) return
+      validatePackageNames(deps)
+
+      let args: string[]
+      if (pm === "bun") args = ["add", dev ? "-d" : "", ...deps].filter(Boolean)
+      else if (pm === "yarn")
+        args = ["add", dev ? "-D" : "", ...deps].filter(Boolean)
+      else if (pm === "pnpm")
+        args = ["add", dev ? "-D" : "", ...deps].filter(Boolean)
+      else args = ["install", dev ? "-D" : "", ...deps].filter(Boolean)
+
+      const output = spawnSync(pm, args, { stdio: "inherit", cwd })
+      if (output.error) throw output.error
+      if (output.status !== 0) {
+        throw new Error(`Command failed with exit code ${output.status}`)
+      }
     },
     getInitCommand,
     getInstallDepsCommand,
     installAll: ({ cwd }) => {
-      const installCommand = getInstallAllCommand()
-      console.log(kleur.gray(`> ${installCommand}`))
-      const output = execSync(installCommand, {
+      let args: string[]
+      if (pm === "yarn") args = ["install"]
+      else if (pm === "pnpm") args = ["install"]
+      else if (pm === "bun") args = ["install"]
+      else args = ["install"]
+
+      console.log(kleur.gray(`> ${pm} install`))
+      const output = spawnSync(pm, args, {
         stdio: ["inherit", "pipe", "pipe"],
         cwd,
       })
-      if (output) {
-        process.stdout.write(output)
+      if (output.stdout) process.stdout.write(output.stdout)
+      if (output.stderr) process.stderr.write(output.stderr)
+      if (output.error) throw output.error
+      if (output.status !== 0) {
+        throw new Error(`Command failed with exit code ${output.status}`)
       }
     },
     getInstallAllCommand,
