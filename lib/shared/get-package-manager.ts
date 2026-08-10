@@ -55,16 +55,11 @@ function validatePackageNames(names: string[]) {
 }
 
 function handleSpawnOutput(output: ReturnType<typeof spawnSync>) {
+  if (output.stdout) process.stdout.write(output.stdout)
+  if (output.stderr) process.stderr.write(output.stderr)
   if (output.error) throw output.error
   if (output.status !== 0) {
-    const errMessage = [
-      `Command failed with exit code ${output.status}`,
-      output.stdout ? output.stdout.toString() : "",
-      output.stderr ? output.stderr.toString() : "",
-    ]
-      .filter(Boolean)
-      .join("\n")
-    const err = new Error(errMessage)
+    const err = new Error(`Command failed with exit code ${output.status}`)
     Object.assign(err, {
       status: output.status,
       stdout: output.stdout,
@@ -108,8 +103,6 @@ export function getPackageManager(): PackageManager {
         stdio: ["inherit", "pipe", "pipe"],
         cwd,
       })
-      if (output.stdout) process.stdout.write(output.stdout)
-      if (output.stderr) process.stderr.write(output.stderr)
       handleSpawnOutput(output)
     },
     update: ({ name, cwd }) => {
@@ -128,8 +121,6 @@ export function getPackageManager(): PackageManager {
         stdio: ["inherit", "pipe", "pipe"],
         cwd,
       })
-      if (output.stdout) process.stdout.write(output.stdout)
-      if (output.stderr) process.stderr.write(output.stderr)
       handleSpawnOutput(output)
     },
     init: ({ cwd }) => {
@@ -171,8 +162,6 @@ export function getPackageManager(): PackageManager {
         stdio: ["inherit", "pipe", "pipe"],
         cwd,
       })
-      if (output.stdout) process.stdout.write(output.stdout)
-      if (output.stderr) process.stderr.write(output.stderr)
       handleSpawnOutput(output)
     },
     getInstallAllCommand,
