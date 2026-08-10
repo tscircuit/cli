@@ -54,6 +54,26 @@ function validatePackageNames(names: string[]) {
   }
 }
 
+function handleSpawnOutput(output: ReturnType<typeof spawnSync>) {
+  if (output.error) throw output.error
+  if (output.status !== 0) {
+    const errMessage = [
+      `Command failed with exit code ${output.status}`,
+      output.stdout ? output.stdout.toString() : "",
+      output.stderr ? output.stderr.toString() : "",
+    ]
+      .filter(Boolean)
+      .join("\n")
+    const err = new Error(errMessage)
+    Object.assign(err, {
+      status: output.status,
+      stdout: output.stdout,
+      stderr: output.stderr,
+    })
+    throw err
+  }
+}
+
 export function getPackageManager(): PackageManager {
   const pm = detectPackageManager()
   return {
@@ -70,10 +90,7 @@ export function getPackageManager(): PackageManager {
       else args = ["uninstall", ...names]
 
       const output = spawnSync(pm, args, { stdio: "pipe", cwd })
-      if (output.error) throw output.error
-      if (output.status !== 0) {
-        throw new Error(`Command failed with exit code ${output.status}`)
-      }
+      handleSpawnOutput(output)
     },
     install: ({ name, cwd }) => {
       const names = name.split(/\s+/).filter(Boolean)
@@ -93,10 +110,7 @@ export function getPackageManager(): PackageManager {
       })
       if (output.stdout) process.stdout.write(output.stdout)
       if (output.stderr) process.stderr.write(output.stderr)
-      if (output.error) throw output.error
-      if (output.status !== 0) {
-        throw new Error(`Command failed with exit code ${output.status}`)
-      }
+      handleSpawnOutput(output)
     },
     update: ({ name, cwd }) => {
       const names = name.split(/\s+/).filter(Boolean)
@@ -116,10 +130,7 @@ export function getPackageManager(): PackageManager {
       })
       if (output.stdout) process.stdout.write(output.stdout)
       if (output.stderr) process.stderr.write(output.stderr)
-      if (output.error) throw output.error
-      if (output.status !== 0) {
-        throw new Error(`Command failed with exit code ${output.status}`)
-      }
+      handleSpawnOutput(output)
     },
     init: ({ cwd }) => {
       let args: string[]
@@ -129,10 +140,7 @@ export function getPackageManager(): PackageManager {
       else args = ["init", "-y"]
 
       const output = spawnSync(pm, args, { stdio: "inherit", cwd })
-      if (output.error) throw output.error
-      if (output.status !== 0) {
-        throw new Error(`Command failed with exit code ${output.status}`)
-      }
+      handleSpawnOutput(output)
     },
     installDeps: ({ deps, cwd, dev }) => {
       if (deps.length === 0) return
@@ -147,10 +155,7 @@ export function getPackageManager(): PackageManager {
       else args = ["install", dev ? "-D" : "", ...deps].filter(Boolean)
 
       const output = spawnSync(pm, args, { stdio: "inherit", cwd })
-      if (output.error) throw output.error
-      if (output.status !== 0) {
-        throw new Error(`Command failed with exit code ${output.status}`)
-      }
+      handleSpawnOutput(output)
     },
     getInitCommand,
     getInstallDepsCommand,
@@ -168,10 +173,7 @@ export function getPackageManager(): PackageManager {
       })
       if (output.stdout) process.stdout.write(output.stdout)
       if (output.stderr) process.stderr.write(output.stderr)
-      if (output.error) throw output.error
-      if (output.status !== 0) {
-        throw new Error(`Command failed with exit code ${output.status}`)
-      }
+      handleSpawnOutput(output)
     },
     getInstallAllCommand,
   }
