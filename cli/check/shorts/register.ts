@@ -7,6 +7,7 @@ import type {
 import type { PlatformConfig } from "@tscircuit/props"
 import type { Command } from "commander"
 import { getCircuitJsonForCheck, resolveCheckInputFilePath } from "../shared"
+import { loadCheckShorts } from "./load-check-shorts"
 
 interface CheckShortsOptions {
   mode?: "pcb" | "gerber"
@@ -22,45 +23,6 @@ export interface CheckShortsResult {
     contentType: "image/png" | "image/svg+xml"
     defaultOutputPath: string
   }>
-}
-
-type CheckShortsModule = typeof import("@tscircuit/check-shorts")
-
-export const CHECK_SHORTS_CDN_URL =
-  "https://jscdn.tscircuit.com/@tscircuit/check-shorts/latest/+esm"
-
-const importCheckShortsFromCdn = async (
-  url: string,
-): Promise<CheckShortsModule> => await import(url)
-
-const importCheckShortsFromPackage = async (): Promise<CheckShortsModule> =>
-  await import("@tscircuit/check-shorts")
-
-export const loadCheckShorts = async (
-  options: {
-    importFromCdn?: (url: string) => Promise<CheckShortsModule>
-    preferCdn?: boolean
-  } = {},
-): Promise<CheckShortsModule> => {
-  const importFromCdn = options.importFromCdn ?? importCheckShortsFromCdn
-  const preferCdn =
-    options.preferCdn ??
-    (process.env.NODE_ENV !== "test" && process.env.TSCI_TEST_MODE !== "true")
-
-  if (!preferCdn) return importCheckShortsFromPackage()
-
-  try {
-    return await importFromCdn(CHECK_SHORTS_CDN_URL)
-  } catch (cdnError) {
-    try {
-      return await importCheckShortsFromPackage()
-    } catch (packageError) {
-      throw new AggregateError(
-        [cdnError, packageError],
-        "Failed to load @tscircuit/check-shorts from jscdn or the installed CLI package",
-      )
-    }
-  }
 }
 
 const parsePixelsPerMm = (value?: string): number | undefined => {

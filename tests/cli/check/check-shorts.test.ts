@@ -5,10 +5,12 @@ import { appendCopperBridgeTrace } from "@tscircuit/check-shorts"
 import { temporaryDirectory } from "tempy"
 import { getCircuitJsonForCheck } from "../../../cli/check/shared"
 import {
-  CHECK_SHORTS_CDN_URL,
-  checkShorts,
+  CHECK_SHORTS_CDN_BASE_URL,
+  CHECK_SHORTS_PACKAGE_JSON_URL,
   loadCheckShorts,
-} from "../../../cli/check/shorts/register"
+  loadLatestCheckShorts,
+} from "../../../cli/check/shorts/load-check-shorts"
+import { checkShorts } from "../../../cli/check/shorts/register"
 import { getCliTestFixture } from "../../fixtures/get-cli-test-fixture"
 
 const circuitCode = `
@@ -70,29 +72,76 @@ const pcbSnapshotSnapshotPath = path.join(
   "check-shorts-pcb.snap.svg",
 )
 
-test("check shorts loads the latest checker from jscdn", async () => {
-  let requestedUrl: string | undefined
-  const expectedModule = {
-    renderBitmapShortDebug: () => ({ shorts: [] }),
-  } as unknown as typeof import("@tscircuit/check-shorts")
+test("check shorts installs and dynamically imports the latest jscdn release", async () => {
+  const cacheDir = temporaryDirectory()
+  const requestedUrls: string[] = []
+  const installedTarballUrls: string[] = []
 
-  const loadedModule = await loadCheckShorts({
-    preferCdn: true,
-    importFromCdn: async (url) => {
-      requestedUrl = url
-      return expectedModule
-    },
-  })
+  try {
+    const load = () =>
+      loadLatestCheckShorts({
+        cacheDir,
+        fetchFn: (async (input: RequestInfo | URL) => {
+          requestedUrls.push(input.toString())
+          return Response.json({
+            name: "@tscircuit/check-shorts",
+            version: "9.8.7",
+          })
+        }) as typeof fetch,
+        installPackage: async ({ installDir, tarballUrl }) => {
+          installedTarballUrls.push(tarballUrl)
+          const packageDir = path.join(
+            installDir,
+            "node_modules",
+            "@tscircuit",
+            "check-shorts",
+          )
+          await mkdir(path.join(packageDir, "dist"), { recursive: true })
+          await writeFile(
+            path.join(packageDir, "package.json"),
+            JSON.stringify({
+              name: "@tscircuit/check-shorts",
+              version: "9.8.7",
+              type: "module",
+              exports: { ".": { import: "./dist/index.js" } },
+            }),
+          )
+          await writeFile(
+            path.join(packageDir, "dist", "index.js"),
+            [
+              "export const appendBitmapLegend = value => value",
+              "export const createShortDebugSvg = () => '<svg />'",
+              "export const encodeRgbaPng = () => new Uint8Array()",
+              "export const renderBitmapShortDebug = async () => ({ shorts: [], loadedVersion: '9.8.7' })",
+            ].join("\n"),
+          )
+        },
+      })
 
-  expect(requestedUrl).toBe(CHECK_SHORTS_CDN_URL)
-  expect(requestedUrl).toContain("/latest/+esm")
-  expect(loadedModule).toBe(expectedModule)
+    const firstModule = await load()
+    const secondModule = await load()
+    const debugRender = (await firstModule.renderBitmapShortDebug([], {
+      mode: "pcb",
+    })) as unknown as { loadedVersion: string }
+
+    expect(debugRender.loadedVersion).toBe("9.8.7")
+    expect(secondModule).toBe(firstModule)
+    expect(requestedUrls).toEqual([
+      CHECK_SHORTS_PACKAGE_JSON_URL,
+      CHECK_SHORTS_PACKAGE_JSON_URL,
+    ])
+    expect(installedTarballUrls).toEqual([
+      `${CHECK_SHORTS_CDN_BASE_URL}/9.8.7.tgz`,
+    ])
+  } finally {
+    await rm(cacheDir, { recursive: true, force: true })
+  }
 })
 
 test("check shorts falls back to the packaged checker when jscdn is unavailable", async () => {
   const loadedModule = await loadCheckShorts({
     preferCdn: true,
-    importFromCdn: async () => {
+    loadLatest: async () => {
       throw new Error("jscdn unavailable")
     },
   })

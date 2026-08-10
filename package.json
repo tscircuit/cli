@@ -9,7 +9,7 @@
   "devDependencies": {
     "@babel/standalone": "^7.26.9",
     "@biomejs/biome": "^1.9.4",
-    "@tscircuit/check-shorts": "https://jscdn.tscircuit.com/@tscircuit/check-shorts/0.0.12.tgz",
+    "@tscircuit/check-shorts": "https://jscdn.tscircuit.com/@tscircuit/check-shorts/0.0.19.tgz",
     "@tscircuit/circuit-json-placement-analysis": "^0.0.6",
     "@tscircuit/circuit-json-routing-analysis": "^0.0.6",
     "@tscircuit/circuit-json-schematic-placement-analysis": "github:tscircuit/circuit-json-schematic-placement-analysis#bb0b41d80c9714695b498e182c2a558f1e0ceb2d",
