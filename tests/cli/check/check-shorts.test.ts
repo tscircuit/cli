@@ -1,16 +1,10 @@
-import { expect, mock, test } from "bun:test"
+import { expect, test } from "bun:test"
 import { mkdir, readFile, rm, stat, symlink, writeFile } from "node:fs/promises"
 import path from "node:path"
 import { appendCopperBridgeTrace } from "@tscircuit/check-shorts"
 import looksSame from "@tscircuit/image-utils/looks-same"
 import { temporaryDirectory } from "tempy"
 import { getCircuitJsonForCheck } from "../../../cli/check/shared"
-import {
-  CHECK_SHORTS_CDN_BASE_URL,
-  CHECK_SHORTS_PACKAGE_JSON_URL,
-  loadCheckShorts,
-  loadLatestCheckShorts,
-} from "../../../cli/check/shorts/load-check-shorts"
 import { checkShorts } from "../../../cli/check/shorts/register"
 import { getCliTestFixture } from "../../fixtures/get-cli-test-fixture"
 
@@ -72,83 +66,6 @@ const pcbSnapshotSnapshotPath = path.join(
   snapshotDir,
   "check-shorts-pcb.snap.svg",
 )
-
-test("check shorts installs and dynamically imports the latest jscdn release", async () => {
-  const cacheDir = temporaryDirectory()
-  const requestedUrls: string[] = []
-  const installedTarballUrls: string[] = []
-
-  try {
-    const load = () =>
-      loadLatestCheckShorts({
-        cacheDir,
-        fetchFn: (async (input: RequestInfo | URL) => {
-          requestedUrls.push(input.toString())
-          return Response.json({
-            name: "@tscircuit/check-shorts",
-            version: "9.8.7",
-          })
-        }) as typeof fetch,
-        installPackage: async ({ installDir, tarballUrl }) => {
-          installedTarballUrls.push(tarballUrl)
-          const packageDir = path.join(
-            installDir,
-            "node_modules",
-            "@tscircuit",
-            "check-shorts",
-          )
-          await mkdir(path.join(packageDir, "dist"), { recursive: true })
-          await writeFile(
-            path.join(packageDir, "package.json"),
-            JSON.stringify({
-              name: "@tscircuit/check-shorts",
-              version: "9.8.7",
-              type: "module",
-              exports: { ".": { import: "./dist/index.js" } },
-            }),
-          )
-          await writeFile(
-            path.join(packageDir, "dist", "index.js"),
-            [
-              "export const appendBitmapLegend = value => value",
-              "export const createShortDebugSvg = () => '<svg />'",
-              "export const encodeRgbaPng = () => new Uint8Array()",
-              "export const renderBitmapShortDebug = async () => ({ shorts: [], loadedVersion: '9.8.7' })",
-            ].join("\n"),
-          )
-        },
-      })
-
-    const firstModule = await load()
-    const secondModule = await load()
-    const debugRender = (await firstModule.renderBitmapShortDebug([], {
-      mode: "pcb",
-    })) as unknown as { loadedVersion: string }
-
-    expect(debugRender.loadedVersion).toBe("9.8.7")
-    expect(secondModule).toBe(firstModule)
-    expect(requestedUrls).toEqual([
-      CHECK_SHORTS_PACKAGE_JSON_URL,
-      CHECK_SHORTS_PACKAGE_JSON_URL,
-    ])
-    expect(installedTarballUrls).toEqual([
-      `${CHECK_SHORTS_CDN_BASE_URL}/9.8.7.tgz`,
-    ])
-  } finally {
-    await rm(cacheDir, { recursive: true, force: true })
-  }
-})
-
-test("check shorts falls back to the packaged checker when jscdn is unavailable", async () => {
-  const loadedModule = await loadCheckShorts({
-    preferCdn: true,
-    loadLatest: async () => {
-      throw new Error("jscdn unavailable")
-    },
-  })
-
-  expect(loadedModule.renderBitmapShortDebug).toBeFunction()
-})
 
 test("check shorts reports no shorts for a clean board", async () => {
   const tmpDir = temporaryDirectory()
@@ -247,16 +164,18 @@ test("check shorts routes a source board before analyzing it", async () => {
   try {
     await linkWorkspaceNodeModules(tmpDir)
     await writeFile(circuitPath, routedCircuitCode)
-    mock.module("@tscircuit/check-shorts", () => ({
-      renderBitmapShortDebug: (circuitJson: Array<{ type: string }>) => {
-        pcbTraceCount = circuitJson.filter(
-          (element) => element.type === "pcb_trace",
-        ).length
-        return { shorts: [] }
-      },
-    }))
-
-    const result = await checkShorts(circuitPath)
+    const result = await checkShorts(circuitPath, {}, async (circuitJson) => {
+      pcbTraceCount = circuitJson.filter(
+        (element) => element.type === "pcb_trace",
+      ).length
+      return {
+        width: 0,
+        height: 0,
+        rgba: new Uint8Array(),
+        shorts: [],
+        legend: [],
+      }
+    })
 
     expect(result.shorts).toHaveLength(0)
     expect(pcbTraceCount).toBeGreaterThan(0)

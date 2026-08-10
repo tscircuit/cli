@@ -1,13 +1,16 @@
 import { mkdir, writeFile } from "node:fs/promises"
 import path from "node:path"
-import type {
-  BitmapShort,
-  FindBitmapShortsOptions,
+import {
+  appendBitmapLegend,
+  createShortDebugSvg,
+  encodeRgbaPng,
+  renderBitmapShortDebug,
+  type BitmapShort,
+  type FindBitmapShortsOptions,
 } from "@tscircuit/check-shorts"
 import type { PlatformConfig } from "@tscircuit/props"
 import type { Command } from "commander"
 import { getCircuitJsonForCheck, resolveCheckInputFilePath } from "../shared"
-import { loadCheckShorts } from "./load-check-shorts"
 
 interface CheckShortsOptions {
   mode?: "pcb" | "gerber"
@@ -67,6 +70,7 @@ const getShortPcbSnapshotOutputPath = () =>
 export const checkShorts = async (
   file?: string,
   options: CheckShortsOptions = {},
+  renderShortDebug: typeof renderBitmapShortDebug = renderBitmapShortDebug,
 ): Promise<CheckShortsResult> => {
   const resolvedInputFilePath = await resolveCheckInputFilePath(file)
   const mode = parseMode(options.mode)
@@ -84,16 +88,9 @@ export const checkShorts = async (
     } satisfies PlatformConfig,
     allowPrebuiltCircuitJson: true,
   })
-  const {
-    appendBitmapLegend,
-    createShortDebugSvg,
-    encodeRgbaPng,
-    renderBitmapShortDebug,
-  } = await loadCheckShorts()
-
   const debugRenders = await Promise.all(
     layers.map((layer) =>
-      renderBitmapShortDebug(circuitJson, {
+      renderShortDebug(circuitJson, {
         mode,
         layer,
         pixelsPerMm,
