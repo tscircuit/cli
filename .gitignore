@@ -182,6 +182,3 @@ package-lock.json
 .yalc
 .yalc.lock
 .tscircuit
-.agents
-skills-lock.json
-/*.md
