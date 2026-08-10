@@ -2,6 +2,7 @@ import { expect, mock, test } from "bun:test"
 import { mkdir, readFile, rm, stat, symlink, writeFile } from "node:fs/promises"
 import path from "node:path"
 import { appendCopperBridgeTrace } from "@tscircuit/check-shorts"
+import looksSame from "@tscircuit/image-utils/looks-same"
 import { temporaryDirectory } from "tempy"
 import { getCircuitJsonForCheck } from "../../../cli/check/shared"
 import {
@@ -197,6 +198,15 @@ test("tsci check shorts detects a copper bridge short", async () => {
     const pcbSnapshotStats = await stat(pcbSnapshotPath)
     const expectedBitmapSnapshot = await readFile(bitmapSnapshotPath)
     const expectedPcbSnapshot = await readFile(pcbSnapshotSnapshotPath, "utf-8")
+    const bitmapComparison = await looksSame(
+      expectedBitmapSnapshot,
+      artifactPng,
+      {
+        strict: true,
+        ignoreAntialiasing: false,
+        ignoreCaret: false,
+      },
+    )
 
     expect(exitCode).toBe(1)
     expect(stderr).toBe("")
@@ -219,7 +229,7 @@ test("tsci check shorts detects a copper bridge short", async () => {
     expect(pcbSnapshotStats.size).toBeGreaterThan("stale pcb snapshot".length)
     expect(pcbSnapshot).toContain("<svg")
     expect(pcbSnapshot).toContain('data-type="short-debug"')
-    expect(artifactPng).toEqual(expectedBitmapSnapshot)
+    expect(bitmapComparison.equal).toBe(true)
     expect(pcbSnapshot).toEqual(expectedPcbSnapshot)
   } finally {
     await rm(circuitPath, { force: true })
