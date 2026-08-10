@@ -2,6 +2,23 @@ import fs from "fs"
 import kleur from "kleur"
 import { spawnSync } from "node:child_process"
 
+export interface PackageManager {
+  name: "npm" | "yarn" | "pnpm" | "bun"
+  uninstall: (opts: { name: string; cwd: string }) => void
+  install: (opts: { name: string; cwd: string }) => void
+  update: (opts: { name: string; cwd: string }) => void
+  init: (opts: { cwd: string }) => void
+  installDeps: (opts: {
+    deps: string[]
+    cwd: string
+    dev?: boolean
+  }) => void
+  getInitCommand: () => string
+  getInstallDepsCommand: (deps: string[], dev?: boolean) => string
+  installAll: (opts: { cwd: string }) => void
+  getInstallAllCommand: () => string
+}
+
 function detectPackageManager(): "npm" | "yarn" | "pnpm" | "bun" {
   const userAgent = process.env.npm_config_user_agent || ""
   if (userAgent.startsWith("yarn")) return "yarn"
@@ -26,23 +43,6 @@ function detectPackageManager(): "npm" | "yarn" | "pnpm" | "bun" {
   }
 
   return "npm" // Default to npm
-}
-
-export interface PackageManager {
-  name: "npm" | "yarn" | "pnpm" | "bun"
-  uninstall: (opts: { name: string; cwd: string }) => void
-  install: (opts: { name: string; cwd: string }) => void
-  update: (opts: { name: string; cwd: string }) => void
-  init: (opts: { cwd: string }) => void
-  installDeps: (opts: {
-    deps: string[]
-    cwd: string
-    dev?: boolean
-  }) => void
-  getInitCommand: () => string
-  getInstallDepsCommand: (deps: string[], dev?: boolean) => string
-  installAll: (opts: { cwd: string }) => void
-  getInstallAllCommand: () => string
 }
 
 function validatePackageNames(names: string[]) {
