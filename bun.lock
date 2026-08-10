@@ -7,7 +7,7 @@
       "devDependencies": {
         "@babel/standalone": "^7.26.9",
         "@biomejs/biome": "^1.9.4",
-        "@tscircuit/check-shorts": "https://jscdn.tscircuit.com/@tscircuit/check-shorts/0.0.12.tgz",
+        "@tscircuit/check-shorts": "https://jscdn.tscircuit.com/@tscircuit/check-shorts/0.0.19.tgz",
         "@tscircuit/circuit-json-placement-analysis": "^0.0.6",
         "@tscircuit/circuit-json-routing-analysis": "^0.0.6",
         "@tscircuit/circuit-json-schematic-placement-analysis": "github:tscircuit/circuit-json-schematic-placement-analysis#bb0b41d80c9714695b498e182c2a558f1e0ceb2d",
@@ -320,7 +320,7 @@
 
     "@tscircuit/capacity-autorouter": ["@tscircuit/capacity-autorouter@0.0.710", "", { "dependencies": { "fast-json-stable-stringify": "^2.1.0", "object-hash": "^3.0.0", "stack-svgs": "^0.0.1" } }, "sha512-+mK6pc8hQdo7G6iIRzvIV2EH6TOM215oQv12VObB2k0rl1m/5oiw9f66GlBGUYxGRbob7YVJZ2G5AH554nZ9/Q=="],
 
-    "@tscircuit/check-shorts": ["@tscircuit/check-shorts@https://jscdn.tscircuit.com/@tscircuit/check-shorts/0.0.12.tgz", { "peerDependencies": { "@resvg/resvg-js": "^2.6.2", "@tscircuit/circuit-json-util": "*", "@tscircuit/math-utils": "*", "circuit-json": "*", "circuit-json-to-connectivity-map": "*", "circuit-json-to-gerber": "*", "circuit-to-canvas": "*", "circuit-to-svg": "*", "fast-png": "^8.0.0", "gerber-to-svg": "*", "react": "^19.2.7", "transformation-matrix": "^2.16.1", "typescript": "^5" } }, "sha512-vtMbDVT9wiC69eg/kHcOYgRzU18oK8gR7pEvg/q5u/Zetzkmu1R/dulM0kj/HrfW32tjNg2+G6LHSY3UYoXwrg=="],
+    "@tscircuit/check-shorts": ["@tscircuit/check-shorts@https://jscdn.tscircuit.com/@tscircuit/check-shorts/0.0.19.tgz", { "peerDependencies": { "@resvg/resvg-js": "^2.6.2", "@tscircuit/alphabet": "^0.0.25", "@tscircuit/circuit-json-util": "*", "@tscircuit/math-utils": "*", "circuit-json": "*", "circuit-json-to-connectivity-map": "*", "circuit-json-to-gerber": "*", "circuit-to-canvas": "*", "circuit-to-svg": "*", "fast-png": "^8.0.0", "gerber-to-svg": "*", "react": "^19.2.7", "transformation-matrix": "^2.16.1", "typescript": "^5" } }],
 
     "@tscircuit/checks": ["@tscircuit/checks@0.0.145", "", { "peerDependencies": { "@flatten-js/core": "*", "@tscircuit/math-utils": "*", "circuit-json": "*", "circuit-json-to-connectivity-map": "*", "typescript": "^5.5.3" } }, "sha512-HKdugkjGSrx4HyyrrtDi4pXmORZGx9kA/4zKRUnk7qqqaIyF7OKXGSKW1nIxv+O2oSHOu4z9lpMCEYkHmPUdrQ=="],
 
