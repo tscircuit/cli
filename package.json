@@ -48,7 +48,7 @@
     "circuit-json-to-step": "^0.0.38",
     "circuit-json-to-tscircuit": "^0.0.42",
     "circuit-json-trace-length-analysis": "github:tscircuit/circuit-json-trace-length-analysis#2b44792a40df0ca83b6bfb6ac95ed5e35e7168b8",
-    "circuit-to-canvas": "^0.0.111",
+    "circuit-to-canvas": "^0.0.123",
     "circuit-to-svg": "^0.0.393",
     "commander": "^14.0.0",
     "conf": "^13.1.0",
