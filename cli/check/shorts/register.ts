@@ -7,10 +7,14 @@ import type {
 import type { PlatformConfig } from "@tscircuit/props"
 import type { Command } from "commander"
 import { getCircuitJsonForCheck, resolveCheckInputFilePath } from "../shared"
+import {
+  type CheckShortsLayerOption,
+  getCheckShortLayers,
+} from "./get-check-short-layers"
 
 interface CheckShortsOptions {
   mode?: "pcb" | "gerber"
-  layer?: "top" | "bottom" | "all"
+  layer?: CheckShortsLayerOption
   pixelsPerMm?: string
 }
 
@@ -78,7 +82,7 @@ const parseMode = (mode?: string): "pcb" | "gerber" => {
   throw new Error("--mode must be either pcb or gerber")
 }
 
-const parseLayer = (layer?: string): "top" | "bottom" | "all" => {
+const parseLayer = (layer?: string): CheckShortsLayerOption => {
   if (!layer) return "all"
   if (layer === "top" || layer === "bottom" || layer === "all") return layer
   throw new Error("--layer must be top, bottom, or all")
@@ -109,10 +113,6 @@ export const checkShorts = async (
   const resolvedInputFilePath = await resolveCheckInputFilePath(file)
   const mode = parseMode(options.mode)
   const layerOption = parseLayer(options.layer)
-  const layers =
-    layerOption === "all"
-      ? (["top", "bottom"] as const)
-      : ([layerOption] as const)
   const pixelsPerMm = parsePixelsPerMm(options.pixelsPerMm)
   const circuitJson = await getCircuitJsonForCheck({
     filePath: resolvedInputFilePath,
@@ -122,6 +122,7 @@ export const checkShorts = async (
     } satisfies PlatformConfig,
     allowPrebuiltCircuitJson: true,
   })
+  const layers = getCheckShortLayers({ circuitJson, layerOption })
   const {
     appendBitmapLegend,
     createShortDebugSvg,
