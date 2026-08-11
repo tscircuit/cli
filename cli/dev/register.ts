@@ -2,6 +2,7 @@ import type { Command } from "commander"
 import * as fs from "node:fs"
 import * as net from "node:net"
 import * as path from "node:path"
+import * as readline from "node:readline"
 import { parseAutorouterPhaseName } from "lib/shared/autorouter-diagnostics"
 import { resolveDevTarget } from "./resolve-dev-target"
 import kleur from "kleur"
@@ -46,6 +47,7 @@ export const registerDev = (program: Command) => {
     .description("Start development server for a package")
     .argument("[file]", "Path to the package file or directory")
     .option("-p, --port <number>", "Port to run server on", "3020")
+    .option("--no-interactive", "Disable interactive terminal shortcuts")
     .option("--kicad-pcm", "Enable KiCad PCM proxy server at /pcm/*")
     .option(
       "--autorouter-debug",
@@ -72,6 +74,7 @@ export const registerDev = (program: Command) => {
         file: string,
         options: {
           port: string
+          interactive?: boolean
           kicadPcm?: boolean
           autorouterDebug?: boolean
           autorouterPhase?: string
@@ -115,17 +118,68 @@ export const registerDev = (program: Command) => {
 
         const timeToStart = Date.now() - startTime
 
+        const isRaw = process.stdin.isTTY && !!process.stdin.setRawMode
+        const enterPhrase = isRaw ? "" : " + enter"
+
         console.log(
           `\n\n  ${kleur.green(`@tscircuit/cli@${getVersion()}`)} ${kleur.gray("ready in")} ${kleur.white(`${Math.round(timeToStart)}ms`)}`,
         )
-        console.log(
-          `\n  ${kleur.bold("➜ Local:")}   ${kleur.underline(kleur.cyan(`http://localhost:${port}`))}${server.componentFilePath ? kleur.underline(kleur.cyan(`/#file=${encodeURIComponent(path.relative(process.cwd(), server.componentFilePath).replaceAll("\\", "/"))}`)) : ""}\n\n`,
-        )
+        const printUrl = () => {
+          console.log(
+            `\n  ${kleur.bold("➜ Local:")}   ${kleur.underline(kleur.cyan(`http://localhost:${port}`))}${server.componentFilePath ? kleur.underline(kleur.cyan(`/#file=${encodeURIComponent(path.relative(process.cwd(), server.componentFilePath).replaceAll("\\", "/"))}`)) : ""}`,
+          )
+        }
+        printUrl()
+        if (options.interactive !== false) {
+          console.log(
+            `  ${kleur.bold("➜ help:")}    ${kleur.gray(`press ${kleur.bold("h" + enterPhrase)} to show help`)}\n`,
+          )
+        }
+
         console.log(
           kleur.gray(
             `Watching ${kleur.underline(server.projectDir.split("/").slice(-2).join("/")!)} for changes...`,
           ),
         )
+
+        if (process.stdin.isTTY && options.interactive !== false) {
+          readline.emitKeypressEvents(process.stdin)
+          process.stdin.setRawMode?.(true)
+          process.stdin.resume()
+
+          const printHelp = () => {
+            console.log(
+              `\n  ${kleur.bold("Shortcuts")}\n` +
+                `  ${kleur.gray("press")} ${kleur.bold(`r${enterPhrase}`)} ${kleur.gray("to restart the server")}\n` +
+                `  ${kleur.gray("press")} ${kleur.bold(`u${enterPhrase}`)} ${kleur.gray("to show server url")}\n` +
+                `  ${kleur.gray("press")} ${kleur.bold(`q${enterPhrase}`)} ${kleur.gray("to quit")}\n`,
+            )
+          }
+
+          let actionRunning = false
+          process.stdin.on("keypress", async (str, key) => {
+            if (key.ctrl && (key.name === "c" || key.name === "d")) {
+              process.exit(0)
+            }
+            if (actionRunning) return
+
+            const name = key.name
+            if (name === "h") {
+              printHelp()
+            } else if (name === "u") {
+              printUrl()
+            } else if (name === "r") {
+              actionRunning = true
+              console.log(kleur.green("restarting server...\n"))
+              await server.stop()
+              await server.start()
+              printUrl()
+              actionRunning = false
+            } else if (name === "q") {
+              process.exit(0)
+            }
+          })
+        }
 
         if (options.kicadPcm) {
           console.log(
