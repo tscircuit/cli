@@ -1,7 +1,12 @@
+import "bun-match-svg"
 import { expect, mock, test } from "bun:test"
 import { mkdir, readFile, rm, stat, symlink, writeFile } from "node:fs/promises"
 import path from "node:path"
-import { appendCopperBridgeTrace } from "@tscircuit/check-shorts"
+import {
+  appendCopperBridgeTrace,
+  createShortDebugSvg,
+} from "@tscircuit/check-shorts"
+import type { PcbTrace } from "circuit-json"
 import { temporaryDirectory } from "tempy"
 import { getCircuitJsonForCheck } from "../../../cli/check/shared"
 import {
@@ -30,6 +35,12 @@ export default () => (
 )
 `
 
+const emptyBoardCircuitCode = `
+export default () => (
+  <board width="10mm" height="10mm" routingDisabled />
+)
+`
+
 const makeCircuitJsonWithShort = async (circuitPath: string) => {
   const circuitJson = await getCircuitJsonForCheck({
     filePath: circuitPath,
@@ -44,6 +55,63 @@ const makeCircuitJsonWithShort = async (circuitPath: string) => {
     end: { x: 2.2, y: 0 },
     width: 0.25,
   })
+}
+
+const makeFourLayerCircuitJsonWithInnerShort = async (circuitPath: string) => {
+  const circuitJson = await getCircuitJsonForCheck({
+    filePath: circuitPath,
+    platformConfig: {
+      pcbDisabled: false,
+      routingDisabled: true,
+    },
+  })
+  const pcbBoard = circuitJson.find((element) => element.type === "pcb_board")
+  if (!pcbBoard || pcbBoard.type !== "pcb_board") {
+    throw new Error("Expected the repro to render a PCB board")
+  }
+  pcbBoard.num_layers = 4
+
+  const makeInnerTrace = ({
+    pcbTraceId,
+    start,
+    end,
+  }: {
+    pcbTraceId: string
+    start: { x: number; y: number }
+    end: { x: number; y: number }
+  }): PcbTrace => ({
+    type: "pcb_trace",
+    pcb_trace_id: pcbTraceId,
+    route: [
+      {
+        route_type: "wire",
+        ...start,
+        width: 0.25,
+        layer: "inner1",
+      },
+      {
+        route_type: "wire",
+        ...end,
+        width: 0.25,
+        layer: "inner1",
+      },
+    ],
+  })
+
+  circuitJson.push(
+    makeInnerTrace({
+      pcbTraceId: "pcb_trace_inner_horizontal",
+      start: { x: -3, y: 0 },
+      end: { x: 3, y: 0 },
+    }),
+    makeInnerTrace({
+      pcbTraceId: "pcb_trace_inner_vertical",
+      start: { x: 0, y: -3 },
+      end: { x: 0, y: 3 },
+    }),
+  )
+
+  return circuitJson
 }
 
 const linkWorkspaceNodeModules = async (tmpDir: string) => {
@@ -69,7 +137,6 @@ const pcbSnapshotSnapshotPath = path.join(
   snapshotDir,
   "check-shorts-pcb.snap.svg",
 )
-
 test("check shorts loads the latest checker from jscdn", async () => {
   let requestedUrl: string | undefined
   const expectedModule = {
@@ -177,6 +244,35 @@ test("tsci check shorts detects a copper bridge short", async () => {
     await rm(circuitJsonPath, { force: true })
     await rm(bitmapArtifactPath, { force: true })
     await rm(pcbSnapshotPath, { force: true })
+  }
+}, 20_000)
+
+test("repro: check shorts --layer all skips an inner-layer short", async () => {
+  const { tmpDir } = await getCliTestFixture()
+  const circuitPath = path.join(tmpDir, "inner-layer-short.tsx")
+  const circuitJsonPath = path.join(tmpDir, "inner-layer-short.circuit.json")
+
+  try {
+    await linkWorkspaceNodeModules(tmpDir)
+    await writeFile(circuitPath, emptyBoardCircuitCode)
+    const circuitJson =
+      await makeFourLayerCircuitJsonWithInnerShort(circuitPath)
+    await writeFile(circuitJsonPath, JSON.stringify(circuitJson, null, 2))
+
+    const result = await checkShorts(circuitJsonPath, { layer: "all" })
+    const debugSvg = createShortDebugSvg(circuitJson, result.shorts, {
+      layer: "inner1",
+    })
+
+    expect(debugSvg).toMatchSvgSnapshot(
+      import.meta.path,
+      "check-shorts-inner-layer-pcb",
+    )
+    expect(result.output).toContain("No shorts detected")
+    expect(result.shorts).toHaveLength(0)
+  } finally {
+    await rm(circuitPath, { force: true })
+    await rm(circuitJsonPath, { force: true })
   }
 }, 20_000)
 
