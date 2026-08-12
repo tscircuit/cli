@@ -9,7 +9,7 @@
         "@biomejs/biome": "^1.9.4",
         "@tscircuit/check-shorts": "https://jscdn.tscircuit.com/@tscircuit/check-shorts/0.0.19.tgz",
         "@tscircuit/circuit-json-placement-analysis": "^0.0.6",
-        "@tscircuit/circuit-json-routing-analysis": "^0.0.6",
+        "@tscircuit/circuit-json-routing-analysis": "^0.0.7",
         "@tscircuit/circuit-json-schematic-placement-analysis": "github:tscircuit/circuit-json-schematic-placement-analysis#bb0b41d80c9714695b498e182c2a558f1e0ceb2d",
         "@tscircuit/circuit-json-util": "^0.0.105",
         "@tscircuit/eval": "^0.0.1016",
@@ -326,7 +326,7 @@
 
     "@tscircuit/circuit-json-placement-analysis": ["@tscircuit/circuit-json-placement-analysis@0.0.6", "", { "dependencies": { "flatbush": "^4.5.1", "rbush": "^4.0.1" }, "peerDependencies": { "typescript": "^5" } }, "sha512-ICqLrrDIGD+Re+I0knzIxRdYBu3uJgn/k4U474U/A4rg73CqA/W6XnmveiXAixl7mbCUAO2rijiX3XYAQzlLUg=="],
 
-    "@tscircuit/circuit-json-routing-analysis": ["@tscircuit/circuit-json-routing-analysis@0.0.6", "", { "peerDependencies": { "circuit-json": "*", "typescript": "^5" } }, "sha512-JRmCqieAV7janGaDvWvwFEbFt8xjf5bf6cBDMb3qM3hgR0tv71Dk8P0ClZLJ1I6FWE/PwtIS8h+24ehDHfgW2A=="],
+    "@tscircuit/circuit-json-routing-analysis": ["@tscircuit/circuit-json-routing-analysis@0.0.7", "", { "peerDependencies": { "circuit-json": "*", "typescript": "^5" } }, "sha512-5KRMU7V+4aLi5HRHUfTdsJUO8TNZF7Lz4KwChYTCMGn1fSDVJvwlr3ObfuBvJDt9HxgZpYRwTlwOEPBcSPInXg=="],
 
     "@tscircuit/circuit-json-schematic-placement-analysis": ["@tscircuit/circuit-json-schematic-placement-analysis@github:tscircuit/circuit-json-schematic-placement-analysis#bb0b41d", { "dependencies": { "@tscircuit/circuit-json-util": "^0.0.94" }, "peerDependencies": { "circuit-json": "*", "typescript": "^5" } }, "tscircuit-circuit-json-schematic-placement-analysis-bb0b41d", "sha512-L8P1Qs4rs9tBWosUJEFvNKSKwBKHHIArmJh+aDCGz5m9g5dP+STyadkTOb9BJRXuWXm1ndBD05VMfHMwb9F9JQ=="],
 
