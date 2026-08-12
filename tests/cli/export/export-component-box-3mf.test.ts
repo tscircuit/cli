@@ -1,4 +1,6 @@
 import { expect, test } from "bun:test"
+import type { CircuitJson } from "circuit-json"
+import { renderFdmComponentBoxPng } from "circuit-json-to-fdm-component-box"
 import { readFile, writeFile } from "node:fs/promises"
 import path from "node:path"
 import JSZip from "jszip"
@@ -35,6 +37,26 @@ test(
     const archive = await JSZip.loadAsync(threeMf)
     expect(archive.file("3D/3dmodel.model")).not.toBeNull()
     expect(stdout).toContain(`Exported to ${outputPath}!`)
+
+    const circuitJsonPath = path.join(tmpDir, "assembly.circuit.json")
+    const circuitJsonExport = await runCommand(
+      `tsci export ${circuitPath} -f circuit-json -o assembly.circuit.json`,
+    )
+    expect(circuitJsonExport.exitCode).toBe(0)
+    expect(circuitJsonExport.stderr).toBe("")
+
+    const circuitJson = JSON.parse(
+      await readFile(circuitJsonPath, "utf8"),
+    ) as CircuitJson
+    const previewPng = await renderFdmComponentBoxPng(
+      circuitJson,
+      { columns: 2 },
+      { width: 640, height: 480 },
+    )
+    await expect(previewPng).toMatchPngSnapshot(
+      import.meta.path,
+      "component-box-preview",
+    )
   },
   { timeout: 60_000 },
 )
