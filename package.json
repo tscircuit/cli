@@ -39,6 +39,7 @@
     "circuit-json-to-3d-png": "^0.0.6",
     "circuit-json-to-bom-csv": "^0.0.7",
     "circuit-json-to-connectivity-map": "^0.0.25",
+    "circuit-json-to-fdm-component-box": "^0.0.2",
     "circuit-json-to-footprinter": "^0.0.15",
     "circuit-json-to-gerber": "^0.0.94",
     "circuit-json-to-kicad": "0.0.157",

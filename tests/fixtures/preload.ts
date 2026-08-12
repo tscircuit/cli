@@ -1,4 +1,5 @@
 import { afterEach } from "bun:test"
+import "./png-snapshot-matcher"
 
 declare global {
   // Add the property to the globalThis type

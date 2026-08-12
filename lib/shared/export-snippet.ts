@@ -23,6 +23,7 @@ import {
 import { convertCircuitJsonToPickAndPlaceCsv } from "circuit-json-to-pnp-csv"
 import { convertCircuitJsonToReadableNetlist } from "circuit-json-to-readable-netlist"
 import { circuitJsonToStep } from "circuit-json-to-step"
+import { circuitJsonToFdmComponentBox } from "circuit-json-to-fdm-component-box"
 import {
   convertCircuitJsonToAssemblySvg,
   convertCircuitJsonToPcbSvg,
@@ -62,6 +63,7 @@ export const ALLOWED_EXPORT_FORMATS = [
   "srj",
   "step",
   "assembly-svg",
+  "component-box-3mf",
 ] as const
 
 export type ExportFormat = (typeof ALLOWED_EXPORT_FORMATS)[number]
@@ -84,6 +86,7 @@ const OUTPUT_EXTENSIONS: Record<ExportFormat, string> = {
   "kicad-library": "",
   srj: ".simple-route.json",
   step: ".step",
+  "component-box-3mf": "-component-box.3mf",
 }
 
 const isRecord = (value: unknown): value is Record<string, unknown> =>
@@ -358,6 +361,11 @@ export const exportSnippet = async ({
       break
     case "assembly-svg":
       outputContent = convertCircuitJsonToAssemblySvg(circuitJson)
+      break
+    case "component-box-3mf":
+      outputContent = Buffer.from(
+        await circuitJsonToFdmComponentBox(circuitJson),
+      )
       break
     default:
       outputContent = JSON.stringify(circuitJson, null, 2)
