@@ -35,13 +35,13 @@
         "chokidar": "4.0.1",
         "circuit-json": "^0.0.464",
         "circuit-json-to-3d-png": "^0.0.6",
-        "circuit-json-to-bom-csv": "^0.0.7",
+        "circuit-json-to-bom-csv": "^0.0.15",
         "circuit-json-to-connectivity-map": "^0.0.25",
         "circuit-json-to-fdm-component-box": "^0.0.2",
         "circuit-json-to-footprinter": "^0.0.15",
         "circuit-json-to-gerber": "^0.0.94",
         "circuit-json-to-kicad": "0.0.157",
-        "circuit-json-to-pnp-csv": "^0.0.9",
+        "circuit-json-to-pnp-csv": "^0.0.10",
         "circuit-json-to-readable-netlist": "^0.0.15",
         "circuit-json-to-spice": "^0.0.45",
         "circuit-json-to-step": "^0.0.38",
@@ -565,7 +565,7 @@
 
     "circuit-json-to-3d-png": ["circuit-json-to-3d-png@0.0.6", "", { "dependencies": { "@resvg/resvg-js": "^2.6.2", "poppygl": "^0.0.24" }, "peerDependencies": { "circuit-json": "*", "circuit-json-to-gltf": "*", "typescript": "^5" } }, "sha512-zZSnhIjZrJGG9ITWvSlWRKSY/dksIPkggZQyaVaHv1No5o8uG0l0HsZlcwx+vtoN1bIdm8GVp8dSRKIza63JOA=="],
 
-    "circuit-json-to-bom-csv": ["circuit-json-to-bom-csv@0.0.7", "", { "dependencies": { "format-si-prefix": "^0.3.2", "papaparse": "^5.4.1" }, "peerDependencies": { "typescript": "^5.0.0" } }, "sha512-bmdNtnrATx7DpV2dTjXLkFmgvxJfY4Um/k+7lXJhkXhlY2hEf7msxBqDXQdcKYkDB9/sdqZp4iCrWqItJ6N7yQ=="],
+    "circuit-json-to-bom-csv": ["circuit-json-to-bom-csv@0.0.15", "", { "dependencies": { "format-si-prefix": "^0.3.2", "lucide-react": "^1.23.0", "papaparse": "^5.4.1", "react": "^19.2.7", "react-dom": "^19.2.7" }, "peerDependencies": { "typescript": "^5.0.0" } }, "sha512-FkX9QlU4H2oLUqeI5ohLQJiTJcMvSHHCcmawtuuI+TRyh5gDd2nd6PiAB8mkTjrKEQ93bDkGzn9z74VyPWdB7g=="],
 
     "circuit-json-to-bpc": ["circuit-json-to-bpc@0.0.13", "", { "peerDependencies": { "bpc-graph": "*", "circuit-json": "*", "typescript": "^5" } }, "sha512-3wSMtPa6tJkiBQN4tsm7f0Mb7Wp90X2c8dNbULoDVE4mGGoFqP1DXqBlyvvZZl+4SjqznzQQ0EioLe2SCQTOcg=="],
 
@@ -581,7 +581,7 @@
 
     "circuit-json-to-kicad": ["circuit-json-to-kicad@0.0.157", "", { "peerDependencies": { "typescript": "^5" } }, "sha512-Fm640ScrkVCtkx6KnpgJBjprC5PA4tsful2gZyhlEnKLKLGhYsIp6hrdh0jpJK8H+CItWt6TdeV9JcxYFhRrYw=="],
 
-    "circuit-json-to-pnp-csv": ["circuit-json-to-pnp-csv@0.0.9", "", { "dependencies": { "papaparse": "^5.4.1" }, "peerDependencies": { "@tscircuit/soup-util": "*", "typescript": "^5.0.0" } }, "sha512-viHpZUlYX59jnMI0zG3mt3EDKtH/H1tM8g32q1lzONrHWSfOpCqdHUsWIaSrPk1Nt1fk/aECo1YwjBnUgL0Y+A=="],
+    "circuit-json-to-pnp-csv": ["circuit-json-to-pnp-csv@0.0.10", "", { "dependencies": { "papaparse": "^5.4.1" }, "peerDependencies": { "@tscircuit/soup-util": "*", "typescript": "^5.0.0" } }, "sha512-mZ6lrx77HPZObt0DpC60NE0lur8NZ5bFDk8FoZrvdul0PsnZvNHde2eDLDgEgULb/N/mf1sNFyejAxszFy2KoQ=="],
 
     "circuit-json-to-readable-netlist": ["circuit-json-to-readable-netlist@0.0.15", "", { "peerDependencies": { "@tscircuit/circuit-json-util": "*", "circuit-json": "*", "circuit-json-to-connectivity-map": "*", "typescript": "^5.0.0" } }, "sha512-mnWH1WIkH+BrMIYDRspWKlLa8fGB/mlGKBi5NsMBpV7UHNc3Bn2EC+KIKcEY9I3EhspfXXOW5GUI7leehdP3mA=="],
 
