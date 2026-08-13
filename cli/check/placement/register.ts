@@ -1,17 +1,18 @@
 import {
+  type PlacementIssue,
   analyzeAllPlacements,
   analyzeComponentPlacement,
 } from "@tscircuit/circuit-json-placement-analysis"
 import {
-  categorizeErrorOrWarning,
   type DrcCategory,
+  categorizeErrorOrWarning,
 } from "@tscircuit/circuit-json-util"
 import type { PlatformConfig } from "@tscircuit/props"
 import type { AnyCircuitElement } from "circuit-json"
 import type { Command } from "commander"
 import {
-  analyzeCircuitJson,
   type CircuitJsonIssue,
+  analyzeCircuitJson,
 } from "lib/shared/circuit-json-diagnostics"
 import { getCircuitJsonForCheck, resolveCheckInputFilePath } from "../shared"
 
@@ -147,7 +148,15 @@ const formatPlacementDiagnostics = ({
   return lines.join("\n")
 }
 
-export const checkPlacement = async (file?: string, refdes?: string) => {
+const isPlacementAnalysisIssueRelatedToRefdes = (
+  issue: PlacementIssue,
+  refdes: string,
+) => issue.componentA === refdes || issue.componentB === refdes
+
+export const getCheckPlacementResult = async (
+  file?: string,
+  refdes?: string,
+) => {
   const resolvedInputFilePath = await resolveCheckInputFilePath(file)
   const circuitJson = (await getCircuitJsonForCheck({
     filePath: resolvedInputFilePath,
@@ -158,15 +167,31 @@ export const checkPlacement = async (file?: string, refdes?: string) => {
     allowPrebuiltCircuitJson: true,
   })) as AnyCircuitElement[]
 
+  const placementAnalysis = analyzeAllPlacements(circuitJson)
   const analysisReport = refdes
     ? analyzeComponentPlacement(circuitJson, refdes).getString()
-    : analyzeAllPlacements(circuitJson).getString()
+    : placementAnalysis.getString()
+  const placementAnalysisIssues = refdes
+    ? placementAnalysis
+        .getIssues()
+        .filter((issue) =>
+          isPlacementAnalysisIssueRelatedToRefdes(issue, refdes),
+        )
+    : placementAnalysis.getIssues()
   const placementDiagnostics = getPlacementDiagnostics(circuitJson, refdes)
 
-  return `${analysisReport.trimEnd()}\n\n${formatPlacementDiagnostics(
-    placementDiagnostics,
-  )}`
+  return {
+    output: `${analysisReport.trimEnd()}\n\n${formatPlacementDiagnostics(
+      placementDiagnostics,
+    )}`,
+    hasErrors:
+      placementDiagnostics.errors.length > 0 ||
+      placementAnalysisIssues.length > 0,
+  }
 }
+
+export const checkPlacement = async (file?: string, refdes?: string) =>
+  (await getCheckPlacementResult(file, refdes)).output
 
 export const registerCheckPlacement = (program: Command) => {
   program.commands
@@ -177,8 +202,12 @@ export const registerCheckPlacement = (program: Command) => {
     .argument("[refdes]", "Optional refdes to scope the check")
     .action(async (file?: string, refdes?: string) => {
       try {
-        const output = await checkPlacement(file, refdes)
+        const { output, hasErrors } = await getCheckPlacementResult(
+          file,
+          refdes,
+        )
         console.log(output)
+        if (hasErrors) process.exitCode = 1
       } catch (error) {
         console.error(error instanceof Error ? error.message : String(error))
         process.exit(1)
