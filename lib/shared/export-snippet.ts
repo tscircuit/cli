@@ -140,7 +140,10 @@ export const exportSnippet = async ({
   const projectDir = path.dirname(filePath)
   const outputBaseName = path.basename(filePath).replace(/\.[^.]+$/, "")
   const outputFileName = `${outputBaseName}${OUTPUT_EXTENSIONS[format]}`
-  const outputDestination = path.join(projectDir, outputPath ?? outputFileName)
+  const outputDestination =
+    outputPath && path.isAbsolute(outputPath)
+      ? outputPath
+      : path.join(projectDir, outputPath ?? outputFileName)
 
   // Handle kicad-library separately - it doesn't need generateCircuitJson
   if (format === "kicad-library") {

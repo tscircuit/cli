@@ -1,0 +1,19 @@
+[
+  {
+    "type": "pcb_board",
+    "pcb_board_id": "pcb_board_0",
+    "center": {
+      "x": 0,
+      "y": 0
+    },
+    "width": 10,
+    "height": 10,
+    "thickness": 1.6,
+    "outline": [
+      { "x": -5, "y": -5 },
+      { "x": 5, "y": -5 },
+      { "x": 5, "y": 5 },
+      { "x": -5, "y": 5 }
+    ]
+  }
+]
