@@ -17,7 +17,7 @@
     "@tscircuit/eval": "^0.0.1016",
     "@tscircuit/fake-snippets": "^0.0.182",
     "@tscircuit/file-server": "^0.0.32",
-    "@tscircuit/footprinter": "^0.0.374",
+    "@tscircuit/footprinter": "^0.0.418",
     "@tscircuit/image-utils": "^0.0.8",
     "@tscircuit/krt-wasm": "^0.1.6",
     "@tscircuit/math-utils": "0.0.36",
