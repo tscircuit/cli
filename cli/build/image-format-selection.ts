@@ -30,6 +30,11 @@ export const EMPTY_IMAGE_FORMAT_SELECTION: BuildImageFormatSelection = {
   simulationSchematicSvgs: false,
 }
 
+export const SITE_IMAGE_FORMAT_SELECTION: BuildImageFormatSelection = {
+  ...EMPTY_IMAGE_FORMAT_SELECTION,
+  threeDPngs: true,
+}
+
 export const hasAnyImageFormatSelected = (
   selection: BuildImageFormatSelection,
 ) =>

@@ -23,12 +23,14 @@ const generatePreviewAssets = async ({
   distDir,
   imageFormats,
   pcbSnapshotSettings,
+  skipExisting,
 }: {
   build: BuildFileResult
   outputDir: string
   distDir: string
   imageFormats: BuildImageFormatSelection
   pcbSnapshotSettings?: PcbSnapshotSettings
+  skipExisting?: boolean
 }) => {
   const prefixRelative = path.relative(distDir, outputDir) || "."
   const prefix = prefixRelative === "." ? "" : `[${prefixRelative}] `
@@ -125,10 +127,13 @@ const generatePreviewAssets = async ({
   }
 
   if (imageFormats.threeDPngs) {
+    const outputPath = path.join(outputDir, "3d.png")
+    if (skipExisting && fs.existsSync(outputPath)) return
+
     try {
       console.log(`${prefix}Generating 3D PNG...`)
       const pngBuffer = await renderCircuitJsonTo3dPng(circuitJson)
-      fs.writeFileSync(path.join(outputDir, "3d.png"), Buffer.from(pngBuffer))
+      fs.writeFileSync(outputPath, Buffer.from(pngBuffer))
       console.log(`${prefix}Written 3d.png`)
     } catch (error) {
       console.error(`${prefix}Failed to generate 3D PNG:`, error)
@@ -144,6 +149,7 @@ export const buildPreviewImages = async ({
   allImages,
   imageFormats,
   pcbSnapshotSettings,
+  skipExisting,
 }: {
   builtFiles: BuildFileResult[]
   distDir: string
@@ -152,6 +158,7 @@ export const buildPreviewImages = async ({
   allImages?: boolean
   imageFormats: BuildImageFormatSelection
   pcbSnapshotSettings?: PcbSnapshotSettings
+  skipExisting?: boolean
 }) => {
   const successfulBuilds = builtFiles.filter((file) => file.ok)
   // previewComponentPath takes precedence over mainEntrypoint for preview images
@@ -176,6 +183,7 @@ export const buildPreviewImages = async ({
         distDir,
         imageFormats,
         pcbSnapshotSettings,
+        skipExisting,
       })
     }
     return
@@ -204,5 +212,6 @@ export const buildPreviewImages = async ({
     pcbSnapshotSettings,
     distDir,
     imageFormats,
+    skipExisting,
   })
 }

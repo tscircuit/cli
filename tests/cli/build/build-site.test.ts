@@ -35,6 +35,30 @@ test("build with --site generates index.html and standalone.min.js", async () =>
   expect(standaloneJs.isFile()).toBe(true)
 }, 30_000)
 
+test("build with --site generates only 3D preview images for every circuit", async () => {
+  const { tmpDir, runCommand } = await getCliTestFixture()
+  await writeFile(path.join(tmpDir, "first.circuit.tsx"), circuitCode)
+  await writeFile(path.join(tmpDir, "second.circuit.tsx"), circuitCode)
+  await writeFile(path.join(tmpDir, "package.json"), "{}")
+
+  const { stderr } = await runCommand("tsci build --site --use-cdn-javascript")
+  expect(stderr).toBe("")
+
+  for (const circuitName of ["first", "second"]) {
+    const outputDir = path.join(tmpDir, "dist", circuitName)
+    const preview3d = await readFile(path.join(outputDir, "3d.png"))
+
+    expect(preview3d[0]).toBe(0x89)
+    expect(preview3d[1]).toBe(0x50)
+    expect(preview3d[2]).toBe(0x4e)
+    expect(preview3d[3]).toBe(0x47)
+    await expect(stat(path.join(outputDir, "pcb.svg"))).rejects.toBeTruthy()
+    await expect(
+      stat(path.join(outputDir, "schematic.svg")),
+    ).rejects.toBeTruthy()
+  }
+}, 60_000)
+
 test("build with --site --use-cdn-javascript uses CDN URL and no standalone.min.js", async () => {
   const { tmpDir, runCommand } = await getCliTestFixture()
   const circuitPath = path.join(tmpDir, "test.circuit.tsx")
