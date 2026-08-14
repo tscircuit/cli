@@ -35,10 +35,18 @@ if (!success) {
   process.exit(1)
 }
 
+const manifoldWasmSourcePath = Bun.resolveSync(
+  "@tscircuit/manifold-2d/manifold.wasm",
+  import.meta.dir,
+)
+const manifoldWasm = Bun.file(manifoldWasmSourcePath)
+await Bun.write("./dist/cli/manifold.wasm", manifoldWasm)
+
 for (const output of outputs) {
   console.log(
     `${basename(output.path)} ${(output.size / 1024 / 1024).toFixed(2)} MB`,
   )
 }
+console.log(`manifold.wasm ${(manifoldWasm.size / 1024 / 1024).toFixed(2)} MB`)
 
 export {}
