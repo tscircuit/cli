@@ -44,6 +44,7 @@ import {
 import {
   hasAnyImageFormatSelected,
   resolveImageFormatSelection,
+  SITE_IMAGE_FORMAT_SELECTION,
 } from "./image-format-selection"
 import { resolveBuildOptions } from "./resolve-build-options"
 import { transpileFile } from "./transpile"
@@ -468,6 +469,12 @@ export const registerBuild = (program: Command) => {
         const shouldGenerateAllPreviewImages = Boolean(
           resolvedOptions?.allImages,
         )
+        const shouldGenerateSite3dImages = Boolean(
+          resolvedOptions?.site &&
+            !(
+              shouldGenerateAllPreviewImages && imageFormatSelection.threeDPngs
+            ),
+        )
         const shouldGeneratePreviewAssetsInWorker = Boolean(
           resolvedOptions?.ci &&
             concurrencyValue > 1 &&
@@ -817,6 +824,19 @@ export const registerBuild = (program: Command) => {
                 : projectConfig?.pcbSnapshotSettings,
             })
           }
+        }
+
+        if (shouldGenerateSite3dImages) {
+          console.log("Generating 3D preview images for all site builds...")
+          await buildPreviewImages({
+            builtFiles,
+            distDir,
+            mainEntrypoint,
+            previewComponentPath,
+            allImages: true,
+            imageFormats: SITE_IMAGE_FORMAT_SELECTION,
+            skipExisting: true,
+          })
         }
 
         if (resolvedOptions?.previewGltf) {
