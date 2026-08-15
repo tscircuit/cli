@@ -189,6 +189,28 @@ test("check shorts reports no shorts for a clean board", async () => {
   }
 }, 20_000)
 
+test("repro: check shorts evaluates ordinary .json filenames as source", async () => {
+  const tmpDir = temporaryDirectory()
+  const sourceCircuitPath = path.join(tmpDir, "shorted-board.tsx")
+  const prebuiltCircuitJsonPath = path.join(tmpDir, "shorted-board.json")
+
+  try {
+    await linkWorkspaceNodeModules(tmpDir)
+    await writeFile(sourceCircuitPath, circuitCode)
+    const circuitJson = await makeCircuitJsonWithShort(sourceCircuitPath)
+    await writeFile(
+      prebuiltCircuitJsonPath,
+      JSON.stringify(circuitJson, null, 2),
+    )
+
+    await expect(checkShorts(prebuiltCircuitJsonPath)).rejects.toThrow(
+      "Element type is invalid",
+    )
+  } finally {
+    await rm(tmpDir, { recursive: true, force: true })
+  }
+}, 20_000)
+
 test("tsci check shorts detects a copper bridge short", async () => {
   const { runCommand, tmpDir } = await getCliTestFixture()
   const circuitPath = path.join(tmpDir, "shorted-board.tsx")
