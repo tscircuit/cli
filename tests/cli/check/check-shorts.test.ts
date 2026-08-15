@@ -189,7 +189,7 @@ test("check shorts reports no shorts for a clean board", async () => {
   }
 }, 20_000)
 
-test("repro: check shorts evaluates ordinary .json filenames as source", async () => {
+test("check shorts recognizes prebuilt Circuit JSON by content", async () => {
   const tmpDir = temporaryDirectory()
   const sourceCircuitPath = path.join(tmpDir, "shorted-board.tsx")
   const prebuiltCircuitJsonPath = path.join(tmpDir, "shorted-board.json")
@@ -203,8 +203,14 @@ test("repro: check shorts evaluates ordinary .json filenames as source", async (
       JSON.stringify(circuitJson, null, 2),
     )
 
-    await expect(checkShorts(prebuiltCircuitJsonPath)).rejects.toThrow(
-      "Element type is invalid",
+    const result = await checkShorts(prebuiltCircuitJsonPath)
+    const debugSvg = createShortDebugSvg(circuitJson, result.shorts)
+
+    expect(result.shorts).toHaveLength(4)
+    expect(result.output).toContain("Detected 4 shorts in shorted-board.json")
+    expect(debugSvg).toMatchSvgSnapshot(
+      import.meta.path,
+      "check-shorts-ordinary-json-pcb",
     )
   } finally {
     await rm(tmpDir, { recursive: true, force: true })

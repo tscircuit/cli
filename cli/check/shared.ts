@@ -9,6 +9,34 @@ import { getEntrypoint } from "lib/shared/get-entrypoint"
 import { isCircuitJsonFile } from "lib/shared/is-circuit-json-file"
 import { findCircuitProjectDir } from "lib/shared/circuit-json-build-cache"
 
+const hasCircuitJsonElementDiscriminator = (
+  value: unknown,
+): value is { type: string } =>
+  typeof value === "object" &&
+  value !== null &&
+  "type" in value &&
+  typeof value.type === "string"
+
+const tryReadPrebuiltCircuitJson = (
+  filePath: string,
+): AnyCircuitElement[] | null => {
+  try {
+    const parsedFile: unknown = JSON.parse(fs.readFileSync(filePath, "utf-8"))
+    if (
+      !Array.isArray(parsedFile) ||
+      !parsedFile.every(hasCircuitJsonElementDiscriminator)
+    ) {
+      return null
+    }
+
+    // Circuit JSON is a discriminated element array. Full semantic checks are
+    // command-specific, matching the existing *.circuit.json loading path.
+    return parsedFile as AnyCircuitElement[]
+  } catch {
+    return null
+  }
+}
+
 export const resolveCheckInputFilePath = async (file?: string) => {
   if (file) {
     return path.isAbsolute(file) ? file : path.resolve(process.cwd(), file)
@@ -36,6 +64,11 @@ export const getCircuitJsonForCheck = async ({
   allowPrebuiltCircuitJson?: boolean
   autorouterDiagnostics?: AutorouterDiagnosticsOptions
 }): Promise<AnyCircuitElement[]> => {
+  if (allowPrebuiltCircuitJson) {
+    const prebuiltCircuitJson = tryReadPrebuiltCircuitJson(filePath)
+    if (prebuiltCircuitJson) return prebuiltCircuitJson
+  }
+
   if (allowPrebuiltCircuitJson && isCircuitJsonFile(filePath)) {
     const parsedJson = JSON.parse(fs.readFileSync(filePath, "utf-8"))
     return Array.isArray(parsedJson) ? parsedJson : []
