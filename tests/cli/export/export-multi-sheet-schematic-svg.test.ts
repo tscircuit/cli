@@ -32,7 +32,7 @@ export default () => (
   </board>
 )`
 
-test("repro: schematic-svg export renders only the default sheet", async () => {
+test("schematic-svg export renders every schematic sheet", async () => {
   const { tmpDir, runCommand } = await getCliTestFixture()
   const circuitPath = path.join(tmpDir, "multiple-sheets.circuit.tsx")
 
@@ -49,9 +49,12 @@ test("repro: schematic-svg export renders only the default sheet", async () => {
     "utf-8",
   )
 
-  expect(schematicSvg).not.toContain('class="tscircuit-stacked-schematic"')
+  expect(schematicSvg).toContain('class="tscircuit-stacked-schematic"')
+  expect(schematicSvg.match(/class="stacked-sheet-label"/g)).toHaveLength(2)
+  expect(schematicSvg).toContain("Power Sheet")
+  expect(schematicSvg).toContain("Control Sheet")
   expect(schematicSvg).toContain("R1")
-  expect(schematicSvg).not.toContain("C1")
+  expect(schematicSvg).toContain("C1")
   await expect(schematicSvg).toMatchSvgSnapshot(
     import.meta.path,
     "only-default-sheet",

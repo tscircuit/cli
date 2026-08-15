@@ -27,7 +27,7 @@ import { circuitJsonToFdmComponentBox } from "circuit-json-to-fdm-component-box"
 import {
   convertCircuitJsonToAssemblySvg,
   convertCircuitJsonToPcbSvg,
-  convertCircuitJsonToSchematicSvg,
+  convertCircuitJsonToStackedSchematicSheetsSvg,
 } from "circuit-to-svg"
 import { convertCircuitJsonToDsnString } from "dsn-converter"
 import JSZip from "jszip"
@@ -215,7 +215,7 @@ export const exportSnippet = async ({
 
   switch (format) {
     case "schematic-svg":
-      outputContent = convertCircuitJsonToSchematicSvg(circuitJson)
+      outputContent = convertCircuitJsonToStackedSchematicSheetsSvg(circuitJson)
       break
     case "schematic-pdf":
       outputContent = await convertCircuitJsonToSchematicPdf(circuitJson)
