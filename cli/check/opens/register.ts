@@ -1,4 +1,7 @@
-import type { BitmapOpen, FindBitmapOpensOptions } from "@tscircuit/check-shorts"
+import type {
+  BitmapOpen,
+  FindBitmapOpensOptions,
+} from "@tscircuit/check-shorts"
 import type { PlatformConfig } from "@tscircuit/props"
 import type { Command } from "commander"
 import { getCircuitJsonForCheck, resolveCheckInputFilePath } from "../shared"
@@ -73,20 +76,24 @@ export const checkOpens = async (
     } satisfies PlatformConfig,
     allowPrebuiltCircuitJson: true,
   })
-  const layers = getCheckShortLayers({ circuitJson, layerOption })
   const { findBitmapOpens } = await loadCheckShorts()
 
-  const opensPerLayer = await Promise.all(
-    layers.map((layer) =>
-      findBitmapOpens(circuitJson, {
-        mode,
-        layer,
-        pixelsPerMm,
-      } satisfies FindBitmapOpensOptions),
-    ),
-  )
-  const opens = opensPerLayer.flat()
-  const filename = resolvedInputFilePath.split("/").pop() ?? resolvedInputFilePath
+  // Unlike shorts, opens are a whole-board question: a net routed top -> via ->
+  // bottom is fully connected, but looked at one layer at a time it appears
+  // split. So "all" means one analysis spanning every copper layer (the
+  // detector's default), not one analysis per layer.
+  const layers =
+    layerOption === "all"
+      ? undefined
+      : getCheckShortLayers({ circuitJson, layerOption })
+
+  const opens = await findBitmapOpens(circuitJson, {
+    mode,
+    ...(layers?.[0] ? { layer: layers[0] } : {}),
+    pixelsPerMm,
+  } satisfies FindBitmapOpensOptions)
+  const filename =
+    resolvedInputFilePath.split("/").pop() ?? resolvedInputFilePath
 
   if (opens.length === 0) {
     return { output: `No opens detected in ${filename}`, opens }
@@ -109,7 +116,11 @@ export const registerCheckOpens = (program: Command) => {
       "Detect nets whose copper is not fully joined (unrouted connections)",
     )
     .argument("[file]", "Path to the entry file or prebuilt circuit JSON")
-    .option("--mode <mode>", "Bitmap source to analyze: pcb or gerber", "gerber")
+    .option(
+      "--mode <mode>",
+      "Bitmap source to analyze: pcb or gerber",
+      "gerber",
+    )
     .option("--layer <layer>", "Layer to analyze: top, bottom, or all", "all")
     .option("--pixels-per-mm <number>", "Bitmap resolution for open detection")
     .action(async (file?: string, options?: CheckOpensOptions) => {
