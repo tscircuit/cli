@@ -1,11 +1,11 @@
 import type { PlatformConfig } from "@tscircuit/props"
 import type { VisibleLayerRef } from "circuit-json"
 import type { CameraPreset } from "circuit-json-to-3d-png"
+import { loadRuntimeProjectConfig } from "lib/project-config"
 import type { PcbSnapshotSettings } from "lib/project-config/project-config-schema"
+import { mergePlatformConfigs } from "lib/shared/platform-config-utils"
 import { processSnapshotFile } from "lib/shared/process-snapshot-file"
 import { registerStaticAssetLoaders } from "lib/shared/register-static-asset-loaders"
-import { loadRuntimeProjectConfig } from "lib/project-config"
-import { mergePlatformConfigs } from "lib/shared/platform-config-utils"
 import type { SnapshotCompletedMessage } from "./worker-types"
 
 type SnapshotWorkerOptions = {
@@ -20,6 +20,7 @@ type SnapshotWorkerOptions = {
   createDiff: boolean
   cameraPreset?: CameraPreset
   pcbLayer?: VisibleLayerRef
+  componentName?: string
 }
 
 export const handleSnapshotFile = async (
@@ -51,6 +52,7 @@ export const handleSnapshotFile = async (
     createDiff: options.createDiff,
     cameraPreset: options.cameraPreset,
     pcbLayer: options.pcbLayer,
+    componentName: options.componentName,
   })
 
   return {

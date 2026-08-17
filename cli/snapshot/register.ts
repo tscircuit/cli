@@ -1,6 +1,6 @@
-import type { Command } from "commander"
 import type { VisibleLayerRef } from "circuit-json"
 import { CAMERA_PRESET_NAMES, type CameraPreset } from "circuit-json-to-3d-png"
+import type { Command } from "commander"
 import { snapshotProject } from "lib/shared/snapshot-project"
 
 export const registerSnapshot = (program: Command) => {
@@ -25,6 +25,10 @@ export const registerSnapshot = (program: Command) => {
     )
     .option("--disable-parts-engine", "Disable the parts engine")
     .option("--show-courtyards", "Show courtyard outlines in PCB snapshots")
+    .option(
+      "--component-name <name>",
+      "Focus on one PCB component (implies --pcb-only and --show-courtyards)",
+    )
     .option(
       "--camera-preset <preset>",
       `Camera angle preset for 3D snapshots (implies --3d). Valid presets: ${CAMERA_PRESET_NAMES.join(", ")}`,
@@ -53,6 +57,7 @@ export const registerSnapshot = (program: Command) => {
           ci?: boolean
           test?: boolean
           concurrency?: string
+          componentName?: string
         },
       ) => {
         if (
@@ -83,6 +88,19 @@ export const registerSnapshot = (program: Command) => {
         }
 
         if (
+          options.componentName &&
+          (options.schematicOnly ||
+            options.simulationOnly ||
+            options["3d"] ||
+            options.cameraPreset)
+        ) {
+          console.error(
+            "--component-name cannot be combined with --schematic-only, --simulation-only, --3d, or --camera-preset.",
+          )
+          process.exit(1)
+        }
+
+        if (
           options.simulationOnly &&
           (options.pcbOnly ||
             options.schematicOnly ||
@@ -97,7 +115,7 @@ export const registerSnapshot = (program: Command) => {
         }
 
         let pcbOnly = options.pcbOnly ?? false
-        if (pcbLayer) {
+        if (pcbLayer || options.componentName) {
           pcbOnly = true
         }
 
@@ -117,9 +135,11 @@ export const registerSnapshot = (program: Command) => {
           platformConfig: options.disablePartsEngine
             ? { partsEngineDisabled: true }
             : undefined,
-          pcbSnapshotSettingsOverride: options.showCourtyards
-            ? { showCourtyards: true }
-            : undefined,
+          pcbSnapshotSettingsOverride:
+            options.showCourtyards || options.componentName
+              ? { showCourtyards: true }
+              : undefined,
+          componentName: options.componentName,
           cameraPreset: options.cameraPreset as CameraPreset | undefined,
           createDiff: (options.ci ?? false) || (options.test ?? false),
           onExit: (code) => process.exit(code),

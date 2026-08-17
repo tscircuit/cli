@@ -1,19 +1,20 @@
 import fs from "node:fs"
 import path from "node:path"
 import type { PlatformConfig } from "@tscircuit/props"
-import type { PcbSnapshotSettings } from "lib/project-config/project-config-schema"
 import type { AnyCircuitElement, VisibleLayerRef } from "circuit-json"
 import { renderCircuitJsonTo3dPng } from "circuit-json-to-3d-png"
+import type { CameraPreset } from "circuit-json-to-3d-png"
 import {
   convertCircuitJsonToPcbSvg,
   convertCircuitJsonToStackedSchematicSheetsSvg,
 } from "circuit-to-svg"
 import kleur from "kleur"
-import type { CameraPreset } from "circuit-json-to-3d-png"
+import type { PcbSnapshotSettings } from "lib/project-config/project-config-schema"
 import { getOrGenerateCircuitJson } from "lib/shared/get-or-generate-circuit-json"
 import { getPlatformConfigWithCliDefaults } from "lib/shared/get-platform-config-with-cli-defaults"
 import { getSimulationSvgAssetsFromCircuitJson } from "lib/shared/simulation-svg-assets"
 import { compareAndCreateDiff } from "./compare-images"
+import { getComponentPcbViewport } from "./get-component-pcb-viewport"
 import { isCircuitJsonFile } from "./is-circuit-json-file"
 
 export type ProcessSnapshotFileOptions = {
@@ -31,6 +32,7 @@ export type ProcessSnapshotFileOptions = {
   createDiff: boolean
   cameraPreset?: CameraPreset
   pcbLayer?: VisibleLayerRef
+  componentName?: string
 }
 
 export type ProcessSnapshotFileResult = {
@@ -57,6 +59,7 @@ export const processSnapshotFile = async ({
   createDiff,
   cameraPreset,
   pcbLayer,
+  componentName,
 }: ProcessSnapshotFileOptions): Promise<ProcessSnapshotFileResult> => {
   const relativeFilePath = path.relative(projectDir, file)
   const successPaths: string[] = []
@@ -104,9 +107,13 @@ export const processSnapshotFile = async ({
 
   if (!simulationOnly) {
     try {
+      const viewport = componentName
+        ? getComponentPcbViewport(circuitJson, componentName)
+        : undefined
       pcbSvg = convertCircuitJsonToPcbSvg(circuitJson, {
         ...pcbSnapshotSettings,
         layer: pcbLayer,
+        viewport,
       })
     } catch (error) {
       const errorMessage =
@@ -228,6 +235,9 @@ export const processSnapshotFile = async ({
   fs.mkdirSync(snapDir, { recursive: true })
 
   const base = path.basename(file).replace(/\.[^.]+$/, "")
+  const componentSuffix = componentName
+    ? `-${componentName.replace(/^\./, "").replace(/[^a-zA-Z0-9._-]+/g, "-")}`
+    : ""
   const snapshots: Array<
     | {
         type: string | VisibleLayerRef
@@ -283,7 +293,7 @@ export const processSnapshotFile = async ({
     const is3d = type === "3d"
     const snapPath = path.join(
       snapDir,
-      `${base}-${type}.snap.${is3d ? "png" : "svg"}`,
+      `${base}${componentSuffix}-${type}.snap.${is3d ? "png" : "svg"}`,
     )
     const existing = fs.existsSync(snapPath)
 

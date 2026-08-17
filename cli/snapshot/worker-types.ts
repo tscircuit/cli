@@ -21,6 +21,7 @@ export type SnapshotFileMessage = {
     createDiff: boolean
     cameraPreset?: CameraPreset
     pcbLayer?: VisibleLayerRef
+    componentName?: string
   }
 }
 

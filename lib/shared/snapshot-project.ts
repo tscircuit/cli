@@ -2,6 +2,7 @@ import fs from "node:fs"
 import path from "node:path"
 import type { PlatformConfig } from "@tscircuit/props"
 import type { VisibleLayerRef } from "circuit-json"
+import type { CameraPreset } from "circuit-json-to-3d-png"
 import { snapshotFilesWithWorkerPool } from "cli/snapshot/worker-pool"
 import kleur from "kleur"
 import {
@@ -10,7 +11,6 @@ import {
   loadRuntimeProjectConfig,
 } from "lib/project-config"
 import type { PcbSnapshotSettings } from "lib/project-config/project-config-schema"
-import type { CameraPreset } from "circuit-json-to-3d-png"
 import { findBoardFilesAsync } from "lib/shared/find-board-files"
 import { mergePlatformConfigs } from "lib/shared/platform-config-utils"
 import { processSnapshotFile } from "lib/shared/process-snapshot-file"
@@ -44,6 +44,8 @@ type SnapshotOptions = {
   cameraPreset?: CameraPreset
   /** Limit PCB snapshots to one layer */
   pcbLayer?: VisibleLayerRef
+  /** Focus the PCB snapshot on one component */
+  componentName?: string
   /** Number of files to process in parallel (default: 1) */
   concurrency?: number
   onExit?: (code: number) => void
@@ -78,6 +80,7 @@ export const snapshotProject = async ({
   createDiff = false,
   cameraPreset,
   pcbLayer,
+  componentName,
   concurrency = 1,
 }: SnapshotOptions = {}) => {
   // --camera-preset implies --3d
@@ -188,6 +191,7 @@ export const snapshotProject = async ({
           createDiff,
           cameraPreset,
           pcbLayer,
+          componentName,
         },
         stopOnFailure: true,
         onLog: (lines) => {
@@ -232,6 +236,7 @@ export const snapshotProject = async ({
         createDiff,
         cameraPreset,
         pcbLayer,
+        componentName,
       })
 
       processResult(result)

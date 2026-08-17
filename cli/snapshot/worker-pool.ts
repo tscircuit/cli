@@ -81,6 +81,7 @@ export const snapshotFilesWithWorkerPool = async (options: {
         createDiff: job.options.createDiff,
         cameraPreset: job.options.cameraPreset,
         pcbLayer: job.options.pcbLayer,
+        componentName: job.options.componentName,
       },
     }),
     isLogMessage: (message) => message.message_type === "worker_log",
