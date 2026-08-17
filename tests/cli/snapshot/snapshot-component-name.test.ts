@@ -1,4 +1,5 @@
 import { expect, test } from "bun:test"
+import "bun-match-svg"
 import { join } from "node:path"
 import { getCliTestFixture } from "../../fixtures/get-cli-test-fixture"
 
@@ -26,17 +27,5 @@ test("snapshot --component-name focuses a PCB snapshot on one component", async 
   )
   const svg = await Bun.file(snapshotPath).text()
 
-  await runCommand("tsci snapshot --update --show-courtyards --pcb-only")
-  const fullBoardSvg = await Bun.file(
-    join(tmpDir, "__snapshots__", "test.board-pcb.snap.svg"),
-  ).text()
-
-  expect(svg).toContain("R1")
-  expect(svg).toContain("pcb-courtyard-")
-  expect(svg).not.toBe(fullBoardSvg)
-  expect(
-    await Bun.file(
-      join(tmpDir, "__snapshots__", "test.board-R1-schematic.snap.svg"),
-    ).exists(),
-  ).toBe(false)
+  expect(svg).toMatchSvgSnapshot(import.meta.path, "component-name-R1")
 }, 60_000)
