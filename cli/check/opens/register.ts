@@ -15,6 +15,7 @@ interface CheckOpensOptions {
   mode?: "pcb" | "gerber"
   layer?: CheckShortsLayerOption
   pixelsPerMm?: string
+  ignoreNet?: string[]
 }
 
 export interface CheckOpensResult {
@@ -87,11 +88,16 @@ export const checkOpens = async (
       ? undefined
       : getCheckShortLayers({ circuitJson, layerOption })
 
+  const ignoreNets = options.ignoreNet?.length ? options.ignoreNet : undefined
+
   const opens = await findBitmapOpens(circuitJson, {
     mode,
     ...(layers?.[0] ? { layer: layers[0] } : {}),
     pixelsPerMm,
-  } satisfies FindBitmapOpensOptions)
+    ignoreNets,
+    // ignoreNets ships in @tscircuit/check-shorts after 0.0.19; widen the
+    // pinned type until the dependency is bumped.
+  } satisfies FindBitmapOpensOptions & { ignoreNets?: string[] })
   const filename =
     resolvedInputFilePath.split("/").pop() ?? resolvedInputFilePath
 
@@ -123,6 +129,12 @@ export const registerCheckOpens = (program: Command) => {
     )
     .option("--layer <layer>", "Layer to analyze: top, bottom, or all", "all")
     .option("--pixels-per-mm <number>", "Bitmap resolution for open detection")
+    .option(
+      "--ignore-net <name>",
+      "Net to exclude from open detection, for nets joined off the board by design (mounting holes bonded through a metal enclosure, signals joined by a cable or mating connector). Repeatable.",
+      (value: string, previous: string[]) => [...previous, value],
+      [] as string[],
+    )
     .action(async (file?: string, options?: CheckOpensOptions) => {
       try {
         const result = await checkOpens(file, options)
