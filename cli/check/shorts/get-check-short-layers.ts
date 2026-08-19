@@ -1,10 +1,19 @@
-import { all_layers, type AnyCircuitElement, type LayerRef } from "circuit-json"
+import type { AnyCircuitElement, LayerRef } from "circuit-json"
 
 export type CheckShortsLayerOption = LayerRef | "all"
 
-const innerCopperLayers = all_layers.filter((layer) =>
-  layer.startsWith("inner"),
-)
+type InnerLayerRef = Exclude<LayerRef, "top" | "bottom">
+
+const innerCopperLayers = [
+  "inner1",
+  "inner2",
+  "inner3",
+  "inner4",
+  "inner5",
+  "inner6",
+  "inner7",
+  "inner8",
+] satisfies InnerLayerRef[]
 
 export const getCheckShortLayers = ({
   circuitJson,
