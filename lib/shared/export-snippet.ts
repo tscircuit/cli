@@ -1,50 +1,50 @@
-import fs from "node:fs";
-import path from "node:path";
-import { promisify } from "node:util";
-import type { PlatformConfig } from "@tscircuit/props";
-import type { AnyCircuitElement } from "circuit-json";
+import fs from "node:fs"
+import path from "node:path"
+import { promisify } from "node:util"
+import type { PlatformConfig } from "@tscircuit/props"
+import type { AnyCircuitElement } from "circuit-json"
 import {
   convertBomRowsToCsv,
   convertCircuitJsonToBomRows,
-} from "circuit-json-to-bom-csv";
+} from "circuit-json-to-bom-csv"
 import {
   convertSoupToExcellonDrillCommands,
   convertSoupToGerberCommands,
   stringifyExcellonDrill,
   stringifyGerberCommandLayers,
-} from "circuit-json-to-gerber";
-import type { LayerRef } from "circuit-json";
-import { convertCircuitJsonToGltf } from "circuit-json-to-gltf";
+} from "circuit-json-to-gerber"
+import type { LayerRef } from "circuit-json"
+import { convertCircuitJsonToGltf } from "circuit-json-to-gltf"
 import {
   CircuitJsonToKicadPcbConverter,
   CircuitJsonToKicadProConverter,
   CircuitJsonToKicadSchConverter,
   resolveAndLoadKicad3dModelFiles,
-} from "circuit-json-to-kicad";
-import { convertCircuitJsonToPickAndPlaceCsv } from "circuit-json-to-pnp-csv";
-import { convertCircuitJsonToReadableNetlist } from "circuit-json-to-readable-netlist";
-import { circuitJsonToStep } from "circuit-json-to-step";
-import { circuitJsonToFdmComponentBox } from "circuit-json-to-fdm-component-box";
+} from "circuit-json-to-kicad"
+import { convertCircuitJsonToPickAndPlaceCsv } from "circuit-json-to-pnp-csv"
+import { convertCircuitJsonToReadableNetlist } from "circuit-json-to-readable-netlist"
+import { circuitJsonToStep } from "circuit-json-to-step"
+import { circuitJsonToFdmComponentBox } from "circuit-json-to-fdm-component-box"
 import {
   convertCircuitJsonToAssemblySvg,
   convertCircuitJsonToPcbSvg,
   convertCircuitJsonToStackedSchematicSheetsSvg,
-} from "circuit-to-svg";
-import { convertCircuitJsonToDsnString } from "dsn-converter";
-import JSZip from "jszip";
-import type { PcbSnapshotSettings } from "lib/project-config/project-config-schema";
-import { generateCircuitJson } from "lib/shared/generate-circuit-json";
-import { getCircuitJsonToGltfOptions } from "lib/shared/get-circuit-json-to-gltf-options";
-import { getOrGenerateCircuitJson } from "lib/shared/get-or-generate-circuit-json";
-import { getPlatformConfigWithCliDefaults } from "lib/shared/get-platform-config-with-cli-defaults";
-import { loadLocalStepModelFsMap } from "lib/shared/load-local-step-model-fs-map";
-import { mergePlatformConfigs } from "lib/shared/platform-config-utils";
-import { convertCircuitJsonToSchematicPdf } from "./convert-circuit-json-to-schematic-pdf";
-import { convertToKicadLibrary } from "./convert-to-kicad-library";
-import { importFromUserLand } from "./importFromUserLand";
-import { isCircuitJsonFile } from "./is-circuit-json-file";
+} from "circuit-to-svg"
+import { convertCircuitJsonToDsnString } from "dsn-converter"
+import JSZip from "jszip"
+import type { PcbSnapshotSettings } from "lib/project-config/project-config-schema"
+import { generateCircuitJson } from "lib/shared/generate-circuit-json"
+import { getCircuitJsonToGltfOptions } from "lib/shared/get-circuit-json-to-gltf-options"
+import { getOrGenerateCircuitJson } from "lib/shared/get-or-generate-circuit-json"
+import { getPlatformConfigWithCliDefaults } from "lib/shared/get-platform-config-with-cli-defaults"
+import { loadLocalStepModelFsMap } from "lib/shared/load-local-step-model-fs-map"
+import { mergePlatformConfigs } from "lib/shared/platform-config-utils"
+import { convertCircuitJsonToSchematicPdf } from "./convert-circuit-json-to-schematic-pdf"
+import { convertToKicadLibrary } from "./convert-to-kicad-library"
+import { importFromUserLand } from "./importFromUserLand"
+import { isCircuitJsonFile } from "./is-circuit-json-file"
 
-const writeFileAsync = promisify(fs.writeFile);
+const writeFileAsync = promisify(fs.writeFile)
 
 export const ALLOWED_EXPORT_FORMATS = [
   "json",
@@ -65,9 +65,9 @@ export const ALLOWED_EXPORT_FORMATS = [
   "step",
   "assembly-svg",
   "component-box-3mf",
-] as const;
+] as const
 
-export type ExportFormat = (typeof ALLOWED_EXPORT_FORMATS)[number];
+export type ExportFormat = (typeof ALLOWED_EXPORT_FORMATS)[number]
 
 const OUTPUT_EXTENSIONS: Record<ExportFormat, string> = {
   json: ".circuit.json",
@@ -88,10 +88,10 @@ const OUTPUT_EXTENSIONS: Record<ExportFormat, string> = {
   srj: ".simple-route.json",
   step: ".step",
   "component-box-3mf": "-component-box.3mf",
-};
+}
 
 const isRecord = (value: unknown): value is Record<string, unknown> =>
-  typeof value === "object" && value !== null;
+  typeof value === "object" && value !== null
 
 const unwrapSimpleRouteJson = (value: unknown) => {
   if (
@@ -101,26 +101,26 @@ const unwrapSimpleRouteJson = (value: unknown) => {
       "obstacles" in value.simpleRouteJson ||
       "bounds" in value.simpleRouteJson)
   ) {
-    return value.simpleRouteJson;
+    return value.simpleRouteJson
   }
 
-  return value;
-};
+  return value
+}
 
 type ExportOptions = {
-  filePath: string;
-  format: ExportFormat;
-  writeFile?: boolean;
-  outputPath?: string;
-  platformConfig?: PlatformConfig;
-  pcbSnapshotSettings?: PcbSnapshotSettings;
-  onExit?: (code: number) => void;
-  onError?: (message: string) => void;
+  filePath: string
+  format: ExportFormat
+  writeFile?: boolean
+  outputPath?: string
+  platformConfig?: PlatformConfig
+  pcbSnapshotSettings?: PcbSnapshotSettings
+  onExit?: (code: number) => void
+  onError?: (message: string) => void
   onSuccess: (data: {
-    outputDestination: string;
-    outputContent: string | Buffer;
-  }) => void;
-};
+    outputDestination: string
+    outputContent: string | Buffer
+  }) => void
+}
 
 export const exportSnippet = async ({
   filePath,
@@ -134,17 +134,17 @@ export const exportSnippet = async ({
   onSuccess = (result: unknown) => console.log(result),
 }: ExportOptions) => {
   if (!ALLOWED_EXPORT_FORMATS.includes(format)) {
-    onError(`Invalid format: ${format}`);
-    return onExit(1);
+    onError(`Invalid format: ${format}`)
+    return onExit(1)
   }
 
-  const projectDir = path.dirname(filePath);
-  const outputBaseName = path.basename(filePath).replace(/\.[^.]+$/, "");
-  const outputFileName = `${outputBaseName}${OUTPUT_EXTENSIONS[format]}`;
+  const projectDir = path.dirname(filePath)
+  const outputBaseName = path.basename(filePath).replace(/\.[^.]+$/, "")
+  const outputFileName = `${outputBaseName}${OUTPUT_EXTENSIONS[format]}`
   const outputDestination =
     outputPath && path.isAbsolute(outputPath)
       ? outputPath
-      : path.join(projectDir, outputPath ?? outputFileName);
+      : path.join(projectDir, outputPath ?? outputFileName)
 
   // Handle kicad-library separately - it doesn't need generateCircuitJson
   if (format === "kicad-library") {
@@ -153,87 +153,86 @@ export const exportSnippet = async ({
         filePath,
         libraryName: outputBaseName,
         outputDir: outputDestination,
-      });
+      })
       if (writeFile) {
-        onSuccess({ outputDestination: result.outputDir, outputContent: "" });
+        onSuccess({ outputDestination: result.outputDir, outputContent: "" })
       }
-      return onExit(0);
+      return onExit(0)
     } catch (err) {
-      onError(`Error exporting KiCad library: ${err}`);
-      return onExit(1);
+      onError(`Error exporting KiCad library: ${err}`)
+      return onExit(1)
     }
   }
 
-  let circuitJson: AnyCircuitElement[];
+  let circuitJson: AnyCircuitElement[]
 
   if (isCircuitJsonFile(filePath)) {
     const rawCircuitJson = await fs.promises
       .readFile(filePath, "utf-8")
       .catch((err) => {
-        onError(`Error reading circuit JSON file: ${err}`);
-        return null;
-      });
+        onError(`Error reading circuit JSON file: ${err}`)
+        return null
+      })
 
-    if (!rawCircuitJson) return onExit(1);
+    if (!rawCircuitJson) return onExit(1)
 
     try {
-      const parsedCircuitJson = JSON.parse(rawCircuitJson);
+      const parsedCircuitJson = JSON.parse(rawCircuitJson)
       if (!Array.isArray(parsedCircuitJson)) {
-        onError("Error parsing circuit JSON file: expected an array");
-        return onExit(1);
+        onError("Error parsing circuit JSON file: expected an array")
+        return onExit(1)
       }
-      circuitJson = parsedCircuitJson as AnyCircuitElement[];
+      circuitJson = parsedCircuitJson as AnyCircuitElement[]
     } catch (err) {
-      onError(`Error parsing circuit JSON file: ${err}`);
-      return onExit(1);
+      onError(`Error parsing circuit JSON file: ${err}`)
+      return onExit(1)
     }
   } else {
-    const isJlcpcbFabricationExport = format === "gerbers";
+    const isJlcpcbFabricationExport = format === "gerbers"
     const fabricationPlatformConfig = isJlcpcbFabricationExport
       ? getPlatformConfigWithCliDefaults(
           mergePlatformConfigs(platformConfig, {
             enablePartOrientationAnalysis: true,
           }),
         )
-      : platformConfig;
+      : platformConfig
     const generateCircuitData = isJlcpcbFabricationExport
       ? generateCircuitJson
-      : getOrGenerateCircuitJson;
+      : getOrGenerateCircuitJson
     const circuitData = await generateCircuitData({
       filePath,
       saveToFile: format === "circuit-json",
       platformConfig: fabricationPlatformConfig,
     }).catch((err) => {
-      onError(`Error generating circuit JSON: ${err}`);
-      return null;
-    });
+      onError(`Error generating circuit JSON: ${err}`)
+      return null
+    })
 
-    if (!circuitData) return onExit(1);
-    circuitJson = circuitData.circuitJson;
+    if (!circuitData) return onExit(1)
+    circuitJson = circuitData.circuitJson
   }
 
-  let outputContent: string | Buffer;
+  let outputContent: string | Buffer
 
   switch (format) {
     case "schematic-svg":
-      outputContent =
-        convertCircuitJsonToStackedSchematicSheetsSvg(circuitJson);
-      break;
+      outputContent = convertCircuitJsonToStackedSchematicSheetsSvg(circuitJson)
+      break
     case "schematic-pdf":
-      outputContent = await convertCircuitJsonToSchematicPdf(circuitJson);
-      break;
+      outputContent = await convertCircuitJsonToSchematicPdf(circuitJson)
+      break
     case "pcb-svg":
       outputContent = convertCircuitJsonToPcbSvg(
         circuitJson,
         pcbSnapshotSettings,
-      );
-      break;
+      )
+      break
     case "specctra-dsn":
-      outputContent = convertCircuitJsonToDsnString(circuitJson);
-      break;
+      outputContent = convertCircuitJsonToDsnString(circuitJson)
+      break
     case "readable-netlist":
-      outputContent = convertCircuitJsonToReadableNetlist(circuitJson);
-      break;
+      outputContent = convertCircuitJsonToReadableNetlist(circuitJson)
+      break
     case "gltf":
       outputContent = JSON.stringify(
         await convertCircuitJsonToGltf(
@@ -242,58 +241,58 @@ export const exportSnippet = async ({
         ),
         null,
         2,
-      );
-      break;
+      )
+      break
     case "glb":
       outputContent = Buffer.from(
         (await convertCircuitJsonToGltf(
           circuitJson,
           getCircuitJsonToGltfOptions({ format: "glb" }),
         )) as ArrayBuffer,
-      );
-      break;
+      )
+      break
     case "srj":
       {
-        const userLandTscircuit = await importFromUserLand("tscircuit");
+        const userLandTscircuit = await importFromUserLand("tscircuit")
         const simpleRouteJson = unwrapSimpleRouteJson(
           userLandTscircuit.getSimpleRouteJsonFromCircuitJson({
             circuitJson,
           }),
-        );
-        outputContent = JSON.stringify(simpleRouteJson, null, 2);
+        )
+        outputContent = JSON.stringify(simpleRouteJson, null, 2)
       }
-      break;
+      break
     case "kicad_sch": {
-      const converter = new CircuitJsonToKicadSchConverter(circuitJson);
-      converter.runUntilFinished();
-      outputContent = converter.getOutputString();
-      break;
+      const converter = new CircuitJsonToKicadSchConverter(circuitJson)
+      converter.runUntilFinished()
+      outputContent = converter.getOutputString()
+      break
     }
     case "kicad_pcb": {
-      const converter = new CircuitJsonToKicadPcbConverter(circuitJson);
-      converter.runUntilFinished();
-      outputContent = converter.getOutputString();
-      break;
+      const converter = new CircuitJsonToKicadPcbConverter(circuitJson)
+      converter.runUntilFinished()
+      outputContent = converter.getOutputString()
+      break
     }
     case "kicad_zip": {
-      const schConverter = new CircuitJsonToKicadSchConverter(circuitJson);
-      schConverter.runUntilFinished();
+      const schConverter = new CircuitJsonToKicadSchConverter(circuitJson)
+      schConverter.runUntilFinished()
       const pcbConverter = new CircuitJsonToKicadPcbConverter(circuitJson, {
         includeBuiltin3dModels: true,
         projectName: outputBaseName,
-      });
-      pcbConverter.runUntilFinished();
+      })
+      pcbConverter.runUntilFinished()
       const proConverter = new CircuitJsonToKicadProConverter(circuitJson, {
         projectName: outputBaseName,
         schematicFilename: `${outputBaseName}.kicad_sch`,
         pcbFilename: `${outputBaseName}.kicad_pcb`,
-      });
-      proConverter.runUntilFinished();
+      })
+      proConverter.runUntilFinished()
 
-      const zip = new JSZip();
-      zip.file(`${outputBaseName}.kicad_sch`, schConverter.getOutputString());
-      zip.file(`${outputBaseName}.kicad_pcb`, pcbConverter.getOutputString());
-      zip.file(`${outputBaseName}.kicad_pro`, proConverter.getOutputString());
+      const zip = new JSZip()
+      zip.file(`${outputBaseName}.kicad_sch`, schConverter.getOutputString())
+      zip.file(`${outputBaseName}.kicad_pcb`, pcbConverter.getOutputString())
+      zip.file(`${outputBaseName}.kicad_pro`, proConverter.getOutputString())
 
       await resolveAndLoadKicad3dModelFiles({
         model3dSourcePaths: pcbConverter.getModel3dSourcePaths(),
@@ -302,37 +301,37 @@ export const exportSnippet = async ({
         readFile: (modelPath) =>
           fs.promises.readFile(path.resolve(projectDir, modelPath)),
         onModelFile: ({ outputPath, content }) => {
-          zip.file(outputPath, content);
+          zip.file(outputPath, content)
         },
         onError: ({ sourcePath }) => {
-          console.warn(`Failed to load 3D model from ${sourcePath}`);
+          console.warn(`Failed to load 3D model from ${sourcePath}`)
         },
-      });
+      })
 
-      outputContent = await zip.generateAsync({ type: "nodebuffer" });
-      break;
+      outputContent = await zip.generateAsync({ type: "nodebuffer" })
+      break
     }
     case "gerbers": {
-      const zip = new JSZip();
+      const zip = new JSZip()
 
       const gerberLayerCmds = convertSoupToGerberCommands(circuitJson, {
         flip_y_axis: false,
-      });
-      const gerberFileContents = stringifyGerberCommandLayers(gerberLayerCmds);
+      })
+      const gerberFileContents = stringifyGerberCommandLayers(gerberLayerCmds)
 
       for (const [fileName, fileContents] of Object.entries(
         gerberFileContents,
       )) {
-        zip.file(`${fileName}.gbr`, fileContents);
+        zip.file(`${fileName}.gbr`, fileContents)
       }
 
       const platedDrillCmds = convertSoupToExcellonDrillCommands({
         circuitJson,
         is_plated: true,
         flip_y_axis: false,
-      });
+      })
       if (platedDrillCmds.length > 0) {
-        zip.file("drill.drl", stringifyExcellonDrill(platedDrillCmds));
+        zip.file("drill.drl", stringifyExcellonDrill(platedDrillCmds))
       }
 
       // Emit one drill file per distinct plated layer span (e.g. top-bottom,
@@ -352,22 +351,22 @@ export const exportSnippet = async ({
               ? [`${element.from_layer}->${element.to_layer}`]
               : [],
           ),
-      );
+      )
       for (const spanKey of platedSpans) {
-        if (spanKey === "top->bottom") continue; // already in drill.drl
-        const [from_layer, to_layer] = spanKey.split("->") as LayerRef[];
+        if (spanKey === "top->bottom") continue // already in drill.drl
+        const [from_layer, to_layer] = spanKey.split("->") as LayerRef[]
         const spanDrillCmds = convertSoupToExcellonDrillCommands({
           circuitJson,
           is_plated: true,
           flip_y_axis: false,
           layer_span: { from_layer, to_layer },
-        });
+        })
         if (spanDrillCmds.length > 0) {
-          const safeSpan = spanKey.replace(/[^a-z0-9]/gi, "_");
+          const safeSpan = spanKey.replace(/[^a-z0-9]/gi, "_")
           zip.file(
             `drill_${safeSpan}.drl`,
             stringifyExcellonDrill(spanDrillCmds),
-          );
+          )
         }
       }
 
@@ -375,22 +374,22 @@ export const exportSnippet = async ({
         circuitJson,
         is_plated: false,
         flip_y_axis: false,
-      });
+      })
       if (nonPlatedDrillCmds.length > 0) {
-        zip.file("drill_npth.drl", stringifyExcellonDrill(nonPlatedDrillCmds));
+        zip.file("drill_npth.drl", stringifyExcellonDrill(nonPlatedDrillCmds))
       }
 
-      const bomRows = await convertCircuitJsonToBomRows({ circuitJson });
-      const bomCsv = await convertBomRowsToCsv(bomRows);
-      zip.file("bom.csv", bomCsv);
+      const bomRows = await convertCircuitJsonToBomRows({ circuitJson })
+      const bomCsv = await convertBomRowsToCsv(bomRows)
+      zip.file("bom.csv", bomCsv)
 
       const pnpCsv = await convertCircuitJsonToPickAndPlaceCsv(circuitJson, {
         supplier: "jlcpcb",
-      });
-      zip.file("pick_and_place.csv", pnpCsv);
+      })
+      zip.file("pick_and_place.csv", pnpCsv)
 
-      outputContent = await zip.generateAsync({ type: "nodebuffer" });
-      break;
+      outputContent = await zip.generateAsync({ type: "nodebuffer" })
+      break
     }
 
     case "step":
@@ -398,30 +397,30 @@ export const exportSnippet = async ({
         includeComponents: true,
         includeExternalMeshes: true,
         fsMap: await loadLocalStepModelFsMap(circuitJson),
-      });
-      break;
+      })
+      break
     case "assembly-svg":
-      outputContent = convertCircuitJsonToAssemblySvg(circuitJson);
-      break;
+      outputContent = convertCircuitJsonToAssemblySvg(circuitJson)
+      break
     case "component-box-3mf":
       outputContent = Buffer.from(
         await circuitJsonToFdmComponentBox(circuitJson),
-      );
-      break;
+      )
+      break
     default:
-      outputContent = JSON.stringify(circuitJson, null, 2);
+      outputContent = JSON.stringify(circuitJson, null, 2)
   }
   if (writeFile) {
     await writeFileAsync(outputDestination, outputContent).catch((err) => {
-      onError(`Error writing file: ${err}`);
-      return onExit(1);
-    });
+      onError(`Error writing file: ${err}`)
+      return onExit(1)
+    })
   }
 
   onSuccess({
     outputDestination,
     outputContent,
-  });
+  })
 
-  onExit(0);
-};
+  onExit(0)
+}

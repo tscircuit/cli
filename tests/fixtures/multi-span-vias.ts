@@ -41,4 +41,4 @@ export const buildMultiSpanViaCircuitJson = () => [
     to_layer: "bottom",
     layers: ["inner1", "bottom"],
   },
-];
+]
