@@ -17,11 +17,10 @@ export const getCheckShortLayers = ({
   const boardLayerCount =
     pcbBoard?.type === "pcb_board" ? pcbBoard.num_layers : 2
   const innerLayerCount = Math.max(0, Math.floor(boardLayerCount) - 2)
-  const availableLayers: LayerRef[] = [
-    "top",
-    ...innerCopperLayers.slice(0, innerLayerCount),
-    "bottom",
-  ]
+  const availableLayers: LayerRef[] =
+    boardLayerCount <= 1
+      ? ["top"]
+      : ["top", ...innerCopperLayers.slice(0, innerLayerCount), "bottom"]
 
   if (layerOption === "all") return availableLayers
 

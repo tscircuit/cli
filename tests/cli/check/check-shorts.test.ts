@@ -6,9 +6,10 @@ import {
   appendCopperBridgeTrace,
   createShortDebugSvg,
 } from "@tscircuit/check-shorts"
-import type { PcbTrace } from "circuit-json"
+import { pcb_board, type PcbTrace } from "circuit-json"
 import { temporaryDirectory } from "tempy"
 import { getCircuitJsonForCheck } from "../../../cli/check/shared"
+import { getCheckShortLayers } from "../../../cli/check/shorts/get-check-short-layers"
 import {
   CHECK_SHORTS_CDN_URL,
   checkShorts,
@@ -290,6 +291,26 @@ test("check shorts --layer all detects an inner-layer short", async () => {
     await rm(circuitJsonPath, { force: true })
   }
 }, 20_000)
+
+test("check shorts exposes only top on a one-layer board", () => {
+  const circuitJson = [
+    pcb_board.parse({
+      type: "pcb_board",
+      pcb_board_id: "pcb_board_one_layer",
+      center: { x: 0, y: 0 },
+      num_layers: 1,
+    }),
+  ]
+
+  expect(getCheckShortLayers({ circuitJson, layerOption: "all" })).toEqual([
+    "top",
+  ])
+  expect(() =>
+    getCheckShortLayers({ circuitJson, layerOption: "bottom" }),
+  ).toThrow(
+    "--layer bottom is not available on this 1-layer board; available layers: top",
+  )
+})
 
 test("check shorts can select an individual inner layer", async () => {
   const { runCommand, tmpDir } = await getCliTestFixture()
