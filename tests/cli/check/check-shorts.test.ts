@@ -291,6 +291,55 @@ test("check shorts --layer all detects an inner-layer short", async () => {
   }
 }, 20_000)
 
+test("check shorts can select an individual inner layer", async () => {
+  const { runCommand, tmpDir } = await getCliTestFixture()
+  const circuitPath = path.join(tmpDir, "individual-inner-layer-short.tsx")
+  const circuitJsonPath = path.join(
+    tmpDir,
+    "individual-inner-layer-short.circuit.json",
+  )
+
+  try {
+    await linkWorkspaceNodeModules(tmpDir)
+    await writeFile(circuitPath, emptyBoardCircuitCode)
+    const circuitJson =
+      await makeFourLayerCircuitJsonWithInnerShort(circuitPath)
+    await writeFile(circuitJsonPath, JSON.stringify(circuitJson, null, 2))
+
+    const selectedInnerLayer = await runCommand(
+      `tsci check shorts ${circuitJsonPath} --mode pcb --layer inner1`,
+    )
+
+    expect(selectedInnerLayer.exitCode).toBe(1)
+    expect(selectedInnerLayer.stderr).toBe("")
+    expect(selectedInnerLayer.stdout).toContain("Detected 1 short")
+    expect(selectedInnerLayer.stdout).toContain("inner1/pcb")
+
+    const unavailableInnerLayer = await runCommand(
+      `tsci check shorts ${circuitJsonPath} --mode pcb --layer inner3`,
+    )
+
+    expect(unavailableInnerLayer.exitCode).toBe(1)
+    expect(unavailableInnerLayer.stdout).not.toContain("Detected")
+    expect(unavailableInnerLayer.stderr).toContain(
+      "--layer inner3 is not available on this 4-layer board; available layers: top, inner1, inner2, bottom",
+    )
+
+    const invalidLayer = await runCommand(
+      `tsci check shorts ${circuitJsonPath} --mode pcb --layer copper1`,
+    )
+
+    expect(invalidLayer.exitCode).toBe(1)
+    expect(invalidLayer.stdout).not.toContain("Detected")
+    expect(invalidLayer.stderr).toContain(
+      "--layer must be one of: top, bottom, inner1, inner2, inner3, inner4, inner5, inner6, inner7, inner8, all",
+    )
+  } finally {
+    await rm(circuitPath, { force: true })
+    await rm(circuitJsonPath, { force: true })
+  }
+}, 30_000)
+
 test("check shorts routes a source board before analyzing it", async () => {
   const tmpDir = temporaryDirectory()
   const circuitPath = path.join(tmpDir, "routed-board.tsx")

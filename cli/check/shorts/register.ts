@@ -5,6 +5,7 @@ import type {
   FindBitmapShortsOptions,
 } from "@tscircuit/check-shorts"
 import type { PlatformConfig } from "@tscircuit/props"
+import { all_layers, layer_string } from "circuit-json"
 import type { Command } from "commander"
 import { getCircuitJsonForCheck, resolveCheckInputFilePath } from "../shared"
 import {
@@ -82,10 +83,16 @@ const parseMode = (mode?: string): "pcb" | "gerber" => {
   throw new Error("--mode must be either pcb or gerber")
 }
 
+const checkShortsLayerNames = [...all_layers, "all"].join(", ")
+
 const parseLayer = (layer?: string): CheckShortsLayerOption => {
   if (!layer) return "all"
-  if (layer === "top" || layer === "bottom" || layer === "all") return layer
-  throw new Error("--layer must be top, bottom, or all")
+  if (layer === "all") return layer
+
+  const parsedLayer = layer_string.safeParse(layer)
+  if (parsedLayer.success) return parsedLayer.data
+
+  throw new Error(`--layer must be one of: ${checkShortsLayerNames}`)
 }
 
 const formatLabels = (labels: string[]) =>
@@ -187,7 +194,11 @@ export const registerCheckShorts = (program: Command) => {
       "Bitmap source to analyze: pcb or gerber",
       "gerber",
     )
-    .option("--layer <layer>", "Layer to analyze: top, bottom, or all", "all")
+    .option(
+      "--layer <layer>",
+      `Layer to analyze: ${checkShortsLayerNames}`,
+      "all",
+    )
     .option("--pixels-per-mm <number>", "Bitmap resolution for short detection")
     .action(async (file?: string, options?: CheckShortsOptions) => {
       try {
