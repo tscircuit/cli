@@ -9,10 +9,25 @@ import { replaceExactFootprint } from "./replace-exact-footprint"
 
 export const DEFAULT_FOOTPRINTER_ACCURACY_THRESHOLD = 0.98
 
+const COURTYARD_ELEMENT_TYPES = new Set([
+  "pcb_courtyard_rect",
+  "pcb_courtyard_circle",
+  "pcb_courtyard_outline",
+  "pcb_courtyard_pill",
+  "pcb_courtyard_polygon",
+])
+
+const hasCourtyard = (circuitJson: readonly AnyCircuitElement[]): boolean =>
+  circuitJson.some((element) => COURTYARD_ELEMENT_TYPES.has(element.type))
+
 export interface ImportedFootprintConversion {
   accuracy?: number
   candidate?: FootprinterDiscoveryCandidate
-  mode: "exact-discovery-failed" | "exact-low-accuracy" | "footprinter"
+  mode:
+    | "exact-courtyard-loss"
+    | "exact-discovery-failed"
+    | "exact-low-accuracy"
+    | "footprinter"
   tsx: string
 }
 
@@ -47,6 +62,14 @@ export const convertImportedFootprintToFootprinter = ({
     const footprinterCircuitJson = fp
       .string(candidate.footprinterString)
       .circuitJson() as AnyCircuitElement[]
+    if (hasCourtyard(circuitJson) && !hasCourtyard(footprinterCircuitJson)) {
+      return {
+        accuracy: candidate.copperIntersectionOverUnion,
+        candidate,
+        mode: "exact-courtyard-loss",
+        tsx,
+      }
+    }
     const pinMap = getFootprinterToTargetPinMap(
       circuitJson,
       footprinterCircuitJson,

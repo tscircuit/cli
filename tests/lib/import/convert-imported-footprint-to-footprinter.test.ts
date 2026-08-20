@@ -113,3 +113,29 @@ test("keeps the exact footprint when copper IoU is at or below 98%", () => {
   expect(result.accuracy).toBeLessThanOrEqual(0.98)
   expect(result.tsx).toBe(exactTsx)
 })
+
+test("keeps the exact footprint when compaction would remove its courtyard", () => {
+  const circuitJson = fp
+    .string("res_p1.3mm_pw0.55mm_ph0.7mm")
+    .circuitJson() as AnyCircuitElement[]
+  circuitJson.push({
+    type: "pcb_courtyard_rect",
+    pcb_courtyard_rect_id: "pcb_courtyard_rect_1",
+    pcb_component_id: "pcb_component_1",
+    center: { x: 0, y: 0 },
+    width: 2,
+    height: 1,
+    layer: "top",
+  })
+  const exactTsx =
+    "<chip footprint={<footprint><smtpad /><courtyardrect /></footprint>} />"
+
+  const result = convertImportedFootprintToFootprinter({
+    circuitJson,
+    tsx: exactTsx,
+  })
+
+  expect(result.mode).toBe("exact-courtyard-loss")
+  expect(result.accuracy).toBeGreaterThan(0.98)
+  expect(result.tsx).toBe(exactTsx)
+})

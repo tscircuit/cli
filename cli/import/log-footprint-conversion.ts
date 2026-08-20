@@ -30,6 +30,15 @@ export const logFootprintConversion = (conversion: FootprintConversion) => {
     return
   }
 
+  if (conversion.mode === "exact-courtyard-loss") {
+    console.log(
+      kleur.yellow(
+        "Using the exact EasyEDA footprint because the compact footprinter result has no courtyard.",
+      ),
+    )
+    return
+  }
+
   if (conversion.mode === "exact-discovery-failed") {
     console.log(
       kleur.yellow(
