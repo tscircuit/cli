@@ -45,6 +45,10 @@ export const handleBuildFile = async (
   try {
     process.chdir(projectDir)
 
+    if (path.resolve(filePath) !== path.resolve(outputPath)) {
+      fs.rmSync(outputPath, { force: true })
+    }
+
     workerLog(
       `Generating circuit JSON for ${path.relative(projectDir, filePath)}...`,
     )
