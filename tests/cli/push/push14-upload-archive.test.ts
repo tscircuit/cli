@@ -1,9 +1,9 @@
-import { expect, test } from "bun:test"
+import { test, expect } from "bun:test"
+import { getCliTestFixture } from "../../fixtures/get-cli-test-fixture"
 import * as fs from "node:fs"
 import * as path from "node:path"
 import { gunzipSync } from "node:zlib"
 import { getArchivePayload } from "lib/shared/push-snippet"
-import { getCliTestFixture } from "../../fixtures/get-cli-test-fixture"
 
 test("compressed upload payload matches the registry archive format", async () => {
   const { tmpDir } = await getCliTestFixture()
