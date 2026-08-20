@@ -1,20 +1,20 @@
-import { cliConfig } from "lib/cli-config"
-import { getRegistryApiKy } from "lib/registry-api/get-ky"
 import * as fs from "node:fs"
 import * as path from "node:path"
-import semver from "semver"
+import { gzipSync } from "node:zlib"
 import Debug from "debug"
 import kleur from "kleur"
-import { getEntrypoint } from "./get-entrypoint"
-import prompts from "lib/utils/prompts"
-import { getUnscopedPackageName } from "lib/utils/get-unscoped-package-name"
-import { getPackageAuthor } from "lib/utils/get-package-author"
-import { validatePackageName } from "lib/utils/validate-package-name"
+import { cliConfig } from "lib/cli-config"
 import { getPackageFilePaths } from "lib/dev/get-package-file-paths"
+import { getRegistryApiKy } from "lib/registry-api/get-ky"
 import { checkOrgAccess } from "lib/utils/check-org-access"
-import { isBinaryFile } from "./is-binary-file"
+import { getPackageAuthor } from "lib/utils/get-package-author"
+import { getUnscopedPackageName } from "lib/utils/get-unscoped-package-name"
+import prompts from "lib/utils/prompts"
+import { validatePackageName } from "lib/utils/validate-package-name"
+import semver from "semver"
+import { getEntrypoint } from "./get-entrypoint"
 import { hasBinaryContent } from "./has-binary-content"
-import JSZip from "jszip"
+import { isBinaryFile } from "./is-binary-file"
 
 type PushOptions = {
   filePath?: string
@@ -79,28 +79,32 @@ const findPushProject = async ({
   return { snippetFilePath, packageJsonPath, projectDir }
 }
 
-const getArchivePayload = async (
+export const getArchivePayload = (
   filePaths: string[],
   projectDir: string,
   packageNameWithVersion: string,
 ) => {
-  const zip = new JSZip()
-
-  for (const fullFilePath of filePaths) {
+  const files = filePaths.map((fullFilePath) => {
     const relativeFilePath = path.relative(projectDir, fullFilePath)
-    zip.file(relativeFilePath, fs.readFileSync(fullFilePath))
-  }
+    const fileBuffer = fs.readFileSync(fullFilePath)
+    const isBinary =
+      isBinaryFile(relativeFilePath) || hasBinaryContent(fileBuffer)
 
-  const archive = await zip.generateAsync({
-    type: "uint8array",
-    compression: "DEFLATE",
-    compressionOptions: { level: 9 },
+    return isBinary
+      ? {
+          file_path: relativeFilePath,
+          content_base64: fileBuffer.toString("base64"),
+        }
+      : {
+          file_path: relativeFilePath,
+          content_text: fileBuffer.toString("utf8"),
+        }
   })
+  const archive = gzipSync(JSON.stringify({ files }), { level: 9 })
 
   return {
     package_name_with_version: packageNameWithVersion,
-    archive_base64: Buffer.from(archive).toString("base64"),
-    archive_format: "zip",
+    archive_base64: archive.toString("base64"),
   }
 }
 
@@ -407,7 +411,7 @@ export const pushSnippet = async ({
   if (shouldUploadArchive) {
     log(kleur.gray("Uploading package archive..."))
     try {
-      const archivePayload = await getArchivePayload(
+      const archivePayload = getArchivePayload(
         filePaths,
         projectDir,
         packageNameWithVersion,
