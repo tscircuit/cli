@@ -10,7 +10,7 @@ export default () => (
   </board>
 )`
 
-test("default build and --ignore-errors both exit zero for DRC errors", async () => {
+test("build exits nonzero for DRC errors unless explicitly ignored", async () => {
   const { tmpDir, runCommand } = await getCliTestFixture()
 
   await writeFile(path.join(tmpDir, "test.circuit.tsx"), validCircuitCode)
@@ -29,7 +29,7 @@ test("default build and --ignore-errors both exit zero for DRC errors", async ()
     "Component R1 extends outside board boundaries",
   )
 
-  expect(defaultBuild.exitCode).toBe(0)
+  expect(defaultBuild.exitCode).toBe(1)
   expect(defaultBuild.stdout).toContain("Build completed with errors")
   expect(ignoredBuild.exitCode).toBe(0)
 }, 30_000)
