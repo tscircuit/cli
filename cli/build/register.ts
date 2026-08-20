@@ -1036,8 +1036,10 @@ export const registerBuild = (program: Command) => {
           }
         }
 
-        // Fatal errors (e.g., circuit generation exceptions) always cause exit code 1.
-        const shouldExitNonZero = hasFatalErrors
+        // Fatal generation failures and unignored Circuit JSON errors both
+        // make the default build unsuccessful. `--ignore-errors` keeps
+        // `hasErrors` false and remains the explicit opt-in to exit zero.
+        const shouldExitNonZero = hasFatalErrors || hasErrors
 
         const successCount = builtFiles.filter((f) => f.ok).length
         const failCount = builtFiles.length - successCount
@@ -1122,7 +1124,12 @@ export const registerBuild = (program: Command) => {
             : kleur.green("\n✓ Done"),
         )
         if (shouldExitNonZero) {
-          exitBuild(1, "fatal circuit build errors occurred")
+          exitBuild(
+            1,
+            hasFatalErrors
+              ? "fatal circuit build errors occurred"
+              : "unignored circuit errors occurred",
+          )
         }
 
         exitBuild(0, "build finished successfully")
