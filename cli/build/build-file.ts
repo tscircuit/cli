@@ -41,6 +41,10 @@ export const buildFile = async (
   try {
     console.log("Generating circuit JSON...")
 
+    if (path.resolve(input) !== path.resolve(output)) {
+      fs.rmSync(output, { force: true })
+    }
+
     const normalizedInputPath = input.toLowerCase().replaceAll("\\", "/")
     const isPrebuiltCircuitJson =
       normalizedInputPath.endsWith(".circuit.json") ||

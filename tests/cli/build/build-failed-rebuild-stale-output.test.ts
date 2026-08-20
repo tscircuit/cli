@@ -1,5 +1,5 @@
 import { expect, test } from "bun:test"
-import { readFile, writeFile } from "node:fs/promises"
+import { stat, writeFile } from "node:fs/promises"
 import path from "node:path"
 import { getCliTestFixture } from "../../fixtures/get-cli-test-fixture"
 
@@ -17,7 +17,7 @@ export default () => {
 }
 `
 
-test("failed rebuild leaves the previous circuit JSON in dist", async () => {
+test("failed rebuild removes the previous circuit JSON", async () => {
   const { tmpDir, runCommand } = await getCliTestFixture()
   const circuitPath = path.join(tmpDir, "index.tsx")
   const outputPath = path.join(tmpDir, "dist", "index", "circuit.json")
@@ -26,12 +26,12 @@ test("failed rebuild leaves the previous circuit JSON in dist", async () => {
 
   const firstBuild = await runCommand("tsci build index.tsx")
   expect(firstBuild.exitCode).toBe(0)
-  const previousCircuitJson = await readFile(outputPath, "utf8")
+  expect((await stat(outputPath)).isFile()).toBe(true)
 
   await writeFile(circuitPath, failingCircuitCode)
   const failedRebuild = await runCommand("tsci build index.tsx")
 
   expect(failedRebuild.exitCode).toBe(1)
   expect(failedRebuild.stderr).toContain("intentional failed rebuild")
-  expect(await readFile(outputPath, "utf8")).toBe(previousCircuitJson)
-})
+  await expect(stat(outputPath)).rejects.toMatchObject({ code: "ENOENT" })
+}, 30_000)
