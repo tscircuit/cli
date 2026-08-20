@@ -2,6 +2,40 @@ import { test, expect } from "bun:test"
 import { getCliTestFixture } from "../../fixtures/get-cli-test-fixture"
 import * as fs from "node:fs"
 import * as path from "node:path"
+import { gunzipSync } from "node:zlib"
+import { getArchivePayload } from "lib/shared/push-snippet"
+
+test("compressed upload payload matches the registry archive format", async () => {
+  const { tmpDir } = await getCliTestFixture()
+  const textFilePath = path.resolve(tmpDir, "snippet.tsx")
+  const binaryFilePath = path.resolve(tmpDir, "image.bin")
+
+  fs.writeFileSync(textFilePath, "// Snippet content")
+  fs.writeFileSync(binaryFilePath, Buffer.from([0, 1, 2, 255]))
+
+  const payload = getArchivePayload(
+    [textFilePath, binaryFilePath],
+    tmpDir,
+    "test-user/test-package@1.0.0",
+  )
+  const archive = JSON.parse(
+    gunzipSync(Buffer.from(payload.archive_base64, "base64")).toString("utf8"),
+  )
+
+  expect(payload.package_name_with_version).toBe("test-user/test-package@1.0.0")
+  expect(archive).toEqual({
+    files: [
+      {
+        file_path: "snippet.tsx",
+        content_text: "// Snippet content",
+      },
+      {
+        file_path: "image.bin",
+        content_base64: Buffer.from([0, 1, 2, 255]).toString("base64"),
+      },
+    ],
+  })
+})
 
 test("should attempt archive upload when TSCI_PUSH_ARCHIVE is enabled", async () => {
   const { tmpDir, runCommand } = await getCliTestFixture({ loggedIn: true })

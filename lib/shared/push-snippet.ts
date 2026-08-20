@@ -14,7 +14,7 @@ import { getPackageFilePaths } from "lib/dev/get-package-file-paths"
 import { checkOrgAccess } from "lib/utils/check-org-access"
 import { isBinaryFile } from "./is-binary-file"
 import { hasBinaryContent } from "./has-binary-content"
-import JSZip from "jszip"
+import { gzipSync } from "node:zlib"
 
 type PushOptions = {
   filePath?: string
@@ -79,28 +79,32 @@ const findPushProject = async ({
   return { snippetFilePath, packageJsonPath, projectDir }
 }
 
-const getArchivePayload = async (
+export const getArchivePayload = (
   filePaths: string[],
   projectDir: string,
   packageNameWithVersion: string,
 ) => {
-  const zip = new JSZip()
-
-  for (const fullFilePath of filePaths) {
+  const files = filePaths.map((fullFilePath) => {
     const relativeFilePath = path.relative(projectDir, fullFilePath)
-    zip.file(relativeFilePath, fs.readFileSync(fullFilePath))
-  }
+    const fileBuffer = fs.readFileSync(fullFilePath)
+    const isBinary =
+      isBinaryFile(relativeFilePath) || hasBinaryContent(fileBuffer)
 
-  const archive = await zip.generateAsync({
-    type: "uint8array",
-    compression: "DEFLATE",
-    compressionOptions: { level: 9 },
+    return isBinary
+      ? {
+          file_path: relativeFilePath,
+          content_base64: fileBuffer.toString("base64"),
+        }
+      : {
+          file_path: relativeFilePath,
+          content_text: fileBuffer.toString("utf8"),
+        }
   })
+  const archive = gzipSync(JSON.stringify({ files }), { level: 9 })
 
   return {
     package_name_with_version: packageNameWithVersion,
-    archive_base64: Buffer.from(archive).toString("base64"),
-    archive_format: "zip",
+    archive_base64: archive.toString("base64"),
   }
 }
 
@@ -407,7 +411,7 @@ export const pushSnippet = async ({
   if (shouldUploadArchive) {
     log(kleur.gray("Uploading package archive..."))
     try {
-      const archivePayload = await getArchivePayload(
+      const archivePayload = getArchivePayload(
         filePaths,
         projectDir,
         packageNameWithVersion,
