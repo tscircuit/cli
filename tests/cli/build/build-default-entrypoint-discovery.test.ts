@@ -4,12 +4,16 @@ import path from "node:path"
 import { getBuildEntrypoints } from "cli/build/get-build-entrypoints"
 import { temporaryDirectory } from "tempy"
 
-test("default build discovers work circuits alongside the main entrypoint", async () => {
+test("default build excludes work circuits while retaining project circuits", async () => {
   const projectDir = temporaryDirectory()
   fs.mkdirSync(path.join(projectDir, "work"), { recursive: true })
   fs.writeFileSync(path.join(projectDir, "package.json"), "{}")
   fs.writeFileSync(
     path.join(projectDir, "index.circuit.tsx"),
+    "export default () => <board />",
+  )
+  fs.writeFileSync(
+    path.join(projectDir, "diagnostic.circuit.tsx"),
     "export default () => <board />",
   )
   fs.writeFileSync(
@@ -24,7 +28,29 @@ test("default build discovers work circuits alongside the main entrypoint", asyn
 
   expect(result.mainEntrypoint).toBeUndefined()
   expect(relativeCircuitFiles).toEqual([
+    "diagnostic.circuit.tsx",
     "index.circuit.tsx",
-    "work/diagnostic.circuit.tsx",
   ])
+})
+
+test("configured includeBoardFiles can explicitly include work circuits", async () => {
+  const projectDir = temporaryDirectory()
+  fs.mkdirSync(path.join(projectDir, "work"), { recursive: true })
+  fs.writeFileSync(path.join(projectDir, "package.json"), "{}")
+  fs.writeFileSync(
+    path.join(projectDir, "work", "diagnostic.circuit.tsx"),
+    "export default () => <board />",
+  )
+  fs.writeFileSync(
+    path.join(projectDir, "tscircuit.config.json"),
+    JSON.stringify({ includeBoardFiles: ["work/**/*.circuit.tsx"] }),
+  )
+
+  const result = await getBuildEntrypoints({ rootDir: projectDir })
+
+  expect(
+    result.circuitFiles.map((filePath) =>
+      path.relative(projectDir, filePath).split(path.sep).join("/"),
+    ),
+  ).toEqual(["work/diagnostic.circuit.tsx"])
 })
