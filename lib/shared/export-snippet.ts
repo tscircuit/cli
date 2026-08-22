@@ -7,12 +7,7 @@ import {
   convertBomRowsToCsv,
   convertCircuitJsonToBomRows,
 } from "circuit-json-to-bom-csv"
-import {
-  convertSoupToExcellonDrillCommands,
-  convertSoupToGerberCommands,
-  stringifyExcellonDrill,
-  stringifyGerberCommandLayers,
-} from "circuit-json-to-gerber"
+import { convertCircuitJsonToGerberFiles } from "circuit-json-to-gerber"
 import { convertCircuitJsonToGltf } from "circuit-json-to-gltf"
 import {
   CircuitJsonToKicadPcbConverter,
@@ -313,33 +308,11 @@ export const exportSnippet = async ({
     case "gerbers": {
       const zip = new JSZip()
 
-      const gerberLayerCmds = convertSoupToGerberCommands(circuitJson, {
+      const gerberFiles = convertCircuitJsonToGerberFiles(circuitJson, {
         flip_y_axis: false,
       })
-      const gerberFileContents = stringifyGerberCommandLayers(gerberLayerCmds)
-
-      for (const [fileName, fileContents] of Object.entries(
-        gerberFileContents,
-      )) {
-        zip.file(`${fileName}.gbr`, fileContents)
-      }
-
-      const platedDrillCmds = convertSoupToExcellonDrillCommands({
-        circuitJson,
-        is_plated: true,
-        flip_y_axis: false,
-      })
-      if (platedDrillCmds.length > 0) {
-        zip.file("drill.drl", stringifyExcellonDrill(platedDrillCmds))
-      }
-
-      const nonPlatedDrillCmds = convertSoupToExcellonDrillCommands({
-        circuitJson,
-        is_plated: false,
-        flip_y_axis: false,
-      })
-      if (nonPlatedDrillCmds.length > 0) {
-        zip.file("drill_npth.drl", stringifyExcellonDrill(nonPlatedDrillCmds))
+      for (const [fileName, fileContents] of Object.entries(gerberFiles)) {
+        zip.file(fileName, fileContents)
       }
 
       const bomRows = await convertCircuitJsonToBomRows({ circuitJson })
