@@ -10,13 +10,14 @@ export default () => (
   </board>
 )`
 
-test("build succeeds when circuit JSON is generated with DRC errors", async () => {
+test("default build and --ignore-errors both exit zero for DRC errors", async () => {
   const { tmpDir, runCommand } = await getCliTestFixture()
 
   await writeFile(path.join(tmpDir, "test.circuit.tsx"), validCircuitCode)
   await writeFile(path.join(tmpDir, "package.json"), "{}")
 
-  const { exitCode, stdout } = await runCommand("tsci build")
+  const defaultBuild = await runCommand("tsci build")
+  const ignoredBuild = await runCommand("tsci build --ignore-errors")
 
   const circuitJsonPath = path.join(tmpDir, "dist", "test", "circuit.json")
   const circuitJson = await readFile(circuitJsonPath, "utf-8")
@@ -28,6 +29,7 @@ test("build succeeds when circuit JSON is generated with DRC errors", async () =
     "Component R1 extends outside board boundaries",
   )
 
-  expect(exitCode).toBe(0)
-  expect(stdout).toContain("Build completed with errors")
+  expect(defaultBuild.exitCode).toBe(0)
+  expect(defaultBuild.stdout).toContain("Build completed with errors")
+  expect(ignoredBuild.exitCode).toBe(0)
 }, 30_000)
