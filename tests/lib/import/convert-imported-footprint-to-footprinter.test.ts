@@ -1,4 +1,7 @@
+import "bun-match-svg"
 import { expect, test } from "bun:test"
+import { rm, symlink, writeFile } from "node:fs/promises"
+import path from "node:path"
 import { fp } from "@tscircuit/footprinter"
 import type {
   AnyCircuitElement,
@@ -6,8 +9,7 @@ import type {
   PcbSmtPad,
   SourcePort,
 } from "circuit-json"
-import { rm, symlink, writeFile } from "node:fs/promises"
-import path from "node:path"
+import { convertCircuitJsonToPcbSvg } from "circuit-to-svg"
 import { convertImportedFootprintToFootprinter } from "lib/import/footprinter/convert-imported-footprint-to-footprinter"
 import { generateCircuitJson } from "lib/shared/generate-circuit-json"
 import { temporaryDirectory } from "tempy"
@@ -93,6 +95,41 @@ export const TestChip = () => (
   }
 })
 
+test("compacts C2871569 while preserving its 4x4 thermal-via array", () => {
+  const circuitJson = fp
+    .string(
+      "qfn64_thermalpad6.3mmx6.3mm_thermalvias4x4_thermalviapitch1mm_thermalviaid0.3048mm_thermalviaod0.6096mm_pillpads_h9.67mm_pw0.28mm_pl0.66mm",
+    )
+    .circuitJson() as AnyCircuitElement[]
+  const exactTsx =
+    "<chip footprint={<footprint><smtpad /><via /></footprint>} />"
+
+  const result = convertImportedFootprintToFootprinter({
+    circuitJson,
+    sourceHints: ["C2871569", "QFN-64"],
+    tsx: exactTsx,
+  })
+
+  expect(result.mode).toBe("footprinter")
+  expect(result.candidate?.footprinterString).toContain("_thermalvias4x4")
+  expect(result.candidate?.footprinterString).toContain("_thermalviapitch1mm")
+  expect(result.candidate?.footprinterString).toContain("_thermalviaid0.3048mm")
+  expect(result.candidate?.footprinterString).toContain("_thermalviaod0.6096mm")
+  expect(result.candidate?.holeIntersectionOverUnion).toBeGreaterThan(0.99)
+  expect(result.tsx).not.toContain("footprint={<footprint>")
+
+  const recoveredCircuitJson = fp
+    .string(result.candidate!.footprinterString)
+    .circuitJson()
+  expect(
+    recoveredCircuitJson.filter((element) => element.type === "pcb_via"),
+  ).toHaveLength(16)
+  expect(convertCircuitJsonToPcbSvg(recoveredCircuitJson)).toMatchSvgSnapshot(
+    import.meta.path,
+    "C2871569-thermal-vias",
+  )
+})
+
 test("keeps the exact footprint when copper IoU is at or below 98%", () => {
   const circuitJson = fp
     .string("res_p1.3mm_pw0.55mm_ph0.7mm")
@@ -101,7 +138,7 @@ test("keeps the exact footprint when copper IoU is at or below 98%", () => {
   if (!firstPad || firstPad.type !== "pcb_smtpad") {
     throw new Error("Expected an SMT pad")
   }
-  firstPad.shape = "circle"
+  Object.assign(firstPad, { radius: 0.1, shape: "circle" as const })
   const exactTsx = "<chip footprint={<footprint><smtpad /></footprint>} />"
 
   const result = convertImportedFootprintToFootprinter({
