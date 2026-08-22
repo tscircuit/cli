@@ -28,8 +28,7 @@ export const handleSnapshotFile = async (
   snapshotsDirName: string | undefined,
   options: SnapshotWorkerOptions,
 ): Promise<SnapshotCompletedMessage> => {
-  process.chdir(projectDir)
-  await registerStaticAssetLoaders()
+  await registerStaticAssetLoaders(undefined, projectDir)
   const projectConfig = await loadRuntimeProjectConfig(projectDir)
   const platformConfig = mergePlatformConfigs(
     projectConfig?.platformConfig,

@@ -40,6 +40,7 @@ const ALLOWED_FILE_EXTENSIONS = [
 
 type GenerateCircuitJsonOptions = {
   filePath: string
+  projectDir?: string
   outputDir?: string
   outputFileName?: string
   saveToFile?: boolean
@@ -59,6 +60,7 @@ type GenerateCircuitJsonOptions = {
  */
 export async function generateCircuitJson({
   filePath,
+  projectDir: projectDirOption,
   outputDir,
   outputFileName,
   saveToFile = false,
@@ -75,10 +77,14 @@ export async function generateCircuitJson({
     sourceFilesystemMd5Hash ?? getSourceFilesystemMd5Hash(filePath)
 
   // Import React and make it globally available for packages referencing it
-  const React = await importFromUserLand("react")
+  const projectRootDir = path.resolve(projectDirOption ?? process.cwd())
+  const React = await importFromUserLand("react", projectRootDir)
   ;(globalThis as any).React = React
-  registerStaticAssetLoaders(platformConfig)
-  const userLandTscircuit = await importFromUserLand("tscircuit")
+  registerStaticAssetLoaders(platformConfig, projectRootDir)
+  const userLandTscircuit = await importFromUserLand(
+    "tscircuit",
+    projectRootDir,
+  )
 
   const runner = new userLandTscircuit.RootCircuit({
     platform: platformConfig,
@@ -93,12 +99,12 @@ export async function generateCircuitJson({
   solverDiagnostics?.attachToRootCircuit(runner)
   const absoluteFilePath = path.isAbsolute(filePath)
     ? filePath
-    : path.resolve(process.cwd(), filePath)
-  const projectDir = path.dirname(absoluteFilePath)
-  const resolvedOutputDir = outputDir ?? projectDir
+    : path.resolve(projectRootDir, filePath)
+  const sourceDir = path.dirname(absoluteFilePath)
+  const resolvedOutputDir = outputDir ?? sourceDir
 
   // Get the relative path to the component from the project directory
-  const relativeComponentPath = path.relative(projectDir, absoluteFilePath)
+  const relativeComponentPath = path.relative(sourceDir, absoluteFilePath)
 
   // Create a default output filename if not provided
   const baseFileName =
@@ -108,14 +114,14 @@ export async function generateCircuitJson({
     `${baseFileName}.circuit.json`,
   )
 
-  debug(`Project directory: ${projectDir}`)
+  debug(`Project directory: ${sourceDir}`)
   debug(`Relative component path: ${relativeComponentPath}`)
   debug(`Output path: ${outputPath}`)
 
   // Create a virtual file system with the project files
   const fsMap = {
     ...((await getVirtualFileSystemFromDirPath({
-      dirPath: projectDir,
+      dirPath: sourceDir,
       fileMatchFn: (filePath) => {
         const normalizedFilePath = filePath.replace(/\\/g, "/")
 
