@@ -13,6 +13,7 @@ import {
   stringifyExcellonDrill,
   stringifyGerberCommandLayers,
 } from "circuit-json-to-gerber"
+import type { LayerRef } from "circuit-json"
 import { convertCircuitJsonToGltf } from "circuit-json-to-gltf"
 import {
   CircuitJsonToKicadPcbConverter,
@@ -331,6 +332,42 @@ export const exportSnippet = async ({
       })
       if (platedDrillCmds.length > 0) {
         zip.file("drill.drl", stringifyExcellonDrill(platedDrillCmds))
+      }
+
+      // Emit one drill file per distinct plated layer span (e.g. top-bottom,
+      // top-inner1, inner1-bottom). The converter only includes vias whose span
+      // matches the requested layer_span, so a single default call silently
+      // drops every non-default-span via.
+      const platedSpans = new Set(
+        circuitJson
+          .filter(
+            (element: any) =>
+              element?.type === "pcb_via" ||
+              element?.type === "pcb_plated_hole",
+          )
+          .flatMap((element: any) =>
+            typeof element?.from_layer === "string" &&
+            typeof element?.to_layer === "string"
+              ? [`${element.from_layer}->${element.to_layer}`]
+              : [],
+          ),
+      )
+      for (const spanKey of platedSpans) {
+        if (spanKey === "top->bottom") continue // already in drill.drl
+        const [from_layer, to_layer] = spanKey.split("->") as LayerRef[]
+        const spanDrillCmds = convertSoupToExcellonDrillCommands({
+          circuitJson,
+          is_plated: true,
+          flip_y_axis: false,
+          layer_span: { from_layer, to_layer },
+        })
+        if (spanDrillCmds.length > 0) {
+          const safeSpan = spanKey.replace(/[^a-z0-9]/gi, "_")
+          zip.file(
+            `drill_${safeSpan}.drl`,
+            stringifyExcellonDrill(spanDrillCmds),
+          )
+        }
       }
 
       const nonPlatedDrillCmds = convertSoupToExcellonDrillCommands({
