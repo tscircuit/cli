@@ -51,10 +51,9 @@ export function getPlatformConfigWithCliDefaults(
   userConfig?: PlatformConfig,
   options?: { projectDir?: string },
 ): PlatformConfig {
+  const projectDir = options?.projectDir ?? process.cwd()
   const basePlatformConfig = getPlatformConfig()
-  const cacheDir = options?.projectDir
-    ? path.join(options.projectDir, ".tscircuit", "cache")
-    : undefined
+  const cacheDir = path.join(projectDir, ".tscircuit", "cache")
 
   const defaultConfig: PlatformConfig = {
     ...basePlatformConfig,
@@ -68,7 +67,7 @@ export function getPlatformConfigWithCliDefaults(
           let fetchUrl = url
           if (url.startsWith("./") || url.startsWith("../")) {
             // Relative path - resolve to absolute first
-            const absolutePath = path.resolve(process.cwd(), url)
+            const absolutePath = path.resolve(projectDir, url)
             fetchUrl = `file://${absolutePath}`
           } else if (url.startsWith("/")) {
             // Absolute path - check if it exists, otherwise try resolving as relative
@@ -77,7 +76,7 @@ export function getPlatformConfigWithCliDefaults(
             } else {
               // Try treating it as a relative path (strip leading / and resolve from cwd)
               const relativePath = `.${url}`
-              const absolutePath = path.resolve(process.cwd(), relativePath)
+              const absolutePath = path.resolve(projectDir, relativePath)
               if (fs.existsSync(absolutePath)) {
                 fetchUrl = `file://${absolutePath}`
               } else {

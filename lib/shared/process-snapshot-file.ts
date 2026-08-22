@@ -83,6 +83,7 @@ export const processSnapshotFile = async ({
 
       const result = await getOrGenerateCircuitJson({
         filePath: file,
+        projectDir,
         platformConfig: platformConfigWithCliDefaults,
       })
       circuitJson = result.circuitJson

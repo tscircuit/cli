@@ -43,13 +43,11 @@ export const handleBuildFile = async (
   const startedAt = options?.profile ? performance.now() : 0
 
   try {
-    process.chdir(projectDir)
-
     workerLog(
       `Generating circuit JSON for ${path.relative(projectDir, filePath)}...`,
     )
 
-    await registerStaticAssetLoaders()
+    await registerStaticAssetLoaders(undefined, projectDir)
 
     const projectConfig = await loadRuntimeProjectConfig(projectDir)
     const platformConfig = mergePlatformConfigs(
@@ -71,6 +69,7 @@ export const handleBuildFile = async (
       : (
           await generateCircuitJson({
             filePath,
+            projectDir,
             platformConfig: platformConfigWithCliDefaults,
             injectedProps: options?.injectedProps,
             autorouterDiagnostics: options?.autorouterDiagnostics

@@ -61,6 +61,7 @@ export const buildFile = async (
     if (!isPrebuiltCircuitJson) {
       const result = await generateCircuitJson({
         filePath: input,
+        projectDir,
         platformConfig: platformConfigWithCliDefaults,
         injectedProps: options?.injectedProps,
         autorouterDiagnostics: options?.autorouterDiagnostics,

@@ -2,12 +2,15 @@ import { createRequire } from "node:module"
 import fs from "node:fs"
 import path, { relative, resolve } from "node:path"
 
-export async function importFromUserLand(moduleName: string) {
+export async function importFromUserLand(
+  moduleName: string,
+  projectDir = process.cwd(),
+) {
   // First try to resolve relative to the user's project without triggering
   // Bun's auto-install (which can pull in inconsistent dependency versions)
-  const userModulePath = path.join(process.cwd(), "node_modules", moduleName)
+  const userModulePath = path.join(projectDir, "node_modules", moduleName)
   if (fs.existsSync(userModulePath)) {
-    const userRequire = createRequire(path.join(process.cwd(), "noop.js"))
+    const userRequire = createRequire(path.join(projectDir, "noop.js"))
     try {
       const resolvedUserPath = userRequire.resolve(moduleName)
       return await import(resolvedUserPath)

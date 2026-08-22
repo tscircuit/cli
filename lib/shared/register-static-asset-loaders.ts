@@ -76,8 +76,8 @@ const normalizeStaticFileLoaderResult = (result: any) => {
  * Finds and reads the tsconfig.json file, returning the baseUrl if configured.
  * Returns null if no tsconfig.json is found or no baseUrl is set.
  */
-const getBaseUrlFromTsConfig = (): string | null => {
-  const tsconfigPath = path.join(process.cwd(), "tsconfig.json")
+const getBaseUrlFromTsConfig = (projectDir: string): string | null => {
+  const tsconfigPath = path.join(projectDir, "tsconfig.json")
 
   try {
     if (!fs.existsSync(tsconfigPath)) {
@@ -97,14 +97,17 @@ const getBaseUrlFromTsConfig = (): string | null => {
   return null
 }
 
-export const registerStaticAssetLoaders = (platformConfig?: PlatformConfig) => {
+export const registerStaticAssetLoaders = (
+  platformConfig?: PlatformConfig,
+  projectDir = process.cwd(),
+) => {
   activePlatformConfig = platformConfig
 
   if (registered) return
   registered = true
 
   if (typeof Bun !== "undefined" && typeof Bun.plugin === "function") {
-    const baseUrl = getBaseUrlFromTsConfig()
+    const baseUrl = getBaseUrlFromTsConfig(projectDir)
 
     Bun.plugin({
       name: "tsci-static-assets",
@@ -123,8 +126,8 @@ export const registerStaticAssetLoaders = (platformConfig?: PlatformConfig) => {
           }
 
           const baseDir = baseUrl
-            ? path.resolve(process.cwd(), baseUrl)
-            : process.cwd()
+            ? path.resolve(projectDir, baseUrl)
+            : projectDir
 
           const relativePath = path
             .relative(baseDir, args.path)
