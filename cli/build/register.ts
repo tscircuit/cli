@@ -2,8 +2,10 @@ import fs from "node:fs"
 import path from "node:path"
 import JSZip from "jszip"
 import type { PlatformConfig } from "@tscircuit/props"
+import type { AnyCircuitElement } from "circuit-json"
 import type { Command } from "commander"
 import kleur from "kleur"
+import { analyzePcbRoutingCompleteness } from "lib/shared/analyze-pcb-routing-completeness"
 import { getCircuitJsonOutputDirName } from "lib/shared/circuit-json-build-cache"
 import { loadRuntimeProjectConfig } from "lib/project-config"
 import {
@@ -409,6 +411,7 @@ export const registerBuild = (program: Command) => {
 
         let hasErrors = false
         let hasFatalErrors = false
+        let unroutedPcbNetCount = 0
         const ignoredDrcByCategory: DrcIgnoreCounts = {
           netlist: 0,
           pin_specification: 0,
@@ -494,7 +497,7 @@ export const registerBuild = (program: Command) => {
           outputPath: string,
           buildOutcome: {
             ok: boolean
-            circuitJson?: unknown[]
+            circuitJson?: AnyCircuitElement[]
             hasErrors?: boolean
             ignoredDrcByCategory?: DrcIgnoreCounts
             isFatalError?: { errorType: string; message: string }
@@ -502,6 +505,14 @@ export const registerBuild = (program: Command) => {
         ) => {
           const relative = path.relative(projectDir, filePath)
           const outputDirName = getCircuitJsonOutputDirName(relative)
+          let circuitJson = buildOutcome.circuitJson
+          const getCircuitJson = (): AnyCircuitElement[] | undefined => {
+            if (!circuitJson && fs.existsSync(outputPath)) {
+              const parsed = JSON.parse(fs.readFileSync(outputPath, "utf-8"))
+              circuitJson = Array.isArray(parsed) ? parsed : undefined
+            }
+            return circuitJson
+          }
 
           builtFiles.push({
             sourcePath: filePath,
@@ -547,14 +558,38 @@ export const registerBuild = (program: Command) => {
             })
           }
 
+          if (buildOutcome.ok) {
+            const builtCircuitJson = getCircuitJson()
+            if (builtCircuitJson) {
+              const routingCompleteness =
+                analyzePcbRoutingCompleteness(builtCircuitJson)
+              const fileUnroutedNetCount =
+                routingCompleteness.unroutedNets.length
+              unroutedPcbNetCount += fileUnroutedNetCount
+
+              if (fileUnroutedNetCount > 0) {
+                hasErrors = true
+                console.error(
+                  kleur.red(
+                    `Unrouted PCB net${fileUnroutedNetCount === 1 ? "" : "s"} in ${relative}: ${fileUnroutedNetCount}`,
+                  ),
+                )
+                for (const unroutedNet of routingCompleteness.unroutedNets) {
+                  console.error(
+                    kleur.red(
+                      `  - ${unroutedNet.label} (${unroutedNet.disconnectedGroupCount} disconnected groups)`,
+                    ),
+                  )
+                }
+              }
+            }
+          }
+
           if (buildOutcome.ok && shouldGenerateKicadProject) {
             // Read circuit JSON from file if not provided (worker mode doesn't pass it through IPC)
-            let circuitJson = buildOutcome.circuitJson
-            if (!circuitJson && fs.existsSync(outputPath)) {
-              circuitJson = JSON.parse(fs.readFileSync(outputPath, "utf-8"))
-            }
+            const builtCircuitJson = getCircuitJson()
 
-            if (circuitJson) {
+            if (builtCircuitJson) {
               const projectOutputDir = path.join(
                 distDir,
                 outputDirName,
@@ -566,7 +601,7 @@ export const registerBuild = (program: Command) => {
                   resolvedOptions?.kicadProjectZip,
               )
               const project = await generateKicadProject({
-                circuitJson,
+                circuitJson: builtCircuitJson,
                 outputDir: projectOutputDir,
                 projectName,
                 writeFiles: shouldWriteKicadFiles,
@@ -1036,8 +1071,8 @@ export const registerBuild = (program: Command) => {
           }
         }
 
-        // Fatal errors (e.g., circuit generation exceptions) always cause exit code 1.
-        const shouldExitNonZero = hasFatalErrors
+        // Fatal generation errors and incomplete PCB routing always fail.
+        const shouldExitNonZero = hasFatalErrors || unroutedPcbNetCount > 0
 
         const successCount = builtFiles.filter((f) => f.ok).length
         const failCount = builtFiles.length - successCount
@@ -1096,6 +1131,9 @@ export const registerBuild = (program: Command) => {
         console.log(
           `  Circuits  ${kleur.green(`${successCount} passed`)}${failCount > 0 ? kleur.red(` ${failCount} failed`) : ""}`,
         )
+        console.log(
+          `  Routing   ${unroutedPcbNetCount === 0 ? kleur.green("0 unrouted") : kleur.red(`${unroutedPcbNetCount} unrouted`)}`,
+        )
         if (enabledOpts.length > 0) {
           console.log(`  Options   ${kleur.cyan(enabledOpts.join(", "))}`)
         }
@@ -1122,7 +1160,12 @@ export const registerBuild = (program: Command) => {
             : kleur.green("\n✓ Done"),
         )
         if (shouldExitNonZero) {
-          exitBuild(1, "fatal circuit build errors occurred")
+          exitBuild(
+            1,
+            hasFatalErrors
+              ? "fatal circuit build errors occurred"
+              : "unrouted PCB nets found",
+          )
         }
 
         exitBuild(0, "build finished successfully")

@@ -80,6 +80,8 @@ The `build` command also accepts the following options:
 - `--ignore-placement-drc` - suppress placement DRC diagnostics
 - `--ignore-routing-drc` - suppress routing DRC diagnostics
 
+The build exits with code 1 when traced PCB nets are not fully routed.
+
 ### KiCad PCM compatibility
 
 `tsci build --kicad-pcm` uses the package license from `package.json` and
