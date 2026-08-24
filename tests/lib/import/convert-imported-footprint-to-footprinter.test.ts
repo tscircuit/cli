@@ -101,7 +101,15 @@ test("keeps the exact footprint when copper IoU is at or below 98%", () => {
   if (!firstPad || firstPad.type !== "pcb_smtpad") {
     throw new Error("Expected an SMT pad")
   }
-  firstPad.shape = "circle"
+  if (firstPad.shape !== "rect") {
+    throw new Error("Expected a rectangular SMT pad")
+  }
+  const circlePad: PcbSmtPad = {
+    ...firstPad,
+    shape: "circle",
+    radius: Math.min(firstPad.width, firstPad.height) / 2,
+  }
+  circuitJson[circuitJson.indexOf(firstPad)] = circlePad
   const exactTsx = "<chip footprint={<footprint><smtpad /></footprint>} />"
 
   const result = convertImportedFootprintToFootprinter({
