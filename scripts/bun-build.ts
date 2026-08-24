@@ -1,4 +1,6 @@
-import { basename } from "node:path"
+import { copyFile, mkdir } from "node:fs/promises"
+import { createRequire } from "node:module"
+import { basename, dirname, join } from "node:path"
 // @ts-ignore
 import tscircuitPackageJson from "tscircuit/package.json"
 
@@ -40,5 +42,19 @@ for (const output of outputs) {
     `${basename(output.path)} ${(output.size / 1024 / 1024).toFixed(2)} MB`,
   )
 }
+
+const require = createRequire(import.meta.url)
+const manifoldWasmSourcePath = require.resolve(
+  "@tscircuit/manifold-2d/manifold.wasm",
+)
+const manifoldWasmOutputPath = join(
+  process.cwd(),
+  "dist",
+  "cli",
+  "manifold.wasm",
+)
+
+await mkdir(dirname(manifoldWasmOutputPath), { recursive: true })
+await copyFile(manifoldWasmSourcePath, manifoldWasmOutputPath)
 
 export {}
