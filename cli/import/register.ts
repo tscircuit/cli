@@ -38,6 +38,7 @@ export const registerImport = (program: Command) => {
         const hasFilters = opts.jlcpcb || opts.lcsc || opts.tscircuit
         const searchJlc = opts.jlcpcb || opts.lcsc || !hasFilters
         const searchTscircuit = opts.tscircuit
+        let didJlcSearchSucceed = false
         const ky = getRegistryApiKy()
         const spinner = ora({
           text: "Searching...",
@@ -55,6 +56,7 @@ export const registerImport = (program: Command) => {
           package: string
           description: string
           price: number
+          stock: number
         }> = []
 
         if (searchTscircuit) {
@@ -79,8 +81,13 @@ export const registerImport = (program: Command) => {
           try {
             spinner.text = "Searching JLCPCB parts..."
             const searchUrl = `https://jlcsearch.tscircuit.com/api/search?limit=10&q=${encodeURIComponent(query)}`
-            const resp = await fetch(searchUrl).then((r) => r.json())
-            jlcResults = resp.components
+            const response = await fetch(searchUrl)
+            if (!response.ok) {
+              throw new Error(`JLCPCB search failed with ${response.status}`)
+            }
+            const resp = await response.json()
+            jlcResults = resp.components ?? []
+            didJlcSearchSucceed = true
           } catch (error) {
             spinner.fail("Failed to search JLCPCB")
             console.error(
@@ -100,6 +107,7 @@ export const registerImport = (program: Command) => {
             await importJlcpcbPart({
               download: opts.download,
               partNumber: directLcscPartNumber,
+              stock: didJlcSearchSucceed ? 0 : undefined,
               useExactFootprint: opts.useExactFootprint,
             })
             return
@@ -117,7 +125,7 @@ export const registerImport = (program: Command) => {
           title: string
           value:
             | { type: "registry"; name: string }
-            | { type: "jlcpcb"; part: number }
+            | { type: "jlcpcb"; part: number; stock: number }
           selected?: boolean
         }> = []
 
@@ -132,7 +140,11 @@ export const registerImport = (program: Command) => {
         jlcResults?.forEach((comp, idx) => {
           choices.push({
             title: `[jlcpcb] ${comp.mfr} (C${comp.lcsc}) - ${comp.description}`,
-            value: { type: "jlcpcb", part: comp.lcsc },
+            value: {
+              type: "jlcpcb",
+              part: comp.lcsc,
+              stock: comp.stock,
+            },
             selected: !choices.length && idx === 0,
           })
         })
@@ -173,6 +185,7 @@ export const registerImport = (program: Command) => {
           await importJlcpcbPart({
             download: opts.download,
             partNumber: `C${String(choice.part)}`,
+            stock: choice.stock,
             useExactFootprint: opts.useExactFootprint,
           })
         }
