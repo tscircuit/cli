@@ -10,7 +10,8 @@ test("warns without blocking when a JLCPCB part is out of stock", () => {
       stock: 0,
     })
 
-    expect(warnSpy).toHaveBeenCalledWith(
+    expect(warnSpy).toHaveBeenCalledTimes(1)
+    expect(Bun.stripANSI(String(warnSpy.mock.calls[0]?.[0]))).toBe(
       "Warning: C1526234 is currently out of stock at JLCPCB. The component will still be imported.",
     )
   } finally {
