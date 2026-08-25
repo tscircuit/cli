@@ -39,6 +39,46 @@ test("transpile command generates ESM, CommonJS, and type declarations", async (
   expect(dtsContent).toContain("export")
 }, 30_000)
 
+test("transpile supports explicit TypeScript extensions from user tsconfig", async () => {
+  const { tmpDir, runCommand } = await getCliTestFixture()
+  const entryPath = path.join(tmpDir, "index.ts")
+  const componentPath = path.join(tmpDir, "component.tsx")
+
+  await writeFile(entryPath, 'export { Component } from "./component.tsx"\n')
+  await writeFile(componentPath, 'export const Component = "component"\n')
+  await writeFile(path.join(tmpDir, "package.json"), "{}")
+  await writeFile(
+    path.join(tmpDir, "tsconfig.json"),
+    JSON.stringify({
+      compilerOptions: {
+        target: "ES2020",
+        module: "ESNext",
+        moduleResolution: "node",
+        jsx: "react-jsx",
+        allowImportingTsExtensions: true,
+      },
+    }),
+  )
+
+  const { stderr, exitCode } = await runCommand(`tsci transpile ${entryPath}`)
+
+  expect(exitCode).toBe(0)
+  expect(stderr).not.toContain("TS5097")
+  expect(stderr).not.toContain("TS5096")
+
+  const esmContent = await readFile(
+    path.join(tmpDir, "dist", "index.js"),
+    "utf-8",
+  )
+  expect(esmContent).toContain("Component")
+
+  const dtsContent = await readFile(
+    path.join(tmpDir, "dist", "index.d.ts"),
+    "utf-8",
+  )
+  expect(dtsContent).toContain("Component")
+}, 30_000)
+
 test("transpile uses mainEntrypoint when available", async () => {
   const { tmpDir, runCommand } = await getCliTestFixture()
   const mainPath = path.join(tmpDir, "index.tsx")
