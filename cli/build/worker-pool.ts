@@ -94,7 +94,7 @@ export async function buildFilesWithWorkerPool(options: {
   )
   const workerJobTimeoutMs = Number.isFinite(envWorkerTimeoutMs)
     ? envWorkerTimeoutMs
-    : (options.workerJobTimeoutMs ?? 300000)
+    : (options.workerJobTimeoutMs ?? 10 * 60 * 1000)
   const poolConcurrency = Math.max(
     1,
     Math.min(options.concurrency, options.files.length),
