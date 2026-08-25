@@ -7,6 +7,7 @@ import { prompts } from "lib/utils/prompts"
 import ora from "ora"
 import { importJlcpcbPart } from "./import-jlcpcb-part"
 import { parseDirectLcscPartNumber } from "./parse-direct-lcsc-part-number"
+import { warnIfJlcpcbPartIsOutOfStock } from "./warn-if-jlcpcb-part-is-out-of-stock"
 
 export const registerImport = (program: Command) => {
   program
@@ -104,10 +105,13 @@ export const registerImport = (program: Command) => {
             ? parseDirectLcscPartNumber(query)
             : null
           if (directLcscPartNumber) {
+            warnIfJlcpcbPartIsOutOfStock({
+              partNumber: directLcscPartNumber,
+              stock: didJlcSearchSucceed ? 0 : undefined,
+            })
             await importJlcpcbPart({
               download: opts.download,
               partNumber: directLcscPartNumber,
-              stock: didJlcSearchSucceed ? 0 : undefined,
               useExactFootprint: opts.useExactFootprint,
             })
             return
@@ -182,10 +186,14 @@ export const registerImport = (program: Command) => {
             return process.exit(1)
           }
         } else {
+          const partNumber = `C${String(choice.part)}`
+          warnIfJlcpcbPartIsOutOfStock({
+            partNumber,
+            stock: choice.stock,
+          })
           await importJlcpcbPart({
             download: opts.download,
-            partNumber: `C${String(choice.part)}`,
-            stock: choice.stock,
+            partNumber,
             useExactFootprint: opts.useExactFootprint,
           })
         }

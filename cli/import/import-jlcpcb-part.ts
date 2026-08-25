@@ -2,21 +2,16 @@ import kleur from "kleur"
 import { importComponentFromJlcpcb } from "lib/import/import-component-from-jlcpcb"
 import ora from "ora"
 import { logFootprintConversion } from "./log-footprint-conversion"
-import { warnIfJlcpcbPartIsOutOfStock } from "./warn-if-jlcpcb-part-is-out-of-stock"
 
 export const importJlcpcbPart = async ({
   download,
   partNumber,
-  stock,
   useExactFootprint,
 }: {
   download?: boolean
   partNumber: string
-  stock?: number
   useExactFootprint?: boolean
 }) => {
-  warnIfJlcpcbPartIsOutOfStock({ partNumber, stock })
-
   const spinner = ora({
     text: `Importing "${partNumber}" from JLCPCB...`,
     stream: process.stdout,
