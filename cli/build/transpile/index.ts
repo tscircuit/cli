@@ -7,11 +7,26 @@ import commonjs from "@rollup/plugin-commonjs"
 import json from "@rollup/plugin-json"
 import dts from "rollup-plugin-dts"
 import kleur from "kleur"
+import ts from "typescript"
 
 import {
   createStaticAssetPlugin,
   STATIC_ASSET_EXTENSIONS,
 } from "./static-asset-plugin"
+
+const [typescriptMajor, typescriptMinor] = ts.versionMajorMinor
+  .split(".")
+  .map(Number)
+// TypeScript 5.7+ can emit projects that import .ts/.tsx paths by rewriting
+// those specifiers, instead of reporting TS5097 or requiring noEmit.
+const supportsRewriteRelativeImportExtensions =
+  typescriptMajor > 5 || (typescriptMajor === 5 && typescriptMinor >= 7)
+const typescriptExtensionEmitOptions = supportsRewriteRelativeImportExtensions
+  ? {
+      allowImportingTsExtensions: true,
+      rewriteRelativeImportExtensions: true,
+    }
+  : { allowImportingTsExtensions: false }
 
 const createExternalFunction =
   (projectDir: string, tsconfigPath?: string) =>
@@ -143,7 +158,7 @@ export const transpileFile = async ({
               sourceMap: false,
               noEmit: false,
               emitDeclarationOnly: false,
-              allowImportingTsExtensions: false,
+              ...typescriptExtensionEmitOptions,
             }
           : {
               target: "ES2020",
@@ -156,6 +171,7 @@ export const transpileFile = async ({
               allowSyntheticDefaultImports: true,
               allowArbitraryExtensions: true,
               baseUrl: projectDir,
+              ...typescriptExtensionEmitOptions,
             },
       }),
     ]
