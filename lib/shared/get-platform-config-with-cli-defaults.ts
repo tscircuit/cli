@@ -3,6 +3,7 @@ import fs from "node:fs"
 import path from "node:path"
 import { getPlatformConfig } from "@tscircuit/eval/platform-config"
 import type { PlatformConfig } from "@tscircuit/props"
+import { mergePlatformConfigs } from "./platform-config-utils"
 
 export function createLocalCacheEngine(
   cacheDir = path.join(process.cwd(), ".tscircuit", "cache"),
@@ -98,22 +99,5 @@ export function getPlatformConfigWithCliDefaults(
     return defaultConfig
   }
 
-  const mergedConfig: PlatformConfig = {
-    ...defaultConfig,
-    ...userConfig,
-    // If user provides footprintFileParserMap, merge it with our defaults
-    footprintFileParserMap: {
-      ...defaultConfig.footprintFileParserMap,
-      ...userConfig.footprintFileParserMap,
-    },
-  }
-
-  if (defaultConfig.staticFileLoaderMap || userConfig.staticFileLoaderMap) {
-    mergedConfig.staticFileLoaderMap = {
-      ...defaultConfig.staticFileLoaderMap,
-      ...userConfig.staticFileLoaderMap,
-    }
-  }
-
-  return mergedConfig
+  return mergePlatformConfigs(defaultConfig, userConfig)!
 }
