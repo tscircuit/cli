@@ -613,8 +613,16 @@ describe("autorouter diagnostics", () => {
 
     await new Promise((resolve) => setTimeout(resolve, 5))
 
-    expect(() => diagnostics.checkTimeout()).toThrow(
-      AutorouterPhaseTimeoutError,
+    let timeoutError: unknown
+    try {
+      diagnostics.checkTimeout()
+    } catch (error) {
+      timeoutError = error
+    }
+
+    expect(timeoutError).toBeInstanceOf(AutorouterPhaseTimeoutError)
+    expect((timeoutError as Error).message).toContain(
+      "Set a different timeout with `--autorouter-timeout <duration>`",
     )
     expect(fs.existsSync(path.join(debugDir, "phase-1.timeout.json"))).toBe(
       true,
