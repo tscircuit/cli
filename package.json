@@ -26,7 +26,7 @@
     "@tscircuit/krt-wasm": "^0.1.6",
     "@tscircuit/math-utils": "0.0.36",
     "@tscircuit/props": "^0.0.612",
-    "@tscircuit/runframe": "^0.0.2574",
+    "@tscircuit/runframe": "^0.0.2581",
     "@tscircuit/schematic-match-adapt": "^0.0.22",
     "@tscircuit/solver-utils": "0.0.16",
     "@types/bun": "^1.2.2",
@@ -39,7 +39,7 @@
     "@types/semver": "^7.5.8",
     "bun-match-svg": "^0.0.12",
     "chokidar": "4.0.1",
-    "circuit-json": "^0.0.464",
+    "circuit-json": "^0.0.479",
     "circuit-json-to-3d-png": "^0.0.6",
     "circuit-json-to-bom-csv": "^0.0.7",
     "circuit-json-to-connectivity-map": "^0.0.25",
@@ -93,7 +93,7 @@
     "zod": "^3.23.8"
   },
   "peerDependencies": {
-    "circuit-json": "^0.0.464",
+    "circuit-json": "^0.0.479",
     "tscircuit": "*"
   },
   "bin": {
@@ -108,6 +108,9 @@
     "tscircuit": {
       "optional": false
     }
+  },
+  "overrides": {
+    "circuit-json": "0.0.479"
   },
   "scripts": {
     "start": "bun run dev",
