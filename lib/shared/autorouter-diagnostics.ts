@@ -221,7 +221,7 @@ export class AutorouterDiagnostics {
 
     const artifactPath = this.writeTimeoutArtifact(this.activePhase, elapsedMs)
     const phaseLabel = this.getPhaseLabel(this.activePhase)
-    const message = `Autorouter timeout after ${this.formatElapsed(elapsedMs)} in ${phaseLabel}.`
+    const message = `Autorouter timeout after ${this.formatElapsed(elapsedMs)} in ${phaseLabel}. Set a different timeout with \`--autorouter-timeout <duration>\` (for example, \`--autorouter-timeout 2m\`).`
     this.log(kleur.red(message))
 
     throw new AutorouterPhaseTimeoutError(message, artifactPath)
