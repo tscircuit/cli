@@ -34,6 +34,8 @@ import { registerImport } from "./import/register"
 import { registerInit } from "./init/register"
 import { registerInstall } from "./install/register"
 import { registerPush } from "./push/register"
+import { registerReportAutorouter } from "./report/autorouter/register"
+import { registerReport } from "./report/register"
 import { registerRemove } from "./remove/register"
 import { registerRegistryPackagesCreate } from "./registry/packages/create/register"
 import { registerRegistryPackagesUpdate } from "./registry/packages/update/register"
@@ -83,6 +85,8 @@ registerInstall(program)
 registerUpdate(program)
 registerUpgradeCommand(program)
 registerDoctor(program)
+registerReport(program)
+registerReportAutorouter(program)
 registerCheck(program)
 registerCheckNetlist(program)
 registerCheckPinSpecification(program)

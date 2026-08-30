@@ -57,6 +57,7 @@ Commands:
                                latest version
   upgrade                      Upgrade CLI to the latest version
   doctor                       Run diagnostic checks for your tscircuit setup
+  report                       Report a tscircuit bug
   check [file]                 Partially build and validate circuit artifacts
   registry                     Manage tscircuit registry resources
   search [options] <query...>  Search for footprints, CAD models or packages in
@@ -125,6 +126,20 @@ The debug directory contains:
 
 Use `--autorouter-dump-srj failed` to keep only failed-stage routing data, or
 `--autorouter-dump-srj phase:N` to capture a single stage.
+
+To submit one of these inputs as an autorouter bug report, log in and pass the
+selected input file to `tsci report autorouter`:
+
+```bash
+tsci login
+tsci report autorouter \
+  dist/autorouter-debug/phase-0.input.simple-route.json \
+  --title "USB board routing failure"
+```
+
+The command uploads only the selected Simple Route JSON and prints a shareable
+bug-report URL. Autorouter bug reports are public; the command asks for
+confirmation before uploading. Pass `--yes` when running non-interactively.
 
 Use `--autorouter-phase <name>` to enable the debugger automatically and keep
 debugging through the named `<autoroutingphase name="..." />`. Later phases
