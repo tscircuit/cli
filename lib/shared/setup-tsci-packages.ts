@@ -43,7 +43,7 @@ export async function setupTsciProject(
   if (devDependencies.length > 0) {
     console.log("Installing dependencies...")
     try {
-      packageManager.installDeps({
+      await packageManager.installDeps({
         deps: devDependencies,
         cwd: projectPath,
         dev: true,

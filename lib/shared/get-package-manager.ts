@@ -1,6 +1,9 @@
 import fs from "fs"
 import kleur from "kleur"
-import { execSync } from "node:child_process"
+import { exec, execSync } from "node:child_process"
+import { promisify } from "node:util"
+
+const execAsync = promisify(exec)
 
 function detectPackageManager(): "npm" | "yarn" | "pnpm" | "bun" {
   const userAgent = process.env.npm_config_user_agent || ""
@@ -31,14 +34,14 @@ function detectPackageManager(): "npm" | "yarn" | "pnpm" | "bun" {
 export interface PackageManager {
   name: "npm" | "yarn" | "pnpm" | "bun"
   uninstall: (opts: { name: string; cwd: string }) => void
-  install: (opts: { name: string; cwd: string }) => void
+  install: (opts: { name: string; cwd: string }) => Promise<void>
   update: (opts: { name: string; cwd: string }) => void
   init: (opts: { cwd: string }) => void
   installDeps: (opts: {
     deps: string[]
     cwd: string
     dev?: boolean
-  }) => void
+  }) => Promise<void>
   getInitCommand: () => string
   getInstallDepsCommand: (deps: string[], dev?: boolean) => string
   installAll: (opts: { cwd: string }) => void
@@ -62,7 +65,7 @@ export function getPackageManager(): PackageManager {
       }
       execSync(uninstallCommand, { stdio: "pipe", cwd })
     },
-    install: ({ name, cwd }) => {
+    install: async ({ name, cwd }) => {
       let installCommand: string
       if (pm === "yarn") {
         installCommand = `yarn add ${name}`
@@ -74,13 +77,13 @@ export function getPackageManager(): PackageManager {
         installCommand = `npm install ${name}`
       }
       console.log(kleur.gray(`> ${installCommand}`))
-      const output = execSync(installCommand, {
-        stdio: ["inherit", "pipe", "pipe"],
+      // Keep the event loop available for the project lock's heartbeat.
+      const { stdout, stderr } = await execAsync(installCommand, {
         cwd,
+        maxBuffer: 10 * 1024 * 1024,
       })
-      if (output) {
-        process.stdout.write(output)
-      }
+      if (stdout) process.stdout.write(stdout)
+      if (stderr) process.stderr.write(stderr)
     },
     update: ({ name, cwd }) => {
       let updateCommand: string
@@ -106,9 +109,14 @@ export function getPackageManager(): PackageManager {
       const initCommand = getInitCommand()
       execSync(initCommand, { stdio: "inherit", cwd })
     },
-    installDeps: ({ deps, cwd, dev }) => {
+    installDeps: async ({ deps, cwd, dev }) => {
       const installCommand = getInstallDepsCommand(deps, dev)
-      execSync(installCommand, { stdio: "inherit", cwd })
+      const { stdout, stderr } = await execAsync(installCommand, {
+        cwd,
+        maxBuffer: 10 * 1024 * 1024,
+      })
+      if (stdout) process.stdout.write(stdout)
+      if (stderr) process.stderr.write(stderr)
     },
     getInitCommand,
     getInstallDepsCommand,
