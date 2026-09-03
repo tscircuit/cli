@@ -37,6 +37,7 @@ import { convertCircuitJsonToSchematicPdf } from "./convert-circuit-json-to-sche
 import { convertToKicadLibrary } from "./convert-to-kicad-library"
 import { importFromUserLand } from "./importFromUserLand"
 import { isCircuitJsonFile } from "./is-circuit-json-file"
+import { inlineLocalCadModels } from "./inline-local-cad-models"
 
 const writeFileAsync = promisify(fs.writeFile)
 
@@ -230,7 +231,7 @@ export const exportSnippet = async ({
     case "gltf":
       outputContent = JSON.stringify(
         await convertCircuitJsonToGltf(
-          circuitJson,
+          await inlineLocalCadModels(circuitJson),
           getCircuitJsonToGltfOptions({ format: "gltf" }),
         ),
         null,
@@ -240,7 +241,7 @@ export const exportSnippet = async ({
     case "glb":
       outputContent = Buffer.from(
         (await convertCircuitJsonToGltf(
-          circuitJson,
+          await inlineLocalCadModels(circuitJson),
           getCircuitJsonToGltfOptions({ format: "glb" }),
         )) as ArrayBuffer,
       )
