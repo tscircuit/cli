@@ -6,6 +6,7 @@ import { getPackageManager } from "./get-package-manager"
 import { resolveTarballUrlFromRegistry } from "./resolve-tarball-url-from-registry"
 import { detectAndSetupKicadLibrary } from "./detect-and-setup-kicad-library"
 import { handleRegistryAuthError } from "./handle-registry-auth-error"
+import { withProjectInstallLock } from "./with-project-install-lock"
 
 /**
  * Checks if a package spec is a tscircuit component format and normalizes it.
@@ -78,6 +79,13 @@ export async function addPackages(
   packageSpecs: string[],
   projectDir: string = process.cwd(),
 ) {
+  // Cover registry setup and post-install setup as well as the package manager.
+  return withProjectInstallLock(projectDir, () =>
+    addPackagesUnlocked(packageSpecs, projectDir),
+  )
+}
+
+async function addPackagesUnlocked(packageSpecs: string[], projectDir: string) {
   const normalized = packageSpecs.map((spec) => ({
     original: spec,
     normalized: normalizeTscircuitPackageName(spec),
@@ -136,12 +144,15 @@ export async function addPackages(
 
   const packageManager = getPackageManager()
   try {
-    packageManager.install({ name: installTargets.join(" "), cwd: projectDir })
+    await packageManager.install({
+      name: installTargets.join(" "),
+      cwd: projectDir,
+    })
     console.log(kleur.green(`✓ Added ${kleur.bold(displayNames)} successfully`))
 
-    await Promise.all(
-      packageSpecs.map((spec) => detectAndSetupKicadLibrary(spec, projectDir)),
-    )
+    for (const spec of packageSpecs) {
+      await detectAndSetupKicadLibrary(spec, projectDir)
+    }
   } catch (error) {
     const errorMessage = error instanceof Error ? error.message : String(error)
     console.error(kleur.red(`✗ Failed to add ${displayNames}:`), errorMessage)
