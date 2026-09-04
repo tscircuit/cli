@@ -800,9 +800,22 @@ export class AutorouterDiagnostics {
       event.solverName ? `solver=${event.solverName}` : null,
       event.effort !== undefined ? `effort=${event.effort}x` : null,
       cacheDescription,
-      event.cacheKey ? `cache_key=${event.cacheKey}` : null,
+      event.cacheKey
+        ? `cache_id=${this.formatCacheKeyForLog(event.cacheKey)}`
+        : null,
     ].filter(Boolean)
     return parts.join(", ")
+  }
+
+  private formatCacheKeyForLog(cacheKey: string) {
+    const localPhaseCacheMatch = cacheKey.match(
+      /:solver:([a-f0-9]{16}):srj:([a-f0-9]{16})$/,
+    )
+    if (localPhaseCacheMatch) {
+      return `${localPhaseCacheMatch[1].slice(0, 8)}/${localPhaseCacheMatch[2].slice(0, 8)}`
+    }
+    if (cacheKey.length <= 24) return cacheKey
+    return `${cacheKey.slice(0, 10)}…${cacheKey.slice(-10)}`
   }
 
   private getExecutionMetadata(activePhase: ActivePhase) {
