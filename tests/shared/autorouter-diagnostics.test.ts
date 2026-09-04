@@ -292,7 +292,8 @@ describe("autorouter diagnostics", () => {
       solverName: "AutoroutingPipelineSolver9_PreloadedTraceGraph",
       effort: 10,
       cacheStatus: "miss",
-      cacheKey: "routes:core@0.0.0:solver:abc:srj:def",
+      cacheKey:
+        "routes:core@0.0.0:solver:1234567890abcdef:srj:abcdef0123456789",
       simpleRouteJson: {
         connections: [{ name: "GND" }],
         obstacles: [{ obstacleId: "pad_1" }],
@@ -351,8 +352,9 @@ describe("autorouter diagnostics", () => {
     )
     expect(logs.join("\n")).toContain("effort=10x")
     expect(logs.join("\n")).toContain("cache=miss")
-    expect(logs.join("\n")).toContain(
-      "cache_key=routes:core@0.0.0:solver:abc:srj:def",
+    expect(logs.join("\n")).toContain("cache_id=12345678/abcdef01")
+    expect(logs.join("\n")).not.toContain(
+      "routes:core@0.0.0:solver:1234567890abcdef:srj:abcdef0123456789",
     )
     expect(logs.join("\n")).toContain("phase 1/1 done")
     expect(logs).toContain(
@@ -377,7 +379,8 @@ describe("autorouter diagnostics", () => {
       solverName: "AutoroutingPipelineSolver9_PreloadedTraceGraph",
       effort: 10,
       cacheStatus: "miss",
-      cacheKey: "routes:core@0.0.0:solver:abc:srj:def",
+      cacheKey:
+        "routes:core@0.0.0:solver:1234567890abcdef:srj:abcdef0123456789",
     })
     expect(
       fs
