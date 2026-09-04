@@ -122,7 +122,12 @@ The debug directory contains:
   A fanout router and its downstream router appear as separate stages.
 - `phase-N.input.simple-route.json` and `phase-N.output.traces.json` when
   `--autorouter-dump-srj all` is enabled.
-- `board.meta.json` — phase timing and connection-count summary.
+- `board.meta.json` — phase timing and connection-count summary, including the
+  resolved router, solver pipeline, effort, and cache status/key.
+
+The live stage log prints the same routing metadata. This makes it explicit
+when a result was computed, reused from the local cache, or run without caching
+and records why caching was disabled.
 
 Use `--autorouter-dump-srj failed` to keep only failed-stage routing data, or
 `--autorouter-dump-srj phase:N` to capture a single stage.

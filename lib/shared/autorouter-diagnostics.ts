@@ -70,6 +70,12 @@ type AutoroutingEventPayload = {
   autorouterVersion?: string
   effort?: number
   solverName?: string
+  cacheStatus?: "disabled" | "hit" | "miss"
+  cacheKey?: string
+  cacheDisabledReason?:
+    | "custom_algorithm"
+    | "strategy_not_cacheable"
+    | "no_cache_engine"
   iteration?: number
   steps?: number
   progress?: number
@@ -95,6 +101,16 @@ type ActivePhase = {
   startedAt: number
   startedAtIso: string
   simpleRouteJson?: SimpleRouteJson
+  autorouterName?: string
+  autorouterVersion?: string
+  solverName?: string
+  effort?: number
+  cacheStatus?: "disabled" | "hit" | "miss"
+  cacheKey?: string
+  cacheDisabledReason?:
+    | "custom_algorithm"
+    | "strategy_not_cacheable"
+    | "no_cache_engine"
   routerDescription: string
   lastProgressLogAt: number
   hasLoggedStart: boolean
@@ -280,6 +296,13 @@ export class AutorouterDiagnostics {
       startedAt: performance.now(),
       startedAtIso: new Date().toISOString(),
       simpleRouteJson,
+      autorouterName: event.autorouterName,
+      autorouterVersion: event.autorouterVersion,
+      solverName: event.solverName,
+      effort: event.effort,
+      cacheStatus: event.cacheStatus,
+      cacheKey: event.cacheKey,
+      cacheDisabledReason: event.cacheDisabledReason,
       routerDescription: this.formatRouter(event),
       lastProgressLogAt: 0,
       hasLoggedStart: false,
@@ -354,6 +377,7 @@ export class AutorouterDiagnostics {
       connectionCount: activePhase.connectionCount,
       obstacleCount: activePhase.obstacleCount,
       previousTraceCount: activePhase.previousTraceCount,
+      ...this.getExecutionMetadata(activePhase),
       outputTraceCount,
       outputJumperCount,
       errorCount,
@@ -418,6 +442,7 @@ export class AutorouterDiagnostics {
       connectionCount: activePhase.connectionCount,
       obstacleCount: activePhase.obstacleCount,
       previousTraceCount: activePhase.previousTraceCount,
+      ...this.getExecutionMetadata(activePhase),
       elapsedMs: Math.round(elapsedMs),
       error,
       startedAt: activePhase.startedAtIso,
@@ -451,6 +476,7 @@ export class AutorouterDiagnostics {
         connectionCount: activePhase.connectionCount,
         obstacleCount: activePhase.obstacleCount,
         previousTraceCount: activePhase.previousTraceCount,
+        ...this.getExecutionMetadata(activePhase),
         error,
       })
     }
@@ -494,9 +520,7 @@ export class AutorouterDiagnostics {
       connectionCount: activePhase.connectionCount,
       obstacleCount: activePhase.obstacleCount,
       previousTraceCount: activePhase.previousTraceCount,
-      autorouter: {
-        kind: "default-or-core",
-      },
+      ...this.getExecutionMetadata(activePhase),
       files: {
         inputSimpleRouteJson: inputFile,
         previousOutputTraces: previousTracesFile,
@@ -547,15 +571,7 @@ export class AutorouterDiagnostics {
   private logPhaseStart(activePhase: ActivePhase, reason?: string) {
     const reasonText = reason ? ` ${reason}` : ""
     this.log(
-      [
-        `Autorouting ${this.formatUserFacingText(activePhase.componentDisplayName)} ${this.getPhaseLabel(activePhase)}${reasonText} start:`,
-        `connections=${activePhase.connectionCount},`,
-        `obstacles=${activePhase.obstacleCount},`,
-        `previous_traces=${activePhase.previousTraceCount}`,
-        activePhase.routerDescription
-          ? `, ${activePhase.routerDescription}`
-          : "",
-      ].join(" "),
+      `Autorouting ${this.formatUserFacingText(activePhase.componentDisplayName)} ${this.getPhaseLabel(activePhase)}${reasonText} start: connections=${activePhase.connectionCount}, obstacles=${activePhase.obstacleCount}, previous_traces=${activePhase.previousTraceCount}${activePhase.routerDescription ? `, ${activePhase.routerDescription}` : ""}`,
     )
 
     const connectionNames = this.getConnectionNames(activePhase.simpleRouteJson)
@@ -773,12 +789,32 @@ export class AutorouterDiagnostics {
   }
 
   private formatRouter(event: AutoroutingEventPayload) {
+    const cacheDescription = event.cacheStatus
+      ? event.cacheStatus === "disabled" && event.cacheDisabledReason
+        ? `cache=disabled(${event.cacheDisabledReason})`
+        : `cache=${event.cacheStatus}`
+      : null
     const parts = [
       event.autorouterName ? `router=${event.autorouterName}` : null,
       event.autorouterVersion ? `version=${event.autorouterVersion}` : null,
-      event.effort !== undefined ? `effort=${event.effort}` : null,
+      event.solverName ? `solver=${event.solverName}` : null,
+      event.effort !== undefined ? `effort=${event.effort}x` : null,
+      cacheDescription,
+      event.cacheKey ? `cache_key=${event.cacheKey}` : null,
     ].filter(Boolean)
     return parts.join(", ")
+  }
+
+  private getExecutionMetadata(activePhase: ActivePhase) {
+    return {
+      autorouterName: activePhase.autorouterName,
+      autorouterVersion: activePhase.autorouterVersion,
+      solverName: activePhase.solverName,
+      effort: activePhase.effort,
+      cacheStatus: activePhase.cacheStatus,
+      cacheKey: activePhase.cacheKey,
+      cacheDisabledReason: activePhase.cacheDisabledReason,
+    }
   }
 
   private getConnectionNames(simpleRouteJson?: SimpleRouteJson) {
