@@ -284,6 +284,15 @@ describe("autorouter diagnostics", () => {
     root.emit("autorouting:start", {
       subcircuit_id: "subcircuit_source_group_0",
       componentDisplayName: "board unnamedsubcircuit0",
+      routingPhaseIndex: 0,
+      phaseOrdinal: 1,
+      phaseCount: 1,
+      autorouterName: "tscircuit",
+      autorouterVersion: "beta_pipeline9",
+      solverName: "AutoroutingPipelineSolver9_PreloadedTraceGraph",
+      effort: 10,
+      cacheStatus: "miss",
+      cacheKey: "routes:core@0.0.0:solver:abc:srj:def",
       simpleRouteJson: {
         connections: [{ name: "GND" }],
         obstacles: [{ obstacleId: "pad_1" }],
@@ -333,10 +342,19 @@ describe("autorouter diagnostics", () => {
     expect(fs.existsSync(path.join(debugDir, "phase-0-routed.png"))).toBe(true)
     await diagnostics.finalize([])
 
-    expect(logs.join("\n")).toContain("phase 1 start")
+    expect(logs.join("\n")).toContain("phase 1/1 start")
     expect(logs.join("\n")).toContain("connections=1")
     expect(logs.join("\n")).toContain("obstacles=1")
-    expect(logs.join("\n")).toContain("phase 1 done")
+    expect(logs.join("\n")).toContain("router=tscircuit")
+    expect(logs.join("\n")).toContain(
+      "solver=AutoroutingPipelineSolver9_PreloadedTraceGraph",
+    )
+    expect(logs.join("\n")).toContain("effort=10x")
+    expect(logs.join("\n")).toContain("cache=miss")
+    expect(logs.join("\n")).toContain(
+      "cache_key=routes:core@0.0.0:solver:abc:srj:def",
+    )
+    expect(logs.join("\n")).toContain("phase 1/1 done")
     expect(logs).toContain(
       `Wrote debug artifact: ${path.relative(process.cwd(), path.join(debugDir, "placement-unrouted.png"))}`,
     )
@@ -350,6 +368,17 @@ describe("autorouter diagnostics", () => {
       fs.existsSync(path.join(debugDir, "phase-0.output.traces.json")),
     ).toBe(true)
     expect(fs.existsSync(path.join(debugDir, "board.meta.json"))).toBe(true)
+    const summary = JSON.parse(
+      fs.readFileSync(path.join(debugDir, "board.meta.json"), "utf8"),
+    )
+    expect(summary.phases[0]).toMatchObject({
+      autorouterName: "tscircuit",
+      autorouterVersion: "beta_pipeline9",
+      solverName: "AutoroutingPipelineSolver9_PreloadedTraceGraph",
+      effort: 10,
+      cacheStatus: "miss",
+      cacheKey: "routes:core@0.0.0:solver:abc:srj:def",
+    })
     expect(
       fs
         .readFileSync(path.join(debugDir, "placement-unrouted.png"))
