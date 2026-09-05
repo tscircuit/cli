@@ -7,6 +7,7 @@ import {
   createShortDebugSvg,
 } from "@tscircuit/check-shorts"
 import { pcb_board, type PcbTrace } from "circuit-json"
+import { decode } from "fast-png"
 import { temporaryDirectory } from "tempy"
 import { getCircuitJsonForCheck } from "../../../cli/check/shared"
 import { getCheckShortLayers } from "../../../cli/check/shorts/get-check-short-layers"
@@ -142,6 +143,17 @@ const innerLayerBitmapSnapshotPath = path.join(
   snapshotDir,
   "check-shorts-inner-layer-bitmap.snap.png",
 )
+
+const expectSameBitmap = (actual: Uint8Array, expected: Uint8Array) => {
+  const actualBitmap = decode(actual)
+  const expectedBitmap = decode(expected)
+
+  expect(actualBitmap.width).toBe(expectedBitmap.width)
+  expect(actualBitmap.height).toBe(expectedBitmap.height)
+  expect(actualBitmap.channels).toBe(expectedBitmap.channels)
+  expect(actualBitmap.data).toEqual(expectedBitmap.data)
+}
+
 test("check shorts loads the latest checker from jscdn", async () => {
   let requestedUrl: string | undefined
   const expectedModule = {
@@ -242,7 +254,7 @@ test("tsci check shorts detects a copper bridge short", async () => {
     expect(pcbSnapshotStats.size).toBeGreaterThan("stale pcb snapshot".length)
     expect(pcbSnapshot).toContain("<svg")
     expect(pcbSnapshot).toContain('data-type="short-debug"')
-    expect(artifactPng).toEqual(expectedBitmapSnapshot)
+    expectSameBitmap(artifactPng, expectedBitmapSnapshot)
     expect(pcbSnapshot).toEqual(expectedPcbSnapshot)
   } finally {
     await rm(circuitPath, { force: true })
@@ -283,7 +295,8 @@ test("check shorts --layer all detects an inner-layer short", async () => {
     if (!bitmapArtifact || typeof bitmapArtifact.content === "string") {
       throw new Error("Expected an inner-layer short bitmap")
     }
-    expect(bitmapArtifact.content).toEqual(
+    expectSameBitmap(
+      bitmapArtifact.content,
       new Uint8Array(await readFile(innerLayerBitmapSnapshotPath)),
     )
   } finally {
