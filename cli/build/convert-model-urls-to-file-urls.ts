@@ -1,12 +1,15 @@
+import { existsSync } from "node:fs"
 import path from "node:path"
 import { pathToFileURL } from "node:url"
 
 /**
- * Convert local file paths in model URLs to file:// URLs for fetch() compatibility.
- * The circuit-json-to-gltf library uses fetch() to load GLB/STL/OBJ/GLTF files,
- * which requires proper URLs rather than local file paths.
+ * Resolve local model paths before the converter applies its registry base URL.
+ * Keep assets as file references so loaders can read them on demand.
  */
-export const convertModelUrlsToFileUrls = (circuitJson: any[]): any[] => {
+export const convertModelUrlsToFileUrls = (
+  circuitJson: any[],
+  projectDir = process.cwd(),
+): any[] => {
   const modelUrlKeys = [
     "model_glb_url",
     "glb_model_url",
@@ -30,12 +33,17 @@ export const convertModelUrlsToFileUrls = (circuitJson: any[]): any[] => {
         // Skip values that are already URLs (http://, https://, file://, etc.)
         if (value.match(/^[a-zA-Z]+:\/\//)) continue
 
+        const localPath = path.resolve(projectDir, value)
+        // Uninstalled package assets still need the registry URL resolver.
+        if (/^(\.\/)?node_modules\//.test(value) && !existsSync(localPath))
+          continue
+
         if (value.startsWith("/") || value.match(/^[a-zA-Z]:\\/)) {
           // Absolute path (Unix or Windows)
           updated[key] = pathToFileURL(value).href
-        } else if (value.startsWith(".")) {
+        } else if (value.startsWith(".") || existsSync(localPath)) {
           // Relative path (e.g. ./chip.glb) — resolve against cwd
-          updated[key] = pathToFileURL(path.resolve(process.cwd(), value)).href
+          updated[key] = pathToFileURL(localPath).href
         }
       }
     }
