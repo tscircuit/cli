@@ -59,15 +59,17 @@ test(
 
 test("release rejects unknown presets, conflicting formats, and unwritable destinations", async () => {
   const { tmpDir, runCommand } = await getCliTestFixture()
-  expect(
-    (await runCommand("tsci export missing.tsx --preset unknown")).exitCode,
-  ).not.toBe(0)
+  const invalidPreset = await runCommand(
+    "tsci export missing.tsx --preset unknown",
+  )
+  expect(invalidPreset.exitCode).not.toBe(0)
+  expect(invalidPreset.stderr).toContain("Invalid preset: unknown")
   for (const format of ["json", "spice", "gerbers"]) {
     const conflict = await runCommand(
       `tsci export missing.tsx --preset release --format ${format}`,
     )
     expect(conflict.exitCode).not.toBe(0)
-    expect(conflict.stderr).toContain("cannot be used with option")
+    expect(conflict.stderr).toContain("cannot be combined with a format")
   }
   const circuitPath = path.join(tmpDir, "board.circuit.json")
   await writeFile(circuitPath, "[]")

@@ -1,4 +1,4 @@
-import { Option, type Command } from "commander"
+import type { Command } from "commander"
 import { exportSnippet } from "lib/shared/export-snippet"
 import type { ExportFormat } from "lib/shared/export-snippet"
 import { ALLOWED_EXPORT_FORMATS } from "lib/shared/export-snippet"
@@ -23,11 +23,7 @@ export const registerExport = (program: Command) => {
       "-f, --format <format>",
       `Output format (${ALLOWED_EXPORT_FORMATS.join(", ")})`,
     )
-    .addOption(
-      new Option("--preset <preset>", "Export a preset bundle")
-        .choices(["release"])
-        .conflicts("format"),
-    )
+    .option("--preset <preset>", "Export a preset bundle (release)")
     .option("-o, --output <path>", "Output file path or preset directory")
     .option("--disable-parts-engine", "Disable the parts engine")
     .option("--show-courtyards", "Show courtyard outlines in PCB SVG output")
@@ -35,13 +31,21 @@ export const registerExport = (program: Command) => {
       async (
         file,
         options: {
-          preset?: "release"
+          preset?: string
           format?: string
           output?: string
           disablePartsEngine?: boolean
           showCourtyards?: boolean
         },
       ) => {
+        if (options.preset !== undefined && options.preset !== "release") {
+          console.error(`Invalid preset: ${options.preset}. Expected release.`)
+          process.exit(1)
+        }
+        if (options.preset !== undefined && options.format !== undefined) {
+          console.error("The release preset cannot be combined with a format")
+          process.exit(1)
+        }
         const formatOption = options.format ?? "json"
         const projectConfig = await loadRuntimeProjectConfig(process.cwd())
 
