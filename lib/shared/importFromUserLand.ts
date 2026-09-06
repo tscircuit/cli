@@ -1,6 +1,13 @@
 import { createRequire } from "node:module"
 import fs from "node:fs"
-import path, { relative, resolve } from "node:path"
+import path from "node:path"
+import { pathToFileURL } from "node:url"
+
+function toImportSpecifier(resolvedPath: string) {
+  return path.isAbsolute(resolvedPath)
+    ? pathToFileURL(resolvedPath).href
+    : resolvedPath
+}
 
 export async function importFromUserLand(
   moduleName: string,
@@ -13,7 +20,7 @@ export async function importFromUserLand(
     const userRequire = createRequire(path.join(projectDir, "noop.js"))
     try {
       const resolvedUserPath = userRequire.resolve(moduleName)
-      return await import(resolvedUserPath)
+      return await import(toImportSpecifier(resolvedUserPath))
     } catch (error: any) {
       if (error?.code !== "MODULE_NOT_FOUND") {
         throw error
@@ -26,7 +33,7 @@ export async function importFromUserLand(
   const cliRequire = createRequire(import.meta.url)
   try {
     const resolvedCliPath = cliRequire.resolve(moduleName)
-    return await import(resolvedCliPath)
+    return await import(toImportSpecifier(resolvedCliPath))
   } catch (error: any) {
     if (error?.code !== "MODULE_NOT_FOUND") {
       throw error
