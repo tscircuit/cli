@@ -23,27 +23,26 @@ export const registerExport = (program: Command) => {
       "-f, --format <format>",
       `Output format (${ALLOWED_EXPORT_FORMATS.join(", ")})`,
     )
-    .option("--preset <preset>", "Export a preset bundle (release)")
-    .option("-o, --output <path>", "Output file path or preset directory")
+    .option(
+      "--release",
+      "Export circuit JSON, schematic SVG, PCB SVG, and Gerbers",
+    )
+    .option("-o, --output <path>", "Output file path or release directory")
     .option("--disable-parts-engine", "Disable the parts engine")
     .option("--show-courtyards", "Show courtyard outlines in PCB SVG output")
     .action(
       async (
         file,
         options: {
-          preset?: string
+          release?: boolean
           format?: string
           output?: string
           disablePartsEngine?: boolean
           showCourtyards?: boolean
         },
       ) => {
-        if (options.preset !== undefined && options.preset !== "release") {
-          console.error(`Invalid preset: ${options.preset}. Expected release.`)
-          process.exit(1)
-        }
-        if (options.preset !== undefined && options.format !== undefined) {
-          console.error("The release preset cannot be combined with a format")
+        if (options.release && options.format !== undefined) {
+          console.error("--release cannot be combined with --format")
           process.exit(1)
         }
         const formatOption = options.format ?? "json"
@@ -103,7 +102,7 @@ export const registerExport = (program: Command) => {
         await exportSnippet({
           filePath: file,
           format,
-          preset: options.preset,
+          release: options.release,
           outputPath: options.output,
           platformConfig: platformConfigWithCliDefaults,
           pcbSnapshotSettings: options.showCourtyards

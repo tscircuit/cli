@@ -31,7 +31,7 @@ test(
     )
 
     const result = await runCommand(
-      `tsci export ${circuitPath} --preset release --output dist/release --disable-parts-engine`,
+      `tsci export ${circuitPath} --release --output dist/release --disable-parts-engine`,
     )
     expect(result.exitCode).toBe(0)
     expect(await readFile(path.join(tmpDir, "builds.txt"), "utf8")).toBe(
@@ -57,19 +57,16 @@ test(
   { timeout: 60_000 },
 )
 
-test("release rejects unknown presets, conflicting formats, and unwritable destinations", async () => {
+test("release rejects conflicting formats and unwritable destinations", async () => {
   const { tmpDir, runCommand } = await getCliTestFixture()
-  const invalidPreset = await runCommand(
-    "tsci export missing.tsx --preset unknown",
-  )
-  expect(invalidPreset.exitCode).not.toBe(0)
-  expect(invalidPreset.stderr).toContain("Invalid preset: unknown")
   for (const format of ["json", "spice", "gerbers"]) {
     const conflict = await runCommand(
-      `tsci export missing.tsx --preset release --format ${format}`,
+      `tsci export missing.tsx --release --format ${format}`,
     )
     expect(conflict.exitCode).not.toBe(0)
-    expect(conflict.stderr).toContain("cannot be combined with a format")
+    expect(conflict.stderr).toContain(
+      "--release cannot be combined with --format",
+    )
   }
   const circuitPath = path.join(tmpDir, "board.circuit.json")
   await writeFile(circuitPath, "[]")
@@ -78,7 +75,7 @@ test("release rejects unknown presets, conflicting formats, and unwritable desti
   expect(
     (
       await runCommand(
-        `tsci export ${circuitPath} --preset release --output ${outputPath}`,
+        `tsci export ${circuitPath} --release --output ${outputPath}`,
       )
     ).exitCode,
   ).not.toBe(0)

@@ -84,15 +84,15 @@ The `build` command also accepts the following options:
 ### Release export
 
 ```bash
-tsci export board.tsx --preset release --output dist/release
+tsci export board.tsx --release --output dist/release
 ```
 
-The release preset builds once and reuses that Circuit JSON to write
+`--release` builds once and reuses that Circuit JSON to write
 `circuit.json`, `schematic.svg`, `pcb.svg`, and `gerbers.zip`. The Gerber ZIP
 includes the existing BOM and JLCPCB pick-and-place files.
 
-`--output` is a directory for presets and defaults to `dist/release`, relative
-to the input file's directory. It is created automatically. `--preset` cannot
+`--output` is a directory for release exports and defaults to `dist/release`, relative
+to the input file's directory. It is created automatically. `--release` cannot
 be combined with `--format`.
 
 ### KiCad PCM compatibility

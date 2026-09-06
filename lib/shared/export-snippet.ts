@@ -111,7 +111,7 @@ const unwrapSimpleRouteJson = (value: unknown) => {
 type ExportOptions = {
   filePath: string
   format?: ExportFormat
-  preset?: "release"
+  release?: boolean
   writeFile?: boolean
   outputPath?: string
   platformConfig?: PlatformConfig
@@ -127,7 +127,7 @@ type ExportOptions = {
 export const exportSnippet = async ({
   filePath,
   format: formatOption,
-  preset,
+  release = false,
   outputPath,
   platformConfig,
   pcbSnapshotSettings,
@@ -136,8 +136,8 @@ export const exportSnippet = async ({
   onError = (message) => console.error(message),
   onSuccess = (result: unknown) => console.log(result),
 }: ExportOptions) => {
-  if (preset && formatOption) {
-    onError("The release preset cannot be combined with a format")
+  if (release && formatOption) {
+    onError("--release cannot be combined with --format")
     return onExit(1)
   }
   const format = formatOption ?? "json"
@@ -149,9 +149,9 @@ export const exportSnippet = async ({
   const projectDir = path.dirname(filePath)
   const outputBaseName = path.basename(filePath).replace(/\.[^.]+$/, "")
   let outputFileName = `${outputBaseName}${OUTPUT_EXTENSIONS[format]}`
-  if (preset === "release") {
+  if (release) {
     if (!writeFile) {
-      onError("The release preset requires writing to an output directory")
+      onError("Release export requires writing to an output directory")
       return onExit(1)
     }
     outputFileName = path.join("dist", "release")
@@ -203,8 +203,7 @@ export const exportSnippet = async ({
       return onExit(1)
     }
   } else {
-    const isJlcpcbFabricationExport =
-      format === "gerbers" || preset === "release"
+    const isJlcpcbFabricationExport = format === "gerbers" || release
     const fabricationPlatformConfig = isJlcpcbFabricationExport
       ? getPlatformConfigWithCliDefaults(
           mergePlatformConfigs(platformConfig, {
@@ -228,7 +227,7 @@ export const exportSnippet = async ({
     circuitJson = circuitData.circuitJson
   }
 
-  if (preset === "release") {
+  if (release) {
     try {
       await fs.promises.mkdir(outputDestination, { recursive: true })
       for (const { format, fileName } of RELEASE_EXPORTS) {
