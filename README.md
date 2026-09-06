@@ -81,6 +81,36 @@ The `build` command also accepts the following options:
 - `--ignore-placement-drc` - suppress placement DRC diagnostics
 - `--ignore-routing-drc` - suppress routing DRC diagnostics
 
+### Release export
+
+```bash
+tsci export board.tsx --preset release --output dist/release
+```
+
+The release preset builds once with Gerber part-orientation analysis enabled,
+then uses that Circuit JSON for `circuit.json`, `schematic.svg`, `pcb.svg`,
+`assembly.svg`, `board.glb`, `gerbers.zip`, `bom.csv`, `pick-and-place.csv`,
+`checks.json`, and `release-manifest.json`. The standalone CSV files match the
+BOM and JLCPCB pick-and-place files inside the Gerber ZIP.
+
+`--output` is a directory for presets, defaults to `dist/release`, and resolves
+relative paths from the input file's directory, like other exports. Parent
+directories are created automatically. `--preset` cannot be combined with
+`--format`; `--disable-parts-engine` and `--show-courtyards` still apply.
+
+`checks.json` contains the build diagnostics as `errors` and `warnings` arrays,
+using the same classification as `tsci check`. It does not run additional check
+subcommands or fail the export on circuit diagnostics. Export failures exit
+nonzero. The manifest is written last and records the schema version, CLI
+version, and each artifact's relative path, byte count, and SHA-256 hash.
+
+To repeat conversion without rebuilding, export the saved `circuit.json` with
+`--preset release`. Gerber ZIP entries use fixed timestamps, but the current
+Gerber converter embeds creation dates inside Gerber and drill files, so the
+ZIP and its manifest hash differ between runs. Byte-for-byte reproducibility
+requires an upstream timestamp option and also depends on converter versions
+and any externally fetched CAD models.
+
 ### KiCad PCM compatibility
 
 `tsci build --kicad-pcm` uses the package license from `package.json` and

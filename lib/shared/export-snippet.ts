@@ -3,40 +3,15 @@ import path from "node:path"
 import { promisify } from "node:util"
 import type { PlatformConfig } from "@tscircuit/props"
 import type { AnyCircuitElement } from "circuit-json"
-import {
-  convertBomRowsToCsv,
-  convertCircuitJsonToBomRows,
-} from "circuit-json-to-bom-csv"
-import { convertCircuitJsonToGerberFiles } from "circuit-json-to-gerber"
-import { convertCircuitJsonToGltf } from "circuit-json-to-gltf"
-import {
-  CircuitJsonToKicadPcbConverter,
-  CircuitJsonToKicadProConverter,
-  CircuitJsonToKicadSchConverter,
-  resolveAndLoadKicad3dModelFiles,
-} from "circuit-json-to-kicad"
-import { convertCircuitJsonToPickAndPlaceCsv } from "circuit-json-to-pnp-csv"
-import { convertCircuitJsonToReadableNetlist } from "circuit-json-to-readable-netlist"
-import { circuitJsonToStep } from "circuit-json-to-step"
-import { circuitJsonToFdmComponentBox } from "circuit-json-to-fdm-component-box"
-import {
-  convertCircuitJsonToAssemblySvg,
-  convertCircuitJsonToPcbSvg,
-  convertCircuitJsonToStackedSchematicSheetsSvg,
-} from "circuit-to-svg"
-import { convertCircuitJsonToDsnString } from "dsn-converter"
-import JSZip from "jszip"
 import type { PcbSnapshotSettings } from "lib/project-config/project-config-schema"
 import { generateCircuitJson } from "lib/shared/generate-circuit-json"
-import { getCircuitJsonToGltfOptions } from "lib/shared/get-circuit-json-to-gltf-options"
 import { getOrGenerateCircuitJson } from "lib/shared/get-or-generate-circuit-json"
 import { getPlatformConfigWithCliDefaults } from "lib/shared/get-platform-config-with-cli-defaults"
-import { loadLocalStepModelFsMap } from "lib/shared/load-local-step-model-fs-map"
 import { mergePlatformConfigs } from "lib/shared/platform-config-utils"
-import { convertCircuitJsonToSchematicPdf } from "./convert-circuit-json-to-schematic-pdf"
 import { convertToKicadLibrary } from "./convert-to-kicad-library"
-import { importFromUserLand } from "./importFromUserLand"
 import { isCircuitJsonFile } from "./is-circuit-json-file"
+import { convertCircuitJsonToExport } from "./convert-circuit-json-to-export"
+import { exportReleasePreset } from "./export-release-preset"
 
 const writeFileAsync = promisify(fs.writeFile)
 
@@ -84,26 +59,10 @@ const OUTPUT_EXTENSIONS: Record<ExportFormat, string> = {
   "component-box-3mf": "-component-box.3mf",
 }
 
-const isRecord = (value: unknown): value is Record<string, unknown> =>
-  typeof value === "object" && value !== null
-
-const unwrapSimpleRouteJson = (value: unknown) => {
-  if (
-    isRecord(value) &&
-    isRecord(value.simpleRouteJson) &&
-    ("connections" in value.simpleRouteJson ||
-      "obstacles" in value.simpleRouteJson ||
-      "bounds" in value.simpleRouteJson)
-  ) {
-    return value.simpleRouteJson
-  }
-
-  return value
-}
-
 type ExportOptions = {
   filePath: string
-  format: ExportFormat
+  format?: ExportFormat
+  preset?: "release"
   writeFile?: boolean
   outputPath?: string
   platformConfig?: PlatformConfig
@@ -118,7 +77,8 @@ type ExportOptions = {
 
 export const exportSnippet = async ({
   filePath,
-  format,
+  format: formatOption,
+  preset,
   outputPath,
   platformConfig,
   pcbSnapshotSettings,
@@ -127,6 +87,11 @@ export const exportSnippet = async ({
   onError = (message) => console.error(message),
   onSuccess = (result: unknown) => console.log(result),
 }: ExportOptions) => {
+  if (preset && formatOption) {
+    onError("The release preset cannot be combined with a format")
+    return onExit(1)
+  }
+  const format = formatOption ?? "json"
   if (!ALLOWED_EXPORT_FORMATS.includes(format)) {
     onError(`Invalid format: ${format}`)
     return onExit(1)
@@ -134,7 +99,14 @@ export const exportSnippet = async ({
 
   const projectDir = path.dirname(filePath)
   const outputBaseName = path.basename(filePath).replace(/\.[^.]+$/, "")
-  const outputFileName = `${outputBaseName}${OUTPUT_EXTENSIONS[format]}`
+  let outputFileName = `${outputBaseName}${OUTPUT_EXTENSIONS[format]}`
+  if (preset === "release") {
+    if (!writeFile) {
+      onError("The release preset requires writing to an output directory")
+      return onExit(1)
+    }
+    outputFileName = path.join("dist", "release")
+  }
   const outputDestination =
     outputPath && path.isAbsolute(outputPath)
       ? outputPath
@@ -182,7 +154,8 @@ export const exportSnippet = async ({
       return onExit(1)
     }
   } else {
-    const isJlcpcbFabricationExport = format === "gerbers"
+    const isJlcpcbFabricationExport =
+      format === "gerbers" || preset === "release"
     const fabricationPlatformConfig = isJlcpcbFabricationExport
       ? getPlatformConfigWithCliDefaults(
           mergePlatformConfigs(platformConfig, {
@@ -195,7 +168,7 @@ export const exportSnippet = async ({
       : getOrGenerateCircuitJson
     const circuitData = await generateCircuitData({
       filePath,
-      saveToFile: format === "circuit-json",
+      saveToFile: !preset && format === "circuit-json",
       platformConfig: fabricationPlatformConfig,
     }).catch((err) => {
       onError(`Error generating circuit JSON: ${err}`)
@@ -206,146 +179,30 @@ export const exportSnippet = async ({
     circuitJson = circuitData.circuitJson
   }
 
-  let outputContent: string | Buffer
-
-  switch (format) {
-    case "schematic-svg":
-      outputContent = convertCircuitJsonToStackedSchematicSheetsSvg(circuitJson)
-      break
-    case "schematic-pdf":
-      outputContent = await convertCircuitJsonToSchematicPdf(circuitJson)
-      break
-    case "pcb-svg":
-      outputContent = convertCircuitJsonToPcbSvg(
+  if (preset === "release") {
+    try {
+      await exportReleasePreset({
         circuitJson,
+        filePath,
+        outputDestination,
+        platformConfig,
         pcbSnapshotSettings,
-      )
-      break
-    case "specctra-dsn":
-      outputContent = convertCircuitJsonToDsnString(circuitJson)
-      break
-    case "readable-netlist":
-      outputContent = convertCircuitJsonToReadableNetlist(circuitJson)
-      break
-    case "gltf":
-      outputContent = JSON.stringify(
-        await convertCircuitJsonToGltf(
-          circuitJson,
-          getCircuitJsonToGltfOptions({ format: "gltf" }),
-        ),
-        null,
-        2,
-      )
-      break
-    case "glb":
-      outputContent = Buffer.from(
-        (await convertCircuitJsonToGltf(
-          circuitJson,
-          getCircuitJsonToGltfOptions({ format: "glb" }),
-        )) as ArrayBuffer,
-      )
-      break
-    case "srj":
-      {
-        const userLandTscircuit = await importFromUserLand("tscircuit")
-        const simpleRouteJson = unwrapSimpleRouteJson(
-          userLandTscircuit.getSimpleRouteJsonFromCircuitJson({
-            circuitJson,
-          }),
-        )
-        outputContent = JSON.stringify(simpleRouteJson, null, 2)
-      }
-      break
-    case "kicad_sch": {
-      const converter = new CircuitJsonToKicadSchConverter(circuitJson)
-      converter.runUntilFinished()
-      outputContent = converter.getOutputString()
-      break
+      })
+      onSuccess({ outputDestination, outputContent: "" })
+      return onExit(0)
+    } catch (err) {
+      onError(`Error exporting release: ${err}`)
+      return onExit(1)
     }
-    case "kicad_pcb": {
-      const converter = new CircuitJsonToKicadPcbConverter(circuitJson)
-      converter.runUntilFinished()
-      outputContent = converter.getOutputString()
-      break
-    }
-    case "kicad_zip": {
-      const schConverter = new CircuitJsonToKicadSchConverter(circuitJson)
-      schConverter.runUntilFinished()
-      const pcbConverter = new CircuitJsonToKicadPcbConverter(circuitJson, {
-        includeBuiltin3dModels: true,
-        projectName: outputBaseName,
-      })
-      pcbConverter.runUntilFinished()
-      const proConverter = new CircuitJsonToKicadProConverter(circuitJson, {
-        projectName: outputBaseName,
-        schematicFilename: `${outputBaseName}.kicad_sch`,
-        pcbFilename: `${outputBaseName}.kicad_pcb`,
-      })
-      proConverter.runUntilFinished()
-
-      const zip = new JSZip()
-      zip.file(`${outputBaseName}.kicad_sch`, schConverter.getOutputString())
-      zip.file(`${outputBaseName}.kicad_pcb`, pcbConverter.getOutputString())
-      zip.file(`${outputBaseName}.kicad_pro`, proConverter.getOutputString())
-
-      await resolveAndLoadKicad3dModelFiles({
-        model3dSourcePaths: pcbConverter.getModel3dSourcePaths(),
-        projectName: outputBaseName,
-        fetch: platformConfig?.platformFetch ?? globalThis.fetch,
-        readFile: (modelPath) =>
-          fs.promises.readFile(path.resolve(projectDir, modelPath)),
-        onModelFile: ({ outputPath, content }) => {
-          zip.file(outputPath, content)
-        },
-        onError: ({ sourcePath }) => {
-          console.warn(`Failed to load 3D model from ${sourcePath}`)
-        },
-      })
-
-      outputContent = await zip.generateAsync({ type: "nodebuffer" })
-      break
-    }
-    case "gerbers": {
-      const zip = new JSZip()
-
-      const gerberFiles = convertCircuitJsonToGerberFiles(circuitJson, {
-        flip_y_axis: false,
-      })
-      for (const [fileName, fileContents] of Object.entries(gerberFiles)) {
-        zip.file(fileName, fileContents)
-      }
-
-      const bomRows = await convertCircuitJsonToBomRows({ circuitJson })
-      const bomCsv = await convertBomRowsToCsv(bomRows)
-      zip.file("bom.csv", bomCsv)
-
-      const pnpCsv = await convertCircuitJsonToPickAndPlaceCsv(circuitJson, {
-        supplier: "jlcpcb",
-      })
-      zip.file("pick_and_place.csv", pnpCsv)
-
-      outputContent = await zip.generateAsync({ type: "nodebuffer" })
-      break
-    }
-
-    case "step":
-      outputContent = await circuitJsonToStep(circuitJson, {
-        includeComponents: true,
-        includeExternalMeshes: true,
-        fsMap: await loadLocalStepModelFsMap(circuitJson),
-      })
-      break
-    case "assembly-svg":
-      outputContent = convertCircuitJsonToAssemblySvg(circuitJson)
-      break
-    case "component-box-3mf":
-      outputContent = Buffer.from(
-        await circuitJsonToFdmComponentBox(circuitJson),
-      )
-      break
-    default:
-      outputContent = JSON.stringify(circuitJson, null, 2)
   }
+
+  const outputContent = await convertCircuitJsonToExport({
+    circuitJson,
+    format,
+    filePath,
+    platformConfig,
+    pcbSnapshotSettings,
+  })
   if (writeFile) {
     await writeFileAsync(outputDestination, outputContent).catch((err) => {
       onError(`Error writing file: ${err}`)

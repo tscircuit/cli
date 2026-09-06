@@ -1,4 +1,4 @@
-import type { Command } from "commander"
+import { Option, type Command } from "commander"
 import { exportSnippet } from "lib/shared/export-snippet"
 import type { ExportFormat } from "lib/shared/export-snippet"
 import { ALLOWED_EXPORT_FORMATS } from "lib/shared/export-snippet"
@@ -23,13 +23,19 @@ export const registerExport = (program: Command) => {
       "-f, --format <format>",
       `Output format (${ALLOWED_EXPORT_FORMATS.join(", ")})`,
     )
-    .option("-o, --output <path>", "Output file path")
+    .addOption(
+      new Option("--preset <preset>", "Export a preset bundle")
+        .choices(["release"])
+        .conflicts("format"),
+    )
+    .option("-o, --output <path>", "Output file path or preset directory")
     .option("--disable-parts-engine", "Disable the parts engine")
     .option("--show-courtyards", "Show courtyard outlines in PCB SVG output")
     .action(
       async (
         file,
         options: {
+          preset?: "release"
           format?: string
           output?: string
           disablePartsEngine?: boolean
@@ -88,11 +94,12 @@ export const registerExport = (program: Command) => {
           process.exit(0)
         }
 
-        const format = formatOption as ExportFormat
+        const format = options.format as ExportFormat | undefined
 
         await exportSnippet({
           filePath: file,
           format,
+          preset: options.preset,
           outputPath: options.output,
           platformConfig: platformConfigWithCliDefaults,
           pcbSnapshotSettings: options.showCourtyards
