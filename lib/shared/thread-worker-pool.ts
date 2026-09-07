@@ -49,6 +49,7 @@ export class ThreadWorkerPool<TJob, TWorkerInput, TWorkerOutput, TResult> {
   private stopped = false
   private stopReason: Error | null = null
   private heartbeatIntervalId: NodeJS.Timeout | null = null
+  private terminationPromise: Promise<void> | null = null
 
   constructor(
     options: ThreadWorkerPoolOptions<
@@ -202,6 +203,8 @@ export class ThreadWorkerPool<TJob, TWorkerInput, TWorkerOutput, TResult> {
   }
 
   private replaceWorker(threadWorker: ThreadWorker<TJob, TResult>): void {
+    if (this.stopped) return
+
     this.clearWorkerTimeout(threadWorker)
     void threadWorker.worker.terminate().catch(() => undefined)
 
@@ -229,7 +232,6 @@ export class ThreadWorkerPool<TJob, TWorkerInput, TWorkerOutput, TResult> {
     threadWorker.currentStatus = null
     threadWorker.busy = false
     action(job)
-    this.processQueue()
   }
 
   private attachWorkerHandlers(
@@ -238,7 +240,7 @@ export class ThreadWorkerPool<TJob, TWorkerInput, TWorkerOutput, TResult> {
     const worker = threadWorker.worker
 
     worker.on("message", (message: TWorkerOutput) => {
-      if (threadWorker.worker !== worker) {
+      if (this.stopped || threadWorker.worker !== worker) {
         return
       }
 
@@ -263,10 +265,11 @@ export class ThreadWorkerPool<TJob, TWorkerInput, TWorkerOutput, TResult> {
 
         job.resolve(this.options.getResult(message))
       })
+      this.processQueue()
     })
 
     worker.on("error", (error) => {
-      if (threadWorker.worker !== worker) {
+      if (this.stopped || threadWorker.worker !== worker) {
         return
       }
 
@@ -283,18 +286,16 @@ export class ThreadWorkerPool<TJob, TWorkerInput, TWorkerOutput, TResult> {
     })
 
     worker.on("exit", (code) => {
-      if (threadWorker.worker !== worker) {
+      if (this.stopped || threadWorker.worker !== worker) {
         return
       }
 
-      if (code !== 0) {
-        this.finishJob(threadWorker, (job) => {
-          job.reject(new Error(`Worker exited with code ${code}`))
-        })
+      this.finishJob(threadWorker, (job) => {
+        job.reject(new Error(`Worker exited with code ${code}`))
+      })
 
-        this.replaceWorker(threadWorker)
-        this.processQueue()
-      }
+      this.replaceWorker(threadWorker)
+      this.processQueue()
     })
   }
 
@@ -330,6 +331,10 @@ export class ThreadWorkerPool<TJob, TWorkerInput, TWorkerOutput, TResult> {
 
     await this.initWorkers()
 
+    if (this.stopped) {
+      throw this.stopReason ?? new Error("Worker pool stopped")
+    }
+
     return new Promise((resolve, reject) => {
       this.jobQueue.push({ job, resolve, reject })
       this.processQueue()
@@ -337,7 +342,10 @@ export class ThreadWorkerPool<TJob, TWorkerInput, TWorkerOutput, TResult> {
   }
 
   async stop(reason: Error): Promise<void> {
-    if (this.stopped) return
+    if (this.stopped) {
+      await this.terminationPromise
+      return
+    }
 
     this.stopped = true
     this.stopHeartbeat()
@@ -346,17 +354,25 @@ export class ThreadWorkerPool<TJob, TWorkerInput, TWorkerOutput, TResult> {
       queuedJob.reject(reason)
     }
     this.jobQueue = []
+    const workers = this.workers
+    this.workers = []
+    this.initialized = false
+
+    this.terminationPromise = Promise.all(
+      workers.map((worker) => {
+        this.clearWorkerTimeout(worker)
+        worker.currentJob?.reject(reason)
+        worker.currentJob = null
+        worker.currentJobStartedAt = null
+        worker.currentStatus = null
+        worker.busy = false
+        return worker.worker.terminate()
+      }),
+    ).then(() => undefined)
+    await this.terminationPromise
   }
 
   async terminate(): Promise<void> {
-    this.stopHeartbeat()
-    await Promise.all(
-      this.workers.map((worker) => {
-        this.clearWorkerTimeout(worker)
-        return worker.worker.terminate()
-      }),
-    )
-    this.workers = []
-    this.initialized = false
+    await this.stop(new Error("Worker pool terminated"))
   }
 }

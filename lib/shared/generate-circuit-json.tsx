@@ -170,24 +170,30 @@ export async function generateCircuitJson({
 
   runner.add(<Component {...(injectedProps ?? {})} />)
 
-  runner.render()
-
   const loggedAsyncEffectNames = new Set<string>()
 
-  while (!runner.isDoneRendering()) {
-    for (const asyncEffect of runner.getRunningAsyncEffects()) {
-      const asyncEffectName = asyncEffect.effectName
-      if (!asyncEffectName || loggedAsyncEffectNames.has(asyncEffectName)) {
-        continue
+  try {
+    runner.render()
+
+    while (!runner.isDoneRendering()) {
+      for (const asyncEffect of runner.getRunningAsyncEffects()) {
+        const asyncEffectName = asyncEffect.effectName
+        if (!asyncEffectName || loggedAsyncEffectNames.has(asyncEffectName)) {
+          continue
+        }
+
+        loggedAsyncEffectNames.add(asyncEffectName)
+        onAsyncEffectStatus?.(asyncEffectName)
       }
 
-      loggedAsyncEffectNames.add(asyncEffectName)
-      onAsyncEffectStatus?.(asyncEffectName)
+      autorouterDiagnostics.checkTimeout()
+      await new Promise((resolve) => setTimeout(resolve, 100))
+      runner.render()
     }
-
-    autorouterDiagnostics.checkTimeout()
-    await new Promise((resolve) => setTimeout(resolve, 100))
-    runner.render()
+  } catch (error) {
+    // User projects can use older tscircuit versions without cancellation.
+    runner.cancelRendering?.(error)
+    throw error
   }
 
   runner.emit("renderComplete")
