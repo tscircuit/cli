@@ -1,6 +1,5 @@
 import { createRequire } from "node:module"
-import pkg from "../package.json"
-import semver from "semver"
+import { getCliVersion } from "./shared/get-cli-version"
 
 const require = createRequire(import.meta.url)
 
@@ -16,8 +15,6 @@ const resolvePackageVersionFromNodeModules: VersionResolver = (packageName) => {
     return undefined
   }
 }
-
-const getCliVersion = () => semver.inc(pkg.version, "patch") ?? pkg.version
 
 type GlobalWithTscircuitVersion = typeof globalThis & {
   TSCIRCUIT_VERSION?: string

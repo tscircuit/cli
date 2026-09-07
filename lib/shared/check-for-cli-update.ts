@@ -2,15 +2,13 @@ import ky from "ky"
 import { getPackageManager } from "./get-package-manager"
 import { getGlobalDepsInstallCommand } from "lib/shared/get-dep-install-command"
 import { execSync } from "node:child_process"
-import { program } from "cli/main"
 import semver from "semver"
-import { version as pkgVersion } from "../../package.json"
+import { getCliVersion } from "./get-cli-version"
 import kleur from "kleur"
 import { prompts } from "lib/utils/prompts"
 import { shouldBeInteractive } from "lib/utils/should-be-interactive"
 
-export const currentCliVersion = () =>
-  program?.version() ?? semver.inc(pkgVersion, "patch") ?? pkgVersion
+export const currentCliVersion = getCliVersion
 
 export const getLatestVersion = async () => {
   const { version: latestCliVersion } = await ky

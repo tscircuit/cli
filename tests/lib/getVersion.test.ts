@@ -1,5 +1,6 @@
 import { afterEach, expect, test } from "bun:test"
 import { getVersion, getVersionInfo } from "lib/getVersion"
+import { version as sourceVersion } from "../../package.json"
 
 type GlobalWithTscircuitVersion = typeof globalThis & {
   TSCIRCUIT_VERSION?: string
@@ -40,4 +41,12 @@ test("getVersion verbose output prints all requested packages", () => {
   expect(output).toContain("@tscircuit/cli:")
   expect(output).toContain("@tscircuit/runframe:")
   expect(output).toContain("@tscircuit/core:")
+})
+
+test("getVersionInfo reports the source package version without guessing a patch", () => {
+  // Given the source checkout has its own current package version.
+  // When reading the CLI version independently of the wrapper package.
+  const { cliVersion } = getVersionInfo(() => undefined)
+  // Then the reported version matches the installed manifest exactly.
+  expect(cliVersion).toBe(sourceVersion)
 })
