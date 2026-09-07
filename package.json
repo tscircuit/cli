@@ -112,7 +112,7 @@
     }
   },
   "overrides": {
-    "circuit-json": "0.0.479"
+    "circuit-json": "^0.0.479"
   },
   "scripts": {
     "start": "bun run dev",
