@@ -53,6 +53,7 @@ type CircuitJsonLookup = {
 }
 
 type AutoroutingEventPayload = {
+  isolatedSubcircuitPath?: string[]
   subcircuit_id?: string
   subcircuitId?: string
   componentDisplayName?: string
@@ -87,6 +88,10 @@ type AutoroutingEventPayload = {
 }
 
 type ActivePhase = {
+  key: string
+  subcircuitKey: string
+  isolatedSubcircuitPath: string[]
+  artifactDirectory: string
   subcircuitId: string
   componentDisplayName: string
   phaseName?: string
@@ -180,10 +185,13 @@ export class AutorouterDiagnostics {
     Omit<AutorouterDiagnosticsOptions, "log">
   private phaseOrdinalBySubcircuit = new Map<string, number>()
   private traceCountBySubcircuit = new Map<string, number>()
-  private activePhase: ActivePhase | null = null
+  private activePhases = new Map<string, ActivePhase>()
+  private primarySubcircuitId?: string
+  private isolatedCompletedPhaseTraces = new Map<string, AutorouterTrace[]>()
   private completedPhaseTraces: AutorouterTrace[] = []
   private hasWrittenPlacementSnapshot = false
   private targetPhaseReached = false
+  private targetPhaseReachedBySubcircuit = new Set<string>()
   private summary: Array<Record<string, unknown>> = []
   private rootCircuit: any
 
@@ -230,17 +238,19 @@ export class AutorouterDiagnostics {
   checkTimeout() {
     this.checkLongRunning()
 
-    if (!this.options.timeoutMs || !this.activePhase) return
+    if (!this.options.timeoutMs) return
 
-    const elapsedMs = performance.now() - this.activePhase.startedAt
-    if (elapsedMs < this.options.timeoutMs) return
+    for (const activePhase of this.activePhases.values()) {
+      const elapsedMs = performance.now() - activePhase.startedAt
+      if (elapsedMs < this.options.timeoutMs) continue
 
-    const artifactPath = this.writeTimeoutArtifact(this.activePhase, elapsedMs)
-    const phaseLabel = this.getPhaseLabel(this.activePhase)
-    const message = `Autorouter timeout after ${this.formatElapsed(elapsedMs)} in ${phaseLabel}. Set a different timeout with \`--autorouter-timeout <duration>\` (for example, \`--autorouter-timeout 2m\`).`
-    this.log(kleur.red(message))
+      const artifactPath = this.writeTimeoutArtifact(activePhase, elapsedMs)
+      const phaseLabel = this.getPhaseLabel(activePhase)
+      const message = `Autorouter timeout after ${this.formatElapsed(elapsedMs)} in ${phaseLabel}. Set a different timeout with \`--autorouter-timeout <duration>\` (for example, \`--autorouter-timeout 2m\`).`
+      this.log(kleur.red(message))
 
-    throw new AutorouterPhaseTimeoutError(message, artifactPath)
+      throw new AutorouterPhaseTimeoutError(message, artifactPath)
+    }
   }
 
   finalize(circuitJson?: CircuitJson) {
@@ -263,14 +273,16 @@ export class AutorouterDiagnostics {
   }
 
   private handleStart(event: AutoroutingEventPayload) {
-    if (this.targetPhaseReached) return
-
     const simpleRouteJson = event.simpleRouteJson
     const subcircuitId =
       event.subcircuit_id ?? event.subcircuitId ?? "unknown-subcircuit"
-    const previousOrdinal = this.phaseOrdinalBySubcircuit.get(subcircuitId) ?? 0
+    const isolatedSubcircuitPath = event.isolatedSubcircuitPath ?? []
+    const subcircuitKey = JSON.stringify([isolatedSubcircuitPath, subcircuitId])
+    if (this.targetPhaseReachedBySubcircuit.has(subcircuitKey)) return
+    const previousOrdinal =
+      this.phaseOrdinalBySubcircuit.get(subcircuitKey) ?? 0
     const phaseOrdinal = event.phaseOrdinal ?? previousOrdinal + 1
-    this.phaseOrdinalBySubcircuit.set(subcircuitId, phaseOrdinal)
+    this.phaseOrdinalBySubcircuit.set(subcircuitKey, phaseOrdinal)
     const routingPhaseIndex = event.routingPhaseIndex ?? phaseOrdinal - 1
     const connectionCount =
       event.connectionCount ?? simpleRouteJson?.connections?.length ?? 0
@@ -278,10 +290,24 @@ export class AutorouterDiagnostics {
       event.obstacleCount ?? simpleRouteJson?.obstacles?.length ?? 0
     const previousTraceCount =
       event.previousTraceCount ??
-      this.traceCountBySubcircuit.get(subcircuitId) ??
+      this.traceCountBySubcircuit.get(subcircuitKey) ??
       0
 
-    this.activePhase = {
+    const key = JSON.stringify([
+      subcircuitKey,
+      routingPhaseIndex,
+      phaseOrdinal,
+      event.phaseName,
+      event.phaseStageIndex,
+    ])
+    const activePhase: ActivePhase = {
+      key,
+      subcircuitKey,
+      isolatedSubcircuitPath,
+      artifactDirectory: this.getArtifactDirectory(
+        subcircuitId,
+        isolatedSubcircuitPath,
+      ),
       subcircuitId,
       componentDisplayName: event.componentDisplayName ?? "subcircuit",
       phaseName: event.phaseName,
@@ -309,7 +335,13 @@ export class AutorouterDiagnostics {
       longRunningLoggingStarted: false,
     }
 
-    if (this.options.enabled && !this.hasWrittenPlacementSnapshot) {
+    this.activePhases.set(key, activePhase)
+
+    if (
+      this.options.enabled &&
+      isolatedSubcircuitPath.length === 0 &&
+      !this.hasWrittenPlacementSnapshot
+    ) {
       const placementCircuitJson = this.getCurrentCircuitJson().filter(
         (element) => !this.isRouteElement(element),
       ) as AnyCircuitElement[]
@@ -320,32 +352,33 @@ export class AutorouterDiagnostics {
     }
 
     if (this.options.enabled) {
-      this.logPhaseStart(this.activePhase)
+      this.logPhaseStart(activePhase)
     }
 
     if (this.shouldDumpInput(routingPhaseIndex)) {
       this.writeJson(
-        this.getPhaseFileName(this.activePhase, "input.simple-route.json"),
+        this.getPhaseFileName(activePhase, "input.simple-route.json"),
         simpleRouteJson ?? {},
       )
     }
   }
 
   private handleProgress(event: AutoroutingEventPayload) {
-    if (!this.activePhase) return
+    const activePhase = this.matchActivePhase(event)
+    if (!activePhase) return
     const now = performance.now()
-    this.activePhase.lastProgress = event
-    if (!this.shouldLogPhaseDetails(this.activePhase)) return
+    activePhase.lastProgress = event
+    if (!this.shouldLogPhaseDetails(activePhase)) return
 
     if (
-      this.activePhase.lastProgressLogAt > 0 &&
-      now - this.activePhase.lastProgressLogAt < PROGRESS_LOG_INTERVAL_MS
+      activePhase.lastProgressLogAt > 0 &&
+      now - activePhase.lastProgressLogAt < PROGRESS_LOG_INTERVAL_MS
     ) {
       return
     }
-    this.activePhase.lastProgressLogAt = now
+    activePhase.lastProgressLogAt = now
 
-    this.logProgress(this.activePhase, event, now)
+    this.logProgress(activePhase, event, now)
   }
 
   private handleEnd(event: AutoroutingEventPayload) {
@@ -361,10 +394,17 @@ export class AutorouterDiagnostics {
       activePhase.previousTraceCount + outputTraceCount
 
     this.traceCountBySubcircuit.set(
-      activePhase.subcircuitId,
+      activePhase.subcircuitKey,
       cumulativeTraceCount,
     )
-    this.completedPhaseTraces.push(...(outputSrj?.traces ?? []))
+    if (activePhase.isolatedSubcircuitPath.length > 0) {
+      const scopeKey = JSON.stringify(activePhase.isolatedSubcircuitPath)
+      const traces = this.isolatedCompletedPhaseTraces.get(scopeKey) ?? []
+      traces.push(...(outputSrj?.traces ?? []))
+      this.isolatedCompletedPhaseTraces.set(scopeKey, traces)
+    } else {
+      this.completedPhaseTraces.push(...(outputSrj?.traces ?? []))
+    }
     this.summary.push({
       subcircuit_id: activePhase.subcircuitId,
       componentDisplayName: activePhase.componentDisplayName,
@@ -408,20 +448,25 @@ export class AutorouterDiagnostics {
       )
     }
 
-    if (this.options.enabled) {
+    if (
+      this.options.enabled &&
+      activePhase.isolatedSubcircuitPath.length === 0
+    ) {
       this.writePngSnapshot(
-        `phase-${activePhase.routingPhaseIndex}-routed.png`,
+        path.join(
+          activePhase.artifactDirectory,
+          `phase-${activePhase.routingPhaseIndex}-routed.png`,
+        ),
         this.getCircuitJsonWithCompletedPhaseTraces(),
       )
     }
 
     if (this.isFinalTargetPhaseStage(activePhase)) {
       this.targetPhaseReached = true
+      this.targetPhaseReachedBySubcircuit.add(activePhase.subcircuitKey)
     }
 
-    if (this.activePhase === activePhase) {
-      this.activePhase = null
-    }
+    this.activePhases.delete(activePhase.key)
   }
 
   private handleError(event: AutoroutingEventPayload) {
@@ -454,7 +499,7 @@ export class AutorouterDiagnostics {
         this.logPhaseStart(activePhase, "failed")
       }
       this.log(
-        `  ${this.getPhaseLabel(activePhase)} error after ${this.formatElapsed(elapsedMs)}: ${this.formatUserFacingText(error.message)}`,
+        `  ${this.getPhaseLabel(activePhase)} error after ${this.formatElapsed(elapsedMs)}: ${this.formatUserFacingText(error.message, activePhase.isolatedSubcircuitPath.length > 0)}`,
       )
     }
 
@@ -483,11 +528,10 @@ export class AutorouterDiagnostics {
 
     if (this.isFinalTargetPhaseStage(activePhase)) {
       this.targetPhaseReached = true
+      this.targetPhaseReachedBySubcircuit.add(activePhase.subcircuitKey)
     }
 
-    if (this.activePhase === activePhase) {
-      this.activePhase = null
-    }
+    this.activePhases.delete(activePhase.key)
   }
 
   private writeTimeoutArtifact(activePhase: ActivePhase, elapsedMs: number) {
@@ -500,11 +544,20 @@ export class AutorouterDiagnostics {
       "previous-output.traces.json",
     )
     const timeoutFile = this.getPhaseFileName(activePhase, "timeout.json")
-    const boardFile = "board.source-and-pcb.circuit.json"
+    const boardFile =
+      activePhase.isolatedSubcircuitPath.length === 0
+        ? "board.source-and-pcb.circuit.json"
+        : undefined
+    const previousTraces =
+      activePhase.isolatedSubcircuitPath.length > 0
+        ? (this.isolatedCompletedPhaseTraces.get(
+            JSON.stringify(activePhase.isolatedSubcircuitPath),
+          ) ?? [])
+        : this.completedPhaseTraces
 
     this.writeJson(inputFile, activePhase.simpleRouteJson ?? {})
-    this.writeJson(previousTracesFile, this.completedPhaseTraces)
-    this.writeJson(boardFile, this.getCurrentCircuitJson())
+    this.writeJson(previousTracesFile, previousTraces)
+    if (boardFile) this.writeJson(boardFile, this.getCurrentCircuitJson())
 
     return this.writeJson(timeoutFile, {
       type: "autorouter_phase_timeout",
@@ -531,10 +584,11 @@ export class AutorouterDiagnostics {
   }
 
   private checkLongRunning() {
-    if (!this.activePhase) return
-    const elapsedMs = performance.now() - this.activePhase.startedAt
-    if (!this.didCrossLongRunningThreshold(this.activePhase, elapsedMs)) return
-    this.startLongRunningLogging(this.activePhase, elapsedMs)
+    for (const activePhase of this.activePhases.values()) {
+      const elapsedMs = performance.now() - activePhase.startedAt
+      if (!this.didCrossLongRunningThreshold(activePhase, elapsedMs)) continue
+      this.startLongRunningLogging(activePhase, elapsedMs)
+    }
   }
 
   private didCrossLongRunningThreshold(
@@ -571,10 +625,13 @@ export class AutorouterDiagnostics {
   private logPhaseStart(activePhase: ActivePhase, reason?: string) {
     const reasonText = reason ? ` ${reason}` : ""
     this.log(
-      `Autorouting ${this.formatUserFacingText(activePhase.componentDisplayName)} ${this.getPhaseLabel(activePhase)}${reasonText} start: connections=${activePhase.connectionCount}, obstacles=${activePhase.obstacleCount}, previous_traces=${activePhase.previousTraceCount}${activePhase.routerDescription ? `, ${activePhase.routerDescription}` : ""}`,
+      `Autorouting ${this.formatUserFacingText(activePhase.componentDisplayName, activePhase.isolatedSubcircuitPath.length > 0)} ${this.getPhaseLabel(activePhase)}${reasonText} start: connections=${activePhase.connectionCount}, obstacles=${activePhase.obstacleCount}, previous_traces=${activePhase.previousTraceCount}${activePhase.routerDescription ? `, ${activePhase.routerDescription}` : ""}`,
     )
 
-    const connectionNames = this.getConnectionNames(activePhase.simpleRouteJson)
+    const connectionNames = this.getConnectionNames(
+      activePhase.simpleRouteJson,
+      activePhase.isolatedSubcircuitPath.length > 0,
+    )
     if (connectionNames.length > 0) {
       this.log(`  connections: ${connectionNames.join(", ")}`)
     }
@@ -628,13 +685,39 @@ export class AutorouterDiagnostics {
     )
   }
 
-  private matchActivePhase(event: AutoroutingEventPayload) {
-    if (!this.activePhase) return null
+  private matchActivePhase(event: AutoroutingEventPayload): ActivePhase | null {
+    const scopeKey = JSON.stringify(event.isolatedSubcircuitPath ?? [])
     const subcircuitId = event.subcircuit_id ?? event.subcircuitId
-    if (subcircuitId && subcircuitId !== this.activePhase.subcircuitId) {
-      return null
-    }
-    return this.activePhase
+    const matches = [...this.activePhases.values()].filter((activePhase) => {
+      if (JSON.stringify(activePhase.isolatedSubcircuitPath) !== scopeKey) {
+        return false
+      }
+      if (subcircuitId && subcircuitId !== activePhase.subcircuitId)
+        return false
+      if (
+        event.routingPhaseIndex != null &&
+        event.routingPhaseIndex !== activePhase.routingPhaseIndex
+      )
+        return false
+      if (
+        event.phaseOrdinal !== undefined &&
+        event.phaseOrdinal !== activePhase.phaseOrdinal
+      )
+        return false
+      if (
+        event.phaseName !== undefined &&
+        event.phaseName !== activePhase.phaseName
+      )
+        return false
+      if (
+        event.phaseStageIndex !== undefined &&
+        event.phaseStageIndex !== activePhase.phaseStageIndex
+      )
+        return false
+      return true
+    })
+    // Legacy events can omit phase metadata, but must still identify one phase.
+    return matches.length === 1 ? matches[0] : null
   }
 
   private shouldDumpInput(routingPhaseIndex: number) {
@@ -661,8 +744,8 @@ export class AutorouterDiagnostics {
 
   private writeJson(fileName: string, value: unknown) {
     const debugDir = path.resolve(this.options.debugDir ?? DEFAULT_DEBUG_DIR)
-    fs.mkdirSync(debugDir, { recursive: true })
     const filePath = path.join(debugDir, fileName)
+    fs.mkdirSync(path.dirname(filePath), { recursive: true })
     fs.writeFileSync(filePath, JSON.stringify(value, null, 2))
     this.logArtifact(filePath)
     return filePath
@@ -677,8 +760,8 @@ export class AutorouterDiagnostics {
       const pcbSvg = convertCircuitJsonToPcbSvg(circuitJson, options)
       const png = convertSvgToPngBuffer(pcbSvg)
       const debugDir = path.resolve(this.options.debugDir ?? DEFAULT_DEBUG_DIR)
-      fs.mkdirSync(debugDir, { recursive: true })
       const filePath = path.join(debugDir, fileName)
+      fs.mkdirSync(path.dirname(filePath), { recursive: true })
       fs.writeFileSync(filePath, png)
       this.logArtifact(filePath)
     } catch (error) {
@@ -752,12 +835,37 @@ export class AutorouterDiagnostics {
     return element.type === "pcb_trace" || element.type === "pcb_via"
   }
 
+  private getArtifactDirectory(subcircuitId: string, isolatedPath: string[]) {
+    const encodeSegment = (value: string) =>
+      encodeURIComponent(value).replaceAll(".", "%2E")
+    if (isolatedPath.length > 0) {
+      return path.join(
+        "isolated",
+        ...isolatedPath.map(encodeSegment),
+        encodeSegment(subcircuitId),
+      )
+    }
+    this.primarySubcircuitId ??= subcircuitId
+    return subcircuitId === this.primarySubcircuitId
+      ? ""
+      : path.join("subcircuits", encodeSegment(subcircuitId))
+  }
+
   private getPhaseFileName(activePhase: ActivePhase, suffix: string) {
     const phaseNumber = activePhase.routingPhaseIndex
-    return `phase-${phaseNumber}.${suffix}`
+    return path.join(
+      activePhase.artifactDirectory,
+      `phase-${phaseNumber}.${suffix}`,
+    )
   }
 
   private getPhaseLabel(activePhase: ActivePhase) {
+    const scopeLabel =
+      activePhase.isolatedSubcircuitPath.length > 0
+        ? ` [isolated ${activePhase.isolatedSubcircuitPath.join("/")}]`
+        : activePhase.artifactDirectory
+          ? ` [${activePhase.componentDisplayName}: ${activePhase.subcircuitId}]`
+          : ""
     const phaseName = activePhase.phaseName ? ` "${activePhase.phaseName}"` : ""
     const stageLabel =
       activePhase.phaseStageIndex !== undefined &&
@@ -766,9 +874,9 @@ export class AutorouterDiagnostics {
         ? ` stage ${activePhase.phaseStageIndex + 1}/${activePhase.phaseStageCount}`
         : ""
     if (activePhase.phaseCount) {
-      return `phase ${activePhase.phaseOrdinal}/${activePhase.phaseCount}${phaseName}${stageLabel}`
+      return `phase ${activePhase.phaseOrdinal}/${activePhase.phaseCount}${phaseName}${stageLabel}${scopeLabel}`
     }
-    return `phase ${activePhase.phaseOrdinal}${phaseName}${stageLabel}`
+    return `phase ${activePhase.phaseOrdinal}${phaseName}${stageLabel}${scopeLabel}`
   }
 
   private isFinalTargetPhaseStage(activePhase: ActivePhase) {
@@ -820,6 +928,9 @@ export class AutorouterDiagnostics {
 
   private getExecutionMetadata(activePhase: ActivePhase) {
     return {
+      ...(activePhase.isolatedSubcircuitPath.length > 0
+        ? { isolatedSubcircuitPath: activePhase.isolatedSubcircuitPath }
+        : {}),
       autorouterName: activePhase.autorouterName,
       autorouterVersion: activePhase.autorouterVersion,
       solverName: activePhase.solverName,
@@ -830,8 +941,13 @@ export class AutorouterDiagnostics {
     }
   }
 
-  private getConnectionNames(simpleRouteJson?: SimpleRouteJson) {
-    const circuitJsonLookup = this.createCircuitJsonLookup()
+  private getConnectionNames(
+    simpleRouteJson?: SimpleRouteJson,
+    isolated = false,
+  ) {
+    const circuitJsonLookup: CircuitJsonLookup = isolated
+      ? { circuitJson: [], elementById: new Map() }
+      : this.createCircuitJsonLookup()
 
     return [
       ...new Set(
@@ -878,7 +994,9 @@ export class AutorouterDiagnostics {
     return null
   }
 
-  private formatUserFacingText(value: string) {
+  private formatUserFacingText(value: string, isolated = false) {
+    if (isolated)
+      return value.replace(CIRCUIT_JSON_ID_PATTERN, "internal element")
     const circuitJsonLookup = this.createCircuitJsonLookup()
     let formattedValue = value
 
