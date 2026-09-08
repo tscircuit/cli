@@ -1,0 +1,28 @@
+{
+  "success": true,
+  "code": 0,
+  "result": {
+    "facets": {
+      "mine": 0,
+      "lcsc": 0,
+      "SMT": 0,
+      "easyeda": 0,
+      "following": 0,
+      "user": 0
+    },
+    "lists": {
+      "lcsc": [],
+      "easyeda": [],
+      "mine": [],
+      "following": [],
+      "user": [],
+      "SMT": []
+    },
+    "pageSize": 100,
+    "totalPage": 0,
+    "wd": "c41411351",
+    "uid": "0819f05c4eef4c71ace90d822a990e87",
+    "type": "3",
+    "doctype": ["2"]
+  }
+}
