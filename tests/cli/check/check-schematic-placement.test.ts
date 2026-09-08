@@ -1,5 +1,5 @@
 import { expect, test } from "bun:test"
-import { rm, writeFile } from "node:fs/promises"
+import { readFile, readdir, rm, writeFile } from "node:fs/promises"
 import path from "node:path"
 import { checkSchematicPlacement } from "../../../cli/check/schematic-placement/register"
 import { getCliTestFixture } from "../../fixtures/get-cli-test-fixture"
@@ -100,7 +100,7 @@ const misalignedPinPairsCircuitJson = [
 ]
 
 test("tsci check schematic-placement prints schematic placement analysis", async () => {
-  const { runCommand } = await getCliTestFixture()
+  const { runCommand, tmpDir } = await getCliTestFixture()
   const circuitPath = path.join(
     process.cwd(),
     `tmp-check-schematic-placement-${Date.now()}-${Math.random().toString(36).slice(2)}.tsx`,
@@ -117,10 +117,37 @@ test("tsci check schematic-placement prints schematic placement analysis", async
 
     expect(exitCode).toBe(0)
     expect(stderr).toBe("")
-    expect(stdout.trim()).toContain(expected)
+    expect(stdout.trim()).toContain(expected.output)
     expect(stdout).toContain("<SchematicBoxPositions>")
     expect(stdout).toContain('componentName="R1"')
     expect(stdout).toContain('componentName="C1"')
+    const outputDir = path.join(tmpDir, "dist", "schematic-placement")
+    expect((await readdir(outputDir)).sort()).toEqual(
+      expected.artifacts.map((artifact) => artifact.fileName).sort(),
+    )
+    expect(expected.artifacts.length).toBeGreaterThan(0)
+    for (const artifact of expected.artifacts) {
+      const svg = await readFile(
+        path.join(outputDir, artifact.fileName),
+        "utf8",
+      )
+      expect(svg).toBe(artifact.content)
+      expect(svg.match(/data-issue-index=/g)).toHaveLength(1)
+      expect(stdout).toContain(path.join(outputDir, artifact.fileName))
+    }
+    // A later clean result removes stale generated reports but keeps user files.
+    await writeFile(path.join(outputDir, "notes.svg"), "keep this")
+    const cleanCircuitPath = path.join(tmpDir, "clean.circuit.json")
+    await writeFile(cleanCircuitPath, "[]")
+    const clean = await runCommand(
+      `tsci check schematic-placement ${cleanCircuitPath}`,
+    )
+    expect(clean.exitCode).toBe(0)
+    expect(clean.stderr).toBe("")
+    expect(await readdir(outputDir)).toEqual(["notes.svg"])
+    expect(await readFile(path.join(outputDir, "notes.svg"), "utf8")).toBe(
+      "keep this",
+    )
   } finally {
     await rm(circuitPath, { force: true })
   }
@@ -140,4 +167,21 @@ test("tsci check schematic-placement reports a better vertical pin alignment", a
   expect(stdout).toContain(
     '<ComponentPinsWouldAlignWithVerticalShift firstComponentName="U1" secondComponentName="U2" targetComponentName="U2" deltaSchY="-1" newSchY="0" currentlyAlignedPinCount="0" alignedPinCount="2"',
   )
+})
+
+test("tsci check schematic-placement creates no artifact directory for a clean circuit", async () => {
+  const { runCommand, tmpDir } = await getCliTestFixture()
+  const circuitPath = path.join(tmpDir, "clean.circuit.json")
+  await writeFile(circuitPath, "[]")
+  const { stdout, stderr, exitCode } = await runCommand(
+    `tsci check schematic-placement ${circuitPath}`,
+  )
+  expect(exitCode).toBe(0)
+  expect(stderr).toBe("")
+  expect(stdout.trim()).toBe("")
+  expect(
+    await readdir(path.join(tmpDir, "dist", "schematic-placement")).catch(
+      (error) => error.code,
+    ),
+  ).toBe("ENOENT")
 })
