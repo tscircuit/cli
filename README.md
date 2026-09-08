@@ -11,23 +11,6 @@ https://github.com/user-attachments/assets/0228e09d-48fc-4bf5-814b-762b60fc35c7
 tsci dev
 ```
 
-## Schematic placement reports
-
-```bash
-tsci check schematic-placement path/to/circuit.tsx
-# Prebuilt Circuit JSON is also supported:
-tsci check schematic-placement path/to/circuit.json
-```
-
-The command prints placement analysis and automatically writes one SVG per issue
-to `dist/schematic-placement/` in the current directory. Each SVG shows a cropped
-schematic with that issue highlighted and its XML description underneath. The
-command prints the path of every generated SVG.
-
-Rerunning replaces previously generated `issue-*.svg` reports, including removing
-them when no issues remain. Other files in the directory are preserved. A clean
-check creates no new artifact directory.
-
 ## Installation
 
 ```bash
