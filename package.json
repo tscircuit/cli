@@ -1,6 +1,6 @@
 {
   "name": "@tscircuit/cli",
-  "version": "0.1.2019",
+  "version": "0.1.2030",
   "repository": {
     "type": "git",
     "url": "https://github.com/tscircuit/cli"
@@ -112,7 +112,7 @@
     }
   },
   "overrides": {
-    "circuit-json": "0.0.479"
+    "circuit-json": "^0.0.479"
   },
   "scripts": {
     "start": "bun run dev",
