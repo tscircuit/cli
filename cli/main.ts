@@ -21,6 +21,7 @@ import { registerCheckRoutingDifficulty } from "./check/routing-difficulty/regis
 import { registerCheckSchematicPlacement } from "./check/schematic-placement/register"
 import { registerCheckShorts } from "./check/shorts/register"
 import { registerCheckSource } from "./check/source/register"
+import { registerCheckSupplierFootprints } from "./check/supplier-footprints/register"
 import { registerCheckTraceLength } from "./check/trace-length/register"
 import { registerClone } from "./clone/register"
 import { registerConfigPrint } from "./config/print/register"
@@ -95,6 +96,7 @@ registerCheckRoutingDifficulty(program)
 registerCheckSchematicPlacement(program)
 registerCheckShorts(program)
 registerCheckSource(program)
+registerCheckSupplierFootprints(program)
 registerCheckTraceLength(program)
 
 registerRegistry(program)
