@@ -10,13 +10,18 @@ export function registerUpgradeCommand(program: Command) {
     .command("upgrade")
     .description("Upgrade CLI to the latest version")
     .action(async () => {
-      const isUpdated = await updateTsciIfNewVersionIsAvailable()
-      if (!isUpdated) {
-        console.log(
-          kleur.green(
-            `You are already using the latest version of tsci (v${currentCliVersion()})`,
-          ),
-        )
+      try {
+        const isUpdated = await updateTsciIfNewVersionIsAvailable()
+        if (!isUpdated) {
+          console.log(
+            kleur.green(
+              `You are already using the latest version of tsci (v${currentCliVersion()})`,
+            ),
+          )
+        }
+      } catch (error) {
+        console.error(error instanceof Error ? error.message : String(error))
+        process.exitCode = 1
       }
     })
 }
