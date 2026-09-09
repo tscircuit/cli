@@ -1,12 +1,43 @@
 import { expect, test } from "bun:test"
+import { writeFile } from "node:fs/promises"
+import path from "node:path"
 import type { AnyCircuitElement } from "circuit-json"
-import { checkSupplierFootprintsInCircuitJson } from "cli/check/supplier-footprints/register"
+import { checkSupplierFootprintsInCircuitJson } from "cli/check/supplier-footprints/check-supplier-footprints"
 import { compareSupplierFootprint } from "cli/check/supplier-footprints/compare-footprints"
+import { getCliTestFixture } from "../../fixtures/get-cli-test-fixture"
+
+const rotateTestPoint = ({
+  point,
+  rotationDegrees,
+  x,
+  y,
+}: {
+  point: { x: number; y: number }
+  rotationDegrees: number
+  x: number
+  y: number
+}) => {
+  const normalizedRotationDegrees = ((rotationDegrees % 360) + 360) % 360
+  if (normalizedRotationDegrees === 0) {
+    return { x: x + point.x, y: y + point.y }
+  }
+  if (normalizedRotationDegrees === 90) {
+    return { x: x - point.y, y: y + point.x }
+  }
+  if (normalizedRotationDegrees === 180) {
+    return { x: x - point.x, y: y - point.y }
+  }
+  if (normalizedRotationDegrees === 270) {
+    return { x: x + point.y, y: y - point.x }
+  }
+  throw new Error("Test fixture rotation must be a multiple of 90 degrees")
+}
 
 const makeFootprint = ({
   componentId,
   sourceComponentId,
   rotation = 0,
+  layer = "top",
   x = 0,
   y = 0,
   pins = [
@@ -17,16 +48,11 @@ const makeFootprint = ({
   componentId: string
   sourceComponentId: string
   rotation?: number
+  layer?: "top" | "bottom"
   x?: number
   y?: number
   pins?: Array<{ pin: number; x: number; y: number; width?: number }>
 }): AnyCircuitElement[] => {
-  const angle = (rotation * Math.PI) / 180
-  const rotate = (point: { x: number; y: number }) => ({
-    x: x + point.x * Math.cos(angle) - point.y * Math.sin(angle),
-    y: y + point.x * Math.sin(angle) + point.y * Math.cos(angle),
-  })
-
   return [
     {
       type: "source_component",
@@ -41,11 +67,16 @@ const makeFootprint = ({
       center: { x, y },
       width: 3,
       height: 2,
-      layer: "top",
+      layer,
       rotation,
     },
     ...pins.flatMap((pin, index) => {
-      const position = rotate(pin)
+      const position = rotateTestPoint({
+        point: layer === "bottom" ? { x: pin.x, y: -pin.y } : pin,
+        rotationDegrees: rotation,
+        x,
+        y,
+      })
       const sourcePortId = `${sourceComponentId}_port_${pin.pin}`
       const pcbPortId = `${componentId}_port_${pin.pin}`
       return [
@@ -64,7 +95,7 @@ const makeFootprint = ({
           pcb_component_id: componentId,
           x: position.x,
           y: position.y,
-          layers: ["top"],
+          layers: [layer],
         },
         {
           type: "pcb_smtpad",
@@ -75,7 +106,7 @@ const makeFootprint = ({
           y: position.y,
           width: rotation % 180 === 90 ? 0.6 : (pin.width ?? 0.8),
           height: rotation % 180 === 90 ? (pin.width ?? 0.8) : 0.6,
-          layer: "top",
+          layer,
           shape: "rect",
           port_hints: [`pin${pin.pin}`],
         },
@@ -95,6 +126,37 @@ test("supplier footprint comparison accepts translated and rotated placement", (
     rotation: 90,
     x: 12,
     y: -4,
+  })
+
+  const result = compareSupplierFootprint({
+    localCircuitJson: local,
+    localPcbComponentId: "local_component",
+    supplierCircuitJson: supplier,
+  })
+
+  expect(result.matches).toBeTrue()
+  expect(result.mismatches).toEqual([])
+})
+
+test("supplier footprint comparison accepts mirrored bottom placement", () => {
+  const pins = [
+    { pin: 1, x: -1, y: -0.5 },
+    { pin: 2, x: 1, y: 0 },
+    { pin: 3, x: 0, y: 1 },
+  ]
+  const supplier = makeFootprint({
+    componentId: "supplier_component",
+    sourceComponentId: "supplier_source",
+    pins,
+  })
+  const local = makeFootprint({
+    componentId: "local_component",
+    sourceComponentId: "local_source",
+    layer: "bottom",
+    rotation: 90,
+    x: 12,
+    y: -4,
+    pins,
   })
 
   const result = compareSupplierFootprint({
@@ -155,7 +217,38 @@ test("supplier footprint comparison catches pad geometry differences", () => {
 
   expect(result.matches).toBeFalse()
   expect(result.mismatches.map(({ message }) => message).join("\n")).toContain(
-    "width 1.2 != 0.8",
+    "copper geometry",
+  )
+})
+
+test("supplier footprint comparison catches extra mechanical holes", () => {
+  const supplier = makeFootprint({
+    componentId: "supplier_component",
+    sourceComponentId: "supplier_source",
+  })
+  const local = makeFootprint({
+    componentId: "local_component",
+    sourceComponentId: "local_source",
+  })
+  local.push({
+    type: "pcb_hole",
+    pcb_hole_id: "local_hole",
+    pcb_component_id: "local_component",
+    hole_shape: "circle",
+    hole_diameter: 0.8,
+    x: 0,
+    y: 1.5,
+  })
+
+  const result = compareSupplierFootprint({
+    localCircuitJson: local,
+    localPcbComponentId: "local_component",
+    supplierCircuitJson: supplier,
+  })
+
+  expect(result.matches).toBeFalse()
+  expect(result.mismatches.map(({ message }) => message).join("\n")).toContain(
+    "mechanical hole count 1 != 0",
   )
 })
 
@@ -192,8 +285,6 @@ test("supplier footprint comparison treats a fully rounded square pad as a circl
     pad.rect_pad_width = 0.8
     pad.rect_pad_height = 0.8
     pad.rect_border_radius = 0.4
-    pad.hole_offset_x = 0
-    pad.hole_offset_y = 0
     pad.layers = ["top", "bottom"]
     delete pad.width
     delete pad.height
@@ -324,4 +415,28 @@ test("supplier footprint check caches duplicate supplier footprint requests", as
   expect(result.hasErrors).toBeFalse()
   expect(result.checks).toHaveLength(2)
   expect(fetchCount).toBe(1)
+})
+
+test("tsci check supplier-footprints accepts prebuilt Circuit JSON", async () => {
+  const { runCommand, tmpDir } = await getCliTestFixture()
+  const circuitJsonPath = path.join(tmpDir, "supplier-check.circuit.json")
+  await writeFile(
+    circuitJsonPath,
+    JSON.stringify(
+      makeFootprint({
+        componentId: "local_component",
+        sourceComponentId: "local_source",
+      }),
+    ),
+  )
+
+  const { stdout, stderr, exitCode } = await runCommand(
+    `tsci check supplier-footprints ${circuitJsonPath}`,
+  )
+
+  expect(exitCode).toBe(0)
+  expect(stderr).toBe("")
+  expect(stdout).toContain("Supplier footprint check:")
+  expect(stdout).toContain("Checked: 0")
+  expect(stdout).toContain("Skipped without supplier part numbers: 1")
 })
