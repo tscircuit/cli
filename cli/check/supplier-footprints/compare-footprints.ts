@@ -169,25 +169,42 @@ const getComponentFootprint = ({
 }
 
 const mirrorPcbSmtPad = (pad: PcbSmtPad): PcbSmtPad => {
+  const layer =
+    pad.layer === "top" ? "bottom" : pad.layer === "bottom" ? "top" : pad.layer
   if (pad.shape === "polygon") {
     return {
       ...pad,
+      layer,
       points: pad.points.map((point) => ({ ...point, y: -point.y })),
     }
   }
   if (pad.shape === "rotated_rect" || pad.shape === "rotated_pill") {
-    return { ...pad, y: -pad.y, ccw_rotation: -pad.ccw_rotation }
+    return {
+      ...pad,
+      layer,
+      y: -pad.y,
+      ccw_rotation: -pad.ccw_rotation,
+    }
   }
-  return { ...pad, y: -pad.y }
+  return { ...pad, layer, y: -pad.y }
 }
 
 const mirrorPcbPlatedHole = (pad: PcbPlatedHole): PcbPlatedHole => {
+  const layers = pad.layers.map((layer) =>
+    layer === "top" ? "bottom" : layer === "bottom" ? "top" : layer,
+  )
   if (pad.shape === "oval" || pad.shape === "pill") {
-    return { ...pad, y: -pad.y, ccw_rotation: -pad.ccw_rotation }
+    return {
+      ...pad,
+      layers,
+      y: -pad.y,
+      ccw_rotation: -pad.ccw_rotation,
+    }
   }
   if (pad.shape === "circular_hole_with_rect_pad") {
     return {
       ...pad,
+      layers,
       y: -pad.y,
       hole_offset_y: -pad.hole_offset_y,
       rect_ccw_rotation:
@@ -197,11 +214,17 @@ const mirrorPcbPlatedHole = (pad: PcbPlatedHole): PcbPlatedHole => {
     }
   }
   if (pad.shape === "pill_hole_with_rect_pad") {
-    return { ...pad, y: -pad.y, hole_offset_y: -pad.hole_offset_y }
+    return {
+      ...pad,
+      layers,
+      y: -pad.y,
+      hole_offset_y: -pad.hole_offset_y,
+    }
   }
   if (pad.shape === "rotated_pill_hole_with_rect_pad") {
     return {
       ...pad,
+      layers,
       y: -pad.y,
       hole_offset_y: -pad.hole_offset_y,
       hole_ccw_rotation: -pad.hole_ccw_rotation,
@@ -211,6 +234,7 @@ const mirrorPcbPlatedHole = (pad: PcbPlatedHole): PcbPlatedHole => {
   if (pad.shape === "hole_with_polygon_pad") {
     return {
       ...pad,
+      layers,
       y: -pad.y,
       hole_offset_y: -pad.hole_offset_y,
       pad_outline: pad.pad_outline.map((point) => ({
@@ -221,7 +245,7 @@ const mirrorPcbPlatedHole = (pad: PcbPlatedHole): PcbPlatedHole => {
         pad.ccw_rotation === undefined ? undefined : -pad.ccw_rotation,
     }
   }
-  return { ...pad, y: -pad.y }
+  return { ...pad, layers, y: -pad.y }
 }
 
 const mirrorPcbHole = (hole: PcbHole): PcbHole =>
@@ -283,6 +307,25 @@ const formatPinMismatch = (mismatch: PinMismatchDetail) => {
   return `pin ${localPins} mismatch at local pad ${localPad}: supplier pad ${supplierPad} has pin ${supplierPins}`
 }
 
+const getNumericPinHints = (pad: PcbPad) =>
+  (pad.port_hints ?? [])
+    .flatMap((hint) => {
+      const match = /^(?:pin)?(\d+)$/i.exec(hint.trim())
+      return match?.[1] ? [Number.parseInt(match[1], 10)] : []
+    })
+    .sort((firstPin, secondPin) => firstPin - secondPin)
+
+const getSmtPadLayerSignature = (pad: PcbSmtPad) => {
+  const pinLabel = getNumericPinHints(pad).join(",") || "unnumbered"
+  return `${pinLabel}:${pad.layer}`
+}
+
+const getSmtPadLayerSignatures = (footprint: Footprint) =>
+  footprint.pads
+    .filter((pad): pad is PcbSmtPad => pad.type === "pcb_smtpad")
+    .map(getSmtPadLayerSignature)
+    .sort()
+
 export const compareSupplierFootprint = ({
   localCircuitJson,
   localPcbComponentId,
@@ -332,6 +375,8 @@ export const compareSupplierFootprint = ({
     localFootprint,
     supplierFootprint,
   )
+  const localPadLayerSignatures = getSmtPadLayerSignatures(localFootprint)
+  const supplierPadLayerSignatures = getSmtPadLayerSignatures(supplierFootprint)
 
   for (const [primitiveName, localCount, supplierCount] of [
     ["pad", localFootprint.pads.length, supplierFootprint.pads.length],
@@ -359,6 +404,11 @@ export const compareSupplierFootprint = ({
     mismatches.push({
       message: `drill geometry ${formatPercentage(comparison.holeIntersectionOverUnion)} match`,
     })
+  }
+  if (
+    localPadLayerSignatures.join("|") !== supplierPadLayerSignatures.join("|")
+  ) {
+    mismatches.push({ message: "pad layer assignments differ" })
   }
   mismatches.push(
     ...comparison.pinMismatches.map((mismatch) => ({

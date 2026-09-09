@@ -127,7 +127,7 @@ export const checkSupplierFootprintsInCircuitJson = async ({
       const cacheKey = getSupplierPartCacheKey(workItem.candidate)
       let supplierCircuitJsonPromise = supplierCircuitJsonCache.get(cacheKey)
       if (!supplierCircuitJsonPromise) {
-        supplierCircuitJsonPromise = Promise.resolve(
+        supplierCircuitJsonPromise = Promise.resolve().then(() =>
           fetchPartCircuitJson({ supplierPartNumber }),
         )
         supplierCircuitJsonCache.set(cacheKey, supplierCircuitJsonPromise)

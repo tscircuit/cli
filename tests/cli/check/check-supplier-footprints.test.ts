@@ -252,6 +252,36 @@ test("supplier footprint comparison catches extra mechanical holes", () => {
   )
 })
 
+test("supplier footprint comparison catches an SMT pad on the wrong layer", () => {
+  const supplier = makeFootprint({
+    componentId: "supplier_component",
+    sourceComponentId: "supplier_source",
+  })
+  const local = makeFootprint({
+    componentId: "local_component",
+    sourceComponentId: "local_source",
+  })
+  const firstPad = local.find(
+    (element) =>
+      element.type === "pcb_smtpad" && element.port_hints?.includes("pin1"),
+  )
+  if (!firstPad || firstPad.type !== "pcb_smtpad") {
+    throw new Error("Expected test fixture pin 1 pad")
+  }
+  firstPad.layer = "bottom"
+
+  const result = compareSupplierFootprint({
+    localCircuitJson: local,
+    localPcbComponentId: "local_component",
+    supplierCircuitJson: supplier,
+  })
+
+  expect(result.matches).toBeFalse()
+  expect(result.mismatches.map(({ message }) => message).join("\n")).toContain(
+    "pad layer assignments differ",
+  )
+})
+
 test("supplier footprint comparison treats a fully rounded square pad as a circle", () => {
   const supplier = makeFootprint({
     componentId: "supplier_component",
@@ -373,7 +403,7 @@ test("supplier footprint check returns a non-passing result on fetch failure", a
 
   const result = await checkSupplierFootprintsInCircuitJson({
     circuitJson: local,
-    fetchPartCircuitJson: async () => {
+    fetchPartCircuitJson: () => {
       throw new Error("offline")
     },
   })
