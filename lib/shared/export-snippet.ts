@@ -54,6 +54,7 @@ export const ALLOWED_EXPORT_FORMATS = [
   "kicad_sch",
   "kicad_pcb",
   "kicad_zip",
+  "altium",
   "kicad-library",
   "srj",
   "step",
@@ -78,6 +79,7 @@ const OUTPUT_EXTENSIONS: Record<ExportFormat, string> = {
   kicad_sch: ".kicad_sch",
   kicad_pcb: ".kicad_pcb",
   kicad_zip: "-kicad.zip",
+  altium: "-altium.zip",
   "kicad-library": "",
   srj: ".simple-route.json",
   step: ".step",
@@ -256,6 +258,15 @@ export const exportSnippet = async ({
         outputContent = JSON.stringify(simpleRouteJson, null, 2)
       }
       break
+    case "altium": {
+      const { convertCircuitJsonToAltiumZip } = await import(
+        "circuit-json-to-altium"
+      )
+      outputContent = Buffer.from(
+        await convertCircuitJsonToAltiumZip(circuitJson, outputBaseName),
+      )
+      break
+    }
     case "kicad_sch": {
       const converter = new CircuitJsonToKicadSchConverter(circuitJson)
       converter.runUntilFinished()
