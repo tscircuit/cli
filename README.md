@@ -49,7 +49,7 @@ Commands:
                                project
   snapshot [options] [path]    Generate schematic and PCB snapshots (add --3d
                                for 3d preview)
-  setup                        Setup utilities like GitHub Actions
+  setup                        Setup utilities like GitHub Actions and AI skills
   install [packageSpec]        Install project dependencies, or install a
                                specific package (e.g., tsci install
                                https://github.com/espressif/kicad-libraries)
@@ -71,6 +71,35 @@ Commands:
   help [command]               display help for command
 ```
 <!-- END_HELP_OUTPUT -->
+
+### Installing and updating AI skills
+
+```sh
+# Install missing copies in the current project
+tsci setup skills
+
+# Refresh project copies from the tscircuit/skill GitHub repository
+tsci setup skills --update
+
+# Refresh home-directory copies used across projects
+tsci setup skills --global --update
+```
+
+Skills are installed in `.claude/skills/tscircuit` and
+`.agents/skills/tscircuit`, relative to the current directory or your home with
+`--global`. Updates also refresh an existing `.codex/skills/tscircuit` copy used
+by older installations.
+
+Without `--update`, existing skills are left unchanged. Upgrading the CLI alone
+does not refresh installed skills.
+
+An update downloads the new skill before replacing any installation. Previous
+files, including local edits and files no longer present upstream, are preserved
+under `.tscircuit/skill-updates/<update-id>/backups/`; the command prints the
+backup path. Local edits are backed up, not merged into the new version. If a
+replacement fails, the command attempts to restore the previous installations
+and exits nonzero. If restoration also fails, the error identifies the retained
+backup directory.
 
 The `build` command also accepts the following options:
 
