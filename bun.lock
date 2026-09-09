@@ -95,10 +95,8 @@
       },
     },
   },
-  "trustedDependencies": [
-    "altiumts",
-  ],
   "overrides": {
+    "altiumts": "0.0.59",
     "circuit-json": "^0.0.480",
   },
   "packages": {
@@ -502,7 +500,7 @@
 
     "ajv-formats": ["ajv-formats@3.0.1", "", { "dependencies": { "ajv": "^8.0.0" } }, "sha512-8iUql50EUR+uUcdRQ3HDqa6EVyo3docL8g5WJ3FNcWmu62IbkGUue/pEyLBW8VGKKucTPgqeks4fIU1DA4yowQ=="],
 
-    "altiumts": ["altiumts@github:tscircuit/altiumts#6c8af3d", { "dependencies": { "cfb": "^1.2.2", "fflate": "^0.8.3" }, "peerDependencies": { "typescript": "^5" }, "bin": { "altiumts": "./dist/cli.js" } }, "tscircuit-altiumts-6c8af3d", "sha512-zsUdzOoYfiy7T7ip7Cl1T6QJbqU2ux5+CABXWlkcTrZUf47WSQtzfdtN4YbxeRRV1uN+NO/bLGe6cwj4pm03EQ=="],
+    "altiumts": ["altiumts@0.0.59", "", { "dependencies": { "cfb": "^1.2.2", "fflate": "^0.8.3" }, "peerDependencies": { "typescript": "^5" }, "bin": { "altiumts": "dist/cli.js" } }, "sha512-EunWtSs0FXEnxN9G10PvZyplDwcaE8/ioML3nnzqlAlGeKcnkKGHLpKBL0aUjg0i4yCovzn6ZihroBFhsi/6XA=="],
 
     "ansi-regex": ["ansi-regex@6.2.2", "", {}, "sha512-Bq3SmSpyFHaWjPk8If9yc6svM8c56dB5BAtW4Qbw5jHTwwXXcTLoRMkpDJp6VL0XzlWaCHTXrkFURMYmD0sLqg=="],
 
