@@ -40,8 +40,9 @@
     "@types/semver": "^7.5.8",
     "bun-match-svg": "^0.0.12",
     "chokidar": "4.0.1",
-    "circuit-json": "^0.0.479",
+    "circuit-json": "^0.0.480",
     "circuit-json-to-3d-png": "^0.0.6",
+    "circuit-json-to-altium": "github:tscircuit/circuit-json-to-altium#5bdb7d235ef896ddf9ac5c4f315c4d0ce07fdfb5",
     "circuit-json-to-bom-csv": "^0.0.17",
     "circuit-json-to-connectivity-map": "^0.0.25",
     "circuit-json-to-fdm-component-box": "^0.0.2",
@@ -95,7 +96,7 @@
     "zod": "^3.23.8"
   },
   "peerDependencies": {
-    "circuit-json": "^0.0.479",
+    "circuit-json": "^0.0.480",
     "tscircuit": "*"
   },
   "bin": {
@@ -112,7 +113,8 @@
     }
   },
   "overrides": {
-    "circuit-json": "^0.0.479"
+    "circuit-json": "^0.0.480",
+    "altiumts": "0.0.59"
   },
   "scripts": {
     "start": "bun run dev",
