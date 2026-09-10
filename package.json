@@ -14,7 +14,7 @@
     "@babel/standalone": "^7.26.9",
     "@biomejs/biome": "^1.9.4",
     "@tscircuit/check-shorts": "https://jscdn.tscircuit.com/@tscircuit/check-shorts/0.0.19.tgz",
-    "@tscircuit/circuit-json-placement-analysis": "^0.0.9",
+    "@tscircuit/circuit-json-placement-analysis": "^0.0.15",
     "@tscircuit/circuit-json-routing-analysis": "^0.0.8",
     "@tscircuit/circuit-json-schematic-placement-analysis": "github:tscircuit/circuit-json-schematic-placement-analysis#cb6059c8e2561967afad591b30251a915cab42e5",
     "@tscircuit/circuit-json-util": "^0.0.113",
