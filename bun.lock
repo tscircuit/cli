@@ -10,7 +10,7 @@
         "@tscircuit/check-shorts": "https://jscdn.tscircuit.com/@tscircuit/check-shorts/0.0.19.tgz",
         "@tscircuit/circuit-json-placement-analysis": "^0.0.15",
         "@tscircuit/circuit-json-routing-analysis": "^0.0.8",
-        "@tscircuit/circuit-json-schematic-placement-analysis": "github:tscircuit/circuit-json-schematic-placement-analysis#cb6059c8e2561967afad591b30251a915cab42e5",
+        "@tscircuit/circuit-json-schematic-placement-analysis": "github:tscircuit/circuit-json-schematic-placement-analysis#41260fc05b736c0f3fdc33892b6da0ece40107b9",
         "@tscircuit/circuit-json-util": "^0.0.113",
         "@tscircuit/eval": "^0.0.1016",
         "@tscircuit/fake-snippets": "^0.0.182",
@@ -398,7 +398,7 @@
 
     "@tscircuit/circuit-json-routing-analysis": ["@tscircuit/circuit-json-routing-analysis@0.0.8", "", { "peerDependencies": { "circuit-json": "*", "typescript": "^5" } }, "sha512-mZxRSUbqVb6iZ47ZhNL3mDL7BY9kUcbLg7o4f8Jn5amkDGvmTo52547JQ5ui/6WSJHXmaW7hmRVTEj6PlivskQ=="],
 
-    "@tscircuit/circuit-json-schematic-placement-analysis": ["@tscircuit/circuit-json-schematic-placement-analysis@github:tscircuit/circuit-json-schematic-placement-analysis#cb6059c", { "dependencies": { "@tscircuit/circuit-json-util": "^0.0.94", "circuit-json-to-connectivity-map": "^0.0.23", "circuit-to-svg": "^0.0.370", "stack-svgs": "^0.0.1" }, "peerDependencies": { "circuit-json": "*", "typescript": "^5" } }, "tscircuit-circuit-json-schematic-placement-analysis-cb6059c", "sha512-WMAH3CV4/Jk48cAWbbtoJEbWvzWzlj8o4t7anVdIj0jqJtm9/lqa70qvoQvdU7c1wNUhzuh0/Cetqp7ALaEpiw=="],
+    "@tscircuit/circuit-json-schematic-placement-analysis": ["@tscircuit/circuit-json-schematic-placement-analysis@github:tscircuit/circuit-json-schematic-placement-analysis#41260fc", { "dependencies": { "@tscircuit/circuit-json-util": "^0.0.94", "circuit-json-to-connectivity-map": "^0.0.23", "circuit-to-svg": "^0.0.370", "stack-svgs": "^0.0.1" }, "peerDependencies": { "circuit-json": "*", "typescript": "^5" } }, "tscircuit-circuit-json-schematic-placement-analysis-41260fc", "sha512-A4TIo2PyD7hQ/3Pt4kczM9e/s2y19SGwbXmqCS+6vOEEvhk+MOZ2d7voCus9U57zFCoaoFrqA4t3Oq3ZL0qehQ=="],
 
     "@tscircuit/circuit-json-util": ["@tscircuit/circuit-json-util@0.0.113", "", { "dependencies": { "parsel-js": "^1.1.2" }, "peerDependencies": { "circuit-json": "*", "transformation-matrix": "*", "zod": "3" } }, "sha512-1KliGS0RMvhWz9tl00gtIlFHxGG5OYfLlBvSrid2muFkWox3ZH/zSKKd9sbaB75clnJEBXJd+WFQ0oAhAPQNxw=="],
 
