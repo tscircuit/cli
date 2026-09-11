@@ -56,9 +56,11 @@ export function formatCircuitJsonDiagnostics({
 // to DRC violations on an otherwise valid circuit). These make `tsci build`
 // exit nonzero and the circuit is not counted as passed.
 const CIRCUIT_FAILURE_ERROR_TYPES = new Set([
+  // A trace endpoint could not be resolved to an existing port - the design
+  // is invalid (author error), never a legitimate partial build. Routing
+  // failures like pcb_trace_missing_error intentionally stay exit 0 because
+  // valid simulation/partial circuits can leave traces unrouted.
   "source_trace_not_connected_error",
-  "pcb_trace_missing_error",
-  "pcb_port_not_connected_error",
 ])
 
 export function isCircuitFailureError(issue: CircuitJsonIssue): boolean {
