@@ -1,5 +1,5 @@
 import { expect, test } from "bun:test"
-import { readFile, writeFile } from "node:fs/promises"
+import { readFile, symlink, writeFile } from "node:fs/promises"
 import path from "node:path"
 import { getCliTestFixture } from "../../fixtures/get-cli-test-fixture"
 
@@ -10,13 +10,18 @@ export default () => (
   </board>
 )`
 
-test("build succeeds when circuit JSON is generated with DRC errors", async () => {
+test("build exits 1 and retains circuit JSON with DRC errors", async () => {
   const { tmpDir, runCommand } = await getCliTestFixture()
 
+  await symlink(
+    path.resolve("node_modules"),
+    path.join(tmpDir, "node_modules"),
+    "dir",
+  )
   await writeFile(path.join(tmpDir, "test.circuit.tsx"), validCircuitCode)
   await writeFile(path.join(tmpDir, "package.json"), "{}")
 
-  const { exitCode, stdout } = await runCommand("tsci build")
+  const { exitCode, stdout } = await runCommand("tsci build --pcb-svgs")
 
   const circuitJsonPath = path.join(tmpDir, "dist", "test", "circuit.json")
   const circuitJson = await readFile(circuitJsonPath, "utf-8")
@@ -28,6 +33,9 @@ test("build succeeds when circuit JSON is generated with DRC errors", async () =
     "Component R1 extends outside board boundaries",
   )
 
-  expect(exitCode).toBe(0)
+  expect(
+    await readFile(path.join(tmpDir, "dist", "test", "pcb.svg"), "utf-8"),
+  ).toContain("<svg")
+  expect(exitCode).toBe(1)
   expect(stdout).toContain("Build completed with errors")
 }, 30_000)
