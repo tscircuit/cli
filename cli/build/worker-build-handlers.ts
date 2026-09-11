@@ -3,7 +3,10 @@ import path from "node:path"
 import type { PlatformConfig } from "@tscircuit/props"
 import type { AnyCircuitElement } from "circuit-json"
 import { loadRuntimeProjectConfig } from "lib/project-config"
-import { analyzeCircuitJson } from "../../lib/shared/circuit-json-diagnostics"
+import {
+  analyzeCircuitJson,
+  isCircuitFailureError,
+} from "../../lib/shared/circuit-json-diagnostics"
 import { generateCircuitJson } from "../../lib/shared/generate-circuit-json"
 import { getPlatformConfigWithCliDefaults } from "../../lib/shared/get-platform-config-with-cli-defaults"
 import { mergePlatformConfigs } from "../../lib/shared/platform-config-utils"
@@ -122,6 +125,9 @@ export const handleBuildFile = async (
 
     const hasErrors =
       filteredDiagnostics.errors.length > 0 && !options?.ignoreErrors
+    const hasCircuitErrors =
+      !options?.ignoreErrors &&
+      filteredDiagnostics.errors.some(isCircuitFailureError)
     let glbOk: boolean | undefined
     let glbError: string | undefined
     let stepOk: boolean | undefined
@@ -193,6 +199,7 @@ export const handleBuildFile = async (
       preview_error: previewError,
       ok: true,
       hasErrors,
+      hasCircuitErrors,
       ignoredDrcCount: filteredDiagnostics.ignoredCount,
       ignoredDrcByCategory: filteredDiagnostics.ignoredByCategory,
       errors,
