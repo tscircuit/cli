@@ -419,7 +419,7 @@ export const registerBuild = (program: Command) => {
         }
         const staticFileReferences: StaticBuildFileReference[] = []
 
-        const builtFiles: BuildFileResult[] = []
+        const builtFiles: (BuildFileResult & { hasErrors?: boolean })[] = []
         const kicadProjects: Array<
           GeneratedKicadProject & { sourcePath: string }
         > = []
@@ -507,6 +507,7 @@ export const registerBuild = (program: Command) => {
             sourcePath: filePath,
             outputPath,
             ok: buildOutcome.ok,
+            hasErrors: buildOutcome.hasErrors,
           })
 
           if (buildOutcome.hasErrors) {
@@ -1036,10 +1037,12 @@ export const registerBuild = (program: Command) => {
           }
         }
 
-        // Fatal errors (e.g., circuit generation exceptions) always cause exit code 1.
-        const shouldExitNonZero = hasFatalErrors
+        // Report circuit errors only after all requested artifacts are generated.
+        const shouldExitNonZero = hasErrors
 
-        const successCount = builtFiles.filter((f) => f.ok).length
+        const successCount = builtFiles.filter(
+          (f) => f.ok && !f.hasErrors,
+        ).length
         const failCount = builtFiles.length - successCount
         const enabledOpts = [
           resolvedOptions?.site && "site",
@@ -1122,7 +1125,12 @@ export const registerBuild = (program: Command) => {
             : kleur.green("\n✓ Done"),
         )
         if (shouldExitNonZero) {
-          exitBuild(1, "fatal circuit build errors occurred")
+          exitBuild(
+            1,
+            hasFatalErrors
+              ? "fatal circuit build errors occurred"
+              : "circuit build errors occurred",
+          )
         }
 
         exitBuild(0, "build finished successfully")
