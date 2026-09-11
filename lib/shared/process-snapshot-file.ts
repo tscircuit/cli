@@ -305,20 +305,22 @@ export const processSnapshotFile = async ({
     let equal: boolean
     let diffPath: string | undefined
 
-    if (createDiff) {
-      diffPath = snapPath.replace(
+    if (update && !createDiff) {
+      // Explicit updates also refresh nonvisual metadata in the SVG source.
+      equal = oldContentBuffer.equals(newContentBuffer)
+    } else {
+      const comparisonPath = snapPath.replace(
         is3d ? ".snap.png" : ".snap.svg",
         is3d ? ".diff.png" : ".diff.svg",
       )
+      if (createDiff) diffPath = comparisonPath
       const comparison = await compareAndCreateDiff(
         oldContentBuffer,
         newContentBuffer,
-        diffPath,
-        true,
+        comparisonPath,
+        createDiff,
       )
       equal = comparison.equal
-    } else {
-      equal = oldContentBuffer.equals(newContentBuffer)
     }
 
     if (update) {

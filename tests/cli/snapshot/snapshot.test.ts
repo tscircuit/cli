@@ -711,7 +711,7 @@ test("snapshot with directory path and default includeBoardFiles returns clear n
   expect(stdout).not.toContain("No entrypoint found")
 }, 30_000)
 
-test("snapshot command treats textual snapshot changes as mismatch by default", async () => {
+test("snapshot command ignores nonvisual text but refreshes it on update", async () => {
   const { tmpDir, runCommand } = await getCliTestFixture()
 
   await Bun.write(
@@ -735,8 +735,9 @@ test("snapshot command treats textual snapshot changes as mismatch by default", 
 
   const { stderr: matchStderr, exitCode: matchExitCode } =
     await runCommand("tsci snapshot")
-  expect(matchExitCode).toBe(1)
-  expect(matchStderr).toContain("Snapshot mismatch")
+  expect(matchExitCode).toBe(0)
+  expect(matchStderr).not.toContain("Snapshot mismatch")
+  expect(fs.readFileSync(pcbPath, "utf-8")).toBe(contentsBefore)
 
   await runCommand("tsci snapshot --update")
   const contentsAfter = fs.readFileSync(pcbPath, "utf-8")
@@ -745,7 +746,7 @@ test("snapshot command treats textual snapshot changes as mismatch by default", 
   expect(contentsAfter).not.toContain("<!-- comment -->")
 }, 30_000)
 
-test("snapshot command treats textual pcb and schematic changes as mismatch by default", async () => {
+test("snapshot command ignores nonvisual PCB and schematic text changes", async () => {
   const { tmpDir, runCommand } = await getCliTestFixture()
 
   await Bun.write(
@@ -772,8 +773,10 @@ test("snapshot command treats textual pcb and schematic changes as mismatch by d
   const schBefore = fs.readFileSync(schPath, "utf-8")
 
   const { stderr, exitCode } = await runCommand("tsci snapshot")
-  expect(exitCode).toBe(1)
-  expect(stderr).toContain("Snapshot mismatch")
+  expect(exitCode).toBe(0)
+  expect(stderr).not.toContain("Snapshot mismatch")
+  expect(fs.readFileSync(pcbPath, "utf-8")).toBe(pcbBefore)
+  expect(fs.readFileSync(schPath, "utf-8")).toBe(schBefore)
 
   await runCommand("tsci snapshot --update")
 
