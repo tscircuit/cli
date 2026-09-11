@@ -50,6 +50,7 @@ export type BuildCompletedMessage = {
   preview_error?: string
   ok: boolean
   hasErrors?: boolean
+  hasCircuitErrors?: boolean
   ignoredDrcCount?: number
   ignoredDrcByCategory?: DrcIgnoreCounts
   /** Fatal error that should always cause exit code 1, even with --ignore-errors */
@@ -95,6 +96,7 @@ export type BuildJobResult = {
   previewError?: string
   ok: boolean
   hasErrors?: boolean
+  hasCircuitErrors?: boolean
   ignoredDrcCount?: number
   ignoredDrcByCategory?: DrcIgnoreCounts
   /** Fatal error that should always cause exit code 1, even with --ignore-errors */
