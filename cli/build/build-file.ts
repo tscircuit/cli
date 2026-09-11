@@ -3,7 +3,10 @@ import path from "node:path"
 import type { PlatformConfig } from "@tscircuit/props"
 import type { AnyCircuitElement } from "circuit-json"
 import kleur from "kleur"
-import { analyzeCircuitJson } from "lib/shared/circuit-json-diagnostics"
+import {
+  analyzeCircuitJson,
+  isCircuitFailureError,
+} from "lib/shared/circuit-json-diagnostics"
 import { generateCircuitJson } from "lib/shared/generate-circuit-json"
 import { getPlatformConfigWithCliDefaults } from "lib/shared/get-platform-config-with-cli-defaults"
 import type { AutorouterDiagnosticsOptions } from "lib/shared/autorouter-diagnostics"
@@ -22,6 +25,12 @@ export type BuildFileOutcome = {
   ignoredDrcByCategory?: DrcIgnoreCounts
   /** Fatal error that should always cause exit code 1, even with --ignore-errors */
   isFatalError?: { errorType: string; message: string }
+  /**
+   * The circuit failed to build correctly (e.g. unresolvable trace endpoint,
+   * missing routed copper). Causes exit code 1 and the circuit is not
+   * counted as passed. Distinct from DRC violations, which stay exit 0.
+   */
+  hasCircuitErrors?: boolean
 }
 
 export const buildFile = async (
@@ -103,6 +112,9 @@ export const buildFile = async (
       circuitJson,
       hasErrors:
         filteredDiagnostics.errors.length > 0 && !options?.ignoreErrors,
+      hasCircuitErrors:
+        !options?.ignoreErrors &&
+        filteredDiagnostics.errors.some(isCircuitFailureError),
       ignoredDrcCount: filteredDiagnostics.ignoredCount,
       ignoredDrcByCategory: filteredDiagnostics.ignoredByCategory,
     }
