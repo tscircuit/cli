@@ -143,6 +143,7 @@ export async function buildFilesWithWorkerPool(options: {
         previewError: completedMessage.preview_error,
         ok: completedMessage.ok,
         hasErrors: completedMessage.hasErrors,
+        hasCircuitErrors: completedMessage.hasCircuitErrors,
         ignoredDrcCount: completedMessage.ignoredDrcCount,
         ignoredDrcByCategory: completedMessage.ignoredDrcByCategory,
         isFatalError: completedMessage.isFatalError,
