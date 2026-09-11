@@ -408,6 +408,7 @@ export const registerBuild = (program: Command) => {
         }
 
         let hasErrors = false
+        let hasCircuitErrors = false
         let hasFatalErrors = false
         const ignoredDrcByCategory: DrcIgnoreCounts = {
           netlist: 0,
@@ -419,7 +420,7 @@ export const registerBuild = (program: Command) => {
         }
         const staticFileReferences: StaticBuildFileReference[] = []
 
-        const builtFiles: (BuildFileResult & { hasErrors?: boolean })[] = []
+        const builtFiles: BuildFileResult[] = []
         const kicadProjects: Array<
           GeneratedKicadProject & { sourcePath: string }
         > = []
@@ -496,6 +497,7 @@ export const registerBuild = (program: Command) => {
             ok: boolean
             circuitJson?: unknown[]
             hasErrors?: boolean
+            hasCircuitErrors?: boolean
             ignoredDrcByCategory?: DrcIgnoreCounts
             isFatalError?: { errorType: string; message: string }
           },
@@ -506,12 +508,16 @@ export const registerBuild = (program: Command) => {
           builtFiles.push({
             sourcePath: filePath,
             outputPath,
-            ok: buildOutcome.ok,
-            hasErrors: buildOutcome.hasErrors,
+            // Circuits that failed to build correctly (e.g. unresolvable
+            // trace endpoints) are not counted as passed
+            ok: buildOutcome.ok && !buildOutcome.hasCircuitErrors,
           })
 
           if (buildOutcome.hasErrors) {
             hasErrors = true
+          }
+          if (buildOutcome.hasCircuitErrors) {
+            hasCircuitErrors = true
           }
           if (buildOutcome.ignoredDrcByCategory) {
             ignoredDrcByCategory.netlist +=
@@ -754,6 +760,7 @@ export const registerBuild = (program: Command) => {
               await processBuildResult(result.filePath, result.outputPath, {
                 ok: result.ok,
                 hasErrors: result.hasErrors,
+                hasCircuitErrors: result.hasCircuitErrors,
                 ignoredDrcByCategory: result.ignoredDrcByCategory,
                 isFatalError: result.isFatalError,
               })
@@ -1037,12 +1044,13 @@ export const registerBuild = (program: Command) => {
           }
         }
 
-        // Report circuit errors only after all requested artifacts are generated.
-        const shouldExitNonZero = hasErrors
+        // Fatal errors (e.g., circuit generation exceptions) always cause exit code 1.
+        // Circuit build failures (e.g. unresolvable trace endpoints, missing
+        // routed copper) also exit 1 so CI can detect invalid designs; DRC
+        // violations alone still exit 0.
+        const shouldExitNonZero = hasFatalErrors || hasCircuitErrors
 
-        const successCount = builtFiles.filter(
-          (f) => f.ok && !f.hasErrors,
-        ).length
+        const successCount = builtFiles.filter((f) => f.ok).length
         const failCount = builtFiles.length - successCount
         const enabledOpts = [
           resolvedOptions?.site && "site",
@@ -1125,12 +1133,7 @@ export const registerBuild = (program: Command) => {
             : kleur.green("\n✓ Done"),
         )
         if (shouldExitNonZero) {
-          exitBuild(
-            1,
-            hasFatalErrors
-              ? "fatal circuit build errors occurred"
-              : "circuit build errors occurred",
-          )
+          exitBuild(1, "fatal circuit build errors occurred")
         }
 
         exitBuild(0, "build finished successfully")
