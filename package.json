@@ -48,6 +48,7 @@
     "circuit-json-to-fdm-component-box": "^0.0.2",
     "circuit-json-to-footprinter": "^0.0.54",
     "circuit-json-to-gerber": "^0.0.105",
+    "circuit-json-to-gltf": "^0.0.124",
     "circuit-json-to-kicad": "0.0.181",
     "circuit-json-to-pnp-csv": "^0.0.13",
     "circuit-json-to-readable-netlist": "^0.0.15",
@@ -95,12 +96,10 @@
     "typed-ky": "^0.0.4",
     "zod": "^3.23.8"
   },
-  "dependencies": {
-    "circuit-json-to-gltf": "^0.0.124"
-  },
   "peerDependencies": {
     "circuit-json": "^0.0.480",
-    "tscircuit": "*"
+    "tscircuit": "*",
+    "circuit-json-to-gltf": ">=0.0.124"
   },
   "bin": {
     "tscircuit-cli": "./cli/entrypoint.js"
