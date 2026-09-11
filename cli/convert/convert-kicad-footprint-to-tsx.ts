@@ -15,11 +15,25 @@ export const convertKicadFootprintToTsx = async ({
 }) => {
   const circuitJson = await convertKicadFootprintToCircuitJson(inputPath)
   const componentName = name ?? path.basename(inputPath, ".kicad_mod")
-  const tsx = convertCircuitJsonToTscircuit(circuitJson, { componentName })
+  const rawTsx = convertCircuitJsonToTscircuit(circuitJson, { componentName })
+  const tsx = bindKicadReferenceText(rawTsx)
   const outputPath = output
     ? path.resolve(output)
     : path.join(path.dirname(inputPath), `${componentName}.tsx`)
 
   await fs.writeFile(outputPath, tsx)
   console.log(kleur.green(`Converted ${outputPath}`))
+}
+
+// KiCad footprints use the literal "REF**" as the placeholder text of the
+// fp_text reference field. Bind that label to the component instance name so
+// each placed instance prints its own reference designator instead of
+// "REF**". Ordinary user text stays literal.
+const bindKicadReferenceText = (tsx: string) => {
+  // Only rewrite when the generated component has `props` in scope
+  if (!tsx.includes("(props:")) return tsx
+  return tsx.replaceAll(
+    /(<silkscreentext\b[^>]*?)text="REF\*\*"/g,
+    '$1text={props.name ?? "REF**"}',
+  )
 }
