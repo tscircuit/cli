@@ -51,3 +51,17 @@ export function formatCircuitJsonDiagnostics({
 
   return lines.join("\n")
 }
+
+// Errors that mean the circuit itself failed to build correctly (as opposed
+// to DRC violations on an otherwise valid circuit). These make `tsci build`
+// exit nonzero and the circuit is not counted as passed.
+const CIRCUIT_FAILURE_ERROR_TYPES = new Set([
+  "source_trace_not_connected_error",
+  "pcb_trace_missing_error",
+  "pcb_port_not_connected_error",
+])
+
+export function isCircuitFailureError(issue: CircuitJsonIssue): boolean {
+  const t = issue.error_type ?? issue.type
+  return typeof t === "string" && CIRCUIT_FAILURE_ERROR_TYPES.has(t)
+}
