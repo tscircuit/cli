@@ -95,6 +95,9 @@
     "typed-ky": "^0.0.4",
     "zod": "^3.23.8"
   },
+  "dependencies": {
+    "circuit-json-to-gltf": "^0.0.124"
+  },
   "peerDependencies": {
     "circuit-json": "^0.0.480",
     "tscircuit": "*"
