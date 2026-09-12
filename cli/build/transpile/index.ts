@@ -1,32 +1,11 @@
 import path from "node:path"
 import fs from "node:fs"
-import { rollup } from "rollup"
-import typescript from "@rollup/plugin-typescript"
-import resolve from "@rollup/plugin-node-resolve"
-import commonjs from "@rollup/plugin-commonjs"
-import json from "@rollup/plugin-json"
-import dts from "rollup-plugin-dts"
 import kleur from "kleur"
-import ts from "typescript"
 
 import {
   createStaticAssetPlugin,
   STATIC_ASSET_EXTENSIONS,
 } from "./static-asset-plugin"
-
-const [typescriptMajor, typescriptMinor] = ts.versionMajorMinor
-  .split(".")
-  .map(Number)
-// TypeScript 5.7+ can emit projects that import .ts/.tsx paths by rewriting
-// those specifiers, instead of reporting TS5097 or requiring noEmit.
-const supportsRewriteRelativeImportExtensions =
-  typescriptMajor > 5 || (typescriptMajor === 5 && typescriptMinor >= 7)
-const typescriptExtensionEmitOptions = supportsRewriteRelativeImportExtensions
-  ? {
-      allowImportingTsExtensions: true,
-      rewriteRelativeImportExtensions: true,
-    }
-  : { allowImportingTsExtensions: false }
 
 const createExternalFunction =
   (projectDir: string, tsconfigPath?: string) =>
@@ -100,6 +79,52 @@ export const transpileFile = async ({
   projectDir: string
 }): Promise<boolean> => {
   try {
+    const { default: ts } = await import("typescript")
+    if (
+      !ts.ModuleKind ||
+      !ts.SyntaxKind ||
+      typeof ts.createProgram !== "function"
+    ) {
+      throw new Error(
+        `TypeScript ${ts.version} does not provide the JavaScript compiler API required for transpilation. ` +
+          "Install a compatible compiler in your project with `bun add --dev --exact typescript@5.9.3` " +
+          "or `npm install --save-dev --save-exact typescript@5.9.3`, then retry.",
+      )
+    }
+
+    // These plugins access the compiler API during module initialization.
+    // Load them only after checking compatibility, so help/version output and
+    // circuit builds without transpilation can run without that API.
+    const [
+      { rollup },
+      { default: typescript },
+      { default: resolve },
+      { default: commonjs },
+      { default: json },
+      { default: dts },
+    ] = await Promise.all([
+      import("rollup"),
+      import("@rollup/plugin-typescript"),
+      import("@rollup/plugin-node-resolve"),
+      import("@rollup/plugin-commonjs"),
+      import("@rollup/plugin-json"),
+      import("rollup-plugin-dts"),
+    ])
+
+    const [typescriptMajor, typescriptMinor] = ts.versionMajorMinor
+      .split(".")
+      .map(Number)
+    // TypeScript 5.7+ can rewrite explicit .ts/.tsx imports during emit.
+    const supportsRewriteRelativeImportExtensions =
+      typescriptMajor > 5 || (typescriptMajor === 5 && typescriptMinor >= 7)
+    const typescriptExtensionEmitOptions =
+      supportsRewriteRelativeImportExtensions
+        ? {
+            allowImportingTsExtensions: true,
+            rewriteRelativeImportExtensions: true,
+          }
+        : { allowImportingTsExtensions: false }
+
     fs.mkdirSync(outputDir, { recursive: true })
 
     // Check if user has a tsconfig.json
