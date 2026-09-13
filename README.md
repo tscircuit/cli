@@ -49,7 +49,7 @@ Commands:
                                project
   snapshot [options] [path]    Generate schematic and PCB snapshots (add --3d
                                for 3d preview)
-  setup                        Setup utilities like GitHub Actions
+  setup                        Setup utilities like GitHub Actions and AI skills
   install [packageSpec]        Install project dependencies, or install a
                                specific package (e.g., tsci install
                                https://github.com/espressif/kicad-libraries)
