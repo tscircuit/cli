@@ -32,15 +32,23 @@ test("init installs tscircuit skills for both Claude and Codex", async () => {
   const { tmpDir, runCommand } = await getCliTestFixture()
 
   const projectDir = "skills-project"
-  await runCommand(`tsci init ${projectDir} -y --no-install`)
+  const { exitCode, stderr } = await runCommand(
+    `tsci init ${projectDir} -y --no-install`,
+  )
 
-  const claudeSkillExists = await Bun.file(
-    join(tmpDir, projectDir, ".claude/skills/tscircuit/SKILL.md"),
-  ).exists()
-  const codexSkillExists = await Bun.file(
-    join(tmpDir, projectDir, ".agents/skills/tscircuit/SKILL.md"),
-  ).exists()
-
-  expect(claudeSkillExists).toBeTrue()
-  expect(codexSkillExists).toBeTrue()
+  expect(exitCode).toBe(0)
+  expect(stderr).not.toContain("Failed to set up tscircuit skill")
+  for (const skillPath of [
+    ".claude/skills/tscircuit",
+    ".agents/skills/tscircuit",
+  ]) {
+    expect(
+      await Bun.file(join(tmpDir, projectDir, skillPath, "SKILL.md")).text(),
+    ).toBe("# Test tscircuit skill\n")
+    expect(
+      await Bun.file(
+        join(tmpDir, projectDir, skillPath, "references/example.md"),
+      ).text(),
+    ).toBe("# Test circuit example\n")
+  }
 }, 30_000)

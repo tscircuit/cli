@@ -101,12 +101,20 @@ export async function getCliTestFixture(
     let stdout = ""
     let stderr = ""
 
-    const task = Bun.spawn(["bun", ...args], {
-      cwd: tmpDir,
-      stdout: "pipe",
-      stderr: "pipe",
-      env,
-    })
+    const task = Bun.spawn(
+      [
+        "bun",
+        "--preload",
+        resolve(import.meta.dir, "mock-skill-fetch.ts"),
+        ...args,
+      ],
+      {
+        cwd: tmpDir,
+        stdout: "pipe",
+        stderr: "pipe",
+        env,
+      },
+    )
 
     // Stream stdout to console and capture
     const stdoutReader = task.stdout.getReader()
