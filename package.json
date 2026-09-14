@@ -48,6 +48,7 @@
     "circuit-json-to-fdm-component-box": "^0.0.2",
     "circuit-json-to-footprinter": "^0.0.54",
     "circuit-json-to-gerber": "^0.0.105",
+    "circuit-json-to-gltf": "^0.0.127",
     "circuit-json-to-kicad": "0.0.212",
     "circuit-json-to-pnp-csv": "^0.0.13",
     "circuit-json-to-readable-netlist": "^0.0.15",
@@ -97,6 +98,7 @@
   },
   "peerDependencies": {
     "circuit-json": "^0.0.489",
+    "circuit-json-to-gltf": "^0.0.127",
     "tscircuit": "*"
   },
   "bin": {
