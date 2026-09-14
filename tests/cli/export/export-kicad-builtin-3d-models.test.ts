@@ -55,7 +55,7 @@ export default () => (
   const builtinSteps = (await readdir(builtinShapesDir)).sort()
   expect(builtinSteps).toMatchInlineSnapshot(`
     [
-      "0603.step",
+      "cap0603.step",
       "res0402.step",
     ]
   `)

@@ -100,7 +100,8 @@ test("check placement exits nonzero for pad and courtyard overlap", async () => 
 
   expect(exitCode).not.toBe(0)
   expect(stdout).toContain("placement summary: 1 pad overlap")
-  expect(stdout).toContain("pcb_courtyard_overlap_error")
+  expect(stdout).toContain("pcb_footprint_overlap_error")
+  expect(stdout).toContain("2 pad clearance violations, 1 courtyard conflict")
 })
 
 test("check placement exits nonzero for connector intrusion", async () => {
@@ -159,5 +160,6 @@ test("check placement exit status only considers the requested refdes", async ()
   expect(cleanScope.stdout).toContain("R3")
   expect(cleanScope.stdout).not.toContain("R1 and R2 pad overlap")
   expect(failingScope.exitCode).not.toBe(0)
-  expect(failingScope.stdout).toContain("pcb_smtpad R1.pin1 overlaps")
+  expect(failingScope.stdout).toContain("pcb_footprint_overlap_error")
+  expect(failingScope.stdout).toContain("R1 overlaps R2")
 }, 20_000)

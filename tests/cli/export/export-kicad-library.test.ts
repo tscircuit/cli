@@ -73,10 +73,10 @@ export const MyCircuit = () => (
   expect(files.filter((f) => !f.endsWith("/")).sort()).toMatchInlineSnapshot(`
     [
       "3dmodels/circuit.3dshapes/SW_Push_1P1T_NO_CK_KMR2.step",
-      "3dmodels/tscircuit_builtin.3dshapes/0603.step",
+      "3dmodels/tscircuit_builtin.3dshapes/cap0603.step",
       "3dmodels/tscircuit_builtin.3dshapes/res0402.step",
       "footprints/circuit.pretty/MyCircuit.kicad_mod",
-      "footprints/tscircuit_builtin.pretty/capacitor_0603.kicad_mod",
+      "footprints/tscircuit_builtin.pretty/capacitor_cap0603.kicad_mod",
       "footprints/tscircuit_builtin.pretty/resistor_res0402.kicad_mod",
       "fp-lib-table",
       "sym-lib-table",
