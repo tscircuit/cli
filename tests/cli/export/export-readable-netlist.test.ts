@@ -43,7 +43,7 @@ test("export readable-netlist", async () => {
   expect(readableNetlist).toMatchInlineSnapshot(`
     "COMPONENTS:
      - R1: 1kΩ res0402 resistor
-     - C1: 1000pF 0402 capacitor
+     - C1: 1000pF cap0402 capacitor
 
     NET: C1_pos
       - R1 pin1
@@ -55,7 +55,7 @@ test("export readable-netlist", async () => {
     - pin1(anode, pos, left): NETS(C1_pos)
     - pin2(cathode, neg, right): NOT_CONNECTED
 
-    C1 (1000pF 0402)
+    C1 (1000pF cap0402)
     - pin1(pos, anode, left): NETS(C1_pos)
     - pin2(neg, cathode, right): NOT_CONNECTED
     "
