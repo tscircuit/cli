@@ -119,7 +119,9 @@ test("export kicad zip includes 3d models", async () => {
     (f) =>
       f.startsWith("3dmodels/tscircuit_builtin.3dshapes/") && !f.endsWith("/"),
   )
-  expect(modelFiles).toContain("3dmodels/tscircuit_builtin.3dshapes/0402.step")
+  expect(modelFiles).toContain(
+    "3dmodels/tscircuit_builtin.3dshapes/cap0402.step",
+  )
 
   // Each model file should have non-zero content
   for (const modelFile of modelFiles) {

@@ -13,7 +13,7 @@ test("init a project with an npm import and build", async () => {
 
   // Add a dependency to package.json and install it
   const pm = getPackageManager()
-  pm.installDeps({ deps: ["is-odd"], cwd: projectDir, dev: true })
+  await pm.installDeps({ deps: ["is-odd"], cwd: projectDir, dev: true })
 
   // Modify index.tsx to use the dependency
   const indexTsxPath = join(projectDir, "index.tsx")
@@ -49,4 +49,4 @@ test("init a project with an npm import and build", async () => {
   )
   expect(resistor).toBeDefined()
   expect(resistor!.resistance).toBe(1000)
-}, 20_000)
+}, 60_000)

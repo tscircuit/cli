@@ -18,14 +18,14 @@
     "@tscircuit/circuit-json-routing-analysis": "^0.0.8",
     "@tscircuit/circuit-json-schematic-placement-analysis": "github:tscircuit/circuit-json-schematic-placement-analysis#41260fc05b736c0f3fdc33892b6da0ece40107b9",
     "@tscircuit/circuit-json-util": "^0.0.113",
-    "@tscircuit/eval": "^0.0.1016",
+    "@tscircuit/eval": "0.0.1402",
     "@tscircuit/fake-snippets": "^0.0.182",
     "@tscircuit/file-server": "^0.0.32",
     "@tscircuit/footprinter": "^0.0.426",
     "@tscircuit/image-utils": "^0.0.8",
     "@tscircuit/krt-wasm": "^0.1.6",
     "@tscircuit/math-utils": "0.0.36",
-    "@tscircuit/props": "^0.0.612",
+    "@tscircuit/props": "^0.0.657",
     "@tscircuit/runframe": "^0.0.2723",
     "@tscircuit/schematic-match-adapt": "^0.0.22",
     "@tscircuit/solver-utils": "0.0.16",
@@ -40,7 +40,7 @@
     "@types/semver": "^7.5.8",
     "bun-match-svg": "^0.0.12",
     "chokidar": "4.0.1",
-    "circuit-json": "^0.0.480",
+    "circuit-json": "^0.0.489",
     "circuit-json-to-3d-png": "^0.0.6",
     "circuit-json-to-altium": "github:tscircuit/circuit-json-to-altium#1a50d0dd2c0737cf940d92c0315852dc0111dd87",
     "circuit-json-to-bom-csv": "^0.0.17",
@@ -90,13 +90,13 @@
     "spicets": "^0.0.4",
     "stepts": "^0.0.3",
     "tempy": "^3.1.0",
-    "tscircuit": "0.0.2142-libonly",
+    "tscircuit": "0.0.2547-libonly",
     "tsx": "^4.7.1",
     "typed-ky": "^0.0.4",
     "zod": "^3.23.8"
   },
   "peerDependencies": {
-    "circuit-json": "^0.0.480",
+    "circuit-json": "^0.0.489",
     "tscircuit": "*"
   },
   "bin": {
@@ -113,7 +113,7 @@
     }
   },
   "overrides": {
-    "circuit-json": "^0.0.480",
+    "circuit-json": "^0.0.489",
     "altiumts": "0.0.59"
   },
   "scripts": {
