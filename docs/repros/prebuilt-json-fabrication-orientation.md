@@ -9,13 +9,13 @@ bun install --frozen-lockfile
 bun test tests/shared/export-snippet-json-orientation-repro.test.ts
 ```
 
-The test is intentionally failing. It calls the real CLI `exportSnippet` handler, generates actual Gerber ZIPs and parses their `pick_and_place.csv` files. No production implementation is mocked or modified. The two tiny SOT-23 footprints face opposite directions. An in-fixture parts engine returns fixed supplier pad geometry, avoiding external requests; an isolated in-memory cache prevents prior supplier results from influencing the test.
+The regression now passes with metadata enrichment for prebuilt JSON. It calls the real CLI `exportSnippet` handler, generates actual Gerber ZIPs and parses their `pick_and_place.csv` files. No production implementation is mocked or modified. The two tiny SOT-23 footprints face opposite directions. An in-fixture parts engine returns fixed supplier pad geometry, avoiding external requests; an isolated in-memory cache prevents prior supplier results from influencing the test.
 
 ## Result
 
 | Component | TSX → Gerbers | TSX → circuit JSON → Gerbers |
 | --- | --- | --- |
-| Q_PD_ENABLE | 180° | **0° (incorrect)** |
+| Q_PD_ENABLE | 180° | 180° (previously 0°) |
 | Q_BUZZER | 0° | 0° |
 
 All three export operations report successful exit status. The ordinary circuit JSON has neither `pin1_location` nor `supplier_pin1_location_map`. Direct TSX fabrication correctly generates and uses the metadata. JSON fabrication silently exports the raw zero-degree component rotation.
@@ -36,4 +36,4 @@ A production fix should enrich or explicitly reject/warn on missing orientation 
 
 ## Scope
 
-This is a reproduction, not a production fix. No PCB geometry, registry package or order was changed. Existing orientation-metadata and Gerber drill export tests are run separately as controls.
+The fix enriches prebuilt JSON with local and JLCPCB pin-1 metadata before CPL conversion, without rerendering or changing copper geometry. It reuses existing frames, deduplicates supplier lookups within an export, and skips DNP/test-point components. Missing supplier data or ambiguous bottom-side frames generate named warnings; bottom-side mirroring is not guessed. No registry package or order was changed. Existing orientation-metadata and Gerber drill export tests are run separately as controls.

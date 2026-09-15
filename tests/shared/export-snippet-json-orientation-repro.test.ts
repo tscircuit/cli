@@ -3,7 +3,6 @@ import { mkdtemp, rm, symlink, writeFile } from "node:fs/promises"
 import { tmpdir } from "node:os"
 import path from "node:path"
 import JSZip from "jszip"
-import Papa from "papaparse"
 import { exportSnippet } from "lib/shared/export-snippet"
 
 // Deterministic supplier fixture: no external JLCPCB request. Both supplier
@@ -27,7 +26,7 @@ const supplierPads = [
 const source = `
 const supplierPads = ${JSON.stringify(supplierPads)}
 const partsEngine = {
-  findPart: async () => [],
+  findPart: async () => ({}),
   fetchPartCircuitJson: async () => supplierPads,
 }
 export default () => <board width={20} height={10} routingDisabled partsEngine={partsEngine}>
@@ -45,14 +44,18 @@ export default () => <board width={20} height={10} routingDisabled partsEngine={
 </board>
 `
 
-// Intentionally failing regression: JSON fabrication must preserve the supplier
+// Regression: JSON fabrication must preserve the supplier
 // orientation produced by exporting the same source directly.
-test("REPRO: TSX and prebuilt JSON fabrication exports must agree on SOT-23 rotations", async () => {
+test("TSX and prebuilt JSON fabrication exports must agree on SOT-23 rotations", async () => {
   const dir = await mkdtemp(path.join(tmpdir(), "tsci-json-orientation-repro-"))
   const sourcePath = path.join(dir, "board.circuit.tsx")
   const jsonPath = path.join(dir, "board.circuit.json")
   const cache = new Map<string, string>()
   const platformConfig = {
+    partsEngine: {
+      findPart: async () => ({}),
+      fetchPartCircuitJson: async () => supplierPads as any,
+    },
     localCacheEngine: {
       getItem: (key: string) => cache.get(key) ?? null,
       setItem: (key: string, value: string) => {
@@ -85,9 +88,13 @@ test("REPRO: TSX and prebuilt JSON fabrication exports must agree on SOT-23 rota
   async function rotations(content: string | Buffer) {
     const zip = await JSZip.loadAsync(content)
     const csv = await zip.file("pick_and_place.csv")!.async("string")
-    const rows = Papa.parse<Record<string, string>>(csv, { header: true }).data
+    const [header, ...lines] = csv.trim().split(/\r?\n/)
+    expect(header).toBe("Designator,Mid X,Mid Y,Layer,Rotation")
     return Object.fromEntries(
-      rows.map((r) => [r.Designator, Number(r.Rotation)]),
+      lines.map((line) => {
+        const [name, , , , rotation] = line.split(",")
+        return [name, Number(rotation)]
+      }),
     )
   }
   try {
@@ -111,7 +118,7 @@ test("REPRO: TSX and prebuilt JSON fabrication exports must agree on SOT-23 rota
     const prebuilt = await rotations(await run(jsonPath, "gerbers"))
     console.log("TSX fabrication:", direct, "JSON fabrication:", prebuilt)
     expect(direct).toEqual({ Q_PD_ENABLE: 180, Q_BUZZER: 0 })
-    // Current behavior: success with Q_PD_ENABLE=0, no missing-orientation error.
+    // Prebuilt JSON must receive the same supplier-frame correction.
     expect(prebuilt).toEqual(direct)
   } finally {
     await rm(dir, { recursive: true, force: true })

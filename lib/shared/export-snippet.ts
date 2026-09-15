@@ -1,3 +1,4 @@
+import { enrichFabricationOrientation } from "./enrich-fabrication-orientation"
 import fs from "node:fs"
 import path from "node:path"
 import { promisify } from "node:util"
@@ -206,6 +207,13 @@ export const exportSnippet = async ({
 
     if (!circuitData) return onExit(1)
     circuitJson = circuitData.circuitJson
+  }
+
+  if (format === "gerbers" && isCircuitJsonFile(filePath)) {
+    circuitJson = await enrichFabricationOrientation(
+      circuitJson,
+      getPlatformConfigWithCliDefaults(platformConfig),
+    )
   }
 
   let outputContent: string | Buffer
