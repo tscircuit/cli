@@ -182,6 +182,24 @@ the solver can be reproduced independently. Values that JSON cannot represent
 directly, such as `undefined`, `NaN`, maps, sets, or circular references, use
 explicit `value_type` records instead of being silently discarded.
 
+## Searching DigiKey and Mouser parts
+
+Use `--digikey` or `--mouser` for distributor stock and supplier part numbers:
+
+```sh
+tsci search --digikey LM358
+tsci search --mouser --json "buck converter"
+tsci search --digikey --mouser LM358
+tsci search --ti --digikey --mouser --json TPS62160
+```
+
+Results come from [DigiKey Search](https://digikeysearch.tscircuit.com) and
+[Mouser Search](https://mousersearch.tscircuit.com), without requiring distributor
+API credentials. Text output includes supplier part numbers; JSON preserves
+returned part metadata with `source: "digikey"` or `source: "mouser"`.
+Stock and pricing reflect the services' cached responses. These flags provide
+part discovery, not direct TSX import from distributors.
+
 ## Searching Texas Instruments parts
 
 Use `--ti` to search the TI catalog indexed by [tisearch](https://tisearch.tscircuit.com):
