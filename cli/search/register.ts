@@ -17,6 +17,7 @@ export const registerSearch = (program: Command) => {
     .option("--kicad", "Search KiCad footprints")
     .option("--jlcpcb", "Search JLCPCB components")
     .option("--lcsc", "Alias for --jlcpcb")
+    .option("--ti", "Search Texas Instruments components")
     .option("--tscircuit", "Search tscircuit registry packages")
     .option("--json", "Output search results as JSON")
     .action(
@@ -26,13 +27,14 @@ export const registerSearch = (program: Command) => {
           kicad?: boolean
           jlcpcb?: boolean
           lcsc?: boolean
+          ti?: boolean
           tscircuit?: boolean
           json?: boolean
         },
       ) => {
         const query = getQueryFromParts(queryParts)
         const hasFilters =
-          opts.kicad || opts.jlcpcb || opts.lcsc || opts.tscircuit
+          opts.kicad || opts.jlcpcb || opts.lcsc || opts.ti || opts.tscircuit
         const searchKicad = opts.kicad
         const searchJlc = opts.jlcpcb || opts.lcsc || !hasFilters
         const searchTscircuit = opts.tscircuit
@@ -55,6 +57,17 @@ export const registerSearch = (program: Command) => {
           price: number
         }> = []
 
+        let tiResults: Array<{
+          mfr: string
+          package: string
+          description: string
+          stock: number
+          price: number | null
+          ti_product_number?: string
+          product_url?: string
+          datasheet_url?: string
+        }> = []
+
         let kicadResults: string[] = []
 
         try {
@@ -75,6 +88,19 @@ export const registerSearch = (program: Command) => {
             jlcResults = jlcResponse?.components ?? []
           }
 
+          if (opts.ti) {
+            const tiSearchUrl =
+              "https://tisearch.tscircuit.com/api/search?limit=10&q=" +
+              encodeURIComponent(query)
+            const response = await fetch(tiSearchUrl)
+            if (!response.ok)
+              throw new Error(`TI search failed (HTTP ${response.status})`)
+            const data = await response.json()
+            if (!Array.isArray(data?.components))
+              throw new Error("TI search returned an invalid response")
+            tiResults = data.components
+          }
+
           if (searchKicad) {
             const kicadFiles: string[] = await fetch(
               "https://kicad-mod-cache.tscircuit.com/kicad_files.json",
@@ -87,7 +113,7 @@ export const registerSearch = (program: Command) => {
           }
         } catch (error) {
           console.error(
-            kleur.red("Failed to search registry:"),
+            kleur.red("Failed to search:"),
             error instanceof Error ? error.message : error,
           )
           process.exit(1)
@@ -102,6 +128,10 @@ export const registerSearch = (program: Command) => {
             ...results.packages.map((pkg) => ({
               source: "tscircuit" as const,
               ...pkg,
+            })),
+            ...tiResults.map((comp) => ({
+              ...comp,
+              source: "ti" as const,
             })),
             ...jlcResults.map((comp) => ({
               source: "jlcpcb" as const,
@@ -125,11 +155,13 @@ export const registerSearch = (program: Command) => {
         if (
           !kicadResults.length &&
           !results.packages.length &&
-          !jlcResults.length
+          !jlcResults.length &&
+          !tiResults.length
         ) {
           const sources = [
             searchTscircuit && "tscircuit registry",
             searchJlc && "JLCPCB",
+            opts.ti && "Texas Instruments",
             searchKicad && "KiCad",
           ].filter(Boolean)
           console.log(
@@ -191,6 +223,21 @@ export const registerSearch = (program: Command) => {
           jlcResults.forEach((comp, idx) => {
             console.log(
               `${idx + 1}. ${comp.mfr} (C${comp.lcsc}) - ${comp.description} (stock: ${comp.stock.toLocaleString("en-US")})`,
+            )
+          })
+        }
+        if (tiResults.length) {
+          console.log()
+          console.log(
+            kleur
+              .bold()
+              .underline(
+                `Found ${tiResults.length} component(s) in TI search:`,
+              ),
+          )
+          tiResults.forEach((comp, idx) => {
+            console.log(
+              `${idx + 1}. ${comp.mfr} - ${comp.description} (stock: ${comp.stock.toLocaleString("en-US")})`,
             )
           })
         }
