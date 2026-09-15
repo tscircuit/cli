@@ -36,11 +36,12 @@ export const convertKicadFootprintToTsx = async ({
   const extractedRef = extractKicadFootprintReference(modContent)
   const circuitJson = await convertKicadFootprintToCircuitJson(inputPath)
 
-  const sourceComp = circuitJson.find(
-    (el): el is { type: "source_component"; name?: string } =>
-      el.type === "source_component",
-  )
-  const ref = extractedRef ?? sourceComp?.name ?? null
+  const sourceComp = circuitJson.find((el) => el.type === "source_component")
+  const sourceCompName =
+    sourceComp && "name" in sourceComp && typeof sourceComp.name === "string"
+      ? sourceComp.name
+      : null
+  const ref = extractedRef ?? sourceCompName
 
   if (ref && ref.trim() !== "") {
     const encodedRef = Buffer.from(ref, "utf-8").toString("hex")
