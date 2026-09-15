@@ -114,6 +114,35 @@ test("convert kicad_mod to tsx", async () => {
   const tsxPath = path.join(tmpDir, "R_01005_0402Metric.tsx")
   const tsx = await readFile(tsxPath, "utf-8")
   expect(tsx).toContain("export const R_01005_0402Metric")
+  expect(tsx).toContain('text={props.name ?? "REF**"}')
+})
+
+test("convert kicad_mod preserves reference placeholder semantics as instance-aware props.name (#4708)", async () => {
+  const { tmpDir, runCommand } = await getCliTestFixture()
+  const twoPadMod = `(footprint "TwoPad"
+ (version 20240108)
+ (generator "pcbnew")
+ (layer "F.Cu")
+ (attr smd)
+ (fp_text reference "REF**" (at 0 -2) (layer "F.SilkS") (effects (font (size 1 1) (thickness 0.15))))
+ (fp_text user "PIN 1" (at -1 2) (layer "F.SilkS") (effects (font (size 0.5 0.5) (thickness 0.1))))
+ (pad "1" smd rect (at -0.8 0) (size 0.9 1) (layers "F.Cu" "F.Paste" "F.Mask"))
+ (pad "2" smd rect (at 0.8 0) (size 0.9 1) (layers "F.Cu" "F.Paste" "F.Mask"))
+)`
+  const modPath = path.join(tmpDir, "two-pad.kicad_mod")
+  await writeFile(modPath, twoPadMod)
+
+  const { stdout, stderr, exitCode } = await runCommand(
+    `tsci convert ${modPath} --name TwoPad --output ${path.join(tmpDir, "TwoPad.tsx")}`,
+  )
+  expect(exitCode).toBe(0)
+  expect(stderr).toBe("")
+  expect(stdout).toContain("Converted")
+
+  const tsxPath = path.join(tmpDir, "TwoPad.tsx")
+  const tsx = await readFile(tsxPath, "utf-8")
+  expect(tsx).toContain('text={props.name ?? "REF**"}')
+  expect(tsx).toContain('text="PIN 1"')
 })
 
 test("convert kicad_mod to a footprinter string", async () => {
