@@ -13,7 +13,7 @@ test("build --kicad-project-zip creates a zip and removes kicad dir", async () =
     circuitPath,
     `
 export default () => (
-  <board width="10mm" height="10mm">
+  <board width="10mm" height="10mm" minTraceWidth={0.25}>
     <resistor resistance="1k" footprint="0402" name="R1" pcbX={0} pcbY={0} />
   </board>
 )
@@ -46,4 +46,8 @@ export default () => (
   expect(fileNames).toContain("my-board.kicad_sch")
   expect(fileNames).toContain("my-board.kicad_pcb")
   expect(fileNames).toContain("my-board.kicad_pro")
+  const project = JSON.parse(
+    await zip.file("my-board.kicad_pro")!.async("string"),
+  )
+  expect(project.board.design_settings.rules.min_track_width).toBe(0.25)
 }, 60_000)
