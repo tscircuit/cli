@@ -4,7 +4,11 @@ import tscircuitPackageJson from "tscircuit/package.json"
 
 const tscircuitPackageJsonDeps = Object.keys(tscircuitPackageJson.dependencies)
 
-const ALLOW_BUNDLING = ["@tscircuit/runframe"]
+const ALLOW_BUNDLING = [
+  "@tscircuit/runframe",
+  // The CLI uses orientation helpers newer than tscircuit's converter dependency.
+  "circuit-json-to-pnp-csv",
+]
 
 const result = await Bun.build({
   entrypoints: [
