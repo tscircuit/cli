@@ -37,6 +37,7 @@ import { convertCircuitJsonToSchematicPdf } from "./convert-circuit-json-to-sche
 import { convertToKicadLibrary } from "./convert-to-kicad-library"
 import { importFromUserLand } from "./importFromUserLand"
 import { isCircuitJsonFile } from "./is-circuit-json-file"
+import { prepareJlcpcbOrientation } from "./prepare-jlcpcb-orientation"
 
 const writeFileAsync = promisify(fs.writeFile)
 
@@ -317,6 +318,17 @@ export const exportSnippet = async ({
       break
     }
     case "gerbers": {
+      try {
+        circuitJson = await prepareJlcpcbOrientation(
+          circuitJson,
+          getPlatformConfigWithCliDefaults(platformConfig),
+        )
+      } catch (error) {
+        onError(
+          `Error preparing fabrication orientations: ${error instanceof Error ? error.message : String(error)}`,
+        )
+        return onExit(1)
+      }
       const zip = new JSZip()
 
       const gerberFiles = convertCircuitJsonToGerberFiles(circuitJson, {
