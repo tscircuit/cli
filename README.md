@@ -81,27 +81,6 @@ The `build` command also accepts the following options:
 - `--ignore-placement-drc` - suppress placement DRC diagnostics
 - `--ignore-routing-drc` - suppress routing DRC diagnostics
 
-### JLCPCB fabrication export
-
-```bash
-tsci export board.circuit.json --format gerbers --output fabrication.zip
-```
-
-Gerber export verifies pin-1 rotation metadata for fitted components with a
-JLCPCB part number before writing the ZIP. For existing Circuit JSON, it recovers
-the authored pin-1 frame from top-side numbered pads and fetches missing supplier
-footprints through the configured parts engine. It does not rebuild the board,
-reroute traces, move geometry, or rewrite the input file.
-
-If a supplier lookup fails, the frames are incompatible, or orientation cannot
-be determined, export exits with an error naming the affected components. Enable
-the parts engine or provide verified `pcb_component.pin1_location` and
-`supplier_pin1_location_map.jlcpcb` metadata. `--disable-parts-engine` still
-allows export when the required metadata is already present. Bottom-side
-components require an explicit authored `pin1_location`, because prebuilt JSON
-does not identify the original footprint layer needed to undo mirroring safely.
-Do-not-place parts and test points are excluded from this check.
-
 ### Altium export
 
 Export a TSX circuit or an existing Circuit JSON file as an Altium project:

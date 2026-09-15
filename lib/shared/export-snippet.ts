@@ -15,7 +15,10 @@ import {
   CircuitJsonToKicadSchConverter,
   resolveAndLoadKicad3dModelFiles,
 } from "circuit-json-to-kicad"
-import { convertCircuitJsonToPickAndPlaceCsv } from "circuit-json-to-pnp-csv"
+import {
+  convertCircuitJsonToPickAndPlaceCsv,
+  prepareJlcpcbOrientation,
+} from "circuit-json-to-pnp-csv"
 import { convertCircuitJsonToReadableNetlist } from "circuit-json-to-readable-netlist"
 import { circuitJsonToStep } from "circuit-json-to-step"
 import { circuitJsonToFdmComponentBox } from "circuit-json-to-fdm-component-box"
@@ -37,7 +40,6 @@ import { convertCircuitJsonToSchematicPdf } from "./convert-circuit-json-to-sche
 import { convertToKicadLibrary } from "./convert-to-kicad-library"
 import { importFromUserLand } from "./importFromUserLand"
 import { isCircuitJsonFile } from "./is-circuit-json-file"
-import { prepareJlcpcbOrientation } from "./prepare-jlcpcb-orientation"
 
 const writeFileAsync = promisify(fs.writeFile)
 

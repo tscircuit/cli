@@ -43,7 +43,7 @@
         "circuit-json-to-footprinter": "^0.0.54",
         "circuit-json-to-gerber": "^0.0.105",
         "circuit-json-to-kicad": "0.0.212",
-        "circuit-json-to-pnp-csv": "^0.0.13",
+        "circuit-json-to-pnp-csv": "https://pkg.pr.new/circuit-json-to-pnp-csv@f7ebead",
         "circuit-json-to-readable-netlist": "^0.0.15",
         "circuit-json-to-spice": "^0.0.45",
         "circuit-json-to-step": "^0.0.38",
@@ -602,7 +602,7 @@
 
     "circuit-json-to-kicad": ["circuit-json-to-kicad@0.0.212", "", { "peerDependencies": { "typescript": "^5" } }, "sha512-ReX53/9k0hfbqOODTfXPz3x8xaW8MkJDe9f6QNK2p9Z1vxJnOnTsT/Uc3RKRMLh1kUqP1Pd6lKJheWsVw0V2lQ=="],
 
-    "circuit-json-to-pnp-csv": ["circuit-json-to-pnp-csv@0.0.13", "", { "dependencies": { "papaparse": "^5.4.1" }, "peerDependencies": { "@tscircuit/soup-util": "*", "typescript": "^5.0.0" } }, "sha512-evgWh9gcQCa+OfUfEHHqKgFw0BglHg29EucyUkuMWCUfM9qokAFenUIeSAJz/tFIGLTRPYY5xfQ4HzWXlkH/lg=="],
+    "circuit-json-to-pnp-csv": ["circuit-json-to-pnp-csv@https://pkg.pr.new/circuit-json-to-pnp-csv@f7ebead", { "dependencies": { "@tscircuit/circuit-json-util": "^0.0.113", "papaparse": "^5.4.1" }, "peerDependencies": { "@tscircuit/soup-util": "*", "circuit-json": "^0.0.489", "typescript": "^5.0.0" } }],
 
     "circuit-json-to-readable-netlist": ["circuit-json-to-readable-netlist@0.0.15", "", { "peerDependencies": { "@tscircuit/circuit-json-util": "*", "circuit-json": "*", "circuit-json-to-connectivity-map": "*", "typescript": "^5.0.0" } }, "sha512-mnWH1WIkH+BrMIYDRspWKlLa8fGB/mlGKBi5NsMBpV7UHNc3Bn2EC+KIKcEY9I3EhspfXXOW5GUI7leehdP3mA=="],
 
