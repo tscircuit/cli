@@ -18,6 +18,8 @@ export const registerSearch = (program: Command) => {
     .option("--jlcpcb", "Search JLCPCB components")
     .option("--lcsc", "Alias for --jlcpcb")
     .option("--ti", "Search Texas Instruments components")
+    .option("--digikey", "Search DigiKey components")
+    .option("--mouser", "Search Mouser components")
     .option("--tscircuit", "Search tscircuit registry packages")
     .option("--json", "Output search results as JSON")
     .action(
@@ -28,13 +30,21 @@ export const registerSearch = (program: Command) => {
           jlcpcb?: boolean
           lcsc?: boolean
           ti?: boolean
+          digikey?: boolean
+          mouser?: boolean
           tscircuit?: boolean
           json?: boolean
         },
       ) => {
         const query = getQueryFromParts(queryParts)
         const hasFilters =
-          opts.kicad || opts.jlcpcb || opts.lcsc || opts.ti || opts.tscircuit
+          opts.kicad ||
+          opts.jlcpcb ||
+          opts.lcsc ||
+          opts.ti ||
+          opts.digikey ||
+          opts.mouser ||
+          opts.tscircuit
         const searchKicad = opts.kicad
         const searchJlc = opts.jlcpcb || opts.lcsc || !hasFilters
         const searchTscircuit = opts.tscircuit
@@ -66,6 +76,23 @@ export const registerSearch = (program: Command) => {
           ti_product_number?: string
           product_url?: string
           datasheet_url?: string
+        }> = []
+
+        const distributors = [
+          { source: "digikey", label: "DigiKey", enabled: opts.digikey },
+          { source: "mouser", label: "Mouser", enabled: opts.mouser },
+        ] as const
+        const distributorResults: Array<{
+          source: "digikey" | "mouser"
+          label: string
+          components: Array<{
+            mfr: string
+            description: string
+            stock: number
+            supplier_part_number?: string
+            digikey_product_number?: string
+            mouser_product_number?: string
+          }>
         }> = []
 
         let kicadResults: string[] = []
@@ -101,6 +128,27 @@ export const registerSearch = (program: Command) => {
             tiResults = data.components
           }
 
+          for (const distributor of distributors) {
+            if (!distributor.enabled) continue
+            const url = `https://${distributor.source}search.tscircuit.com/api/search?limit=10&q=${encodeURIComponent(query)}`
+            const response = await fetch(url, {
+              headers: { accept: "application/json" },
+            })
+            if (!response.ok)
+              throw new Error(
+                `${distributor.label} search failed (HTTP ${response.status})`,
+              )
+            const data = await response.json()
+            if (!Array.isArray(data?.components))
+              throw new Error(
+                `${distributor.label} search returned an invalid response`,
+              )
+            distributorResults.push({
+              ...distributor,
+              components: data.components,
+            })
+          }
+
           if (searchKicad) {
             const kicadFiles: string[] = await fetch(
               "https://kicad-mod-cache.tscircuit.com/kicad_files.json",
@@ -133,6 +181,9 @@ export const registerSearch = (program: Command) => {
               ...comp,
               source: "ti" as const,
             })),
+            ...distributorResults.flatMap(({ source, components }) =>
+              components.map((comp) => ({ ...comp, source })),
+            ),
             ...jlcResults.map((comp) => ({
               source: "jlcpcb" as const,
               ...comp,
@@ -156,12 +207,14 @@ export const registerSearch = (program: Command) => {
           !kicadResults.length &&
           !results.packages.length &&
           !jlcResults.length &&
-          !tiResults.length
+          !tiResults.length &&
+          !distributorResults.some(({ components }) => components.length)
         ) {
           const sources = [
             searchTscircuit && "tscircuit registry",
             searchJlc && "JLCPCB",
             opts.ti && "Texas Instruments",
+            ...distributors.filter((d) => d.enabled).map((d) => d.label),
             searchKicad && "KiCad",
           ].filter(Boolean)
           console.log(
@@ -238,6 +291,27 @@ export const registerSearch = (program: Command) => {
           tiResults.forEach((comp, idx) => {
             console.log(
               `${idx + 1}. ${comp.mfr} - ${comp.description} (stock: ${comp.stock.toLocaleString("en-US")})`,
+            )
+          })
+        }
+        for (const { source, label, components } of distributorResults) {
+          if (!components.length) continue
+          console.log()
+          console.log(
+            kleur
+              .bold()
+              .underline(
+                `Found ${components.length} component(s) in ${label} search:`,
+              ),
+          )
+          components.forEach((comp, idx) => {
+            const supplierNumber =
+              comp.supplier_part_number || comp[`${source}_product_number`]
+            const identity = supplierNumber
+              ? `${comp.mfr} (${supplierNumber})`
+              : comp.mfr
+            console.log(
+              `${idx + 1}. ${identity} - ${comp.description} (stock: ${comp.stock.toLocaleString("en-US")})`,
             )
           })
         }
