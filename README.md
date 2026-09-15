@@ -182,6 +182,21 @@ the solver can be reproduced independently. Values that JSON cannot represent
 directly, such as `undefined`, `NaN`, maps, sets, or circular references, use
 explicit `value_type` records instead of being silently discarded.
 
+## Searching Texas Instruments parts
+
+Use `--ti` to search the TI catalog indexed by [tisearch](https://tisearch.tscircuit.com):
+
+```sh
+tsci search --ti TPS62160
+tsci search --ti --json "buck converter"
+tsci search --ti --jlcpcb TPS62160
+```
+
+JSON results identify TI parts with `source: "ti"` and include stored stock,
+pricing, and product links. No TI API credentials are needed. Search reads the
+indexed catalog; stock and metadata reflect the latest completed background
+refresh. This flag provides part discovery, not TSX component import.
+
 ## Development
 
 This command will open the `index.tsx` file for editing.
