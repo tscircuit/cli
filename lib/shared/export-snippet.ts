@@ -17,7 +17,7 @@ import {
 } from "circuit-json-to-kicad"
 import {
   convertCircuitJsonToPickAndPlaceCsv,
-  prepareJlcpcbOrientation,
+  populatePartOrientationMetadata,
 } from "circuit-json-to-pnp-csv"
 import { convertCircuitJsonToReadableNetlist } from "circuit-json-to-readable-netlist"
 import { circuitJsonToStep } from "circuit-json-to-step"
@@ -321,10 +321,10 @@ export const exportSnippet = async ({
     }
     case "gerbers": {
       try {
-        circuitJson = await prepareJlcpcbOrientation(
-          circuitJson,
-          getPlatformConfigWithCliDefaults(platformConfig),
-        )
+        circuitJson = await populatePartOrientationMetadata(circuitJson, {
+          ...getPlatformConfigWithCliDefaults(platformConfig),
+          supplier: "jlcpcb",
+        })
       } catch (error) {
         onError(
           `Error preparing fabrication orientations: ${error instanceof Error ? error.message : String(error)}`,

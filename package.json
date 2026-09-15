@@ -49,7 +49,7 @@
     "circuit-json-to-footprinter": "^0.0.54",
     "circuit-json-to-gerber": "^0.0.105",
     "circuit-json-to-kicad": "0.0.212",
-    "circuit-json-to-pnp-csv": "https://pkg.pr.new/circuit-json-to-pnp-csv@f7ebead",
+    "circuit-json-to-pnp-csv": "https://pkg.pr.new/circuit-json-to-pnp-csv@864a84d",
     "circuit-json-to-readable-netlist": "^0.0.15",
     "circuit-json-to-spice": "^0.0.45",
     "circuit-json-to-step": "^0.0.38",

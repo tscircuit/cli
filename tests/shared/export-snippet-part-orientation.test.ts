@@ -76,7 +76,16 @@ test("prebuilt routed JSON is enriched before PnP export without rewriting the i
     path.join(tmpdir(), "tsci-routed-orientation-"),
   )
   const filePath = path.join(directory, "routed.circuit.json")
-  const sourceText = JSON.stringify(fixture)
+  const circuitJson = structuredClone(fixture) as AnyCircuitElement[]
+  const source = circuitJson.find(
+    (element) => element.type === "source_component",
+  )!
+  if (source.type !== "source_component") throw new Error("missing source")
+  source.supplier_part_numbers = {
+    ...source.supplier_part_numbers,
+    pcbway: ["ALTERNATIVE-SUPPLIER-PART"],
+  }
+  const sourceText = JSON.stringify(circuitJson)
   const supplierJson: AnyCircuitElement[] = [
     [1, -1, -2],
     [2, 1, -2],
