@@ -130,17 +130,9 @@ const snapshotDir = path.join(
   "check",
   "__snapshots__",
 )
-const bitmapSnapshotPath = path.join(
-  snapshotDir,
-  "check-shorts-bitmap.snap.png",
-)
 const pcbSnapshotSnapshotPath = path.join(
   snapshotDir,
   "check-shorts-pcb.snap.svg",
-)
-const innerLayerBitmapSnapshotPath = path.join(
-  snapshotDir,
-  "check-shorts-inner-layer-bitmap.snap.png",
 )
 test("check shorts loads the latest checker from jscdn", async () => {
   let requestedUrl: string | undefined
@@ -218,7 +210,6 @@ test("tsci check shorts detects a copper bridge short", async () => {
     const artifactStats = await stat(bitmapArtifactPath)
     const pcbSnapshot = await readFile(pcbSnapshotPath, "utf-8")
     const pcbSnapshotStats = await stat(pcbSnapshotPath)
-    const expectedBitmapSnapshot = await readFile(bitmapSnapshotPath)
     const expectedPcbSnapshot = await readFile(pcbSnapshotSnapshotPath, "utf-8")
 
     expect(exitCode).toBe(1)
@@ -242,7 +233,7 @@ test("tsci check shorts detects a copper bridge short", async () => {
     expect(pcbSnapshotStats.size).toBeGreaterThan("stale pcb snapshot".length)
     expect(pcbSnapshot).toContain("<svg")
     expect(pcbSnapshot).toContain('data-type="short-debug"')
-    expect(artifactPng).toEqual(expectedBitmapSnapshot)
+    await expect(artifactPng).toMatchPngSnapshot(import.meta.path, "bitmap")
     expect(pcbSnapshot).toEqual(expectedPcbSnapshot)
   } finally {
     await rm(circuitPath, { force: true })
@@ -283,8 +274,9 @@ test("check shorts --layer all detects an inner-layer short", async () => {
     if (!bitmapArtifact || typeof bitmapArtifact.content === "string") {
       throw new Error("Expected an inner-layer short bitmap")
     }
-    expect(bitmapArtifact.content).toEqual(
-      new Uint8Array(await readFile(innerLayerBitmapSnapshotPath)),
+    await expect(bitmapArtifact.content).toMatchPngSnapshot(
+      import.meta.path,
+      "inner-layer-bitmap",
     )
   } finally {
     await rm(circuitPath, { force: true })
