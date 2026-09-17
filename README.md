@@ -116,6 +116,23 @@ Projects can select a schema or declare a distribution-specific PCM license in
 Set `schemaVersion` to `1` or `2` to force a schema. Forcing v1 rejects licenses
 that are not in KiCad's v1 license list instead of substituting another license.
 
+### Cloud autorouting
+
+Enable networked Pipeline9 autorouting for CLI builds, exports, and snapshots
+in `tscircuit.config.json`:
+
+```json
+{
+  "useCloudAutorouting": true
+}
+```
+
+Omitting this setting or setting it to `false` keeps routing local. Cloud
+autorouting applies to Pipeline9 at effort 1; explicit alternative pipelines
+and effort levels retain their local solver. An explicit
+`platformConfig.useCloudAutorouter` in `tscircuit.config.ts` or
+`tscircuit.config.js` takes precedence.
+
 ### Debug autorouting stages
 
 Use `--autorouter-debug` to log each autorouting stage and write visual

@@ -154,7 +154,7 @@ export const loadRuntimeProjectConfig = async (
     return null
   }
 
-  return {
+  const mergedConfig: TscircuitRuntimeProjectConfig = {
     ...(jsonConfig ?? {}),
     ...(moduleConfig ?? {}),
     build: {
@@ -166,6 +166,15 @@ export const loadRuntimeProjectConfig = async (
       ...moduleConfig?.pcbSnapshotSettings,
     },
   }
+
+  if (mergedConfig.useCloudAutorouting !== undefined) {
+    mergedConfig.platformConfig = {
+      useCloudAutorouter: mergedConfig.useCloudAutorouting,
+      ...mergedConfig.platformConfig,
+    }
+  }
+
+  return mergedConfig
 }
 
 export const loadProjectConfig = (

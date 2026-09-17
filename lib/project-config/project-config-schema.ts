@@ -31,6 +31,7 @@ export const projectConfigSchema = z.object({
   kicadLibraryName: z.string().optional(),
   kicadPcm: kicadPcmSettingsSchema.optional(),
   alwaysUseLatestTscircuitOnCloud: z.boolean().optional(),
+  useCloudAutorouting: z.boolean().optional(),
   build: z
     .object({
       circuitJson: z.boolean().optional(),

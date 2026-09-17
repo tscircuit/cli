@@ -103,6 +103,10 @@
       "type": "boolean",
       "description": "Always use the latest TSCircuit version when building on the cloud."
     },
+    "useCloudAutorouting": {
+      "type": "boolean",
+      "description": "Use networked Pipeline9 autorouting at effort 1. Omitted or false keeps local routing; explicit alternative pipelines and effort levels retain their local solver."
+    },
     "build": {
       "type": "object",
       "additionalProperties": false,
