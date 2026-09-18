@@ -2,7 +2,7 @@ import fs from "node:fs"
 import path from "node:path"
 import { promisify } from "node:util"
 import type { PlatformConfig } from "@tscircuit/props"
-import type { AnyCircuitElement } from "circuit-json"
+import type { AnyCircuitElement, PcbBoard } from "circuit-json"
 import {
   convertBomRowsToCsv,
   convertCircuitJsonToBomRows,
@@ -293,11 +293,28 @@ export const exportSnippet = async ({
         pcbFilename: `${outputBaseName}.kicad_pcb`,
       })
       proConverter.runUntilFinished()
+      const proProject = proConverter.getOutput()
+      const pcbBoard = (circuitJson as AnyCircuitElement[]).find(
+        (el): el is PcbBoard => el.type === "pcb_board",
+      )
+      const minBoardEdgeClearance =
+        pcbBoard?.min_board_edge_clearance ??
+        (pcbBoard as any)?.min_copper_edge_clearance
+      if (
+        minBoardEdgeClearance !== undefined &&
+        proProject.board?.design_settings?.rules
+      ) {
+        proProject.board.design_settings.rules.min_copper_edge_clearance =
+          minBoardEdgeClearance
+      }
 
       const zip = new JSZip()
       zip.file(`${outputBaseName}.kicad_sch`, schConverter.getOutputString())
       zip.file(`${outputBaseName}.kicad_pcb`, pcbConverter.getOutputString())
-      zip.file(`${outputBaseName}.kicad_pro`, proConverter.getOutputString())
+      zip.file(
+        `${outputBaseName}.kicad_pro`,
+        `${JSON.stringify(proProject, null, 2)}\n`,
+      )
 
       await resolveAndLoadKicad3dModelFiles({
         model3dSourcePaths: pcbConverter.getModel3dSourcePaths(),
