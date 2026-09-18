@@ -3,10 +3,11 @@ import path from "node:path"
 import type { PlatformConfig } from "@tscircuit/props"
 import {
   CircuitJsonToKicadPcbConverter,
+  CircuitJsonToKicadProConverter,
   CircuitJsonToKicadSchConverter,
   resolveAndLoadKicad3dModelFiles,
 } from "circuit-json-to-kicad"
-import type { AnyCircuitElement } from "circuit-json"
+import type { AnyCircuitElement, PcbBoard } from "circuit-json"
 
 type GenerateKicadProjectOptions = {
   circuitJson: unknown[]
@@ -23,33 +24,6 @@ export type GeneratedKicadProject = {
   outputDir: string
   projectName: string
 }
-
-const createKicadProContent = ({
-  projectName,
-  schematicFileName,
-  boardFileName,
-}: {
-  projectName: string
-  schematicFileName: string
-  boardFileName: string
-}) =>
-  JSON.stringify(
-    {
-      head: {
-        version: 1,
-        generator: "tsci",
-      },
-      project: {
-        name: projectName,
-        files: {
-          schematic: schematicFileName,
-          board: boardFileName,
-        },
-      },
-    },
-    null,
-    2,
-  )
 
 export const generateKicadProject = async ({
   circuitJson,
@@ -77,11 +51,32 @@ export const generateKicadProject = async ({
   const boardFileName = `${sanitizedProjectName}.kicad_pcb`
   const projectFileName = `${sanitizedProjectName}.kicad_pro`
 
-  const proContent = createKicadProContent({
-    projectName: sanitizedProjectName,
-    schematicFileName,
-    boardFileName,
-  })
+  const proConverter = new CircuitJsonToKicadProConverter(
+    circuitJson as AnyCircuitElement[],
+    {
+      projectName: sanitizedProjectName,
+      schematicFilename: schematicFileName,
+      pcbFilename: boardFileName,
+    },
+  )
+  proConverter.runUntilFinished()
+  const proProject = proConverter.getOutput()
+
+  const pcbBoard = (circuitJson as AnyCircuitElement[]).find(
+    (el): el is PcbBoard => el.type === "pcb_board",
+  )
+  const minBoardEdgeClearance =
+    pcbBoard?.min_board_edge_clearance ??
+    (pcbBoard as any)?.min_copper_edge_clearance
+  if (
+    minBoardEdgeClearance !== undefined &&
+    proProject.board?.design_settings?.rules
+  ) {
+    proProject.board.design_settings.rules.min_copper_edge_clearance =
+      minBoardEdgeClearance
+  }
+
+  const proContent = `${JSON.stringify(proProject, null, 2)}\n`
 
   if (writeFiles) {
     fs.mkdirSync(outputDir, { recursive: true })
