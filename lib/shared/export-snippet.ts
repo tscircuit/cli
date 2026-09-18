@@ -15,7 +15,10 @@ import {
   CircuitJsonToKicadSchConverter,
   resolveAndLoadKicad3dModelFiles,
 } from "circuit-json-to-kicad"
-import { convertCircuitJsonToPickAndPlaceCsv } from "circuit-json-to-pnp-csv"
+import {
+  convertCircuitJsonToPickAndPlaceCsv,
+  populatePartOrientationMetadata,
+} from "circuit-json-to-pnp-csv"
 import { convertCircuitJsonToReadableNetlist } from "circuit-json-to-readable-netlist"
 import { circuitJsonToStep } from "circuit-json-to-step"
 import { circuitJsonToFdmComponentBox } from "circuit-json-to-fdm-component-box"
@@ -317,6 +320,17 @@ export const exportSnippet = async ({
       break
     }
     case "gerbers": {
+      try {
+        circuitJson = await populatePartOrientationMetadata(circuitJson, {
+          ...getPlatformConfigWithCliDefaults(platformConfig),
+          supplier: "jlcpcb",
+        })
+      } catch (error) {
+        onError(
+          `Error preparing fabrication orientations: ${error instanceof Error ? error.message : String(error)}`,
+        )
+        return onExit(1)
+      }
       const zip = new JSZip()
 
       const gerberFiles = convertCircuitJsonToGerberFiles(circuitJson, {
