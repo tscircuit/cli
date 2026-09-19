@@ -41,3 +41,9 @@ test("getVersion verbose output prints all requested packages", () => {
   expect(output).toContain("@tscircuit/runframe:")
   expect(output).toContain("@tscircuit/core:")
 })
+
+test("getCliVersion matches on-disk package.json version without synthetic patch bump", async () => {
+  const { getCliVersion } = await import("lib/getVersion")
+  const pkg = await import("../../package.json")
+  expect(getCliVersion()).toBe(pkg.version)
+})
