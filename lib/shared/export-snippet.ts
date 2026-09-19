@@ -27,7 +27,7 @@ import {
 } from "circuit-to-svg"
 import { convertCircuitJsonToDsnString } from "dsn-converter"
 import JSZip from "jszip"
-import type { PcbSnapshotSettings } from "lib/project-config/project-config-schema"
+import type { PcbRenderSettings } from "lib/shared/pcb-x-ray-options"
 import { generateCircuitJson } from "lib/shared/generate-circuit-json"
 import { getCircuitJsonToGltfOptions } from "lib/shared/get-circuit-json-to-gltf-options"
 import { getOrGenerateCircuitJson } from "lib/shared/get-or-generate-circuit-json"
@@ -112,7 +112,7 @@ type ExportOptions = {
   writeFile?: boolean
   outputPath?: string
   platformConfig?: PlatformConfig
-  pcbSnapshotSettings?: PcbSnapshotSettings
+  pcbSnapshotSettings?: PcbRenderSettings
   onExit?: (code: number) => void
   onError?: (message: string) => void
   onSuccess: (data: {

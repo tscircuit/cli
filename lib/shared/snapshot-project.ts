@@ -9,7 +9,7 @@ import {
   getSnapshotsDir,
   loadRuntimeProjectConfig,
 } from "lib/project-config"
-import type { PcbSnapshotSettings } from "lib/project-config/project-config-schema"
+import type { PcbRenderSettings } from "lib/shared/pcb-x-ray-options"
 import type { CameraPreset } from "circuit-json-to-3d-png"
 import { findBoardFilesAsync } from "lib/shared/find-board-files"
 import { mergePlatformConfigs } from "lib/shared/platform-config-utils"
@@ -37,7 +37,7 @@ type SnapshotOptions = {
   /** Optional platform configuration overrides */
   platformConfig?: PlatformConfig
   /** Overrides pcbSnapshotSettings from project config (merged on top) */
-  pcbSnapshotSettingsOverride?: PcbSnapshotSettings
+  pcbSnapshotSettingsOverride?: PcbRenderSettings
   /** Create visual diff artifacts when snapshots mismatch */
   createDiff?: boolean
   /** Camera preset name for 3D snapshots (implies --3d) */

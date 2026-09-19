@@ -1,6 +1,13 @@
 import { InvalidArgumentError, type Command } from "commander"
 import type { PcbSnapshotSettings } from "lib/project-config/project-config-schema"
 
+// Per-invocation rendering options, deliberately separate from project config.
+export type PcbRenderSettings = PcbSnapshotSettings & {
+  xRayNets?: string[]
+  layer?: "top" | "bottom"
+  hiddenLayerOpacity?: number
+}
+
 export type PcbXRayCliOptions = {
   xRayNet?: string[]
   hiddenLayerOpacity?: number
@@ -35,7 +42,7 @@ export function addPcbXRayOptions(command: Command): Command {
 
 export function getPcbXRaySettings(
   options: PcbXRayCliOptions,
-): PcbSnapshotSettings {
+): PcbRenderSettings {
   return {
     ...(options.xRayNet?.length ? { xRayNets: options.xRayNet } : {}),
     ...(options.hiddenLayerOpacity !== undefined

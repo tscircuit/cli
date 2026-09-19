@@ -5,7 +5,7 @@ import {
   convertCircuitJsonToPcbSvg as renderSvg,
   type PcbSvgOptions,
 } from "circuit-to-svg-xray"
-import type { PcbSnapshotSettings } from "lib/project-config/project-config-schema"
+import type { PcbRenderSettings } from "lib/shared/pcb-x-ray-options"
 
 const copperTypes = new Set([
   "pcb_trace",
@@ -81,7 +81,7 @@ export function resolveXRayElementIds(
 
 export function convertCircuitJsonToPcbSvg(
   elements: AnyCircuitElement[],
-  options: PcbSnapshotSettings & PcbSvgOptions = {},
+  options: PcbRenderSettings & PcbSvgOptions = {},
 ): string {
   const { xRayNets, ...renderOptions } = options
   if (!xRayNets?.length) return renderNormalSvg(elements, renderOptions)

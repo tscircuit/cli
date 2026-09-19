@@ -2,7 +2,7 @@ import { convertCircuitJsonToPcbSvg } from "lib/shared/render-pcb-svg"
 import fs from "node:fs"
 import path from "node:path"
 import type { PlatformConfig } from "@tscircuit/props"
-import type { PcbSnapshotSettings } from "lib/project-config/project-config-schema"
+import type { PcbRenderSettings } from "lib/shared/pcb-x-ray-options"
 import type { AnyCircuitElement, VisibleLayerRef } from "circuit-json"
 import { renderCircuitJsonTo3dPng } from "circuit-json-to-3d-png"
 import { convertCircuitJsonToStackedSchematicSheetsSvg } from "circuit-to-svg"
@@ -25,7 +25,7 @@ export type ProcessSnapshotFileOptions = {
   simulationOnly: boolean
   forceUpdate: boolean
   platformConfig?: PlatformConfig
-  pcbSnapshotSettings?: PcbSnapshotSettings
+  pcbSnapshotSettings?: PcbRenderSettings
   createDiff: boolean
   cameraPreset?: CameraPreset
   pcbLayer?: VisibleLayerRef

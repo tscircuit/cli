@@ -1,13 +1,12 @@
 import { z } from "zod"
 
-export const pcbSnapshotSettingsSchema = z.object({
-  layer: z.enum(["top", "bottom"]).optional(),
-  xRayNets: z.array(z.string().min(1)).optional(),
-  hiddenLayerOpacity: z.number().min(0).max(1).optional(),
-  showCourtyards: z.boolean().optional(),
-  showPcbNotes: z.boolean().optional(),
-  showFabricationNotes: z.boolean().optional(),
-})
+export const pcbSnapshotSettingsSchema = z
+  .object({
+    showCourtyards: z.boolean().optional(),
+    showPcbNotes: z.boolean().optional(),
+    showFabricationNotes: z.boolean().optional(),
+  })
+  .strict()
 
 export const kicadPcmSettingsSchema = z.object({
   schemaVersion: z

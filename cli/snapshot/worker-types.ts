@@ -1,7 +1,7 @@
 import type { PlatformConfig } from "@tscircuit/props"
 import type { VisibleLayerRef } from "circuit-json"
 import type { CameraPreset } from "circuit-json-to-3d-png"
-import type { PcbSnapshotSettings } from "lib/project-config/project-config-schema"
+import type { PcbRenderSettings } from "lib/shared/pcb-x-ray-options"
 import type { ProcessSnapshotFileResult } from "lib/shared/process-snapshot-file"
 
 export type SnapshotFileMessage = {
@@ -17,7 +17,7 @@ export type SnapshotFileMessage = {
     simulationOnly: boolean
     forceUpdate: boolean
     platformConfig?: PlatformConfig
-    pcbSnapshotSettings?: PcbSnapshotSettings
+    pcbSnapshotSettings?: PcbRenderSettings
     createDiff: boolean
     cameraPreset?: CameraPreset
     pcbLayer?: VisibleLayerRef

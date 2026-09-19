@@ -180,3 +180,31 @@ test("loadProjectConfig merges json config with module config", async () => {
     showCourtyards: true,
   })
 })
+
+test.each([
+  ["xRayNets", ["GND"]],
+  ["layer", "bottom"],
+  ["hiddenLayerOpacity", 0.2],
+] as const)("PCB config rejects CLI-only %s", async (key, value) => {
+  const config = { pcbSnapshotSettings: { [key]: value } }
+  expect(projectConfigSchema.safeParse(config).success).toBeFalse()
+  expect(
+    jsonSchema.properties.pcbSnapshotSettings.properties,
+  ).not.toHaveProperty(key)
+  expect(
+    jsonSchema.properties.pcbSnapshotSettings.additionalProperties,
+  ).toBeFalse()
+
+  for (const extension of ["json", "ts"] as const) {
+    const tmpDir = temporaryDirectory()
+    tempDirs.push(tmpDir)
+    await writeFile(
+      path.join(tmpDir, `tscircuit.config.${extension}`),
+      extension === "json"
+        ? JSON.stringify(config)
+        : `export default ${JSON.stringify(config)}`,
+    )
+    const loaded = await loadRuntimeProjectConfig(tmpDir)
+    expect(loaded?.pcbSnapshotSettings).toBeUndefined()
+  }
+})
