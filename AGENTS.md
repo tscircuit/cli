@@ -77,6 +77,10 @@ Test fixture provides:
 - Trailing commas: all
 - Path aliases available: `lib/*`, `cli/*`, `tests/*`
 
+## Documentation
+
+Avoid adding new README sections for individual features unless explicitly requested.
+
 ## Runtime
 
 The CLI entrypoint (`cli/entrypoint.js`) selects between Bun and tsx as the TypeScript runner, preferring Bun when available. This allows hot-reload during development while maintaining Node.js compatibility.
