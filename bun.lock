@@ -51,7 +51,7 @@
         "circuit-json-trace-length-analysis": "github:tscircuit/circuit-json-trace-length-analysis#2b44792a40df0ca83b6bfb6ac95ed5e35e7168b8",
         "circuit-to-canvas": "^0.0.123",
         "circuit-to-svg": "^0.0.393",
-        "circuit-to-svg-xray": "github:tscircuit/circuit-to-svg#569a2e96315333d70f2d8580c2e304cee6e93e0a",
+        "circuit-to-svg-xray": "npm:circuit-to-svg@0.0.425",
         "commander": "^14.0.0",
         "conf": "^13.1.0",
         "configstore": "^7.0.0",
@@ -96,9 +96,6 @@
       },
     },
   },
-  "trustedDependencies": [
-    "circuit-to-svg-xray",
-  ],
   "overrides": {
     "altiumts": "0.0.59",
     "circuit-json": "^0.0.489",
@@ -624,7 +621,7 @@
 
     "circuit-to-svg": ["circuit-to-svg@0.0.393", "", { "dependencies": { "@types/node": "^22.5.5", "bun-types": "^1.1.40", "calculate-elbow": "0.0.12", "debug": "^4.4.3", "svg-path-commander": "^2.1.11", "svgson": "^5.3.1", "transformation-matrix": "^2.16.1" }, "peerDependencies": { "@tscircuit/alphabet": "*" } }, "sha512-wyPi94yex6lYMbXpNHyaTzrZM8qqH0nNUJDCl1bzQlpc9Q6P92aU6SwAHEkuxRAmhs3Yk1kS1DZLT9ci3KafDA=="],
 
-    "circuit-to-svg-xray": ["circuit-to-svg@github:tscircuit/circuit-to-svg#569a2e9", { "dependencies": { "@types/node": "^22.5.5", "bun-types": "^1.1.40", "calculate-elbow": "0.0.12", "debug": "^4.4.3", "svg-path-commander": "^2.1.11", "svgson": "^5.3.1", "transformation-matrix": "^2.16.1" }, "peerDependencies": { "@tscircuit/alphabet": "*" } }, "tscircuit-circuit-to-svg-569a2e9"],
+    "circuit-to-svg-xray": ["circuit-to-svg@0.0.425", "", { "dependencies": { "@types/node": "^22.5.5", "bun-types": "^1.1.40", "calculate-elbow": "0.0.12", "debug": "^4.4.3", "svg-path-commander": "^2.1.11", "svgson": "^5.3.1", "transformation-matrix": "^2.16.1" }, "peerDependencies": { "@tscircuit/alphabet": "*" } }, "sha512-VS9+8FCn1QBp12gFsF35IdpX0VMHyLbWJaoExdB5W60S+aTo1eJu620EeRIio+qsefGo1oD/7I0Nn92tWG3xMg=="],
 
     "cli-cursor": ["cli-cursor@5.0.0", "", { "dependencies": { "restore-cursor": "^5.0.0" } }, "sha512-aCj4O5wKyszjMmDT4tZj93kxyydN/K5zPWSCe6/0AV/AA1pqe5ZBIw0a2ZfPQV7lL5/yb5HsUreJ6UFAF1tEQw=="],
 

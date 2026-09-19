@@ -1,6 +1,5 @@
 {
   "name": "@tscircuit/cli",
-  "trustedDependencies": ["circuit-to-svg-xray"],
   "version": "0.1.2104",
   "repository": {
     "type": "git",
@@ -58,7 +57,7 @@
     "circuit-json-trace-length-analysis": "github:tscircuit/circuit-json-trace-length-analysis#2b44792a40df0ca83b6bfb6ac95ed5e35e7168b8",
     "circuit-to-canvas": "^0.0.123",
     "circuit-to-svg": "^0.0.393",
-    "circuit-to-svg-xray": "github:tscircuit/circuit-to-svg#569a2e96315333d70f2d8580c2e304cee6e93e0a",
+    "circuit-to-svg-xray": "npm:circuit-to-svg@0.0.425",
     "commander": "^14.0.0",
     "conf": "^13.1.0",
     "configstore": "^7.0.0",
