@@ -1,11 +1,15 @@
+import {
+  addPcbXRayOptions,
+  getPcbXRaySettings,
+  type PcbXRayCliOptions,
+} from "lib/shared/pcb-x-ray-options"
 import type { Command } from "commander"
 import type { VisibleLayerRef } from "circuit-json"
 import { CAMERA_PRESET_NAMES, type CameraPreset } from "circuit-json-to-3d-png"
 import { snapshotProject } from "lib/shared/snapshot-project"
 
 export const registerSnapshot = (program: Command) => {
-  program
-    .command("snapshot")
+  addPcbXRayOptions(program.command("snapshot"))
     .argument(
       "[path]",
       "Path to file, directory, or glob pattern (e.g., 'examples/**/*.tsx')",
@@ -53,7 +57,7 @@ export const registerSnapshot = (program: Command) => {
           ci?: boolean
           test?: boolean
           concurrency?: string
-        },
+        } & PcbXRayCliOptions,
       ) => {
         if (
           options.cameraPreset &&
@@ -96,7 +100,19 @@ export const registerSnapshot = (program: Command) => {
           process.exit(1)
         }
 
-        let pcbOnly = options.pcbOnly ?? false
+        if (
+          options.xRayNet?.length &&
+          (options.schematicOnly ||
+            options.simulationOnly ||
+            options["3d"] ||
+            options.cameraPreset)
+        ) {
+          console.error(
+            "--x-ray-net cannot be combined with schematic, simulation, or 3D-only options.",
+          )
+          process.exit(1)
+        }
+        let pcbOnly = options.pcbOnly ?? Boolean(options.xRayNet?.length)
         if (pcbLayer) {
           pcbOnly = true
         }
@@ -117,9 +133,10 @@ export const registerSnapshot = (program: Command) => {
           platformConfig: options.disablePartsEngine
             ? { partsEngineDisabled: true }
             : undefined,
-          pcbSnapshotSettingsOverride: options.showCourtyards
-            ? { showCourtyards: true }
-            : undefined,
+          pcbSnapshotSettingsOverride: {
+            ...(options.showCourtyards ? { showCourtyards: true } : {}),
+            ...getPcbXRaySettings(options),
+          },
           cameraPreset: options.cameraPreset as CameraPreset | undefined,
           createDiff: (options.ci ?? false) || (options.test ?? false),
           onExit: (code) => process.exit(code),

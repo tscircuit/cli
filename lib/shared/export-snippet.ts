@@ -1,3 +1,5 @@
+import { convertSvgToPngBuffer } from "./convert-svg-to-png"
+import { convertCircuitJsonToPcbSvg } from "lib/shared/render-pcb-svg"
 import fs from "node:fs"
 import path from "node:path"
 import { promisify } from "node:util"
@@ -21,7 +23,6 @@ import { circuitJsonToStep } from "circuit-json-to-step"
 import { circuitJsonToFdmComponentBox } from "circuit-json-to-fdm-component-box"
 import {
   convertCircuitJsonToAssemblySvg,
-  convertCircuitJsonToPcbSvg,
   convertCircuitJsonToStackedSchematicSheetsSvg,
 } from "circuit-to-svg"
 import { convertCircuitJsonToDsnString } from "dsn-converter"
@@ -46,6 +47,7 @@ export const ALLOWED_EXPORT_FORMATS = [
   "schematic-svg",
   "schematic-pdf",
   "pcb-svg",
+  "pcb-png",
   "gerbers",
   "readable-netlist",
   "gltf",
@@ -70,6 +72,7 @@ const OUTPUT_EXTENSIONS: Record<ExportFormat, string> = {
   "schematic-svg": "-schematic.svg",
   "schematic-pdf": "-schematic.pdf",
   "pcb-svg": "-pcb.svg",
+  "pcb-png": "-pcb.png",
   "assembly-svg": "-assembly.svg",
   gerbers: "-gerbers.zip",
   "readable-netlist": "-readable.netlist",
@@ -218,10 +221,17 @@ export const exportSnippet = async ({
       outputContent = await convertCircuitJsonToSchematicPdf(circuitJson)
       break
     case "pcb-svg":
-      outputContent = convertCircuitJsonToPcbSvg(
-        circuitJson,
-        pcbSnapshotSettings,
-      )
+    case "pcb-png":
+      try {
+        const svg = convertCircuitJsonToPcbSvg(circuitJson, pcbSnapshotSettings)
+        outputContent =
+          format === "pcb-png" ? Buffer.from(convertSvgToPngBuffer(svg)) : svg
+      } catch (error) {
+        onError(
+          `Error rendering PCB image: ${error instanceof Error ? error.message : String(error)}`,
+        )
+        return onExit(1)
+      }
       break
     case "specctra-dsn":
       outputContent = convertCircuitJsonToDsnString(circuitJson)
