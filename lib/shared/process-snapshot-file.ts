@@ -1,13 +1,11 @@
+import { convertCircuitJsonToPcbSvg } from "lib/shared/render-pcb-svg"
 import fs from "node:fs"
 import path from "node:path"
 import type { PlatformConfig } from "@tscircuit/props"
 import type { PcbSnapshotSettings } from "lib/project-config/project-config-schema"
 import type { AnyCircuitElement, VisibleLayerRef } from "circuit-json"
 import { renderCircuitJsonTo3dPng } from "circuit-json-to-3d-png"
-import {
-  convertCircuitJsonToPcbSvg,
-  convertCircuitJsonToStackedSchematicSheetsSvg,
-} from "circuit-to-svg"
+import { convertCircuitJsonToStackedSchematicSheetsSvg } from "circuit-to-svg"
 import kleur from "kleur"
 import type { CameraPreset } from "circuit-json-to-3d-png"
 import { getOrGenerateCircuitJson } from "lib/shared/get-or-generate-circuit-json"
@@ -107,7 +105,7 @@ export const processSnapshotFile = async ({
     try {
       pcbSvg = convertCircuitJsonToPcbSvg(circuitJson, {
         ...pcbSnapshotSettings,
-        layer: pcbLayer,
+        layer: pcbLayer ?? pcbSnapshotSettings?.layer,
       })
     } catch (error) {
       const errorMessage =
@@ -238,10 +236,11 @@ export const processSnapshotFile = async ({
     | { type: "3d"; content: Uint8Array; isBinary: true }
   > = []
   if (!simulationOnly && (pcbOnly || !schematicOnly)) {
-    let pcbSnapshotType: "pcb" | VisibleLayerRef = "pcb"
+    let pcbSnapshotType: string = "pcb"
     if (pcbLayer) {
       pcbSnapshotType = pcbLayer
     }
+    if (pcbSnapshotSettings?.xRayNets?.length) pcbSnapshotType += "-xray"
     snapshots.push({
       type: pcbSnapshotType,
       content: pcbSvg!,

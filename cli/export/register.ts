@@ -1,3 +1,8 @@
+import {
+  addPcbXRayOptions,
+  getPcbXRaySettings,
+  type PcbXRayCliOptions,
+} from "lib/shared/pcb-x-ray-options"
 import type { Command } from "commander"
 import { exportSnippet } from "lib/shared/export-snippet"
 import type { ExportFormat } from "lib/shared/export-snippet"
@@ -15,8 +20,7 @@ import { getPlatformConfigWithCliDefaults } from "lib/shared/get-platform-config
 import { findCircuitProjectDir } from "lib/shared/circuit-json-build-cache"
 
 export const registerExport = (program: Command) => {
-  program
-    .command("export")
+  addPcbXRayOptions(program.command("export"))
     .description("Export tscircuit code to various formats")
     .argument("<file>", "Path to the package file")
     .option(
@@ -24,19 +28,33 @@ export const registerExport = (program: Command) => {
       `Output format (${ALLOWED_EXPORT_FORMATS.join(", ")})`,
     )
     .option("-o, --output <path>", "Output file path")
+    .option("--layer <layer>", "PCB front layer: top or bottom")
     .option("--disable-parts-engine", "Disable the parts engine")
     .option("--show-courtyards", "Show courtyard outlines in PCB SVG output")
     .action(
       async (
         file,
         options: {
+          layer?: "top" | "bottom"
           format?: string
           output?: string
           disablePartsEngine?: boolean
           showCourtyards?: boolean
-        },
+        } & PcbXRayCliOptions,
       ) => {
         const formatOption = options.format ?? "json"
+        if (options.layer && !["top", "bottom"].includes(options.layer)) {
+          console.error("Unknown PCB layer. Valid layers: top, bottom")
+          process.exit(1)
+        }
+        if (
+          (options.xRayNet?.length ||
+            options.hiddenLayerOpacity !== undefined) &&
+          !["pcb-svg", "pcb-png"].includes(formatOption)
+        ) {
+          console.error("X-Ray options require --format pcb-svg or pcb-png.")
+          process.exit(1)
+        }
         const projectConfig = await loadRuntimeProjectConfig(process.cwd())
 
         const commandPlatformConfig: PlatformConfig | undefined =
@@ -95,9 +113,12 @@ export const registerExport = (program: Command) => {
           format,
           outputPath: options.output,
           platformConfig: platformConfigWithCliDefaults,
-          pcbSnapshotSettings: options.showCourtyards
-            ? { showCourtyards: true }
-            : undefined,
+          pcbSnapshotSettings: {
+            ...projectConfig?.pcbSnapshotSettings,
+            ...(options.showCourtyards ? { showCourtyards: true } : {}),
+            ...getPcbXRaySettings(options),
+            ...(options.layer ? { layer: options.layer } : {}),
+          },
           onExit: (code) => process.exit(code),
           onError: (message) => console.error(message),
           onSuccess: ({ outputDestination }) =>

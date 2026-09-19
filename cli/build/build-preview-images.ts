@@ -1,11 +1,9 @@
+import { convertCircuitJsonToPcbSvg } from "lib/shared/render-pcb-svg"
 import fs from "node:fs"
 import path from "node:path"
 import type { AnyCircuitElement } from "circuit-json"
 import { renderCircuitJsonTo3dPng } from "circuit-json-to-3d-png"
-import {
-  convertCircuitJsonToPcbSvg,
-  convertCircuitJsonToSchematicSvg,
-} from "circuit-to-svg"
+import { convertCircuitJsonToSchematicSvg } from "circuit-to-svg"
 import type { PcbSnapshotSettings } from "lib/project-config/project-config-schema"
 import { convertSvgToPngBuffer } from "lib/shared/convert-svg-to-png"
 import type { BuildImageFormatSelection } from "./image-format-selection"

@@ -1,13 +1,11 @@
+import { convertCircuitJsonToPcbSvg } from "lib/shared/render-pcb-svg"
 import fs from "node:fs"
 import path from "node:path"
 import type { AnyCircuitElement } from "circuit-json"
 import { renderCircuitJsonTo3dPng } from "circuit-json-to-3d-png"
 import { convertCircuitJsonToGltf } from "circuit-json-to-gltf"
 import { circuitJsonToStep } from "circuit-json-to-step"
-import {
-  convertCircuitJsonToPcbSvg,
-  convertCircuitJsonToSchematicSvg,
-} from "circuit-to-svg"
+import { convertCircuitJsonToSchematicSvg } from "circuit-to-svg"
 import { loadLocalStepModelFsMap } from "lib/shared/load-local-step-model-fs-map"
 import { getSimulationSvgAssetsFromCircuitJson } from "lib/shared/simulation-svg-assets"
 import type { PcbSnapshotSettings } from "../../lib/project-config/project-config-schema"

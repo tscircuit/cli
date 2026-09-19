@@ -81,6 +81,41 @@ The `build` command also accepts the following options:
 - `--ignore-placement-drc` - suppress placement DRC diagnostics
 - `--ignore-routing-drc` - suppress routing DRC diagnostics
 
+### X-Ray PCB images
+
+Inspect one or more nets by exact net/trace name, generated trace display name,
+or a connected Circuit JSON element ID. Repeat `--x-ray-net` to add nets:
+
+```sh
+tsci export board.tsx --format pcb-svg --x-ray-net GND --hidden-layer-opacity 0.05 --output ground.svg
+tsci export board.circuit.json --format pcb-png --x-ray-net GND --x-ray-net VCC --layer bottom --output power.png
+tsci snapshot board.tsx --x-ray-net GND --hidden-layer-opacity 0.05 --update
+```
+
+Selected copper and via/plated-hole drills stay opaque on every layer. Other
+copper uses the specified opacity (0–1, default 0.2). Non-copper layers and
+unrelated drills are hidden. During X-Ray, `--layer` brings that copper layer to
+the front. Unknown or ambiguous names fail with an error; use an element ID to
+disambiguate. Names containing spaces must be quoted.
+
+X-Ray snapshots imply `--pcb-only` and use a `-pcb-xray.snap.svg` suffix (or
+`-top-xray.snap.svg` / `-bottom-xray.snap.svg` with `--layer`), keeping ordinary
+snapshots separate. Double-check the selected nets when updating an existing
+X-Ray snapshot.
+
+The same settings can be saved in `tscircuit.config.json` for build previews,
+exports, and snapshots:
+
+```json
+{
+  "pcbSnapshotSettings": {
+    "xRayNets": ["GND", "VCC"],
+    "hiddenLayerOpacity": 0.05,
+    "layer": "top"
+  }
+}
+```
+
 ### Altium export
 
 Export a TSX circuit or an existing Circuit JSON file as an Altium project:
