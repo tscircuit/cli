@@ -16,7 +16,7 @@
     "@tscircuit/check-shorts": "https://jscdn.tscircuit.com/@tscircuit/check-shorts/0.0.24.tgz",
     "@tscircuit/circuit-json-placement-analysis": "^0.0.15",
     "@tscircuit/circuit-json-routing-analysis": "^0.0.8",
-    "@tscircuit/circuit-json-schematic-placement-analysis": "github:tscircuit/circuit-json-schematic-placement-analysis#41260fc05b736c0f3fdc33892b6da0ece40107b9",
+    "@tscircuit/circuit-json-schematic-placement-analysis": "github:tscircuit/circuit-json-schematic-placement-analysis#59114bedae176e652c99c9835e5803001bd27304",
     "@tscircuit/circuit-json-util": "^0.0.113",
     "@tscircuit/eval": "0.0.1402",
     "@tscircuit/fake-snippets": "^0.0.182",
