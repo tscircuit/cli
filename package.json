@@ -28,6 +28,7 @@
     "@tscircuit/props": "^0.0.657",
     "@tscircuit/runframe": "^0.0.2783",
     "@tscircuit/schematic-match-adapt": "^0.0.22",
+    "@tscircuit/schematic-trace-solver": "^0.0.204",
     "@tscircuit/solver-utils": "0.0.16",
     "@types/bun": "^1.2.2",
     "@types/configstore": "^6.0.2",
@@ -87,6 +88,7 @@
     "prompts": "^2.4.2",
     "proper-lockfile": "^4.1.2",
     "redaxios": "^0.5.1",
+    "schematic-symbols": "^0.0.246",
     "semver": "^7.6.3",
     "spicets": "^0.0.4",
     "stepts": "^0.0.3",
@@ -115,10 +117,7 @@
   },
   "overrides": {
     "circuit-json": "^0.0.489",
-    "altiumts": "0.0.59",
-    "circuit-to-svg": "0.0.429",
-    "schematic-symbols": "0.0.246",
-    "@tscircuit/schematic-trace-solver": "0.0.204"
+    "altiumts": "0.0.59"
   },
   "scripts": {
     "start": "bun run dev",
