@@ -12,6 +12,25 @@ interface RegistryPackagesUpdateOptions {
   unlinkGithub?: boolean
 }
 
+export const normalizeGithubRepo = (input: string): string => {
+  let repo = input
+  const urlMatch =
+    /^https?:\/\/(?:www\.)?github\.com\/([^?#]+)(?:[?#].*)?$/i.exec(input)
+  if (urlMatch) {
+    repo = urlMatch[1].replace(/\/$/, "").replace(/\.git$/, "")
+  }
+  if (
+    !/^[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,37}[a-zA-Z0-9])?\/(?!\.{1,2}$)[a-zA-Z0-9_.-]{1,100}$/.test(
+      repo,
+    )
+  ) {
+    throw new Error(
+      "GitHub repository must be owner/repo or a GitHub repository URL (for example, https://github.com/tscircuit/my-board)",
+    )
+  }
+  return repo
+}
+
 export const getCurrentDirectoryPackageName = (): string | undefined => {
   const packageJsonPath = path.join(process.cwd(), "package.json")
 
@@ -47,8 +66,8 @@ export const registerRegistryPackagesUpdate = (program: Command) => {
     .option("--enable-public-dist", "Enable public dist")
     .option("--disable-public-dist", "Disable public dist")
     .option(
-      "--github-repo <owner/repo>",
-      "Link a GitHub repository, as in package settings",
+      "--github-repo <owner/repo-or-url>",
+      "Link a GitHub repository by owner/repo or URL",
     )
     .option("--unlink-github", "Remove the linked GitHub repository")
     .action(async (opts: RegistryPackagesUpdateOptions) => {
@@ -79,15 +98,12 @@ export const registerRegistryPackagesUpdate = (program: Command) => {
         process.exit(1)
       }
 
-      if (
-        opts.githubRepo !== undefined &&
-        !/^[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,37}[a-zA-Z0-9])?\/[a-zA-Z0-9_.-]{1,100}$/.test(
-          opts.githubRepo,
-        )
-      ) {
-        console.error(
-          "GitHub repository must be in owner/repo format (for example, tscircuit/my-board)",
-        )
+      let githubRepo: string | undefined
+      try {
+        if (opts.githubRepo !== undefined)
+          githubRepo = normalizeGithubRepo(opts.githubRepo)
+      } catch (error) {
+        console.error(error instanceof Error ? error.message : String(error))
         process.exit(1)
       }
 
@@ -125,7 +141,7 @@ export const registerRegistryPackagesUpdate = (program: Command) => {
               ? { public_dist_enabled: publicDistEnabled }
               : {}),
             ...(opts.githubRepo !== undefined
-              ? { github_repo_full_name: opts.githubRepo }
+              ? { github_repo_full_name: githubRepo }
               : {}),
             ...(opts.unlinkGithub ? { github_repo_full_name: null } : {}),
           },

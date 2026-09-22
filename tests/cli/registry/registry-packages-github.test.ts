@@ -1,6 +1,7 @@
 import { expect, test } from "bun:test"
 import fs from "node:fs"
 import path from "node:path"
+import { normalizeGithubRepo } from "cli/registry/packages/update/register"
 import { getCliTestFixture } from "tests/fixtures/get-cli-test-fixture"
 
 const setup = async () => {
@@ -49,7 +50,7 @@ test("explicit package overrides cwd and unlink preserves other settings", async
   expect(
     (
       await runCommand(
-        "tsci registry packages update --package-name test-user/github-board --github-repo tscircuit/second",
+        "tsci registry packages update --package-name test-user/github-board --github-repo https://github.com/tscircuit/second.git/",
       )
     ).exitCode,
   ).toBe(0)
@@ -73,7 +74,7 @@ test("invalid or conflicting flags fail without changing the repository", async 
   const { runCommand, registryDb, packageId } = await setup()
   for (const flags of [
     "--github-repo owner/repo --unlink-github",
-    "--github-repo https://github.com/owner/repo",
+    "--github-repo https://gitlab.com/owner/repo",
     "--github-repo owner/repo/extra",
     "--github-repo repo",
     "--enable-public-dist --disable-public-dist --github-repo owner/repo",
@@ -186,3 +187,32 @@ test("update payload includes only requested settings and resolves package IDs",
     server.stop(true)
   }
 }, 30_000)
+
+test("normalizes GitHub repository URLs without accepting other sites or subpages", () => {
+  for (const input of [
+    "owner/repo",
+    "https://github.com/owner/repo",
+    "https://github.com/owner/repo/",
+    "https://github.com/owner/repo.git",
+    "https://github.com/owner/repo.git/",
+    "http://github.com/owner/repo",
+    "https://www.github.com/owner/repo?tab=readme-ov-file#readme",
+  ])
+    expect(normalizeGithubRepo(input)).toBe("owner/repo")
+  for (const input of [
+    "https://gitlab.com/owner/repo",
+    "https://github.com.example.org/owner/repo",
+    "https://github.com@evil.example/owner/repo",
+    "https://user:password@github.com/owner/repo",
+    "https://github.com/owner/repo/tree/main",
+    "https://github.com/owner/repo/issues/1",
+    "https://github.com/owner",
+    "https://github.com/owner//repo",
+    "https://github.com/owner/repo/../other",
+    "owner/..",
+    "",
+  ])
+    expect(() => normalizeGithubRepo(input)).toThrow(
+      "GitHub repository must be",
+    )
+})

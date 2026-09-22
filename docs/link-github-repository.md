@@ -6,6 +6,14 @@ From a package directory, run:
 tsci registry packages update --github-repo tscircuit/my-board
 ```
 
+GitHub repository URLs also work, including `.git` URLs and trailing slashes:
+
+```sh
+tsci registry packages update --github-repo https://github.com/tscircuit/my-board
+```
+
+URLs are normalized to `owner/repo`; links to issues, branches, or other sites are rejected.
+
 The command reads the package name from `package.json`, including the
 `@tsci/owner.package` format. To select a package explicitly:
 
