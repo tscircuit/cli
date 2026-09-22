@@ -1,32 +1,70 @@
 import path from "node:path"
 import fs from "node:fs"
-import { rollup } from "rollup"
-import typescript from "@rollup/plugin-typescript"
-import resolve from "@rollup/plugin-node-resolve"
-import commonjs from "@rollup/plugin-commonjs"
-import json from "@rollup/plugin-json"
-import dts from "rollup-plugin-dts"
 import kleur from "kleur"
-import ts from "typescript"
 
 import {
   createStaticAssetPlugin,
   STATIC_ASSET_EXTENSIONS,
 } from "./static-asset-plugin"
 
-const [typescriptMajor, typescriptMinor] = ts.versionMajorMinor
-  .split(".")
-  .map(Number)
-// TypeScript 5.7+ can emit projects that import .ts/.tsx paths by rewriting
-// those specifiers, instead of reporting TS5097 or requiring noEmit.
-const supportsRewriteRelativeImportExtensions =
-  typescriptMajor > 5 || (typescriptMajor === 5 && typescriptMinor >= 7)
-const typescriptExtensionEmitOptions = supportsRewriteRelativeImportExtensions
-  ? {
-      allowImportingTsExtensions: true,
-      rewriteRelativeImportExtensions: true,
-    }
-  : { allowImportingTsExtensions: false }
+// The bundler stack (rollup plugins + the user's typescript install) is only
+// needed when transpiling. Loading it lazily keeps `tsci` usable in projects
+// whose typescript version cannot even be parsed by @rollup/plugin-typescript
+// (e.g. the TypeScript 7 native port, which dropped ts.ModuleKind).
+const loadBundlerDeps = async () => {
+  const ts = (await import("typescript")).default
+  const [typescriptMajor, typescriptMinor] = ts.versionMajorMinor
+    .split(".")
+    .map(Number)
+  if (
+    !Number.isFinite(typescriptMajor) ||
+    typescriptMajor >= 6 ||
+    ts.ModuleKind?.ES2015 === undefined
+  ) {
+    throw new Error(
+      `Installed TypeScript ${ts.version} is not supported by the ` +
+        `transpiler (@rollup/plugin-typescript requires TypeScript 5.x). ` +
+        `Pin typescript@^5 in your project, e.g. \`bun add -D typescript@5\`.`,
+    )
+  }
+
+  const [
+    { rollup },
+    { default: typescript },
+    { default: resolve },
+    { default: commonjs },
+    { default: json },
+    { default: dts },
+  ] = await Promise.all([
+    import("rollup"),
+    import("@rollup/plugin-typescript"),
+    import("@rollup/plugin-node-resolve"),
+    import("@rollup/plugin-commonjs"),
+    import("@rollup/plugin-json"),
+    import("rollup-plugin-dts"),
+  ])
+
+  // TypeScript 5.7+ can emit projects that import .ts/.tsx paths by rewriting
+  // those specifiers, instead of reporting TS5097 or requiring noEmit.
+  const supportsRewriteRelativeImportExtensions =
+    typescriptMajor > 5 || (typescriptMajor === 5 && typescriptMinor >= 7)
+  const typescriptExtensionEmitOptions = supportsRewriteRelativeImportExtensions
+    ? {
+        allowImportingTsExtensions: true,
+        rewriteRelativeImportExtensions: true,
+      }
+    : { allowImportingTsExtensions: false }
+
+  return {
+    rollup,
+    typescript,
+    resolve,
+    commonjs,
+    json,
+    dts,
+    typescriptExtensionEmitOptions,
+  }
+}
 
 const createExternalFunction =
   (projectDir: string, tsconfigPath?: string) =>
@@ -101,6 +139,16 @@ export const transpileFile = async ({
 }): Promise<boolean> => {
   try {
     fs.mkdirSync(outputDir, { recursive: true })
+
+    const {
+      rollup,
+      typescript,
+      resolve,
+      commonjs,
+      json,
+      dts,
+      typescriptExtensionEmitOptions,
+    } = await loadBundlerDeps()
 
     // Check if user has a tsconfig.json
     const tsconfigPath = path.join(projectDir, "tsconfig.json")
