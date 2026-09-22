@@ -56,8 +56,8 @@
     "circuit-json-to-tscircuit": "^0.0.42",
     "circuit-json-trace-length-analysis": "github:tscircuit/circuit-json-trace-length-analysis#2b44792a40df0ca83b6bfb6ac95ed5e35e7168b8",
     "circuit-to-canvas": "^0.0.123",
-    "circuit-to-svg": "^0.0.393",
-    "circuit-to-svg-xray": "npm:circuit-to-svg@0.0.425",
+    "circuit-to-svg": "^0.0.429",
+    "circuit-to-svg-xray": "npm:circuit-to-svg@0.0.429",
     "commander": "^14.0.0",
     "conf": "^13.1.0",
     "configstore": "^7.0.0",
@@ -115,7 +115,10 @@
   },
   "overrides": {
     "circuit-json": "^0.0.489",
-    "altiumts": "0.0.59"
+    "altiumts": "0.0.59",
+    "circuit-to-svg": "0.0.429",
+    "schematic-symbols": "0.0.246",
+    "@tscircuit/schematic-trace-solver": "0.0.204"
   },
   "scripts": {
     "start": "bun run dev",
