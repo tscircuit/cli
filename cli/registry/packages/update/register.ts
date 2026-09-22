@@ -1,13 +1,15 @@
-import type { Command } from "commander"
-import { getRegistryApiKy } from "lib/registry-api/get-ky"
-import kleur from "kleur"
 import fs from "node:fs"
 import path from "node:path"
+import type { Command } from "commander"
+import kleur from "kleur"
+import { getRegistryApiKy } from "lib/registry-api/get-ky"
 
 interface RegistryPackagesUpdateOptions {
   packageName?: string
   enablePublicDist?: boolean
   disablePublicDist?: boolean
+  githubRepo?: string
+  unlinkGithub?: boolean
 }
 
 export const getCurrentDirectoryPackageName = (): string | undefined => {
@@ -44,6 +46,11 @@ export const registerRegistryPackagesUpdate = (program: Command) => {
     .option("--package-name <packageName>", "Package name to update")
     .option("--enable-public-dist", "Enable public dist")
     .option("--disable-public-dist", "Disable public dist")
+    .option(
+      "--github-repo <owner/repo>",
+      "Link a GitHub repository, as in package settings",
+    )
+    .option("--unlink-github", "Remove the linked GitHub repository")
     .action(async (opts: RegistryPackagesUpdateOptions) => {
       const packageName = opts.packageName ?? getCurrentDirectoryPackageName()
 
@@ -67,24 +74,60 @@ export const registerRegistryPackagesUpdate = (program: Command) => {
         process.exit(1)
       }
 
+      if (opts.githubRepo !== undefined && opts.unlinkGithub) {
+        console.error("Cannot use both --github-repo and --unlink-github")
+        process.exit(1)
+      }
+
+      if (
+        opts.githubRepo !== undefined &&
+        !/^[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,37}[a-zA-Z0-9])?\/[a-zA-Z0-9_.-]{1,100}$/.test(
+          opts.githubRepo,
+        )
+      ) {
+        console.error(
+          "GitHub repository must be in owner/repo format (for example, tscircuit/my-board)",
+        )
+        process.exit(1)
+      }
+
       const publicDistEnabled = getPublicDistEnabledFromOptions({
         enablePublicDist: opts.enablePublicDist,
         disablePublicDist: opts.disablePublicDist,
       })
 
-      if (publicDistEnabled === undefined) {
+      if (
+        publicDistEnabled === undefined &&
+        opts.githubRepo === undefined &&
+        !opts.unlinkGithub
+      ) {
         console.error(
-          "You must provide either --enable-public-dist or --disable-public-dist",
+          "You must provide --enable-public-dist, --disable-public-dist, --github-repo, or --unlink-github",
         )
         process.exit(1)
       }
 
       try {
         const ky = getRegistryApiKy()
+        // package.json uses @tsci/owner.package; the registry lookup uses owner/package.
+        const registryName = packageName.startsWith("@tsci/")
+          ? packageName.slice(6).replace(".", "/")
+          : packageName.replace(/^@/, "")
+        const { package: pkg } = await ky
+          .post("packages/get", {
+            json: { name: registryName },
+          })
+          .json<{ package: { package_id: string } }>()
         await ky.post("packages/update", {
           json: {
-            package_name: packageName,
-            public_dist_enabled: publicDistEnabled,
+            package_id: pkg.package_id,
+            ...(publicDistEnabled !== undefined
+              ? { public_dist_enabled: publicDistEnabled }
+              : {}),
+            ...(opts.githubRepo !== undefined
+              ? { github_repo_full_name: opts.githubRepo }
+              : {}),
+            ...(opts.unlinkGithub ? { github_repo_full_name: null } : {}),
           },
         })
         console.log(kleur.green(`Updated package ${packageName}`))
