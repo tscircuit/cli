@@ -47,3 +47,45 @@ export default () => (
   expect(fileNames).toContain("my-board.kicad_pcb")
   expect(fileNames).toContain("my-board.kicad_pro")
 }, 60_000)
+
+test("build --kicad-project writes every hierarchical schematic sheet", async () => {
+  const { tmpDir, runCommand } = await getCliTestFixture()
+
+  const circuitPath = path.join(tmpDir, "my-board.tsx")
+  await writeFile(
+    circuitPath,
+    `
+export default () => (
+  <board width="20mm" height="20mm" routingDisabled>
+    <schematicsheet name="Sheet 1" displayName="Sheet 1" sheetIndex={0} />
+    <schematicsheet name="Sheet 2" displayName="Sheet 2" sheetIndex={1} />
+    <resistor resistance="1k" footprint="0402" name="R1" pcbX={3} schSheetName="Sheet 1" />
+    <capacitor capacitance="1000pF" footprint="0402" name="C1" pcbX={-3} schSheetName="Sheet 2" />
+  </board>
+)
+`,
+  )
+
+  await writeFile(
+    path.join(tmpDir, "package.json"),
+    JSON.stringify({ type: "module", dependencies: { react: "^19.1.0" } }),
+  )
+
+  await runCommand("tsci install")
+
+  const { stderr } = await runCommand(
+    `tsci build --kicad-project ${circuitPath}`,
+  )
+  expect(stderr).toBe("")
+
+  const kicadDir = path.join(tmpDir, "dist", "my-board", "kicad")
+  const schFilenames = fs
+    .readdirSync(kicadDir)
+    .filter((f) => f.endsWith(".kicad_sch"))
+    .sort()
+  expect(schFilenames).toEqual([
+    "my-board.kicad_sch",
+    "sheet_1.kicad_sch",
+    "sheet_2.kicad_sch",
+  ])
+}, 60_000)

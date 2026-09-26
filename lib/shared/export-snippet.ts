@@ -305,7 +305,13 @@ export const exportSnippet = async ({
       proConverter.runUntilFinished()
 
       const zip = new JSZip()
-      zip.file(`${outputBaseName}.kicad_sch`, schConverter.getOutputString())
+      // Hierarchical schematics produce one file per sheet; the root sheet
+      // references the others by filename, so all of them must be written
+      for (const schFile of schConverter.getOutputFiles({
+        schematicFilename: `${outputBaseName}.kicad_sch`,
+      })) {
+        zip.file(schFile.filename, schFile.content)
+      }
       zip.file(`${outputBaseName}.kicad_pcb`, pcbConverter.getOutputString())
       zip.file(`${outputBaseName}.kicad_pro`, proConverter.getOutputString())
 

@@ -130,3 +130,58 @@ test("export kicad zip includes 3d models", async () => {
     expect(content.length).toBeGreaterThan(0)
   }
 }, 60_000)
+
+const hierarchicalCircuitCode = `
+export default () => (
+  <board width="20mm" height="20mm" routingDisabled>
+    <schematicsheet name="Sheet 1" displayName="Sheet 1" sheetIndex={0} />
+    <schematicsheet name="Sheet 2" displayName="Sheet 2" sheetIndex={1} />
+    <resistor
+      resistance="1k"
+      footprint="0402"
+      name="R1"
+      pcbX={3}
+      schSheetName="Sheet 1"
+    />
+    <capacitor
+      capacitance="1000pF"
+      footprint="0402"
+      name="C1"
+      pcbX={-3}
+      schSheetName="Sheet 2"
+    />
+  </board>
+)`
+
+test("export kicad zip includes every hierarchical schematic sheet", async () => {
+  const { tmpDir, runCommand } = await getCliTestFixture()
+  const circuitPath = path.join(tmpDir, "test-circuit.tsx")
+
+  await writeFile(circuitPath, hierarchicalCircuitCode)
+
+  const { stderr } = await runCommand(`tsci export ${circuitPath} -f kicad_zip`)
+
+  expect(stderr).toBe("")
+
+  const zipBuffer = await readFile(path.join(tmpDir, "test-circuit-kicad.zip"))
+  const zip = await JSZip.loadAsync(zipBuffer)
+
+  const schFilenames = Object.keys(zip.files)
+    .filter((f) => f.endsWith(".kicad_sch"))
+    .sort()
+  expect(schFilenames).toEqual([
+    "sheet_1.kicad_sch",
+    "sheet_2.kicad_sch",
+    "test-circuit.kicad_sch",
+  ])
+
+  // The root sheet references each child sheet file by name
+  const rootContent = await zip.file("test-circuit.kicad_sch")!.async("string")
+  expect(rootContent).toContain('"Sheetfile" "sheet_1.kicad_sch"')
+  expect(rootContent).toContain('"Sheetfile" "sheet_2.kicad_sch"')
+
+  const sheet1Content = await zip.file("sheet_1.kicad_sch")!.async("string")
+  const sheet2Content = await zip.file("sheet_2.kicad_sch")!.async("string")
+  expect(sheet1Content).toContain('"Reference" "R1"')
+  expect(sheet2Content).toContain('"Reference" "C1"')
+}, 60_000)
