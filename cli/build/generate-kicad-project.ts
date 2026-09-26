@@ -62,7 +62,6 @@ export const generateKicadProject = async ({
     circuitJson as AnyCircuitElement[],
   )
   schConverter.runUntilFinished()
-  const schContent = schConverter.getOutputString()
 
   const sanitizedProjectName =
     projectName.trim().length > 0 ? projectName.trim() : "project"
@@ -77,6 +76,13 @@ export const generateKicadProject = async ({
   const boardFileName = `${sanitizedProjectName}.kicad_pcb`
   const projectFileName = `${sanitizedProjectName}.kicad_pro`
 
+  // Hierarchical schematics produce one file per sheet; the root sheet
+  // (always first) references the others by filename
+  const schFiles = schConverter.getOutputFiles({
+    schematicFilename: schematicFileName,
+  })
+  const schContent = schFiles[0]!.content
+
   const proContent = createKicadProContent({
     projectName: sanitizedProjectName,
     schematicFileName,
@@ -85,7 +91,9 @@ export const generateKicadProject = async ({
 
   if (writeFiles) {
     fs.mkdirSync(outputDir, { recursive: true })
-    fs.writeFileSync(path.join(outputDir, schematicFileName), schContent)
+    for (const schFile of schFiles) {
+      fs.writeFileSync(path.join(outputDir, schFile.filename), schFile.content)
+    }
     fs.writeFileSync(path.join(outputDir, boardFileName), pcbContent)
     fs.writeFileSync(path.join(outputDir, projectFileName), proContent)
 
