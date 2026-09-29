@@ -90,6 +90,14 @@ export async function generateCircuitJson({
   const runner = new userLandTscircuit.RootCircuit({
     platform: platformConfig,
   })
+  const asyncEffectFailures: string[] = []
+  runner.on("asyncEffect:end", (event) => {
+    if (event.error !== undefined) {
+      asyncEffectFailures.push(
+        `${event.phase} (${event.effectName}): ${event.error}`,
+      )
+    }
+  })
   const autorouterDiagnostics = new AutorouterDiagnostics(
     autorouterDiagnosticsOptions,
   )
@@ -194,6 +202,14 @@ export async function generateCircuitJson({
 
   runner.emit("renderComplete")
   solverDiagnostics?.finalize()
+
+  // A settled render can still contain failed effects. In particular, a DRC
+  // exception may leave no error elements in Circuit JSON at all.
+  if (asyncEffectFailures.length > 0) {
+    throw new Error(
+      `Circuit rendering did not complete successfully:\n${asyncEffectFailures.join("\n")}`,
+    )
+  }
 
   // Get the circuit JSON
   const circuitJson = addSourceFilesystemHash(
