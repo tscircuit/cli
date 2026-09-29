@@ -91,13 +91,16 @@ export async function generateCircuitJson({
     platform: platformConfig,
   })
   const asyncEffectFailures: string[] = []
-  runner.on("asyncEffect:end", (event) => {
-    if (event.error !== undefined) {
-      asyncEffectFailures.push(
-        `${event.phase} (${event.effectName}): ${event.error}`,
-      )
-    }
-  })
+  runner.on(
+    "asyncEffect:end",
+    (event: { phase: string; effectName: string; error?: string }) => {
+      if (event.error !== undefined) {
+        asyncEffectFailures.push(
+          `${event.phase} (${event.effectName}): ${event.error}`,
+        )
+      }
+    },
+  )
   const autorouterDiagnostics = new AutorouterDiagnostics(
     autorouterDiagnosticsOptions,
   )
