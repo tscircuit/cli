@@ -9,6 +9,7 @@ import {
   AutorouterDiagnostics,
   type AutorouterDiagnosticsOptions,
 } from "./autorouter-diagnostics"
+import { attachAutoroutingArtifacts } from "./autorouting-artifacts"
 import { importFromUserLand } from "./importFromUserLand"
 import { registerStaticAssetLoaders } from "./register-static-asset-loaders"
 import {
@@ -97,6 +98,7 @@ export async function generateCircuitJson({
     ? new SolverDiagnostics(solverDiagnosticsOptions)
     : null
   solverDiagnostics?.attachToRootCircuit(runner)
+  attachAutoroutingArtifacts(runner, filePath, projectRootDir)
   const absoluteFilePath = path.isAbsolute(filePath)
     ? filePath
     : path.resolve(projectRootDir, filePath)

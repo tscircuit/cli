@@ -20,6 +20,7 @@ test("build --solver-debug writes schematic solver constructor inputs", async ()
           />
           <led
             name="D1"
+            pinLabels={{ pin1: "cathode", pin2: "anode" }}
             footprint="0603"
             schX={2}
             pcbX={2}
