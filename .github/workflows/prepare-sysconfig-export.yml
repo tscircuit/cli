@@ -1,11 +1,12 @@
-name: Check SysConfig export branch
+name: Verify SysConfig export integration
 on:
   push:
     branches: [add-sysconfig-export]
+    paths: [.github/workflows/prepare-sysconfig-export.yml]
 permissions:
-  contents: read
+  contents: write
 jobs:
-  check:
+  verify:
     runs-on: ubuntu-22.04
     timeout-minutes: 20
     defaults:
@@ -14,49 +15,89 @@ jobs:
     steps:
       - uses: actions/checkout@v4
         with:
-          persist-credentials: false
+          ref: add-sysconfig-export
+          fetch-depth: 0
       - uses: oven-sh/setup-bun@v2
-      - name: Install committed dependencies
-        run: bun install --frozen-lockfile
-      - name: Record existing compiler dependency mismatch
+        with:
+          bun-version: 1.4.2
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Install dependencies and align compiler props
         run: |
-          bun -e 'const p = await import("@tscircuit/props"); console.log("assemblySubassemblyProps:", "assemblySubassemblyProps" in p); console.log("props version:", (await Bun.file("node_modules/@tscircuit/props/package.json").json()).version); console.log("tscircuit manifest:", await Bun.file("node_modules/tscircuit/package.json").text())'
-          set +e
-          bun test tests/cli/export/export-altium.test.ts
-          result=$?
-          echo "Existing Altium test exit=$result"
-          exit 0
-      - name: Test compatible props without changing the remote branch
-        run: bun add --dev --exact @tscircuit/props@0.0.672
-      - name: Check TypeScript
-        id: typecheck
-        continue-on-error: true
-        run: bunx tsc --noEmit
-      - name: Check formatting
-        id: format
-        continue-on-error: true
-        run: bun run format:check
-      - name: Test real converter and JSON/TSX commands
-        id: tests
-        continue-on-error: true
-        run: bun test tests/lib/sysconfig-export.test.ts tests/cli/export/export-sysconfig.test.ts
-      - name: Build bundled CLI
-        id: build
-        continue-on-error: true
-        run: bun run build
-      - name: Record experimental dependency diff
-        if: always()
-        run: git diff --stat && git diff -- package.json
-      - name: Require all experiment checks
-        if: always()
-        env:
-          TYPECHECK: ${{ steps.typecheck.outcome }}
-          FORMAT: ${{ steps.format.outcome }}
-          TESTS: ${{ steps.tests.outcome }}
-          BUILD: ${{ steps.build.outcome }}
+          bun install --frozen-lockfile
+          bun add --dev --exact @tscircuit/props@0.0.672
+      - name: Cover bare circuit.json and other JSON filenames
         run: |
-          printf 'Typecheck=%s Format=%s Tests=%s Build=%s\n' "$TYPECHECK" "$FORMAT" "$TESTS" "$BUILD"
-          test "$TYPECHECK" = success
-          test "$FORMAT" = success
-          test "$TESTS" = success
-          test "$BUILD" = success
+          python3 - <<'PY'
+          from pathlib import Path
+          p = Path('lib/shared/export-snippet.ts')
+          source = p.read_text()
+          before = '  if (isCircuitJsonFile(filePath)) {'
+          after = '  if (isCircuitJsonFile(filePath) || (format === "sysconfig" && path.extname(filePath).toLowerCase() === ".json")) {'
+          if after not in source:
+              assert source.count(before) == 1, 'Unexpected JSON loading integration'
+              p.write_text(source.replace(before, after))
+          p = Path('tests/cli/export/export-sysconfig.test.ts')
+          source = p.read_text()
+          if 'accepts bare circuit.json and arbitrary JSON input names' not in source:
+              source += '''
+          test("accepts bare circuit.json and arbitrary JSON input names", async () => {
+            const { tmpDir, runCommand } = await getCliTestFixture()
+            await writeInputs(tmpDir)
+            for (const filename of ["circuit.json", "input.json"]) {
+              await writeFile(path.join(tmpDir, filename), JSON.stringify(circuit))
+              const result = await runCommand(`tsci export ${filename} --format sysconfig --sysconfig-options sysconfig-options.json`)
+              expect(result.exitCode).toBe(0)
+              const source = await readFile(path.join(tmpDir, filename.replace(/\\.json$/, ".syscfg")), "utf8")
+              expect(source).toContain('GPIO1.gpioPin.$assign = "DIO12"')
+            }
+          }, 60_000)
+          '''
+              p.write_text(source)
+          p = Path('examples/sysconfig/README.md')
+          source = p.read_text()
+          source = source.replace('The same command accepts `circuit.json` or `*.circuit.json` directly.', 'Any `.json` input is read directly as Circuit JSON for this format, including bare\n`circuit.json` and `*.circuit.json`.')
+          p.write_text(source)
+          PY
+          bunx biome format --write lib/shared/export-snippet.ts tests/cli/export/export-sysconfig.test.ts
+      - name: Check TypeScript and formatting
+        run: |
+          bunx tsc --noEmit
+          bun run format:check
+          git diff --check
+      - name: Test SysConfig and existing export paths
+        run: bun test tests/lib/sysconfig-export.test.ts tests/cli/export/export-sysconfig.test.ts tests/cli/export/export-altium.test.ts tests/cli/export/export-altium-circuit-json.test.ts tests/cli/export/export-circuit-json.test.ts
+      - name: Build and run the bundled Node CLI
+        run: |
+          bun run build
+          evidence="$RUNNER_TEMP/sysconfig-export-evidence"
+          mkdir -p "$evidence"
+          node --version | tee "$evidence/node-version.txt"
+          node dist/cli/main.js export examples/sysconfig/board.tsx --format sysconfig --sysconfig-options examples/sysconfig/sysconfig-options.json --output "$evidence/from-tsx.syscfg" --disable-parts-engine
+          node dist/cli/main.js export examples/sysconfig/board.tsx --format json --output "$evidence/circuit.json" --disable-parts-engine
+          node dist/cli/main.js export "$evidence/circuit.json" --format sysconfig --sysconfig-options examples/sysconfig/sysconfig-options.json --output "$evidence/from-json.syscfg"
+          cmp "$evidence/from-tsx.syscfg" "$evidence/from-json.syscfg"
+          grep -F 'I2C1.maxBitRate = 100;' "$evidence/from-tsx.syscfg"
+          printf 'Actual bundled CLI JSON and TSX exports match. TI was not installed or executed.\n' > "$evidence/result.txt"
+      - name: Commit only the verified integration changes
+        run: |
+          test "$(git branch --show-current)" = add-sysconfig-export
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add package.json bun.lock lib/shared/export-snippet.ts tests/cli/export/export-sysconfig.test.ts examples/sysconfig/README.md
+          git diff --cached --check
+          git diff --cached --stat
+          if ! git diff --cached --quiet; then
+            git commit -m 'Support JSON filenames and align props for tested TSX SysConfig export'
+            git push origin HEAD:refs/heads/add-sysconfig-export
+          fi
+          git rev-parse HEAD > "$RUNNER_TEMP/sysconfig-export-evidence/verified-revision.txt"
+      - name: Upload execution evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: sysconfig-cli-export-evidence
+          path: ${{ runner.temp }}/sysconfig-export-evidence/
+          retention-days: 14
+          if-no-files-found: warn
