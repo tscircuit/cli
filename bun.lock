@@ -48,6 +48,7 @@
         "circuit-json-to-readable-netlist": "^0.0.15",
         "circuit-json-to-spice": "^0.0.45",
         "circuit-json-to-step": "^0.0.38",
+        "circuit-json-to-sysconfig": "github:tscircuit/circuit-json-to-sysconfig#007eb0475681b0088efa19e845b3807ab1b1ec27",
         "circuit-json-to-tscircuit": "^0.0.42",
         "circuit-json-trace-length-analysis": "github:tscircuit/circuit-json-trace-length-analysis#2b44792a40df0ca83b6bfb6ac95ed5e35e7168b8",
         "circuit-to-canvas": "^0.0.123",
@@ -501,6 +502,8 @@
 
     "abort-controller": ["abort-controller@3.0.0", "", { "dependencies": { "event-target-shim": "^5.0.0" } }, "sha512-h8lQ8tacZYnR3vNQTgibj+tODHI5/+l06Au2Pcriv/Gmet0eaj4TwWH41sO9wnHDiQsEj19q0drzdWdeAHtweg=="],
 
+    "acorn": ["acorn@8.18.0", "", { "bin": { "acorn": "bin/acorn" } }, "sha512-lGq+9yr1/GuAWaVYIHRjvvySG5/4VfKIvC8EWxStPdcDh/Ka7FG3twP6v4d5BkravUilhIAsG4Qj83t02LWUPQ=="],
+
     "adler-32": ["adler-32@1.3.1", "", {}, "sha512-ynZ4w/nUUv5rrsR8UUGoe1VC9hZj6V5hU9Qw1HlMDJGEJw5S7TfTErWTjMys6M7vr0YWcPqs3qAr4ss0nDfP+A=="],
 
     "ajv": ["ajv@8.20.0", "", { "dependencies": { "fast-deep-equal": "^3.1.3", "fast-uri": "^3.0.1", "json-schema-traverse": "^1.0.0", "require-from-string": "^2.0.2" } }, "sha512-Thbli+OlOj+iMPYFBVBfJ3OmCAnaSyNn4M1vz9T6Gka5Jt9ba/HIR56joy65tY6kx/FCF5VXNB819Y7/GUrBGA=="],
@@ -614,6 +617,8 @@
     "circuit-json-to-spice": ["circuit-json-to-spice@0.0.45", "", { "dependencies": { "circuit-json-to-connectivity-map": "^0.0.22" }, "peerDependencies": { "@tscircuit/circuit-json-util": "*", "circuit-json": "*", "spicets": "*", "typescript": "^5.0.0" } }, "sha512-e8THrj+jWK0BEjpw0relCYNCuEYEFAy5dFRYUQgMxdnrTjs2h5WoGWRNGPndqNkrpV5b63AzdX3wVR7Mtqi1HQ=="],
 
     "circuit-json-to-step": ["circuit-json-to-step@0.0.38", "", { "dependencies": { "circuit-json-to-connectivity-map": "^0.0.22", "circuit-json-to-gltf": "^0.0.106", "stepts": "^0.0.4" }, "peerDependencies": { "@tscircuit/circuit-json-util": "*", "circuit-to-svg": "*", "typescript": "^5" } }, "sha512-B/WMK6WrraMkhqKY0I+cF1LssP4Y+l89JFlUETyzyJG/r/Up1YA7iFqLYTwoeYGqXPBJUMq0sB6rSzOwibNPCA=="],
+
+    "circuit-json-to-sysconfig": ["circuit-json-to-sysconfig@github:tscircuit/circuit-json-to-sysconfig#007eb04", { "dependencies": { "circuit-json": "0.0.506", "sysconfigts": "github:tscircuit/sysconfigts#35381191fb3946185632d9c4c2ac4c2e69329535", "zod": "3.25.76" } }, "tscircuit-circuit-json-to-sysconfig-007eb04", "sha512-zzW++KG0hmwlOy3C/j1KKVOZ5wL1dSoEkfK4zGbxQ4/uYv71AbDEhgDw3A6D16CjE782NmhbQpvpI2+me9yccQ=="],
 
     "circuit-json-to-tscircuit": ["circuit-json-to-tscircuit@0.0.42", "", { "peerDependencies": { "typescript": "^5.0.0" } }, "sha512-HEQf1DP6y1pqunmZwNWu06EN36VgJln7cpchUitmyJwHPVhv2t6ABwHgKYzJuQwsVSmvLHc1/3QjdjP+1ekmqw=="],
 
@@ -1202,6 +1207,8 @@
     "svg-path-commander": ["svg-path-commander@2.2.1", "", { "dependencies": { "@thednp/dommatrix": "^3.0.4" } }, "sha512-hZ9GOFBT/J31fTu3UCj+dZs1w4ZqiGCG/nQpFm1CEQ/EPFj9x3pHXPi6EjYuZmPlua7K8CdFc2+HxndiZ/Q3+g=="],
 
     "svgson": ["svgson@5.3.1", "", { "dependencies": { "deep-rename-keys": "^0.2.1", "xml-reader": "2.4.3" } }, "sha512-qdPgvUNWb40gWktBJnbJRelWcPzkLed/ShhnRsjbayXz8OtdPOzbil9jtiZdrYvSDumAz/VNQr6JaNfPx/gvPA=="],
+
+    "sysconfigts": ["sysconfigts@github:tscircuit/sysconfigts#3538119", { "dependencies": { "acorn": "^8.15.0" } }, "tscircuit-sysconfigts-3538119", "sha512-N4wwAE1GwoFA2vVV3U33eBtEvz4bJ5j1M7g1JYcRMc4iRza9q7Pb5WQNIZquWfCa6887Mn01Pt4huS/QqKe/Ng=="],
 
     "tar-fs": ["tar-fs@3.1.3", "", { "dependencies": { "pump": "^3.0.0", "tar-stream": "^3.1.5" }, "optionalDependencies": { "bare-fs": "^4.0.1", "bare-path": "^3.0.0" } }, "sha512-/hU4AXnIdZu+Gvl1pk0oI5f5HxWsCJRtY2aFaJdk9VvyL48DWU6iU5WAIPG+wIi1YvWA6eTJvIviP/tMAZZNwQ=="],
 

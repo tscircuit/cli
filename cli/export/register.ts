@@ -28,6 +28,14 @@ export const registerExport = (program: Command) => {
       `Output format (${ALLOWED_EXPORT_FORMATS.join(", ")})`,
     )
     .option("-o, --output <path>", "Output file path")
+    .option(
+      "--sysconfig-options <file>",
+      "JSON settings for SysConfig export (required with --format sysconfig)",
+    )
+    .addHelpText(
+      "after",
+      "\nSysConfig example: tsci export board.tsx --format sysconfig --sysconfig-options sysconfig-options.json\nOptions select component_name and stable port names; see examples/sysconfig. Export does not run TI validation.\n",
+    )
     .option("--layer <layer>", "PCB front layer: top or bottom")
     .option("--disable-parts-engine", "Disable the parts engine")
     .option("--show-courtyards", "Show courtyard outlines in PCB SVG output")
@@ -38,11 +46,16 @@ export const registerExport = (program: Command) => {
           layer?: "top" | "bottom"
           format?: string
           output?: string
+          sysconfigOptions?: string
           disablePartsEngine?: boolean
           showCourtyards?: boolean
         } & PcbXRayCliOptions,
       ) => {
         const formatOption = options.format ?? "json"
+        if (options.sysconfigOptions && formatOption !== "sysconfig") {
+          console.error("--sysconfig-options requires --format sysconfig")
+          process.exit(1)
+        }
         if (options.layer && !["top", "bottom"].includes(options.layer)) {
           console.error("Unknown PCB layer. Valid layers: top, bottom")
           process.exit(1)
@@ -112,6 +125,7 @@ export const registerExport = (program: Command) => {
           filePath: file,
           format,
           outputPath: options.output,
+          sysconfigOptionsPath: options.sysconfigOptions,
           platformConfig: platformConfigWithCliDefaults,
           pcbSnapshotSettings: {
             ...projectConfig?.pcbSnapshotSettings,
@@ -122,7 +136,9 @@ export const registerExport = (program: Command) => {
           onExit: (code) => process.exit(code),
           onError: (message) => console.error(message),
           onSuccess: ({ outputDestination }) =>
-            console.log(`Exported to ${outputDestination}!`),
+            console.log(
+              `Exported to ${outputDestination}!${format === "sysconfig" ? " Configuration only; TI validation was not run." : ""}`,
+            ),
         })
       },
     )

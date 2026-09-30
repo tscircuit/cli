@@ -39,6 +39,11 @@ import { convertToKicadLibrary } from "./convert-to-kicad-library"
 import { importFromUserLand } from "./importFromUserLand"
 import { isCircuitJsonFile } from "./is-circuit-json-file"
 
+import {
+  readSysconfigOptions,
+  type SysconfigExportOptions,
+} from "./sysconfig-export/read-options"
+
 const writeFileAsync = promisify(fs.writeFile)
 
 export const ALLOWED_EXPORT_FORMATS = [
@@ -62,6 +67,7 @@ export const ALLOWED_EXPORT_FORMATS = [
   "step",
   "assembly-svg",
   "component-box-3mf",
+  "sysconfig",
 ] as const
 
 export type ExportFormat = (typeof ALLOWED_EXPORT_FORMATS)[number]
@@ -87,6 +93,7 @@ const OUTPUT_EXTENSIONS: Record<ExportFormat, string> = {
   srj: ".simple-route.json",
   step: ".step",
   "component-box-3mf": "-component-box.3mf",
+  sysconfig: ".syscfg",
 }
 
 const isRecord = (value: unknown): value is Record<string, unknown> =>
@@ -111,6 +118,7 @@ type ExportOptions = {
   format: ExportFormat
   writeFile?: boolean
   outputPath?: string
+  sysconfigOptionsPath?: string
   platformConfig?: PlatformConfig
   pcbSnapshotSettings?: PcbSnapshotSettings
   onExit?: (code: number) => void
@@ -125,6 +133,7 @@ export const exportSnippet = async ({
   filePath,
   format,
   outputPath,
+  sysconfigOptionsPath,
   platformConfig,
   pcbSnapshotSettings,
   writeFile = true,
@@ -144,6 +153,37 @@ export const exportSnippet = async ({
     outputPath && path.isAbsolute(outputPath)
       ? outputPath
       : path.join(projectDir, outputPath ?? outputFileName)
+
+  let sysconfigOptions: SysconfigExportOptions | undefined
+  if (format === "sysconfig") {
+    if (!sysconfigOptionsPath) {
+      onError("SysConfig export requires --sysconfig-options <file>")
+      return onExit(1)
+    }
+    try {
+      const outputAbsolute = path.resolve(outputDestination)
+      for (const inputPath of [filePath, sysconfigOptionsPath]) {
+        const inputAbsolute = path.resolve(inputPath)
+        const outputReal = await fs.promises
+          .realpath(outputAbsolute)
+          .catch(() => outputAbsolute)
+        const inputReal = await fs.promises
+          .realpath(inputAbsolute)
+          .catch(() => inputAbsolute)
+        if (outputReal === inputReal)
+          throw new Error(
+            "SysConfig output must not replace the circuit input or options file",
+          )
+      }
+      sysconfigOptions = await readSysconfigOptions(sysconfigOptionsPath)
+    } catch (error) {
+      onError(error instanceof Error ? error.message : String(error))
+      return onExit(1)
+    }
+  } else if (sysconfigOptionsPath) {
+    onError("--sysconfig-options requires --format sysconfig")
+    return onExit(1)
+  }
 
   // Handle kicad-library separately - it doesn't need generateCircuitJson
   if (format === "kicad-library") {
@@ -201,7 +241,14 @@ export const exportSnippet = async ({
     const circuitData = await generateCircuitData({
       filePath,
       saveToFile: format === "circuit-json",
-      platformConfig: fabricationPlatformConfig,
+      platformConfig:
+        format === "sysconfig"
+          ? mergePlatformConfigs(fabricationPlatformConfig, {
+              pcbDisabled: true,
+              routingDisabled: true,
+              placementDrcChecksDisabled: true,
+            })
+          : fabricationPlatformConfig,
     }).catch((err) => {
       onError(`Error generating circuit JSON: ${err}`)
       return null
@@ -214,6 +261,21 @@ export const exportSnippet = async ({
   let outputContent: string | Buffer
 
   switch (format) {
+    case "sysconfig": {
+      try {
+        if (!sysconfigOptions) throw new Error("Missing SysConfig options")
+        const { convertToSysconfig } = await import(
+          "./sysconfig-export/convert-sysconfig"
+        )
+        outputContent = convertToSysconfig(circuitJson, sysconfigOptions)
+      } catch (error) {
+        onError(
+          `Error exporting SysConfig: ${error instanceof Error ? error.message : String(error)}`,
+        )
+        return onExit(1)
+      }
+      break
+    }
     case "schematic-svg":
       outputContent = convertCircuitJsonToStackedSchematicSheetsSvg(circuitJson)
       break
@@ -368,10 +430,16 @@ export const exportSnippet = async ({
       outputContent = JSON.stringify(circuitJson, null, 2)
   }
   if (writeFile) {
-    await writeFileAsync(outputDestination, outputContent).catch((err) => {
+    try {
+      if (format === "sysconfig")
+        await fs.promises.mkdir(path.dirname(outputDestination), {
+          recursive: true,
+        })
+      await writeFileAsync(outputDestination, outputContent)
+    } catch (err) {
       onError(`Error writing file: ${err}`)
       return onExit(1)
-    })
+    }
   }
 
   onSuccess({
