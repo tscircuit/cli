@@ -1,0 +1,123 @@
+name: Prepare SysConfig export branch
+on:
+  push:
+    branches: [add-sysconfig-export]
+    paths: [.github/workflows/prepare-sysconfig-export.yml]
+permissions:
+  contents: write
+jobs:
+  prepare:
+    runs-on: ubuntu-22.04
+    timeout-minutes: 20
+    defaults:
+      run:
+        shell: bash
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: add-sysconfig-export
+          fetch-depth: 0
+      - uses: oven-sh/setup-bun@v2
+      - name: Apply integration to the inspected export pipeline
+        run: |
+          python3 - <<'PY'
+          import json
+          from pathlib import Path
+          def change(filename, before, after):
+              p = Path(filename)
+              source = p.read_text()
+              if after in source:
+                  return
+              if source.count(before) != 1:
+                  raise RuntimeError(f'Expected exactly one integration anchor in {filename}: {before}')
+              p.write_text(source.replace(before, after))
+          p = Path('package.json')
+          package = json.loads(p.read_text())
+          package['devDependencies']['circuit-json-to-sysconfig'] = 'github:tscircuit/circuit-json-to-sysconfig#007eb0475681b0088efa19e845b3807ab1b1ec27'
+          package['devDependencies'] = dict(sorted(package['devDependencies'].items()))
+          p.write_text(json.dumps(package, indent=2) + '\n')
+          filename = 'cli/export/register.ts'
+          change(filename, '.option("-o, --output <path>", "Output file path")', '.option("-o, --output <path>", "Output file path")\n    .option("--sysconfig-options <file>", "JSON settings for SysConfig export (required with --format sysconfig)")\n    .addHelpText("after", "\\nSysConfig example: tsci export board.tsx --format sysconfig --sysconfig-options sysconfig-options.json\\nOptions select component_name and stable port names; see examples/sysconfig. Export does not run TI validation.\\n")')
+          change(filename, '          output?: string', '          output?: string\n          sysconfigOptions?: string')
+          change(filename, '          outputPath: options.output,', '          outputPath: options.output,\n          sysconfigOptionsPath: options.sysconfigOptions,')
+          change(filename, '        const formatOption = options.format ?? "json"', '        const formatOption = options.format ?? "json"\n        if (options.sysconfigOptions && formatOption !== "sysconfig") {\n          console.error("--sysconfig-options requires --format sysconfig")\n          process.exit(1)\n        }')
+          change(filename, 'console.log(`Exported to ${outputDestination}!`)', 'console.log(`Exported to ${outputDestination}!${format === "sysconfig" ? " Configuration only; TI validation was not run." : ""}`)')
+          filename = 'lib/shared/export-snippet.ts'
+          change(filename, 'const writeFileAsync = promisify(fs.writeFile)', 'import { readSysconfigOptions, type SysconfigExportOptions } from "./sysconfig-export/read-options"\n\nconst writeFileAsync = promisify(fs.writeFile)')
+          change(filename, '  "component-box-3mf",\n] as const', '  "component-box-3mf",\n  "sysconfig",\n] as const')
+          change(filename, '  "component-box-3mf": "-component-box.3mf",', '  "component-box-3mf": "-component-box.3mf",\n  sysconfig: ".syscfg",')
+          change(filename, '  outputPath?: string\n', '  outputPath?: string\n  sysconfigOptionsPath?: string\n')
+          change(filename, '  outputPath,\n  platformConfig,', '  outputPath,\n  sysconfigOptionsPath,\n  platformConfig,')
+          before = '  // Handle kicad-library separately - it doesn\'t need generateCircuitJson'
+          after = '''  let sysconfigOptions: SysconfigExportOptions | undefined
+            if (format === "sysconfig") {
+              if (!sysconfigOptionsPath) {
+                onError("SysConfig export requires --sysconfig-options <file>")
+                return onExit(1)
+              }
+              try {
+                const outputAbsolute = path.resolve(outputDestination)
+                for (const inputPath of [filePath, sysconfigOptionsPath]) {
+                  const inputAbsolute = path.resolve(inputPath)
+                  const outputReal = await fs.promises.realpath(outputAbsolute).catch(() => outputAbsolute)
+                  const inputReal = await fs.promises.realpath(inputAbsolute).catch(() => inputAbsolute)
+                  if (outputReal === inputReal) throw new Error("SysConfig output must not replace the circuit input or options file")
+                }
+                sysconfigOptions = await readSysconfigOptions(sysconfigOptionsPath)
+              } catch (error) {
+                onError(error instanceof Error ? error.message : String(error))
+                return onExit(1)
+              }
+            } else if (sysconfigOptionsPath) {
+              onError("--sysconfig-options requires --format sysconfig")
+              return onExit(1)
+            }
+
+            // Handle kicad-library separately - it doesn't need generateCircuitJson'''
+          change(filename, before, after)
+          change(filename, '      platformConfig: fabricationPlatformConfig,', '      platformConfig: format === "sysconfig"\n        ? mergePlatformConfigs(fabricationPlatformConfig, { pcbDisabled: true, routingDisabled: true, placementDrcChecksDisabled: true })\n        : fabricationPlatformConfig,')
+          change(filename, '  switch (format) {\n    case "schematic-svg":', '''  switch (format) {
+              case "sysconfig": {
+                try {
+                  if (!sysconfigOptions) throw new Error("Missing SysConfig options")
+                  const { convertToSysconfig } = await import("./sysconfig-export/convert-sysconfig")
+                  outputContent = convertToSysconfig(circuitJson, sysconfigOptions)
+                } catch (error) {
+                  onError(`Error exporting SysConfig: ${error instanceof Error ? error.message : String(error)}`)
+                  return onExit(1)
+                }
+                break
+              }
+              case "schematic-svg":''')
+          change(filename, '''    await writeFileAsync(outputDestination, outputContent).catch((err) => {
+                onError(`Error writing file: ${err}`)
+                return onExit(1)
+              })'''.replace('                ', '      ').replace('              ', '    '), '''    try {
+                if (format === "sysconfig") await fs.promises.mkdir(path.dirname(outputDestination), { recursive: true })
+                await writeFileAsync(outputDestination, outputContent)
+              } catch (err) {
+                onError(`Error writing file: ${err}`)
+                return onExit(1)
+              }''')
+          PY
+      - name: Install and update the existing CLI lockfile
+        run: bun install
+      - name: Format only SysConfig export changes
+        run: bunx biome format --write cli/export/register.ts lib/shared/export-snippet.ts lib/shared/sysconfig-export tests/lib/sysconfig-export.test.ts tests/cli/export/export-sysconfig.test.ts examples/sysconfig
+      - name: Commit prepared changes to the feature branch only
+        run: |
+          test "$(git branch --show-current)" = add-sysconfig-export
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add package.json bun.lock cli/export/register.ts lib/shared/export-snippet.ts lib/shared/sysconfig-export tests/lib/sysconfig-export.test.ts tests/cli/export/export-sysconfig.test.ts examples/sysconfig
+          git diff --cached --check
+          if ! git diff --cached --quiet; then
+            git commit -m 'Integrate SysConfig export and update CLI dependency lockfile'
+            git push origin HEAD:refs/heads/add-sysconfig-export
+          fi
+      - name: Check TypeScript
+        run: bunx tsc --noEmit
+      - name: Check formatting
+        run: bun run format:check
+      - name: Test real converter and JSON/TSX commands
+        run: bun test tests/lib/sysconfig-export.test.ts tests/cli/export/export-sysconfig.test.ts

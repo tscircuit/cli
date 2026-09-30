@@ -1,0 +1,21 @@
+{
+  "component_name": "U1",
+  "gpios": [
+    {
+      "port": "SIGNAL",
+      "gpio_name": "CONFIG_SIGNAL",
+      "direction": "input",
+      "pull": "none",
+      "interrupt": "none"
+    }
+  ],
+  "i2c": {
+    "i2c_name": "CONFIG_I2C_0",
+    "sda_port": "SDA",
+    "scl_port": "SCL",
+    "max_bit_rate": 100000,
+    "peripheral_assignment": "suggested"
+  },
+  "reserved_ports": [],
+  "firmware": { "rtos": "nortos" }
+}
