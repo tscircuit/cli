@@ -59,7 +59,7 @@ export function attachAutoroutingArtifacts(
         fs.writeFileSync(outputPath, contents)
       }
       console.log(
-        `Saved autorouting paths to ${path.relative(projectDir, outputPath)} (import this JSON into <autoroutingphase pcbTracePaths={...} />).`,
+        `Saved autorouting paths to ${path.relative(projectDir, outputPath)} (import this JSON into the matching <autoroutingphase pcbTracePaths={...} /> or <fanout pcbTracePaths={...} />).`,
       )
     } catch (error) {
       console.warn(
