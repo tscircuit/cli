@@ -15,8 +15,8 @@ const powerParts = [
     componentName: "LM5146RGYR",
     rawEasy: lm5146,
     pins: [
-      { pinNumber: 1, rawLabel: "EN/UVLO" },
-      { pinNumber: 3, rawLabel: "SS/TRK" },
+      { pinNumber: 1, rawLabel: "EN/UVLO", aliases: ["EN", "UVLO"] },
+      { pinNumber: 3, rawLabel: "SS/TRK", aliases: ["SS", "TRK"] },
     ],
   },
   {
@@ -24,10 +24,12 @@ const powerParts = [
     componentName: "TPS259474ARPWR",
     rawEasy: tps259474,
     pins: [
-      { pinNumber: 1, rawLabel: "EN/UVLO" },
-      { pinNumber: 2, rawLabel: "OVLO/OVCSEL" },
-      { pinNumber: 3, rawLabel: "PG/AUXOFF" },
-      { pinNumber: 4, rawLabel: "PGTH/FLT#" },
+      { pinNumber: 1, rawLabel: "EN/UVLO", aliases: ["EN", "UVLO"] },
+      // The source symbol lists other family variants too. Check the functions
+      // actually available on TPS259474A against its datasheet.
+      { pinNumber: 2, rawLabel: "OVLO/OVCSEL", aliases: ["OVLO"] },
+      { pinNumber: 3, rawLabel: "PG/AUXOFF", aliases: ["PG"] },
+      { pinNumber: 4, rawLabel: "PGTH/FLT#", aliases: ["PGTH"] },
     ],
   },
 ]
@@ -53,11 +55,14 @@ for (const { partNumber, componentName, rawEasy, pins } of powerParts) {
     const sourcePorts = circuitJson.filter(
       (element) => element.type === "source_port",
     )
-    const importedPins = pins.map(({ pinNumber }) => {
+    const importedPins = pins.map(({ pinNumber, aliases }) => {
       const sourcePort = sourcePorts.find(
         (port) => port.pin_number === pinNumber,
       )
       if (!sourcePort) throw new Error(`Missing ${partNumber} pin ${pinNumber}`)
+      for (const alias of aliases) {
+        expect(sourcePort.port_hints).toContain(alias)
+      }
       return {
         pinNumber,
         name: sourcePort.name,
@@ -74,4 +79,42 @@ for (const { partNumber, componentName, rawEasy, pins } of powerParts) {
       `${partNumber}-pcb`,
     )
   })
+
+  for (const { pinNumber, aliases } of pins) {
+    for (const alias of aliases) {
+      test(`${partNumber}: ${alias} connects to pin ${pinNumber} and its PCB pad`, async () => {
+        const tsx = await convertRawEasyToTsx({ rawEasy })
+        const circuitJson = await renderImportedPowerComponent({
+          tsx,
+          componentName,
+          alias,
+        })
+        const sourcePort = circuitJson.find(
+          (element) =>
+            element.type === "source_port" && element.pin_number === pinNumber,
+        )
+        if (sourcePort?.type !== "source_port") {
+          throw new Error(`Missing ${partNumber} pin ${pinNumber}`)
+        }
+        const traces = circuitJson.filter(
+          (element) => element.type === "source_trace",
+        )
+        expect(traces).toHaveLength(1)
+        expect(traces[0].connected_source_port_ids).toEqual([
+          sourcePort.source_port_id,
+        ])
+        const pcbPorts = circuitJson
+          .filter((element) => element.type === "pcb_port")
+          .filter(
+            (element) => element.source_port_id === sourcePort.source_port_id,
+          )
+        expect(pcbPorts).toHaveLength(1)
+        const pads = circuitJson
+          .filter((element) => element.type === "pcb_smtpad")
+          .filter((element) => element.pcb_port_id === pcbPorts[0].pcb_port_id)
+        expect(pads).toHaveLength(1)
+        expect(pads[0].port_hints).toContain(`pin${pinNumber}`)
+      })
+    }
+  }
 }
