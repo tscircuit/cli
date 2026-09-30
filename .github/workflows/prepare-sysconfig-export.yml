@@ -27,7 +27,7 @@ jobs:
         run: |
           bun install --frozen-lockfile
           bun add --dev --exact @tscircuit/props@0.0.672
-      - name: Cover bare circuit.json and other JSON filenames
+      - name: Keep JSON input out of source compilation
         run: |
           python3 - <<'PY'
           from pathlib import Path
@@ -37,6 +37,22 @@ jobs:
           after = '  if (isCircuitJsonFile(filePath) || (format === "sysconfig" && path.extname(filePath).toLowerCase() === ".json")) {'
           if after not in source:
               assert source.count(before) == 1, 'Unexpected JSON loading integration'
+              p.write_text(source.replace(before, after))
+          p = Path('cli/export/register.ts')
+          source = p.read_text()
+          before = '''        const platformConfigWithCliDefaults = getPlatformConfigWithCliDefaults(
+                    platformConfig,
+                    {
+                      projectDir: findCircuitProjectDir(file),
+                    },
+                  )'''.replace('                    ', '          ').replace('                  ', '        ')
+          after = '''        // JSON export needs no source-project discovery or compiler loaders.
+                  const isSysconfigJson = formatOption === "sysconfig" && path.extname(file).toLowerCase() === ".json"
+                  const platformConfigWithCliDefaults = isSysconfigJson
+                    ? platformConfig
+                    : getPlatformConfigWithCliDefaults(platformConfig, { projectDir: findCircuitProjectDir(file) })'''.replace('                  ', '        ').replace('                    ', '          ')
+          if 'const isSysconfigJson =' not in source:
+              assert source.count(before) == 1, repr(before)
               p.write_text(source.replace(before, after))
           p = Path('tests/cli/export/export-sysconfig.test.ts')
           source = p.read_text()
@@ -56,11 +72,10 @@ jobs:
           '''
               p.write_text(source)
           p = Path('examples/sysconfig/README.md')
-          source = p.read_text()
-          source = source.replace('The same command accepts `circuit.json` or `*.circuit.json` directly.', 'Any `.json` input is read directly as Circuit JSON for this format, including bare\n`circuit.json` and `*.circuit.json`.')
+          source = p.read_text().replace('The same command accepts `circuit.json` or `*.circuit.json` directly.', 'Any `.json` input is read directly as Circuit JSON for this format, including bare\n`circuit.json` and `*.circuit.json`.')
           p.write_text(source)
           PY
-          bunx biome format --write lib/shared/export-snippet.ts tests/cli/export/export-sysconfig.test.ts
+          bunx biome format --write cli/export/register.ts lib/shared/export-snippet.ts tests/cli/export/export-sysconfig.test.ts
       - name: Check TypeScript and formatting
         run: |
           bunx tsc --noEmit
@@ -74,6 +89,18 @@ jobs:
           evidence="$RUNNER_TEMP/sysconfig-export-evidence"
           mkdir -p "$evidence"
           node --version | tee "$evidence/node-version.txt"
+          python3 - <<'PY'
+          from pathlib import Path
+          count = 0
+          for p in Path('dist').rglob('*.js'):
+              text = p.read_text(errors='replace')
+              needle = 'Error parsing JSON file'
+              start = text.find(needle)
+              if start >= 0:
+                  print(str(p), text[max(0,start-700):start+250])
+                  count += 1
+                  if count >= 3: break
+          PY
           node dist/cli/main.js export examples/sysconfig/board.tsx --format sysconfig --sysconfig-options examples/sysconfig/sysconfig-options.json --output "$evidence/from-tsx.syscfg" --disable-parts-engine
           node dist/cli/main.js export examples/sysconfig/board.tsx --format json --output "$evidence/circuit.json" --disable-parts-engine
           node dist/cli/main.js export "$evidence/circuit.json" --format sysconfig --sysconfig-options examples/sysconfig/sysconfig-options.json --output "$evidence/from-json.syscfg"
@@ -85,11 +112,11 @@ jobs:
           test "$(git branch --show-current)" = add-sysconfig-export
           git config user.name 'github-actions[bot]'
           git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
-          git add package.json bun.lock lib/shared/export-snippet.ts tests/cli/export/export-sysconfig.test.ts examples/sysconfig/README.md
+          git add package.json bun.lock cli/export/register.ts lib/shared/export-snippet.ts tests/cli/export/export-sysconfig.test.ts examples/sysconfig/README.md
           git diff --cached --check
           git diff --cached --stat
           if ! git diff --cached --quiet; then
-            git commit -m 'Support JSON filenames and align props for tested TSX SysConfig export'
+            git commit -m 'Support JSON input without compiler discovery and align props for TSX exports'
             git push origin HEAD:refs/heads/add-sysconfig-export
           fi
           git rev-parse HEAD > "$RUNNER_TEMP/sysconfig-export-evidence/verified-revision.txt"
