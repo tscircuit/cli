@@ -4,18 +4,22 @@ exports[`C3188679 imported power-pin labels: C3188679-pin-labels 1`] = `
 [
   {
     "aliases": [
+      "EN",
+      "UVLO",
       "pin1",
       "1",
     ],
-    "name": "pin1",
+    "name": "EN",
     "pinNumber": 1,
   },
   {
     "aliases": [
+      "SS",
+      "TRK",
       "pin3",
       "3",
     ],
-    "name": "pin3",
+    "name": "SS",
     "pinNumber": 3,
   },
 ]
@@ -25,34 +29,42 @@ exports[`C3662807 imported power-pin labels: C3662807-pin-labels 1`] = `
 [
   {
     "aliases": [
+      "EN",
+      "UVLO",
       "pin1",
       "1",
     ],
-    "name": "pin1",
+    "name": "EN",
     "pinNumber": 1,
   },
   {
     "aliases": [
+      "OVLO",
+      "OVCSEL",
       "pin2",
       "2",
     ],
-    "name": "pin2",
+    "name": "OVLO",
     "pinNumber": 2,
   },
   {
     "aliases": [
+      "PG",
+      "AUXOFF",
       "pin3",
       "3",
     ],
-    "name": "pin3",
+    "name": "PG",
     "pinNumber": 3,
   },
   {
     "aliases": [
+      "PGTH",
+      "N_FLT",
       "pin4",
       "4",
     ],
-    "name": "pin4",
+    "name": "PGTH",
     "pinNumber": 4,
   },
 ]
