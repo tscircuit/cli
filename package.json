@@ -118,7 +118,7 @@
   "overrides": {
     "circuit-json": "^0.0.489",
     "altiumts": "0.0.59",
-    "@tscircuit/core": "0.0.2026"
+    "@tscircuit/core": "0.0.2027"
   },
   "scripts": {
     "start": "bun run dev",
