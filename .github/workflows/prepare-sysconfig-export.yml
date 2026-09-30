@@ -16,8 +16,18 @@ jobs:
         with:
           persist-credentials: false
       - uses: oven-sh/setup-bun@v2
-      - name: Install dependencies
-        run: bun install
+      - name: Install committed dependencies
+        run: bun install --frozen-lockfile
+      - name: Record existing compiler dependency mismatch
+        run: |
+          bun -e 'const p = await import("@tscircuit/props"); console.log("assemblySubassemblyProps:", "assemblySubassemblyProps" in p); console.log("props version:", (await Bun.file("node_modules/@tscircuit/props/package.json").json()).version); console.log("tscircuit manifest:", await Bun.file("node_modules/tscircuit/package.json").text())'
+          set +e
+          bun test tests/cli/export/export-altium.test.ts
+          result=$?
+          echo "Existing Altium test exit=$result"
+          exit 0
+      - name: Test compatible props without changing the remote branch
+        run: bun add --dev --exact @tscircuit/props@0.0.672
       - name: Check TypeScript
         id: typecheck
         continue-on-error: true
@@ -30,11 +40,14 @@ jobs:
         id: tests
         continue-on-error: true
         run: bun test tests/lib/sysconfig-export.test.ts tests/cli/export/export-sysconfig.test.ts
-      - name: Build the bundled CLI
+      - name: Build bundled CLI
         id: build
         continue-on-error: true
         run: bun run build
-      - name: Require all checks to pass
+      - name: Record experimental dependency diff
+        if: always()
+        run: git diff --stat && git diff -- package.json
+      - name: Require all experiment checks
         if: always()
         env:
           TYPECHECK: ${{ steps.typecheck.outcome }}
