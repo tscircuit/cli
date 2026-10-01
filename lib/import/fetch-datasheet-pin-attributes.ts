@@ -20,12 +20,13 @@ export const fetchDatasheetPinAttributes = async (
   const chipName = normalizeChipName(manufacturerPartNumber)
   if (!/[a-z0-9]/.test(chipName)) return undefined
 
+  const signal = AbortSignal.timeout(5_000)
   try {
     const url = new URL(
       `${getRegistryApiUrl().replace(/\/$/, "")}/datasheets/get`,
     )
     url.searchParams.set("chip_name", chipName)
-    const response = await fetch(url, { signal: AbortSignal.timeout(10_000) })
+    const response = await fetch(url, { signal })
     if (response.status === 404) return undefined
     if (!response.ok) throw new Error(`HTTP ${response.status}`)
     const parsed = responseSchema.safeParse(await response.json())
@@ -36,8 +37,13 @@ export const fetchDatasheetPinAttributes = async (
     }
     return datasheet.pin_attributes ?? undefined
   } catch (error) {
+    const message =
+      signal.aborted ||
+      (error instanceof Error && error.name === "TimeoutError")
+        ? `Datasheet API did not respond within 5 seconds for ${manufacturerPartNumber}`
+        : `Could not load datasheet pin attributes for ${manufacturerPartNumber}: ${error instanceof Error ? error.message : "request failed"}`
     console.warn(
-      `Could not load datasheet pin attributes for ${manufacturerPartNumber}: ${error instanceof Error ? error.message : "request failed"}. Continuing with imported attributes.`,
+      `${message}. pinAttributes may not be populated. Continuing with imported attributes.`,
     )
     return undefined
   }

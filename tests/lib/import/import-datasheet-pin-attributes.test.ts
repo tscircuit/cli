@@ -258,6 +258,16 @@ for (const [name, response, warnings] of [
       expect(props.pinAttributes?.pin5?.providesVoltage).toBeUndefined()
       expect(props.pinAttributes?.pin2?.requiresGround).toBe(true)
       expect(warn).toHaveBeenCalledTimes(warnings)
+      if (warnings) {
+        expect(warn.mock.calls[0]![0]).toContain(
+          "pinAttributes may not be populated",
+        )
+      }
+      if (name === "timeout") {
+        expect(warn.mock.calls[0]![0]).toContain(
+          "did not respond within 5 seconds",
+        )
+      }
     } finally {
       fetchMock.mockRestore()
       warn.mockRestore()
@@ -276,6 +286,60 @@ test("does not request a datasheet without a manufacturer part number", async ()
     fetchMock.mockRestore()
   }
 })
+
+for (const stalledPhase of ["headers", "body"] as const) {
+  test(`datasheet deadline aborts a stalled response ${stalledPhase}`, async () => {
+    const originalFetch = globalThis.fetch
+    const originalTimeout = AbortSignal.timeout.bind(AbortSignal)
+    // Assert the production deadline while shortening the wait in this test.
+    const timeout = spyOn(AbortSignal, "timeout").mockImplementation((ms) => {
+      expect(ms).toBe(5_000)
+      return originalTimeout(100)
+    })
+    const warn = spyOn(console, "warn").mockImplementation(() => {})
+    let releaseResponse: (() => void) | undefined
+    let receivedHeaders = false
+    const server = Bun.serve({
+      hostname: "127.0.0.1",
+      port: 0,
+      fetch: () =>
+        stalledPhase === "headers"
+          ? new Promise<Response>((resolve) => {
+              releaseResponse = () => resolve(new Response(null))
+            })
+          : new Response(
+              new ReadableStream({
+                start(controller) {
+                  controller.enqueue(new TextEncoder().encode('{"datasheet":'))
+                },
+              }),
+            ),
+    })
+    const fetchMock = mockFetch(async (_input, init) => {
+      const response = await originalFetch(server.url, init)
+      receivedHeaders = true
+      return response
+    })
+    try {
+      expect(await fetchDatasheetPinAttributes("F1C100S")).toBeUndefined()
+      expect(timeout).toHaveBeenCalledTimes(1)
+      expect(receivedHeaders).toBe(stalledPhase === "body")
+      expect(warn).toHaveBeenCalledTimes(1)
+      expect(warn.mock.calls[0]![0]).toContain(
+        "Datasheet API did not respond within 5 seconds for F1C100S",
+      )
+      expect(warn.mock.calls[0]![0]).toContain(
+        "pinAttributes may not be populated",
+      )
+    } finally {
+      fetchMock.mockRestore()
+      timeout.mockRestore()
+      warn.mockRestore()
+      releaseResponse?.()
+      await server.stop(true)
+    }
+  })
+}
 
 for (const hasSearchResult of [true, false]) {
   test(`--exclude-pin-attributes skips the lookup (${hasSearchResult ? "search result" : "direct fallback"})`, async () => {
