@@ -1,0 +1,1093 @@
+{
+  "datasheet": {
+    "datasheet_id": "f0971767-1b7e-43e3-b9b1-536321772153",
+    "chip_name": "F1C100S",
+    "pin_attributes": {
+      "pin1": {
+        "isOutput": true
+      },
+      "pin2": {
+        "isInput": true
+      },
+      "pin3": {
+        "isOutput": true
+      },
+      "pin4": {
+        "requiresPower": true,
+        "mustBeConnected": true,
+        "shouldHaveDecouplingCapacitor": true
+      },
+      "pin5": {
+        "requiresPower": true,
+        "requiresVoltage": 3.3,
+        "mustBeConnected": true,
+        "shouldHaveDecouplingCapacitor": true
+      },
+      "pin6": {
+        "isBidirectional": true,
+        "canUseTriState": true,
+        "capabilities": ["i2c_sda"],
+        "canUseInternalPullup": true,
+        "canUseInternalPulldown": true,
+        "canUseOpenDrain": true,
+        "isGpio": true
+      },
+      "pin7": {
+        "isBidirectional": true,
+        "canUseTriState": true,
+        "canUseInternalPullup": true,
+        "canUseInternalPulldown": true,
+        "isGpio": true
+      },
+      "pin8": {
+        "isBidirectional": true,
+        "canUseTriState": true,
+        "canUseInternalPullup": true,
+        "canUseInternalPulldown": true,
+        "isGpio": true
+      },
+      "pin9": {
+        "isBidirectional": true,
+        "canUseTriState": true,
+        "capabilities": ["uart_rx"],
+        "canUseInternalPullup": true,
+        "canUseInternalPulldown": true,
+        "isGpio": true
+      },
+      "pin10": {
+        "isBidirectional": true,
+        "canUseTriState": true,
+        "capabilities": ["uart_tx"],
+        "canUseInternalPullup": true,
+        "canUseInternalPulldown": true,
+        "isGpio": true
+      },
+      "pin11": {
+        "isBidirectional": true,
+        "canUseTriState": true,
+        "capabilities": ["i2c_scl"],
+        "canUseInternalPullup": true,
+        "canUseInternalPulldown": true,
+        "canUseOpenDrain": true,
+        "isGpio": true
+      },
+      "pin12": {
+        "isBidirectional": true,
+        "canUseTriState": true,
+        "capabilities": ["i2c_sda"],
+        "canUseInternalPullup": true,
+        "canUseInternalPulldown": true,
+        "canUseOpenDrain": true,
+        "isGpio": true
+      },
+      "pin13": {
+        "isBidirectional": true,
+        "canUseTriState": true,
+        "canUseInternalPullup": true,
+        "canUseInternalPulldown": true,
+        "isGpio": true
+      },
+      "pin14": {
+        "isBidirectional": true,
+        "canUseTriState": true,
+        "canUseInternalPullup": true,
+        "canUseInternalPulldown": true,
+        "isGpio": true
+      },
+      "pin15": {
+        "isBidirectional": true,
+        "canUseTriState": true,
+        "canUseInternalPullup": true,
+        "canUseInternalPulldown": true,
+        "isGpio": true
+      },
+      "pin16": {
+        "isBidirectional": true,
+        "canUseTriState": true,
+        "canUseInternalPullup": true,
+        "canUseInternalPulldown": true,
+        "isGpio": true
+      },
+      "pin17": {
+        "isBidirectional": true,
+        "canUseTriState": true,
+        "canUseInternalPullup": true,
+        "canUseInternalPulldown": true,
+        "isGpio": true
+      },
+      "pin18": {
+        "isBidirectional": true,
+        "canUseTriState": true,
+        "capabilities": ["i2c_scl"],
+        "canUseInternalPullup": true,
+        "canUseInternalPulldown": true,
+        "canUseOpenDrain": true,
+        "isGpio": true
+      },
+      "pin19": {
+        "isBidirectional": true,
+        "canUseTriState": true,
+        "capabilities": ["uart_tx"],
+        "canUseInternalPullup": true,
+        "canUseInternalPulldown": true,
+        "isGpio": true
+      },
+      "pin20": {
+        "requiresPower": true,
+        "requiresVoltage": 3.3,
+        "mustBeConnected": true,
+        "shouldHaveDecouplingCapacitor": true
+      },
+      "pin21": {
+        "isBidirectional": true,
+        "canUseTriState": true,
+        "capabilities": ["uart_rx"],
+        "canUseInternalPullup": true,
+        "canUseInternalPulldown": true,
+        "isGpio": true
+      },
+      "pin22": {
+        "requiresPower": true,
+        "requiresVoltage": 1.1,
+        "mustBeConnected": true,
+        "shouldHaveDecouplingCapacitor": true
+      },
+      "pin23": {
+        "isBidirectional": true,
+        "canUseTriState": true,
+        "capabilities": ["i2c_scl"],
+        "canUseInternalPullup": true,
+        "canUseInternalPulldown": true,
+        "canUseOpenDrain": true,
+        "isGpio": true
+      },
+      "pin24": {
+        "isBidirectional": true,
+        "canUseTriState": true,
+        "capabilities": ["i2c_sda"],
+        "canUseInternalPullup": true,
+        "canUseInternalPulldown": true,
+        "canUseOpenDrain": true,
+        "isGpio": true
+      },
+      "pin25": {
+        "isBidirectional": true,
+        "canUseTriState": true,
+        "canUseInternalPullup": true,
+        "canUseInternalPulldown": true,
+        "isGpio": true
+      },
+      "pin26": {
+        "isBidirectional": true,
+        "canUseTriState": true,
+        "capabilities": ["spi_cs"],
+        "canUseInternalPullup": true,
+        "canUseInternalPulldown": true,
+        "isGpio": true
+      },
+      "pin27": {
+        "isBidirectional": true,
+        "canUseTriState": true,
+        "capabilities": ["spi_mosi"],
+        "canUseInternalPullup": true,
+        "canUseInternalPulldown": true,
+        "isGpio": true
+      },
+      "pin28": {
+        "isBidirectional": true,
+        "canUseTriState": true,
+        "capabilities": ["spi_sck"],
+        "canUseInternalPullup": true,
+        "canUseInternalPulldown": true,
+        "isGpio": true
+      },
+      "pin29": {
+        "isBidirectional": true,
+        "canUseTriState": true,
+        "capabilities": ["spi_miso"],
+        "canUseInternalPullup": true,
+        "canUseInternalPulldown": true,
+        "isGpio": true
+      },
+      "pin30": {
+        "requiresPower": true,
+        "requiresVoltage": 2.5,
+        "mustBeConnected": true,
+        "shouldHaveDecouplingCapacitor": true
+      },
+      "pin31": {
+        "requiresPower": true,
+        "requiresVoltage": 2.5,
+        "mustBeConnected": true,
+        "shouldHaveDecouplingCapacitor": true
+      },
+      "pin32": {
+        "requiresPower": true,
+        "requiresVoltage": 2.5,
+        "mustBeConnected": true,
+        "shouldHaveDecouplingCapacitor": true
+      },
+      "pin33": {
+        "requiresPower": true,
+        "mustBeConnected": true
+      },
+      "pin34": {
+        "requiresPower": true,
+        "requiresVoltage": 2.5,
+        "mustBeConnected": true,
+        "shouldHaveDecouplingCapacitor": true
+      },
+      "pin35": {
+        "requiresPower": true,
+        "requiresVoltage": 1.1,
+        "mustBeConnected": true,
+        "shouldHaveDecouplingCapacitor": true
+      },
+      "pin36": {
+        "requiresPower": true,
+        "requiresVoltage": 2.5,
+        "mustBeConnected": true,
+        "shouldHaveDecouplingCapacitor": true
+      },
+      "pin37": {
+        "isBidirectional": true,
+        "canUseTriState": true,
+        "capabilities": ["i2c_sda"],
+        "canUseInternalPullup": true,
+        "canUseInternalPulldown": true,
+        "canUseOpenDrain": true,
+        "isGpio": true
+      },
+      "pin38": {
+        "isBidirectional": true,
+        "canUseTriState": true,
+        "capabilities": ["i2c_scl"],
+        "canUseInternalPullup": true,
+        "canUseInternalPulldown": true,
+        "canUseOpenDrain": true,
+        "isGpio": true
+      },
+      "pin39": {
+        "isBidirectional": true,
+        "canUseTriState": true,
+        "capabilities": ["spi_miso"],
+        "canUseInternalPullup": true,
+        "canUseInternalPulldown": true,
+        "isGpio": true
+      },
+      "pin40": {
+        "isBidirectional": true,
+        "canUseTriState": true,
+        "capabilities": ["spi_sck"],
+        "canUseInternalPullup": true,
+        "canUseInternalPulldown": true,
+        "isGpio": true
+      },
+      "pin41": {
+        "isBidirectional": true,
+        "canUseTriState": true,
+        "capabilities": ["uart_rx", "spi_mosi"],
+        "canUseInternalPullup": true,
+        "canUseInternalPulldown": true,
+        "isGpio": true
+      },
+      "pin42": {
+        "isBidirectional": true,
+        "canUseTriState": true,
+        "capabilities": ["uart_tx", "spi_cs"],
+        "canUseInternalPullup": true,
+        "canUseInternalPulldown": true,
+        "isGpio": true
+      },
+      "pin43": {
+        "isBidirectional": true,
+        "canUseTriState": true,
+        "canUseInternalPullup": true,
+        "canUseInternalPulldown": true,
+        "isGpio": true
+      },
+      "pin44": {
+        "isBidirectional": true,
+        "canUseTriState": true,
+        "canUseInternalPullup": true,
+        "canUseInternalPulldown": true,
+        "isGpio": true
+      },
+      "pin45": {
+        "isBidirectional": true,
+        "canUseTriState": true,
+        "canUseInternalPullup": true,
+        "canUseInternalPulldown": true,
+        "isGpio": true
+      },
+      "pin46": {
+        "isBidirectional": true,
+        "canUseTriState": true,
+        "canUseInternalPullup": true,
+        "canUseInternalPulldown": true,
+        "isGpio": true
+      },
+      "pin47": {
+        "isBidirectional": true,
+        "canUseTriState": true,
+        "canUseInternalPullup": true,
+        "canUseInternalPulldown": true,
+        "isGpio": true
+      },
+      "pin48": {
+        "isBidirectional": true,
+        "canUseTriState": true,
+        "capabilities": ["i2c_sda", "uart_tx"],
+        "canUseInternalPullup": true,
+        "canUseInternalPulldown": true,
+        "canUseOpenDrain": true,
+        "isGpio": true
+      },
+      "pin49": {
+        "isBidirectional": true,
+        "canUseTriState": true,
+        "capabilities": ["i2c_scl", "uart_rx"],
+        "canUseInternalPullup": true,
+        "canUseInternalPulldown": true,
+        "canUseOpenDrain": true,
+        "isGpio": true
+      },
+      "pin50": {
+        "requiresPower": true,
+        "requiresVoltage": 3.3,
+        "mustBeConnected": true,
+        "shouldHaveDecouplingCapacitor": true
+      },
+      "pin51": {
+        "isInput": true
+      },
+      "pin52": {
+        "isOutput": true
+      },
+      "pin53": {
+        "isBidirectional": true,
+        "canUseTriState": true,
+        "canUseInternalPullup": true,
+        "canUseInternalPulldown": true,
+        "isGpio": true
+      },
+      "pin54": {
+        "isBidirectional": true,
+        "canUseTriState": true,
+        "capabilities": ["uart_tx"],
+        "canUseInternalPullup": true,
+        "canUseInternalPulldown": true,
+        "isGpio": true
+      },
+      "pin55": {
+        "isBidirectional": true,
+        "canUseTriState": true,
+        "canUseInternalPullup": true,
+        "canUseInternalPulldown": true,
+        "isGpio": true
+      },
+      "pin56": {
+        "isBidirectional": true,
+        "canUseTriState": true,
+        "capabilities": ["uart_rx"],
+        "canUseInternalPullup": true,
+        "canUseInternalPulldown": true,
+        "isGpio": true
+      },
+      "pin57": {
+        "isBidirectional": true,
+        "canUseTriState": true,
+        "canUseInternalPullup": true,
+        "canUseInternalPulldown": true,
+        "isGpio": true
+      },
+      "pin58": {
+        "isBidirectional": true,
+        "canUseTriState": true,
+        "canUseInternalPullup": true,
+        "canUseInternalPulldown": true,
+        "isGpio": true
+      },
+      "pin59": {
+        "isBidirectional": true,
+        "canUseTriState": true,
+        "capabilities": ["spi_sck"],
+        "canUseInternalPullup": true,
+        "canUseInternalPulldown": true,
+        "isGpio": true
+      },
+      "pin60": {
+        "isBidirectional": true,
+        "canUseTriState": true,
+        "capabilities": ["spi_cs"],
+        "canUseInternalPullup": true,
+        "canUseInternalPulldown": true,
+        "isGpio": true
+      },
+      "pin61": {
+        "isBidirectional": true,
+        "canUseTriState": true,
+        "capabilities": ["spi_miso"],
+        "canUseInternalPullup": true,
+        "canUseInternalPulldown": true,
+        "isGpio": true
+      },
+      "pin62": {
+        "isBidirectional": true,
+        "canUseTriState": true,
+        "capabilities": ["spi_mosi", "uart_tx"],
+        "canUseInternalPullup": true,
+        "canUseInternalPulldown": true,
+        "isGpio": true
+      },
+      "pin63": {
+        "isBidirectional": true,
+        "canUseTriState": true,
+        "capabilities": ["uart_tx", "spi_miso"],
+        "isGpio": true
+      },
+      "pin64": {
+        "isBidirectional": true,
+        "canUseTriState": true,
+        "capabilities": ["uart_rx", "spi_sck"],
+        "isGpio": true
+      },
+      "pin65": {
+        "isBidirectional": true,
+        "canUseTriState": true,
+        "capabilities": ["spi_mosi"],
+        "isGpio": true
+      },
+      "pin66": {
+        "isBidirectional": true,
+        "canUseTriState": true,
+        "capabilities": ["spi_cs"],
+        "isGpio": true
+      },
+      "pin67": {
+        "requiresPower": true,
+        "requiresVoltage": 3.3,
+        "mustBeConnected": true,
+        "shouldHaveDecouplingCapacitor": true
+      },
+      "pin68": {
+        "isBidirectional": true
+      },
+      "pin69": {
+        "isBidirectional": true
+      },
+      "pin70": {
+        "isInput": true
+      },
+      "pin71": {
+        "requiresPower": true,
+        "requiresVoltage": 1.1,
+        "mustBeConnected": true,
+        "shouldHaveDecouplingCapacitor": true
+      },
+      "pin72": {
+        "isOutput": true
+      },
+      "pin73": {
+        "requiresPower": true,
+        "requiresVoltage": 3.3,
+        "mustBeConnected": true,
+        "shouldHaveDecouplingCapacitor": true
+      },
+      "pin74": {
+        "requiresGround": true,
+        "mustBeConnected": true
+      },
+      "pin75": {
+        "isInput": true
+      },
+      "pin76": {
+        "isInput": true
+      },
+      "pin77": {
+        "isInput": true
+      },
+      "pin78": {
+        "isInput": true
+      },
+      "pin79": {
+        "isInput": true
+      },
+      "pin80": {
+        "requiresPower": true,
+        "requiresVoltage": 2.8,
+        "mustBeConnected": true,
+        "shouldHaveDecouplingCapacitor": true
+      },
+      "pin81": {
+        "isOutput": true
+      },
+      "pin82": {
+        "requiresGround": true,
+        "mustBeConnected": true
+      },
+      "pin83": {
+        "isOutput": true
+      },
+      "pin84": {
+        "isInput": true
+      },
+      "pin85": {
+        "isInput": true
+      },
+      "pin86": {
+        "isInput": true
+      },
+      "pin87": {
+        "isInput": true
+      },
+      "pin88": {
+        "isOutput": true
+      },
+      "pin89": {
+        "requiresGround": true,
+        "mustBeConnected": true
+      }
+    },
+    "footprinter_string": "mlp88_thermalpad6.75mmx6.75mm_p0.4mm_h11mm_pw0.2mm_pl0.8mm_pin1location(bottomside,left)_rounded0",
+    "datasheet_pdf_urls": [
+      "https://linux-sunxi.org/images/b/ba/F1C100s_Datasheet_V1.0.pdf"
+    ],
+    "pin_information": [
+      {
+        "pin_number": "1",
+        "name": ["HPL"],
+        "description": "HPL; see Allwinner F1C100S Rev1.0 sections4.1-4.3",
+        "capabilities": []
+      },
+      {
+        "pin_number": "2",
+        "name": ["HPCOMFB"],
+        "description": "HPCOMFB; see Allwinner F1C100S Rev1.0 sections4.1-4.3",
+        "capabilities": []
+      },
+      {
+        "pin_number": "3",
+        "name": ["HPCOM"],
+        "description": "HPCOM; see Allwinner F1C100S Rev1.0 sections4.1-4.3",
+        "capabilities": []
+      },
+      {
+        "pin_number": "4",
+        "name": ["HPVCC"],
+        "description": "HPVCC; see Allwinner F1C100S Rev1.0 sections4.1-4.3",
+        "capabilities": []
+      },
+      {
+        "pin_number": "5",
+        "name": ["VCC_IO1"],
+        "description": "VCC_IO1; see Allwinner F1C100S Rev1.0 sections4.1-4.3",
+        "capabilities": []
+      },
+      {
+        "pin_number": "6",
+        "name": ["PD0"],
+        "description": "PD0; see Allwinner F1C100S Rev1.0 sections4.1-4.3",
+        "capabilities": ["i2c_sda"]
+      },
+      {
+        "pin_number": "7",
+        "name": ["PD1"],
+        "description": "PD1; see Allwinner F1C100S Rev1.0 sections4.1-4.3",
+        "capabilities": []
+      },
+      {
+        "pin_number": "8",
+        "name": ["PD2"],
+        "description": "PD2; see Allwinner F1C100S Rev1.0 sections4.1-4.3",
+        "capabilities": []
+      },
+      {
+        "pin_number": "9",
+        "name": ["PD3"],
+        "description": "PD3; see Allwinner F1C100S Rev1.0 sections4.1-4.3",
+        "capabilities": ["uart_rx"]
+      },
+      {
+        "pin_number": "10",
+        "name": ["PD4"],
+        "description": "PD4; see Allwinner F1C100S Rev1.0 sections4.1-4.3",
+        "capabilities": ["uart_tx"]
+      },
+      {
+        "pin_number": "11",
+        "name": ["PD5"],
+        "description": "PD5; see Allwinner F1C100S Rev1.0 sections4.1-4.3",
+        "capabilities": ["i2c_scl"]
+      },
+      {
+        "pin_number": "12",
+        "name": ["PD6"],
+        "description": "PD6; see Allwinner F1C100S Rev1.0 sections4.1-4.3",
+        "capabilities": ["i2c_sda"]
+      },
+      {
+        "pin_number": "13",
+        "name": ["PD7"],
+        "description": "PD7; see Allwinner F1C100S Rev1.0 sections4.1-4.3",
+        "capabilities": []
+      },
+      {
+        "pin_number": "14",
+        "name": ["PD8"],
+        "description": "PD8; see Allwinner F1C100S Rev1.0 sections4.1-4.3",
+        "capabilities": []
+      },
+      {
+        "pin_number": "15",
+        "name": ["PD9"],
+        "description": "PD9; see Allwinner F1C100S Rev1.0 sections4.1-4.3",
+        "capabilities": []
+      },
+      {
+        "pin_number": "16",
+        "name": ["PD10"],
+        "description": "PD10; see Allwinner F1C100S Rev1.0 sections4.1-4.3",
+        "capabilities": []
+      },
+      {
+        "pin_number": "17",
+        "name": ["PD11"],
+        "description": "PD11; see Allwinner F1C100S Rev1.0 sections4.1-4.3",
+        "capabilities": []
+      },
+      {
+        "pin_number": "18",
+        "name": ["PD12"],
+        "description": "PD12; see Allwinner F1C100S Rev1.0 sections4.1-4.3",
+        "capabilities": ["i2c_scl"]
+      },
+      {
+        "pin_number": "19",
+        "name": ["PD13"],
+        "description": "PD13; see Allwinner F1C100S Rev1.0 sections4.1-4.3",
+        "capabilities": ["uart_tx"]
+      },
+      {
+        "pin_number": "20",
+        "name": ["VCC_IO2"],
+        "description": "VCC_IO2; see Allwinner F1C100S Rev1.0 sections4.1-4.3",
+        "capabilities": []
+      },
+      {
+        "pin_number": "21",
+        "name": ["PD14"],
+        "description": "PD14; see Allwinner F1C100S Rev1.0 sections4.1-4.3",
+        "capabilities": ["uart_rx"]
+      },
+      {
+        "pin_number": "22",
+        "name": ["VDD_CORE1"],
+        "description": "VDD_CORE1; see Allwinner F1C100S Rev1.0 sections4.1-4.3",
+        "capabilities": []
+      },
+      {
+        "pin_number": "23",
+        "name": ["PD15"],
+        "description": "PD15; see Allwinner F1C100S Rev1.0 sections4.1-4.3",
+        "capabilities": ["i2c_scl"]
+      },
+      {
+        "pin_number": "24",
+        "name": ["PD16"],
+        "description": "PD16; see Allwinner F1C100S Rev1.0 sections4.1-4.3",
+        "capabilities": ["i2c_sda"]
+      },
+      {
+        "pin_number": "25",
+        "name": ["PD17"],
+        "description": "PD17; see Allwinner F1C100S Rev1.0 sections4.1-4.3",
+        "capabilities": []
+      },
+      {
+        "pin_number": "26",
+        "name": ["PD18"],
+        "description": "PD18; see Allwinner F1C100S Rev1.0 sections4.1-4.3",
+        "capabilities": ["spi_cs"]
+      },
+      {
+        "pin_number": "27",
+        "name": ["PD19"],
+        "description": "PD19; see Allwinner F1C100S Rev1.0 sections4.1-4.3",
+        "capabilities": ["spi_mosi"]
+      },
+      {
+        "pin_number": "28",
+        "name": ["PD20"],
+        "description": "PD20; see Allwinner F1C100S Rev1.0 sections4.1-4.3",
+        "capabilities": ["spi_sck"]
+      },
+      {
+        "pin_number": "29",
+        "name": ["PD21"],
+        "description": "PD21; see Allwinner F1C100S Rev1.0 sections4.1-4.3",
+        "capabilities": ["spi_miso"]
+      },
+      {
+        "pin_number": "30",
+        "name": ["VCC_DRAM1"],
+        "description": "VCC_DRAM1; see Allwinner F1C100S Rev1.0 sections4.1-4.3",
+        "capabilities": []
+      },
+      {
+        "pin_number": "31",
+        "name": ["VCC_DRAM2"],
+        "description": "VCC_DRAM2; see Allwinner F1C100S Rev1.0 sections4.1-4.3",
+        "capabilities": []
+      },
+      {
+        "pin_number": "32",
+        "name": ["VCC_DRAM3"],
+        "description": "VCC_DRAM3; see Allwinner F1C100S Rev1.0 sections4.1-4.3",
+        "capabilities": []
+      },
+      {
+        "pin_number": "33",
+        "name": ["SVREF"],
+        "description": "SVREF; see Allwinner F1C100S Rev1.0 sections4.1-4.3",
+        "capabilities": []
+      },
+      {
+        "pin_number": "34",
+        "name": ["VCC_DRAM4"],
+        "description": "VCC_DRAM4; see Allwinner F1C100S Rev1.0 sections4.1-4.3",
+        "capabilities": []
+      },
+      {
+        "pin_number": "35",
+        "name": ["VDD_CORE2"],
+        "description": "VDD_CORE2; see Allwinner F1C100S Rev1.0 sections4.1-4.3",
+        "capabilities": []
+      },
+      {
+        "pin_number": "36",
+        "name": ["VCC_DRAM5"],
+        "description": "VCC_DRAM5; see Allwinner F1C100S Rev1.0 sections4.1-4.3",
+        "capabilities": []
+      },
+      {
+        "pin_number": "37",
+        "name": ["PE12"],
+        "description": "PE12; see Allwinner F1C100S Rev1.0 sections4.1-4.3",
+        "capabilities": ["i2c_sda"]
+      },
+      {
+        "pin_number": "38",
+        "name": ["PE11"],
+        "description": "PE11; see Allwinner F1C100S Rev1.0 sections4.1-4.3",
+        "capabilities": ["i2c_scl"]
+      },
+      {
+        "pin_number": "39",
+        "name": ["PE10"],
+        "description": "PE10; see Allwinner F1C100S Rev1.0 sections4.1-4.3",
+        "capabilities": ["spi_miso"]
+      },
+      {
+        "pin_number": "40",
+        "name": ["PE9"],
+        "description": "PE9; see Allwinner F1C100S Rev1.0 sections4.1-4.3",
+        "capabilities": ["spi_sck"]
+      },
+      {
+        "pin_number": "41",
+        "name": ["PE8"],
+        "description": "PE8; see Allwinner F1C100S Rev1.0 sections4.1-4.3",
+        "capabilities": ["uart_rx", "spi_mosi"]
+      },
+      {
+        "pin_number": "42",
+        "name": ["PE7"],
+        "description": "PE7; see Allwinner F1C100S Rev1.0 sections4.1-4.3",
+        "capabilities": ["uart_tx", "spi_cs"]
+      },
+      {
+        "pin_number": "43",
+        "name": ["PE6"],
+        "description": "PE6; see Allwinner F1C100S Rev1.0 sections4.1-4.3",
+        "capabilities": []
+      },
+      {
+        "pin_number": "44",
+        "name": ["PE5"],
+        "description": "PE5; see Allwinner F1C100S Rev1.0 sections4.1-4.3",
+        "capabilities": []
+      },
+      {
+        "pin_number": "45",
+        "name": ["PE4"],
+        "description": "PE4; see Allwinner F1C100S Rev1.0 sections4.1-4.3",
+        "capabilities": []
+      },
+      {
+        "pin_number": "46",
+        "name": ["PE3"],
+        "description": "PE3; see Allwinner F1C100S Rev1.0 sections4.1-4.3",
+        "capabilities": []
+      },
+      {
+        "pin_number": "47",
+        "name": ["PE2"],
+        "description": "PE2; see Allwinner F1C100S Rev1.0 sections4.1-4.3",
+        "capabilities": []
+      },
+      {
+        "pin_number": "48",
+        "name": ["PE1"],
+        "description": "PE1; see Allwinner F1C100S Rev1.0 sections4.1-4.3",
+        "capabilities": ["i2c_sda", "uart_tx"]
+      },
+      {
+        "pin_number": "49",
+        "name": ["PE0"],
+        "description": "PE0; see Allwinner F1C100S Rev1.0 sections4.1-4.3",
+        "capabilities": ["i2c_scl", "uart_rx"]
+      },
+      {
+        "pin_number": "50",
+        "name": ["VCC_IO3"],
+        "description": "VCC_IO3; see Allwinner F1C100S Rev1.0 sections4.1-4.3",
+        "capabilities": []
+      },
+      {
+        "pin_number": "51",
+        "name": ["HOSCI"],
+        "description": "HOSCI; see Allwinner F1C100S Rev1.0 sections4.1-4.3",
+        "capabilities": []
+      },
+      {
+        "pin_number": "52",
+        "name": ["HOSCO"],
+        "description": "HOSCO; see Allwinner F1C100S Rev1.0 sections4.1-4.3",
+        "capabilities": []
+      },
+      {
+        "pin_number": "53",
+        "name": ["PF5"],
+        "description": "PF5; see Allwinner F1C100S Rev1.0 sections4.1-4.3",
+        "capabilities": []
+      },
+      {
+        "pin_number": "54",
+        "name": ["PF4"],
+        "description": "PF4; see Allwinner F1C100S Rev1.0 sections4.1-4.3",
+        "capabilities": ["uart_tx"]
+      },
+      {
+        "pin_number": "55",
+        "name": ["PF3"],
+        "description": "PF3; see Allwinner F1C100S Rev1.0 sections4.1-4.3",
+        "capabilities": []
+      },
+      {
+        "pin_number": "56",
+        "name": ["PF2"],
+        "description": "PF2; see Allwinner F1C100S Rev1.0 sections4.1-4.3",
+        "capabilities": ["uart_rx"]
+      },
+      {
+        "pin_number": "57",
+        "name": ["PF1"],
+        "description": "PF1; see Allwinner F1C100S Rev1.0 sections4.1-4.3",
+        "capabilities": []
+      },
+      {
+        "pin_number": "58",
+        "name": ["PF0"],
+        "description": "PF0; see Allwinner F1C100S Rev1.0 sections4.1-4.3",
+        "capabilities": []
+      },
+      {
+        "pin_number": "59",
+        "name": ["PC0"],
+        "description": "PC0; see Allwinner F1C100S Rev1.0 sections4.1-4.3",
+        "capabilities": ["spi_sck"]
+      },
+      {
+        "pin_number": "60",
+        "name": ["PC1"],
+        "description": "PC1; see Allwinner F1C100S Rev1.0 sections4.1-4.3",
+        "capabilities": ["spi_cs"]
+      },
+      {
+        "pin_number": "61",
+        "name": ["PC2"],
+        "description": "PC2; see Allwinner F1C100S Rev1.0 sections4.1-4.3",
+        "capabilities": ["spi_miso"]
+      },
+      {
+        "pin_number": "62",
+        "name": ["PC3"],
+        "description": "PC3; see Allwinner F1C100S Rev1.0 sections4.1-4.3",
+        "capabilities": ["spi_mosi", "uart_tx"]
+      },
+      {
+        "pin_number": "63",
+        "name": ["TPY2"],
+        "description": "TPY2; see Allwinner F1C100S Rev1.0 sections4.1-4.3",
+        "capabilities": ["uart_tx", "spi_miso"]
+      },
+      {
+        "pin_number": "64",
+        "name": ["TPY1"],
+        "description": "TPY1; see Allwinner F1C100S Rev1.0 sections4.1-4.3",
+        "capabilities": ["uart_rx", "spi_sck"]
+      },
+      {
+        "pin_number": "65",
+        "name": ["TPX2"],
+        "description": "TPX2; see Allwinner F1C100S Rev1.0 sections4.1-4.3",
+        "capabilities": ["spi_mosi"]
+      },
+      {
+        "pin_number": "66",
+        "name": ["TPX1"],
+        "description": "TPX1; see Allwinner F1C100S Rev1.0 sections4.1-4.3",
+        "capabilities": ["spi_cs"]
+      },
+      {
+        "pin_number": "67",
+        "name": ["UVCC"],
+        "description": "UVCC; see Allwinner F1C100S Rev1.0 sections4.1-4.3",
+        "capabilities": []
+      },
+      {
+        "pin_number": "68",
+        "name": ["USB_DM"],
+        "description": "USB_DM; see Allwinner F1C100S Rev1.0 sections4.1-4.3",
+        "capabilities": []
+      },
+      {
+        "pin_number": "69",
+        "name": ["USB_DP"],
+        "description": "USB_DP; see Allwinner F1C100S Rev1.0 sections4.1-4.3",
+        "capabilities": []
+      },
+      {
+        "pin_number": "70",
+        "name": ["RESET"],
+        "description": "RESET; see Allwinner F1C100S Rev1.0 sections4.1-4.3",
+        "capabilities": []
+      },
+      {
+        "pin_number": "71",
+        "name": ["VDD_CORE3"],
+        "description": "VDD_CORE3; see Allwinner F1C100S Rev1.0 sections4.1-4.3",
+        "capabilities": []
+      },
+      {
+        "pin_number": "72",
+        "name": ["TVOUT"],
+        "description": "TVOUT; see Allwinner F1C100S Rev1.0 sections4.1-4.3",
+        "capabilities": []
+      },
+      {
+        "pin_number": "73",
+        "name": ["TV_VCC"],
+        "description": "TV_VCC; see Allwinner F1C100S Rev1.0 sections4.1-4.3",
+        "capabilities": []
+      },
+      {
+        "pin_number": "74",
+        "name": ["TVGND"],
+        "description": "TVGND; see Allwinner F1C100S Rev1.0 sections4.1-4.3",
+        "capabilities": []
+      },
+      {
+        "pin_number": "75",
+        "name": ["TV_VRN"],
+        "description": "TV_VRN; see Allwinner F1C100S Rev1.0 sections4.1-4.3",
+        "capabilities": []
+      },
+      {
+        "pin_number": "76",
+        "name": ["TV_VRP"],
+        "description": "TV_VRP; see Allwinner F1C100S Rev1.0 sections4.1-4.3",
+        "capabilities": []
+      },
+      {
+        "pin_number": "77",
+        "name": ["TVIN1"],
+        "description": "TVIN1; see Allwinner F1C100S Rev1.0 sections4.1-4.3",
+        "capabilities": []
+      },
+      {
+        "pin_number": "78",
+        "name": ["TVIN0"],
+        "description": "TVIN0; see Allwinner F1C100S Rev1.0 sections4.1-4.3",
+        "capabilities": []
+      },
+      {
+        "pin_number": "79",
+        "name": ["LRADC0"],
+        "description": "LRADC0; see Allwinner F1C100S Rev1.0 sections4.1-4.3",
+        "capabilities": []
+      },
+      {
+        "pin_number": "80",
+        "name": ["AVCC"],
+        "description": "AVCC; see Allwinner F1C100S Rev1.0 sections4.1-4.3",
+        "capabilities": []
+      },
+      {
+        "pin_number": "81",
+        "name": ["VRA1"],
+        "description": "VRA1; see Allwinner F1C100S Rev1.0 sections4.1-4.3",
+        "capabilities": []
+      },
+      {
+        "pin_number": "82",
+        "name": ["AGND"],
+        "description": "AGND; see Allwinner F1C100S Rev1.0 sections4.1-4.3",
+        "capabilities": []
+      },
+      {
+        "pin_number": "83",
+        "name": ["VRA2"],
+        "description": "VRA2; see Allwinner F1C100S Rev1.0 sections4.1-4.3",
+        "capabilities": []
+      },
+      {
+        "pin_number": "84",
+        "name": ["FMINL"],
+        "description": "FMINL; see Allwinner F1C100S Rev1.0 sections4.1-4.3",
+        "capabilities": []
+      },
+      {
+        "pin_number": "85",
+        "name": ["FMINR"],
+        "description": "FMINR; see Allwinner F1C100S Rev1.0 sections4.1-4.3",
+        "capabilities": []
+      },
+      {
+        "pin_number": "86",
+        "name": ["LINL"],
+        "description": "LINL; see Allwinner F1C100S Rev1.0 sections4.1-4.3",
+        "capabilities": []
+      },
+      {
+        "pin_number": "87",
+        "name": ["MICIN"],
+        "description": "MICIN; see Allwinner F1C100S Rev1.0 sections4.1-4.3",
+        "capabilities": []
+      },
+      {
+        "pin_number": "88",
+        "name": ["HPR"],
+        "description": "HPR; see Allwinner F1C100S Rev1.0 sections4.1-4.3",
+        "capabilities": []
+      },
+      {
+        "pin_number": "89",
+        "name": ["GND", "thermalpad"],
+        "description": "GND / thermalpad; see Allwinner F1C100S Rev1.0 sections4.1-4.3",
+        "capabilities": []
+      }
+    ]
+  }
+}

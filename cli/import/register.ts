@@ -20,6 +20,10 @@ export const registerImport = (program: Command) => {
     .option("--tscircuit", "Search tscircuit registry packages")
     .option("--download", "Download 3D model assets (.step, .obj) locally")
     .option(
+      "--exclude-pin-attributes",
+      "Skip datasheet pin attributes when importing",
+    )
+    .option(
       "--use-exact-footprint",
       "Keep the exact EasyEDA footprint instead of using a >98% footprinter match",
     )
@@ -32,6 +36,7 @@ export const registerImport = (program: Command) => {
           tscircuit?: boolean
           download?: boolean
           useExactFootprint?: boolean
+          excludePinAttributes?: boolean
         },
       ) => {
         const query = getQueryFromParts(queryParts)
@@ -101,6 +106,7 @@ export const registerImport = (program: Command) => {
               download: opts.download,
               partNumber: directLcscPartNumber,
               useExactFootprint: opts.useExactFootprint,
+              excludePinAttributes: opts.excludePinAttributes,
             })
             return
           }
@@ -174,6 +180,7 @@ export const registerImport = (program: Command) => {
             download: opts.download,
             partNumber: `C${String(choice.part)}`,
             useExactFootprint: opts.useExactFootprint,
+            excludePinAttributes: opts.excludePinAttributes,
           })
         }
       },
