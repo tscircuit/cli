@@ -48,7 +48,7 @@
         "circuit-json-to-readable-netlist": "^0.0.15",
         "circuit-json-to-spice": "^0.0.45",
         "circuit-json-to-step": "^0.0.38",
-        "circuit-json-to-tscircuit": "^0.0.42",
+        "circuit-json-to-tscircuit": "^0.0.50",
         "circuit-json-trace-length-analysis": "github:tscircuit/circuit-json-trace-length-analysis#2b44792a40df0ca83b6bfb6ac95ed5e35e7168b8",
         "circuit-to-canvas": "^0.0.123",
         "circuit-to-svg": "^0.0.430",
@@ -615,7 +615,7 @@
 
     "circuit-json-to-step": ["circuit-json-to-step@0.0.38", "", { "dependencies": { "circuit-json-to-connectivity-map": "^0.0.22", "circuit-json-to-gltf": "^0.0.106", "stepts": "^0.0.4" }, "peerDependencies": { "@tscircuit/circuit-json-util": "*", "circuit-to-svg": "*", "typescript": "^5" } }, "sha512-B/WMK6WrraMkhqKY0I+cF1LssP4Y+l89JFlUETyzyJG/r/Up1YA7iFqLYTwoeYGqXPBJUMq0sB6rSzOwibNPCA=="],
 
-    "circuit-json-to-tscircuit": ["circuit-json-to-tscircuit@0.0.42", "", { "peerDependencies": { "typescript": "^5.0.0" } }, "sha512-HEQf1DP6y1pqunmZwNWu06EN36VgJln7cpchUitmyJwHPVhv2t6ABwHgKYzJuQwsVSmvLHc1/3QjdjP+1ekmqw=="],
+    "circuit-json-to-tscircuit": ["circuit-json-to-tscircuit@0.0.50", "", { "peerDependencies": { "typescript": "^5.0.0" } }, "sha512-peP+Xd/HnZJI0cKTOGQkV2vcvgDgtDck7YElZitRQO2GKL16HAo2G3LOv7ICTRIGJoITrf0Iv8kb1ZA2Ajxf1g=="],
 
     "circuit-json-trace-length-analysis": ["circuit-json-trace-length-analysis@github:tscircuit/circuit-json-trace-length-analysis#2b44792", { "peerDependencies": { "typescript": "^5" } }, "tscircuit-circuit-json-trace-length-analysis-2b44792", "sha512-CTFqTc+F66tflCKmXC+Ge7kD1K2rrEH4Z5vHhUJa0OxmtKh6L1gM80xCJL1YtAL+9f2p7i26U9fO+Pq22NEypQ=="],
 

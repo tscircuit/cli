@@ -1,0 +1,68 @@
+{
+  "datasheet": {
+    "datasheet_id": "89d7e62a-c6bb-41e1-b081-263e8f5ad211",
+    "chip_name": "AP2127K-28TRG1",
+    "pin_attributes": {
+      "pin1": {
+        "requiresPower": true,
+        "mustBeConnected": true,
+        "shouldHaveDecouplingCapacitor": true,
+        "recommendedDecouplingCapacitorCapacitance": "1uF"
+      },
+      "pin2": {
+        "requiresGround": true,
+        "mustBeConnected": true
+      },
+      "pin3": {
+        "isInput": true,
+        "mustBeConnected": true
+      },
+      "pin4": {
+        "doNotConnect": true
+      },
+      "pin5": {
+        "isOutput": true,
+        "providesPower": true,
+        "providesVoltage": 2.8,
+        "shouldHaveDecouplingCapacitor": true,
+        "recommendedDecouplingCapacitorCapacitance": "1uF"
+      }
+    },
+    "footprinter_string": "sot25",
+    "datasheet_pdf_urls": [
+      "https://www.diodes.com/assets/Datasheets/AP2127.pdf"
+    ],
+    "pin_information": [
+      {
+        "pin_number": "1",
+        "name": ["VIN"],
+        "description": "Regulator input; recommended 2.5-6V, subject to dropout",
+        "capabilities": []
+      },
+      {
+        "pin_number": "2",
+        "name": ["GND"],
+        "description": "Ground",
+        "capabilities": []
+      },
+      {
+        "pin_number": "3",
+        "name": ["EN"],
+        "description": "Active-high enable input",
+        "capabilities": []
+      },
+      {
+        "pin_number": "4",
+        "name": ["NC"],
+        "description": "Unconnected terminal",
+        "capabilities": []
+      },
+      {
+        "pin_number": "5",
+        "name": ["VOUT"],
+        "description": "Fixed 2.8V output",
+        "capabilities": []
+      }
+    ]
+  }
+}

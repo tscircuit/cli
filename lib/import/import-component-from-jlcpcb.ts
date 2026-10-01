@@ -6,6 +6,9 @@ import {
 } from "easyeda"
 import fs from "node:fs/promises"
 import path from "node:path"
+import { convertCircuitJsonToTscircuit } from "circuit-json-to-tscircuit"
+import { fetchDatasheetPinAttributes } from "./fetch-datasheet-pin-attributes"
+import { addDatasheetAttributesToCircuitJson } from "./add-datasheet-attributes-to-circuit-json"
 import {
   addCadModelToTsx,
   type ImportedCadComponent,
@@ -41,14 +44,47 @@ export const importComponentFromJlcpcb = async (
   const betterEasy = EasyEdaJsonSchema.parse(rawEasy)
 
   const rawPn = betterEasy.dataStr.head.c_para["Manufacturer Part"]
+  const datasheetAttributesPromise = fetchDatasheetPinAttributes(rawPn)
   const componentName = rawPn
     ? normalizeManufacturerPartNumber(rawPn)
     : jlcpcbPartNumber
 
-  let tsx = await convertRawEasyToTsx({ rawEasy })
-  const circuitJson = convertEasyEdaJsonToCircuitJson(betterEasy, {
+  let circuitJson = convertEasyEdaJsonToCircuitJson(betterEasy, {
     useModelCdn: true,
   })
+  const datasheetAttributes = await datasheetAttributesPromise
+  let tsx: string
+  if (datasheetAttributes && Object.keys(datasheetAttributes).length > 0) {
+    circuitJson = addDatasheetAttributesToCircuitJson(
+      circuitJson,
+      datasheetAttributes,
+    )
+    const pinLabels = Object.fromEntries(
+      circuitJson.flatMap((element) => {
+        if (element.type !== "source_port") return []
+        const pinKey =
+          element.pin_number !== undefined
+            ? `pin${element.pin_number}`
+            : element.name
+        return [
+          [
+            pinKey,
+            (element.port_hints ?? [element.name]).filter(
+              (label) => label !== pinKey,
+            ),
+          ],
+        ]
+      }),
+    )
+    tsx = convertCircuitJsonToTscircuit(circuitJson, {
+      componentName,
+      pinLabels,
+      manufacturerPartNumber: rawPn ?? undefined,
+      supplierPartNumbers: { jlcpcb: [jlcpcbPartNumber] },
+    })
+  } else {
+    tsx = await convertRawEasyToTsx({ rawEasy })
+  }
   const footprintConversion = options.useExactFootprint
     ? ({ mode: "exact-requested", tsx } as const)
     : convertImportedFootprintToFootprinter({
