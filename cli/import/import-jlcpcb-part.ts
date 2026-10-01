@@ -7,10 +7,12 @@ export const importJlcpcbPart = async ({
   download,
   partNumber,
   useExactFootprint,
+  excludePinAttributes,
 }: {
   download?: boolean
   partNumber: string
   useExactFootprint?: boolean
+  excludePinAttributes?: boolean
 }) => {
   const spinner = ora({
     text: `Importing "${partNumber}" from JLCPCB...`,
@@ -24,6 +26,7 @@ export const importJlcpcbPart = async ({
       {
         download,
         useExactFootprint,
+        excludePinAttributes,
       },
     )
     spinner.succeed(kleur.green(`Imported ${filePath}`))

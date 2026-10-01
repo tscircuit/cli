@@ -23,6 +23,7 @@ import { getEasyEdaFootprinterSourceHints } from "./footprinter/get-easyeda-foot
 export interface ImportComponentFromJlcpcbOptions {
   download?: boolean
   useExactFootprint?: boolean
+  excludePinAttributes?: boolean
 }
 
 export interface ImportComponentFromJlcpcbResult {
@@ -44,7 +45,9 @@ export const importComponentFromJlcpcb = async (
   const betterEasy = EasyEdaJsonSchema.parse(rawEasy)
 
   const rawPn = betterEasy.dataStr.head.c_para["Manufacturer Part"]
-  const datasheetAttributesPromise = fetchDatasheetPinAttributes(rawPn)
+  const datasheetAttributesPromise = options.excludePinAttributes
+    ? undefined
+    : fetchDatasheetPinAttributes(rawPn)
   const componentName = rawPn
     ? normalizeManufacturerPartNumber(rawPn)
     : jlcpcbPartNumber

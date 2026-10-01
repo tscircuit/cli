@@ -3,6 +3,8 @@ import { commonComponentProps } from "@tscircuit/props"
 import { readFile, rm } from "node:fs/promises"
 import { temporaryDirectory } from "tempy"
 import ts from "typescript"
+import { Command } from "commander"
+import { registerImport } from "cli/import/register"
 import { importComponentFromJlcpcb } from "lib/import/import-component-from-jlcpcb"
 import { addDatasheetAttributesToCircuitJson } from "lib/import/add-datasheet-attributes-to-circuit-json"
 import { fetchDatasheetPinAttributes } from "lib/import/fetch-datasheet-pin-attributes"
@@ -274,3 +276,63 @@ test("does not request a datasheet without a manufacturer part number", async ()
     fetchMock.mockRestore()
   }
 })
+
+for (const hasSearchResult of [true, false]) {
+  test(`--exclude-pin-attributes skips the lookup (${hasSearchResult ? "search result" : "direct fallback"})`, async () => {
+    const directory = temporaryDirectory()
+    const previousCwd = process.cwd()
+    let datasheetRequests = 0
+    const fetchMock = mockFetch(async (input) => {
+      const url = new URL(String(input))
+      if (url.hostname === "jlcsearch.tscircuit.com") {
+        return Response.json({
+          components: hasSearchResult
+            ? [{ lcsc: 460327, mfr: "AP2127K-2.8TRG1" }]
+            : [],
+        })
+      }
+      if (url.pathname.endsWith("/datasheets/get")) {
+        datasheetRequests++
+        return Response.json(regulator)
+      }
+      if (url.pathname === "/api/components/search") {
+        return Response.json({
+          success: true,
+          result: { lists: { lcsc: [rawRegulator] } },
+        })
+      }
+      if (url.pathname === `/api/components/${rawRegulator.uuid}`) {
+        return Response.json({ success: true, result: rawRegulator })
+      }
+      return new Response(null, { status: 404 })
+    })
+    try {
+      process.chdir(directory)
+      const program = new Command()
+      registerImport(program)
+      await program.parseAsync(
+        [
+          "import",
+          "--jlcpcb",
+          "--exclude-pin-attributes",
+          "--use-exact-footprint",
+          "C460327",
+        ],
+        { from: "user" },
+      )
+      const source = await readFile(
+        `${directory}/imports/AP2127K_2_8TRG1.tsx`,
+        "utf8",
+      )
+      const props = getChipProps(source)
+      expect(datasheetRequests).toBe(0)
+      expect(props.pinAttributes?.pin5?.providesVoltage).toBeUndefined()
+      expect(props.pinAttributes?.pin2?.requiresGround).toBe(true)
+      expect(props.footprint.type).toBe("footprint")
+    } finally {
+      process.chdir(previousCwd)
+      fetchMock.mockRestore()
+      await rm(directory, { recursive: true, force: true })
+    }
+  })
+}
