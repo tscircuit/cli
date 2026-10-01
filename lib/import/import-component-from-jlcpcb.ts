@@ -16,6 +16,8 @@ import {
   type ImportedFootprintConversion,
 } from "./footprinter/convert-imported-footprint-to-footprinter"
 import { getEasyEdaFootprinterSourceHints } from "./footprinter/get-easyeda-footprinter-source-hints"
+import { fetchDatasheetPinAttributes } from "./fetch-datasheet-pin-attributes"
+import { addPinAttributesToTsx } from "./add-pin-attributes-to-tsx"
 
 export interface ImportComponentFromJlcpcbOptions {
   download?: boolean
@@ -41,6 +43,7 @@ export const importComponentFromJlcpcb = async (
   const betterEasy = EasyEdaJsonSchema.parse(rawEasy)
 
   const rawPn = betterEasy.dataStr.head.c_para["Manufacturer Part"]
+  const datasheetAttributesPromise = fetchDatasheetPinAttributes(rawPn)
   const componentName = rawPn
     ? normalizeManufacturerPartNumber(rawPn)
     : jlcpcbPartNumber
@@ -57,6 +60,16 @@ export const importComponentFromJlcpcb = async (
         tsx,
       })
   tsx = footprintConversion.tsx
+  const datasheetAttributes = await datasheetAttributesPromise
+  if (datasheetAttributes) {
+    try {
+      tsx = addPinAttributesToTsx(tsx, datasheetAttributes)
+    } catch {
+      console.warn(
+        `Could not add datasheet pin attributes for ${rawPn} to the generated TSX. Continuing with imported attributes.`,
+      )
+    }
+  }
   const cadComponent = circuitJson.find(
     (item) => item.type === "cad_component",
   ) as ImportedCadComponent | undefined
