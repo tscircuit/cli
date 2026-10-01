@@ -34,6 +34,8 @@ test("gerber export excludes DNP components from both BOM and PnP CSVs", async (
         layer: "top",
         rotation: 0,
         obstructs_within_bounds: true,
+        pin1_location: "topside_left",
+        supplier_pin1_location_map: { jlcpcb: "topside_left" },
         ...(doNotPlace === undefined ? {} : { do_not_place: doNotPlace }),
       },
     ],
