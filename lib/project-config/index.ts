@@ -30,6 +30,8 @@ export const DEFAULT_BOARD_FILE_PATTERNS = [
   "**/*.board.tsx",
   "**/*.circuit.tsx",
   "**/*.circuit.json",
+  // Saved diagnostic circuits must not replace the project entrypoint.
+  "!**/logs/**/*.circuit.json",
 ]
 
 const parseProjectConfigObject = (
