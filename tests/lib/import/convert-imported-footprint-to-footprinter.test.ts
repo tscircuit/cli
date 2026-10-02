@@ -125,11 +125,11 @@ export const TestChip = () => (
       const originalPad = pads.find((pad) =>
         pad.port_hints?.includes(`pin${pin}`),
       )!
-      expect(renderedPad.x).toBeCloseTo(originalPad.x)
-      expect(renderedPad.y).toBeCloseTo(originalPad.y)
       expect(renderedPad.shape).toBe("rect")
       if (renderedPad.shape !== "rect" || originalPad.shape !== "rect")
         throw new Error("Expected rectangular pads")
+      expect(renderedPad.x).toBeCloseTo(originalPad.x)
+      expect(renderedPad.y).toBeCloseTo(originalPad.y)
       expect(renderedPad.width).toBeCloseTo(originalPad.width)
       expect(renderedPad.height).toBeCloseTo(originalPad.height)
     }
