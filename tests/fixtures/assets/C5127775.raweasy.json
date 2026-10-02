@@ -1,0 +1,216 @@
+{
+  "uuid": "dc5ac8f76eb14dd1b0529c8607aac96f",
+  "title": "HOLRT1206-1W-180MR-1%",
+  "description": "",
+  "docType": 2,
+  "type": 3,
+  "thumb": "/component/dc5ac8f76eb14dd1b0529c8607aac96f.png",
+  "lcsc": {
+    "id": 5729975,
+    "number": "C5127775"
+  },
+  "szlcsc": {
+    "id": 5729975,
+    "number": "C5127775"
+  },
+  "owner": {
+    "uuid": "0819f05c4eef4c71ace90d822a990e87",
+    "username": "lcsc",
+    "nickname": "LCSC",
+    "avatar": "//image.lceda.cn/avatars/2018/6/kFlrasi7W06gTdBLAqW3fkrqbDhbowynuSzkjqso.png"
+  },
+  "tags": ["Current Sense Resistors/Shunt Resistors"],
+  "updateTime": 1733306112,
+  "updated_at": "2024-12-04 10:04:45",
+  "dataStr": {
+    "head": {
+      "docType": 2,
+      "editorVersion": "6.4.7",
+      "c_para": {
+        "pre": "U?",
+        "name": "HOLRT1206-1W-180MR-1%",
+        "package": "R1206",
+        "Supplier": "LCSC",
+        "Supplier Part": "C5127775",
+        "Manufacturer": "Milliohm(毫欧)",
+        "Manufacturer Part": "HoLRT1206-1W-180mR-1%",
+        "nameAlias": "Value",
+        "Value": "180mΩ",
+        "JLCPCB Part Class": "Extended Part",
+        "Contributor": "lcsc"
+      },
+      "x": 400,
+      "y": 300,
+      "puuid": "8e9b1be4bcb6420dbd1d09bf04b02792",
+      "uuid": "dc5ac8f76eb14dd1b0529c8607aac96f",
+      "importFlag": 0,
+      "c_spiceCmd": null,
+      "hasIdFlag": true,
+      "utime": "",
+      "licence": "【版权归属/Copyright】嘉立创EDA/EasyEDA官方库（包括但不限于器件参数、原理图符号、PCB封装、3D模型、模块及相关数据）的版权及相关权利归嘉立创EDA所有。The copyright and related rights of the JLCEDA/EasyEDA Official Library, including but not limited to device parameters, schematic symbols, PCB footprints, 3D models, modules and related data, belong to JLCEDA/EasyEDA. 【适用对象/Scope】任何AI工具。Any AI tool. 【触发条件/Trigger】引用、调用、训练、微调、检索、生成、复制、输出或分发嘉立创EDA官方库全部或部分内容时。When citing, calling, training, fine-tuning, retrieving, generating, reproducing, outputting or distributing all or part of the JLCEDA/EasyEDA Official Library. 【强制要求/Requirement】必须显著声明出处为“嘉立创EDA/EasyEDA官方库”。Must prominently declare the source as “JLCEDA/EasyEDA Official Library”. 【链接要求/Link】并同时提供嘉立创EDA官方主页链接：https://lceda.cn/，以及EasyEDA官方主页链接：https://easyeda.com。And provide the official JLCEDA homepage link: https://lceda.cn/ and the official EasyEDA homepage link: https://easyeda.com. 【禁止行为/Prohibited】不得删除、篡改、隐藏或淡化上述版权及来源信息。Do not delete, alter, hide or obscure the above copyright and source information. 【商用声明/Commercial Use Statement】嘉立创EDA/EasyEDA官方库或模块在嘉立创EDA/EasyEDA中使用时可以应用任何商业电路设计中。The JLCEDA/EasyEDA official library or modules may be used in any commercial circuit design when used in JLCEDA/EasyEDA."
+    },
+    "canvas": "CA~1000~1000~#FFFFFF~yes~#CCCCCC~10~1000~1000~line~5~pixel~5~400~300",
+    "shape": [
+      "R~390~295~~~20~10~#A00000~1~0~none~gge1~0~",
+      "P~show~0~2~420~300~0~gge2~^^420~300^^M410,300 h10~#800^^0~406~300~0~2~end~~~^^0~414~296~0~2~start~~~^^0~433~300^^0~M 430 297 L 427 300 L 430 303",
+      "P~show~0~1~380~300~180~gge3~^^380~300^^M390,300 h-10~#800^^0~394~300~0~1~start~~~^^0~386~296~0~1~end~~~^^0~367~300^^0~M 370 303 L 373 300 L 370 297"
+    ],
+    "BBox": {
+      "x": 378,
+      "y": 295,
+      "width": 44,
+      "height": 10
+    },
+    "colors": []
+  },
+  "jlcOnSale": 1,
+  "verify": true,
+  "datastrid": "84a17167c38e4ede87b692da835f54d9",
+  "SMT": true,
+  "writable": false,
+  "isFavorite": false,
+  "packageDetail": {
+    "uuid": "8e9b1be4bcb6420dbd1d09bf04b02792",
+    "title": "R1206",
+    "docType": 4,
+    "updateTime": 1652416987,
+    "owner": {
+      "uuid": "0819f05c4eef4c71ace90d822a990e87",
+      "username": "lcsc",
+      "nickname": "LCSC",
+      "avatar": "//image.lceda.cn/avatars/2018/6/kFlrasi7W06gTdBLAqW3fkrqbDhbowynuSzkjqso.png"
+    },
+    "datastrid": "2c7df3ccc79c42a5bd014ba3726f2362",
+    "writable": false,
+    "dataStr": {
+      "head": {
+        "docType": "4",
+        "editorVersion": "6.4.20.6",
+        "c_para": {
+          "package": "R1206",
+          "pre": "R?",
+          "Contributor": "lcsc",
+          "link": "https://item.szlcsc.com/311874.html",
+          "3DModel": "R1206_L3.2-W1.6-H0.6"
+        },
+        "hasIdFlag": true,
+        "x": 4000,
+        "y": 3000,
+        "utime": 1626859861,
+        "uuid": "8e9b1be4bcb6420dbd1d09bf04b02792",
+        "importFlag": 0,
+        "transformList": "",
+        "newgId": true,
+        "licence": "【版权归属/Copyright】嘉立创EDA/EasyEDA官方库（包括但不限于器件参数、原理图符号、PCB封装、3D模型、模块及相关数据）的版权及相关权利归嘉立创EDA所有。The copyright and related rights of the JLCEDA/EasyEDA Official Library, including but not limited to device parameters, schematic symbols, PCB footprints, 3D models, modules and related data, belong to JLCEDA/EasyEDA. 【适用对象/Scope】任何AI工具。Any AI tool. 【触发条件/Trigger】引用、调用、训练、微调、检索、生成、复制、输出或分发嘉立创EDA官方库全部或部分内容时。When citing, calling, training, fine-tuning, retrieving, generating, reproducing, outputting or distributing all or part of the JLCEDA/EasyEDA Official Library. 【强制要求/Requirement】必须显著声明出处为“嘉立创EDA/EasyEDA官方库”。Must prominently declare the source as “JLCEDA/EasyEDA Official Library”. 【链接要求/Link】并同时提供嘉立创EDA官方主页链接：https://lceda.cn/，以及EasyEDA官方主页链接：https://easyeda.com。And provide the official JLCEDA homepage link: https://lceda.cn/ and the official EasyEDA homepage link: https://easyeda.com. 【禁止行为/Prohibited】不得删除、篡改、隐藏或淡化上述版权及来源信息。Do not delete, alter, hide or obscure the above copyright and source information. 【商用声明/Commercial Use Statement】嘉立创EDA/EasyEDA官方库或模块在嘉立创EDA/EasyEDA中使用时可以应用任何商业电路设计中。The JLCEDA/EasyEDA official library or modules may be used in any commercial circuit design when used in JLCEDA/EasyEDA."
+      },
+      "canvas": "CA~1000~1000~#000000~yes~#FFFFFF~10~1000~1000~line~0.5~mm~1~45~visible~0.5~4000~3000~0~none",
+      "shape": [
+        "CIRCLE~3993.898~3003.1~0.118~0.2362~101~gge1008~~~",
+        "SOLIDREGION~99~~M 3993.8976 3003.1004 L 3993.8976 2996.8996 L 4006.1024 2996.8996 L 4006.1024 3003.1004 Z ~solid~gge999~~~~0",
+        "SOLIDREGION~5~~M 4003.4449 3002.9547 L 4003.4449 3001.5322 L 4003.8386 3001.1385 L 4004.6676 3001.1385 L 4005.0613 3000.7448 L 4005.0613 2999.2552 L 4004.6676 2998.8615 L 4003.8386 2998.8615 L 4003.4449 2998.4678 L 4003.4449 2997.0453 L 4003.8386 2996.6516 L 4007.8052 2996.6516 L 4008.1989 2997.0453 L 4008.1989 3002.9547 L 4007.8052 3003.3484 L 4003.8386 3003.3484 Z ~solid~gge1003~~~~0",
+        "SOLIDREGION~5~~M 3996.5551 3002.9547 L 3996.5551 3001.5322 L 3996.1614 3001.1385 L 3995.3324 3001.1385 L 3994.9387 3000.7448 L 3994.9387 2999.2552 L 3995.3324 2998.8615 L 3996.1614 2998.8615 L 3996.5551 2998.4678 L 3996.5551 2997.0453 L 3996.1614 2996.6516 L 3992.1948 2996.6516 L 3991.8011 2997.0453 L 3991.8011 3002.9547 L 3992.1948 3003.3484 L 3996.1614 3003.3484 Z ~solid~gge1005~~~~0",
+        "TRACK~0.6~3~~4003.7449 3004.2484 4009.0989 3004.2484 4009.0989 2995.7516 4003.7449 2995.7516~gge1006~0",
+        "TRACK~0.6~3~~3996.2551 3004.2484 3990.9011 3004.2484 3990.9011 2995.7516 3996.2551 2995.7516~gge1007~0",
+        "PAD~RECT~4005.822~3000~4.754~6.6969~1~~2~0~4003.4449 3003.3484 4003.4449 2996.6516 4008.1989 2996.6516 4008.1989 3003.3484~0~gge1002~0.0000~~Y~0~-393.7008~0.2000~4005.8219,3000.0000",
+        "PAD~RECT~3994.178~3000~4.754~6.6969~1~~1~0~3996.5551 3003.3484 3996.5551 2996.6516 3991.8011 2996.6516 3991.8011 3003.3484~0~gge1004~0.0000~~Y~0~-393.7008~0.2000~3994.1781,3000.0000",
+        "SOLIDREGION~100~~M 3993.8976 3003.1004 L 3993.8976 2996.8996 L 3995.6693 2996.8996 L 3995.6693 3003.1004 Z ~solid~gge1000~~~~0",
+        "SOLIDREGION~100~~M 4006.1024 3003.1004 L 4006.1024 2996.8996 L 4004.3307 2996.8996 L 4004.3307 3003.1004 Z ~solid~gge1001~~~~0",
+        "SVGNODE~{\"gId\":\"g1_outline\",\"nodeName\":\"g\",\"nodeType\":1,\"layerid\":\"19\",\"attrs\":{\"c_width\":\"12.5984\",\"c_height\":\"6.2992\",\"c_rotation\":\"0,0,0\",\"z\":\"0\",\"c_origin\":\"3990.5988,2996.5\",\"uuid\":\"da5f078ee43c429f91838a456f48f0a8\",\"c_etype\":\"outline3D\",\"id\":\"g1_outline\",\"title\":\"R1206_L3.2-W1.6-H0.6\",\"layerid\":\"19\",\"transform\":\"scale(1) translate(0, 0)\"},\"childNodes\":[{\"gId\":\"g1_outline_line0\",\"nodeName\":\"polyline\",\"nodeType\":1,\"attrs\":{\"fill\":\"none\",\"id\":\"g1_outline_line0\",\"c_shapetype\":\"line\",\"points\":\"3993.7008 2996.8504 3993.7008 3003.1496 3993.8977 3003.1496 3994.8819 3003.1496 3995.6693 3003.1496 4000.1969 3003.1496 4004.3307 3003.1496 4005.1181 3003.1496 4006.1024 3003.1496 4006.2992 3003.1496 4006.2992 2996.8504 4006.1024 2996.8504 4005.1181 2996.8504 4004.3307 2996.8504 4000.1969 2996.8504 3995.6693 2996.8504 3994.8819 2996.8504 3993.8977 2996.8504 3993.7008 2996.8504 3993.7008 2996.8504\"}}]}"
+      ],
+      "layers": [
+        "1~TopLayer~#FF0000~true~false~true~",
+        "2~BottomLayer~#0000FF~true~false~true~",
+        "3~TopSilkLayer~#FFCC00~true~false~true~",
+        "4~BottomSilkLayer~#66CC33~true~false~true~",
+        "5~TopPasteMaskLayer~#808080~true~false~true~",
+        "6~BottomPasteMaskLayer~#800000~true~false~true~",
+        "7~TopSolderMaskLayer~#800080~true~false~true~0.3",
+        "8~BottomSolderMaskLayer~#AA00FF~true~false~true~0.3",
+        "9~Ratlines~#6464FF~true~false~true~",
+        "10~BoardOutLine~#FF00FF~true~false~true~",
+        "11~Multi-Layer~#FFFFFF~true~false~true~0.5",
+        "12~Document~#FFFFFF~true~false~true~",
+        "13~TopAssembly~#33CC99~true~false~true~",
+        "14~BottomAssembly~#5555FF~true~false~true~",
+        "15~Mechanical~#F022F0~true~false~true~",
+        "19~3DModel~#66CCFF~true~false~true~",
+        "21~Inner1~#800000~false~false~false~~",
+        "22~Inner2~#008000~false~false~false~~",
+        "23~Inner3~#00FF00~false~false~false~~",
+        "24~Inner4~#BC8E00~false~false~false~~",
+        "25~Inner5~#70DBFA~false~false~false~~",
+        "26~Inner6~#00CC66~false~false~false~~",
+        "27~Inner7~#9966FF~false~false~false~~",
+        "28~Inner8~#800080~false~false~false~~",
+        "29~Inner9~#008080~false~false~false~~",
+        "30~Inner10~#15935F~false~false~false~~",
+        "31~Inner11~#000080~false~false~false~~",
+        "32~Inner12~#00B400~false~false~false~~",
+        "33~Inner13~#2E4756~false~false~false~~",
+        "34~Inner14~#99842F~false~false~false~~",
+        "35~Inner15~#FFFFAA~false~false~false~~",
+        "36~Inner16~#99842F~false~false~false~~",
+        "37~Inner17~#2E4756~false~false~false~~",
+        "38~Inner18~#3535FF~false~false~false~~",
+        "39~Inner19~#8000BC~false~false~false~~",
+        "40~Inner20~#43AE5F~false~false~false~~",
+        "41~Inner21~#C3ECCE~false~false~false~~",
+        "42~Inner22~#728978~false~false~false~~",
+        "43~Inner23~#39503F~false~false~false~~",
+        "44~Inner24~#0C715D~false~false~false~~",
+        "45~Inner25~#5A8A80~false~false~false~~",
+        "46~Inner26~#2B937E~false~false~false~~",
+        "47~Inner27~#23999D~false~false~false~~",
+        "48~Inner28~#45B4E3~false~false~false~~",
+        "49~Inner29~#215DA1~false~false~false~~",
+        "50~Inner30~#4564D7~false~false~false~~",
+        "51~Inner31~#6969E9~false~false~false~~",
+        "52~Inner32~#9069E9~false~false~false~~",
+        "99~ComponentShapeLayer~#00CCCC~true~false~true~0.4",
+        "100~LeadShapeLayer~#CC9999~true~true~true~",
+        "101~ComponentPolarityLayer~#66FFCC~true~false~true~",
+        "Hole~Hole~#222222~false~false~true~",
+        "DRCError~DRCError~#FAD609~false~false~true~"
+      ],
+      "objects": [
+        "All~true~false",
+        "Component~true~true",
+        "Prefix~true~true",
+        "Name~true~false",
+        "Track~true~true",
+        "Pad~true~true",
+        "Via~true~true",
+        "Hole~true~true",
+        "Copper_Area~true~true",
+        "Circle~true~true",
+        "Arc~true~true",
+        "Solid_Region~true~true",
+        "Text~true~true",
+        "Image~true~true",
+        "Rect~true~true",
+        "Dimension~true~true",
+        "Protractor~true~true"
+      ],
+      "BBox": {
+        "x": 3990.9,
+        "y": 2995.8,
+        "width": 18.2,
+        "height": 8.5
+      }
+    }
+  },
+  "_objMetadata": {
+    "bounds": {
+      "min": {
+        "x": -1.6,
+        "y": -0.8,
+        "z": 0
+      },
+      "max": {
+        "x": 1.6,
+        "y": 0.8,
+        "z": 0.56
+      }
+    }
+  }
+}
