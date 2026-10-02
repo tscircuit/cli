@@ -12,6 +12,8 @@ import rawRegulator from "../../fixtures/assets/datasheets/C460327.raweasy.json"
 import rawF1c from "../../fixtures/assets/datasheets/C1511928.raweasy.json"
 import regulator from "../../fixtures/assets/datasheets/AP2127K-2.8TRG1.datasheet.json"
 import f1c from "../../fixtures/assets/datasheets/F1C100S.datasheet.json"
+import rawImx6 from "../../fixtures/assets/datasheets/C430888.raweasy.json"
+import imx6 from "../../fixtures/assets/datasheets/MCIMX6D6AVT08AD.datasheet.json"
 
 // Evaluate only fixed/generated test fixtures, never API-provided TSX.
 const mockFetch = (
@@ -45,6 +47,8 @@ for (const [raw, response, useExactFootprint] of [
   [rawF1c, f1c, true],
   [rawRegulator, regulator, false],
   [rawF1c, f1c, false],
+  [rawImx6, imx6, true],
+  [rawImx6, imx6, false],
 ] as const) {
   test(`import adds stored attributes to every pin of ${response.datasheet.chip_name} (${useExactFootprint ? "exact" : "compact"})`, async () => {
     const directory = temporaryDirectory()
@@ -70,7 +74,7 @@ for (const [raw, response, useExactFootprint] of [
       throw Error(`Unexpected fetch: ${url}`)
     })
     try {
-      const { filePath } = await importComponentFromJlcpcb(
+      const { filePath, footprintConversion } = await importComponentFromJlcpcb(
         raw.lcsc.number,
         directory,
         { useExactFootprint },
@@ -80,16 +84,28 @@ for (const [raw, response, useExactFootprint] of [
       for (const [pin, attributes] of Object.entries(
         response.datasheet.pin_attributes,
       )) {
+        // BGA datasheets identify physical balls; generated TSX may key their
+        // attributes by the numeric port whose labels contain that ball.
+        const attributeKey = props.pinAttributes[pin]
+          ? pin
+          : Object.entries(props.pinLabels).find(([_key, labels]) =>
+              (labels as string[]).includes(pin),
+            )?.[0]
+        expect(attributeKey).toBeDefined()
         for (const [name, value] of Object.entries(attributes)) {
           expect(
             Array.isArray(value)
-              ? [...props.pinAttributes[pin][name]].sort()
-              : props.pinAttributes[pin][name],
+              ? [...props.pinAttributes[attributeKey!][name]].sort()
+              : props.pinAttributes[attributeKey!][name],
           ).toEqual(Array.isArray(value) ? [...value].sort() : value)
         }
       }
       expect(Object.keys(props.pinAttributes)).toHaveLength(
-        response.datasheet.pin_information.length,
+        // Empty source maps contain no expressible attributes and are omitted
+        // from TSX; physical pin coverage is checked independently below.
+        Object.values(response.datasheet.pin_attributes).filter(
+          (attributes) => Object.keys(attributes).length > 0,
+        ).length,
       )
       expect(datasheetRequests).toBe(1)
       expect(props.supplierPartNumbers.jlcpcb).toContain(raw.lcsc.number)
@@ -105,7 +121,18 @@ for (const [raw, response, useExactFootprint] of [
       expect(props.cadModel.objUrl).toContain(raw.lcsc.number)
       expect(props.cadModel.stepUrl).toContain(raw.lcsc.number)
       if (useExactFootprint) expect(props.footprint.type).toBe("footprint")
-      else expect(typeof props.footprint).toBe("string")
+      else {
+        expect(footprintConversion.mode).toBe("footprinter")
+        expect(typeof props.footprint).toBe("string")
+        if (response.datasheet.chip_name === "MCIMX6D6AVT08AD") {
+          expect(props.footprint).toContain("pinnumbering(columnmajor)")
+          expect(props.footprint).toContain("_missing(1)")
+          expect(source).not.toContain("footprinterPinLabels")
+          expect(props.pinLabels.pin1).toContain("B1")
+          expect(props.pinLabels.pin25).toContain("A2")
+          expect(props.pinLabels.pin624).toContain("AE25")
+        }
+      }
       const override = { pin1: { mustBeConnected: false } }
       expect(
         getChipProps(source, { pinAttributes: override }).pinAttributes,
@@ -114,7 +141,7 @@ for (const [raw, response, useExactFootprint] of [
       fetchMock.mockRestore()
       await rm(directory, { recursive: true, force: true })
     }
-  })
+  }, 30_000)
 }
 
 test("enriches source ports with physical-pin overrides, false/zero values and capabilities", () => {

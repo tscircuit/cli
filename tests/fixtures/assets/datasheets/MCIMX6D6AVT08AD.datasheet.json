@@ -1,0 +1,5978 @@
+{
+  "datasheet": {
+    "chip_name": "MCIMX6D6AVT08AD",
+    "pin_attributes": {
+      "A2": {},
+      "A3": {
+        "isOutput": true
+      },
+      "A4": {
+        "requiresGround": true,
+        "requiresVoltage": 0,
+        "mustBeConnected": true
+      },
+      "A5": {
+        "isInput": true,
+        "requiresGround": true,
+        "requiresVoltage": 0,
+        "mustBeConnected": true
+      },
+      "A6": {
+        "isInput": true,
+        "isOutput": true,
+        "isBidirectional": true
+      },
+      "A7": {
+        "isInput": true
+      },
+      "A8": {
+        "requiresGround": true,
+        "requiresVoltage": 0,
+        "mustBeConnected": true
+      },
+      "A9": {
+        "isInput": true,
+        "isOutput": true,
+        "isBidirectional": true
+      },
+      "B1": {
+        "isInput": true
+      },
+      "B2": {
+        "isInput": true
+      },
+      "B3": {
+        "isOutput": true
+      },
+      "B4": {
+        "requiresGround": true,
+        "requiresVoltage": 0,
+        "mustBeConnected": true
+      },
+      "B5": {
+        "isInput": true,
+        "requiresGround": true,
+        "requiresVoltage": 0,
+        "mustBeConnected": true
+      },
+      "B6": {
+        "isInput": true,
+        "isOutput": true,
+        "isBidirectional": true
+      },
+      "B7": {
+        "isOutput": true
+      },
+      "B8": {
+        "isOutput": true,
+        "needsExternalPullup": true,
+        "canUseOpenDrain": true,
+        "isUsingOpenDrain": true
+      },
+      "B9": {
+        "isInput": true,
+        "isOutput": true,
+        "isBidirectional": true
+      },
+      "C1": {
+        "requiresGround": true,
+        "requiresVoltage": 0,
+        "mustBeConnected": true
+      },
+      "C2": {
+        "isInput": true,
+        "canUseInternalPullup": true
+      },
+      "C3": {
+        "isInput": true,
+        "canUseInternalPullup": true
+      },
+      "C4": {
+        "requiresGround": true,
+        "requiresVoltage": 0,
+        "mustBeConnected": true
+      },
+      "C5": {
+        "isInput": true
+      },
+      "C6": {
+        "requiresGround": true,
+        "requiresVoltage": 0,
+        "mustBeConnected": true
+      },
+      "C7": {
+        "isInput": true
+      },
+      "C8": {
+        "isOutput": true,
+        "doNotConnect": true
+      },
+      "C9": {
+        "isOutput": true
+      },
+      "D1": {
+        "isInput": true
+      },
+      "D2": {
+        "isInput": true
+      },
+      "D3": {
+        "requiresGround": true,
+        "requiresVoltage": 0,
+        "mustBeConnected": true
+      },
+      "D4": {},
+      "D5": {
+        "isInput": true
+      },
+      "D6": {
+        "requiresGround": true,
+        "requiresVoltage": 0,
+        "mustBeConnected": true
+      },
+      "D7": {
+        "isInput": true
+      },
+      "D8": {
+        "requiresGround": true,
+        "requiresVoltage": 0,
+        "mustBeConnected": true
+      },
+      "D9": {
+        "isInput": true
+      },
+      "E1": {
+        "isInput": true
+      },
+      "E2": {
+        "isInput": true
+      },
+      "E3": {
+        "isInput": true
+      },
+      "E4": {
+        "isInput": true
+      },
+      "E5": {
+        "requiresGround": true,
+        "requiresVoltage": 0,
+        "mustBeConnected": true
+      },
+      "E6": {
+        "requiresGround": true,
+        "requiresVoltage": 0,
+        "mustBeConnected": true
+      },
+      "E7": {
+        "requiresGround": true,
+        "requiresVoltage": 0,
+        "mustBeConnected": true
+      },
+      "E8": {
+        "isOutput": true,
+        "mustBeConnected": true,
+        "shouldHaveDecouplingCapacitor": true,
+        "recommendedDecouplingCapacitorCapacitance": "10uF"
+      },
+      "E9": {
+        "shouldHaveDecouplingCapacitor": true
+      },
+      "F1": {
+        "isInput": true
+      },
+      "F2": {
+        "isInput": true
+      },
+      "F3": {
+        "isInput": true
+      },
+      "F4": {
+        "isInput": true
+      },
+      "F5": {
+        "requiresGround": true,
+        "requiresVoltage": 0,
+        "mustBeConnected": true
+      },
+      "F6": {
+        "requiresGround": true,
+        "requiresVoltage": 0,
+        "mustBeConnected": true
+      },
+      "F7": {
+        "requiresGround": true,
+        "requiresVoltage": 0,
+        "mustBeConnected": true
+      },
+      "F8": {
+        "requiresGround": true,
+        "requiresVoltage": 0,
+        "mustBeConnected": true
+      },
+      "F9": {
+        "isOutput": true,
+        "mustBeConnected": true,
+        "shouldHaveDecouplingCapacitor": true,
+        "recommendedDecouplingCapacitorCapacitance": "10uF"
+      },
+      "G1": {
+        "isInput": true,
+        "isOutput": true,
+        "isBidirectional": true
+      },
+      "G2": {
+        "isInput": true,
+        "isOutput": true,
+        "isBidirectional": true
+      },
+      "G3": {
+        "requiresGround": true,
+        "requiresVoltage": 0,
+        "mustBeConnected": true
+      },
+      "G4": {},
+      "G5": {
+        "isInput": true,
+        "canUseInternalPullup": true
+      },
+      "G6": {
+        "isOutput": true,
+        "canUseTriState": true
+      },
+      "G7": {
+        "shouldHaveDecouplingCapacitor": true
+      },
+      "G8": {
+        "shouldHaveDecouplingCapacitor": true
+      },
+      "G9": {
+        "isOutput": true,
+        "mustBeConnected": true,
+        "shouldHaveDecouplingCapacitor": true,
+        "recommendedDecouplingCapacitorCapacitance": "0.22uF"
+      },
+      "H1": {
+        "isOutput": true
+      },
+      "H2": {
+        "isOutput": true
+      },
+      "H3": {
+        "isOutput": true
+      },
+      "H4": {
+        "isOutput": true
+      },
+      "H5": {
+        "isInput": true,
+        "canUseInternalPullup": true
+      },
+      "H6": {
+        "isInput": true,
+        "canUseInternalPullup": true
+      },
+      "H7": {
+        "shouldHaveDecouplingCapacitor": true
+      },
+      "H8": {
+        "requiresGround": true,
+        "requiresVoltage": 0,
+        "mustBeConnected": true
+      },
+      "H9": {
+        "requiresPower": true,
+        "shouldHaveDecouplingCapacitor": true
+      },
+      "J1": {},
+      "J2": {
+        "requiresGround": true,
+        "requiresVoltage": 0,
+        "mustBeConnected": true
+      },
+      "J3": {
+        "isOutput": true
+      },
+      "J4": {
+        "isOutput": true
+      },
+      "J5": {
+        "isOutput": true
+      },
+      "J6": {
+        "isOutput": true
+      },
+      "J7": {
+        "requiresPower": true,
+        "shouldHaveDecouplingCapacitor": true
+      },
+      "J8": {
+        "requiresGround": true,
+        "requiresVoltage": 0,
+        "mustBeConnected": true
+      },
+      "J9": {
+        "requiresPower": true,
+        "shouldHaveDecouplingCapacitor": true
+      },
+      "K1": {
+        "isInput": true
+      },
+      "K2": {},
+      "K3": {
+        "isOutput": true
+      },
+      "K4": {
+        "isOutput": true
+      },
+      "K5": {
+        "isOutput": true
+      },
+      "K6": {
+        "isOutput": true
+      },
+      "K7": {
+        "requiresPower": true,
+        "requiresVoltage": 2.5,
+        "mustBeConnected": true,
+        "shouldHaveDecouplingCapacitor": true
+      },
+      "K8": {
+        "requiresGround": true,
+        "requiresVoltage": 0,
+        "mustBeConnected": true
+      },
+      "K9": {
+        "shouldHaveDecouplingCapacitor": true
+      },
+      "L1": {
+        "isInput": true,
+        "isOutput": true,
+        "isBidirectional": true,
+        "canUseTriState": true,
+        "capabilities": ["uart_rx", "uart_tx"],
+        "canUseInternalPullup": true,
+        "canUseInternalPulldown": true,
+        "canUseOpenDrain": true,
+        "canUsePushPull": true,
+        "isGpio": true
+      },
+      "L2": {
+        "requiresGround": true,
+        "requiresVoltage": 0,
+        "mustBeConnected": true
+      },
+      "L3": {
+        "isInput": true,
+        "isOutput": true,
+        "isBidirectional": true,
+        "canUseTriState": true,
+        "canUseInternalPullup": true,
+        "canUseInternalPulldown": true,
+        "canUseOpenDrain": true,
+        "canUsePushPull": true,
+        "isGpio": true
+      },
+      "L4": {
+        "isInput": true,
+        "isOutput": true,
+        "isBidirectional": true,
+        "canUseTriState": true,
+        "canUseInternalPullup": true,
+        "canUseInternalPulldown": true,
+        "canUseOpenDrain": true,
+        "canUsePushPull": true,
+        "isGpio": true
+      },
+      "L5": {
+        "requiresGround": true,
+        "requiresVoltage": 0,
+        "mustBeConnected": true
+      },
+      "L6": {
+        "isInput": true,
+        "isOutput": true,
+        "isBidirectional": true,
+        "canUseTriState": true,
+        "canUseInternalPullup": true,
+        "canUseInternalPulldown": true,
+        "canUseOpenDrain": true,
+        "canUsePushPull": true,
+        "isGpio": true
+      },
+      "L7": {
+        "shouldHaveDecouplingCapacitor": true
+      },
+      "L8": {
+        "requiresGround": true,
+        "requiresVoltage": 0,
+        "mustBeConnected": true
+      },
+      "L9": {
+        "shouldHaveDecouplingCapacitor": true
+      },
+      "M1": {
+        "isInput": true,
+        "isOutput": true,
+        "isBidirectional": true,
+        "canUseTriState": true,
+        "capabilities": ["spi_miso", "uart_tx", "uart_rx"],
+        "canUseInternalPullup": true,
+        "canUseInternalPulldown": true,
+        "canUseOpenDrain": true,
+        "canUsePushPull": true,
+        "isGpio": true
+      },
+      "M2": {
+        "isInput": true,
+        "isOutput": true,
+        "isBidirectional": true,
+        "canUseTriState": true,
+        "capabilities": ["uart_tx", "uart_rx"],
+        "canUseInternalPullup": true,
+        "canUseInternalPulldown": true,
+        "canUseOpenDrain": true,
+        "canUsePushPull": true,
+        "isGpio": true
+      },
+      "M3": {
+        "isInput": true,
+        "isOutput": true,
+        "isBidirectional": true,
+        "canUseTriState": true,
+        "capabilities": ["spi_cs", "uart_rx", "uart_tx"],
+        "canUseInternalPullup": true,
+        "canUseInternalPulldown": true,
+        "canUseOpenDrain": true,
+        "canUsePushPull": true,
+        "isGpio": true
+      },
+      "M4": {
+        "isInput": true,
+        "isOutput": true,
+        "isBidirectional": true,
+        "canUseTriState": true,
+        "capabilities": ["uart_tx", "uart_rx"],
+        "canUseInternalPullup": true,
+        "canUseInternalPulldown": true,
+        "canUseOpenDrain": true,
+        "canUsePushPull": true,
+        "isGpio": true
+      },
+      "M5": {
+        "isInput": true,
+        "isOutput": true,
+        "isBidirectional": true,
+        "canUseTriState": true,
+        "capabilities": ["uart_rx", "uart_tx"],
+        "canUseInternalPullup": true,
+        "canUseInternalPulldown": true,
+        "canUseOpenDrain": true,
+        "canUsePushPull": true,
+        "isGpio": true
+      },
+      "M6": {
+        "isInput": true,
+        "isOutput": true,
+        "isBidirectional": true,
+        "canUseTriState": true,
+        "canUseInternalPullup": true,
+        "canUseInternalPulldown": true,
+        "canUseOpenDrain": true,
+        "canUsePushPull": true,
+        "isGpio": true
+      },
+      "M7": {
+        "shouldHaveDecouplingCapacitor": true
+      },
+      "M8": {
+        "requiresGround": true,
+        "requiresVoltage": 0,
+        "mustBeConnected": true
+      },
+      "M9": {
+        "shouldHaveDecouplingCapacitor": true
+      },
+      "N1": {
+        "isInput": true,
+        "isOutput": true,
+        "isBidirectional": true,
+        "canUseTriState": true,
+        "capabilities": ["spi_sck"],
+        "canUseInternalPullup": true,
+        "canUseInternalPulldown": true,
+        "canUseOpenDrain": true,
+        "canUsePushPull": true,
+        "isGpio": true
+      },
+      "N2": {
+        "isInput": true,
+        "isOutput": true,
+        "isBidirectional": true,
+        "canUseTriState": true,
+        "canUseInternalPullup": true,
+        "canUseInternalPulldown": true,
+        "canUseOpenDrain": true,
+        "canUsePushPull": true,
+        "isGpio": true
+      },
+      "N3": {
+        "isInput": true,
+        "isOutput": true,
+        "isBidirectional": true,
+        "canUseTriState": true,
+        "capabilities": ["spi_cs"],
+        "canUseInternalPullup": true,
+        "canUseInternalPulldown": true,
+        "canUseOpenDrain": true,
+        "canUsePushPull": true,
+        "isGpio": true
+      },
+      "N4": {
+        "isInput": true,
+        "isOutput": true,
+        "isBidirectional": true,
+        "canUseTriState": true,
+        "capabilities": ["spi_miso"],
+        "canUseInternalPullup": true,
+        "canUseInternalPulldown": true,
+        "canUseOpenDrain": true,
+        "canUsePushPull": true,
+        "isGpio": true
+      },
+      "N5": {
+        "isInput": true,
+        "isOutput": true,
+        "isBidirectional": true,
+        "canUseTriState": true,
+        "capabilities": ["spi_mosi", "i2c_scl"],
+        "canUseInternalPullup": true,
+        "canUseInternalPulldown": true,
+        "canUseOpenDrain": true,
+        "canUsePushPull": true,
+        "isGpio": true
+      },
+      "N6": {
+        "isInput": true,
+        "isOutput": true,
+        "isBidirectional": true,
+        "canUseTriState": true,
+        "capabilities": ["spi_sck", "i2c_sda"],
+        "canUseInternalPullup": true,
+        "canUseInternalPulldown": true,
+        "canUseOpenDrain": true,
+        "canUsePushPull": true,
+        "isGpio": true
+      },
+      "N7": {
+        "requiresPower": true,
+        "shouldHaveDecouplingCapacitor": true
+      },
+      "N8": {
+        "requiresGround": true,
+        "requiresVoltage": 0,
+        "mustBeConnected": true
+      },
+      "N9": {
+        "shouldHaveDecouplingCapacitor": true
+      },
+      "P1": {
+        "isInput": true,
+        "isOutput": true,
+        "isBidirectional": true,
+        "canUseTriState": true,
+        "canUseInternalPullup": true,
+        "canUseInternalPulldown": true,
+        "canUseOpenDrain": true,
+        "canUsePushPull": true,
+        "isGpio": true
+      },
+      "P2": {
+        "isInput": true,
+        "isOutput": true,
+        "isBidirectional": true,
+        "canUseTriState": true,
+        "capabilities": ["spi_mosi"],
+        "canUseInternalPullup": true,
+        "canUseInternalPulldown": true,
+        "canUseOpenDrain": true,
+        "canUsePushPull": true,
+        "isGpio": true
+      },
+      "P3": {
+        "isInput": true,
+        "isOutput": true,
+        "isBidirectional": true,
+        "canUseTriState": true,
+        "canUseInternalPullup": true,
+        "canUseInternalPulldown": true,
+        "canUseOpenDrain": true,
+        "canUsePushPull": true,
+        "isGpio": true
+      },
+      "P4": {
+        "isInput": true,
+        "isOutput": true,
+        "isBidirectional": true,
+        "canUseTriState": true,
+        "canUseInternalPullup": true,
+        "canUseInternalPulldown": true,
+        "canUseOpenDrain": true,
+        "canUsePushPull": true,
+        "isGpio": true
+      },
+      "P5": {
+        "isInput": true,
+        "isOutput": true,
+        "isBidirectional": true,
+        "canUseTriState": true,
+        "canUseInternalPullup": true,
+        "canUseInternalPulldown": true,
+        "canUseOpenDrain": true,
+        "canUsePushPull": true,
+        "isGpio": true
+      },
+      "P6": {
+        "isInput": true,
+        "isOutput": true,
+        "isBidirectional": true,
+        "canUseTriState": true,
+        "canUseInternalPullup": true,
+        "canUseInternalPulldown": true,
+        "canUseOpenDrain": true,
+        "canUsePushPull": true,
+        "isGpio": true
+      },
+      "P7": {
+        "requiresPower": true,
+        "shouldHaveDecouplingCapacitor": true
+      },
+      "P8": {
+        "requiresGround": true,
+        "requiresVoltage": 0,
+        "mustBeConnected": true
+      },
+      "P9": {
+        "shouldHaveDecouplingCapacitor": true
+      },
+      "R1": {
+        "isInput": true,
+        "isOutput": true,
+        "isBidirectional": true,
+        "canUseTriState": true,
+        "canUseInternalPullup": true,
+        "canUseInternalPulldown": true,
+        "canUseOpenDrain": true,
+        "canUsePushPull": true,
+        "isGpio": true
+      },
+      "R2": {
+        "isInput": true,
+        "isOutput": true,
+        "isBidirectional": true,
+        "canUseTriState": true,
+        "capabilities": ["i2c_sda"],
+        "canUseInternalPullup": true,
+        "canUseInternalPulldown": true,
+        "canUseOpenDrain": true,
+        "canUsePushPull": true,
+        "isGpio": true
+      },
+      "R3": {
+        "isInput": true,
+        "isOutput": true,
+        "isBidirectional": true,
+        "canUseTriState": true,
+        "capabilities": ["uart_tx", "uart_rx"],
+        "canUseInternalPullup": true,
+        "canUseInternalPulldown": true,
+        "canUseOpenDrain": true,
+        "canUsePushPull": true,
+        "isGpio": true
+      },
+      "R4": {
+        "isInput": true,
+        "isOutput": true,
+        "isBidirectional": true,
+        "canUseTriState": true,
+        "capabilities": ["i2c_scl"],
+        "canUseInternalPullup": true,
+        "canUseInternalPulldown": true,
+        "canUseOpenDrain": true,
+        "canUsePushPull": true,
+        "isGpio": true
+      },
+      "R5": {
+        "isInput": true,
+        "isOutput": true,
+        "isBidirectional": true,
+        "canUseTriState": true,
+        "capabilities": ["uart_rx", "uart_tx"],
+        "canUseInternalPullup": true,
+        "canUseInternalPulldown": true,
+        "canUseOpenDrain": true,
+        "canUsePushPull": true,
+        "isGpio": true
+      },
+      "R6": {
+        "isInput": true,
+        "isOutput": true,
+        "isBidirectional": true,
+        "canUseTriState": true,
+        "canUseInternalPullup": true,
+        "canUseInternalPulldown": true,
+        "canUseOpenDrain": true,
+        "canUsePushPull": true,
+        "isGpio": true
+      },
+      "R7": {
+        "isInput": true,
+        "isOutput": true,
+        "isBidirectional": true,
+        "canUseTriState": true,
+        "capabilities": ["i2c_scl"],
+        "canUseInternalPullup": true,
+        "canUseInternalPulldown": true,
+        "canUseOpenDrain": true,
+        "canUsePushPull": true,
+        "isGpio": true
+      },
+      "R8": {
+        "requiresGround": true,
+        "requiresVoltage": 0,
+        "mustBeConnected": true
+      },
+      "R9": {
+        "shouldHaveDecouplingCapacitor": true
+      },
+      "T1": {
+        "isInput": true,
+        "isOutput": true,
+        "isBidirectional": true,
+        "canUseTriState": true,
+        "canUseInternalPullup": true,
+        "canUseInternalPulldown": true,
+        "canUseOpenDrain": true,
+        "canUsePushPull": true,
+        "isGpio": true
+      },
+      "T2": {
+        "isInput": true,
+        "isOutput": true,
+        "isBidirectional": true,
+        "canUseTriState": true,
+        "canUseInternalPullup": true,
+        "canUseInternalPulldown": true,
+        "canUseOpenDrain": true,
+        "canUsePushPull": true,
+        "isGpio": true
+      },
+      "T3": {
+        "isInput": true,
+        "isOutput": true,
+        "isBidirectional": true,
+        "canUseTriState": true,
+        "capabilities": ["i2c_sda"],
+        "canUseInternalPullup": true,
+        "canUseInternalPulldown": true,
+        "canUseOpenDrain": true,
+        "canUsePushPull": true,
+        "isGpio": true
+      },
+      "T4": {
+        "isInput": true,
+        "isOutput": true,
+        "isBidirectional": true,
+        "canUseTriState": true,
+        "canUseInternalPullup": true,
+        "canUseInternalPulldown": true,
+        "canUseOpenDrain": true,
+        "canUsePushPull": true,
+        "isGpio": true
+      },
+      "T5": {
+        "isInput": true,
+        "isOutput": true,
+        "isBidirectional": true,
+        "canUseTriState": true,
+        "canUseInternalPulldown": true,
+        "canUseOpenDrain": true,
+        "canUsePushPull": true,
+        "isGpio": true
+      },
+      "T6": {
+        "isInput": true,
+        "isOutput": true,
+        "isBidirectional": true,
+        "canUseTriState": true,
+        "canUseInternalPullup": true,
+        "canUseInternalPulldown": true,
+        "canUseOpenDrain": true,
+        "canUsePushPull": true,
+        "isGpio": true
+      },
+      "T7": {
+        "isInput": true,
+        "isOutput": true,
+        "isBidirectional": true,
+        "canUseTriState": true,
+        "capabilities": ["i2c_sda"],
+        "canUseInternalPullup": true,
+        "canUseInternalPulldown": true,
+        "canUseOpenDrain": true,
+        "canUsePushPull": true,
+        "isGpio": true
+      },
+      "T8": {
+        "requiresGround": true,
+        "requiresVoltage": 0,
+        "mustBeConnected": true
+      },
+      "T9": {
+        "shouldHaveDecouplingCapacitor": true
+      },
+      "U1": {
+        "isOutput": true
+      },
+      "U2": {
+        "isOutput": true
+      },
+      "U3": {
+        "isOutput": true
+      },
+      "U4": {
+        "isOutput": true
+      },
+      "U5": {
+        "isInput": true,
+        "isOutput": true,
+        "isBidirectional": true,
+        "canUseTriState": true,
+        "capabilities": ["spi_cs", "i2c_scl"],
+        "canUseInternalPullup": true,
+        "canUseInternalPulldown": true,
+        "canUseOpenDrain": true,
+        "canUsePushPull": true,
+        "isGpio": true
+      },
+      "U6": {
+        "isInput": true,
+        "isOutput": true,
+        "isBidirectional": true,
+        "canUseTriState": true,
+        "capabilities": ["spi_cs", "uart_rx", "uart_tx"],
+        "canUseInternalPullup": true,
+        "canUseInternalPulldown": true,
+        "canUseOpenDrain": true,
+        "canUsePushPull": true,
+        "isGpio": true
+      },
+      "U7": {
+        "isInput": true,
+        "isOutput": true,
+        "isBidirectional": true,
+        "canUseTriState": true,
+        "capabilities": ["spi_miso", "uart_tx", "uart_rx"],
+        "canUseInternalPullup": true,
+        "canUseInternalPulldown": true,
+        "canUseOpenDrain": true,
+        "canUsePushPull": true,
+        "isGpio": true
+      },
+      "U8": {
+        "requiresGround": true,
+        "requiresVoltage": 0,
+        "mustBeConnected": true
+      },
+      "U9": {
+        "shouldHaveDecouplingCapacitor": true
+      },
+      "V1": {
+        "isOutput": true
+      },
+      "V2": {
+        "isOutput": true
+      },
+      "V3": {
+        "isOutput": true
+      },
+      "V4": {
+        "isOutput": true
+      },
+      "V5": {
+        "isInput": true,
+        "isOutput": true,
+        "isBidirectional": true,
+        "canUseTriState": true,
+        "canUseInternalPulldown": true,
+        "canUseOpenDrain": true,
+        "canUsePushPull": true,
+        "isGpio": true
+      },
+      "V6": {
+        "isInput": true,
+        "isOutput": true,
+        "isBidirectional": true,
+        "canUseTriState": true,
+        "capabilities": ["spi_mosi", "uart_rx", "uart_tx"],
+        "canUseInternalPullup": true,
+        "canUseInternalPulldown": true,
+        "canUseOpenDrain": true,
+        "canUsePushPull": true,
+        "isGpio": true
+      },
+      "V7": {
+        "requiresPower": true,
+        "requiresVoltage": 2.5,
+        "mustBeConnected": true,
+        "shouldHaveDecouplingCapacitor": true
+      },
+      "V8": {
+        "requiresGround": true,
+        "requiresVoltage": 0,
+        "mustBeConnected": true
+      },
+      "V9": {
+        "requiresPower": true,
+        "shouldHaveDecouplingCapacitor": true
+      },
+      "W1": {
+        "isOutput": true
+      },
+      "W2": {
+        "isOutput": true
+      },
+      "W3": {
+        "requiresGround": true,
+        "requiresVoltage": 0,
+        "mustBeConnected": true
+      },
+      "W4": {
+        "isInput": true,
+        "isOutput": true,
+        "isBidirectional": true,
+        "canUseTriState": true,
+        "capabilities": ["spi_cs"],
+        "canUseInternalPullup": true,
+        "canUseInternalPulldown": true,
+        "canUseOpenDrain": true,
+        "canUsePushPull": true,
+        "isGpio": true
+      },
+      "W5": {
+        "isInput": true,
+        "isOutput": true,
+        "isBidirectional": true,
+        "canUseTriState": true,
+        "capabilities": ["spi_sck", "uart_tx", "uart_rx"],
+        "canUseInternalPullup": true,
+        "canUseInternalPulldown": true,
+        "canUseOpenDrain": true,
+        "canUsePushPull": true,
+        "isGpio": true
+      },
+      "W6": {
+        "isInput": true,
+        "isOutput": true,
+        "isBidirectional": true,
+        "canUseTriState": true,
+        "capabilities": ["spi_cs"],
+        "canUseInternalPullup": true,
+        "canUseInternalPulldown": true,
+        "canUseOpenDrain": true,
+        "canUsePushPull": true,
+        "isGpio": true
+      },
+      "W7": {
+        "requiresGround": true,
+        "requiresVoltage": 0,
+        "mustBeConnected": true
+      },
+      "W8": {
+        "requiresGround": true,
+        "requiresVoltage": 0,
+        "mustBeConnected": true
+      },
+      "W9": {
+        "requiresGround": true,
+        "requiresVoltage": 0,
+        "mustBeConnected": true
+      },
+      "Y1": {
+        "isOutput": true
+      },
+      "Y2": {
+        "isOutput": true
+      },
+      "Y3": {
+        "isOutput": true
+      },
+      "Y4": {
+        "isOutput": true
+      },
+      "Y5": {
+        "requiresGround": true,
+        "requiresVoltage": 0,
+        "mustBeConnected": true
+      },
+      "Y6": {
+        "isOutput": true
+      },
+      "Y7": {
+        "isInput": true,
+        "isOutput": true,
+        "isBidirectional": true,
+        "canUseInternalPullup": true
+      },
+      "Y8": {
+        "isInput": true,
+        "isOutput": true,
+        "isBidirectional": true,
+        "canUseInternalPullup": true
+      },
+      "Y9": {
+        "isInput": true,
+        "isOutput": true,
+        "isBidirectional": true,
+        "canUseInternalPullup": true
+      },
+      "A10": {
+        "isInput": true,
+        "isOutput": true,
+        "isBidirectional": true
+      },
+      "A11": {
+        "isInput": true
+      },
+      "A12": {
+        "isOutput": true
+      },
+      "A13": {
+        "requiresGround": true,
+        "requiresVoltage": 0,
+        "mustBeConnected": true
+      },
+      "A14": {
+        "isInput": true
+      },
+      "A15": {
+        "isInput": true,
+        "isOutput": true,
+        "isBidirectional": true,
+        "canUseTriState": true,
+        "canUseInternalPullup": true,
+        "canUseInternalPulldown": true,
+        "canUseOpenDrain": true,
+        "canUsePushPull": true,
+        "isGpio": true
+      },
+      "A16": {
+        "isInput": true,
+        "isOutput": true,
+        "isBidirectional": true,
+        "canUseTriState": true,
+        "canUseInternalPullup": true,
+        "canUseInternalPulldown": true,
+        "canUseOpenDrain": true,
+        "canUsePushPull": true,
+        "isGpio": true
+      },
+      "A17": {
+        "isInput": true,
+        "isOutput": true,
+        "isBidirectional": true,
+        "canUseTriState": true,
+        "canUseInternalPullup": true,
+        "canUseInternalPulldown": true,
+        "canUseOpenDrain": true,
+        "canUsePushPull": true,
+        "isGpio": true
+      },
+      "A18": {
+        "isInput": true,
+        "isOutput": true,
+        "isBidirectional": true,
+        "canUseTriState": true,
+        "canUseInternalPullup": true,
+        "canUseInternalPulldown": true,
+        "canUseOpenDrain": true,
+        "canUsePushPull": true,
+        "isGpio": true
+      },
+      "A19": {
+        "isInput": true,
+        "isOutput": true,
+        "isBidirectional": true,
+        "canUseTriState": true,
+        "canUseInternalPullup": true,
+        "canUseInternalPulldown": true,
+        "canUseOpenDrain": true,
+        "canUsePushPull": true,
+        "isGpio": true
+      },
+      "A20": {
+        "isInput": true,
+        "isOutput": true,
+        "isBidirectional": true,
+        "canUseTriState": true,
+        "canUseInternalPullup": true,
+        "canUseInternalPulldown": true,
+        "canUseOpenDrain": true,
+        "canUsePushPull": true,
+        "isGpio": true
+      },
+      "A21": {
+        "isInput": true,
+        "isOutput": true,
+        "isBidirectional": true,
+        "canUseTriState": true,
+        "capabilities": ["spi_miso"],
+        "canUseInternalPullup": true,
+        "canUseInternalPulldown": true,
+        "canUseOpenDrain": true,
+        "canUsePushPull": true,
+        "isGpio": true
+      },
+      "A22": {
+        "isInput": true,
+        "isOutput": true,
+        "isBidirectional": true,
+        "canUseTriState": true,
+        "capabilities": ["spi_miso"],
+        "canUseInternalPullup": true,
+        "canUseInternalPulldown": true,
+        "canUseOpenDrain": true,
+        "canUsePushPull": true,
+        "isGpio": true
+      },
+      "A23": {
+        "isInput": true,
+        "isOutput": true,
+        "isBidirectional": true,
+        "canUseTriState": true,
+        "capabilities": ["spi_cs"],
+        "canUseInternalPullup": true,
+        "canUseInternalPulldown": true,
+        "canUseOpenDrain": true,
+        "canUsePushPull": true,
+        "isGpio": true
+      },
+      "A24": {
+        "isInput": true,
+        "isOutput": true,
+        "isBidirectional": true,
+        "canUseTriState": true,
+        "canUseInternalPullup": true,
+        "canUseInternalPulldown": true,
+        "canUseOpenDrain": true,
+        "canUsePushPull": true,
+        "isGpio": true
+      },
+      "A25": {
+        "requiresGround": true,
+        "requiresVoltage": 0,
+        "mustBeConnected": true
+      },
+      "AA1": {
+        "isOutput": true
+      },
+      "AA2": {
+        "isOutput": true
+      },
+      "AA3": {
+        "isOutput": true
+      },
+      "AA4": {
+        "isOutput": true
+      },
+      "AA5": {
+        "isInput": true,
+        "isOutput": true,
+        "isBidirectional": true,
+        "canUseInternalPullup": true
+      },
+      "AA6": {
+        "isInput": true,
+        "isOutput": true,
+        "isBidirectional": true,
+        "canUseInternalPullup": true
+      },
+      "AA7": {
+        "requiresGround": true,
+        "requiresVoltage": 0,
+        "mustBeConnected": true
+      },
+      "AA8": {
+        "isInput": true,
+        "isOutput": true,
+        "isBidirectional": true,
+        "canUseInternalPullup": true
+      },
+      "AA9": {
+        "isInput": true,
+        "isOutput": true,
+        "isBidirectional": true,
+        "canUseInternalPullup": true
+      },
+      "AB1": {
+        "isOutput": true
+      },
+      "AB2": {
+        "isOutput": true
+      },
+      "AB3": {
+        "requiresGround": true,
+        "requiresVoltage": 0,
+        "mustBeConnected": true
+      },
+      "AB4": {
+        "isInput": true,
+        "isOutput": true,
+        "isBidirectional": true,
+        "canUseInternalPullup": true
+      },
+      "AB5": {
+        "isInput": true,
+        "isOutput": true,
+        "isBidirectional": true,
+        "canUseInternalPullup": true
+      },
+      "AB6": {
+        "isInput": true,
+        "isOutput": true,
+        "isBidirectional": true,
+        "canUseInternalPullup": true
+      },
+      "AB7": {
+        "isInput": true,
+        "isOutput": true,
+        "isBidirectional": true,
+        "canUseInternalPullup": true
+      },
+      "AB8": {
+        "isOutput": true
+      },
+      "AB9": {
+        "isInput": true,
+        "isOutput": true,
+        "isBidirectional": true,
+        "canUseInternalPullup": true
+      },
+      "AC1": {
+        "isInput": true,
+        "isOutput": true,
+        "isBidirectional": true,
+        "canUseInternalPullup": true
+      },
+      "AC2": {
+        "isInput": true,
+        "shouldHaveDecouplingCapacitor": true,
+        "recommendedDecouplingCapacitorCapacitance": "0.1uF"
+      },
+      "AC3": {
+        "isOutput": true
+      },
+      "AC4": {
+        "isInput": true,
+        "isOutput": true,
+        "isBidirectional": true,
+        "canUseInternalPullup": true
+      },
+      "AC5": {
+        "isInput": true,
+        "isOutput": true,
+        "isBidirectional": true,
+        "canUseInternalPullup": true
+      },
+      "AC6": {
+        "isOutput": true
+      },
+      "AC7": {
+        "isInput": true,
+        "isOutput": true,
+        "isBidirectional": true,
+        "canUseInternalPullup": true
+      },
+      "AC8": {
+        "isInput": true,
+        "isOutput": true,
+        "isBidirectional": true,
+        "canUseInternalPullup": true
+      },
+      "AC9": {
+        "isInput": true,
+        "isOutput": true,
+        "isBidirectional": true,
+        "canUseInternalPullup": true
+      },
+      "AD1": {
+        "isInput": true,
+        "isOutput": true,
+        "isBidirectional": true,
+        "canUseInternalPullup": true
+      },
+      "AD2": {
+        "isInput": true,
+        "isOutput": true,
+        "isBidirectional": true,
+        "canUseInternalPullup": true
+      },
+      "AD3": {
+        "isInput": true,
+        "isOutput": true,
+        "isBidirectional": true
+      },
+      "AD4": {
+        "requiresGround": true,
+        "requiresVoltage": 0,
+        "mustBeConnected": true
+      },
+      "AD5": {
+        "isInput": true,
+        "isOutput": true,
+        "isBidirectional": true,
+        "canUseInternalPullup": true
+      },
+      "AD6": {
+        "isInput": true,
+        "isOutput": true,
+        "isBidirectional": true
+      },
+      "AD7": {
+        "requiresGround": true,
+        "requiresVoltage": 0,
+        "mustBeConnected": true
+      },
+      "AD8": {
+        "isInput": true,
+        "isOutput": true,
+        "isBidirectional": true
+      },
+      "AD9": {
+        "isInput": true,
+        "isOutput": true,
+        "isBidirectional": true,
+        "canUseInternalPullup": true
+      },
+      "AE1": {
+        "requiresGround": true,
+        "requiresVoltage": 0,
+        "mustBeConnected": true
+      },
+      "AE2": {
+        "isInput": true,
+        "isOutput": true,
+        "isBidirectional": true,
+        "canUseInternalPullup": true
+      },
+      "AE3": {
+        "isInput": true,
+        "isOutput": true,
+        "isBidirectional": true
+      },
+      "AE4": {
+        "isInput": true,
+        "isOutput": true,
+        "isBidirectional": true,
+        "canUseInternalPullup": true
+      },
+      "AE5": {
+        "isInput": true,
+        "isOutput": true,
+        "isBidirectional": true,
+        "canUseInternalPullup": true
+      },
+      "AE6": {
+        "isInput": true,
+        "isOutput": true,
+        "isBidirectional": true
+      },
+      "AE7": {
+        "isInput": true,
+        "isOutput": true,
+        "isBidirectional": true,
+        "canUseInternalPullup": true
+      },
+      "AE8": {
+        "isInput": true,
+        "isOutput": true,
+        "isBidirectional": true
+      },
+      "AE9": {
+        "isInput": true,
+        "isOutput": true,
+        "isBidirectional": true,
+        "canUseInternalPullup": true
+      },
+      "B10": {
+        "isInput": true,
+        "isOutput": true,
+        "isBidirectional": true
+      },
+      "B11": {
+        "isInput": true
+      },
+      "B12": {
+        "isOutput": true
+      },
+      "B13": {
+        "isInput": true,
+        "isOutput": true,
+        "isBidirectional": true,
+        "canUseTriState": true,
+        "canUseInternalPullup": true,
+        "canUseInternalPulldown": true,
+        "canUseOpenDrain": true,
+        "canUsePushPull": true,
+        "isGpio": true
+      },
+      "B14": {
+        "isInput": true
+      },
+      "B15": {
+        "isInput": true,
+        "isOutput": true,
+        "isBidirectional": true,
+        "canUseTriState": true,
+        "canUseInternalPullup": true,
+        "canUseInternalPulldown": true,
+        "canUseOpenDrain": true,
+        "canUsePushPull": true,
+        "isGpio": true
+      },
+      "B16": {
+        "isInput": true,
+        "isOutput": true,
+        "isBidirectional": true,
+        "canUseTriState": true,
+        "canUseInternalPullup": true,
+        "canUseInternalPulldown": true,
+        "canUseOpenDrain": true,
+        "canUsePushPull": true,
+        "isGpio": true
+      },
+      "B17": {
+        "isInput": true,
+        "isOutput": true,
+        "isBidirectional": true,
+        "canUseTriState": true,
+        "capabilities": ["uart_tx", "uart_rx"],
+        "canUseInternalPullup": true,
+        "canUseInternalPulldown": true,
+        "canUseOpenDrain": true,
+        "canUsePushPull": true,
+        "isGpio": true
+      },
+      "B18": {
+        "isInput": true,
+        "isOutput": true,
+        "isBidirectional": true,
+        "canUseTriState": true,
+        "canUseInternalPullup": true,
+        "canUseInternalPulldown": true,
+        "canUseOpenDrain": true,
+        "canUsePushPull": true,
+        "isGpio": true
+      },
+      "B19": {
+        "isInput": true,
+        "isOutput": true,
+        "isBidirectional": true,
+        "canUseTriState": true,
+        "canUseInternalPullup": true,
+        "canUseInternalPulldown": true,
+        "canUseOpenDrain": true,
+        "canUsePushPull": true,
+        "isGpio": true
+      },
+      "B20": {
+        "isInput": true,
+        "isOutput": true,
+        "isBidirectional": true,
+        "canUseTriState": true,
+        "canUseInternalPullup": true,
+        "canUseInternalPulldown": true,
+        "canUseOpenDrain": true,
+        "canUsePushPull": true,
+        "isGpio": true
+      },
+      "B21": {
+        "isInput": true,
+        "isOutput": true,
+        "isBidirectional": true,
+        "canUseTriState": true,
+        "capabilities": ["spi_mosi"],
+        "canUseInternalPullup": true,
+        "canUseInternalPulldown": true,
+        "canUseOpenDrain": true,
+        "canUsePushPull": true,
+        "isGpio": true
+      },
+      "B22": {
+        "isInput": true,
+        "isOutput": true,
+        "isBidirectional": true,
+        "canUseTriState": true,
+        "capabilities": ["spi_cs"],
+        "canUseInternalPullup": true,
+        "canUseInternalPulldown": true,
+        "canUseOpenDrain": true,
+        "canUsePushPull": true,
+        "isGpio": true
+      },
+      "B23": {
+        "isInput": true,
+        "isOutput": true,
+        "isBidirectional": true,
+        "canUseTriState": true,
+        "canUseInternalPullup": true,
+        "canUseInternalPulldown": true,
+        "canUseOpenDrain": true,
+        "canUsePushPull": true,
+        "isGpio": true
+      },
+      "B24": {
+        "isInput": true,
+        "isOutput": true,
+        "isBidirectional": true,
+        "canUseTriState": true,
+        "canUseInternalPullup": true,
+        "canUseInternalPulldown": true,
+        "canUseOpenDrain": true,
+        "canUsePushPull": true,
+        "isGpio": true
+      },
+      "B25": {
+        "isInput": true,
+        "isOutput": true,
+        "isBidirectional": true,
+        "canUseTriState": true,
+        "canUseInternalPulldown": true,
+        "canUseOpenDrain": true,
+        "canUsePushPull": true,
+        "isGpio": true
+      },
+      "C10": {
+        "requiresGround": true,
+        "requiresVoltage": 0,
+        "mustBeConnected": true
+      },
+      "C11": {
+        "isInput": true,
+        "canUseInternalPullup": true
+      },
+      "C12": {
+        "isInput": true,
+        "canUseInternalPulldown": true
+      },
+      "C13": {
+        "isInput": true,
+        "isOutput": true,
+        "isBidirectional": true,
+        "canUseTriState": true,
+        "capabilities": ["uart_tx", "uart_rx"],
+        "canUseInternalPullup": true,
+        "canUseInternalPulldown": true,
+        "canUseOpenDrain": true,
+        "canUsePushPull": true,
+        "isGpio": true
+      },
+      "C14": {},
+      "C15": {
+        "isInput": true,
+        "isOutput": true,
+        "isBidirectional": true,
+        "canUseTriState": true,
+        "canUseInternalPullup": true,
+        "canUseInternalPulldown": true,
+        "canUseOpenDrain": true,
+        "canUsePushPull": true,
+        "isGpio": true
+      },
+      "C16": {
+        "isInput": true,
+        "isOutput": true,
+        "isBidirectional": true,
+        "canUseTriState": true,
+        "canUseInternalPullup": true,
+        "canUseInternalPulldown": true,
+        "canUseOpenDrain": true,
+        "canUsePushPull": true,
+        "isGpio": true
+      },
+      "C17": {
+        "isInput": true,
+        "isOutput": true,
+        "isBidirectional": true,
+        "canUseTriState": true,
+        "canUseInternalPullup": true,
+        "canUseInternalPulldown": true,
+        "canUseOpenDrain": true,
+        "canUsePushPull": true,
+        "isGpio": true
+      },
+      "C18": {
+        "isInput": true,
+        "isOutput": true,
+        "isBidirectional": true,
+        "canUseTriState": true,
+        "canUseInternalPullup": true,
+        "canUseInternalPulldown": true,
+        "canUseOpenDrain": true,
+        "canUsePushPull": true,
+        "isGpio": true
+      },
+      "C19": {
+        "isInput": true,
+        "isOutput": true,
+        "isBidirectional": true,
+        "canUseTriState": true,
+        "canUseInternalPullup": true,
+        "canUseInternalPulldown": true,
+        "canUseOpenDrain": true,
+        "canUsePushPull": true,
+        "isGpio": true
+      },
+      "C20": {
+        "isInput": true,
+        "isOutput": true,
+        "isBidirectional": true,
+        "canUseTriState": true,
+        "capabilities": ["spi_cs"],
+        "canUseInternalPullup": true,
+        "canUseInternalPulldown": true,
+        "canUseOpenDrain": true,
+        "canUsePushPull": true,
+        "isGpio": true
+      },
+      "C21": {
+        "isInput": true,
+        "isOutput": true,
+        "isBidirectional": true,
+        "canUseTriState": true,
+        "capabilities": ["spi_sck"],
+        "canUseInternalPullup": true,
+        "canUseInternalPulldown": true,
+        "canUseOpenDrain": true,
+        "canUsePushPull": true,
+        "isGpio": true
+      },
+      "C22": {
+        "isInput": true,
+        "isOutput": true,
+        "isBidirectional": true,
+        "canUseTriState": true,
+        "canUseInternalPullup": true,
+        "canUseInternalPulldown": true,
+        "canUseOpenDrain": true,
+        "canUsePushPull": true,
+        "isGpio": true
+      },
+      "C23": {
+        "isInput": true,
+        "isOutput": true,
+        "isBidirectional": true,
+        "canUseTriState": true,
+        "canUseInternalPulldown": true,
+        "canUseOpenDrain": true,
+        "canUsePushPull": true,
+        "isGpio": true
+      },
+      "C24": {
+        "isInput": true,
+        "isOutput": true,
+        "isBidirectional": true,
+        "canUseTriState": true,
+        "canUseInternalPullup": true,
+        "canUseInternalPulldown": true,
+        "canUseOpenDrain": true,
+        "canUsePushPull": true,
+        "isGpio": true
+      },
+      "C25": {
+        "isInput": true,
+        "isOutput": true,
+        "isBidirectional": true,
+        "canUseTriState": true,
+        "capabilities": ["spi_sck", "i2c_sda"],
+        "canUseInternalPullup": true,
+        "canUseInternalPulldown": true,
+        "canUseOpenDrain": true,
+        "canUsePushPull": true,
+        "isGpio": true
+      },
+      "D10": {
+        "shouldHaveDecouplingCapacitor": true
+      },
+      "D11": {
+        "isOutput": true,
+        "canUseInternalPullup": true,
+        "canUseOpenDrain": true
+      },
+      "D12": {
+        "isInput": true,
+        "canUseInternalPullup": true
+      },
+      "D13": {
+        "isInput": true,
+        "isOutput": true,
+        "isBidirectional": true,
+        "canUseTriState": true,
+        "capabilities": ["uart_rx", "uart_tx"],
+        "canUseInternalPullup": true,
+        "canUseInternalPulldown": true,
+        "canUseOpenDrain": true,
+        "canUsePushPull": true,
+        "isGpio": true
+      },
+      "D14": {
+        "isInput": true,
+        "isOutput": true,
+        "isBidirectional": true,
+        "canUseTriState": true,
+        "canUseInternalPullup": true,
+        "canUseInternalPulldown": true,
+        "canUseOpenDrain": true,
+        "canUsePushPull": true,
+        "isGpio": true
+      },
+      "D15": {
+        "isInput": true,
+        "isOutput": true,
+        "isBidirectional": true,
+        "canUseTriState": true,
+        "canUseInternalPullup": true,
+        "canUseInternalPulldown": true,
+        "canUseOpenDrain": true,
+        "canUsePushPull": true,
+        "isGpio": true
+      },
+      "D16": {
+        "isInput": true,
+        "isOutput": true,
+        "isBidirectional": true,
+        "canUseTriState": true,
+        "canUseInternalPullup": true,
+        "canUseInternalPulldown": true,
+        "canUseOpenDrain": true,
+        "canUsePushPull": true,
+        "isGpio": true
+      },
+      "D17": {
+        "isInput": true,
+        "isOutput": true,
+        "isBidirectional": true,
+        "canUseTriState": true,
+        "canUseInternalPullup": true,
+        "canUseInternalPulldown": true,
+        "canUseOpenDrain": true,
+        "canUsePushPull": true,
+        "isGpio": true
+      },
+      "D18": {
+        "isInput": true,
+        "isOutput": true,
+        "isBidirectional": true,
+        "canUseTriState": true,
+        "canUseInternalPullup": true,
+        "canUseInternalPulldown": true,
+        "canUseOpenDrain": true,
+        "canUsePushPull": true,
+        "isGpio": true
+      },
+      "D19": {
+        "isInput": true,
+        "isOutput": true,
+        "isBidirectional": true,
+        "canUseTriState": true,
+        "capabilities": ["uart_tx", "uart_rx"],
+        "canUseInternalPullup": true,
+        "canUseInternalPulldown": true,
+        "canUseOpenDrain": true,
+        "canUsePushPull": true,
+        "isGpio": true
+      },
+      "D20": {
+        "isInput": true,
+        "isOutput": true,
+        "isBidirectional": true,
+        "canUseTriState": true,
+        "capabilities": ["spi_sck"],
+        "canUseInternalPullup": true,
+        "canUseInternalPulldown": true,
+        "canUseOpenDrain": true,
+        "canUsePushPull": true,
+        "isGpio": true
+      },
+      "D21": {
+        "isInput": true,
+        "isOutput": true,
+        "isBidirectional": true,
+        "canUseTriState": true,
+        "canUseInternalPulldown": true,
+        "canUseOpenDrain": true,
+        "canUsePushPull": true,
+        "isGpio": true
+      },
+      "D22": {
+        "isInput": true,
+        "isOutput": true,
+        "isBidirectional": true,
+        "canUseTriState": true,
+        "canUseInternalPulldown": true,
+        "canUseOpenDrain": true,
+        "canUsePushPull": true,
+        "isGpio": true
+      },
+      "D23": {
+        "isInput": true,
+        "isOutput": true,
+        "isBidirectional": true,
+        "canUseTriState": true,
+        "canUseInternalPullup": true,
+        "canUseInternalPulldown": true,
+        "canUseOpenDrain": true,
+        "canUsePushPull": true,
+        "isGpio": true
+      },
+      "D24": {
+        "isInput": true,
+        "isOutput": true,
+        "isBidirectional": true,
+        "canUseTriState": true,
+        "capabilities": ["spi_mosi", "i2c_sda"],
+        "canUseInternalPullup": true,
+        "canUseInternalPulldown": true,
+        "canUseOpenDrain": true,
+        "canUsePushPull": true,
+        "isGpio": true
+      },
+      "D25": {
+        "isInput": true,
+        "isOutput": true,
+        "isBidirectional": true,
+        "canUseTriState": true,
+        "canUseInternalPullup": true,
+        "canUseInternalPulldown": true,
+        "canUseOpenDrain": true,
+        "canUsePushPull": true,
+        "isGpio": true
+      },
+      "E10": {
+        "isInput": true,
+        "isOutput": true,
+        "isBidirectional": true
+      },
+      "E11": {
+        "isInput": true,
+        "canUseInternalPulldown": true
+      },
+      "E12": {
+        "isInput": true,
+        "canUseInternalPulldown": true
+      },
+      "E13": {
+        "isInput": true,
+        "isOutput": true,
+        "isBidirectional": true,
+        "canUseTriState": true,
+        "capabilities": ["uart_rx", "uart_tx"],
+        "canUseInternalPullup": true,
+        "canUseInternalPulldown": true,
+        "canUseOpenDrain": true,
+        "canUsePushPull": true,
+        "isGpio": true
+      },
+      "E14": {
+        "isInput": true,
+        "isOutput": true,
+        "isBidirectional": true,
+        "canUseTriState": true,
+        "canUseInternalPullup": true,
+        "canUseInternalPulldown": true,
+        "canUseOpenDrain": true,
+        "canUsePushPull": true,
+        "isGpio": true
+      },
+      "E15": {
+        "isInput": true,
+        "isOutput": true,
+        "isBidirectional": true,
+        "canUseTriState": true,
+        "canUseInternalPullup": true,
+        "canUseInternalPulldown": true,
+        "canUseOpenDrain": true,
+        "canUsePushPull": true,
+        "isGpio": true
+      },
+      "E16": {
+        "isInput": true,
+        "isOutput": true,
+        "isBidirectional": true,
+        "canUseTriState": true,
+        "capabilities": ["uart_rx", "uart_tx"],
+        "canUseInternalPullup": true,
+        "canUseInternalPulldown": true,
+        "canUseOpenDrain": true,
+        "canUsePushPull": true,
+        "isGpio": true
+      },
+      "E17": {
+        "isInput": true,
+        "isOutput": true,
+        "isBidirectional": true,
+        "canUseTriState": true,
+        "canUseInternalPullup": true,
+        "canUseInternalPulldown": true,
+        "canUseOpenDrain": true,
+        "canUsePushPull": true,
+        "isGpio": true
+      },
+      "E18": {
+        "isInput": true,
+        "isOutput": true,
+        "isBidirectional": true,
+        "canUseTriState": true,
+        "capabilities": ["uart_rx", "uart_tx"],
+        "canUseInternalPullup": true,
+        "canUseInternalPulldown": true,
+        "canUseOpenDrain": true,
+        "canUsePushPull": true,
+        "isGpio": true
+      },
+      "E19": {
+        "isInput": true,
+        "isOutput": true,
+        "isBidirectional": true,
+        "canUseTriState": true,
+        "capabilities": ["spi_cs"],
+        "canUseInternalPullup": true,
+        "canUseInternalPulldown": true,
+        "canUseOpenDrain": true,
+        "canUsePushPull": true,
+        "isGpio": true
+      },
+      "E20": {
+        "isInput": true,
+        "isOutput": true,
+        "isBidirectional": true,
+        "canUseTriState": true,
+        "capabilities": ["spi_cs"],
+        "canUseInternalPullup": true,
+        "canUseInternalPulldown": true,
+        "canUseOpenDrain": true,
+        "canUsePushPull": true,
+        "isGpio": true
+      },
+      "E21": {
+        "isInput": true,
+        "isOutput": true,
+        "isBidirectional": true,
+        "canUseTriState": true,
+        "canUseInternalPullup": true,
+        "canUseInternalPulldown": true,
+        "canUseOpenDrain": true,
+        "canUsePushPull": true,
+        "isGpio": true
+      },
+      "E22": {
+        "isInput": true,
+        "isOutput": true,
+        "isBidirectional": true,
+        "canUseTriState": true,
+        "capabilities": ["spi_cs", "i2c_scl"],
+        "canUseInternalPullup": true,
+        "canUseInternalPulldown": true,
+        "canUseOpenDrain": true,
+        "canUsePushPull": true,
+        "isGpio": true
+      },
+      "E23": {
+        "isInput": true,
+        "isOutput": true,
+        "isBidirectional": true,
+        "canUseTriState": true,
+        "capabilities": ["spi_miso"],
+        "canUseInternalPulldown": true,
+        "canUseOpenDrain": true,
+        "canUsePushPull": true,
+        "isGpio": true
+      },
+      "E24": {
+        "isInput": true,
+        "isOutput": true,
+        "isBidirectional": true,
+        "canUseTriState": true,
+        "capabilities": ["uart_tx", "uart_rx"],
+        "canUseInternalPullup": true,
+        "canUseInternalPulldown": true,
+        "canUseOpenDrain": true,
+        "canUsePushPull": true,
+        "isGpio": true
+      },
+      "E25": {
+        "isInput": true,
+        "isOutput": true,
+        "isBidirectional": true,
+        "canUseTriState": true,
+        "capabilities": ["uart_rx", "uart_tx"],
+        "canUseInternalPullup": true,
+        "canUseInternalPulldown": true,
+        "canUseOpenDrain": true,
+        "canUsePushPull": true,
+        "isGpio": true
+      },
+      "F10": {
+        "isInput": true,
+        "isOutput": true,
+        "isBidirectional": true
+      },
+      "F11": {
+        "isOutput": true,
+        "canUseOpenDrain": true
+      },
+      "F12": {
+        "isInput": true,
+        "canUseInternalPulldown": true
+      },
+      "F13": {
+        "isInput": true,
+        "isOutput": true,
+        "isBidirectional": true,
+        "canUseTriState": true,
+        "capabilities": ["uart_tx", "uart_rx"],
+        "canUseInternalPullup": true,
+        "canUseInternalPulldown": true,
+        "canUseOpenDrain": true,
+        "canUsePushPull": true,
+        "isGpio": true
+      },
+      "F14": {
+        "isInput": true,
+        "isOutput": true,
+        "isBidirectional": true,
+        "canUseTriState": true,
+        "canUseInternalPullup": true,
+        "canUseInternalPulldown": true,
+        "canUseOpenDrain": true,
+        "canUsePushPull": true,
+        "isGpio": true
+      },
+      "F15": {
+        "isInput": true,
+        "isOutput": true,
+        "isBidirectional": true,
+        "canUseTriState": true,
+        "canUseInternalPullup": true,
+        "canUseInternalPulldown": true,
+        "canUseOpenDrain": true,
+        "canUsePushPull": true,
+        "isGpio": true
+      },
+      "F16": {
+        "isInput": true,
+        "isOutput": true,
+        "isBidirectional": true,
+        "canUseTriState": true,
+        "canUseInternalPullup": true,
+        "canUseInternalPulldown": true,
+        "canUseOpenDrain": true,
+        "canUsePushPull": true,
+        "isGpio": true
+      },
+      "F17": {
+        "isInput": true,
+        "isOutput": true,
+        "isBidirectional": true,
+        "canUseTriState": true,
+        "canUseInternalPullup": true,
+        "canUseInternalPulldown": true,
+        "canUseOpenDrain": true,
+        "canUsePushPull": true,
+        "isGpio": true
+      },
+      "F18": {
+        "isInput": true,
+        "isOutput": true,
+        "isBidirectional": true,
+        "canUseTriState": true,
+        "capabilities": ["spi_cs"],
+        "canUseInternalPullup": true,
+        "canUseInternalPulldown": true,
+        "canUseOpenDrain": true,
+        "canUsePushPull": true,
+        "isGpio": true
+      },
+      "F19": {
+        "isInput": true,
+        "isOutput": true,
+        "isBidirectional": true,
+        "canUseTriState": true,
+        "capabilities": ["spi_mosi"],
+        "canUseInternalPullup": true,
+        "canUseInternalPulldown": true,
+        "canUseOpenDrain": true,
+        "canUsePushPull": true,
+        "isGpio": true
+      },
+      "F20": {
+        "isInput": true,
+        "isOutput": true,
+        "isBidirectional": true,
+        "canUseTriState": true,
+        "canUseInternalPullup": true,
+        "canUseInternalPulldown": true,
+        "canUseOpenDrain": true,
+        "canUsePushPull": true,
+        "isGpio": true
+      },
+      "F21": {
+        "isInput": true,
+        "isOutput": true,
+        "isBidirectional": true,
+        "canUseTriState": true,
+        "capabilities": ["spi_miso", "i2c_scl"],
+        "canUseInternalPullup": true,
+        "canUseInternalPulldown": true,
+        "canUseOpenDrain": true,
+        "canUsePushPull": true,
+        "isGpio": true
+      },
+      "F22": {
+        "isInput": true,
+        "isOutput": true,
+        "isBidirectional": true,
+        "canUseTriState": true,
+        "capabilities": ["spi_cs", "uart_tx", "uart_rx"],
+        "canUseInternalPullup": true,
+        "canUseInternalPulldown": true,
+        "canUseOpenDrain": true,
+        "canUsePushPull": true,
+        "isGpio": true
+      },
+      "F23": {
+        "isInput": true,
+        "isOutput": true,
+        "isBidirectional": true,
+        "canUseTriState": true,
+        "canUseInternalPullup": true,
+        "canUseInternalPulldown": true,
+        "canUseOpenDrain": true,
+        "canUsePushPull": true,
+        "isGpio": true
+      },
+      "F24": {
+        "isInput": true,
+        "isOutput": true,
+        "isBidirectional": true,
+        "canUseTriState": true,
+        "canUseInternalPulldown": true,
+        "canUseOpenDrain": true,
+        "canUsePushPull": true,
+        "isGpio": true
+      },
+      "F25": {
+        "isInput": true,
+        "isOutput": true,
+        "isBidirectional": true,
+        "canUseTriState": true,
+        "canUseInternalPulldown": true,
+        "canUseOpenDrain": true,
+        "canUsePushPull": true,
+        "isGpio": true
+      },
+      "G10": {
+        "requiresGround": true,
+        "requiresVoltage": 0,
+        "mustBeConnected": true
+      },
+      "G11": {
+        "requiresPower": true,
+        "shouldHaveDecouplingCapacitor": true
+      },
+      "G12": {
+        "shouldHaveDecouplingCapacitor": true
+      },
+      "G13": {
+        "shouldHaveDecouplingCapacitor": true
+      },
+      "G14": {
+        "requiresPower": true,
+        "shouldHaveDecouplingCapacitor": true
+      },
+      "G15": {
+        "requiresPower": true,
+        "shouldHaveDecouplingCapacitor": true
+      },
+      "G16": {
+        "requiresPower": true,
+        "shouldHaveDecouplingCapacitor": true
+      },
+      "G17": {
+        "requiresPower": true,
+        "shouldHaveDecouplingCapacitor": true
+      },
+      "G18": {
+        "requiresPower": true,
+        "shouldHaveDecouplingCapacitor": true
+      },
+      "G19": {
+        "requiresGround": true,
+        "requiresVoltage": 0,
+        "mustBeConnected": true
+      },
+      "G20": {
+        "isInput": true,
+        "isOutput": true,
+        "isBidirectional": true,
+        "canUseTriState": true,
+        "capabilities": ["spi_cs"],
+        "canUseInternalPullup": true,
+        "canUseInternalPulldown": true,
+        "canUseOpenDrain": true,
+        "canUsePushPull": true,
+        "isGpio": true
+      },
+      "G21": {
+        "isInput": true,
+        "isOutput": true,
+        "isBidirectional": true,
+        "canUseTriState": true,
+        "capabilities": ["spi_cs"],
+        "canUseInternalPullup": true,
+        "canUseInternalPulldown": true,
+        "canUseOpenDrain": true,
+        "canUsePushPull": true,
+        "isGpio": true
+      },
+      "G22": {
+        "isInput": true,
+        "isOutput": true,
+        "isBidirectional": true,
+        "canUseTriState": true,
+        "capabilities": ["spi_cs", "uart_rx", "uart_tx"],
+        "canUseInternalPullup": true,
+        "canUseInternalPulldown": true,
+        "canUseOpenDrain": true,
+        "canUsePushPull": true,
+        "isGpio": true
+      },
+      "G23": {
+        "isInput": true,
+        "isOutput": true,
+        "isBidirectional": true,
+        "canUseTriState": true,
+        "capabilities": ["i2c_sda", "spi_mosi"],
+        "canUseInternalPullup": true,
+        "canUseInternalPulldown": true,
+        "canUseOpenDrain": true,
+        "canUsePushPull": true,
+        "isGpio": true
+      },
+      "G24": {
+        "isInput": true,
+        "isOutput": true,
+        "isBidirectional": true,
+        "canUseTriState": true,
+        "canUseInternalPulldown": true,
+        "canUseOpenDrain": true,
+        "canUsePushPull": true,
+        "isGpio": true
+      },
+      "G25": {
+        "isInput": true,
+        "isOutput": true,
+        "isBidirectional": true,
+        "canUseTriState": true,
+        "canUseInternalPulldown": true,
+        "canUseOpenDrain": true,
+        "canUsePushPull": true,
+        "isGpio": true
+      },
+      "H10": {
+        "isOutput": true,
+        "mustBeConnected": true,
+        "shouldHaveDecouplingCapacitor": true
+      },
+      "H11": {
+        "isOutput": true,
+        "shouldHaveDecouplingCapacitor": true
+      },
+      "H12": {
+        "requiresGround": true,
+        "requiresVoltage": 0,
+        "mustBeConnected": true
+      },
+      "H13": {
+        "isOutput": true,
+        "mustBeConnected": true,
+        "shouldHaveDecouplingCapacitor": true
+      },
+      "H14": {
+        "requiresPower": true,
+        "shouldHaveDecouplingCapacitor": true
+      },
+      "H15": {
+        "requiresGround": true,
+        "requiresVoltage": 0,
+        "mustBeConnected": true
+      },
+      "H16": {
+        "requiresPower": true,
+        "shouldHaveDecouplingCapacitor": true
+      },
+      "H17": {
+        "isOutput": true,
+        "mustBeConnected": true,
+        "shouldHaveDecouplingCapacitor": true
+      },
+      "H18": {
+        "requiresGround": true,
+        "requiresVoltage": 0,
+        "mustBeConnected": true
+      },
+      "H19": {
+        "isInput": true,
+        "isOutput": true,
+        "isBidirectional": true,
+        "canUseTriState": true,
+        "capabilities": ["spi_cs"],
+        "canUseInternalPulldown": true,
+        "canUseOpenDrain": true,
+        "canUsePushPull": true,
+        "isGpio": true
+      },
+      "H20": {
+        "isInput": true,
+        "isOutput": true,
+        "isBidirectional": true,
+        "canUseTriState": true,
+        "capabilities": ["spi_sck", "i2c_scl"],
+        "canUseInternalPullup": true,
+        "canUseInternalPulldown": true,
+        "canUseOpenDrain": true,
+        "canUsePushPull": true,
+        "isGpio": true
+      },
+      "H21": {
+        "isInput": true,
+        "isOutput": true,
+        "isBidirectional": true,
+        "canUseTriState": true,
+        "canUseInternalPulldown": true,
+        "canUseOpenDrain": true,
+        "canUsePushPull": true,
+        "isGpio": true
+      },
+      "H22": {
+        "isInput": true,
+        "isOutput": true,
+        "isBidirectional": true,
+        "canUseTriState": true,
+        "canUseInternalPulldown": true,
+        "canUseOpenDrain": true,
+        "canUsePushPull": true,
+        "isGpio": true
+      },
+      "H23": {
+        "isInput": true,
+        "isOutput": true,
+        "isBidirectional": true,
+        "canUseTriState": true,
+        "canUseInternalPulldown": true,
+        "canUseOpenDrain": true,
+        "canUsePushPull": true,
+        "isGpio": true
+      },
+      "H24": {
+        "isInput": true,
+        "isOutput": true,
+        "isBidirectional": true,
+        "canUseTriState": true,
+        "capabilities": ["spi_sck"],
+        "canUseInternalPulldown": true,
+        "canUseOpenDrain": true,
+        "canUsePushPull": true,
+        "isGpio": true
+      },
+      "H25": {
+        "isInput": true,
+        "isOutput": true,
+        "isBidirectional": true,
+        "canUseTriState": true,
+        "canUseInternalPulldown": true,
+        "canUseOpenDrain": true,
+        "canUsePushPull": true,
+        "isGpio": true
+      },
+      "J10": {
+        "isOutput": true,
+        "mustBeConnected": true,
+        "shouldHaveDecouplingCapacitor": true
+      },
+      "J11": {
+        "isOutput": true,
+        "shouldHaveDecouplingCapacitor": true
+      },
+      "J12": {
+        "requiresGround": true,
+        "requiresVoltage": 0,
+        "mustBeConnected": true
+      },
+      "J13": {
+        "isOutput": true,
+        "mustBeConnected": true,
+        "shouldHaveDecouplingCapacitor": true
+      },
+      "J14": {
+        "requiresPower": true,
+        "shouldHaveDecouplingCapacitor": true
+      },
+      "J15": {
+        "requiresGround": true,
+        "requiresVoltage": 0,
+        "mustBeConnected": true
+      },
+      "J16": {
+        "requiresPower": true,
+        "shouldHaveDecouplingCapacitor": true
+      },
+      "J17": {
+        "isOutput": true,
+        "mustBeConnected": true,
+        "shouldHaveDecouplingCapacitor": true
+      },
+      "J18": {
+        "requiresGround": true,
+        "requiresVoltage": 0,
+        "mustBeConnected": true
+      },
+      "J19": {
+        "isInput": true,
+        "isOutput": true,
+        "isBidirectional": true,
+        "canUseTriState": true,
+        "capabilities": ["spi_cs"],
+        "canUseInternalPullup": true,
+        "canUseInternalPulldown": true,
+        "canUseOpenDrain": true,
+        "canUsePushPull": true,
+        "isGpio": true
+      },
+      "J20": {
+        "isInput": true,
+        "isOutput": true,
+        "isBidirectional": true,
+        "canUseTriState": true,
+        "canUseInternalPullup": true,
+        "canUseInternalPulldown": true,
+        "canUseOpenDrain": true,
+        "canUsePushPull": true,
+        "isGpio": true
+      },
+      "J21": {
+        "isInput": true,
+        "isOutput": true,
+        "isBidirectional": true,
+        "canUseTriState": true,
+        "canUseInternalPulldown": true,
+        "canUseOpenDrain": true,
+        "canUsePushPull": true,
+        "isGpio": true
+      },
+      "J22": {
+        "isInput": true,
+        "isOutput": true,
+        "isBidirectional": true,
+        "canUseTriState": true,
+        "canUseInternalPulldown": true,
+        "canUseOpenDrain": true,
+        "canUsePushPull": true,
+        "isGpio": true
+      },
+      "J23": {
+        "isInput": true,
+        "isOutput": true,
+        "isBidirectional": true,
+        "canUseTriState": true,
+        "capabilities": ["spi_mosi"],
+        "canUseInternalPulldown": true,
+        "canUseOpenDrain": true,
+        "canUsePushPull": true,
+        "isGpio": true
+      },
+      "J24": {
+        "isInput": true,
+        "isOutput": true,
+        "isBidirectional": true,
+        "canUseTriState": true,
+        "capabilities": ["spi_miso"],
+        "canUseInternalPulldown": true,
+        "canUseOpenDrain": true,
+        "canUsePushPull": true,
+        "isGpio": true
+      },
+      "J25": {
+        "isInput": true,
+        "isOutput": true,
+        "isBidirectional": true,
+        "canUseTriState": true,
+        "canUseInternalPullup": true,
+        "canUseInternalPulldown": true,
+        "canUseOpenDrain": true,
+        "canUsePushPull": true,
+        "isGpio": true
+      },
+      "K10": {
+        "requiresGround": true,
+        "requiresVoltage": 0,
+        "mustBeConnected": true
+      },
+      "K11": {
+        "isOutput": true,
+        "shouldHaveDecouplingCapacitor": true
+      },
+      "K12": {
+        "requiresGround": true,
+        "requiresVoltage": 0,
+        "mustBeConnected": true
+      },
+      "K13": {
+        "isOutput": true,
+        "mustBeConnected": true,
+        "shouldHaveDecouplingCapacitor": true
+      },
+      "K14": {
+        "requiresPower": true,
+        "shouldHaveDecouplingCapacitor": true
+      },
+      "K15": {
+        "requiresGround": true,
+        "requiresVoltage": 0,
+        "mustBeConnected": true
+      },
+      "K16": {
+        "requiresPower": true,
+        "shouldHaveDecouplingCapacitor": true
+      },
+      "K17": {
+        "isOutput": true,
+        "mustBeConnected": true,
+        "shouldHaveDecouplingCapacitor": true
+      },
+      "K18": {
+        "requiresGround": true,
+        "requiresVoltage": 0,
+        "mustBeConnected": true
+      },
+      "K19": {
+        "requiresPower": true,
+        "shouldHaveDecouplingCapacitor": true
+      },
+      "K20": {
+        "isInput": true,
+        "isOutput": true,
+        "isBidirectional": true,
+        "canUseTriState": true,
+        "capabilities": ["spi_cs"],
+        "canUseInternalPulldown": true,
+        "canUseOpenDrain": true,
+        "canUsePushPull": true,
+        "isGpio": true
+      },
+      "K21": {
+        "isInput": true,
+        "isOutput": true,
+        "isBidirectional": true,
+        "canUseTriState": true,
+        "canUseInternalPulldown": true,
+        "canUseOpenDrain": true,
+        "canUsePushPull": true,
+        "isGpio": true
+      },
+      "K22": {
+        "isInput": true,
+        "isOutput": true,
+        "isBidirectional": true,
+        "canUseTriState": true,
+        "capabilities": ["spi_cs"],
+        "canUseInternalPulldown": true,
+        "canUseOpenDrain": true,
+        "canUsePushPull": true,
+        "isGpio": true
+      },
+      "K23": {
+        "isInput": true,
+        "isOutput": true,
+        "isBidirectional": true,
+        "canUseTriState": true,
+        "canUseInternalPulldown": true,
+        "canUseOpenDrain": true,
+        "canUsePushPull": true,
+        "isGpio": true
+      },
+      "K24": {
+        "isInput": true,
+        "isOutput": true,
+        "isBidirectional": true,
+        "canUseTriState": true,
+        "canUseInternalPullup": true,
+        "canUseInternalPulldown": true,
+        "canUseOpenDrain": true,
+        "canUsePushPull": true,
+        "isGpio": true
+      },
+      "K25": {
+        "isInput": true,
+        "isOutput": true,
+        "isBidirectional": true,
+        "canUseTriState": true,
+        "canUseInternalPullup": true,
+        "canUseInternalPulldown": true,
+        "canUseOpenDrain": true,
+        "canUsePushPull": true,
+        "isGpio": true
+      },
+      "L10": {
+        "requiresGround": true,
+        "requiresVoltage": 0,
+        "mustBeConnected": true
+      },
+      "L11": {
+        "isOutput": true,
+        "shouldHaveDecouplingCapacitor": true
+      },
+      "L12": {
+        "requiresGround": true,
+        "requiresVoltage": 0,
+        "mustBeConnected": true
+      },
+      "L13": {
+        "isOutput": true,
+        "mustBeConnected": true,
+        "shouldHaveDecouplingCapacitor": true
+      },
+      "L14": {
+        "requiresPower": true,
+        "shouldHaveDecouplingCapacitor": true
+      },
+      "L15": {
+        "requiresGround": true,
+        "requiresVoltage": 0,
+        "mustBeConnected": true
+      },
+      "L16": {
+        "requiresPower": true,
+        "shouldHaveDecouplingCapacitor": true
+      },
+      "L17": {
+        "isOutput": true,
+        "mustBeConnected": true,
+        "shouldHaveDecouplingCapacitor": true
+      },
+      "L18": {
+        "requiresGround": true,
+        "requiresVoltage": 0,
+        "mustBeConnected": true
+      },
+      "L19": {
+        "requiresPower": true,
+        "shouldHaveDecouplingCapacitor": true
+      },
+      "L20": {
+        "isInput": true,
+        "isOutput": true,
+        "isBidirectional": true,
+        "canUseTriState": true,
+        "canUseInternalPullup": true,
+        "canUseInternalPulldown": true,
+        "canUseOpenDrain": true,
+        "canUsePushPull": true,
+        "isGpio": true
+      },
+      "L21": {
+        "isInput": true,
+        "isOutput": true,
+        "isBidirectional": true,
+        "canUseTriState": true,
+        "canUseInternalPullup": true,
+        "canUseInternalPulldown": true,
+        "canUseOpenDrain": true,
+        "canUsePushPull": true,
+        "isGpio": true
+      },
+      "L22": {
+        "isInput": true,
+        "isOutput": true,
+        "isBidirectional": true,
+        "canUseTriState": true,
+        "canUseInternalPullup": true,
+        "canUseInternalPulldown": true,
+        "canUseOpenDrain": true,
+        "canUsePushPull": true,
+        "isGpio": true
+      },
+      "L23": {
+        "isInput": true,
+        "isOutput": true,
+        "isBidirectional": true,
+        "canUseTriState": true,
+        "canUseInternalPullup": true,
+        "canUseInternalPulldown": true,
+        "canUseOpenDrain": true,
+        "canUsePushPull": true,
+        "isGpio": true
+      },
+      "L24": {
+        "isInput": true,
+        "isOutput": true,
+        "isBidirectional": true,
+        "canUseTriState": true,
+        "canUseInternalPullup": true,
+        "canUseInternalPulldown": true,
+        "canUseOpenDrain": true,
+        "canUsePushPull": true,
+        "isGpio": true
+      },
+      "L25": {
+        "isInput": true,
+        "isOutput": true,
+        "isBidirectional": true,
+        "canUseTriState": true,
+        "canUseInternalPullup": true,
+        "canUseInternalPulldown": true,
+        "canUseOpenDrain": true,
+        "canUsePushPull": true,
+        "isGpio": true
+      },
+      "M10": {
+        "requiresGround": true,
+        "requiresVoltage": 0,
+        "mustBeConnected": true
+      },
+      "M11": {
+        "isOutput": true,
+        "shouldHaveDecouplingCapacitor": true
+      },
+      "M12": {
+        "requiresGround": true,
+        "requiresVoltage": 0,
+        "mustBeConnected": true
+      },
+      "M13": {
+        "isOutput": true,
+        "mustBeConnected": true,
+        "shouldHaveDecouplingCapacitor": true
+      },
+      "M14": {
+        "requiresPower": true,
+        "shouldHaveDecouplingCapacitor": true
+      },
+      "M15": {
+        "requiresGround": true,
+        "requiresVoltage": 0,
+        "mustBeConnected": true
+      },
+      "M16": {
+        "requiresPower": true,
+        "shouldHaveDecouplingCapacitor": true
+      },
+      "M17": {
+        "isOutput": true,
+        "mustBeConnected": true,
+        "shouldHaveDecouplingCapacitor": true
+      },
+      "M18": {
+        "requiresGround": true,
+        "requiresVoltage": 0,
+        "mustBeConnected": true
+      },
+      "M19": {
+        "requiresPower": true,
+        "shouldHaveDecouplingCapacitor": true
+      },
+      "M20": {
+        "isInput": true,
+        "isOutput": true,
+        "isBidirectional": true,
+        "canUseTriState": true,
+        "canUseInternalPullup": true,
+        "canUseInternalPulldown": true,
+        "canUseOpenDrain": true,
+        "canUsePushPull": true,
+        "isGpio": true
+      },
+      "M21": {
+        "isInput": true,
+        "isOutput": true,
+        "isBidirectional": true,
+        "canUseTriState": true,
+        "canUseInternalPullup": true,
+        "canUseInternalPulldown": true,
+        "canUseOpenDrain": true,
+        "canUsePushPull": true,
+        "isGpio": true
+      },
+      "M22": {
+        "isInput": true,
+        "isOutput": true,
+        "isBidirectional": true,
+        "canUseTriState": true,
+        "canUseInternalPullup": true,
+        "canUseInternalPulldown": true,
+        "canUseOpenDrain": true,
+        "canUsePushPull": true,
+        "isGpio": true
+      },
+      "M23": {
+        "isInput": true,
+        "isOutput": true,
+        "isBidirectional": true,
+        "canUseTriState": true,
+        "canUseInternalPullup": true,
+        "canUseInternalPulldown": true,
+        "canUseOpenDrain": true,
+        "canUsePushPull": true,
+        "isGpio": true
+      },
+      "M24": {
+        "isInput": true,
+        "isOutput": true,
+        "isBidirectional": true,
+        "canUseTriState": true,
+        "canUseInternalPullup": true,
+        "canUseInternalPulldown": true,
+        "canUseOpenDrain": true,
+        "canUsePushPull": true,
+        "isGpio": true
+      },
+      "M25": {
+        "isInput": true,
+        "isOutput": true,
+        "isBidirectional": true,
+        "canUseTriState": true,
+        "canUseInternalPullup": true,
+        "canUseInternalPulldown": true,
+        "canUseOpenDrain": true,
+        "canUsePushPull": true,
+        "isGpio": true
+      },
+      "N10": {
+        "requiresGround": true,
+        "requiresVoltage": 0,
+        "mustBeConnected": true
+      },
+      "N11": {
+        "isOutput": true,
+        "shouldHaveDecouplingCapacitor": true
+      },
+      "N12": {
+        "requiresPower": true,
+        "mustBeConnected": true,
+        "shouldHaveDecouplingCapacitor": true
+      },
+      "N13": {
+        "isOutput": true,
+        "mustBeConnected": true,
+        "shouldHaveDecouplingCapacitor": true
+      },
+      "N14": {
+        "requiresPower": true,
+        "shouldHaveDecouplingCapacitor": true
+      },
+      "N15": {
+        "requiresGround": true,
+        "requiresVoltage": 0,
+        "mustBeConnected": true
+      },
+      "N16": {
+        "requiresPower": true,
+        "shouldHaveDecouplingCapacitor": true
+      },
+      "N17": {
+        "isOutput": true,
+        "mustBeConnected": true,
+        "shouldHaveDecouplingCapacitor": true
+      },
+      "N18": {
+        "requiresGround": true,
+        "requiresVoltage": 0,
+        "mustBeConnected": true
+      },
+      "N19": {
+        "isInput": true,
+        "isOutput": true,
+        "isBidirectional": true,
+        "canUseTriState": true,
+        "canUseInternalPullup": true,
+        "canUseInternalPulldown": true,
+        "canUseOpenDrain": true,
+        "canUsePushPull": true,
+        "isGpio": true
+      },
+      "N20": {
+        "isInput": true,
+        "isOutput": true,
+        "isBidirectional": true,
+        "canUseTriState": true,
+        "canUseInternalPullup": true,
+        "canUseInternalPulldown": true,
+        "canUseOpenDrain": true,
+        "canUsePushPull": true,
+        "isGpio": true
+      },
+      "N21": {
+        "isInput": true,
+        "isOutput": true,
+        "isBidirectional": true,
+        "canUseTriState": true,
+        "canUseInternalPullup": true,
+        "canUseInternalPulldown": true,
+        "canUseOpenDrain": true,
+        "canUsePushPull": true,
+        "isGpio": true
+      },
+      "N22": {
+        "isInput": true,
+        "isOutput": true,
+        "isBidirectional": true,
+        "canUseTriState": true,
+        "canUseInternalPulldown": true,
+        "canUseOpenDrain": true,
+        "canUsePushPull": true,
+        "isGpio": true
+      },
+      "N23": {
+        "isInput": true,
+        "isOutput": true,
+        "isBidirectional": true,
+        "canUseTriState": true,
+        "canUseInternalPullup": true,
+        "canUseInternalPulldown": true,
+        "canUseOpenDrain": true,
+        "canUsePushPull": true,
+        "isGpio": true
+      },
+      "N24": {
+        "isInput": true,
+        "isOutput": true,
+        "isBidirectional": true,
+        "canUseTriState": true,
+        "canUseInternalPullup": true,
+        "canUseInternalPulldown": true,
+        "canUseOpenDrain": true,
+        "canUsePushPull": true,
+        "isGpio": true
+      },
+      "N25": {
+        "isInput": true,
+        "isOutput": true,
+        "isBidirectional": true,
+        "canUseTriState": true,
+        "canUseInternalPullup": true,
+        "canUseInternalPulldown": true,
+        "canUseOpenDrain": true,
+        "canUsePushPull": true,
+        "isGpio": true
+      },
+      "P10": {
+        "requiresGround": true,
+        "requiresVoltage": 0,
+        "mustBeConnected": true
+      },
+      "P11": {
+        "isOutput": true,
+        "shouldHaveDecouplingCapacitor": true
+      },
+      "P12": {
+        "requiresGround": true,
+        "requiresVoltage": 0,
+        "mustBeConnected": true
+      },
+      "P13": {
+        "isOutput": true,
+        "mustBeConnected": true,
+        "shouldHaveDecouplingCapacitor": true
+      },
+      "P14": {
+        "requiresPower": true,
+        "shouldHaveDecouplingCapacitor": true
+      },
+      "P15": {
+        "requiresGround": true,
+        "requiresVoltage": 0,
+        "mustBeConnected": true
+      },
+      "P16": {
+        "requiresPower": true,
+        "shouldHaveDecouplingCapacitor": true
+      },
+      "P17": {
+        "isOutput": true,
+        "mustBeConnected": true,
+        "shouldHaveDecouplingCapacitor": true
+      },
+      "P18": {
+        "requiresGround": true,
+        "requiresVoltage": 0,
+        "mustBeConnected": true
+      },
+      "P19": {
+        "requiresPower": true,
+        "shouldHaveDecouplingCapacitor": true
+      },
+      "P20": {
+        "isInput": true,
+        "isOutput": true,
+        "isBidirectional": true,
+        "canUseTriState": true,
+        "capabilities": ["spi_cs"],
+        "canUseInternalPullup": true,
+        "canUseInternalPulldown": true,
+        "canUseOpenDrain": true,
+        "canUsePushPull": true,
+        "isGpio": true
+      },
+      "P21": {
+        "isInput": true,
+        "isOutput": true,
+        "isBidirectional": true,
+        "canUseTriState": true,
+        "capabilities": ["spi_cs"],
+        "canUseInternalPullup": true,
+        "canUseInternalPulldown": true,
+        "canUseOpenDrain": true,
+        "canUsePushPull": true,
+        "isGpio": true
+      },
+      "P22": {
+        "isInput": true,
+        "isOutput": true,
+        "isBidirectional": true,
+        "canUseTriState": true,
+        "capabilities": ["spi_mosi"],
+        "canUseInternalPullup": true,
+        "canUseInternalPulldown": true,
+        "canUseOpenDrain": true,
+        "canUsePushPull": true,
+        "isGpio": true
+      },
+      "P23": {
+        "isInput": true,
+        "isOutput": true,
+        "isBidirectional": true,
+        "canUseTriState": true,
+        "capabilities": ["spi_miso"],
+        "canUseInternalPullup": true,
+        "canUseInternalPulldown": true,
+        "canUseOpenDrain": true,
+        "canUsePushPull": true,
+        "isGpio": true
+      },
+      "P24": {
+        "isInput": true,
+        "isOutput": true,
+        "isBidirectional": true,
+        "canUseTriState": true,
+        "capabilities": ["spi_sck"],
+        "canUseInternalPullup": true,
+        "canUseInternalPulldown": true,
+        "canUseOpenDrain": true,
+        "canUsePushPull": true,
+        "isGpio": true
+      },
+      "P25": {
+        "isInput": true,
+        "isOutput": true,
+        "isBidirectional": true,
+        "canUseTriState": true,
+        "canUseInternalPullup": true,
+        "canUseInternalPulldown": true,
+        "canUseOpenDrain": true,
+        "canUsePushPull": true,
+        "isGpio": true
+      },
+      "R10": {
+        "isOutput": true,
+        "mustBeConnected": true,
+        "shouldHaveDecouplingCapacitor": true
+      },
+      "R11": {
+        "isOutput": true,
+        "shouldHaveDecouplingCapacitor": true
+      },
+      "R12": {
+        "requiresGround": true,
+        "requiresVoltage": 0,
+        "mustBeConnected": true
+      },
+      "R13": {
+        "isOutput": true,
+        "mustBeConnected": true,
+        "shouldHaveDecouplingCapacitor": true
+      },
+      "R14": {
+        "requiresPower": true,
+        "shouldHaveDecouplingCapacitor": true
+      },
+      "R15": {
+        "requiresGround": true,
+        "requiresVoltage": 0,
+        "mustBeConnected": true
+      },
+      "R16": {
+        "requiresPower": true,
+        "shouldHaveDecouplingCapacitor": true
+      },
+      "R17": {
+        "requiresGround": true,
+        "requiresVoltage": 0,
+        "mustBeConnected": true
+      },
+      "R18": {
+        "requiresPower": true,
+        "shouldHaveDecouplingCapacitor": true
+      },
+      "R19": {
+        "requiresPower": true,
+        "shouldHaveDecouplingCapacitor": true
+      },
+      "R20": {
+        "isInput": true,
+        "isOutput": true,
+        "isBidirectional": true,
+        "canUseTriState": true,
+        "canUseInternalPullup": true,
+        "canUseInternalPulldown": true,
+        "canUseOpenDrain": true,
+        "canUsePushPull": true,
+        "isGpio": true
+      },
+      "R21": {
+        "isInput": true,
+        "isOutput": true,
+        "isBidirectional": true,
+        "canUseTriState": true,
+        "canUseInternalPullup": true,
+        "canUseInternalPulldown": true,
+        "canUseOpenDrain": true,
+        "canUsePushPull": true,
+        "isGpio": true
+      },
+      "R22": {
+        "isInput": true,
+        "isOutput": true,
+        "isBidirectional": true,
+        "canUseTriState": true,
+        "canUseInternalPullup": true,
+        "canUseInternalPulldown": true,
+        "canUseOpenDrain": true,
+        "canUsePushPull": true,
+        "isGpio": true
+      },
+      "R23": {
+        "isInput": true,
+        "isOutput": true,
+        "isBidirectional": true,
+        "canUseTriState": true,
+        "capabilities": ["spi_cs"],
+        "canUseInternalPullup": true,
+        "canUseInternalPulldown": true,
+        "canUseOpenDrain": true,
+        "canUsePushPull": true,
+        "isGpio": true
+      },
+      "R24": {
+        "isInput": true,
+        "isOutput": true,
+        "isBidirectional": true,
+        "canUseTriState": true,
+        "canUseInternalPullup": true,
+        "canUseInternalPulldown": true,
+        "canUseOpenDrain": true,
+        "canUsePushPull": true,
+        "isGpio": true
+      },
+      "R25": {
+        "isInput": true,
+        "isOutput": true,
+        "isBidirectional": true,
+        "canUseTriState": true,
+        "capabilities": ["spi_cs"],
+        "canUseInternalPullup": true,
+        "canUseInternalPulldown": true,
+        "canUseOpenDrain": true,
+        "canUsePushPull": true,
+        "isGpio": true
+      },
+      "T10": {
+        "isOutput": true,
+        "mustBeConnected": true,
+        "shouldHaveDecouplingCapacitor": true
+      },
+      "T11": {
+        "requiresGround": true,
+        "requiresVoltage": 0,
+        "mustBeConnected": true
+      },
+      "T12": {
+        "requiresGround": true,
+        "requiresVoltage": 0,
+        "mustBeConnected": true
+      },
+      "T13": {
+        "isOutput": true,
+        "mustBeConnected": true,
+        "shouldHaveDecouplingCapacitor": true
+      },
+      "T14": {
+        "isOutput": true,
+        "mustBeConnected": true,
+        "shouldHaveDecouplingCapacitor": true
+      },
+      "T15": {
+        "requiresGround": true,
+        "requiresVoltage": 0,
+        "mustBeConnected": true
+      },
+      "T16": {
+        "requiresPower": true,
+        "shouldHaveDecouplingCapacitor": true
+      },
+      "T17": {
+        "requiresGround": true,
+        "requiresVoltage": 0,
+        "mustBeConnected": true
+      },
+      "T18": {
+        "requiresPower": true,
+        "shouldHaveDecouplingCapacitor": true
+      },
+      "T19": {
+        "requiresGround": true,
+        "requiresVoltage": 0,
+        "mustBeConnected": true
+      },
+      "T20": {
+        "isInput": true,
+        "isOutput": true,
+        "isBidirectional": true,
+        "canUseTriState": true,
+        "capabilities": ["spi_mosi"],
+        "canUseInternalPullup": true,
+        "canUseInternalPulldown": true,
+        "canUseOpenDrain": true,
+        "canUsePushPull": true,
+        "isGpio": true
+      },
+      "T21": {
+        "isInput": true,
+        "isOutput": true,
+        "isBidirectional": true,
+        "canUseTriState": true,
+        "capabilities": ["spi_mosi"],
+        "canUseInternalPullup": true,
+        "canUseInternalPulldown": true,
+        "canUseOpenDrain": true,
+        "canUsePushPull": true,
+        "isGpio": true
+      },
+      "T22": {
+        "isInput": true,
+        "isOutput": true,
+        "isBidirectional": true,
+        "canUseTriState": true,
+        "capabilities": ["spi_cs"],
+        "canUseInternalPullup": true,
+        "canUseInternalPulldown": true,
+        "canUseOpenDrain": true,
+        "canUsePushPull": true,
+        "isGpio": true
+      },
+      "T23": {
+        "isInput": true,
+        "isOutput": true,
+        "isBidirectional": true,
+        "canUseTriState": true,
+        "canUseInternalPullup": true,
+        "canUseInternalPulldown": true,
+        "canUseOpenDrain": true,
+        "canUsePushPull": true,
+        "isGpio": true
+      },
+      "T24": {
+        "isInput": true,
+        "isOutput": true,
+        "isBidirectional": true,
+        "canUseTriState": true,
+        "canUseInternalPullup": true,
+        "canUseInternalPulldown": true,
+        "canUseOpenDrain": true,
+        "canUsePushPull": true,
+        "isGpio": true
+      },
+      "T25": {
+        "isInput": true,
+        "isOutput": true,
+        "isBidirectional": true,
+        "canUseTriState": true,
+        "canUseInternalPullup": true,
+        "canUseInternalPulldown": true,
+        "canUseOpenDrain": true,
+        "canUsePushPull": true,
+        "isGpio": true
+      },
+      "U10": {
+        "isOutput": true,
+        "mustBeConnected": true,
+        "shouldHaveDecouplingCapacitor": true
+      },
+      "U11": {
+        "requiresGround": true,
+        "requiresVoltage": 0,
+        "mustBeConnected": true
+      },
+      "U12": {
+        "requiresGround": true,
+        "requiresVoltage": 0,
+        "mustBeConnected": true
+      },
+      "U13": {
+        "isOutput": true,
+        "mustBeConnected": true,
+        "shouldHaveDecouplingCapacitor": true
+      },
+      "U14": {
+        "isOutput": true,
+        "mustBeConnected": true,
+        "shouldHaveDecouplingCapacitor": true
+      },
+      "U15": {
+        "requiresGround": true,
+        "requiresVoltage": 0,
+        "mustBeConnected": true
+      },
+      "U16": {
+        "requiresPower": true,
+        "shouldHaveDecouplingCapacitor": true
+      },
+      "U17": {
+        "requiresGround": true,
+        "requiresVoltage": 0,
+        "mustBeConnected": true
+      },
+      "U18": {
+        "requiresPower": true,
+        "shouldHaveDecouplingCapacitor": true
+      },
+      "U19": {
+        "requiresGround": true,
+        "requiresVoltage": 0,
+        "mustBeConnected": true
+      },
+      "U20": {
+        "isInput": true,
+        "isOutput": true,
+        "isBidirectional": true,
+        "canUseTriState": true,
+        "canUseInternalPullup": true,
+        "canUseInternalPulldown": true,
+        "canUseOpenDrain": true,
+        "canUsePushPull": true,
+        "isGpio": true
+      },
+      "U21": {
+        "isInput": true,
+        "isOutput": true,
+        "isBidirectional": true,
+        "canUseTriState": true,
+        "canUseInternalPullup": true,
+        "canUseInternalPulldown": true,
+        "canUseOpenDrain": true,
+        "canUsePushPull": true,
+        "isGpio": true
+      },
+      "U22": {
+        "isInput": true,
+        "isOutput": true,
+        "isBidirectional": true,
+        "canUseTriState": true,
+        "capabilities": ["spi_sck"],
+        "canUseInternalPullup": true,
+        "canUseInternalPulldown": true,
+        "canUseOpenDrain": true,
+        "canUsePushPull": true,
+        "isGpio": true
+      },
+      "U23": {
+        "isInput": true,
+        "isOutput": true,
+        "isBidirectional": true,
+        "canUseTriState": true,
+        "capabilities": ["spi_sck"],
+        "canUseInternalPullup": true,
+        "canUseInternalPulldown": true,
+        "canUseOpenDrain": true,
+        "canUsePushPull": true,
+        "isGpio": true
+      },
+      "U24": {
+        "isInput": true,
+        "isOutput": true,
+        "isBidirectional": true,
+        "canUseTriState": true,
+        "capabilities": ["spi_miso"],
+        "canUseInternalPullup": true,
+        "canUseInternalPulldown": true,
+        "canUseOpenDrain": true,
+        "canUsePushPull": true,
+        "isGpio": true
+      },
+      "U25": {
+        "isInput": true,
+        "isOutput": true,
+        "isBidirectional": true,
+        "canUseTriState": true,
+        "canUseInternalPullup": true,
+        "canUseInternalPulldown": true,
+        "canUseOpenDrain": true,
+        "canUsePushPull": true,
+        "isGpio": true
+      },
+      "V10": {
+        "requiresPower": true,
+        "shouldHaveDecouplingCapacitor": true
+      },
+      "V11": {
+        "requiresPower": true,
+        "shouldHaveDecouplingCapacitor": true
+      },
+      "V12": {
+        "requiresPower": true,
+        "shouldHaveDecouplingCapacitor": true
+      },
+      "V13": {
+        "requiresPower": true,
+        "shouldHaveDecouplingCapacitor": true
+      },
+      "V14": {
+        "requiresPower": true,
+        "shouldHaveDecouplingCapacitor": true
+      },
+      "V15": {
+        "requiresPower": true,
+        "shouldHaveDecouplingCapacitor": true
+      },
+      "V16": {
+        "requiresPower": true,
+        "shouldHaveDecouplingCapacitor": true
+      },
+      "V17": {
+        "requiresPower": true,
+        "shouldHaveDecouplingCapacitor": true
+      },
+      "V18": {
+        "requiresPower": true,
+        "shouldHaveDecouplingCapacitor": true
+      },
+      "V19": {
+        "requiresGround": true,
+        "requiresVoltage": 0,
+        "mustBeConnected": true
+      },
+      "V20": {
+        "isInput": true,
+        "isOutput": true,
+        "isBidirectional": true,
+        "canUseTriState": true,
+        "canUseInternalPullup": true,
+        "canUseInternalPulldown": true,
+        "canUseOpenDrain": true,
+        "canUsePushPull": true,
+        "isGpio": true
+      },
+      "V21": {
+        "isInput": true,
+        "isOutput": true,
+        "isBidirectional": true,
+        "canUseTriState": true,
+        "canUseInternalPullup": true,
+        "canUseInternalPulldown": true,
+        "canUseOpenDrain": true,
+        "canUsePushPull": true,
+        "isGpio": true
+      },
+      "V22": {
+        "isInput": true,
+        "isOutput": true,
+        "isBidirectional": true,
+        "canUseTriState": true,
+        "canUseInternalPullup": true,
+        "canUseInternalPulldown": true,
+        "canUseOpenDrain": true,
+        "canUsePushPull": true,
+        "isGpio": true
+      },
+      "V23": {
+        "isInput": true,
+        "isOutput": true,
+        "isBidirectional": true,
+        "canUseTriState": true,
+        "canUseInternalPullup": true,
+        "canUseInternalPulldown": true,
+        "canUseOpenDrain": true,
+        "canUsePushPull": true,
+        "isGpio": true
+      },
+      "V24": {
+        "isInput": true,
+        "isOutput": true,
+        "isBidirectional": true,
+        "canUseTriState": true,
+        "capabilities": ["spi_miso"],
+        "canUseInternalPullup": true,
+        "canUseInternalPulldown": true,
+        "canUseOpenDrain": true,
+        "canUsePushPull": true,
+        "isGpio": true
+      },
+      "V25": {
+        "isInput": true,
+        "isOutput": true,
+        "isBidirectional": true,
+        "canUseTriState": true,
+        "capabilities": ["spi_cs"],
+        "canUseInternalPullup": true,
+        "canUseInternalPulldown": true,
+        "canUseOpenDrain": true,
+        "canUsePushPull": true,
+        "isGpio": true
+      },
+      "W10": {
+        "requiresGround": true,
+        "requiresVoltage": 0,
+        "mustBeConnected": true
+      },
+      "W11": {
+        "requiresGround": true,
+        "requiresVoltage": 0,
+        "mustBeConnected": true
+      },
+      "W12": {
+        "requiresGround": true,
+        "requiresVoltage": 0,
+        "mustBeConnected": true
+      },
+      "W13": {
+        "requiresGround": true,
+        "requiresVoltage": 0,
+        "mustBeConnected": true
+      },
+      "W14": {
+        "isOutput": true
+      },
+      "W15": {
+        "requiresGround": true,
+        "requiresVoltage": 0,
+        "mustBeConnected": true
+      },
+      "W16": {
+        "requiresGround": true,
+        "requiresVoltage": 0,
+        "mustBeConnected": true
+      },
+      "W17": {
+        "requiresGround": true,
+        "requiresVoltage": 0,
+        "mustBeConnected": true
+      },
+      "W18": {
+        "requiresGround": true,
+        "requiresVoltage": 0,
+        "mustBeConnected": true
+      },
+      "W19": {
+        "requiresGround": true,
+        "requiresVoltage": 0,
+        "mustBeConnected": true
+      },
+      "W20": {
+        "isInput": true,
+        "isOutput": true,
+        "isBidirectional": true,
+        "canUseTriState": true,
+        "canUseInternalPullup": true,
+        "canUseInternalPulldown": true,
+        "canUseOpenDrain": true,
+        "canUsePushPull": true,
+        "isGpio": true
+      },
+      "W21": {
+        "isInput": true,
+        "isOutput": true,
+        "isBidirectional": true,
+        "canUseTriState": true,
+        "canUseInternalPullup": true,
+        "canUseInternalPulldown": true,
+        "canUseOpenDrain": true,
+        "canUsePushPull": true,
+        "isGpio": true
+      },
+      "W22": {
+        "isInput": true,
+        "isOutput": true,
+        "isBidirectional": true,
+        "canUseTriState": true,
+        "canUseInternalPullup": true,
+        "canUseInternalPulldown": true,
+        "canUseOpenDrain": true,
+        "canUsePushPull": true,
+        "isGpio": true
+      },
+      "W23": {
+        "isInput": true,
+        "isOutput": true,
+        "isBidirectional": true,
+        "canUseTriState": true,
+        "canUseInternalPullup": true,
+        "canUseInternalPulldown": true,
+        "canUseOpenDrain": true,
+        "canUsePushPull": true,
+        "isGpio": true
+      },
+      "W24": {
+        "isInput": true,
+        "isOutput": true,
+        "isBidirectional": true,
+        "canUseTriState": true,
+        "capabilities": ["spi_cs"],
+        "canUseInternalPullup": true,
+        "canUseInternalPulldown": true,
+        "canUseOpenDrain": true,
+        "canUsePushPull": true,
+        "isGpio": true
+      },
+      "W25": {
+        "isInput": true,
+        "isOutput": true,
+        "isBidirectional": true,
+        "canUseInternalPullup": true
+      },
+      "Y10": {
+        "isInput": true,
+        "isOutput": true,
+        "isBidirectional": true,
+        "canUseInternalPullup": true
+      },
+      "Y11": {
+        "isOutput": true
+      },
+      "Y12": {
+        "isOutput": true
+      },
+      "Y13": {
+        "isOutput": true
+      },
+      "Y14": {
+        "isOutput": true
+      },
+      "Y15": {
+        "isOutput": true
+      },
+      "Y16": {
+        "isOutput": true
+      },
+      "Y17": {
+        "isInput": true,
+        "isOutput": true,
+        "isBidirectional": true,
+        "canUseInternalPullup": true
+      },
+      "Y18": {
+        "isInput": true,
+        "isOutput": true,
+        "isBidirectional": true,
+        "canUseInternalPullup": true
+      },
+      "Y19": {
+        "isInput": true,
+        "isOutput": true,
+        "isBidirectional": true,
+        "canUseInternalPullup": true
+      },
+      "Y20": {
+        "isInput": true,
+        "isOutput": true,
+        "isBidirectional": true,
+        "canUseInternalPullup": true
+      },
+      "Y21": {
+        "isOutput": true
+      },
+      "Y22": {
+        "isInput": true,
+        "isOutput": true,
+        "isBidirectional": true,
+        "canUseInternalPullup": true
+      },
+      "Y23": {
+        "isInput": true,
+        "isOutput": true,
+        "isBidirectional": true,
+        "canUseInternalPullup": true
+      },
+      "Y24": {
+        "requiresGround": true,
+        "requiresVoltage": 0,
+        "mustBeConnected": true
+      },
+      "Y25": {
+        "isInput": true,
+        "isOutput": true,
+        "isBidirectional": true,
+        "canUseInternalPullup": true
+      },
+      "AA10": {
+        "requiresGround": true,
+        "requiresVoltage": 0,
+        "mustBeConnected": true
+      },
+      "AA11": {
+        "isOutput": true
+      },
+      "AA12": {
+        "isOutput": true
+      },
+      "AA13": {
+        "requiresGround": true,
+        "requiresVoltage": 0,
+        "mustBeConnected": true
+      },
+      "AA14": {
+        "isOutput": true
+      },
+      "AA15": {
+        "isOutput": true
+      },
+      "AA16": {
+        "requiresGround": true,
+        "requiresVoltage": 0,
+        "mustBeConnected": true
+      },
+      "AA17": {
+        "isInput": true,
+        "isOutput": true,
+        "isBidirectional": true,
+        "canUseInternalPullup": true
+      },
+      "AA18": {
+        "isInput": true,
+        "isOutput": true,
+        "isBidirectional": true,
+        "canUseInternalPullup": true
+      },
+      "AA19": {
+        "requiresGround": true,
+        "requiresVoltage": 0,
+        "mustBeConnected": true
+      },
+      "AA20": {
+        "isInput": true,
+        "isOutput": true,
+        "isBidirectional": true,
+        "canUseInternalPullup": true
+      },
+      "AA21": {
+        "isInput": true,
+        "isOutput": true,
+        "isBidirectional": true,
+        "canUseInternalPullup": true
+      },
+      "AA22": {
+        "requiresGround": true,
+        "requiresVoltage": 0,
+        "mustBeConnected": true
+      },
+      "AA23": {
+        "isInput": true,
+        "isOutput": true,
+        "isBidirectional": true,
+        "canUseInternalPullup": true
+      },
+      "AA24": {
+        "isInput": true,
+        "isOutput": true,
+        "isBidirectional": true
+      },
+      "AA25": {
+        "isInput": true,
+        "isOutput": true,
+        "isBidirectional": true
+      },
+      "AB10": {
+        "isInput": true,
+        "isOutput": true,
+        "isBidirectional": true
+      },
+      "AB11": {
+        "isInput": true,
+        "isOutput": true,
+        "isBidirectional": true,
+        "canUseInternalPullup": true
+      },
+      "AB12": {
+        "isOutput": true
+      },
+      "AB13": {
+        "isOutput": true
+      },
+      "AB14": {
+        "isOutput": true
+      },
+      "AB15": {
+        "isOutput": true
+      },
+      "AB16": {
+        "isOutput": true
+      },
+      "AB17": {
+        "isOutput": true
+      },
+      "AB18": {
+        "isOutput": true
+      },
+      "AB19": {
+        "isInput": true,
+        "isOutput": true,
+        "isBidirectional": true,
+        "canUseInternalPullup": true
+      },
+      "AB20": {
+        "isInput": true,
+        "isOutput": true,
+        "isBidirectional": true,
+        "canUseInternalPullup": true
+      },
+      "AB21": {
+        "isInput": true,
+        "isOutput": true,
+        "isBidirectional": true,
+        "canUseInternalPullup": true
+      },
+      "AB22": {
+        "isInput": true,
+        "isOutput": true,
+        "isBidirectional": true,
+        "canUseInternalPullup": true
+      },
+      "AB23": {
+        "isInput": true,
+        "isOutput": true,
+        "isBidirectional": true,
+        "canUseInternalPullup": true
+      },
+      "AB24": {
+        "requiresGround": true,
+        "requiresVoltage": 0,
+        "mustBeConnected": true
+      },
+      "AB25": {
+        "isInput": true,
+        "isOutput": true,
+        "isBidirectional": true,
+        "canUseInternalPullup": true
+      },
+      "AC10": {
+        "isInput": true,
+        "isOutput": true,
+        "isBidirectional": true
+      },
+      "AC11": {
+        "isInput": true,
+        "isOutput": true,
+        "isBidirectional": true,
+        "canUseInternalPullup": true
+      },
+      "AC12": {
+        "isOutput": true
+      },
+      "AC13": {
+        "isOutput": true
+      },
+      "AC14": {
+        "isOutput": true
+      },
+      "AC15": {
+        "isOutput": true
+      },
+      "AC16": {
+        "isOutput": true
+      },
+      "AC17": {
+        "isOutput": true
+      },
+      "AC18": {
+        "isInput": true,
+        "isOutput": true,
+        "isBidirectional": true,
+        "canUseInternalPullup": true
+      },
+      "AC19": {
+        "isInput": true,
+        "isOutput": true,
+        "isBidirectional": true,
+        "canUseInternalPullup": true
+      },
+      "AC20": {
+        "isOutput": true
+      },
+      "AC21": {
+        "isInput": true,
+        "isOutput": true,
+        "isBidirectional": true,
+        "canUseInternalPullup": true
+      },
+      "AC22": {
+        "isInput": true,
+        "isOutput": true,
+        "isBidirectional": true,
+        "canUseInternalPullup": true
+      },
+      "AC23": {
+        "isInput": true,
+        "isOutput": true,
+        "isBidirectional": true,
+        "canUseInternalPullup": true
+      },
+      "AC24": {
+        "isInput": true,
+        "isOutput": true,
+        "isBidirectional": true,
+        "canUseInternalPullup": true
+      },
+      "AC25": {
+        "isInput": true,
+        "isOutput": true,
+        "isBidirectional": true,
+        "canUseInternalPullup": true
+      },
+      "AD10": {
+        "requiresGround": true,
+        "requiresVoltage": 0,
+        "mustBeConnected": true
+      },
+      "AD11": {
+        "isInput": true,
+        "isOutput": true,
+        "isBidirectional": true,
+        "canUseInternalPullup": true
+      },
+      "AD12": {
+        "isOutput": true
+      },
+      "AD13": {
+        "requiresGround": true,
+        "requiresVoltage": 0,
+        "mustBeConnected": true
+      },
+      "AD14": {
+        "isOutput": true
+      },
+      "AD15": {
+        "isOutput": true
+      },
+      "AD16": {
+        "requiresGround": true,
+        "requiresVoltage": 0,
+        "mustBeConnected": true
+      },
+      "AD17": {
+        "isOutput": true
+      },
+      "AD18": {
+        "isInput": true,
+        "isOutput": true,
+        "isBidirectional": true
+      },
+      "AD19": {
+        "requiresGround": true,
+        "requiresVoltage": 0,
+        "mustBeConnected": true
+      },
+      "AD20": {
+        "isInput": true,
+        "isOutput": true,
+        "isBidirectional": true
+      },
+      "AD21": {
+        "isInput": true,
+        "isOutput": true,
+        "isBidirectional": true,
+        "canUseInternalPullup": true
+      },
+      "AD22": {
+        "requiresGround": true,
+        "requiresVoltage": 0,
+        "mustBeConnected": true
+      },
+      "AD23": {
+        "isInput": true,
+        "isOutput": true,
+        "isBidirectional": true
+      },
+      "AD24": {
+        "isOutput": true
+      },
+      "AD25": {
+        "isInput": true,
+        "isOutput": true,
+        "isBidirectional": true,
+        "canUseInternalPullup": true
+      },
+      "AE10": {
+        "isOutput": true
+      },
+      "AE11": {
+        "isInput": true,
+        "isOutput": true,
+        "isBidirectional": true,
+        "canUseInternalPullup": true
+      },
+      "AE12": {
+        "isOutput": true
+      },
+      "AE13": {
+        "isOutput": true
+      },
+      "AE14": {
+        "isOutput": true
+      },
+      "AE15": {
+        "isOutput": true
+      },
+      "AE16": {
+        "isOutput": true
+      },
+      "AE17": {
+        "mustBeConnected": true
+      },
+      "AE18": {
+        "isInput": true,
+        "isOutput": true,
+        "isBidirectional": true
+      },
+      "AE19": {
+        "isInput": true,
+        "isOutput": true,
+        "isBidirectional": true,
+        "canUseInternalPullup": true
+      },
+      "AE20": {
+        "isInput": true,
+        "isOutput": true,
+        "isBidirectional": true
+      },
+      "AE21": {
+        "isInput": true,
+        "isOutput": true,
+        "isBidirectional": true,
+        "canUseInternalPullup": true
+      },
+      "AE22": {
+        "isInput": true,
+        "isOutput": true,
+        "isBidirectional": true,
+        "canUseInternalPullup": true
+      },
+      "AE23": {
+        "isInput": true,
+        "isOutput": true,
+        "isBidirectional": true
+      },
+      "AE24": {
+        "isInput": true,
+        "isOutput": true,
+        "isBidirectional": true,
+        "canUseInternalPullup": true
+      },
+      "AE25": {
+        "requiresGround": true,
+        "requiresVoltage": 0,
+        "mustBeConnected": true
+      }
+    },
+    "pin_information": [
+      {
+        "pin_number": "A2"
+      },
+      {
+        "pin_number": "A3"
+      },
+      {
+        "pin_number": "A4"
+      },
+      {
+        "pin_number": "A5"
+      },
+      {
+        "pin_number": "A6"
+      },
+      {
+        "pin_number": "A7"
+      },
+      {
+        "pin_number": "A8"
+      },
+      {
+        "pin_number": "A9"
+      },
+      {
+        "pin_number": "A10"
+      },
+      {
+        "pin_number": "A11"
+      },
+      {
+        "pin_number": "A12"
+      },
+      {
+        "pin_number": "A13"
+      },
+      {
+        "pin_number": "A14"
+      },
+      {
+        "pin_number": "A15"
+      },
+      {
+        "pin_number": "A16"
+      },
+      {
+        "pin_number": "A17"
+      },
+      {
+        "pin_number": "A18"
+      },
+      {
+        "pin_number": "A19"
+      },
+      {
+        "pin_number": "A20"
+      },
+      {
+        "pin_number": "A21"
+      },
+      {
+        "pin_number": "A22"
+      },
+      {
+        "pin_number": "A23"
+      },
+      {
+        "pin_number": "A24"
+      },
+      {
+        "pin_number": "A25"
+      },
+      {
+        "pin_number": "B1"
+      },
+      {
+        "pin_number": "B2"
+      },
+      {
+        "pin_number": "B3"
+      },
+      {
+        "pin_number": "B4"
+      },
+      {
+        "pin_number": "B5"
+      },
+      {
+        "pin_number": "B6"
+      },
+      {
+        "pin_number": "B7"
+      },
+      {
+        "pin_number": "B8"
+      },
+      {
+        "pin_number": "B9"
+      },
+      {
+        "pin_number": "B10"
+      },
+      {
+        "pin_number": "B11"
+      },
+      {
+        "pin_number": "B12"
+      },
+      {
+        "pin_number": "B13"
+      },
+      {
+        "pin_number": "B14"
+      },
+      {
+        "pin_number": "B15"
+      },
+      {
+        "pin_number": "B16"
+      },
+      {
+        "pin_number": "B17"
+      },
+      {
+        "pin_number": "B18"
+      },
+      {
+        "pin_number": "B19"
+      },
+      {
+        "pin_number": "B20"
+      },
+      {
+        "pin_number": "B21"
+      },
+      {
+        "pin_number": "B22"
+      },
+      {
+        "pin_number": "B23"
+      },
+      {
+        "pin_number": "B24"
+      },
+      {
+        "pin_number": "B25"
+      },
+      {
+        "pin_number": "C1"
+      },
+      {
+        "pin_number": "C2"
+      },
+      {
+        "pin_number": "C3"
+      },
+      {
+        "pin_number": "C4"
+      },
+      {
+        "pin_number": "C5"
+      },
+      {
+        "pin_number": "C6"
+      },
+      {
+        "pin_number": "C7"
+      },
+      {
+        "pin_number": "C8"
+      },
+      {
+        "pin_number": "C9"
+      },
+      {
+        "pin_number": "C10"
+      },
+      {
+        "pin_number": "C11"
+      },
+      {
+        "pin_number": "C12"
+      },
+      {
+        "pin_number": "C13"
+      },
+      {
+        "pin_number": "C14"
+      },
+      {
+        "pin_number": "C15"
+      },
+      {
+        "pin_number": "C16"
+      },
+      {
+        "pin_number": "C17"
+      },
+      {
+        "pin_number": "C18"
+      },
+      {
+        "pin_number": "C19"
+      },
+      {
+        "pin_number": "C20"
+      },
+      {
+        "pin_number": "C21"
+      },
+      {
+        "pin_number": "C22"
+      },
+      {
+        "pin_number": "C23"
+      },
+      {
+        "pin_number": "C24"
+      },
+      {
+        "pin_number": "C25"
+      },
+      {
+        "pin_number": "D1"
+      },
+      {
+        "pin_number": "D2"
+      },
+      {
+        "pin_number": "D3"
+      },
+      {
+        "pin_number": "D4"
+      },
+      {
+        "pin_number": "D5"
+      },
+      {
+        "pin_number": "D6"
+      },
+      {
+        "pin_number": "D7"
+      },
+      {
+        "pin_number": "D8"
+      },
+      {
+        "pin_number": "D9"
+      },
+      {
+        "pin_number": "D10"
+      },
+      {
+        "pin_number": "D11"
+      },
+      {
+        "pin_number": "D12"
+      },
+      {
+        "pin_number": "D13"
+      },
+      {
+        "pin_number": "D14"
+      },
+      {
+        "pin_number": "D15"
+      },
+      {
+        "pin_number": "D16"
+      },
+      {
+        "pin_number": "D17"
+      },
+      {
+        "pin_number": "D18"
+      },
+      {
+        "pin_number": "D19"
+      },
+      {
+        "pin_number": "D20"
+      },
+      {
+        "pin_number": "D21"
+      },
+      {
+        "pin_number": "D22"
+      },
+      {
+        "pin_number": "D23"
+      },
+      {
+        "pin_number": "D24"
+      },
+      {
+        "pin_number": "D25"
+      },
+      {
+        "pin_number": "E1"
+      },
+      {
+        "pin_number": "E2"
+      },
+      {
+        "pin_number": "E3"
+      },
+      {
+        "pin_number": "E4"
+      },
+      {
+        "pin_number": "E5"
+      },
+      {
+        "pin_number": "E6"
+      },
+      {
+        "pin_number": "E7"
+      },
+      {
+        "pin_number": "E8"
+      },
+      {
+        "pin_number": "E9"
+      },
+      {
+        "pin_number": "E10"
+      },
+      {
+        "pin_number": "E11"
+      },
+      {
+        "pin_number": "E12"
+      },
+      {
+        "pin_number": "E13"
+      },
+      {
+        "pin_number": "E14"
+      },
+      {
+        "pin_number": "E15"
+      },
+      {
+        "pin_number": "E16"
+      },
+      {
+        "pin_number": "E17"
+      },
+      {
+        "pin_number": "E18"
+      },
+      {
+        "pin_number": "E19"
+      },
+      {
+        "pin_number": "E20"
+      },
+      {
+        "pin_number": "E21"
+      },
+      {
+        "pin_number": "E22"
+      },
+      {
+        "pin_number": "E23"
+      },
+      {
+        "pin_number": "E24"
+      },
+      {
+        "pin_number": "E25"
+      },
+      {
+        "pin_number": "F1"
+      },
+      {
+        "pin_number": "F2"
+      },
+      {
+        "pin_number": "F3"
+      },
+      {
+        "pin_number": "F4"
+      },
+      {
+        "pin_number": "F5"
+      },
+      {
+        "pin_number": "F6"
+      },
+      {
+        "pin_number": "F7"
+      },
+      {
+        "pin_number": "F8"
+      },
+      {
+        "pin_number": "F9"
+      },
+      {
+        "pin_number": "F10"
+      },
+      {
+        "pin_number": "F11"
+      },
+      {
+        "pin_number": "F12"
+      },
+      {
+        "pin_number": "F13"
+      },
+      {
+        "pin_number": "F14"
+      },
+      {
+        "pin_number": "F15"
+      },
+      {
+        "pin_number": "F16"
+      },
+      {
+        "pin_number": "F17"
+      },
+      {
+        "pin_number": "F18"
+      },
+      {
+        "pin_number": "F19"
+      },
+      {
+        "pin_number": "F20"
+      },
+      {
+        "pin_number": "F21"
+      },
+      {
+        "pin_number": "F22"
+      },
+      {
+        "pin_number": "F23"
+      },
+      {
+        "pin_number": "F24"
+      },
+      {
+        "pin_number": "F25"
+      },
+      {
+        "pin_number": "G1"
+      },
+      {
+        "pin_number": "G2"
+      },
+      {
+        "pin_number": "G3"
+      },
+      {
+        "pin_number": "G4"
+      },
+      {
+        "pin_number": "G5"
+      },
+      {
+        "pin_number": "G6"
+      },
+      {
+        "pin_number": "G7"
+      },
+      {
+        "pin_number": "G8"
+      },
+      {
+        "pin_number": "G9"
+      },
+      {
+        "pin_number": "G10"
+      },
+      {
+        "pin_number": "G11"
+      },
+      {
+        "pin_number": "G12"
+      },
+      {
+        "pin_number": "G13"
+      },
+      {
+        "pin_number": "G14"
+      },
+      {
+        "pin_number": "G15"
+      },
+      {
+        "pin_number": "G16"
+      },
+      {
+        "pin_number": "G17"
+      },
+      {
+        "pin_number": "G18"
+      },
+      {
+        "pin_number": "G19"
+      },
+      {
+        "pin_number": "G20"
+      },
+      {
+        "pin_number": "G21"
+      },
+      {
+        "pin_number": "G22"
+      },
+      {
+        "pin_number": "G23"
+      },
+      {
+        "pin_number": "G24"
+      },
+      {
+        "pin_number": "G25"
+      },
+      {
+        "pin_number": "H1"
+      },
+      {
+        "pin_number": "H2"
+      },
+      {
+        "pin_number": "H3"
+      },
+      {
+        "pin_number": "H4"
+      },
+      {
+        "pin_number": "H5"
+      },
+      {
+        "pin_number": "H6"
+      },
+      {
+        "pin_number": "H7"
+      },
+      {
+        "pin_number": "H8"
+      },
+      {
+        "pin_number": "H9"
+      },
+      {
+        "pin_number": "H10"
+      },
+      {
+        "pin_number": "H11"
+      },
+      {
+        "pin_number": "H12"
+      },
+      {
+        "pin_number": "H13"
+      },
+      {
+        "pin_number": "H14"
+      },
+      {
+        "pin_number": "H15"
+      },
+      {
+        "pin_number": "H16"
+      },
+      {
+        "pin_number": "H17"
+      },
+      {
+        "pin_number": "H18"
+      },
+      {
+        "pin_number": "H19"
+      },
+      {
+        "pin_number": "H20"
+      },
+      {
+        "pin_number": "H21"
+      },
+      {
+        "pin_number": "H22"
+      },
+      {
+        "pin_number": "H23"
+      },
+      {
+        "pin_number": "H24"
+      },
+      {
+        "pin_number": "H25"
+      },
+      {
+        "pin_number": "J1"
+      },
+      {
+        "pin_number": "J2"
+      },
+      {
+        "pin_number": "J3"
+      },
+      {
+        "pin_number": "J4"
+      },
+      {
+        "pin_number": "J5"
+      },
+      {
+        "pin_number": "J6"
+      },
+      {
+        "pin_number": "J7"
+      },
+      {
+        "pin_number": "J8"
+      },
+      {
+        "pin_number": "J9"
+      },
+      {
+        "pin_number": "J10"
+      },
+      {
+        "pin_number": "J11"
+      },
+      {
+        "pin_number": "J12"
+      },
+      {
+        "pin_number": "J13"
+      },
+      {
+        "pin_number": "J14"
+      },
+      {
+        "pin_number": "J15"
+      },
+      {
+        "pin_number": "J16"
+      },
+      {
+        "pin_number": "J17"
+      },
+      {
+        "pin_number": "J18"
+      },
+      {
+        "pin_number": "J19"
+      },
+      {
+        "pin_number": "J20"
+      },
+      {
+        "pin_number": "J21"
+      },
+      {
+        "pin_number": "J22"
+      },
+      {
+        "pin_number": "J23"
+      },
+      {
+        "pin_number": "J24"
+      },
+      {
+        "pin_number": "J25"
+      },
+      {
+        "pin_number": "K1"
+      },
+      {
+        "pin_number": "K2"
+      },
+      {
+        "pin_number": "K3"
+      },
+      {
+        "pin_number": "K4"
+      },
+      {
+        "pin_number": "K5"
+      },
+      {
+        "pin_number": "K6"
+      },
+      {
+        "pin_number": "K7"
+      },
+      {
+        "pin_number": "K8"
+      },
+      {
+        "pin_number": "K9"
+      },
+      {
+        "pin_number": "K10"
+      },
+      {
+        "pin_number": "K11"
+      },
+      {
+        "pin_number": "K12"
+      },
+      {
+        "pin_number": "K13"
+      },
+      {
+        "pin_number": "K14"
+      },
+      {
+        "pin_number": "K15"
+      },
+      {
+        "pin_number": "K16"
+      },
+      {
+        "pin_number": "K17"
+      },
+      {
+        "pin_number": "K18"
+      },
+      {
+        "pin_number": "K19"
+      },
+      {
+        "pin_number": "K20"
+      },
+      {
+        "pin_number": "K21"
+      },
+      {
+        "pin_number": "K22"
+      },
+      {
+        "pin_number": "K23"
+      },
+      {
+        "pin_number": "K24"
+      },
+      {
+        "pin_number": "K25"
+      },
+      {
+        "pin_number": "L1"
+      },
+      {
+        "pin_number": "L2"
+      },
+      {
+        "pin_number": "L3"
+      },
+      {
+        "pin_number": "L4"
+      },
+      {
+        "pin_number": "L5"
+      },
+      {
+        "pin_number": "L6"
+      },
+      {
+        "pin_number": "L7"
+      },
+      {
+        "pin_number": "L8"
+      },
+      {
+        "pin_number": "L9"
+      },
+      {
+        "pin_number": "L10"
+      },
+      {
+        "pin_number": "L11"
+      },
+      {
+        "pin_number": "L12"
+      },
+      {
+        "pin_number": "L13"
+      },
+      {
+        "pin_number": "L14"
+      },
+      {
+        "pin_number": "L15"
+      },
+      {
+        "pin_number": "L16"
+      },
+      {
+        "pin_number": "L17"
+      },
+      {
+        "pin_number": "L18"
+      },
+      {
+        "pin_number": "L19"
+      },
+      {
+        "pin_number": "L20"
+      },
+      {
+        "pin_number": "L21"
+      },
+      {
+        "pin_number": "L22"
+      },
+      {
+        "pin_number": "L23"
+      },
+      {
+        "pin_number": "L24"
+      },
+      {
+        "pin_number": "L25"
+      },
+      {
+        "pin_number": "M1"
+      },
+      {
+        "pin_number": "M2"
+      },
+      {
+        "pin_number": "M3"
+      },
+      {
+        "pin_number": "M4"
+      },
+      {
+        "pin_number": "M5"
+      },
+      {
+        "pin_number": "M6"
+      },
+      {
+        "pin_number": "M7"
+      },
+      {
+        "pin_number": "M8"
+      },
+      {
+        "pin_number": "M9"
+      },
+      {
+        "pin_number": "M10"
+      },
+      {
+        "pin_number": "M11"
+      },
+      {
+        "pin_number": "M12"
+      },
+      {
+        "pin_number": "M13"
+      },
+      {
+        "pin_number": "M14"
+      },
+      {
+        "pin_number": "M15"
+      },
+      {
+        "pin_number": "M16"
+      },
+      {
+        "pin_number": "M17"
+      },
+      {
+        "pin_number": "M18"
+      },
+      {
+        "pin_number": "M19"
+      },
+      {
+        "pin_number": "M20"
+      },
+      {
+        "pin_number": "M21"
+      },
+      {
+        "pin_number": "M22"
+      },
+      {
+        "pin_number": "M23"
+      },
+      {
+        "pin_number": "M24"
+      },
+      {
+        "pin_number": "M25"
+      },
+      {
+        "pin_number": "N1"
+      },
+      {
+        "pin_number": "N2"
+      },
+      {
+        "pin_number": "N3"
+      },
+      {
+        "pin_number": "N4"
+      },
+      {
+        "pin_number": "N5"
+      },
+      {
+        "pin_number": "N6"
+      },
+      {
+        "pin_number": "N7"
+      },
+      {
+        "pin_number": "N8"
+      },
+      {
+        "pin_number": "N9"
+      },
+      {
+        "pin_number": "N10"
+      },
+      {
+        "pin_number": "N11"
+      },
+      {
+        "pin_number": "N12"
+      },
+      {
+        "pin_number": "N13"
+      },
+      {
+        "pin_number": "N14"
+      },
+      {
+        "pin_number": "N15"
+      },
+      {
+        "pin_number": "N16"
+      },
+      {
+        "pin_number": "N17"
+      },
+      {
+        "pin_number": "N18"
+      },
+      {
+        "pin_number": "N19"
+      },
+      {
+        "pin_number": "N20"
+      },
+      {
+        "pin_number": "N21"
+      },
+      {
+        "pin_number": "N22"
+      },
+      {
+        "pin_number": "N23"
+      },
+      {
+        "pin_number": "N24"
+      },
+      {
+        "pin_number": "N25"
+      },
+      {
+        "pin_number": "P1"
+      },
+      {
+        "pin_number": "P2"
+      },
+      {
+        "pin_number": "P3"
+      },
+      {
+        "pin_number": "P4"
+      },
+      {
+        "pin_number": "P5"
+      },
+      {
+        "pin_number": "P6"
+      },
+      {
+        "pin_number": "P7"
+      },
+      {
+        "pin_number": "P8"
+      },
+      {
+        "pin_number": "P9"
+      },
+      {
+        "pin_number": "P10"
+      },
+      {
+        "pin_number": "P11"
+      },
+      {
+        "pin_number": "P12"
+      },
+      {
+        "pin_number": "P13"
+      },
+      {
+        "pin_number": "P14"
+      },
+      {
+        "pin_number": "P15"
+      },
+      {
+        "pin_number": "P16"
+      },
+      {
+        "pin_number": "P17"
+      },
+      {
+        "pin_number": "P18"
+      },
+      {
+        "pin_number": "P19"
+      },
+      {
+        "pin_number": "P20"
+      },
+      {
+        "pin_number": "P21"
+      },
+      {
+        "pin_number": "P22"
+      },
+      {
+        "pin_number": "P23"
+      },
+      {
+        "pin_number": "P24"
+      },
+      {
+        "pin_number": "P25"
+      },
+      {
+        "pin_number": "R1"
+      },
+      {
+        "pin_number": "R2"
+      },
+      {
+        "pin_number": "R3"
+      },
+      {
+        "pin_number": "R4"
+      },
+      {
+        "pin_number": "R5"
+      },
+      {
+        "pin_number": "R6"
+      },
+      {
+        "pin_number": "R7"
+      },
+      {
+        "pin_number": "R8"
+      },
+      {
+        "pin_number": "R9"
+      },
+      {
+        "pin_number": "R10"
+      },
+      {
+        "pin_number": "R11"
+      },
+      {
+        "pin_number": "R12"
+      },
+      {
+        "pin_number": "R13"
+      },
+      {
+        "pin_number": "R14"
+      },
+      {
+        "pin_number": "R15"
+      },
+      {
+        "pin_number": "R16"
+      },
+      {
+        "pin_number": "R17"
+      },
+      {
+        "pin_number": "R18"
+      },
+      {
+        "pin_number": "R19"
+      },
+      {
+        "pin_number": "R20"
+      },
+      {
+        "pin_number": "R21"
+      },
+      {
+        "pin_number": "R22"
+      },
+      {
+        "pin_number": "R23"
+      },
+      {
+        "pin_number": "R24"
+      },
+      {
+        "pin_number": "R25"
+      },
+      {
+        "pin_number": "T1"
+      },
+      {
+        "pin_number": "T2"
+      },
+      {
+        "pin_number": "T3"
+      },
+      {
+        "pin_number": "T4"
+      },
+      {
+        "pin_number": "T5"
+      },
+      {
+        "pin_number": "T6"
+      },
+      {
+        "pin_number": "T7"
+      },
+      {
+        "pin_number": "T8"
+      },
+      {
+        "pin_number": "T9"
+      },
+      {
+        "pin_number": "T10"
+      },
+      {
+        "pin_number": "T11"
+      },
+      {
+        "pin_number": "T12"
+      },
+      {
+        "pin_number": "T13"
+      },
+      {
+        "pin_number": "T14"
+      },
+      {
+        "pin_number": "T15"
+      },
+      {
+        "pin_number": "T16"
+      },
+      {
+        "pin_number": "T17"
+      },
+      {
+        "pin_number": "T18"
+      },
+      {
+        "pin_number": "T19"
+      },
+      {
+        "pin_number": "T20"
+      },
+      {
+        "pin_number": "T21"
+      },
+      {
+        "pin_number": "T22"
+      },
+      {
+        "pin_number": "T23"
+      },
+      {
+        "pin_number": "T24"
+      },
+      {
+        "pin_number": "T25"
+      },
+      {
+        "pin_number": "U1"
+      },
+      {
+        "pin_number": "U2"
+      },
+      {
+        "pin_number": "U3"
+      },
+      {
+        "pin_number": "U4"
+      },
+      {
+        "pin_number": "U5"
+      },
+      {
+        "pin_number": "U6"
+      },
+      {
+        "pin_number": "U7"
+      },
+      {
+        "pin_number": "U8"
+      },
+      {
+        "pin_number": "U9"
+      },
+      {
+        "pin_number": "U10"
+      },
+      {
+        "pin_number": "U11"
+      },
+      {
+        "pin_number": "U12"
+      },
+      {
+        "pin_number": "U13"
+      },
+      {
+        "pin_number": "U14"
+      },
+      {
+        "pin_number": "U15"
+      },
+      {
+        "pin_number": "U16"
+      },
+      {
+        "pin_number": "U17"
+      },
+      {
+        "pin_number": "U18"
+      },
+      {
+        "pin_number": "U19"
+      },
+      {
+        "pin_number": "U20"
+      },
+      {
+        "pin_number": "U21"
+      },
+      {
+        "pin_number": "U22"
+      },
+      {
+        "pin_number": "U23"
+      },
+      {
+        "pin_number": "U24"
+      },
+      {
+        "pin_number": "U25"
+      },
+      {
+        "pin_number": "V1"
+      },
+      {
+        "pin_number": "V2"
+      },
+      {
+        "pin_number": "V3"
+      },
+      {
+        "pin_number": "V4"
+      },
+      {
+        "pin_number": "V5"
+      },
+      {
+        "pin_number": "V6"
+      },
+      {
+        "pin_number": "V7"
+      },
+      {
+        "pin_number": "V8"
+      },
+      {
+        "pin_number": "V9"
+      },
+      {
+        "pin_number": "V10"
+      },
+      {
+        "pin_number": "V11"
+      },
+      {
+        "pin_number": "V12"
+      },
+      {
+        "pin_number": "V13"
+      },
+      {
+        "pin_number": "V14"
+      },
+      {
+        "pin_number": "V15"
+      },
+      {
+        "pin_number": "V16"
+      },
+      {
+        "pin_number": "V17"
+      },
+      {
+        "pin_number": "V18"
+      },
+      {
+        "pin_number": "V19"
+      },
+      {
+        "pin_number": "V20"
+      },
+      {
+        "pin_number": "V21"
+      },
+      {
+        "pin_number": "V22"
+      },
+      {
+        "pin_number": "V23"
+      },
+      {
+        "pin_number": "V24"
+      },
+      {
+        "pin_number": "V25"
+      },
+      {
+        "pin_number": "W1"
+      },
+      {
+        "pin_number": "W2"
+      },
+      {
+        "pin_number": "W3"
+      },
+      {
+        "pin_number": "W4"
+      },
+      {
+        "pin_number": "W5"
+      },
+      {
+        "pin_number": "W6"
+      },
+      {
+        "pin_number": "W7"
+      },
+      {
+        "pin_number": "W8"
+      },
+      {
+        "pin_number": "W9"
+      },
+      {
+        "pin_number": "W10"
+      },
+      {
+        "pin_number": "W11"
+      },
+      {
+        "pin_number": "W12"
+      },
+      {
+        "pin_number": "W13"
+      },
+      {
+        "pin_number": "W14"
+      },
+      {
+        "pin_number": "W15"
+      },
+      {
+        "pin_number": "W16"
+      },
+      {
+        "pin_number": "W17"
+      },
+      {
+        "pin_number": "W18"
+      },
+      {
+        "pin_number": "W19"
+      },
+      {
+        "pin_number": "W20"
+      },
+      {
+        "pin_number": "W21"
+      },
+      {
+        "pin_number": "W22"
+      },
+      {
+        "pin_number": "W23"
+      },
+      {
+        "pin_number": "W24"
+      },
+      {
+        "pin_number": "W25"
+      },
+      {
+        "pin_number": "Y1"
+      },
+      {
+        "pin_number": "Y2"
+      },
+      {
+        "pin_number": "Y3"
+      },
+      {
+        "pin_number": "Y4"
+      },
+      {
+        "pin_number": "Y5"
+      },
+      {
+        "pin_number": "Y6"
+      },
+      {
+        "pin_number": "Y7"
+      },
+      {
+        "pin_number": "Y8"
+      },
+      {
+        "pin_number": "Y9"
+      },
+      {
+        "pin_number": "Y10"
+      },
+      {
+        "pin_number": "Y11"
+      },
+      {
+        "pin_number": "Y12"
+      },
+      {
+        "pin_number": "Y13"
+      },
+      {
+        "pin_number": "Y14"
+      },
+      {
+        "pin_number": "Y15"
+      },
+      {
+        "pin_number": "Y16"
+      },
+      {
+        "pin_number": "Y17"
+      },
+      {
+        "pin_number": "Y18"
+      },
+      {
+        "pin_number": "Y19"
+      },
+      {
+        "pin_number": "Y20"
+      },
+      {
+        "pin_number": "Y21"
+      },
+      {
+        "pin_number": "Y22"
+      },
+      {
+        "pin_number": "Y23"
+      },
+      {
+        "pin_number": "Y24"
+      },
+      {
+        "pin_number": "Y25"
+      },
+      {
+        "pin_number": "AA1"
+      },
+      {
+        "pin_number": "AA2"
+      },
+      {
+        "pin_number": "AA3"
+      },
+      {
+        "pin_number": "AA4"
+      },
+      {
+        "pin_number": "AA5"
+      },
+      {
+        "pin_number": "AA6"
+      },
+      {
+        "pin_number": "AA7"
+      },
+      {
+        "pin_number": "AA8"
+      },
+      {
+        "pin_number": "AA9"
+      },
+      {
+        "pin_number": "AA10"
+      },
+      {
+        "pin_number": "AA11"
+      },
+      {
+        "pin_number": "AA12"
+      },
+      {
+        "pin_number": "AA13"
+      },
+      {
+        "pin_number": "AA14"
+      },
+      {
+        "pin_number": "AA15"
+      },
+      {
+        "pin_number": "AA16"
+      },
+      {
+        "pin_number": "AA17"
+      },
+      {
+        "pin_number": "AA18"
+      },
+      {
+        "pin_number": "AA19"
+      },
+      {
+        "pin_number": "AA20"
+      },
+      {
+        "pin_number": "AA21"
+      },
+      {
+        "pin_number": "AA22"
+      },
+      {
+        "pin_number": "AA23"
+      },
+      {
+        "pin_number": "AA24"
+      },
+      {
+        "pin_number": "AA25"
+      },
+      {
+        "pin_number": "AB1"
+      },
+      {
+        "pin_number": "AB2"
+      },
+      {
+        "pin_number": "AB3"
+      },
+      {
+        "pin_number": "AB4"
+      },
+      {
+        "pin_number": "AB5"
+      },
+      {
+        "pin_number": "AB6"
+      },
+      {
+        "pin_number": "AB7"
+      },
+      {
+        "pin_number": "AB8"
+      },
+      {
+        "pin_number": "AB9"
+      },
+      {
+        "pin_number": "AB10"
+      },
+      {
+        "pin_number": "AB11"
+      },
+      {
+        "pin_number": "AB12"
+      },
+      {
+        "pin_number": "AB13"
+      },
+      {
+        "pin_number": "AB14"
+      },
+      {
+        "pin_number": "AB15"
+      },
+      {
+        "pin_number": "AB16"
+      },
+      {
+        "pin_number": "AB17"
+      },
+      {
+        "pin_number": "AB18"
+      },
+      {
+        "pin_number": "AB19"
+      },
+      {
+        "pin_number": "AB20"
+      },
+      {
+        "pin_number": "AB21"
+      },
+      {
+        "pin_number": "AB22"
+      },
+      {
+        "pin_number": "AB23"
+      },
+      {
+        "pin_number": "AB24"
+      },
+      {
+        "pin_number": "AB25"
+      },
+      {
+        "pin_number": "AC1"
+      },
+      {
+        "pin_number": "AC2"
+      },
+      {
+        "pin_number": "AC3"
+      },
+      {
+        "pin_number": "AC4"
+      },
+      {
+        "pin_number": "AC5"
+      },
+      {
+        "pin_number": "AC6"
+      },
+      {
+        "pin_number": "AC7"
+      },
+      {
+        "pin_number": "AC8"
+      },
+      {
+        "pin_number": "AC9"
+      },
+      {
+        "pin_number": "AC10"
+      },
+      {
+        "pin_number": "AC11"
+      },
+      {
+        "pin_number": "AC12"
+      },
+      {
+        "pin_number": "AC13"
+      },
+      {
+        "pin_number": "AC14"
+      },
+      {
+        "pin_number": "AC15"
+      },
+      {
+        "pin_number": "AC16"
+      },
+      {
+        "pin_number": "AC17"
+      },
+      {
+        "pin_number": "AC18"
+      },
+      {
+        "pin_number": "AC19"
+      },
+      {
+        "pin_number": "AC20"
+      },
+      {
+        "pin_number": "AC21"
+      },
+      {
+        "pin_number": "AC22"
+      },
+      {
+        "pin_number": "AC23"
+      },
+      {
+        "pin_number": "AC24"
+      },
+      {
+        "pin_number": "AC25"
+      },
+      {
+        "pin_number": "AD1"
+      },
+      {
+        "pin_number": "AD2"
+      },
+      {
+        "pin_number": "AD3"
+      },
+      {
+        "pin_number": "AD4"
+      },
+      {
+        "pin_number": "AD5"
+      },
+      {
+        "pin_number": "AD6"
+      },
+      {
+        "pin_number": "AD7"
+      },
+      {
+        "pin_number": "AD8"
+      },
+      {
+        "pin_number": "AD9"
+      },
+      {
+        "pin_number": "AD10"
+      },
+      {
+        "pin_number": "AD11"
+      },
+      {
+        "pin_number": "AD12"
+      },
+      {
+        "pin_number": "AD13"
+      },
+      {
+        "pin_number": "AD14"
+      },
+      {
+        "pin_number": "AD15"
+      },
+      {
+        "pin_number": "AD16"
+      },
+      {
+        "pin_number": "AD17"
+      },
+      {
+        "pin_number": "AD18"
+      },
+      {
+        "pin_number": "AD19"
+      },
+      {
+        "pin_number": "AD20"
+      },
+      {
+        "pin_number": "AD21"
+      },
+      {
+        "pin_number": "AD22"
+      },
+      {
+        "pin_number": "AD23"
+      },
+      {
+        "pin_number": "AD24"
+      },
+      {
+        "pin_number": "AD25"
+      },
+      {
+        "pin_number": "AE1"
+      },
+      {
+        "pin_number": "AE2"
+      },
+      {
+        "pin_number": "AE3"
+      },
+      {
+        "pin_number": "AE4"
+      },
+      {
+        "pin_number": "AE5"
+      },
+      {
+        "pin_number": "AE6"
+      },
+      {
+        "pin_number": "AE7"
+      },
+      {
+        "pin_number": "AE8"
+      },
+      {
+        "pin_number": "AE9"
+      },
+      {
+        "pin_number": "AE10"
+      },
+      {
+        "pin_number": "AE11"
+      },
+      {
+        "pin_number": "AE12"
+      },
+      {
+        "pin_number": "AE13"
+      },
+      {
+        "pin_number": "AE14"
+      },
+      {
+        "pin_number": "AE15"
+      },
+      {
+        "pin_number": "AE16"
+      },
+      {
+        "pin_number": "AE17"
+      },
+      {
+        "pin_number": "AE18"
+      },
+      {
+        "pin_number": "AE19"
+      },
+      {
+        "pin_number": "AE20"
+      },
+      {
+        "pin_number": "AE21"
+      },
+      {
+        "pin_number": "AE22"
+      },
+      {
+        "pin_number": "AE23"
+      },
+      {
+        "pin_number": "AE24"
+      },
+      {
+        "pin_number": "AE25"
+      }
+    ]
+  }
+}
