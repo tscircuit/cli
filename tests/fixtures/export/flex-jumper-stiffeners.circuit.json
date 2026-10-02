@@ -1,0 +1,365 @@
+[
+  {
+    "type": "pcb_board",
+    "pcb_board_id": "flex_jumper",
+    "center": {
+      "x": 30,
+      "y": -10
+    },
+    "width": 40,
+    "height": 12,
+    "num_layers": 2,
+    "material": "flex",
+    "thickness": 0.12,
+    "outline": [
+      {
+        "x": 10,
+        "y": -16
+      },
+      {
+        "x": 20,
+        "y": -16
+      },
+      {
+        "x": 20,
+        "y": -13
+      },
+      {
+        "x": 40,
+        "y": -13
+      },
+      {
+        "x": 40,
+        "y": -16
+      },
+      {
+        "x": 50,
+        "y": -16
+      },
+      {
+        "x": 50,
+        "y": -4
+      },
+      {
+        "x": 40,
+        "y": -4
+      },
+      {
+        "x": 40,
+        "y": -7
+      },
+      {
+        "x": 20,
+        "y": -7
+      },
+      {
+        "x": 20,
+        "y": -4
+      },
+      {
+        "x": 10,
+        "y": -4
+      }
+    ]
+  },
+  {
+    "type": "pcb_smtpad",
+    "pcb_smtpad_id": "connector_finger_1",
+    "shape": "rect",
+    "x": 12.75,
+    "y": -12.5,
+    "width": 4.5,
+    "height": 0.7,
+    "layer": "top"
+  },
+  {
+    "type": "pcb_smtpad",
+    "pcb_smtpad_id": "solder_pad_1",
+    "shape": "rect",
+    "x": 47,
+    "y": -12.5,
+    "width": 3.5,
+    "height": 0.8,
+    "layer": "top"
+  },
+  {
+    "type": "pcb_trace",
+    "pcb_trace_id": "jumper_trace_1",
+    "route": [
+      {
+        "route_type": "wire",
+        "x": 12.75,
+        "y": -12.5,
+        "width": 0.25,
+        "layer": "top"
+      },
+      {
+        "route_type": "wire",
+        "x": 47,
+        "y": -12.5,
+        "width": 0.25,
+        "layer": "top"
+      }
+    ]
+  },
+  {
+    "type": "pcb_smtpad",
+    "pcb_smtpad_id": "connector_finger_2",
+    "shape": "rect",
+    "x": 12.75,
+    "y": -11.5,
+    "width": 4.5,
+    "height": 0.7,
+    "layer": "top"
+  },
+  {
+    "type": "pcb_smtpad",
+    "pcb_smtpad_id": "solder_pad_2",
+    "shape": "rect",
+    "x": 47,
+    "y": -11.5,
+    "width": 3.5,
+    "height": 0.8,
+    "layer": "top"
+  },
+  {
+    "type": "pcb_trace",
+    "pcb_trace_id": "jumper_trace_2",
+    "route": [
+      {
+        "route_type": "wire",
+        "x": 12.75,
+        "y": -11.5,
+        "width": 0.25,
+        "layer": "top"
+      },
+      {
+        "route_type": "wire",
+        "x": 47,
+        "y": -11.5,
+        "width": 0.25,
+        "layer": "top"
+      }
+    ]
+  },
+  {
+    "type": "pcb_smtpad",
+    "pcb_smtpad_id": "connector_finger_3",
+    "shape": "rect",
+    "x": 12.75,
+    "y": -10.5,
+    "width": 4.5,
+    "height": 0.7,
+    "layer": "top"
+  },
+  {
+    "type": "pcb_smtpad",
+    "pcb_smtpad_id": "solder_pad_3",
+    "shape": "rect",
+    "x": 47,
+    "y": -10.5,
+    "width": 3.5,
+    "height": 0.8,
+    "layer": "top"
+  },
+  {
+    "type": "pcb_trace",
+    "pcb_trace_id": "jumper_trace_3",
+    "route": [
+      {
+        "route_type": "wire",
+        "x": 12.75,
+        "y": -10.5,
+        "width": 0.25,
+        "layer": "top"
+      },
+      {
+        "route_type": "wire",
+        "x": 47,
+        "y": -10.5,
+        "width": 0.25,
+        "layer": "top"
+      }
+    ]
+  },
+  {
+    "type": "pcb_smtpad",
+    "pcb_smtpad_id": "connector_finger_4",
+    "shape": "rect",
+    "x": 12.75,
+    "y": -9.5,
+    "width": 4.5,
+    "height": 0.7,
+    "layer": "top"
+  },
+  {
+    "type": "pcb_smtpad",
+    "pcb_smtpad_id": "solder_pad_4",
+    "shape": "rect",
+    "x": 47,
+    "y": -9.5,
+    "width": 3.5,
+    "height": 0.8,
+    "layer": "top"
+  },
+  {
+    "type": "pcb_trace",
+    "pcb_trace_id": "jumper_trace_4",
+    "route": [
+      {
+        "route_type": "wire",
+        "x": 12.75,
+        "y": -9.5,
+        "width": 0.25,
+        "layer": "top"
+      },
+      {
+        "route_type": "wire",
+        "x": 47,
+        "y": -9.5,
+        "width": 0.25,
+        "layer": "top"
+      }
+    ]
+  },
+  {
+    "type": "pcb_smtpad",
+    "pcb_smtpad_id": "connector_finger_5",
+    "shape": "rect",
+    "x": 12.75,
+    "y": -8.5,
+    "width": 4.5,
+    "height": 0.7,
+    "layer": "top"
+  },
+  {
+    "type": "pcb_smtpad",
+    "pcb_smtpad_id": "solder_pad_5",
+    "shape": "rect",
+    "x": 47,
+    "y": -8.5,
+    "width": 3.5,
+    "height": 0.8,
+    "layer": "top"
+  },
+  {
+    "type": "pcb_trace",
+    "pcb_trace_id": "jumper_trace_5",
+    "route": [
+      {
+        "route_type": "wire",
+        "x": 12.75,
+        "y": -8.5,
+        "width": 0.25,
+        "layer": "top"
+      },
+      {
+        "route_type": "wire",
+        "x": 47,
+        "y": -8.5,
+        "width": 0.25,
+        "layer": "top"
+      }
+    ]
+  },
+  {
+    "type": "pcb_smtpad",
+    "pcb_smtpad_id": "connector_finger_6",
+    "shape": "rect",
+    "x": 12.75,
+    "y": -7.5,
+    "width": 4.5,
+    "height": 0.7,
+    "layer": "top"
+  },
+  {
+    "type": "pcb_smtpad",
+    "pcb_smtpad_id": "solder_pad_6",
+    "shape": "rect",
+    "x": 47,
+    "y": -7.5,
+    "width": 3.5,
+    "height": 0.8,
+    "layer": "top"
+  },
+  {
+    "type": "pcb_trace",
+    "pcb_trace_id": "jumper_trace_6",
+    "route": [
+      {
+        "route_type": "wire",
+        "x": 12.75,
+        "y": -7.5,
+        "width": 0.25,
+        "layer": "top"
+      },
+      {
+        "route_type": "wire",
+        "x": 47,
+        "y": -7.5,
+        "width": 0.25,
+        "layer": "top"
+      }
+    ]
+  },
+  {
+    "type": "pcb_stiffener",
+    "pcb_stiffener_id": "connector_polyimide_support",
+    "pcb_board_id": "flex_jumper",
+    "shape": "rect",
+    "center": {
+      "x": -15,
+      "y": 0
+    },
+    "width": 9,
+    "height": 11,
+    "layer": "bottom",
+    "material": "polyimide",
+    "thickness": 0.2,
+    "adhesive_thickness": 0.05
+  },
+  {
+    "type": "pcb_stiffener",
+    "pcb_stiffener_id": "solder_pad_fr4_support",
+    "pcb_board_id": "flex_jumper",
+    "shape": "polygon",
+    "outline": [
+      {
+        "x": 11.3,
+        "y": -5.5
+      },
+      {
+        "x": 18.7,
+        "y": -5.5
+      },
+      {
+        "x": 19.5,
+        "y": -4.7
+      },
+      {
+        "x": 19.5,
+        "y": 4.7
+      },
+      {
+        "x": 18.7,
+        "y": 5.5
+      },
+      {
+        "x": 11.3,
+        "y": 5.5
+      },
+      {
+        "x": 10.5,
+        "y": 4.7
+      },
+      {
+        "x": 10.5,
+        "y": -4.7
+      }
+    ],
+    "layer": "bottom",
+    "material": "fr4",
+    "thickness": 0.4,
+    "adhesive_thickness": 0.05
+  }
+]
