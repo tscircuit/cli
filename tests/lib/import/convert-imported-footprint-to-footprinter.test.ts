@@ -12,6 +12,132 @@ import { convertImportedFootprintToFootprinter } from "lib/import/footprinter/co
 import { generateCircuitJson } from "lib/shared/generate-circuit-json"
 import { temporaryDirectory } from "tempy"
 
+test("compacts an identity pin map without adding aliases", () => {
+  const circuitJson = fp.string("sot23").circuitJson() as AnyCircuitElement[]
+  const exactTsx = `
+const pinLabels = { pin1: ["IN"], pin2: ["GND"], pin3: ["VCC"] } as const
+export const TestChip = () => (
+  <chip
+    name="U1"
+    pinLabels={pinLabels}
+    pinAttributes={{ pin1: { isInput: true }, pin2: { requiresGround: true }, pin3: { requiresPower: true } }}
+    footprint={<footprint><smtpad /></footprint>}
+  />
+)
+`
+
+  const result = convertImportedFootprintToFootprinter({
+    circuitJson,
+    sourceHints: ["SOT-23"],
+    tsx: exactTsx,
+  })
+
+  expect(result.mode).toBe("footprinter")
+  expect(result.accuracy).toBeGreaterThan(0.98)
+  expect(result.tsx).toContain('footprint="sot23')
+  expect(result.tsx).toContain("pinLabels={pinLabels}")
+  expect(result.tsx).not.toContain("footprinterPinLabels")
+  expect(result.tsx).toContain(
+    "pinAttributes={{ pin1: { isInput: true }, pin2: { requiresGround: true }, pin3: { requiresPower: true } }}",
+  )
+})
+
+test("preserves exact geometry and distinct attributes when compact pin aliases would collide", async () => {
+  const circuitJson = fp.string("sot23").circuitJson() as AnyCircuitElement[]
+  const pads = circuitJson.filter(
+    (element): element is PcbSmtPad => element.type === "pcb_smtpad",
+  )
+  // Identical copper geometry, but the supplier's physical pin ordering differs.
+  const swappedPins = { "1": "pin2", "2": "pin3", "3": "pin1" }
+  for (const pad of pads) {
+    pad.port_hints = [
+      swappedPins[pad.port_hints![0] as keyof typeof swappedPins],
+    ]
+  }
+  const exactPads = pads
+    .map((pad) => {
+      if (pad.shape !== "rect") throw new Error("Expected rectangular pads")
+      return `<smtpad portHints={[${JSON.stringify(pad.port_hints![0])}]} pcbX={${pad.x}} pcbY={${pad.y}} width={${pad.width}} height={${pad.height}} shape="rect" />`
+    })
+    .join("\n")
+  const exactTsx = `
+const pinLabels = { pin1: ["IN"], pin2: ["GND"], pin3: ["VCC"] } as const
+export const TestChip = () => (
+  <chip
+    name="U1"
+    pinLabels={pinLabels}
+    pinAttributes={{ pin1: { isInput: true, capabilities: ["uart_rx"] }, pin2: { requiresGround: true }, pin3: { requiresPower: true, requiresVoltage: "1.8V" } }}
+    footprint={<footprint>${exactPads}</footprint>}
+  />
+)
+`
+  const result = convertImportedFootprintToFootprinter({
+    circuitJson,
+    sourceHints: ["SOT-23"],
+    tsx: exactTsx,
+  })
+
+  expect(result.accuracy).toBeGreaterThan(0.98)
+  expect(result.mode).toBe("exact-pin-conflict")
+  expect(result.tsx).toBe(exactTsx)
+
+  const tmpDir = temporaryDirectory()
+  try {
+    await symlink(
+      path.join(process.cwd(), "node_modules"),
+      path.join(tmpDir, "node_modules"),
+      "dir",
+    )
+    const filePath = path.join(tmpDir, "TestChip.tsx")
+    await writeFile(filePath, result.tsx)
+    const rendered = await generateCircuitJson({ filePath })
+    for (const [pin, attribute] of [
+      [1, "supports_uart_rx"],
+      [2, "requires_ground"],
+      [3, "requires_power"],
+    ] as const) {
+      const port = rendered.circuitJson.find(
+        (element) =>
+          element.type === "source_port" && element.pin_number === pin,
+      ) as SourcePort
+      expect(port).toBeDefined()
+      expect(port[attribute]).toBe(true)
+      for (const otherAttribute of [
+        "supports_uart_rx",
+        "requires_ground",
+        "requires_power",
+      ] as const) {
+        if (otherAttribute !== attribute)
+          expect(port[otherAttribute]).not.toBe(true)
+      }
+      expect(port.requires_voltage).toBe(pin === 3 ? "1.8V" : undefined)
+
+      const pcbPort = rendered.circuitJson.find(
+        (element) =>
+          element.type === "pcb_port" &&
+          element.source_port_id === port.source_port_id,
+      ) as PcbPort
+      const renderedPad = rendered.circuitJson.find(
+        (element) =>
+          element.type === "pcb_smtpad" &&
+          element.pcb_port_id === pcbPort.pcb_port_id,
+      ) as PcbSmtPad
+      const originalPad = pads.find((pad) =>
+        pad.port_hints?.includes(`pin${pin}`),
+      )!
+      expect(renderedPad.shape).toBe("rect")
+      if (renderedPad.shape !== "rect" || originalPad.shape !== "rect")
+        throw new Error("Expected rectangular pads")
+      expect(renderedPad.x).toBeCloseTo(originalPad.x)
+      expect(renderedPad.y).toBeCloseTo(originalPad.y)
+      expect(renderedPad.width).toBeCloseTo(originalPad.width)
+      expect(renderedPad.height).toBeCloseTo(originalPad.height)
+    }
+  } finally {
+    await rm(tmpDir, { recursive: true, force: true })
+  }
+})
+
 test("compacts a >98% footprint and preserves a renamed thermal-pad pin", async () => {
   const circuitJson = fp
     .string("qfn56_w7_h7_p0.4_pw0.2_pl0.85_thermalpad3.1mmx3.1mm")

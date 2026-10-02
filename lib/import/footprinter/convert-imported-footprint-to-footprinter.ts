@@ -12,7 +12,11 @@ export const DEFAULT_FOOTPRINTER_ACCURACY_THRESHOLD = 0.98
 export interface ImportedFootprintConversion {
   accuracy?: number
   candidate?: FootprinterDiscoveryCandidate
-  mode: "exact-discovery-failed" | "exact-low-accuracy" | "footprinter"
+  mode:
+    | "exact-discovery-failed"
+    | "exact-low-accuracy"
+    | "exact-pin-conflict"
+    | "footprinter"
   tsx: string
 }
 
@@ -56,6 +60,23 @@ export const convertImportedFootprintToFootprinter = ({
         accuracy: candidate.copperIntersectionOverUnion,
         candidate,
         mode: "exact-discovery-failed",
+        tsx,
+      }
+    }
+
+    const targetHints = new Set(pinMap.values())
+    if (
+      [...pinMap].some(
+        ([footprinterHint, targetHint]) =>
+          footprinterHint !== targetHint && targetHints.has(footprinterHint),
+      )
+    ) {
+      // Core matches attributes against every alias, including physical pin names.
+      // Reusing another target pin's name would merge attributes between pins.
+      return {
+        accuracy: candidate.copperIntersectionOverUnion,
+        candidate,
+        mode: "exact-pin-conflict",
         tsx,
       }
     }

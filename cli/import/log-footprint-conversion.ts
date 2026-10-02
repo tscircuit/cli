@@ -37,4 +37,12 @@ export const logFootprintConversion = (conversion: FootprintConversion) => {
       ),
     )
   }
+
+  if (conversion.mode === "exact-pin-conflict") {
+    console.log(
+      kleur.yellow(
+        "Using the exact EasyEDA footprint because footprinter aliases would conflict with existing physical pins.",
+      ),
+    )
+  }
 }
