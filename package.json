@@ -1,6 +1,6 @@
 {
   "name": "@tscircuit/cli",
-  "version": "0.1.2228",
+  "version": "0.1.2231",
   "repository": {
     "type": "git",
     "url": "https://github.com/tscircuit/cli"
@@ -26,7 +26,7 @@
     "@tscircuit/krt-wasm": "^0.1.6",
     "@tscircuit/math-utils": "0.0.36",
     "@tscircuit/props": "^0.0.666",
-    "@tscircuit/runframe": "^0.0.2883",
+    "@tscircuit/runframe": "^0.0.2885",
     "@tscircuit/schematic-match-adapt": "^0.0.22",
     "@tscircuit/schematic-trace-solver": "^0.0.204",
     "@tscircuit/solver-utils": "0.0.16",
@@ -66,7 +66,7 @@
     "debug": "^4.4.0",
     "delay": "^6.0.0",
     "dsn-converter": "^0.0.90",
-    "easyeda": "^0.0.357",
+    "easyeda": "^0.0.366",
     "fuse.js": "^7.1.0",
     "get-port": "^7.1.0",
     "globby": "^14.1.0",
