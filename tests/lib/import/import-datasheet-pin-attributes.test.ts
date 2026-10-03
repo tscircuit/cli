@@ -1,19 +1,25 @@
 import { expect, spyOn, test } from "bun:test"
-import { commonComponentProps } from "@tscircuit/props"
 import { readFile, rm } from "node:fs/promises"
+import {
+  type CommonComponentProps,
+  commonComponentProps,
+} from "@tscircuit/props"
+import { registerImport } from "cli/import/register"
+import { Command } from "commander"
+import { fetchDatasheetPinAttributes } from "lib/import/fetch-datasheet-pin-attributes"
+import { importComponentFromJlcpcb } from "lib/import/import-component-from-jlcpcb"
 import { temporaryDirectory } from "tempy"
 import ts from "typescript"
-import { Command } from "commander"
-import { registerImport } from "cli/import/register"
-import { importComponentFromJlcpcb } from "lib/import/import-component-from-jlcpcb"
-import { addDatasheetAttributesToCircuitJson } from "lib/import/add-datasheet-attributes-to-circuit-json"
-import { fetchDatasheetPinAttributes } from "lib/import/fetch-datasheet-pin-attributes"
+import regulator from "../../fixtures/assets/datasheets/AP2127K-2.8TRG1.datasheet.json"
+import rawCustomSymbol from "../../fixtures/assets/datasheets/C113367.raweasy.json"
+import rawImx6 from "../../fixtures/assets/datasheets/C430888.raweasy.json"
 import rawRegulator from "../../fixtures/assets/datasheets/C460327.raweasy.json"
 import rawF1c from "../../fixtures/assets/datasheets/C1511928.raweasy.json"
-import regulator from "../../fixtures/assets/datasheets/AP2127K-2.8TRG1.datasheet.json"
+import rawPushButton from "../../fixtures/assets/datasheets/C49234237.raweasy.json"
 import f1c from "../../fixtures/assets/datasheets/F1C100S.datasheet.json"
-import rawImx6 from "../../fixtures/assets/datasheets/C430888.raweasy.json"
 import imx6 from "../../fixtures/assets/datasheets/MCIMX6D6AVT08AD.datasheet.json"
+import driver from "../../fixtures/assets/datasheets/drv8818-pin-attributes.json"
+import rawDriver from "../../fixtures/assets/datasheets/drv8818-pwpr.raweasy.json"
 
 // Evaluate only fixed/generated test fixtures, never API-provided TSX.
 const mockFetch = (
@@ -23,7 +29,7 @@ const mockFetch = (
     Object.assign(handler, { preconnect: fetch.preconnect }),
   )
 
-const getChipProps = (source: string, props = {}) => {
+const getImportedElement = (source: string, props = {}) => {
   const js = ts.transpileModule(source, {
     compilerOptions: { jsx: ts.JsxEmit.React, module: ts.ModuleKind.CommonJS },
   }).outputText
@@ -39,7 +45,177 @@ const getChipProps = (source: string, props = {}) => {
   const component = Object.values(module.exports).find(
     (value) => typeof value === "function",
   )!
-  return component(props).props
+  return component(props)
+}
+
+const getChipProps = (source: string, props = {}) =>
+  getImportedElement(source, props).props
+
+const mockSupplierFetch = (
+  raw: { uuid: string; lcsc: { number: string } },
+  datasheet: {
+    chip_name: string
+    pin_attributes: NonNullable<CommonComponentProps["pinAttributes"]>
+  },
+  onDatasheetRequest = () => {},
+) =>
+  mockFetch(async (input) => {
+    const url = new URL(String(input))
+    if (url.pathname.endsWith("/datasheets/get")) {
+      onDatasheetRequest()
+      expect(url.searchParams.get("chip_name")).toBe(
+        datasheet.chip_name.toLowerCase(),
+      )
+      return Response.json({ datasheet })
+    }
+    if (url.pathname === "/api/components/search")
+      return Response.json({
+        success: true,
+        result: { lists: { lcsc: [raw] } },
+      })
+    if (url.pathname === `/api/components/${raw.uuid}`)
+      return Response.json({ success: true, result: raw })
+    if (url.hostname === "modelcdn.tscircuit.com")
+      return new Response(null, { status: 404 })
+    throw Error(`Unexpected fetch: ${url}`)
+  })
+
+for (const useExactFootprint of [true, false]) {
+  test(`DRV8818 import preserves all 29 numeric datasheet rows (${useExactFootprint ? "exact" : "compact"})`, async () => {
+    const directory = temporaryDirectory()
+    const original = structuredClone(driver)
+    let datasheetRequests = 0
+    const fetchMock = mockSupplierFetch(rawDriver, driver, () => {
+      datasheetRequests++
+    })
+    try {
+      const { filePath } = await importComponentFromJlcpcb(
+        rawDriver.lcsc.number,
+        directory,
+        { useExactFootprint },
+      )
+      const props = getChipProps(await readFile(filePath, "utf8"))
+      expect(props.pinAttributes).toBeDefined()
+      expect(Object.keys(props.pinAttributes)).toHaveLength(29)
+      for (const [physicalPin, attributes] of Object.entries(
+        driver.pin_attributes,
+      )) {
+        for (const [name, value] of Object.entries(attributes)) {
+          expect(props.pinAttributes[`pin${physicalPin}`][name]).toEqual(value)
+        }
+      }
+      expect(props.pinAttributes.pin7.requiresGround).toBe(true)
+      expect(props.pinAttributes.pin29.mustBeConnected).toBe(true)
+      expect(props.pinAttributes.pin4.canUseTriState).toBe(true)
+      expect(props.pinAttributes.pin28.requiresPower).toBe(true)
+      expect(
+        commonComponentProps.shape.pinAttributes.parse(props.pinAttributes),
+      ).toEqual(props.pinAttributes)
+      expect(props.supplierPartNumbers.jlcpcb).toEqual(["C99045"])
+      expect(props.manufacturerPartNumber).toBe(driver.chip_name)
+      expect(datasheetRequests).toBe(1)
+      expect(driver).toEqual(original)
+    } finally {
+      fetchMock.mockRestore()
+      await rm(directory, { recursive: true, force: true })
+    }
+  }, 30_000)
+}
+
+test("import passes numeric and prefixed API rows to the converter without losing false, zero or capabilities", async () => {
+  const directory = temporaryDirectory()
+  const fetchMock = mockSupplierFetch(rawRegulator, {
+    chip_name: "AP2127K-28TRG1",
+    pin_attributes: {
+      "5": { providesVoltage: 2.8, mustBeConnected: true },
+      pin5: {
+        providesVoltage: 0,
+        mustBeConnected: false,
+        capabilities: ["uart_tx", "spi_mosi"],
+        activeCapability: "uart_tx",
+        activeCapabilities: ["spi_mosi"],
+      },
+      "2": {},
+      GND: { requiresGround: true },
+    },
+  })
+  try {
+    const { filePath } = await importComponentFromJlcpcb("C460327", directory, {
+      useExactFootprint: true,
+    })
+    const props = getChipProps(await readFile(filePath, "utf8"))
+    expect(props.pinAttributes.pin5).toEqual({
+      providesVoltage: 0,
+      mustBeConnected: false,
+      capabilities: ["uart_tx", "spi_mosi"],
+      activeCapability: "uart_tx",
+      activeCapabilities: ["spi_mosi"],
+    })
+    expect(props.pinAttributes.pin2).toEqual({})
+    expect(props.pinAttributes.pin2.requiresGround).toBeUndefined()
+    expect(props.pinAttributes.pin1.requiresPower).toBe(true)
+  } finally {
+    fetchMock.mockRestore()
+    await rm(directory, { recursive: true, force: true })
+  }
+})
+
+for (const [raw, expectedType, hasCustomSymbol] of [
+  [rawCustomSymbol, "chip", true],
+  [rawPushButton, "pushbutton", false],
+] as const) {
+  test(`datasheet enrichment retains ${raw.lcsc.number} supplier type, symbol and CAD metadata`, async () => {
+    const directory = temporaryDirectory()
+    const pinAttributes = { "1": { mustBeConnected: false, isInput: true } }
+    const fetchMock = mockSupplierFetch(raw, {
+      chip_name: raw.dataStr.head.c_para["Manufacturer Part"],
+      pin_attributes: pinAttributes,
+    })
+    try {
+      const baseline = await importComponentFromJlcpcb(
+        raw.lcsc.number,
+        directory,
+        {
+          useExactFootprint: true,
+          excludePinAttributes: true,
+        },
+      )
+      const baselineElement = getImportedElement(
+        await readFile(baseline.filePath, "utf8"),
+      )
+      const enriched = await importComponentFromJlcpcb(
+        raw.lcsc.number,
+        directory,
+        {
+          useExactFootprint: true,
+        },
+      )
+      const enrichedElement = getImportedElement(
+        await readFile(enriched.filePath, "utf8"),
+      )
+      expect(enrichedElement.type).toBe(expectedType)
+      expect(enrichedElement.type).toBe(baselineElement.type)
+      const { pinAttributes: _baselineAttributes, ...baselineProps } =
+        baselineElement.props
+      const { pinAttributes: enrichedAttributes, ...enrichedProps } =
+        enrichedElement.props
+      expect(enrichedProps).toEqual(baselineProps)
+      expect(enrichedAttributes.pin1).toEqual(pinAttributes["1"])
+      for (const [pin, attributes] of Object.entries(
+        baselineElement.props.pinAttributes ?? {},
+      )) {
+        if (pin !== "pin1") expect(enrichedAttributes[pin]).toEqual(attributes)
+      }
+      expect(Boolean(enrichedProps.symbol)).toBe(hasCustomSymbol)
+      if (hasCustomSymbol) expect(enrichedProps.symbol.type).toBe("symbol")
+      expect(enrichedProps.cadModel.objUrl).toContain(raw.lcsc.number)
+      expect(enrichedProps.cadModel.stepUrl).toContain(raw.lcsc.number)
+      expect(enrichedProps.footprint.type).toBe("footprint")
+    } finally {
+      fetchMock.mockRestore()
+      await rm(directory, { recursive: true, force: true })
+    }
+  })
 }
 
 for (const [raw, response, useExactFootprint] of [
@@ -101,11 +277,8 @@ for (const [raw, response, useExactFootprint] of [
         }
       }
       expect(Object.keys(props.pinAttributes)).toHaveLength(
-        // Empty source maps contain no expressible attributes and are omitted
-        // from TSX; physical pin coverage is checked independently below.
-        Object.values(response.datasheet.pin_attributes).filter(
-          (attributes) => Object.keys(attributes).length > 0,
-        ).length,
+        // Explicit empty physical rows are retained to suppress inference.
+        Object.keys(response.datasheet.pin_attributes).length,
       )
       expect(datasheetRequests).toBe(1)
       expect(props.supplierPartNumbers.jlcpcb).toContain(raw.lcsc.number)
@@ -143,57 +316,6 @@ for (const [raw, response, useExactFootprint] of [
     }
   }, 30_000)
 }
-
-test("enriches source ports with physical-pin overrides, false/zero values and capabilities", () => {
-  const original = [
-    {
-      type: "source_component",
-      source_component_id: "u1",
-      ftype: "simple_chip",
-      name: "U1",
-    },
-    {
-      type: "source_port",
-      source_component_id: "u1",
-      source_port_id: "p1",
-      name: "VOUT",
-      port_hints: ["OUTPUT"],
-      pin_number: 1,
-      requires_power: true,
-    },
-    {
-      type: "source_port",
-      source_component_id: "u2",
-      source_port_id: "p2",
-      name: "VOUT",
-      pin_number: 1,
-    },
-  ] as const
-  const result = addDatasheetAttributesToCircuitJson(
-    structuredClone(original) as any,
-    {
-      OUTPUT: { providesVoltage: 1.8 },
-      VOUT: { mustBeConnected: true },
-      pin1: {
-        providesVoltage: 0,
-        mustBeConnected: false,
-        capabilities: ["uart_tx"],
-        activeCapability: "uart_tx",
-        activeCapabilities: ["spi_mosi"],
-      },
-    },
-  )
-  expect(result[1]).toMatchObject({
-    requires_power: true,
-    provides_voltage: 0,
-    must_be_connected: false,
-    supports_uart_tx: true,
-    is_configured_for_uart_tx: true,
-    is_configured_for_spi_mosi: true,
-  })
-  expect(result[2]).toEqual(original[2])
-  expect(original[1]).not.toHaveProperty("provides_voltage")
-})
 
 for (const [name, response, warnings] of [
   ["missing record", () => new Response(null, { status: 404 }), 0],
