@@ -19,6 +19,7 @@ import {
   type ImportedFootprintConversion,
 } from "./footprinter/convert-imported-footprint-to-footprinter"
 import { getEasyEdaFootprinterSourceHints } from "./footprinter/get-easyeda-footprinter-source-hints"
+import { addManufacturerPartNumberToTsx } from "./add-manufacturer-part-number-to-tsx"
 
 export interface ImportComponentFromJlcpcbOptions {
   download?: boolean
@@ -88,6 +89,7 @@ export const importComponentFromJlcpcb = async (
   } else {
     tsx = await convertRawEasyToTsx({ rawEasy })
   }
+  tsx = addManufacturerPartNumberToTsx(tsx, rawPn ?? undefined)
   const footprintConversion = options.useExactFootprint
     ? ({ mode: "exact-requested", tsx } as const)
     : convertImportedFootprintToFootprinter({

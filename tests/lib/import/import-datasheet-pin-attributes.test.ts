@@ -115,9 +115,13 @@ for (const [raw, response, useExactFootprint] of [
       expect(Object.keys(props.pinLabels)).toHaveLength(
         response.datasheet.pin_information.length,
       )
-      expect(props.manufacturerPartNumber).toBe(
-        raw.dataStr.head.c_para["Manufacturer Part"],
-      )
+      expect(props.mpn).toBe(raw.dataStr.head.c_para["Manufacturer Part"])
+      expect(props.manufacturerPartNumber).toBe(props.mpn)
+      for (const alias of ["mpn", "mfn", "manufacturerPartNumber"]) {
+        expect(getChipProps(source, { [alias]: "OVERRIDE-MPN" }).mpn).toBe(
+          "OVERRIDE-MPN",
+        )
+      }
       expect(props.cadModel.objUrl).toContain(raw.lcsc.number)
       expect(props.cadModel.stepUrl).toContain(raw.lcsc.number)
       if (useExactFootprint) expect(props.footprint.type).toBe("footprint")
@@ -282,6 +286,9 @@ for (const [name, response, warnings] of [
         { useExactFootprint: true },
       )
       const props = getChipProps(await readFile(filePath, "utf8"))
+      expect(props.mpn).toBe(
+        rawRegulator.dataStr.head.c_para["Manufacturer Part"],
+      )
       expect(props.pinAttributes?.pin5?.providesVoltage).toBeUndefined()
       expect(props.pinAttributes?.pin2?.requiresGround).toBe(true)
       expect(warn).toHaveBeenCalledTimes(warnings)
@@ -417,6 +424,9 @@ for (const hasSearchResult of [true, false]) {
       )
       const props = getChipProps(source)
       expect(datasheetRequests).toBe(0)
+      expect(props.mpn).toBe(
+        rawRegulator.dataStr.head.c_para["Manufacturer Part"],
+      )
       expect(props.pinAttributes?.pin5?.providesVoltage).toBeUndefined()
       expect(props.pinAttributes?.pin2?.requiresGround).toBe(true)
       expect(props.footprint.type).toBe("footprint")
