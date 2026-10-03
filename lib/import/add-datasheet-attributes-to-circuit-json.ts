@@ -16,18 +16,46 @@ export const addDatasheetAttributesToCircuitJson = (
       element.source_component_id !== components[0]!.source_component_id
     )
       return element
-    const pinKey =
+    const physicalPin =
       element.pin_number !== undefined
-        ? `pin${element.pin_number}`
-        : element.name
-    const keys = new Set([...(element.port_hints ?? []), element.name])
-    keys.delete(pinKey)
-    keys.add(pinKey)
-    // An explicit physical-pin entry takes precedence over shared signal labels.
-    const attributes = Object.assign(
-      {},
-      ...[...keys].map((key) => pinAttributes[key]),
-    ) as NonNullable<CommonComponentProps["pinAttributes"]>[string]
+        ? String(element.pin_number)
+        : /^(?:pin)?\d+$/.test(element.name)
+          ? element.name.replace(/^pin/, "")
+          : undefined
+    const physicalKeys = physicalPin ? [physicalPin, `pin${physicalPin}`] : []
+    const physicalAttributes = physicalKeys.map((key) => pinAttributes[key])
+    const hasPhysicalAttributes = physicalAttributes.some(
+      (attributes) => attributes !== undefined,
+    )
+    // Physical rows are authoritative, including an explicitly empty row.
+    // Only fall back to signal names/hints when no physical row was supplied.
+    const candidates = hasPhysicalAttributes
+      ? physicalAttributes
+      : [...new Set([...(element.port_hints ?? []), element.name])]
+          .filter(
+            (key) =>
+              !physicalPin ||
+              !/^(?:pin)?\d+$/.test(key) ||
+              key.replace(/^pin/, "") === physicalPin,
+          )
+          .map((key) => pinAttributes[key])
+    const attributes: NonNullable<
+      CommonComponentProps["pinAttributes"]
+    >[string] = {}
+    for (const candidate of candidates) {
+      for (const [key, value] of Object.entries(candidate ?? {})) {
+        if (value === undefined) continue
+        // Conflicting fallback labels cannot safely identify this physical pin.
+        if (
+          !hasPhysicalAttributes &&
+          key in attributes &&
+          JSON.stringify(attributes[key as keyof typeof attributes]) !==
+            JSON.stringify(value)
+        )
+          return element
+        Object.assign(attributes, { [key]: value })
+      }
+    }
     const sourceAttributes: Record<string, unknown> = {}
     for (const [key, value] of Object.entries(attributes)) {
       if (value === undefined) continue
