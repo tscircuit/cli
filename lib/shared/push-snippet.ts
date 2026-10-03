@@ -15,6 +15,10 @@ import { checkOrgAccess } from "lib/utils/check-org-access"
 import { isBinaryFile } from "./is-binary-file"
 import { hasBinaryContent } from "./has-binary-content"
 import { gzipSync } from "node:zlib"
+import {
+  PACKAGE_UPLOAD_TIMEOUT_MS,
+  uploadPackageArchive,
+} from "./upload-package-archive"
 
 type PushOptions = {
   filePath?: string
@@ -416,20 +420,31 @@ export const pushSnippet = async ({
         projectDir,
         packageNameWithVersion,
       )
-      await ky.post("package_files/upload_archive", {
-        json: archivePayload,
+      const result = await uploadPackageArchive({
+        ky,
+        payload: archivePayload,
       })
-      for (const fullFilePath of filePaths) {
-        const relativeFilePath = path.relative(projectDir, fullFilePath)
-        uploadResults.succeeded.push(relativeFilePath)
+      if (result === "uploaded") {
+        for (const fullFilePath of filePaths) {
+          const relativeFilePath = path.relative(projectDir, fullFilePath)
+          uploadResults.succeeded.push(relativeFilePath)
+        }
+        log(kleur.gray(`📦 Uploaded archive with ${filePaths.length} files`))
+      } else {
+        log(
+          kleur.yellow(
+            "Archive upload failed, falling back to file-by-file upload: server does not support archive uploads",
+          ),
+        )
       }
-      log(kleur.gray(`📦 Uploaded archive with ${filePaths.length} files`))
     } catch (error) {
-      log(
-        kleur.yellow(
-          `Archive upload failed, falling back to file-by-file upload: ${error}`,
-        ),
+      const errorDetails = String(error).split("\n\nRequest Body:")[0]
+      onError(
+        `Archive upload was not confirmed: ${errorDetails}\n` +
+          "The server may still be processing the archive. No individual files were retried.\n" +
+          `Check https://tscircuit.com/${scopedPackageName} (version ${releaseVersion}) before pushing again.`,
       )
+      return onExit(1)
     }
   }
 
@@ -462,6 +477,8 @@ export const pushSnippet = async ({
       await ky
         .post("package_files/create", {
           json: payload,
+          timeout: PACKAGE_UPLOAD_TIMEOUT_MS,
+          retry: 0,
         })
         .then(() => {
           const icon = isBinary ? "📦" : "⬆︎"
