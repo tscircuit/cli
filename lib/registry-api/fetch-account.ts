@@ -12,7 +12,11 @@ export const fetchAccount = async (): Promise<Account | null> => {
     const ky = getRegistryApiKy({ sessionToken })
     const { account } = await ky
       .post<EndpointResponse["accounts/get"]>("accounts/get", {
-        json: { account_id: cliConfig.get("accountId") },
+        json: {
+          account_id: process.env.TSCIRCUIT_TOKEN
+            ? undefined
+            : cliConfig.get("accountId"),
+        },
       })
       .json()
     return account
