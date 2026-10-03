@@ -27,7 +27,7 @@ export const getCliConfig = (
 export const cliConfig = getCliConfig()
 
 export const getSessionToken = (): string | undefined => {
-  return cliConfig.get("sessionToken")
+  return process.env.TSCIRCUIT_TOKEN || cliConfig.get("sessionToken")
 }
 
 export const getSessionTokenFromNpmrc = (): string | undefined => {

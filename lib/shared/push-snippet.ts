@@ -1,4 +1,5 @@
-import { cliConfig } from "lib/cli-config"
+import { cliConfig, getSessionToken } from "lib/cli-config"
+import { fetchAccount } from "lib/registry-api/fetch-account"
 import { getRegistryApiKy } from "lib/registry-api/get-ky"
 import * as fs from "node:fs"
 import * as path from "node:path"
@@ -119,7 +120,7 @@ export const pushSnippet = async ({
   onError = (message) => console.error(message),
   onSuccess = (message) => console.log(message),
 }: PushOptions) => {
-  const sessionToken = cliConfig.get("sessionToken")
+  const sessionToken = getSessionToken()
   if (!sessionToken) {
     onError(
       "You need to log in to save package. Run 'tsci login' to authenticate.",
@@ -166,7 +167,9 @@ export const pushSnippet = async ({
   }
 
   const ky = getRegistryApiKy({ sessionToken })
-  const currentUsername = cliConfig.get("tscircuitHandle")
+  const currentUsername = process.env.TSCIRCUIT_TOKEN
+    ? (await fetchAccount())?.tscircuit_handle
+    : cliConfig.get("tscircuitHandle")
   if (!currentUsername) {
     onError("You need to set your tscircuit handle to publish packages")
     return onExit(1)
