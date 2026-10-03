@@ -11,15 +11,6 @@ https://github.com/user-attachments/assets/0228e09d-48fc-4bf5-814b-762b60fc35c7
 tsci dev
 ```
 
-Set `TSCIRCUIT_TOKEN` to authenticate using an existing registry token, for
-example in CI. A non-empty value takes precedence over the saved CLI token;
-an unset or empty value uses the existing token lookup. The environment token
-is not saved to the CLI configuration.
-
-```bash
-TSCIRCUIT_TOKEN="$CI_TSCIRCUIT_TOKEN" tsci push
-```
-
 ## Installation
 
 ```bash
