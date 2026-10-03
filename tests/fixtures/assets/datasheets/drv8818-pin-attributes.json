@@ -1,0 +1,136 @@
+{
+  "chip_name": "DRV8818PWPR",
+  "pin_attributes": {
+    "1": {
+      "isPassive": true,
+      "mustBeConnected": true
+    },
+    "2": {
+      "isOutput": true,
+      "canUsePushPull": true
+    },
+    "3": {
+      "isInput": true,
+      "canUseInternalPulldown": true,
+      "isUsingInternalPulldown": true
+    },
+    "4": {
+      "isOutput": true,
+      "canUseTriState": true
+    },
+    "5": {
+      "isInput": true,
+      "canUseInternalPulldown": true,
+      "isUsingInternalPulldown": true,
+      "shouldHaveDecouplingCapacitor": true,
+      "recommendedDecouplingCapacitorCapacitance": "0.1uF"
+    },
+    "6": {
+      "isInput": true,
+      "mustBeConnected": true
+    },
+    "7": {
+      "requiresGround": true,
+      "mustBeConnected": true
+    },
+    "8": {
+      "isInput": true,
+      "mustBeConnected": true
+    },
+    "9": {
+      "isInput": true,
+      "mustBeConnected": true
+    },
+    "10": {
+      "requiresPower": true,
+      "mustBeConnected": true,
+      "shouldHaveDecouplingCapacitor": true,
+      "recommendedDecouplingCapacitorCapacitance": "0.1uF"
+    },
+    "11": {
+      "isOutput": true,
+      "canUseTriState": true
+    },
+    "12": {
+      "isInput": true,
+      "canUseInternalPulldown": true,
+      "isUsingInternalPulldown": true
+    },
+    "13": {
+      "isInput": true,
+      "canUseInternalPulldown": true,
+      "isUsingInternalPulldown": true
+    },
+    "14": {
+      "isPassive": true,
+      "mustBeConnected": true
+    },
+    "15": {
+      "requiresPower": true,
+      "mustBeConnected": true,
+      "shouldHaveDecouplingCapacitor": true,
+      "recommendedDecouplingCapacitorCapacitance": "0.1uF"
+    },
+    "16": {
+      "isInput": true,
+      "canUseInternalPulldown": true,
+      "isUsingInternalPulldown": true
+    },
+    "17": {
+      "isInput": true,
+      "canUseInternalPullup": true,
+      "isUsingInternalPullup": true
+    },
+    "18": {
+      "isOutput": true,
+      "canUseTriState": true
+    },
+    "19": {
+      "isInput": true,
+      "canUseInternalPulldown": true,
+      "isUsingInternalPulldown": true
+    },
+    "20": {
+      "mustBeConnected": true,
+      "shouldHaveDecouplingCapacitor": true,
+      "recommendedDecouplingCapacitorCapacitance": "0.22uF"
+    },
+    "21": {
+      "requiresGround": true,
+      "mustBeConnected": true
+    },
+    "22": {
+      "mustBeConnected": true
+    },
+    "23": {
+      "mustBeConnected": true
+    },
+    "24": {
+      "mustBeConnected": true
+    },
+    "25": {
+      "isOutput": true,
+      "canUseTriState": true
+    },
+    "26": {
+      "isInput": true,
+      "canUseInternalPullup": true,
+      "isUsingInternalPullup": true
+    },
+    "27": {
+      "isInput": true,
+      "canUseInternalPulldown": true,
+      "isUsingInternalPulldown": true
+    },
+    "28": {
+      "requiresPower": true,
+      "mustBeConnected": true,
+      "shouldHaveDecouplingCapacitor": true,
+      "recommendedDecouplingCapacitorCapacitance": "0.1uF"
+    },
+    "29": {
+      "requiresGround": true,
+      "mustBeConnected": true
+    }
+  }
+}
