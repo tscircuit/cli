@@ -41,7 +41,7 @@
     "@types/semver": "^7.5.8",
     "bun-match-svg": "^0.0.12",
     "chokidar": "4.0.1",
-    "circuit-json": "^0.0.489",
+    "circuit-json": "^0.0.515",
     "circuit-json-to-3d-png": "^0.0.6",
     "circuit-json-to-altium": "github:tscircuit/circuit-json-to-altium#1a50d0dd2c0737cf940d92c0315852dc0111dd87",
     "circuit-json-to-bom-csv": "^0.0.19",
@@ -99,7 +99,7 @@
     "zod": "^3.23.8"
   },
   "peerDependencies": {
-    "circuit-json": "^0.0.489",
+    "circuit-json": "^0.0.515",
     "tscircuit": "*"
   },
   "bin": {
@@ -116,7 +116,7 @@
     }
   },
   "overrides": {
-    "circuit-json": "^0.0.489",
+    "circuit-json": "^0.0.515",
     "altiumts": "0.0.59",
     "poppygl": "0.0.30"
   },

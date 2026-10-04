@@ -110,7 +110,8 @@ export const TestChip = () => (
         if (otherAttribute !== attribute)
           expect(port[otherAttribute]).not.toBe(true)
       }
-      expect(port.requires_voltage).toBe(pin === 3 ? "1.8V" : undefined)
+      if (pin === 3) expect(port).toHaveProperty("requires_voltage", "1.8V")
+      else expect(port.requires_voltage).toBeUndefined()
 
       const pcbPort = rendered.circuitJson.find(
         (element) =>
