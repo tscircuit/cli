@@ -1,5 +1,6 @@
 import { expect, test } from "bun:test"
 import { fp } from "@tscircuit/footprinter"
+import { source_port } from "circuit-json"
 import type {
   AnyCircuitElement,
   PcbPort,
@@ -110,7 +111,9 @@ export const TestChip = () => (
         if (otherAttribute !== attribute)
           expect(port[otherAttribute]).not.toBe(true)
       }
-      expect(port.requires_voltage).toBe(pin === 3 ? "1.8V" : undefined)
+      expect(source_port.parse(port).requires_voltage).toBe(
+        pin === 3 ? 1.8 : undefined,
+      )
 
       const pcbPort = rendered.circuitJson.find(
         (element) =>
