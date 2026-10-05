@@ -4,7 +4,7 @@ import tscircuitPackageJson from "tscircuit/package.json"
 
 const tscircuitPackageJsonDeps = Object.keys(tscircuitPackageJson.dependencies)
 
-const ALLOW_BUNDLING = ["@tscircuit/runframe"]
+const ALLOW_BUNDLING = ["@tscircuit/runframe", "poppygl"]
 
 const result = await Bun.build({
   entrypoints: [

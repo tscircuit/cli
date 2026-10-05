@@ -2,7 +2,7 @@ import { convertCircuitJsonToPcbSvg } from "lib/shared/render-pcb-svg"
 import fs from "node:fs"
 import path from "node:path"
 import type { AnyCircuitElement } from "circuit-json"
-import { renderCircuitJsonTo3dPng } from "circuit-json-to-3d-png"
+import { render3dThumbnail } from "lib/shared/render-3d-thumbnail"
 import { convertCircuitJsonToGltf } from "circuit-json-to-gltf"
 import { circuitJsonToStep } from "circuit-json-to-step"
 import { convertCircuitJsonToSchematicSvg } from "circuit-to-svg"
@@ -133,7 +133,7 @@ export const writeImageAssetsFromCircuitJson = async (
   writeSimulationSvgAssetsFromCircuitJson(circuitJson, outputDir, imageFormats)
 
   if (imageFormats.threeDPngs) {
-    const pngBuffer = await renderCircuitJsonTo3dPng(circuitJson)
+    const pngBuffer = await render3dThumbnail(circuitJson)
 
     fs.writeFileSync(path.join(outputDir, "3d.png"), Buffer.from(pngBuffer))
   }

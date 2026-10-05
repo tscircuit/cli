@@ -180,6 +180,9 @@ test("build --pngs generates only 3d.png", async () => {
   expect(preview3d[1]).toBe(0x50)
   expect(preview3d[2]).toBe(0x4e)
   expect(preview3d[3]).toBe(0x47)
+  expect(preview3d.readUInt32BE(16)).toBe(480)
+  expect(preview3d.readUInt32BE(20)).toBe(320)
+  await expect(preview3d).toMatchPngSnapshot(import.meta.path, "3d-thumbnail")
 
   expect(
     stat(path.join(tmpDir, "dist", "preview", "pcb.svg")),
