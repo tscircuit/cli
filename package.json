@@ -84,7 +84,7 @@
     "perfect-cli": "^1.0.21",
     "playwright": "^1.57.0",
     "polygon-clipping": "^0.15.7",
-    "poppygl": "0.0.30",
+    "poppygl": "0.0.34",
     "prompts": "^2.4.2",
     "proper-lockfile": "^4.1.2",
     "redaxios": "^0.5.1",
@@ -118,7 +118,7 @@
   "overrides": {
     "circuit-json": "^0.0.515",
     "altiumts": "0.0.59",
-    "poppygl": "0.0.30"
+    "poppygl": "0.0.34"
   },
   "scripts": {
     "start": "bun run dev",
