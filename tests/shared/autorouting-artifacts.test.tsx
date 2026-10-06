@@ -121,24 +121,47 @@ test("skips empty and failed phases and reports core's unsupported-output reason
   }
 })
 
-test("old runtimes warn once without attempting a private conversion", () => {
-  const f = fixture()
-  try {
-    for (let i = 0; i < 2; i++)
-      f.root.emit("autorouting:end", {
-        ...event,
-        pcbTracePaths: undefined,
-        _actualRoutingPhaseOrderIndex: undefined,
-      })
-    expect(f.files()).toEqual([])
-    expect(f.warn).toHaveBeenCalledTimes(1)
-    expect(f.warn.mock.calls.flat().join("\n")).toContain(
-      "update your project's tscircuit",
-    )
-  } finally {
-    f.cleanup()
-  }
-})
+test.each([
+  { missing: ["pcbTracePaths"], overrides: { pcbTracePaths: undefined } },
+  {
+    missing: ["_actualRoutingPhaseOrderIndex"],
+    overrides: { _actualRoutingPhaseOrderIndex: undefined },
+  },
+  {
+    missing: ["pcbTracePaths", "_actualRoutingPhaseOrderIndex"],
+    overrides: {
+      pcbTracePaths: undefined,
+      _actualRoutingPhaseOrderIndex: undefined,
+    },
+  },
+])(
+  "missing replay metadata is reported accurately: $missing",
+  ({ missing, overrides }) => {
+    const f = fixture()
+    try {
+      const incompleteEvent = { ...event, ...overrides }
+      for (let i = 0; i < 2; i++)
+        expect(() =>
+          f.root.emit("autorouting:end", incompleteEvent),
+        ).not.toThrow()
+      expect(f.files()).toEqual([])
+      expect(f.warn).toHaveBeenCalledTimes(1)
+      expect(f.warn.mock.calls[0]?.[0]).toBe(
+        `Could not save autorouting replay JSON: the routing event is missing ${missing.join(", ")}. This only affects replay export, not PCB routing. Check that your project's tscircuit runtime supports replay export.`,
+      )
+      expect(incompleteEvent).toEqual({ ...event, ...overrides })
+      // An earlier incomplete event must not block a later exportable phase.
+      f.root.emit("autorouting:end", event)
+      expect(f.files()).toHaveLength(1)
+      expect(JSON.parse(fs.readFileSync(f.files()[0]!, "utf8"))).toEqual(
+        savedPaths,
+      )
+      expect(f.warn).toHaveBeenCalledTimes(1)
+    } finally {
+      f.cleanup()
+    }
+  },
+)
 
 test("artifact write failures remain warnings", () => {
   const f = fixture()
@@ -184,6 +207,40 @@ test("real core events save sparse phase paths that replay identical copper", as
       circuit.db.pcb_trace.list().map((t) => t.route),
     )
     expect(replay.db.pcb_autorouting_error.list()).toEqual([])
+  } finally {
+    f.cleanup()
+  }
+}, 30000)
+
+test("local routing remains successful when replay metadata is unavailable", async () => {
+  const f = fixture()
+  try {
+    const circuit = new RootCircuit()
+    circuit.on("autorouting:end", (completedPhase) => {
+      // Simulate an older event producer without changing the routed circuit.
+      f.root.emit("autorouting:end", {
+        ...completedPhase,
+        pcbTracePaths: undefined,
+        _actualRoutingPhaseOrderIndex: undefined,
+      })
+    })
+    circuit.add(
+      <board width={20} height={10} autorouter="auto_local">
+        <resistor name="R1" resistance="1k" footprint="0402" pcbX={-4} />
+        <resistor name="R2" resistance="1k" footprint="0402" pcbX={4} />
+        <trace from="R1.1" to="R2.1" />
+      </board>,
+    )
+    await circuit.renderUntilSettled()
+    expect(circuit.db.pcb_trace.list().length).toBeGreaterThan(0)
+    expect(circuit.db.pcb_autorouting_error.list()).toEqual([])
+    expect(f.files()).toEqual([])
+    expect(f.warn).toHaveBeenCalledTimes(1)
+    const warning = f.warn.mock.calls[0]?.[0]
+    expect(warning).toContain(
+      "This only affects replay export, not PCB routing",
+    )
+    expect(warning).not.toContain("Use local routing")
   } finally {
     f.cleanup()
   }
