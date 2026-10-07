@@ -3,6 +3,7 @@ import fs from "node:fs"
 import path from "node:path"
 import { getPlatformConfig } from "@tscircuit/eval/platform-config"
 import type { PlatformConfig } from "@tscircuit/props"
+import { jlcPartsEngine } from "@tscircuit/parts-engine"
 import { mergePlatformConfigs } from "./platform-config-utils"
 
 export function createLocalCacheEngine(
@@ -58,6 +59,11 @@ export function getPlatformConfigWithCliDefaults(
 
   const defaultConfig: PlatformConfig = {
     ...basePlatformConfig,
+    checkAvailability: true,
+    partsEngine: {
+      ...basePlatformConfig.partsEngine!,
+      fetchPartAvailability: jlcPartsEngine.fetchPartAvailability,
+    },
     localCacheEngine: createLocalCacheEngine(cacheDir),
     // Override footprintFileParserMap to handle file paths from native imports
     footprintFileParserMap: {
