@@ -142,3 +142,56 @@ test("check netlist succeeds after correcting an invalid selector", async () => 
   expect(corrected.stdout).not.toContain("source_trace_not_connected_error")
   expect(corrected.stdout).toContain("Readable Netlist:")
 }, 40_000)
+
+const autoroutedCircuitWithInvalidChip = `
+export default () => (
+  <board width={30} height={20} autorouter="sequential-trace">
+    <resistor name="R1" resistance="1k" footprint="0402" pcbX={-5} />
+    <resistor name="R2" resistance="1k" footprint="0402" pcbX={5} />
+    <trace name="SIGNAL" from="R1.pin1" to="R2.pin1" />
+    <chip name={{ invalid: true }} />
+  </board>
+)
+`
+
+test("check netlist fails when an unconnected chip cannot be constructed", async () => {
+  const { tmpDir, runCommand } = await getNetlistTestFixture()
+  const circuitPath = path.join(tmpDir, "invalid-chip.tsx")
+  await writeFile(circuitPath, autoroutedCircuitWithInvalidChip)
+
+  // The surviving connection is valid; only component construction fails.
+  // Check fresh evaluation and the cached artifact from an explicit build.
+  for (let run = 0; run < 2; run++) {
+    if (run === 1) {
+      const build = await runCommand(
+        `tsci build ${circuitPath} --disable-parts-engine`,
+      )
+      expect(build.exitCode).toBe(1)
+    }
+    const { stdout, exitCode } = await runCommand(
+      `tsci check netlist ${circuitPath}`,
+    )
+    expect(stdout).toContain("Errors: 1")
+    expect(stdout).toContain("source_failed_to_create_component_error")
+    expect(stdout).toContain("Expected string, received object")
+    expect(stdout).toContain("R1")
+    expect(stdout).toContain("R2")
+    expect(stdout).not.toContain("source_trace_not_connected_error")
+    expect(exitCode).toBe(1)
+  }
+}, 40_000)
+
+test("check netlist accepts an intentionally empty valid circuit", async () => {
+  const { tmpDir, runCommand } = await getNetlistTestFixture()
+  const circuitPath = path.join(tmpDir, "empty.tsx")
+  await writeFile(
+    circuitPath,
+    "export default () => <board width={10} height={10} />",
+  )
+  const { stdout, exitCode } = await runCommand(
+    `tsci check netlist ${circuitPath}`,
+  )
+  expect(stdout).toContain("Errors: 0")
+  expect(stdout).toContain("COMPONENTS:")
+  expect(exitCode).toBe(0)
+}, 20_000)

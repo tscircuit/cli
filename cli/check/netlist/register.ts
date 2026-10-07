@@ -27,6 +27,14 @@ const normalizeCategory = (category: string): DrcCategory =>
 const isNetlistDiagnostic = (issue: CircuitJsonIssue) =>
   normalizeCategory(categorizeErrorOrWarning(issue)) === "netlist"
 
+const isNetlistBlockingError = (issue: CircuitJsonIssue) =>
+  isNetlistDiagnostic(issue) ||
+  categorizeErrorOrWarning(issue) === "source" ||
+  // Construction errors are currently categorized as unknown. They invalidate
+  // the source model even when the surviving netlist has no connectivity errors.
+  issue.type === "source_failed_to_create_component_error" ||
+  issue.error_type === "source_failed_to_create_component_error"
+
 const resolveInputFilePath = async (file?: string) => {
   if (file) {
     return path.isAbsolute(file) ? file : path.resolve(process.cwd(), file)
@@ -62,7 +70,7 @@ export const checkNetlist = async (file?: string) => {
 
   const typedCircuitJson = circuitJson as AnyCircuitElement[]
   const diagnostics = analyzeCircuitJson(typedCircuitJson)
-  const netlistErrors = diagnostics.errors.filter(isNetlistDiagnostic)
+  const netlistErrors = diagnostics.errors.filter(isNetlistBlockingError)
   const netlistWarnings = diagnostics.warnings.filter(isNetlistDiagnostic)
   const readableNetlist = convertCircuitJsonToReadableNetlist(typedCircuitJson)
 
@@ -97,7 +105,9 @@ export const registerCheckNetlist = (program: Command) => {
   program.commands
     .find((c) => c.name() === "check")!
     .command("netlist")
-    .description("Partially build and validate the netlist")
+    .description(
+      "Validate netlist and source construction; skips PCB placement and routing checks",
+    )
     .argument("[file]", "Path to the entry file")
     .action(async (file?: string) => {
       try {
