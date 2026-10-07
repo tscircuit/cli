@@ -27,7 +27,7 @@
     "@tscircuit/math-utils": "0.0.36",
     "@tscircuit/modelprinter": "^0.0.11",
     "@tscircuit/props": "^0.0.694",
-    "@tscircuit/runframe": "^0.0.2915",
+    "@tscircuit/runframe": "^0.0.2923",
     "@tscircuit/schematic-match-adapt": "^0.0.22",
     "@tscircuit/schematic-trace-solver": "^0.0.204",
     "@tscircuit/solver-utils": "0.0.16",
