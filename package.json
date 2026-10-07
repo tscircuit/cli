@@ -26,7 +26,6 @@
     "@tscircuit/krt-wasm": "^0.1.6",
     "@tscircuit/math-utils": "0.0.36",
     "@tscircuit/modelprinter": "^0.0.11",
-    "@tscircuit/parts-engine": "^0.0.37",
     "@tscircuit/props": "^0.0.694",
     "@tscircuit/runframe": "^0.0.2915",
     "@tscircuit/schematic-match-adapt": "^0.0.22",

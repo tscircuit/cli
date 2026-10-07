@@ -20,7 +20,6 @@
         "@tscircuit/krt-wasm": "^0.1.6",
         "@tscircuit/math-utils": "0.0.36",
         "@tscircuit/modelprinter": "^0.0.11",
-        "@tscircuit/parts-engine": "^0.0.37",
         "@tscircuit/props": "^0.0.694",
         "@tscircuit/runframe": "^0.0.2915",
         "@tscircuit/schematic-match-adapt": "^0.0.22",
@@ -450,8 +449,6 @@
     "@tscircuit/modelprinter": ["@tscircuit/modelprinter@0.0.11", "", { "dependencies": { "@tscircuit/mm": "^0.0.9" }, "peerDependencies": { "zod": "^3.25.67" } }, "sha512-3YYShflW6y/pJ0YikDf+3lGCk6hPf7naKZ/uVUMMnsQFRG8lV1utQqqcCqJa4smvR0+mmTMFBxJI7mkNlSUBXw=="],
 
     "@tscircuit/ngspice-spice-engine": ["@tscircuit/ngspice-spice-engine@0.0.20", "", { "peerDependencies": { "@tscircuit/props": "*", "circuit-json": "*", "spicets": "*", "typescript": "^5" } }, "sha512-dXjH51Wl95B6yEVkWCz65DpAHWTJRLHDyD/09eJUpGwLcYfd1F9m4E0XWbuiYZ8wKygYlACTozrSX9n3/LtfwA=="],
-
-    "@tscircuit/parts-engine": ["@tscircuit/parts-engine@0.0.37", "", { "peerDependencies": { "typescript": "^5" } }, "sha512-CC/y+GTroszJJB8jE04w4DJEoT+Medb2yYjEhiYUwWUAOMXNbdX+JNnQaB2Ms5F61CglVoGlxqhnSRZ05nFDug=="],
 
     "@tscircuit/props": ["@tscircuit/props@0.0.694", "", { "peerDependencies": { "circuit-json": "*", "react": "*", "zod": "*" } }, "sha512-t1OZfXB789gwYIprZryJuyIOT1YcDjkeAaLSEJO1W3uJY2cF0RMS6TNLD9XbaK+JcrVAMMBp8GK3QF9MD9Vtkw=="],
 
