@@ -1,6 +1,6 @@
 {
   "name": "@tscircuit/cli",
-  "version": "0.1.2237",
+  "version": "0.1.2254",
   "repository": {
     "type": "git",
     "url": "https://github.com/tscircuit/cli"
@@ -17,16 +17,17 @@
     "@tscircuit/circuit-json-placement-analysis": "^0.0.15",
     "@tscircuit/circuit-json-routing-analysis": "^0.0.8",
     "@tscircuit/circuit-json-schematic-placement-analysis": "https://jscdn.tscircuit.com/@tscircuit/circuit-json-schematic-placement-analysis/0.0.33.tgz",
-    "@tscircuit/circuit-json-util": "^0.0.116",
-    "@tscircuit/eval": "0.0.1538",
+    "@tscircuit/circuit-json-util": "^0.0.120",
+    "@tscircuit/eval": "0.0.1569",
     "@tscircuit/fake-snippets": "^0.0.182",
     "@tscircuit/file-server": "^0.0.32",
     "@tscircuit/footprinter": "^0.0.430",
     "@tscircuit/image-utils": "^0.0.8",
     "@tscircuit/krt-wasm": "^0.1.6",
     "@tscircuit/math-utils": "0.0.36",
-    "@tscircuit/props": "^0.0.666",
-    "@tscircuit/runframe": "^0.0.2907",
+    "@tscircuit/modelprinter": "^0.0.11",
+    "@tscircuit/props": "^0.0.694",
+    "@tscircuit/runframe": "^0.0.2915",
     "@tscircuit/schematic-match-adapt": "^0.0.22",
     "@tscircuit/schematic-trace-solver": "^0.0.204",
     "@tscircuit/solver-utils": "0.0.16",
@@ -41,7 +42,7 @@
     "@types/semver": "^7.5.8",
     "bun-match-svg": "^0.0.12",
     "chokidar": "4.0.1",
-    "circuit-json": "^0.0.515",
+    "circuit-json": "^0.0.520",
     "circuit-json-to-3d-png": "^0.0.6",
     "circuit-json-to-altium": "github:tscircuit/circuit-json-to-altium#1a50d0dd2c0737cf940d92c0315852dc0111dd87",
     "circuit-json-to-bom-csv": "^0.0.19",
@@ -84,7 +85,7 @@
     "perfect-cli": "^1.0.21",
     "playwright": "^1.57.0",
     "polygon-clipping": "^0.15.7",
-    "poppygl": "^0.0.30",
+    "poppygl": "0.0.34",
     "prompts": "^2.4.2",
     "proper-lockfile": "^4.1.2",
     "redaxios": "^0.5.1",
@@ -99,7 +100,7 @@
     "zod": "^3.23.8"
   },
   "peerDependencies": {
-    "circuit-json": "^0.0.515",
+    "circuit-json": "^0.0.520",
     "tscircuit": "*"
   },
   "bin": {
@@ -116,9 +117,10 @@
     }
   },
   "overrides": {
-    "circuit-json": "^0.0.515",
+    "circuit-json": "^0.0.520",
     "altiumts": "0.0.59",
-    "poppygl": "0.0.30"
+    "poppygl": "0.0.34",
+    "@tscircuit/core": "^0.0.2104"
   },
   "scripts": {
     "start": "bun run dev",

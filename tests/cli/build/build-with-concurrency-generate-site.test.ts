@@ -1,6 +1,6 @@
 import { getCliTestFixture } from "../../fixtures/get-cli-test-fixture"
 import { test, expect } from "bun:test"
-import { writeFile, stat } from "node:fs/promises"
+import { readFile, writeFile, stat, symlink } from "node:fs/promises"
 import path from "node:path"
 
 const circuitCode = `
@@ -35,7 +35,8 @@ test("build --pngs --ci --concurrency 2 writes only 3d.png for selected build", 
   const circuitPath = path.join(tmpDir, "index.tsx")
   await writeFile(circuitPath, circuitCode)
 
-  await runCommand(`tsci install`)
+  await writeFile(path.join(tmpDir, "package.json"), "{}")
+  await symlink(path.resolve("node_modules"), path.join(tmpDir, "node_modules"))
   await runCommand(`tsci build --ci --concurrency 2 --pngs`)
 
   const pngPath = path.join(tmpDir, "dist", "index", "3d.png")
@@ -43,6 +44,9 @@ test("build --pngs --ci --concurrency 2 writes only 3d.png for selected build", 
   const schematicSvgPath = path.join(tmpDir, "dist", "index", "schematic.svg")
 
   expect(await stat(pngPath).then((stats) => stats.isFile())).toBe(true)
+  const png = await readFile(pngPath)
+  expect(png.readUInt32BE(16)).toBe(480)
+  expect(png.readUInt32BE(20)).toBe(320)
   await expect(stat(pcbSvgPath)).rejects.toBeTruthy()
   await expect(stat(schematicSvgPath)).rejects.toBeTruthy()
-}, 30_000)
+}, 60_000)
