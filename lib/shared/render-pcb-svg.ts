@@ -1,10 +1,9 @@
-import { convertCircuitJsonToPcbSvg as renderNormalSvg } from "circuit-to-svg"
 import type { AnyCircuitElement } from "circuit-json"
 import { getFullConnectivityMapFromCircuitJson } from "circuit-json-to-connectivity-map"
 import {
   convertCircuitJsonToPcbSvg as renderSvg,
   type PcbSvgOptions,
-} from "circuit-to-svg-xray"
+} from "circuit-to-svg"
 import type { PcbSnapshotSettings } from "lib/project-config/project-config-schema"
 
 const copperTypes = new Set([
@@ -84,7 +83,6 @@ export function convertCircuitJsonToPcbSvg(
   options: PcbSnapshotSettings & PcbSvgOptions = {},
 ): string {
   const { xRayNets, ...renderOptions } = options
-  if (!xRayNets?.length) return renderNormalSvg(elements, renderOptions)
   return renderSvg(elements, {
     ...renderOptions,
     ...(xRayNets?.length
