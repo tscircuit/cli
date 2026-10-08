@@ -238,12 +238,15 @@ test("omitting project style checks preserves platform config without enabling b
   const tmpDir = temporaryDirectory()
   tempDirs.push(tmpDir)
   await writeFile(path.join(tmpDir, "tscircuit.config.json"), "{}")
-  expect((await loadRuntimeProjectConfig(tmpDir))?.platformConfig).toBeUndefined()
+  expect(
+    (await loadRuntimeProjectConfig(tmpDir))?.platformConfig,
+  ).toBeUndefined()
   await writeFile(
     path.join(tmpDir, "tscircuit.config.ts"),
     "export default { platformConfig: { pcbStyleChecksEnabled: true } }",
   )
   expect(
-    (await loadRuntimeProjectConfig(tmpDir))?.platformConfig?.pcbStyleChecksEnabled,
+    (await loadRuntimeProjectConfig(tmpDir))?.platformConfig
+      ?.pcbStyleChecksEnabled,
   ).toBeTrue()
 })

@@ -26,7 +26,7 @@
     "@tscircuit/krt-wasm": "^0.1.6",
     "@tscircuit/math-utils": "0.0.36",
     "@tscircuit/modelprinter": "^0.0.11",
-    "@tscircuit/props": "https://pkg.pr.new/tscircuit/props/@tscircuit/props@bd4d9e6889dfdf90f3b7d3f9740c90ec2097d0a0",
+    "@tscircuit/props": "^0.0.694",
     "@tscircuit/runframe": "^0.0.2936",
     "@tscircuit/schematic-match-adapt": "^0.0.22",
     "@tscircuit/schematic-trace-solver": "^0.0.204",

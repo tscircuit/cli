@@ -10,7 +10,8 @@ import {
 export type { TscircuitProjectConfig }
 
 export type TscircuitRuntimeProjectConfig = TscircuitProjectConfig & {
-  platformConfig?: PlatformConfig
+  platformConfig?: PlatformConfig &
+    Pick<TscircuitProjectConfig, "pcbStyleChecksEnabled">
 }
 
 export const defineConfig = (config: TscircuitRuntimeProjectConfig) => {
