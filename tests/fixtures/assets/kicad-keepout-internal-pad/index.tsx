@@ -47,7 +47,6 @@ export default () => (
     <RepeatedPadChip name="U1" pcbX={0} pcbY={0} />
     <resistor name="R1" resistance="1k" footprint="0402" pcbX={4} pcbY={-3} />
     <keepout
-      name="KO1"
       shape="rect"
       pcbX={0}
       pcbY={1}
