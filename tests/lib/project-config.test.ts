@@ -180,3 +180,70 @@ test("loadProjectConfig merges json config with module config", async () => {
     showCourtyards: true,
   })
 })
+
+test.each([true, false])(
+  "JSON config preserves pcbStyleChecksEnabled=%s and forwards it to core",
+  async (pcbStyleChecksEnabled) => {
+    const tmpDir = temporaryDirectory()
+    tempDirs.push(tmpDir)
+    await writeFile(
+      path.join(tmpDir, "tscircuit.config.json"),
+      JSON.stringify({ pcbStyleChecksEnabled }),
+    )
+    const config = loadProjectConfigSync(tmpDir)
+    expect(config?.pcbStyleChecksEnabled).toBe(pcbStyleChecksEnabled)
+    expect(saveProjectConfig(config, tmpDir)).toBeTrue()
+    expect(loadProjectConfigSync(tmpDir)?.pcbStyleChecksEnabled).toBe(
+      pcbStyleChecksEnabled,
+    )
+    expect(
+      (await loadRuntimeProjectConfig(tmpDir))?.platformConfig
+        ?.pcbStyleChecksEnabled,
+    ).toBe(pcbStyleChecksEnabled)
+  },
+)
+
+test("PCB style checks are optional booleans in both schemas", () => {
+  expect(projectConfigSchema.parse({}).pcbStyleChecksEnabled).toBeUndefined()
+  expect(jsonSchema.properties.pcbStyleChecksEnabled.type).toBe("boolean")
+  for (const value of ["true", 1, null]) {
+    expect(
+      projectConfigSchema.safeParse({ pcbStyleChecksEnabled: value }).success,
+    ).toBeFalse()
+  }
+})
+
+test.each([
+  [true, false],
+  [false, true],
+  [false, false],
+])(
+  "either project (%s) or platform (%s) can enable PCB style checks",
+  async (projectEnabled, platformEnabled) => {
+    const tmpDir = temporaryDirectory()
+    tempDirs.push(tmpDir)
+    await writeFile(
+      path.join(tmpDir, "tscircuit.config.ts"),
+      `export default { pcbStyleChecksEnabled: ${projectEnabled}, platformConfig: { pcbStyleChecksEnabled: ${platformEnabled}, partsEngineDisabled: true } }`,
+    )
+    const config = await loadRuntimeProjectConfig(tmpDir)
+    expect(config?.platformConfig?.pcbStyleChecksEnabled).toBe(
+      projectEnabled || platformEnabled,
+    )
+    expect(config?.platformConfig?.partsEngineDisabled).toBeTrue()
+  },
+)
+
+test("omitting project style checks preserves platform config without enabling by default", async () => {
+  const tmpDir = temporaryDirectory()
+  tempDirs.push(tmpDir)
+  await writeFile(path.join(tmpDir, "tscircuit.config.json"), "{}")
+  expect((await loadRuntimeProjectConfig(tmpDir))?.platformConfig).toBeUndefined()
+  await writeFile(
+    path.join(tmpDir, "tscircuit.config.ts"),
+    "export default { platformConfig: { pcbStyleChecksEnabled: true } }",
+  )
+  expect(
+    (await loadRuntimeProjectConfig(tmpDir))?.platformConfig?.pcbStyleChecksEnabled,
+  ).toBeTrue()
+})

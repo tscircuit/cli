@@ -103,6 +103,10 @@
       "type": "boolean",
       "description": "Always use the latest TSCircuit version when building on the cloud."
     },
+    "pcbStyleChecksEnabled": {
+      "type": "boolean",
+      "description": "Enable warnings for PCB trace segments longer than 5 mm and more than 4 degrees from a multiple of 45 degrees. Disabled by default."
+    },
     "useCloudAutorouting": {
       "type": "boolean",
       "description": "Use networked Pipeline9 autorouting at effort 1. Omitted or false keeps local routing; explicit alternative pipelines and effort levels retain their local solver."

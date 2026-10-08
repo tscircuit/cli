@@ -174,6 +174,15 @@ export const loadRuntimeProjectConfig = async (
     }
   }
 
+  if (mergedConfig.pcbStyleChecksEnabled !== undefined) {
+    mergedConfig.platformConfig = {
+      ...mergedConfig.platformConfig,
+      pcbStyleChecksEnabled:
+        mergedConfig.pcbStyleChecksEnabled === true ||
+        mergedConfig.platformConfig?.pcbStyleChecksEnabled === true,
+    }
+  }
+
   return mergedConfig
 }
 
