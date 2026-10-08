@@ -5,7 +5,7 @@ import {
   EasyEdaJsonSchema,
   convertEasyEdaJsonToCircuitJson,
 } from "easyeda/browser"
-import { convertCircuitJsonToPcbSvg as renderXraySvg } from "circuit-to-svg-xray"
+import { convertCircuitJsonToPcbSvg as renderXraySvg } from "circuit-to-svg"
 import { readFile, rm } from "node:fs/promises"
 import { temporaryDirectory } from "tempy"
 import { importComponentFromJlcpcb } from "../lib/import/import-component-from-jlcpcb"
