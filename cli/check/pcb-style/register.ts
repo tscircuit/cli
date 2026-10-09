@@ -131,7 +131,9 @@ export const checkPcbStyle = async (
     options.svg ?? path.join("checks", "check-pcb-style", "pcb.svg"),
   )
   if (!svgPath.endsWith(".svg") || svgPath === filePath) {
-    throw new Error("--svg must name an SVG output file different from the input")
+    throw new Error(
+      "--svg must name an SVG output file different from the input",
+    )
   }
   const input: unknown = isCircuitJsonFile(filePath)
     ? JSON.parse(await readFile(filePath, "utf8"))
@@ -187,11 +189,26 @@ export const registerCheckPcbStyle = (program: Command) => {
       "--svg <file>",
       "Save a highlighted overview (default: checks/check-pcb-style/pcb.svg)",
     )
-    .option("--issue-type <rule>", "Select odd-angle or staircase (default: both)")
-    .option("--max-segment-length <mm>", "Odd-angle length threshold (default: 5)")
-    .option("--angle-tolerance <degrees>", "Allowed angle tolerance (default: 4)")
-    .option("--min-staircase-bends <count>", "Minimum staircase bends (default: 6)")
-    .option("--min-staircase-length <mm>", "Minimum staircase length (default: 2)")
+    .option(
+      "--issue-type <rule>",
+      "Select odd-angle or staircase (default: both)",
+    )
+    .option(
+      "--max-segment-length <mm>",
+      "Odd-angle length threshold (default: 5)",
+    )
+    .option(
+      "--angle-tolerance <degrees>",
+      "Allowed angle tolerance (default: 4)",
+    )
+    .option(
+      "--min-staircase-bends <count>",
+      "Minimum staircase bends (default: 6)",
+    )
+    .option(
+      "--min-staircase-length <mm>",
+      "Minimum staircase length (default: 2)",
+    )
     .option(
       "--max-stair-step-length <mm>",
       "Maximum merged step length (default: 1)",

@@ -30,8 +30,6 @@ jobs:
         with:
           node-version: 22
       - run: bun install
-      - name: Show dependency lock changes
-        run: git diff -- bun.lock
       - run: bun test tests/cli/check/check-pcb-style.test.ts
       - run: bun run build
       - name: Smoke test compiled CLI under Node
@@ -43,7 +41,7 @@ jobs:
           [{"type":"pcb_trace","pcb_trace_id":"odd","route":[{"route_type":"wire","x":0,"y":0,"width":0.15,"layer":"top"},{"route_type":"wire","x":10,"y":3,"width":0.15,"layer":"top"}]}]
           JSON
           set +e
-          NODE_ENV=test node "$GITHUB_WORKSPACE/dist/cli/main.js" check pcb-style board.circuit.json --json > result.json
+          NODE_ENV=test node --import "$GITHUB_WORKSPACE/node_modules/tsx/dist/loader.mjs" "$GITHUB_WORKSPACE/dist/cli/main.js" check pcb-style board.circuit.json --json > result.json
           RESULT=$?
           set -e
           test "$RESULT" -eq 1

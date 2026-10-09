@@ -27,7 +27,10 @@ const trace = (points: Array<[number, number]>): CircuitJson => [
   },
 ]
 
-const oddAngle = trace([[0, 0], [10, 3]])
+const oddAngle = trace([
+  [0, 0],
+  [10, 3],
+])
 const staircasePoints: Array<[number, number]> = [[0, 0]]
 for (let i = 0; i < 10; i++) {
   const [x, y] = staircasePoints[staircasePoints.length - 1]!
@@ -36,7 +39,7 @@ for (let i = 0; i < 10; i++) {
 const staircase = trace(staircasePoints)
 
 test("PCB style loads the latest jscdn module", async () => {
-  let requestedUrl
+  let requestedUrl: string | undefined
   const analyzer = { analyzePcbStyle, renderPcbStyleSvg }
   const result = await loadPcbStyleAnalysis({
     preferCdn: true,
@@ -92,10 +95,10 @@ test("tsci check pcb-style reports issues and writes a counted overview", async 
 test("subdividing odd-angle copper still reports one issue", async () => {
   const { tmpDir } = await getCliTestFixture()
   const file = path.join(tmpDir, "subdivided.circuit.json")
-  const points = Array.from(
-    { length: 21 },
-    (_, i): [number, number] => [i / 2, (i / 2) * 0.3],
-  )
+  const points = Array.from({ length: 21 }, (_, i): [number, number] => [
+    i / 2,
+    (i / 2) * 0.3,
+  ])
   await writeFile(file, JSON.stringify(trace(points)))
   const result = await checkPcbStyle(file)
   expect(result.analysis.issues).toHaveLength(1)
@@ -125,7 +128,15 @@ test("tsci check pcb-style accepts clean copper and replaces stale highlights", 
   const file = path.join(tmpDir, "board.circuit.json")
   await writeFile(file, JSON.stringify(oddAngle))
   await runCommand(`tsci check pcb-style ${file}`)
-  await writeFile(file, JSON.stringify(trace([[0, 0], [10, 0]])))
+  await writeFile(
+    file,
+    JSON.stringify(
+      trace([
+        [0, 0],
+        [10, 0],
+      ]),
+    ),
+  )
   const result = await runCommand(`tsci check pcb-style ${file}`)
   expect(result.exitCode).toBe(0)
   expect(result.stdout).toContain("No PCB style issues detected")
@@ -165,9 +176,9 @@ test("PCB style rejects invalid input and threshold options", async () => {
   await expect(
     checkPcbStyle(file, { minStaircaseBends: "2.5" }),
   ).rejects.toThrow()
-  await expect(
-    checkPcbStyle(file, { issueType: "other" }),
-  ).rejects.toThrow("--issue-type")
+  await expect(checkPcbStyle(file, { issueType: "other" })).rejects.toThrow(
+    "--issue-type",
+  )
   await expect(checkPcbStyle(file, { svg: file })).rejects.toThrow("--svg")
 })
 
