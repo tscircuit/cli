@@ -147,38 +147,25 @@ test("tsci check pcb-style accepts clean copper and replaces stale highlights", 
   expect(svg).toContain("0 errors")
 }, 30_000)
 
-test("PCB style forwards thresholds and rule selection", async () => {
+test("PCB style checks both rules using the analyzer defaults", async () => {
   const { tmpDir } = await getCliTestFixture()
   const file = path.join(tmpDir, "board.circuit.json")
-  await writeFile(file, JSON.stringify(oddAngle))
-  expect(
-    (await checkPcbStyle(file, { maxSegmentLength: "20" })).analysis.issues,
-  ).toHaveLength(0)
-  expect(
-    (await checkPcbStyle(file, { issueType: "staircase" })).analysis.issues,
-  ).toHaveLength(0)
-  await writeFile(file, JSON.stringify(staircase))
-  expect(
-    (await checkPcbStyle(file, { minStaircaseBends: "20" })).analysis.issues,
-  ).toHaveLength(0)
+  await writeFile(file, JSON.stringify([...oddAngle, ...staircase]))
+  const result = await checkPcbStyle(file)
+  expect(result.analysis.issues.map((issue) => issue.lineItemType)).toEqual([
+    "PcbTraceSegmentOddAngle",
+    "PcbTraceStaircase",
+  ])
+  expect(result.svg).toContain("2 errors")
 })
 
-test("PCB style rejects invalid input and threshold options", async () => {
+test("PCB style rejects invalid input and unsafe SVG output", async () => {
   const { tmpDir } = await getCliTestFixture()
   const file = path.join(tmpDir, "invalid.circuit.json")
   await writeFile(file, JSON.stringify({ circuitJson: oddAngle }))
   await expect(checkPcbStyle(file)).rejects.toThrow("Circuit JSON array")
   await writeFile(file, "{")
   await expect(checkPcbStyle(file)).rejects.toThrow()
-  await expect(
-    checkPcbStyle(file, { maxSegmentLength: "NaN" }),
-  ).rejects.toThrow("--max-segment-length must be a finite number")
-  await expect(
-    checkPcbStyle(file, { minStaircaseBends: "2.5" }),
-  ).rejects.toThrow()
-  await expect(checkPcbStyle(file, { issueType: "other" })).rejects.toThrow(
-    "--issue-type",
-  )
   await expect(checkPcbStyle(file, { svg: file })).rejects.toThrow("--svg")
 })
 
