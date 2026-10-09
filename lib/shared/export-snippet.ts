@@ -1,5 +1,3 @@
-import { convertSvgToPngBuffer } from "./convert-svg-to-png"
-import { convertCircuitJsonToPcbSvg } from "lib/shared/render-pcb-svg"
 import fs from "node:fs"
 import path from "node:path"
 import { promisify } from "node:util"
@@ -9,6 +7,7 @@ import {
   convertBomRowsToCsv,
   convertCircuitJsonToBomRows,
 } from "circuit-json-to-bom-csv"
+import { circuitJsonToFdmComponentBox } from "circuit-json-to-fdm-component-box"
 import { convertCircuitJsonToGerberFiles } from "circuit-json-to-gerber"
 import { convertCircuitJsonToGltf } from "circuit-json-to-gltf"
 import {
@@ -20,7 +19,6 @@ import {
 import { convertCircuitJsonToPickAndPlaceCsv } from "circuit-json-to-pnp-csv"
 import { convertCircuitJsonToReadableNetlist } from "circuit-json-to-readable-netlist"
 import { circuitJsonToStep } from "circuit-json-to-step"
-import { circuitJsonToFdmComponentBox } from "circuit-json-to-fdm-component-box"
 import {
   convertCircuitJsonToAssemblySvg,
   convertCircuitJsonToStackedSchematicSheetsSvg,
@@ -34,7 +32,9 @@ import { getOrGenerateCircuitJson } from "lib/shared/get-or-generate-circuit-jso
 import { getPlatformConfigWithCliDefaults } from "lib/shared/get-platform-config-with-cli-defaults"
 import { loadLocalStepModelFsMap } from "lib/shared/load-local-step-model-fs-map"
 import { mergePlatformConfigs } from "lib/shared/platform-config-utils"
+import { convertCircuitJsonToPcbSvg } from "lib/shared/render-pcb-svg"
 import { convertCircuitJsonToSchematicPdf } from "./convert-circuit-json-to-schematic-pdf"
+import { convertSvgToPngBuffer } from "./convert-svg-to-png"
 import { convertToKicadLibrary } from "./convert-to-kicad-library"
 import { importFromUserLand } from "./importFromUserLand"
 import { isCircuitJsonFile } from "./is-circuit-json-file"
@@ -305,7 +305,12 @@ export const exportSnippet = async ({
       proConverter.runUntilFinished()
 
       const zip = new JSZip()
-      zip.file(`${outputBaseName}.kicad_sch`, schConverter.getOutputString())
+      const schematicFilename = `${outputBaseName}.kicad_sch`
+      for (const schematicFile of schConverter.getOutputFiles({
+        schematicFilename,
+      })) {
+        zip.file(schematicFile.filename, schematicFile.content)
+      }
       zip.file(`${outputBaseName}.kicad_pcb`, pcbConverter.getOutputString())
       zip.file(`${outputBaseName}.kicad_pro`, proConverter.getOutputString())
 

@@ -1,12 +1,12 @@
 import fs from "node:fs"
 import path from "node:path"
 import type { PlatformConfig } from "@tscircuit/props"
+import type { AnyCircuitElement } from "circuit-json"
 import {
   CircuitJsonToKicadPcbConverter,
   CircuitJsonToKicadSchConverter,
   resolveAndLoadKicad3dModelFiles,
 } from "circuit-json-to-kicad"
-import type { AnyCircuitElement } from "circuit-json"
 
 type GenerateKicadProjectOptions = {
   circuitJson: unknown[]
@@ -58,14 +58,25 @@ export const generateKicadProject = async ({
   writeFiles,
   platformConfig,
 }: GenerateKicadProjectOptions): Promise<GeneratedKicadProject> => {
+  const sanitizedProjectName =
+    projectName.trim().length > 0 ? projectName.trim() : "project"
+  const schematicFileName = `${sanitizedProjectName}.kicad_sch`
+  const boardFileName = `${sanitizedProjectName}.kicad_pcb`
+  const projectFileName = `${sanitizedProjectName}.kicad_pro`
+
   const schConverter = new CircuitJsonToKicadSchConverter(
     circuitJson as AnyCircuitElement[],
   )
   schConverter.runUntilFinished()
-  const schContent = schConverter.getOutputString()
-
-  const sanitizedProjectName =
-    projectName.trim().length > 0 ? projectName.trim() : "project"
+  const schematicFiles = schConverter.getOutputFiles({
+    schematicFilename: schematicFileName,
+  })
+  const schContent = schematicFiles.find(
+    (schematicFile) => schematicFile.filename === schematicFileName,
+  )?.content
+  if (schContent === undefined) {
+    throw new Error(`Missing root KiCad schematic: ${schematicFileName}`)
+  }
 
   const pcbConverter = new CircuitJsonToKicadPcbConverter(
     circuitJson as AnyCircuitElement[],
@@ -73,9 +84,6 @@ export const generateKicadProject = async ({
   )
   pcbConverter.runUntilFinished()
   const pcbContent = pcbConverter.getOutputString()
-  const schematicFileName = `${sanitizedProjectName}.kicad_sch`
-  const boardFileName = `${sanitizedProjectName}.kicad_pcb`
-  const projectFileName = `${sanitizedProjectName}.kicad_pro`
 
   const proContent = createKicadProContent({
     projectName: sanitizedProjectName,
@@ -85,7 +93,12 @@ export const generateKicadProject = async ({
 
   if (writeFiles) {
     fs.mkdirSync(outputDir, { recursive: true })
-    fs.writeFileSync(path.join(outputDir, schematicFileName), schContent)
+    for (const schematicFile of schematicFiles) {
+      fs.writeFileSync(
+        path.join(outputDir, schematicFile.filename),
+        schematicFile.content,
+      )
+    }
     fs.writeFileSync(path.join(outputDir, boardFileName), pcbContent)
     fs.writeFileSync(path.join(outputDir, projectFileName), proContent)
 
