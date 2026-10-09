@@ -1,8 +1,6 @@
 import { mkdir, readFile, writeFile } from "node:fs/promises"
 import path from "node:path"
-import type {
-  PcbStyleAnalysisResult,
-} from "@tscircuit/circuit-json-pcb-style-analysis"
+import type { PcbStyleAnalysisResult } from "@tscircuit/circuit-json-pcb-style-analysis"
 import type { CircuitJson } from "circuit-json"
 import type { Command } from "commander"
 import { isCircuitJsonFile } from "lib/shared/is-circuit-json-file"
