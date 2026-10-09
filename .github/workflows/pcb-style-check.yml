@@ -1,0 +1,48 @@
+name: PCB Style Check
+
+on:
+  pull_request:
+    paths:
+      - "cli/check/pcb-style/**"
+      - "cli/main.ts"
+      - "tests/cli/check/check-pcb-style.test.ts"
+      - "package.json"
+      - "bun.lock"
+      - ".github/workflows/pcb-style-check.yml"
+  push:
+    branches: [main]
+    paths:
+      - "cli/check/pcb-style/**"
+      - "cli/main.ts"
+      - "tests/cli/check/check-pcb-style.test.ts"
+      - "package.json"
+      - "bun.lock"
+      - ".github/workflows/pcb-style-check.yml"
+
+jobs:
+  pcb-style:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: oven-sh/setup-bun@v2
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - run: bun install
+      - run: bun test tests/cli/check/check-pcb-style.test.ts
+      - run: bun run build
+      - name: Smoke test compiled CLI under Node
+        run: |
+          TSCI_SMOKE_DIR=$(mktemp -d)
+          trap 'rm -rf "$TSCI_SMOKE_DIR"' EXIT
+          cd "$TSCI_SMOKE_DIR"
+          cat > board.circuit.json <<'JSON'
+          [{"type":"pcb_trace","pcb_trace_id":"odd","route":[{"route_type":"wire","x":0,"y":0,"width":0.15,"layer":"top"},{"route_type":"wire","x":10,"y":3,"width":0.15,"layer":"top"}]}]
+          JSON
+          set +e
+          NODE_ENV=test node --import "$GITHUB_WORKSPACE/node_modules/tsx/dist/loader.mjs" "$GITHUB_WORKSPACE/dist/cli/main.js" check pcb-style board.circuit.json --json > result.json
+          RESULT=$?
+          set -e
+          test "$RESULT" -eq 1
+          node --input-type=module -e 'import fs from "node:fs"; import assert from "node:assert/strict"; const result = JSON.parse(fs.readFileSync("result.json", "utf8")); assert.equal(result.issues.length, 1); assert.equal(result.issues[0].lineItemType, "PcbTraceSegmentOddAngle"); assert.match(fs.readFileSync("checks/check-pcb-style/pcb.svg", "utf8"), /1 errors/);'
