@@ -20,7 +20,7 @@ export function attachAutoroutingArtifacts(
     "autorouting-artifacts",
     entryKey,
   )
-  let warnedUnsupportedVersion = false
+  let warnedMissingReplayMetadata = false
   root.on("autorouting:end", (event) => {
     try {
       if (event.pcbTracePathsUnavailableReason) {
@@ -30,11 +30,17 @@ export function attachAutoroutingArtifacts(
         event.pcbTracePaths === undefined ||
         event._actualRoutingPhaseOrderIndex === undefined
       ) {
-        if (!warnedUnsupportedVersion) {
+        if (!warnedMissingReplayMetadata) {
+          const missingFields = [
+            event.pcbTracePaths === undefined ? "pcbTracePaths" : undefined,
+            event._actualRoutingPhaseOrderIndex === undefined
+              ? "_actualRoutingPhaseOrderIndex"
+              : undefined,
+          ].filter((field) => field !== undefined)
           console.warn(
-            "Autorouting paths were not provided by this router. Use local routing and update your project's tscircuit package to save replayable JSON.",
+            `Could not save autorouting replay JSON: the routing event is missing ${missingFields.join(", ")}. This only affects replay export, not PCB routing. Check that your project's tscircuit runtime supports replay export.`,
           )
-          warnedUnsupportedVersion = true
+          warnedMissingReplayMetadata = true
         }
         return
       }

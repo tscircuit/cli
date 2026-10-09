@@ -24,7 +24,9 @@ selectors and routing options; in particular, keep `autorouter="fanout"` for
 fanout escapes. The CLI saves core’s emitted `pcbTracePaths` unchanged. Automatic export requires
 tscircuit core 0.0.2003 or later (included in `tscircuit@0.0.2647`). If your
 project installs an older runtime, update its `tscircuit` dependency; the CLI
-warns once when events do not provide exportable paths.
+warns once per render when events lack required replay metadata and identifies
+the missing fields. This warning concerns replay export, not PCB routing; local
+routing can complete successfully even when replay metadata is unavailable.
 
 Artifacts contain port selectors and wire/via routes in the enclosing group's
 local PCB coordinates, including via dimensions. Files are separated by source
