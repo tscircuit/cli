@@ -14,6 +14,7 @@ import { registerAuthSetupNpmrc } from "./auth/setup-npmrc/register"
 import { registerAuthWhoami } from "./auth/whoami/register"
 import { registerBuild } from "./build/register"
 import { registerCheckNetlist } from "./check/netlist/register"
+import { registerCheckPcbStyle } from "./check/pcb-style/register"
 import { registerCheckPinSpecification } from "./check/pin-specification/register"
 import { registerCheckPlacement } from "./check/placement/register"
 import { registerCheck } from "./check/register"
@@ -89,6 +90,7 @@ registerReport(program)
 registerReportAutorouter(program)
 registerCheck(program)
 registerCheckNetlist(program)
+registerCheckPcbStyle(program)
 registerCheckPinSpecification(program)
 registerCheckPlacement(program)
 registerCheckRoutingDifficulty(program)
