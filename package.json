@@ -123,7 +123,8 @@
     "circuit-json": "^0.0.525",
     "altiumts": "0.0.59",
     "poppygl": "0.0.34",
-    "@tscircuit/core": "^0.0.2121"
+    "@tscircuit/core": "^0.0.2121",
+    "jscad-planner": "0.0.18"
   },
   "scripts": {
     "start": "bun run dev",
