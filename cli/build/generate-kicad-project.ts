@@ -1,12 +1,12 @@
 import fs from "node:fs"
 import path from "node:path"
 import type { PlatformConfig } from "@tscircuit/props"
-import type { AnyCircuitElement } from "circuit-json"
 import {
   CircuitJsonToKicadPcbConverter,
   CircuitJsonToKicadSchConverter,
   resolveAndLoadKicad3dModelFiles,
 } from "circuit-json-to-kicad"
+import type { AnyCircuitElement } from "circuit-json"
 
 type GenerateKicadProjectOptions = {
   circuitJson: unknown[]
