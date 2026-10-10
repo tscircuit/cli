@@ -1,4 +1,4 @@
-import { InvalidArgumentError, type Command } from "commander"
+import { InvalidArgumentError, Option, type Command } from "commander"
 import { mkdir, readFile, writeFile } from "node:fs/promises"
 import { dirname, join, resolve } from "node:path"
 import type { CopperLayer } from "simulate-return-current"
@@ -17,6 +17,7 @@ const positiveNumber = (value: string) => {
 
 type ReturnCurrentOptions = {
   frequencyHz: number
+  copperModel: "volumetric_copper" | "surface_impedance_copper"
   output: string
   resultJson?: string
   experimentId?: string
@@ -41,6 +42,11 @@ export const registerReturnCurrentSimulation = (simulateCommand: Command) => {
       "--frequency-hz <hz>",
       "Simulation frequency in Hz",
       positiveNumber,
+    )
+    .addOption(
+      new Option("--copper-model <model>", "Conductive copper model")
+        .choices(["volumetric_copper", "surface_impedance_copper"])
+        .default("volumetric_copper"),
     )
     .option("--output <directory>", "Palace case directory", "return-current")
     .option(
@@ -126,6 +132,7 @@ export const registerReturnCurrentSimulation = (simulateCommand: Command) => {
         circuitJson: selected.solverCircuitJson,
         excitations: selected.excitations,
         frequencyHz: options.frequencyHz,
+        copperModel: options.copperModel,
         sampleLayer: options.sampleLayer,
         cellSize: options.cellSize,
         meshSize: options.meshSize,
