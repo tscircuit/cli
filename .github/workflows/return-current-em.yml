@@ -1,0 +1,57 @@
+name: Return Current EM
+
+on:
+  pull_request:
+    paths:
+      - .github/workflows/return-current-em.yml
+      - cli/simulate/**
+      - tests/cli/simulate/return-current.test.ts
+      - tests/cli/simulate/__snapshots__/return-current*
+      - scripts/bun-build.ts
+      - package.json
+      - bun.lock
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  return-current-em:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    env:
+      TSCI_RUN_RETURN_CURRENT_EM: "1"
+    steps:
+      - uses: actions/checkout@v4
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: 1.3.5
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Install Gmsh and VTK system libraries
+        run: |
+          sudo apt-get update
+          sudo apt-get install --no-install-recommends -y libglu1-mesa libgl1 libgomp1
+      - run: bun install --frozen-lockfile
+      - name: Setup Palace Python environment
+        run: |
+          bun -e '
+            import { appendFile } from "node:fs/promises";
+            import { setupPalacePython } from "simulate-return-current/palace";
+            const python = await setupPalacePython({
+              directory: `${process.env.RUNNER_TEMP}/return-current-python`,
+            });
+            await appendFile(process.env.GITHUB_ENV, `PALACE_PYTHON=${python}\n`);
+          '
+      - name: Pull pinned Palace solver
+        run: docker pull benvial/palace@sha256:f0f3a3cbbdf1ee2d8f856ddbe1f5bf4628a92ee8ab87d1e27dc33402ad9c8dda
+      - name: Run fresh EM solve and compare SVG snapshot
+        env:
+          TSCIRCUIT_CONFIG_DIR: ${{ runner.temp }}/return-current-config
+        run: bun test tests/cli/simulate/return-current.test.ts
+      - uses: actions/upload-artifact@v4
+        if: failure()
+        with:
+          name: return-current-snapshot-diff
+          path: tests/cli/simulate/__snapshots__/return-current*
