@@ -55,7 +55,7 @@ export default () => (
     )
 
     const { exitCode, stderr } = await runCommand(
-      "tsci simulate return-current board.circuit.tsx --frequency-hz 100000000 --copper-model surface_impedance_copper --sample-layer bottom --cell-size 0.1 --mesh-size 2 --order 1 --air-padding 2 --processes 1 --output em --result-json result.circuit.json",
+      "tsci simulate return-current board.circuit.tsx --frequency-hz 400000000 --copper-model surface_impedance_copper --sample-layer bottom --cell-size 0.1 --mesh-size 2 --order 1 --air-padding 2 --processes 1 --output em --result-json result.circuit.json",
     )
     expect(stderr).toBe("")
     expect(exitCode).toBe(0)
@@ -69,7 +69,7 @@ export default () => (
           element.type === "simulation_pcb_return_current_result",
       ),
     )
-    expect(result.frequency_hz).toBe(100_000_000)
+    expect(result.frequency_hz).toBe(400_000_000)
 
     const svg = await convertCircuitJsonToPcbSimulationSvg(circuitJson, {
       simulationResultId: result.simulation_pcb_return_current_result_id,
