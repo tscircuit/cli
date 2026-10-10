@@ -99,6 +99,13 @@ export const writeImageAssetsFromCircuitJson = async (
 ) => {
   const { outputDir, imageFormats, pcbSnapshotSettings } = options
   fs.mkdirSync(outputDir, { recursive: true })
+  const hasSchematic = circuitJson.some((e) => e.type.startsWith("schematic_"))
+  if (!hasSchematic) {
+    if (imageFormats.schematicSvgs)
+      fs.rmSync(path.join(outputDir, "schematic.svg"), { force: true })
+    if (imageFormats.schematicPngs)
+      fs.rmSync(path.join(outputDir, "schematic.png"), { force: true })
+  }
 
   if (imageFormats.pcbSvgs) {
     const pcbSvg = convertCircuitJsonToPcbSvg(circuitJson, pcbSnapshotSettings)
@@ -113,7 +120,7 @@ export const writeImageAssetsFromCircuitJson = async (
     )
   }
 
-  if (imageFormats.schematicSvgs) {
+  if (imageFormats.schematicSvgs && hasSchematic) {
     const schematicSvg = convertCircuitJsonToSchematicSvg(circuitJson)
     fs.writeFileSync(
       path.join(outputDir, "schematic.svg"),
@@ -122,7 +129,7 @@ export const writeImageAssetsFromCircuitJson = async (
     )
   }
 
-  if (imageFormats.schematicPngs) {
+  if (imageFormats.schematicPngs && hasSchematic) {
     const schematicSvg = convertCircuitJsonToSchematicSvg(circuitJson)
     fs.writeFileSync(
       path.join(outputDir, "schematic.png"),
