@@ -21,7 +21,6 @@ jobs:
     timeout-minutes: 20
     env:
       TSCI_RUN_RETURN_CURRENT_EM: "1"
-      TSCIRCUIT_CONFIG_DIR: ${{ runner.temp }}/return-current-config
     steps:
       - uses: actions/checkout@v4
       - uses: oven-sh/setup-bun@v2
@@ -48,6 +47,8 @@ jobs:
       - name: Pull pinned Palace solver
         run: docker pull benvial/palace@sha256:f0f3a3cbbdf1ee2d8f856ddbe1f5bf4628a92ee8ab87d1e27dc33402ad9c8dda
       - name: Run fresh EM solve and compare SVG snapshot
+        env:
+          TSCIRCUIT_CONFIG_DIR: ${{ runner.temp }}/return-current-config
         run: bun test tests/cli/simulate/return-current.test.ts
       - uses: actions/upload-artifact@v4
         if: failure()
