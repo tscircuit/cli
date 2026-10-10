@@ -101,7 +101,9 @@
     "zod": "^3.23.8"
   },
   "peerDependencies": {
+    "@tscircuit/math-utils": "0.0.36",
     "circuit-json": "^0.0.525",
+    "circuit-to-svg": "^0.0.447",
     "tscircuit": "*"
   },
   "bin": {
