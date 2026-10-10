@@ -43,6 +43,13 @@ const generatePreviewAssets = async ({
   }
 
   fs.mkdirSync(outputDir, { recursive: true })
+  const hasSchematic = circuitJson.some((e) => e.type.startsWith("schematic_"))
+  if (!hasSchematic) {
+    if (imageFormats.schematicSvgs)
+      fs.rmSync(path.join(outputDir, "schematic.svg"), { force: true })
+    if (imageFormats.schematicPngs)
+      fs.rmSync(path.join(outputDir, "schematic.png"), { force: true })
+  }
 
   if (imageFormats.pcbSvgs) {
     try {
@@ -75,7 +82,7 @@ const generatePreviewAssets = async ({
     }
   }
 
-  if (imageFormats.schematicSvgs) {
+  if (imageFormats.schematicSvgs && hasSchematic) {
     try {
       console.log(`${prefix}Generating schematic SVG...`)
       const schematicSvg = convertCircuitJsonToSchematicSvg(circuitJson)
@@ -90,7 +97,7 @@ const generatePreviewAssets = async ({
     }
   }
 
-  if (imageFormats.schematicPngs) {
+  if (imageFormats.schematicPngs && hasSchematic) {
     try {
       console.log(`${prefix}Generating schematic PNG...`)
       const schematicSvg = convertCircuitJsonToSchematicSvg(circuitJson)
