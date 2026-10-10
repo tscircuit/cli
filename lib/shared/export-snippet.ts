@@ -305,7 +305,12 @@ export const exportSnippet = async ({
       proConverter.runUntilFinished()
 
       const zip = new JSZip()
-      zip.file(`${outputBaseName}.kicad_sch`, schConverter.getOutputString())
+      const schematicFilename = `${outputBaseName}.kicad_sch`
+      for (const schematicFile of schConverter.getOutputFiles({
+        schematicFilename,
+      })) {
+        zip.file(schematicFile.filename, schematicFile.content)
+      }
       zip.file(`${outputBaseName}.kicad_pcb`, pcbConverter.getOutputString())
       zip.file(`${outputBaseName}.kicad_pro`, proConverter.getOutputString())
 
