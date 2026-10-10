@@ -20,6 +20,7 @@ import {
 import { convertCircuitJsonToPickAndPlaceCsv } from "circuit-json-to-pnp-csv"
 import { convertCircuitJsonToReadableNetlist } from "circuit-json-to-readable-netlist"
 import { circuitJsonToStep } from "circuit-json-to-step"
+import { jscadToStep } from "jscad-to-step"
 import { circuitJsonToFdmComponentBox } from "circuit-json-to-fdm-component-box"
 import {
   convertCircuitJsonToAssemblySvg,
@@ -29,6 +30,7 @@ import { convertCircuitJsonToDsnString } from "dsn-converter"
 import JSZip from "jszip"
 import type { PcbSnapshotSettings } from "lib/project-config/project-config-schema"
 import { generateCircuitJson } from "lib/shared/generate-circuit-json"
+import { getAssemblyJscad } from "lib/shared/get-assembly-jscad"
 import { getCircuitJsonToGltfOptions } from "lib/shared/get-circuit-json-to-gltf-options"
 import { getOrGenerateCircuitJson } from "lib/shared/get-or-generate-circuit-json"
 import { getPlatformConfigWithCliDefaults } from "lib/shared/get-platform-config-with-cli-defaults"
@@ -61,6 +63,7 @@ export const ALLOWED_EXPORT_FORMATS = [
   "srj",
   "step",
   "assembly-svg",
+  "assembly-step",
   "component-box-3mf",
 ] as const
 
@@ -74,6 +77,7 @@ const OUTPUT_EXTENSIONS: Record<ExportFormat, string> = {
   "pcb-svg": "-pcb.svg",
   "pcb-png": "-pcb.png",
   "assembly-svg": "-assembly.svg",
+  "assembly-step": "-assembly.step",
   gerbers: "-gerbers.zip",
   "readable-netlist": "-readable.netlist",
   gltf: ".gltf",
@@ -358,6 +362,16 @@ export const exportSnippet = async ({
       break
     case "assembly-svg":
       outputContent = convertCircuitJsonToAssemblySvg(circuitJson)
+      break
+    case "assembly-step":
+      try {
+        outputContent = jscadToStep(getAssemblyJscad(circuitJson))
+      } catch (error) {
+        onError(
+          `Error exporting assembly STEP: ${error instanceof Error ? error.message : String(error)}`,
+        )
+        return onExit(1)
+      }
       break
     case "component-box-3mf":
       outputContent = Buffer.from(

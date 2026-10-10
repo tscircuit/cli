@@ -72,6 +72,7 @@
     "get-port": "^7.1.0",
     "globby": "^14.1.0",
     "jose": "^6.1.0",
+    "jscad-to-step": "0.0.7",
     "jsonwebtoken": "^9.0.2",
     "jszip": "^3.10.1",
     "jwt-decode": "^4.0.0",
