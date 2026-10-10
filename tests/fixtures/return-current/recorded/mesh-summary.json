@@ -1,0 +1,11 @@
+{
+  "nodes": 6447,
+  "tetrahedra": 36451,
+  "groundAttribute": 11,
+  "signalAttribute": 12,
+  "portAttributes": [
+    21,
+    22
+  ],
+  "copperSolidVolumeMm3": 1.6360681949905527
+}

@@ -1,0 +1,119 @@
+name: Return Current EM
+
+on:
+  pull_request:
+    paths:
+      - .github/workflows/return-current-em.yml
+      - tests/cli/snapshot/return-current.test.ts
+      - tests/cli/snapshot/__snapshots__/return-current*
+      - tests/fixtures/return-current/**
+      - tests/fixtures/preload.ts
+      - cli/main.ts
+      - cli/simulate/**
+      - cli/snapshot/**
+      - cli/build/**
+      - lib/shared/**
+      - lib/cli-config/**
+      - scripts/bun-build.ts
+      - package.json
+      - bun.lock
+      - bun.lockb
+      - bunfig.toml
+      - tsconfig.json
+  push:
+    branches: [main]
+    paths:
+      - .github/workflows/return-current-em.yml
+      - tests/cli/snapshot/return-current.test.ts
+      - tests/cli/snapshot/__snapshots__/return-current*
+      - tests/fixtures/return-current/**
+      - tests/fixtures/preload.ts
+      - cli/main.ts
+      - cli/simulate/**
+      - cli/snapshot/**
+      - cli/build/**
+      - lib/shared/**
+      - lib/cli-config/**
+      - scripts/bun-build.ts
+      - package.json
+      - bun.lock
+      - bun.lockb
+      - bunfig.toml
+      - tsconfig.json
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: return-current-em-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  return-current-em:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    env:
+      TSCI_RUN_RETURN_CURRENT_EM: "1"
+      FORCE_COLOR: "0"
+      NODE_ENV: test
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Bun
+        uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: 1.3.5
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install Gmsh and VTK system libraries
+        run: |
+          sudo apt-get update
+          sudo apt-get install --no-install-recommends -y libglu1-mesa libgl1 libgomp1
+
+      - name: Install dependencies
+        run: bun install
+
+      - name: Setup Palace Python environment
+        env:
+          PALACE_VENV_DIRECTORY: ${{ runner.temp }}/return-current-python
+        run: |
+          bun -e '
+            import { appendFile } from "node:fs/promises";
+            import { setupPalacePython } from "simulate-return-current/palace";
+            const python = await setupPalacePython({
+              python: "python3",
+              directory: process.env.PALACE_VENV_DIRECTORY,
+            });
+            await appendFile(process.env.GITHUB_ENV, `PALACE_PYTHON=${python}\n`);
+          '
+
+      - name: Pull the pinned Palace solver image
+        run: docker pull benvial/palace@sha256:f0f3a3cbbdf1ee2d8f856ddbe1f5bf4628a92ee8ab87d1e27dc33402ad9c8dda
+
+      - name: Run fresh EM simulation and snapshot integration test
+        env:
+          TSCI_RETURN_CURRENT_EM_OUTPUT: ${{ runner.temp }}/return-current-em
+          TSCIRCUIT_CONFIG_DIR: ${{ runner.temp }}/return-current-config
+        run: bun test --timeout 180000 tests/cli/snapshot/return-current.test.ts
+
+      - name: Upload EM results and solver evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: return-current-em-${{ github.run_id }}-${{ github.run_attempt }}
+          path: |
+            ${{ runner.temp }}/return-current-em/**/*.json
+            ${{ runner.temp }}/return-current-em/**/*.svg
+            ${{ runner.temp }}/return-current-em/**/*.png
+            ${{ runner.temp }}/return-current-em/**/*.log
+            ${{ runner.temp }}/return-current-em/**/*.csv
+            ${{ runner.temp }}/return-current-python/*.log
+          if-no-files-found: warn
+          retention-days: 14

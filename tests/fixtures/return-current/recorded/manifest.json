@@ -1,0 +1,177 @@
+{
+  "kind": "recorded actual Palace EM solve for the CLI return-current integration test",
+  "solver": "palace",
+  "solver_version": "v0.14.0",
+  "solver_image": "benvial/palace@sha256:f0f3a3cbbdf1ee2d8f856ddbe1f5bf4628a92ee8ab87d1e27dc33402ad9c8dda",
+  "simulator_numerical_source_commit": "aece592843df702ca4830d8b5556ce5cb3e17e1f",
+  "simulator_package_version": "0.0.1",
+  "official_schema_package": "circuit-json@0.0.522",
+  "runtime_versions": {
+    "python": "3.12.14",
+    "gmsh": "4.13.1",
+    "vtk": "9.3.1",
+    "numpy": "2.3.5",
+    "shapely": "2.1.2"
+  },
+  "run": {
+    "startedAt": "2026-10-10T00:09:39.215Z",
+    "completedAt": "2026-10-10T00:09:51.649Z",
+    "totalSeconds": 12.434526308,
+    "reusedCompletedFemSolve": false
+  },
+  "parameters": {
+    "frequency_hz": 1000000,
+    "copper_model": "volumetric_copper",
+    "processes": 4,
+    "fem_order": 1,
+    "mesh_size_mm": 2,
+    "air_padding_mm": 2,
+    "sampling_cell_size_mm": 0.1,
+    "sampling_layer": "bottom",
+    "port_width_mm": 0.18,
+    "fallback_port_resistance_ohms": 50,
+    "source_port_resistance_ohms": 25,
+    "load_port_resistance_ohms": 100,
+    "source_peak_current_amperes": 0.005,
+    "layer_separation_mm": 0.8,
+    "copper_thickness_mm": 0.035,
+    "copper_conductivity_s_per_m": 58000000,
+    "substrate_permittivity": 4.3,
+    "substrate_loss_tangent": 0.02,
+    "board_size_mm": [
+      8,
+      6
+    ],
+    "ground_plane_edge_margin_mm": 0.2,
+    "signal_source_mm": [
+      -2,
+      0
+    ],
+    "signal_load_mm": [
+      2,
+      0
+    ],
+    "return_sink_mm": [
+      -2,
+      1.5
+    ],
+    "return_source_mm": [
+      2,
+      1.5
+    ]
+  },
+  "mesh": {
+    "nodes": 6447,
+    "tetrahedra": 36451,
+    "groundAttribute": 11,
+    "signalAttribute": 12,
+    "portAttributes": [
+      21,
+      22
+    ],
+    "copperSolidVolumeMm3": 1.6360681949905527
+  },
+  "linear_solve": {
+    "global_unknowns": 43056,
+    "gmres_iterations": 3,
+    "converged": true
+  },
+  "field": {
+    "columns": 80,
+    "rows": 60,
+    "cell_width_mm": 0.1,
+    "cell_height_mm": 0.1,
+    "units": "A/mm",
+    "phasor_convention": "signed peak phasors, exp(+j omega t)",
+    "finite": 4248,
+    "null": 552,
+    "via_drills": 8,
+    "bare_board_border": 544
+  },
+  "electrical_results": {
+    "source_current_amperes": {
+      "real": 0.004999999999999999,
+      "imag": -1.3234889800848443e-23
+    },
+    "load_current_amperes": {
+      "real": 0.004999976380097509,
+      "imag": -1.4040996114236895e-06
+    },
+    "input_impedance_ohms": {
+      "real": 100.01225206388172,
+      "imag": -0.0029426923889769915
+    },
+    "input_average_power_w": 0.001250153150798521,
+    "load_average_power_w": 0.0012499882886514355
+  },
+  "checks": {
+    "official_simulation_records": 9,
+    "official_complex_grid_schema_valid": true,
+    "all_exported_vectors_exactly_match_actual_reference": true,
+    "current_fragment_fixture_rebuilds_identical_physical_model": true,
+    "all_solver_provenance_hashes_match_raw_files": true,
+    "linear_solve_converged": true,
+    "separate_signal_and_ground_ports_and_valid_marker_references": true
+  },
+  "provenance": {
+    "circuitSha256": "9a303f130e9cfdc011976849e2f8958849f18263a6097c1fa9d7c84cde3b92b3",
+    "modelSha256": "582397d943629fa29ee91dbbbebc6880f3d7cee30c33c0b786d23997940b00cf",
+    "meshSha256": "49058fb874bf14092864d71b77218f9ff5f05023cc75bbf8378eea8585edda5f"
+  },
+  "input": {
+    "source_fixture": "tests/fixtures/return-current/explicit-ports.circuit.tsx",
+    "pending_input_sha256_at_solve_launch": "193f5fea0ba3cd44582c13179f5700ff989763953bd1f138d56cb7b1b24f2baa",
+    "pending_input_sha256_after_fragment_typing_fix": "d9cd80539a1450c95eae642da7530d86cf6190f049c60e6e9cb93411a95713dd",
+    "current_fixture_physical_model_exactly_matches_recorded_model": true,
+    "note": "The actual solver-input archive contains the CLI-normalized selected board/excitation. Fragment JSX typing changes altered source filesystem metadata; current selected physical model and terminal IDs remain exactly equal."
+  },
+  "files": {
+    "model.json.gz": {
+      "raw_bytes": 11575,
+      "raw_sha256": "582397d943629fa29ee91dbbbebc6880f3d7cee30c33c0b786d23997940b00cf",
+      "gzip_bytes": 1609,
+      "gzip_sha256": "e1025256dcf4122400cb9cc5855f63e28287d99a2310e0331efdf495593fa0ee"
+    },
+    "reference.json.gz": {
+      "raw_bytes": 890385,
+      "raw_sha256": "e43277b91fbe293e02a4742b4cd6c73bc6f48c11fa6b6d5841a6903794c60a19",
+      "gzip_bytes": 190508,
+      "gzip_sha256": "744b3dd0e984003d7f76e95c2ccfc79d7d98c6539fbd08fa64f33624a265a7cd"
+    },
+    "solver-input.circuit.json.gz": {
+      "raw_bytes": 18246,
+      "raw_sha256": "9a303f130e9cfdc011976849e2f8958849f18263a6097c1fa9d7c84cde3b92b3",
+      "gzip_bytes": 2416,
+      "gzip_sha256": "8f7c4fcc64433c8a91c8145f35ad6425e02a63934db9985ca319b82f17b76b86"
+    },
+    "palace.log": {
+      "bytes": 3908,
+      "sha256": "b7a03028cbb13997f2df59934d72f538915c6ea0965354869bb88e04fe56755f"
+    },
+    "palace.json": {
+      "bytes": 1591,
+      "sha256": "1944e853083af1165da641a8a656276957773aa8a5bfb886a1d845f23e6663a5"
+    },
+    "mesh-summary.json": {
+      "bytes": 181,
+      "sha256": "e7653b264c5566b001816530f59774b5aa15e747c29e0fb1b3411d6fd666e880"
+    },
+    "normalization.json": {
+      "bytes": 368,
+      "sha256": "7ec08dbb34f1a1ab0dd2d8287db02d21fb357fc1063b0d143ae587e499bc3d58"
+    },
+    "port-I.csv": {
+      "bytes": 312,
+      "sha256": "e656c5b11a98fced860cf52f8d0bd1570fef9b28a73dfb731d7b32e089ac8ea0"
+    },
+    "port-V.csv": {
+      "bytes": 312,
+      "sha256": "083188d580fb98b8b692c8510481561a3592feef455e798ed3b3c52c61cd6c81"
+    },
+    "run-timing.json": {
+      "bytes": 3769,
+      "sha256": "84907d4373cbb8779de8277e15dc075675bfa0d7721b2ee185675d00f981fd20"
+    }
+  },
+  "limitations": "Coarse first-order EM integration fixture. Mesh/order/domain and local current-density convergence have not been established; not fabrication or signal-integrity signoff."
+}

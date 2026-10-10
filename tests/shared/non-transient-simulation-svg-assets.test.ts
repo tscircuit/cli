@@ -3,7 +3,7 @@ import { expect, test } from "bun:test"
 import type { CircuitJson } from "circuit-json"
 import { getSimulationSvgAssetsFromCircuitJson } from "lib/shared/simulation-svg-assets"
 
-test("creates SVG assets for non-transient simulation analyses", () => {
+test("creates SVG assets for non-transient simulation analyses", async () => {
   const parameterSweepCircuitElements = [
     {
       resistance: 100,
@@ -174,7 +174,8 @@ test("creates SVG assets for non-transient simulation analyses", () => {
     ...parameterSweepCircuitElements,
   ] satisfies CircuitJson
 
-  const simulationSvgAssets = getSimulationSvgAssetsFromCircuitJson(circuitJson)
+  const simulationSvgAssets =
+    await getSimulationSvgAssetsFromCircuitJson(circuitJson)
 
   expect(simulationSvgAssets).toHaveLength(4)
   expect(
@@ -189,7 +190,7 @@ test("creates SVG assets for non-transient simulation analyses", () => {
   ])
 
   for (const simulationSvgAsset of simulationSvgAssets) {
-    expect(simulationSvgAsset.simulationSvg).toMatchSvgSnapshot(
+    await expect(simulationSvgAsset.simulationSvg).toMatchSvgSnapshot(
       import.meta.path,
       simulationSvgAsset.fileNameSuffix,
     )
