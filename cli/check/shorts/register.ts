@@ -2,6 +2,7 @@ import { mkdir, writeFile } from "node:fs/promises"
 import path from "node:path"
 import type {
   BitmapShort,
+  BitmapOpen,
   FindBitmapShortsOptions,
 } from "@tscircuit/check-shorts"
 import type { PlatformConfig } from "@tscircuit/props"
@@ -22,6 +23,7 @@ interface CheckShortsOptions {
 export interface CheckShortsResult {
   output: string
   shorts: BitmapShort[]
+  opens: BitmapOpen[]
   artifacts?: Array<{
     content: Uint8Array | string
     contentType: "image/png" | "image/svg+xml"
@@ -55,7 +57,11 @@ export const loadCheckShorts = async (
   if (!preferCdn) return importCheckShortsFromPackage()
 
   try {
-    return await importFromCdn(CHECK_SHORTS_CDN_URL)
+    const checker = await importFromCdn(CHECK_SHORTS_CDN_URL)
+    if (typeof checker.findBitmapOpens !== "function") {
+      throw new Error("CDN checker does not support open-circuit detection")
+    }
+    return checker
   } catch (cdnError) {
     try {
       return await importCheckShortsFromPackage()
@@ -135,6 +141,7 @@ export const checkShorts = async (
     createShortDebugSvg,
     encodeRgbaPng,
     renderBitmapShortDebug,
+    findBitmapOpens,
   } = await loadCheckShorts()
 
   const debugRenders = await Promise.all(
@@ -147,12 +154,16 @@ export const checkShorts = async (
     ),
   )
   const shorts = debugRenders.flatMap((debugRender) => debugRender.shorts)
+  // A layer-only mask cannot prove continuity. Always probe the complete board
+  // stack, even when --layer restricts the short-contact diagnostic.
+  const opens = await findBitmapOpens(circuitJson, { mode, pixelsPerMm })
   const filename = path.basename(resolvedInputFilePath)
 
-  if (shorts.length === 0) {
+  if (shorts.length === 0 && opens.length === 0) {
     return {
-      output: `No shorts detected in ${filename}`,
+      output: `No shorts detected in ${filename}; no opens detected`,
       shorts,
+      opens,
     }
   }
 
@@ -167,7 +178,7 @@ export const checkShorts = async (
       defaultOutputPath: getShortArtifactOutputPath(),
     },
     {
-      content: createShortDebugSvg(circuitJson, shorts),
+      content: createShortDebugSvg(circuitJson, shorts, { opens }),
       contentType: "image/svg+xml" as const,
       defaultOutputPath: getShortPcbSnapshotOutputPath(),
     },
@@ -175,10 +186,22 @@ export const checkShorts = async (
 
   return {
     output: [
-      `Detected ${shorts.length} short${shorts.length === 1 ? "" : "s"} in ${filename}`,
+      shorts.length > 0
+        ? `Detected ${shorts.length} short${shorts.length === 1 ? "" : "s"} in ${filename}`
+        : `No shorts detected in ${filename}`,
       ...shorts.map(formatShort),
+      ...(opens.length > 0
+        ? [
+            `Detected ${opens.length} open${opens.length === 1 ? "" : "s"} in ${filename}`,
+            ...opens.map(
+              (open, index) =>
+                `${index + 1}. ${open.mode} open on ${open.netNames.join(", ") || open.connectivityKey}: ${open.islands.map((island) => island.labels.join(", ")).join(" | ")}`,
+            ),
+          ]
+        : []),
     ].join("\n"),
     shorts,
+    opens,
     artifacts,
   }
 }
@@ -187,7 +210,7 @@ export const registerCheckShorts = (program: Command) => {
   program.commands
     .find((c) => c.name() === "check")!
     .command("shorts")
-    .description("Detect unintended shorts between separate PCB copper groups")
+    .description("Detect copper shorts and disconnected PCB net islands")
     .argument("[file]", "Path to the entry file or prebuilt circuit JSON")
     .option(
       "--mode <mode>",
@@ -196,7 +219,7 @@ export const registerCheckShorts = (program: Command) => {
     )
     .option(
       "--layer <layer>",
-      `Layer to analyze: ${checkShortsLayerNames}`,
+      `Layer to analyze for shorts: ${checkShortsLayerNames}; opens always use all layers`,
       "all",
     )
     .option("--pixels-per-mm <number>", "Bitmap resolution for short detection")
@@ -212,7 +235,7 @@ export const registerCheckShorts = (program: Command) => {
             console.log(`Short debug artifact written to ${outputPath}`)
           }
         }
-        if (result.shorts.length > 0) {
+        if (result.shorts.length > 0 || result.opens.length > 0) {
           process.exit(1)
         }
       } catch (error) {

@@ -138,6 +138,7 @@ test("check shorts loads the latest checker from jscdn", async () => {
   let requestedUrl: string | undefined
   const expectedModule = {
     renderBitmapShortDebug: () => ({ shorts: [] }),
+    findBitmapOpens: async () => [],
   } as unknown as typeof import("@tscircuit/check-shorts")
 
   const loadedModule = await loadCheckShorts({
@@ -362,6 +363,7 @@ test("check shorts routes a source board before analyzing it", async () => {
     await linkWorkspaceNodeModules(tmpDir)
     await writeFile(circuitPath, routedCircuitCode)
     mock.module("@tscircuit/check-shorts", () => ({
+      findBitmapOpens: async () => [],
       renderBitmapShortDebug: (circuitJson: Array<{ type: string }>) => {
         pcbTraceCount = circuitJson.filter(
           (element) => element.type === "pcb_trace",
