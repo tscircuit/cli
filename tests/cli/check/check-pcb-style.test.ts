@@ -38,6 +38,20 @@ for (let i = 0; i < 10; i++) {
 }
 const staircase = trace(staircasePoints)
 
+const lengthMatched: CircuitJson = [
+  ...[...oddAngle, ...staircase].map((item, i) => ({
+    ...item,
+    pcb_trace_id: `matched-trace-${i}`,
+    source_trace_id: `matched-source-${i}`,
+  })),
+  {
+    type: "source_bus",
+    source_bus_id: "matched-bus",
+    source_trace_ids: ["matched-source-0", "matched-source-1"],
+    max_length_skew: 0,
+  },
+]
+
 test("PCB style loads the latest jscdn module", async () => {
   let requestedUrl: string | undefined
   const analyzer = { analyzePcbStyle, renderPcbStyleSvg }
@@ -60,6 +74,7 @@ test("PCB style falls back to the packaged analyzer offline", async () => {
       throw new Error("CDN unavailable")
     },
   })
+  expect(analyzer.analyzePcbStyle(lengthMatched).issues).toEqual([])
   expect(analyzer.analyzePcbStyle(staircase).issues[0]?.lineItemType).toBe(
     "PcbTraceStaircase",
   )
@@ -158,6 +173,31 @@ test("PCB style checks both rules using the analyzer defaults", async () => {
   ])
   expect(result.svg).toContain("2 errors")
 })
+
+test("tsci check pcb-style exempts length-matched copper while retaining SVG geometry", async () => {
+  const { tmpDir, runCommand } = await getCliTestFixture()
+  const file = path.join(tmpDir, "matched.circuit.json")
+  await writeFile(file, JSON.stringify(lengthMatched))
+  const result = await runCommand(`tsci check pcb-style ${file} --json`)
+  expect(result.exitCode).toBe(0)
+  expect(JSON.parse(result.stdout).issues).toEqual([])
+  const svg = await readFile(
+    path.join(tmpDir, "checks", "check-pcb-style", "pcb.svg"),
+    "utf8",
+  )
+  expect(svg).toContain("0 errors")
+  expect(svg.match(/<line/g)).toHaveLength(11)
+
+  // Removing the requirement makes the same copper eligible for both rules.
+  await writeFile(file, JSON.stringify(lengthMatched.slice(0, -1)))
+  const unconstrained = await runCommand(`tsci check pcb-style ${file} --json`)
+  expect(unconstrained.exitCode).toBe(1)
+  expect(
+    JSON.parse(unconstrained.stdout).issues.map(
+      (issue: { lineItemType: string }) => issue.lineItemType,
+    ),
+  ).toEqual(["PcbTraceSegmentOddAngle", "PcbTraceStaircase"])
+}, 30_000)
 
 test("PCB style rejects invalid input and unsafe SVG output", async () => {
   const { tmpDir } = await getCliTestFixture()
