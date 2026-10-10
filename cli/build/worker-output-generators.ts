@@ -1,12 +1,12 @@
+import { convertCircuitJsonToPcbSvg } from "lib/shared/render-pcb-svg"
 import fs from "node:fs"
 import path from "node:path"
 import type { AnyCircuitElement } from "circuit-json"
+import { render3dThumbnail } from "lib/shared/render-3d-thumbnail"
 import { convertCircuitJsonToGltf } from "circuit-json-to-gltf"
 import { circuitJsonToStep } from "circuit-json-to-step"
 import { convertCircuitJsonToSchematicSvg } from "circuit-to-svg"
 import { loadLocalStepModelFsMap } from "lib/shared/load-local-step-model-fs-map"
-import { render3dThumbnail } from "lib/shared/render-3d-thumbnail"
-import { convertCircuitJsonToPcbSvg } from "lib/shared/render-pcb-svg"
 import { getSimulationSvgAssetsFromCircuitJson } from "lib/shared/simulation-svg-assets"
 import type { PcbSnapshotSettings } from "../../lib/project-config/project-config-schema"
 import { convertSvgToPngBuffer } from "../../lib/shared/convert-svg-to-png"
@@ -15,7 +15,7 @@ import { convertModelUrlsToFileUrls } from "./convert-model-urls-to-file-urls"
 import type { BuildImageFormatSelection } from "./image-format-selection"
 import { normalizeToUint8Array } from "./worker-binary-utils"
 
-export const writeSimulationSvgAssetsFromCircuitJson = async (
+export const writeSimulationSvgAssetsFromCircuitJson = (
   circuitJson: AnyCircuitElement[],
   outputDir: string,
   imageFormats: BuildImageFormatSelection,
@@ -24,24 +24,18 @@ export const writeSimulationSvgAssetsFromCircuitJson = async (
     return false
   }
 
-  const simulationSvgAssets = await getSimulationSvgAssetsFromCircuitJson(
-    circuitJson,
-    { includePcbReturnCurrent: imageFormats.simulationSvgs },
-  )
+  const simulationSvgAssets = getSimulationSvgAssetsFromCircuitJson(circuitJson)
   if (simulationSvgAssets.length === 0) return false
 
-  const hasMultipleSpiceSimulations =
-    simulationSvgAssets.filter((asset) => asset.kind === "spice").length > 1
+  const hasMultipleSimulations = simulationSvgAssets.length > 1
   const simulationFileNames: string[] = []
   const schematicSimulationFileNames: string[] = []
 
   for (const simulationSvgAsset of simulationSvgAssets) {
     if (imageFormats.simulationSvgs) {
-      const fileName =
-        simulationSvgAsset.kind === "pcb-return-current" ||
-        hasMultipleSpiceSimulations
-          ? `simulation-${simulationSvgAsset.fileNameSuffix}.svg`
-          : "simulation.svg"
+      const fileName = hasMultipleSimulations
+        ? `simulation-${simulationSvgAsset.fileNameSuffix}.svg`
+        : "simulation.svg"
       fs.writeFileSync(
         path.join(outputDir, fileName),
         simulationSvgAsset.simulationSvg,
@@ -50,11 +44,8 @@ export const writeSimulationSvgAssetsFromCircuitJson = async (
       simulationFileNames.push(fileName)
     }
 
-    if (
-      imageFormats.simulationSchematicSvgs &&
-      simulationSvgAsset.schematicSimulationSvg !== undefined
-    ) {
-      const fileName = hasMultipleSpiceSimulations
+    if (imageFormats.simulationSchematicSvgs) {
+      const fileName = hasMultipleSimulations
         ? `simulation-schematic-${simulationSvgAsset.fileNameSuffix}.svg`
         : "simulation-schematic.svg"
       fs.writeFileSync(
@@ -139,11 +130,7 @@ export const writeImageAssetsFromCircuitJson = async (
     )
   }
 
-  await writeSimulationSvgAssetsFromCircuitJson(
-    circuitJson,
-    outputDir,
-    imageFormats,
-  )
+  writeSimulationSvgAssetsFromCircuitJson(circuitJson, outputDir, imageFormats)
 
   if (imageFormats.threeDPngs) {
     const pngBuffer = await render3dThumbnail(circuitJson)

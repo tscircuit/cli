@@ -8,11 +8,14 @@ import { loadRuntimeProjectConfig } from "lib/project-config"
 import { mergePlatformConfigs } from "lib/shared/platform-config-utils"
 import { getPlatformConfigWithCliDefaults } from "lib/shared/get-platform-config-with-cli-defaults"
 import { findCircuitProjectDir } from "lib/shared/circuit-json-build-cache"
+import { registerReturnCurrentSimulation } from "./register-return-current"
 
 export const registerSimulate = (program: Command) => {
   const simulateCommand = program
     .command("simulate")
     .description("Run a simulation")
+
+  registerReturnCurrentSimulation(simulateCommand)
 
   simulateCommand
     .command("analog")

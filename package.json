@@ -91,7 +91,7 @@
     "redaxios": "^0.5.1",
     "schematic-symbols": "^0.0.246",
     "semver": "^7.6.3",
-    "simulate-return-current": "https://pkg.pr.new/tscircuit/simulate-return-current@1282c9638c60b8c646a44d2a3ac3a9f864531b94",
+    "simulate-return-current": "https://pkg.pr.new/tscircuit/simulate-return-current@6a7c84cb4f9f66c2cb54199aee50d3c7453748e8",
     "spicets": "^0.0.4",
     "stepts": "^0.0.3",
     "tempy": "^3.1.0",

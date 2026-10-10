@@ -1,11 +1,11 @@
+import { convertCircuitJsonToPcbSvg } from "lib/shared/render-pcb-svg"
 import fs from "node:fs"
 import path from "node:path"
 import type { AnyCircuitElement } from "circuit-json"
+import { render3dThumbnail } from "lib/shared/render-3d-thumbnail"
 import { convertCircuitJsonToSchematicSvg } from "circuit-to-svg"
 import type { PcbSnapshotSettings } from "lib/project-config/project-config-schema"
 import { convertSvgToPngBuffer } from "lib/shared/convert-svg-to-png"
-import { render3dThumbnail } from "lib/shared/render-3d-thumbnail"
-import { convertCircuitJsonToPcbSvg } from "lib/shared/render-pcb-svg"
 import type { BuildImageFormatSelection } from "./image-format-selection"
 import { writeSimulationSvgAssetsFromCircuitJson } from "./worker-output-generators"
 
@@ -106,7 +106,7 @@ const generatePreviewAssets = async ({
 
   if (imageFormats.simulationSvgs || imageFormats.simulationSchematicSvgs) {
     try {
-      const wroteSimulationSvgs = await writeSimulationSvgAssetsFromCircuitJson(
+      const wroteSimulationSvgs = writeSimulationSvgAssetsFromCircuitJson(
         circuitJson,
         outputDir,
         imageFormats,

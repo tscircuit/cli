@@ -13,8 +13,7 @@
       "dist",
       "package.json",
       "tsconfig.json",
-      ".claude",
-      "tests/fixtures/return-current/recorded"
+      ".claude"
     ]
   },
   "javascript": {

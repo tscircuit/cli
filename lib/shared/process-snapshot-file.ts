@@ -1,15 +1,15 @@
+import { convertCircuitJsonToPcbSvg } from "lib/shared/render-pcb-svg"
 import fs from "node:fs"
 import path from "node:path"
 import type { PlatformConfig } from "@tscircuit/props"
+import type { PcbSnapshotSettings } from "lib/project-config/project-config-schema"
 import type { AnyCircuitElement, VisibleLayerRef } from "circuit-json"
 import { renderCircuitJsonTo3dPng } from "circuit-json-to-3d-png"
-import type { CameraPreset } from "circuit-json-to-3d-png"
 import { convertCircuitJsonToStackedSchematicSheetsSvg } from "circuit-to-svg"
 import kleur from "kleur"
-import type { PcbSnapshotSettings } from "lib/project-config/project-config-schema"
+import type { CameraPreset } from "circuit-json-to-3d-png"
 import { getOrGenerateCircuitJson } from "lib/shared/get-or-generate-circuit-json"
 import { getPlatformConfigWithCliDefaults } from "lib/shared/get-platform-config-with-cli-defaults"
-import { convertCircuitJsonToPcbSvg } from "lib/shared/render-pcb-svg"
 import { getSimulationSvgAssetsFromCircuitJson } from "lib/shared/simulation-svg-assets"
 import { compareAndCreateDiff } from "./compare-images"
 import { isCircuitJsonFile } from "./is-circuit-json-file"
@@ -61,13 +61,12 @@ export const processSnapshotFile = async ({
   const warningMessages: string[] = []
   const mismatches: string[] = []
   let didUpdate = false
-  const includeSimulations = simulationOnly || (!pcbOnly && !schematicOnly)
 
   let circuitJson: AnyCircuitElement[]
   let pcbSvg: string | undefined
   let schSvg: string | undefined
-  let simulationSvgAssets: Awaited<
-    ReturnType<typeof getSimulationSvgAssetsFromCircuitJson>
+  let simulationSvgAssets: ReturnType<
+    typeof getSimulationSvgAssetsFromCircuitJson
   > = []
 
   try {
@@ -143,24 +142,20 @@ export const processSnapshotFile = async ({
     }
   }
 
-  if (includeSimulations) {
-    try {
-      simulationSvgAssets =
-        await getSimulationSvgAssetsFromCircuitJson(circuitJson)
-    } catch (error) {
-      const errorMessage =
-        error instanceof Error ? error.message : String(error)
-      return {
-        ok: false,
-        didUpdate: false,
-        successPaths,
-        warningMessages,
-        mismatches,
-        errorMessage:
-          kleur.red(
-            `\n❌ Failed to generate simulation SVGs for ${relativeFilePath}:\n`,
-          ) + kleur.red(`   ${errorMessage}\n`),
-      }
+  try {
+    simulationSvgAssets = getSimulationSvgAssetsFromCircuitJson(circuitJson)
+  } catch (error) {
+    const errorMessage = error instanceof Error ? error.message : String(error)
+    return {
+      ok: false,
+      didUpdate: false,
+      successPaths,
+      warningMessages,
+      mismatches,
+      errorMessage:
+        kleur.red(
+          `\n❌ Failed to generate simulation SVGs for ${relativeFilePath}:\n`,
+        ) + kleur.red(`   ${errorMessage}\n`),
     }
   }
 
@@ -241,7 +236,7 @@ export const processSnapshotFile = async ({
     | { type: "3d"; content: Uint8Array; isBinary: true }
   > = []
   if (!simulationOnly && (pcbOnly || !schematicOnly)) {
-    let pcbSnapshotType = "pcb"
+    let pcbSnapshotType: string = "pcb"
     if (pcbLayer) {
       pcbSnapshotType = pcbLayer
     }
@@ -258,30 +253,28 @@ export const processSnapshotFile = async ({
   if (threeD && png3d) {
     snapshots.push({ type: "3d", content: png3d, isBinary: true })
   }
-  if (includeSimulations && simulationSvgAssets.length > 0) {
-    const hasMultipleSpiceSimulations =
-      simulationSvgAssets.filter((asset) => asset.kind === "spice").length > 1
+  if (
+    (simulationOnly || (!pcbOnly && !schematicOnly)) &&
+    simulationSvgAssets.length > 0
+  ) {
+    const hasMultipleSimulations = simulationSvgAssets.length > 1
     for (const simulationSvgAsset of simulationSvgAssets) {
-      const needsSuffix =
-        simulationSvgAsset.kind === "pcb-return-current" ||
-        hasMultipleSpiceSimulations
-      const simulationType = needsSuffix
+      const simulationType = hasMultipleSimulations
         ? `simulation-${simulationSvgAsset.fileNameSuffix}`
         : "simulation"
+      const schematicSimulationType = hasMultipleSimulations
+        ? `schematic-simulation-${simulationSvgAsset.fileNameSuffix}`
+        : "schematic-simulation"
       snapshots.push({
         type: simulationType,
         content: simulationSvgAsset.simulationSvg,
         isBinary: false,
       })
-      if (simulationSvgAsset.schematicSimulationSvg !== undefined) {
-        snapshots.push({
-          type: hasMultipleSpiceSimulations
-            ? `schematic-simulation-${simulationSvgAsset.fileNameSuffix}`
-            : "schematic-simulation",
-          content: simulationSvgAsset.schematicSimulationSvg,
-          isBinary: false,
-        })
-      }
+      snapshots.push({
+        type: schematicSimulationType,
+        content: simulationSvgAsset.schematicSimulationSvg,
+        isBinary: false,
+      })
     }
   }
 

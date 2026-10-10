@@ -1,2 +1,0 @@
-# Preserve the actual generated solver log, including its final blank line.
-palace.log whitespace=-blank-at-eof

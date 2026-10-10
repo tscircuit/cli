@@ -1,4 +1,6 @@
 import { basename } from "node:path"
+import { cp } from "node:fs/promises"
+import { fileURLToPath } from "node:url"
 // @ts-ignore
 import tscircuitPackageJson from "tscircuit/package.json"
 
@@ -6,6 +8,7 @@ const tscircuitPackageJsonDeps = Object.keys(tscircuitPackageJson.dependencies)
 
 const ALLOW_BUNDLING = [
   "@tscircuit/runframe",
+  "calculate-elbow",
   "poppygl",
   "circuit-json-to-pnp-csv",
 ]
@@ -38,6 +41,15 @@ if (!success) {
   console.error("Build failed", result.logs)
   process.exit(1)
 }
+
+// Palace's bundled orchestration resolves these scripts beside main.js.
+await cp(
+  fileURLToPath(
+    new URL("./python/", import.meta.resolve("simulate-return-current/palace")),
+  ),
+  "./dist/cli/python",
+  { recursive: true },
+)
 
 for (const output of outputs) {
   console.log(
