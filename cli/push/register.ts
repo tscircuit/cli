@@ -14,7 +14,11 @@ export const registerPush = (program: Command) => {
     .option("--include-dist", "Include the dist directory in the push")
     .option(
       "--compress",
-      "Compress project files into a single archive upload for faster pushes",
+      "Compress project files into a single archive upload for faster pushes (default)",
+    )
+    .option(
+      "--no-compress",
+      "Upload project files individually without compression",
     )
     .action(
       async (
@@ -31,7 +35,7 @@ export const registerPush = (program: Command) => {
           isPrivate: options.private ?? false,
           versionTag: options.versionTag,
           includeDist: options.includeDist ?? false,
-          compress: options.compress ?? false,
+          compress: options.compress ?? true,
           onExit: (code) => process.exit(code),
           onError: (message) => console.error(message),
           onSuccess: (message) => console.log(message),

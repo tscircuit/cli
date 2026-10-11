@@ -18,7 +18,7 @@ test("should publish a tagged release and increment when needed", async () => {
   )
 
   const { stdout: stdout1, stderr: stderr1 } = await runCommand(
-    `tsci push --version-tag bugreport1 ${snippetFilePath}`,
+    `tsci push --version-tag bugreport1 ${snippetFilePath} --no-compress`,
   )
 
   expect({ stdout: stdout1, stderr: stderr1 }).toMatchInlineSnapshot(`
@@ -42,7 +42,7 @@ test("should publish a tagged release and increment when needed", async () => {
   `)
 
   const { stdout: stdout2, stderr: stderr2 } = await runCommand(
-    `tsci push --version-tag bugreport1 ${snippetFilePath}`,
+    `tsci push --version-tag bugreport1 ${snippetFilePath} --no-compress`,
   )
 
   expect({ stdout: stdout2, stderr: stderr2 }).toMatchInlineSnapshot(`
