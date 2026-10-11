@@ -1,0 +1,136 @@
+bun test v1.3.14 (0d9b296a)
+
+tests/cli/dev/runtime-config-ignores.test.ts:
+Analyzing node_modules dependencies...
+Found 0 node_modules files to upload
+Node modules uploaded successfully
+{"scenario":"JSON","phase":"initial upload","expected":["src/checks.txt","src/index.tsx","tscircuit.config.json"],"actual":["src/checks.txt","src/index.tsx","tscircuit.config.json"]}
+(pass) initial upload honors JSON ignores [36.31ms]
+Analyzing node_modules dependencies...
+Found 0 node_modules files to upload
+Node modules uploaded successfully
+{"scenario":"TypeScript","phase":"initial upload","expected":["src/checks.txt","src/index.tsx","tscircuit.config.ts"],"actual":["checks/scratch.json","dist/board.circuit.json","src/checks.txt","src/index.tsx","tscircuit.config.ts"]}
+128 |         phase: "initial upload",
+129 |         expected,
+130 |         actual,
+131 |       }),
+132 |     )
+133 |     expect(actual).toEqual(expected)
+                         ^
+error: expect(received).toEqual(expected)
+
+  [
++   "checks/scratch.json",
++   "dist/board.circuit.json",
+    "src/checks.txt",
+    "src/index.tsx",
+    "tscircuit.config.ts",
+  ]
+
+- Expected  - 0
++ Received  + 2
+
+      at <anonymous> (/Users/ankan/Documents/Codex/2026-10-11/cli-ts-config-ignore-reproduction/work/cli/tests/cli/dev/runtime-config-ignores.test.ts:133:20)
+(fail) initial upload honors TypeScript ignores [20.61ms]
+Analyzing node_modules dependencies...
+Found 0 node_modules files to upload
+Node modules uploaded successfully
+{"scenario":"JavaScript","phase":"initial upload","expected":["src/checks.txt","src/index.tsx","tscircuit.config.js"],"actual":["checks/scratch.json","dist/board.circuit.json","src/checks.txt","src/index.tsx","tscircuit.config.js"]}
+128 |         phase: "initial upload",
+129 |         expected,
+130 |         actual,
+131 |       }),
+132 |     )
+133 |     expect(actual).toEqual(expected)
+                         ^
+error: expect(received).toEqual(expected)
+
+  [
++   "checks/scratch.json",
++   "dist/board.circuit.json",
+    "src/checks.txt",
+    "src/index.tsx",
+    "tscircuit.config.js",
+  ]
+
+- Expected  - 0
++ Received  + 2
+
+      at <anonymous> (/Users/ankan/Documents/Codex/2026-10-11/cli-ts-config-ignore-reproduction/work/cli/tests/cli/dev/runtime-config-ignores.test.ts:133:20)
+(fail) initial upload honors JavaScript ignores [21.06ms]
+Analyzing node_modules dependencies...
+Found 0 node_modules files to upload
+Node modules uploaded successfully
+{"scenario":"TypeScript overrides JSON","phase":"initial upload","expected":["src/checks.txt","src/index.tsx","tscircuit.config.json","tscircuit.config.ts"],"actual":["checks/scratch.json","dist/board.circuit.json","tscircuit.config.json","tscircuit.config.ts"]}
+128 |         phase: "initial upload",
+129 |         expected,
+130 |         actual,
+131 |       }),
+132 |     )
+133 |     expect(actual).toEqual(expected)
+                         ^
+error: expect(received).toEqual(expected)
+
+  [
+-   "src/checks.txt",
+-   "src/index.tsx",
++   "checks/scratch.json",
++   "dist/board.circuit.json",
+    "tscircuit.config.json",
+    "tscircuit.config.ts",
+  ]
+
+- Expected  - 2
++ Received  + 2
+
+      at <anonymous> (/Users/ankan/Documents/Codex/2026-10-11/cli-ts-config-ignore-reproduction/work/cli/tests/cli/dev/runtime-config-ignores.test.ts:133:20)
+(fail) initial upload honors TypeScript overrides JSON ignores [18.92ms]
+Analyzing node_modules dependencies...
+Found 0 node_modules files to upload
+Node modules uploaded successfully
+{"scenario":"JSON ignores with runtime-only TypeScript","phase":"initial upload","expected":["src/checks.txt","src/index.tsx","tscircuit.config.json","tscircuit.config.ts"],"actual":["src/checks.txt","src/index.tsx","tscircuit.config.json","tscircuit.config.ts"]}
+(pass) initial upload honors JSON ignores with runtime-only TypeScript ignores [15.86ms]
+Analyzing node_modules dependencies...
+Found 0 node_modules files to upload
+Node modules uploaded successfully
+{"scenario":"no config negative control","phase":"initial upload","expected":["checks/scratch.json","dist/board.circuit.json","src/checks.txt","src/index.tsx"],"actual":["checks/scratch.json","dist/board.circuit.json","src/checks.txt","src/index.tsx"]}
+(pass) initial upload honors no config negative control ignores [16.11ms]
+(pass) runtime loader accepts module ignores and preserves JSON priority and supplier cache [21.29ms]
+Analyzing node_modules dependencies...
+Found 0 node_modules files to upload
+Node modules uploaded successfully
+(pass) DevServer keeps synchronous construction and explicit API ignore overrides [11.56ms]
+Analyzing node_modules dependencies...
+Found 0 node_modules files to upload
+Node modules uploaded successfully
+Saving: checks/scratch.json
+Saving: src/checks.txt
+Saving: dist/new.circuit.json
+Saving: checks/scratch.json
+Saving: dist/new.circuit.json
+{"phase":"watch upload","expected":["src/checks.txt"],"actual":["checks/scratch.json","dist/new.circuit.json","src/checks.txt"]}
+209 |         expected: ["src/checks.txt"],
+210 |         actual: [...new Set(synced)].sort(),
+211 |       }),
+212 |     )
+213 |     expect(synced).toContain("src/checks.txt")
+214 |     expect([...new Set(synced)].sort()).toEqual(["src/checks.txt"])
+                                              ^
+error: expect(received).toEqual(expected)
+
+  [
++   "checks/scratch.json",
++   "dist/new.circuit.json",
+    "src/checks.txt",
+  ]
+
+- Expected  - 0
++ Received  + 2
+
+      at <anonymous> (/Users/ankan/Documents/Codex/2026-10-11/cli-ts-config-ignore-reproduction/work/cli/tests/cli/dev/runtime-config-ignores.test.ts:214:41)
+(fail) watch events honor TypeScript ignores after startup [43.34ms]
+
+ 5 pass
+ 4 fail
+ 17 expect() calls
+Ran 9 tests across 1 file. [582.00ms]
