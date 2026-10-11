@@ -1,10 +1,10 @@
 import type { Command } from "commander"
-import { setSessionToken, getSessionToken, cliConfig } from "lib/cli-config"
 import delay from "delay"
-import { getRegistryApiKy } from "lib/registry-api/get-ky"
-import type { EndpointResponse } from "lib/registry-api/endpoint-types"
-import { fetchAccount } from "lib/registry-api/fetch-account"
 import kleur from "kleur"
+import { cliConfig, getSessionToken, setSessionToken } from "lib/cli-config"
+import type { EndpointResponse } from "lib/registry-api/endpoint-types"
+import { fetchAccountOrError } from "lib/registry-api/fetch-account"
+import { getRegistryApiKy } from "lib/registry-api/get-ky"
 import { setupNpmrc } from "../setup-npmrc/setup-npmrc"
 
 export const registerAuthLogin = (program: Command) => {
@@ -13,10 +13,17 @@ export const registerAuthLogin = (program: Command) => {
     const sessionToken = getSessionToken()
     const tscircuitHandle = cliConfig.get("tscircuitHandle")
     if (sessionToken) {
-      const account = await fetchAccount()
+      const { account, error } = await fetchAccountOrError()
+      if (error) {
+        console.error(
+          `Could not verify your account: ${error instanceof Error ? error.message : String(error)}`,
+        )
+        process.exit(1)
+      }
+      const handleForMessage = tscircuitHandle ?? account?.tscircuit_handle
       console.log(
         kleur.yellow(
-          `Already logged in as ${tscircuitHandle ? kleur.bold(`@${tscircuitHandle}`) : kleur.underline(`@${account?.tscircuit_handle ?? account?.account_id}`)}! Use ${kleur.cyan("tsci logout")} to switch accounts.`,
+          `Already logged in as ${handleForMessage ? kleur.bold(`@${handleForMessage}`) : kleur.underline(`@${account?.account_id ?? "unknown"}`)}! Use ${kleur.cyan("tsci logout")} to switch accounts.`,
         ),
       )
       return
