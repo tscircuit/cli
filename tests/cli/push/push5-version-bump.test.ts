@@ -18,7 +18,7 @@ test("should bump version if release already exists", async () => {
   )
 
   const { stdout: stdout1, stderr: stderr1 } = await runCommand(
-    `tsci push ${snippetFilePath}`,
+    `tsci push ${snippetFilePath} --no-compress`,
   )
 
   expect({ stdout: stdout1, stderr: stderr1 }).toMatchInlineSnapshot(`
@@ -42,7 +42,7 @@ test("should bump version if release already exists", async () => {
   `)
 
   const { stdout: stdout2, stderr: stderr2 } = await runCommand(
-    `tsci push ${snippetFilePath}`,
+    `tsci push ${snippetFilePath} --no-compress`,
   )
 
   expect({ stdout: stdout2, stderr: stderr2 }).toMatchInlineSnapshot(`

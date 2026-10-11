@@ -93,3 +93,45 @@ test("should attempt archive upload when --compress is passed", async () => {
   expect(stdout).toContain("⬆︎ snippet.tsx")
   expect(stdout).toContain('"@tsci/test-user.test-package@1.0.0" published!')
 }, 30_000)
+
+test("should attempt archive upload by default", async () => {
+  const { tmpDir, runCommand } = await getCliTestFixture({ loggedIn: true })
+  const snippetFilePath = path.resolve(tmpDir, "snippet.tsx")
+
+  fs.writeFileSync(snippetFilePath, "// Snippet content")
+  fs.writeFileSync(
+    path.resolve(tmpDir, "package.json"),
+    JSON.stringify({ name: "@tsci/test-user.test-package", version: "1.0.0" }),
+  )
+
+  const { stdout, stderr, exitCode } = await runCommand(
+    `tsci push ${snippetFilePath}`,
+  )
+
+  expect(exitCode).toBe(0)
+  expect(stderr).toBe("")
+  expect(stdout).toContain("Uploading package archive...")
+  expect(stdout).toContain('"@tsci/test-user.test-package@1.0.0" published!')
+}, 30_000)
+
+test("should upload files individually when --no-compress is passed", async () => {
+  const { tmpDir, runCommand } = await getCliTestFixture({ loggedIn: true })
+  const snippetFilePath = path.resolve(tmpDir, "snippet.tsx")
+
+  fs.writeFileSync(snippetFilePath, "// Snippet content")
+  fs.writeFileSync(
+    path.resolve(tmpDir, "package.json"),
+    JSON.stringify({ name: "@tsci/test-user.test-package", version: "1.0.0" }),
+  )
+
+  const { stdout, stderr, exitCode } = await runCommand(
+    `tsci push ${snippetFilePath} --no-compress`,
+  )
+
+  expect(exitCode).toBe(0)
+  expect(stderr).toBe("")
+  expect(stdout).not.toContain("Uploading package archive...")
+  expect(stdout).toContain("⬆︎ package.json")
+  expect(stdout).toContain("⬆︎ snippet.tsx")
+  expect(stdout).toContain('"@tsci/test-user.test-package@1.0.0" published!')
+}, 30_000)

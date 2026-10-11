@@ -3,7 +3,7 @@ import { getCliTestFixture } from "../../fixtures/get-cli-test-fixture"
 import * as fs from "node:fs"
 import * as path from "node:path"
 
-test("should upload files to the registry", async () => {
+test("should upload files individually to the registry with --no-compress", async () => {
   const { tmpDir, runCommand } = await getCliTestFixture({
     loggedIn: true,
   })
@@ -15,7 +15,9 @@ test("should upload files to the registry", async () => {
     JSON.stringify({ name: "@tsci/test-user.test-package", version: "1.0.0" }),
   )
 
-  const { stdout, stderr } = await runCommand(`tsci push ${snippetFilePath}`)
+  const { stdout, stderr } = await runCommand(
+    `tsci push ${snippetFilePath} --no-compress`,
+  )
 
   expect({ stdout, stderr }).toMatchObject({
     stdout:

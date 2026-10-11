@@ -114,7 +114,7 @@ export const pushSnippet = async ({
   isPrivate,
   versionTag,
   includeDist = false,
-  compress = false,
+  compress = true,
   log = console.log,
   onExit = (code) => process.exit(code),
   onError = (message) => console.error(message),
@@ -409,9 +409,7 @@ export const pushSnippet = async ({
   } = { succeeded: [], failed: [] }
 
   const packageNameWithVersion = `${scopedPackageName}@${releaseVersion}`
-  const shouldUploadArchive = compress || process.env.TSCI_PUSH_ARCHIVE === "1"
-
-  if (shouldUploadArchive) {
+  if (compress) {
     log(kleur.gray("Uploading package archive..."))
     try {
       const archivePayload = getArchivePayload(
