@@ -12,7 +12,7 @@ import type {
   FileUpdatedEvent,
 } from "lib/file-server/FileServerEvent"
 import type { FileServerRoutes } from "lib/file-server/FileServerRoutes"
-import { loadProjectConfig } from "lib/project-config"
+import { loadProjectConfig, loadRuntimeProjectConfig } from "lib/project-config"
 import { EventsWatcher } from "lib/server/EventsWatcher"
 import { createHttpServer } from "lib/server/createHttpServer"
 import { addPackage } from "lib/shared/add-package"
@@ -95,6 +95,7 @@ export class DevServer {
   projectDir: string
   /** Paths or directory names to ignore when syncing files */
   ignoredFiles: string[]
+  private initialIgnoredFiles: string[]
 
   /** Whether to enable the KiCad PCM proxy server */
   kicadPcm: boolean
@@ -149,12 +150,18 @@ export class DevServer {
     this.autorouterPhase = autorouterPhase?.trim() || undefined
     const projectConfig = loadProjectConfig(this.projectDir)
     this.ignoredFiles = projectConfig?.ignoredFiles ?? []
+    this.initialIgnoredFiles = this.ignoredFiles
     this.fsKy = ky.create({
       prefixUrl: `http://localhost:${port}`,
     }) as any
   }
 
   async start() {
+    const projectConfig = await loadRuntimeProjectConfig(this.projectDir)
+    // Preserve explicit ignores assigned by API callers before startup.
+    if (this.ignoredFiles === this.initialIgnoredFiles) {
+      this.ignoredFiles = projectConfig?.ignoredFiles ?? []
+    }
     const { server } = await createHttpServer({
       port: this.port,
       defaultMainComponentPath: path.relative(

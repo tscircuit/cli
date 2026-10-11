@@ -12,10 +12,6 @@ import {
 import { createHttpServer } from "lib/server/createHttpServer"
 import { temporaryDirectory } from "tempy"
 
-// Set this to expose the assertions as ordinary failures on the reproduction branch.
-const regressionTest = process.env.TSCI_ASSERT_CONFIG_IGNORES
-  ? test
-  : test.failing
 const ignoredFiles = ["checks", "dist"]
 const moduleConfig = `export default {
   ignoredFiles: ["checks", "dist"],
@@ -28,7 +24,6 @@ const moduleConfig = `export default {
 const cases: {
   name: string
   files: Record<string, string>
-  regression?: boolean
   includeGenerated?: boolean
 }[] = [
   {
@@ -38,12 +33,10 @@ const cases: {
   {
     name: "TypeScript",
     files: { "tscircuit.config.ts": moduleConfig },
-    regression: true,
   },
   {
     name: "JavaScript",
     files: { "tscircuit.config.js": moduleConfig },
-    regression: true,
   },
   {
     name: "TypeScript overrides JSON",
@@ -55,7 +48,6 @@ const cases: {
       }),
       "tscircuit.config.ts": moduleConfig,
     },
-    regression: true,
   },
   {
     name: "JSON ignores with runtime-only TypeScript",
@@ -109,8 +101,7 @@ async function fixture(files: Record<string, string>) {
 }
 
 for (const scenario of cases) {
-  const run = scenario.regression ? regressionTest : test
-  run(`initial upload honors ${scenario.name} ignores`, async () => {
+  test(`initial upload honors ${scenario.name} ignores`, async () => {
     const { server, initialFiles } = await fixture(scenario.files)
     await server.start()
     const { file_list } = await server.fsKy.get("api/files/list").json()
@@ -161,56 +152,53 @@ test("DevServer keeps synchronous construction and explicit API ignore overrides
   ])
 })
 
-regressionTest(
-  "watch events honor TypeScript ignores after startup",
-  async () => {
-    const { server, projectDir } = await fixture(cases[1].files)
-    await server.start()
-    const watcher = server.filesystemWatcher!
-    if (!watcher.getWatched()[projectDir]) await once(watcher, "ready")
-    // Observe real file-sync requests, including any generated-output leaks.
-    const synced: string[] = []
-    server.fsKy = (server.fsKy as unknown as KyInstance).extend({
-      hooks: {
-        beforeRequest: [
-          async (request) => {
-            if (new URL(request.url).pathname === "/api/files/upsert") {
-              synced.push((await request.clone().json()).file_path)
-            }
-          },
-        ],
-      },
-    }) as typeof server.fsKy
-    const changed = once(watcher, "change")
-    await writeFile(path.join(projectDir, "checks/scratch.json"), "[1]")
-    await writeFile(path.join(projectDir, "dist/new.circuit.json"), "[2]")
-    await writeFile(
-      path.join(projectDir, "src/checks.txt"),
-      "updated source control",
-    )
-    await changed
-    for (
-      let attempt = 0;
-      attempt < 100 && !synced.includes("src/checks.txt");
-      attempt++
-    )
-      await Bun.sleep(10)
-    // Also exercise public handlers directly so the exclusion assertions do not
-    // depend on waiting for an event that correctly never arrives.
-    await server.handleFileChangedOnFilesystem(
-      path.join(projectDir, "checks/scratch.json"),
-    )
-    await server.handleFileChangedOnFilesystem(
-      path.join(projectDir, "dist/new.circuit.json"),
-    )
-    console.log(
-      JSON.stringify({
-        phase: "watch upload",
-        expected: ["src/checks.txt"],
-        actual: [...new Set(synced)].sort(),
-      }),
-    )
-    expect(synced).toContain("src/checks.txt")
-    expect([...new Set(synced)].sort()).toEqual(["src/checks.txt"])
-  },
-)
+test("watch events honor TypeScript ignores after startup", async () => {
+  const { server, projectDir } = await fixture(cases[1].files)
+  await server.start()
+  const watcher = server.filesystemWatcher!
+  if (!watcher.getWatched()[projectDir]) await once(watcher, "ready")
+  // Observe real file-sync requests, including any generated-output leaks.
+  const synced: string[] = []
+  server.fsKy = (server.fsKy as unknown as KyInstance).extend({
+    hooks: {
+      beforeRequest: [
+        async (request) => {
+          if (new URL(request.url).pathname === "/api/files/upsert") {
+            synced.push((await request.clone().json()).file_path)
+          }
+        },
+      ],
+    },
+  }) as typeof server.fsKy
+  const changed = once(watcher, "change")
+  await writeFile(path.join(projectDir, "checks/scratch.json"), "[1]")
+  await writeFile(path.join(projectDir, "dist/new.circuit.json"), "[2]")
+  await writeFile(
+    path.join(projectDir, "src/checks.txt"),
+    "updated source control",
+  )
+  await changed
+  for (
+    let attempt = 0;
+    attempt < 100 && !synced.includes("src/checks.txt");
+    attempt++
+  )
+    await Bun.sleep(10)
+  // Also exercise public handlers directly so the exclusion assertions do not
+  // depend on waiting for an event that correctly never arrives.
+  await server.handleFileChangedOnFilesystem(
+    path.join(projectDir, "checks/scratch.json"),
+  )
+  await server.handleFileChangedOnFilesystem(
+    path.join(projectDir, "dist/new.circuit.json"),
+  )
+  console.log(
+    JSON.stringify({
+      phase: "watch upload",
+      expected: ["src/checks.txt"],
+      actual: [...new Set(synced)].sort(),
+    }),
+  )
+  expect(synced).toContain("src/checks.txt")
+  expect([...new Set(synced)].sort()).toEqual(["src/checks.txt"])
+})

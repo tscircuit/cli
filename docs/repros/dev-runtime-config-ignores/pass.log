@@ -1,0 +1,49 @@
+bun test v1.3.14 (0d9b296a)
+
+tests/cli/dev/runtime-config-ignores.test.ts:
+Analyzing node_modules dependencies...
+Found 0 node_modules files to upload
+Node modules uploaded successfully
+{"scenario":"JSON","phase":"initial upload","expected":["src/checks.txt","src/index.tsx","tscircuit.config.json"],"actual":["src/checks.txt","src/index.tsx","tscircuit.config.json"]}
+(pass) initial upload honors JSON ignores [39.98ms]
+Analyzing node_modules dependencies...
+Found 0 node_modules files to upload
+Node modules uploaded successfully
+{"scenario":"TypeScript","phase":"initial upload","expected":["src/checks.txt","src/index.tsx","tscircuit.config.ts"],"actual":["src/checks.txt","src/index.tsx","tscircuit.config.ts"]}
+(pass) initial upload honors TypeScript ignores [29.80ms]
+Analyzing node_modules dependencies...
+Found 0 node_modules files to upload
+Node modules uploaded successfully
+{"scenario":"JavaScript","phase":"initial upload","expected":["src/checks.txt","src/index.tsx","tscircuit.config.js"],"actual":["src/checks.txt","src/index.tsx","tscircuit.config.js"]}
+(pass) initial upload honors JavaScript ignores [16.33ms]
+Analyzing node_modules dependencies...
+Found 0 node_modules files to upload
+Node modules uploaded successfully
+{"scenario":"TypeScript overrides JSON","phase":"initial upload","expected":["src/checks.txt","src/index.tsx","tscircuit.config.json","tscircuit.config.ts"],"actual":["src/checks.txt","src/index.tsx","tscircuit.config.json","tscircuit.config.ts"]}
+(pass) initial upload honors TypeScript overrides JSON ignores [16.96ms]
+Analyzing node_modules dependencies...
+Found 0 node_modules files to upload
+Node modules uploaded successfully
+{"scenario":"JSON ignores with runtime-only TypeScript","phase":"initial upload","expected":["src/checks.txt","src/index.tsx","tscircuit.config.json","tscircuit.config.ts"],"actual":["src/checks.txt","src/index.tsx","tscircuit.config.json","tscircuit.config.ts"]}
+(pass) initial upload honors JSON ignores with runtime-only TypeScript ignores [17.68ms]
+Analyzing node_modules dependencies...
+Found 0 node_modules files to upload
+Node modules uploaded successfully
+{"scenario":"no config negative control","phase":"initial upload","expected":["checks/scratch.json","dist/board.circuit.json","src/checks.txt","src/index.tsx"],"actual":["checks/scratch.json","dist/board.circuit.json","src/checks.txt","src/index.tsx"]}
+(pass) initial upload honors no config negative control ignores [17.31ms]
+(pass) runtime loader accepts module ignores and preserves JSON priority and supplier cache [7.35ms]
+Analyzing node_modules dependencies...
+Found 0 node_modules files to upload
+Node modules uploaded successfully
+(pass) DevServer keeps synchronous construction and explicit API ignore overrides [14.51ms]
+Analyzing node_modules dependencies...
+Found 0 node_modules files to upload
+Node modules uploaded successfully
+Saving: src/checks.txt
+{"phase":"watch upload","expected":["src/checks.txt"],"actual":["src/checks.txt"]}
+(pass) watch events honor TypeScript ignores after startup [39.74ms]
+
+ 9 pass
+ 0 fail
+ 17 expect() calls
+Ran 9 tests across 1 file. [601.00ms]
