@@ -80,6 +80,7 @@ export const writeStepFromCircuitJson = async (
   stepOutputPath: string,
 ) => {
   const stepContent = await circuitJsonToStep(circuitJson, {
+    exportMode: "pcb",
     includeComponents: true,
     includeExternalMeshes: true,
     fsMap: await loadLocalStepModelFsMap(circuitJson),

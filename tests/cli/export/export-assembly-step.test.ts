@@ -1,5 +1,6 @@
 import { expect, test } from "bun:test"
 import type { CircuitJson } from "circuit-json"
+import JSZip from "jszip"
 import { mkdir, readFile, symlink, writeFile } from "node:fs/promises"
 import path from "node:path"
 import {
@@ -47,14 +48,16 @@ test("assembly STEP exports a printable part without a PCB", async () => {
 
   expect(exitCode).toBe(0)
   expect(stderr).toBe("")
-  const outputPath = path.join(tmpDir, "spacer.circuit-assembly.step")
-  const step = await readFile(outputPath, "utf8")
+  const outputPath = path.join(tmpDir, "spacer.circuit-assembly.zip")
+  const zip = await JSZip.loadAsync(await readFile(outputPath))
+  expect(Object.keys(zip.files)).toEqual(["SPACER.step"])
+  const step = await zip.file("SPACER.step")!.async("string")
   expect(stdout).toContain(`Exported to ${outputPath}!`)
   expect(step).toStartWith("ISO-10303-21;")
   expect(step).toContain("MANIFOLD_SOLID_BREP")
   expect(step).toContain("CLOSED_SHELL")
   expect(step).toContain("SI_UNIT(.MILLI.,.METRE.)")
-  expect(step).toContain("Combined Assembly")
+  expect(step).toContain("'SPACER'")
   expect(step).toContain("NEXT_ASSEMBLY_USAGE_OCCURRENCE")
   expect(step.trimEnd()).toEndWith("END-ISO-10303-21;")
 }, 30_000)
@@ -100,11 +103,15 @@ test("assembly STEP exports Circuit JSON with a custom output path and placement
   await writeFile(circuitPath, JSON.stringify(circuitJson))
 
   const { exitCode, stderr } = await runCommand(
-    `tsci export ${circuitPath} -f assembly-step -o spacer.step`,
+    `tsci export ${circuitPath} -f assembly-step -o spacer.zip`,
   )
   expect(exitCode).toBe(0)
   expect(stderr).toBe("")
-  const step = await readFile(path.join(tmpDir, "spacer.step"), "utf8")
+  const zip = await JSZip.loadAsync(
+    await readFile(path.join(tmpDir, "spacer.zip")),
+  )
+  expect(Object.keys(zip.files)).toEqual(["SPACER.step"])
+  const step = await zip.file("SPACER.step")!.async("string")
   const repo = parseRepository(step)
   const entities = repo.entries().map(([, entity]) => entity)
   const transform = entities.find(
@@ -141,7 +148,7 @@ test("assembly STEP exports Circuit JSON with a custom output path and placement
   }
 }, 30_000)
 
-test("assembly STEP preserves touching printed parts as separate named products", async () => {
+test("assembly STEP exports touching printed parts in separate STEP files", async () => {
   const { tmpDir, runCommand } = await getCliTestFixture()
   const circuitPath = path.join(tmpDir, "enclosure.circuit.json")
   const circuitJson: CircuitJson = ["BASE", "COVER"].flatMap(
@@ -169,15 +176,19 @@ test("assembly STEP preserves touching printed parts as separate named products"
   )
   expect(exitCode).toBe(0)
   expect(stderr).toBe("")
-  const step = await readFile(
-    path.join(tmpDir, "enclosure.circuit-assembly.step"),
-    "utf8",
+  const zip = await JSZip.loadAsync(
+    await readFile(path.join(tmpDir, "enclosure.circuit-assembly.zip")),
   )
-  expect(step.match(/= PRODUCT\(/g)).toHaveLength(3)
-  expect(step.match(/= MANIFOLD_SOLID_BREP\(/g)).toHaveLength(2)
-  expect(step.match(/NEXT_ASSEMBLY_USAGE_OCCURRENCE/g)).toHaveLength(2)
-  expect(step).toContain("'BASE'")
-  expect(step).toContain("'COVER'")
+  expect(Object.keys(zip.files)).toEqual(["BASE.step", "COVER.step"])
+  for (const name of ["BASE", "COVER"]) {
+    const step = await zip.file(`${name}.step`)!.async("string")
+    expect(step).toStartWith("ISO-10303-21;")
+    expect(step.match(/= MANIFOLD_SOLID_BREP\(/g)).toHaveLength(1)
+    expect(step.match(/NEXT_ASSEMBLY_USAGE_OCCURRENCE/g)).toHaveLength(1)
+    expect(step).toContain(`'${name}'`)
+    expect(step).not.toContain(name === "BASE" ? "'COVER'" : "'BASE'")
+    expect(step.trimEnd()).toEndWith("END-ISO-10303-21;")
+  }
 }, 30_000)
 
 test("assembly STEP reports missing printable geometry without creating an output", async () => {
@@ -201,6 +212,6 @@ test("assembly STEP reports missing printable geometry without creating an outpu
   expect(exitCode).toBe(1)
   expect(stderr).toContain('Printed part "MISSING" needs JSCAD geometry')
   expect(
-    await Bun.file(path.join(tmpDir, "missing.circuit-assembly.step")).exists(),
+    await Bun.file(path.join(tmpDir, "missing.circuit-assembly.zip")).exists(),
   ).toBe(false)
 }, 30_000)
