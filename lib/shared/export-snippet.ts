@@ -20,7 +20,6 @@ import {
 import { convertCircuitJsonToPickAndPlaceCsv } from "circuit-json-to-pnp-csv"
 import { convertCircuitJsonToReadableNetlist } from "circuit-json-to-readable-netlist"
 import { circuitJsonToStep } from "circuit-json-to-step"
-import { jscadToStep } from "jscad-to-step"
 import { circuitJsonToFdmComponentBox } from "circuit-json-to-fdm-component-box"
 import {
   convertCircuitJsonToAssemblySvg,
@@ -30,7 +29,6 @@ import { convertCircuitJsonToDsnString } from "dsn-converter"
 import JSZip from "jszip"
 import type { PcbSnapshotSettings } from "lib/project-config/project-config-schema"
 import { generateCircuitJson } from "lib/shared/generate-circuit-json"
-import { getAssemblyJscad } from "lib/shared/get-assembly-jscad"
 import { getCircuitJsonToGltfOptions } from "lib/shared/get-circuit-json-to-gltf-options"
 import { getOrGenerateCircuitJson } from "lib/shared/get-or-generate-circuit-json"
 import { getPlatformConfigWithCliDefaults } from "lib/shared/get-platform-config-with-cli-defaults"
@@ -355,6 +353,7 @@ export const exportSnippet = async ({
 
     case "step":
       outputContent = await circuitJsonToStep(circuitJson, {
+        exportMode: "pcb",
         includeComponents: true,
         includeExternalMeshes: true,
         fsMap: await loadLocalStepModelFsMap(circuitJson),
@@ -365,7 +364,9 @@ export const exportSnippet = async ({
       break
     case "assembly-step":
       try {
-        outputContent = jscadToStep(getAssemblyJscad(circuitJson))
+        outputContent = await circuitJsonToStep(circuitJson, {
+          exportMode: "assembly",
+        })
       } catch (error) {
         onError(
           `Error exporting assembly STEP: ${error instanceof Error ? error.message : String(error)}`,

@@ -2,6 +2,12 @@ import { expect, test } from "bun:test"
 import type { CircuitJson } from "circuit-json"
 import { mkdir, readFile, symlink, writeFile } from "node:fs/promises"
 import path from "node:path"
+import {
+  Axis2Placement3D,
+  ItemDefinedTransformation,
+  VertexPoint,
+  parseRepository,
+} from "stepts"
 import { getCliTestFixture } from "../../fixtures/get-cli-test-fixture"
 
 const assemblyCode = `
@@ -48,6 +54,8 @@ test("assembly STEP exports a printable part without a PCB", async () => {
   expect(step).toContain("MANIFOLD_SOLID_BREP")
   expect(step).toContain("CLOSED_SHELL")
   expect(step).toContain("SI_UNIT(.MILLI.,.METRE.)")
+  expect(step).toContain("Combined Assembly")
+  expect(step).toContain("NEXT_ASSEMBLY_USAGE_OCCURRENCE")
   expect(step.trimEnd()).toEndWith("END-ISO-10303-21;")
 }, 30_000)
 
@@ -97,14 +105,31 @@ test("assembly STEP exports Circuit JSON with a custom output path and placement
   expect(exitCode).toBe(0)
   expect(stderr).toBe("")
   const step = await readFile(path.join(tmpDir, "spacer.step"), "utf8")
-  const points = new Map(
-    [...step.matchAll(/#(\d+) = CARTESIAN_POINT\('[^']*',\(([^)]+)\)\);/g)].map(
-      (match) => [match[1], match[2].split(",").map(Number)],
-    ),
-  )
-  const vertices = [...step.matchAll(/VERTEX_POINT\('[^']*',#(\d+)\)/g)].map(
-    (match) => points.get(match[1])!,
-  )
+  const repo = parseRepository(step)
+  const entities = repo.entries().map(([, entity]) => entity)
+  const transform = entities.find(
+    (entity) => entity instanceof ItemDefinedTransformation,
+  )!
+  const placement = transform.transformItem2.resolve(repo) as Axis2Placement3D
+  const origin = placement.location.resolve(repo)
+  const x = placement.refDirection!.resolve(repo)
+  const z = placement.axis!.resolve(repo)
+  const y = [
+    z.dy * x.dz - z.dz * x.dy,
+    z.dz * x.dx - z.dx * x.dz,
+    z.dx * x.dy - z.dy * x.dx,
+  ]
+  const vertices = entities
+    .filter((entity) => entity instanceof VertexPoint)
+    .map((vertex) => {
+      const p = vertex.pnt.resolve(repo)
+      return [
+        origin.x + p.x * x.dx + p.y * y[0] + p.z * z.dx,
+        origin.y + p.x * x.dy + p.y * y[1] + p.z * z.dy,
+        origin.z + p.x * x.dz + p.y * y[2] + p.z * z.dz,
+      ]
+    })
+  expect(step).not.toContain("MOTOR")
   expect(vertices.length).toBeGreaterThan(0)
   for (const [axis, min, max] of [
     [0, 14, 26],
@@ -114,6 +139,45 @@ test("assembly STEP exports Circuit JSON with a custom output path and placement
     expect(Math.min(...vertices.map((point) => point[axis]))).toBeCloseTo(min)
     expect(Math.max(...vertices.map((point) => point[axis]))).toBeCloseTo(max)
   }
+}, 30_000)
+
+test("assembly STEP preserves touching printed parts as separate named products", async () => {
+  const { tmpDir, runCommand } = await getCliTestFixture()
+  const circuitPath = path.join(tmpDir, "enclosure.circuit.json")
+  const circuitJson: CircuitJson = ["BASE", "COVER"].flatMap(
+    (name, index): CircuitJson => [
+      {
+        type: "source_component",
+        source_component_id: name,
+        ftype: "printedpart",
+        name,
+      },
+      {
+        type: "cad_component",
+        cad_component_id: `${name}_cad`,
+        source_component_id: name,
+        position: { x: index * 4, y: 0, z: 0 },
+        model_jscad: { type: "cuboid", size: [4, 6, 2] },
+        model_object_fit: "contain_within_bounds",
+        anchor_alignment: "center",
+      },
+    ],
+  )
+  await writeFile(circuitPath, JSON.stringify(circuitJson))
+  const { exitCode, stderr } = await runCommand(
+    `tsci export ${circuitPath} -f assembly-step`,
+  )
+  expect(exitCode).toBe(0)
+  expect(stderr).toBe("")
+  const step = await readFile(
+    path.join(tmpDir, "enclosure.circuit-assembly.step"),
+    "utf8",
+  )
+  expect(step.match(/= PRODUCT\(/g)).toHaveLength(3)
+  expect(step.match(/= MANIFOLD_SOLID_BREP\(/g)).toHaveLength(2)
+  expect(step.match(/NEXT_ASSEMBLY_USAGE_OCCURRENCE/g)).toHaveLength(2)
+  expect(step).toContain("'BASE'")
+  expect(step).toContain("'COVER'")
 }, 30_000)
 
 test("assembly STEP reports missing printable geometry without creating an output", async () => {

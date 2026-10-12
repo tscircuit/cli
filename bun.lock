@@ -49,7 +49,7 @@
         "circuit-json-to-pnp-csv": "^0.0.18",
         "circuit-json-to-readable-netlist": "^0.0.15",
         "circuit-json-to-spice": "^0.0.45",
-        "circuit-json-to-step": "^0.0.38",
+        "circuit-json-to-step": "^0.0.45",
         "circuit-json-to-tscircuit": "^0.0.50",
         "circuit-json-trace-length-analysis": "github:tscircuit/circuit-json-trace-length-analysis#2b44792a40df0ca83b6bfb6ac95ed5e35e7168b8",
         "circuit-to-canvas": "^0.0.123",
@@ -66,7 +66,6 @@
         "get-port": "^7.1.0",
         "globby": "^14.1.0",
         "jose": "^6.1.0",
-        "jscad-to-step": "0.0.7",
         "jsonwebtoken": "^9.0.2",
         "jszip": "^3.10.1",
         "jwt-decode": "^4.0.0",
@@ -625,7 +624,7 @@
 
     "circuit-json-to-spice": ["circuit-json-to-spice@0.0.45", "", { "dependencies": { "circuit-json-to-connectivity-map": "^0.0.22" }, "peerDependencies": { "@tscircuit/circuit-json-util": "*", "circuit-json": "*", "spicets": "*", "typescript": "^5.0.0" } }, "sha512-e8THrj+jWK0BEjpw0relCYNCuEYEFAy5dFRYUQgMxdnrTjs2h5WoGWRNGPndqNkrpV5b63AzdX3wVR7Mtqi1HQ=="],
 
-    "circuit-json-to-step": ["circuit-json-to-step@0.0.38", "", { "dependencies": { "circuit-json-to-connectivity-map": "^0.0.22", "circuit-json-to-gltf": "^0.0.106", "stepts": "^0.0.4" }, "peerDependencies": { "@tscircuit/circuit-json-util": "*", "circuit-to-svg": "*", "typescript": "^5" } }, "sha512-B/WMK6WrraMkhqKY0I+cF1LssP4Y+l89JFlUETyzyJG/r/Up1YA7iFqLYTwoeYGqXPBJUMq0sB6rSzOwibNPCA=="],
+    "circuit-json-to-step": ["circuit-json-to-step@0.0.45", "", { "dependencies": { "circuit-json-to-connectivity-map": "^0.0.22", "circuit-json-to-gltf": "^0.0.106", "jscad-to-step": "0.0.7", "stepts": "^0.0.4" }, "peerDependencies": { "@tscircuit/circuit-json-util": "*", "circuit-to-svg": "*", "typescript": "^5" } }, "sha512-hJqPk28UqDH0GvnbEOnAp1qyF1sumY5S+k04+Cn2efYER8UR7GSN/P/iXDG754DA+yUmB5cw9ZrnJwvXnP6z+g=="],
 
     "circuit-json-to-tscircuit": ["circuit-json-to-tscircuit@0.0.50", "", { "peerDependencies": { "typescript": "^5.0.0" } }, "sha512-peP+Xd/HnZJI0cKTOGQkV2vcvgDgtDck7YElZitRQO2GKL16HAo2G3LOv7ICTRIGJoITrf0Iv8kb1ZA2Ajxf1g=="],
 
