@@ -72,7 +72,7 @@
     "get-port": "^7.1.0",
     "globby": "^14.1.0",
     "jose": "^6.1.0",
-    "jscad-to-step": "github:tscircuit/jscad-to-step#e47220e6b7a98746b2135f9be62f5687644e58fc",
+    "jscad-to-step": "^0.0.11",
     "jsonwebtoken": "^9.0.2",
     "jszip": "^3.10.1",
     "jwt-decode": "^4.0.0",
@@ -141,6 +141,5 @@
     "cli": "bun ./cli/main.ts",
     "pkg-pr-new-release": "bunx pkg-pr-new publish --comment=off --peerDeps"
   },
-  "type": "module",
-  "trustedDependencies": ["jscad-to-step"]
+  "type": "module"
 }
