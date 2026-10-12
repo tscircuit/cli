@@ -49,7 +49,7 @@
         "circuit-json-to-pnp-csv": "^0.0.18",
         "circuit-json-to-readable-netlist": "^0.0.15",
         "circuit-json-to-spice": "^0.0.45",
-        "circuit-json-to-step": "^0.0.46",
+        "circuit-json-to-step": "^0.0.47",
         "circuit-json-to-tscircuit": "^0.0.50",
         "circuit-json-trace-length-analysis": "github:tscircuit/circuit-json-trace-length-analysis#2b44792a40df0ca83b6bfb6ac95ed5e35e7168b8",
         "circuit-to-canvas": "^0.0.123",
@@ -66,7 +66,6 @@
         "get-port": "^7.1.0",
         "globby": "^14.1.0",
         "jose": "^6.1.0",
-        "jscad-to-step": "^0.0.11",
         "jsonwebtoken": "^9.0.2",
         "jszip": "^3.10.1",
         "jwt-decode": "^4.0.0",
@@ -108,7 +107,6 @@
     "altiumts": "0.0.59",
     "circuit-json": "^0.0.525",
     "jscad-planner": "0.0.18",
-    "jscad-to-step": "^0.0.11",
     "poppygl": "0.0.34",
   },
   "packages": {
@@ -626,7 +624,7 @@
 
     "circuit-json-to-spice": ["circuit-json-to-spice@0.0.45", "", { "dependencies": { "circuit-json-to-connectivity-map": "^0.0.22" }, "peerDependencies": { "@tscircuit/circuit-json-util": "*", "circuit-json": "*", "spicets": "*", "typescript": "^5.0.0" } }, "sha512-e8THrj+jWK0BEjpw0relCYNCuEYEFAy5dFRYUQgMxdnrTjs2h5WoGWRNGPndqNkrpV5b63AzdX3wVR7Mtqi1HQ=="],
 
-    "circuit-json-to-step": ["circuit-json-to-step@0.0.46", "", { "dependencies": { "circuit-json-to-connectivity-map": "^0.0.22", "circuit-json-to-gltf": "^0.0.106", "jscad-to-step": "0.0.7", "stepts": "^0.0.4" }, "peerDependencies": { "@tscircuit/circuit-json-util": "*", "circuit-to-svg": "*", "typescript": "^5" } }, "sha512-Ug/cG3kNIhbpgmQJpYQ44H1xomdbgTQRNpWqxQXdcJgZCIPhy715HPrf+HHw90E9rGKDbDPIth+TdIXYo3s7nA=="],
+    "circuit-json-to-step": ["circuit-json-to-step@0.0.47", "", { "dependencies": { "circuit-json-to-connectivity-map": "^0.0.22", "circuit-json-to-gltf": "^0.0.106", "jscad-to-step": "^0.0.11", "stepts": "^0.0.4" }, "peerDependencies": { "@tscircuit/circuit-json-util": "*", "circuit-to-svg": "*", "typescript": "^5" } }, "sha512-iwu+BUJ9gMFj17jkXS1HpGOMLPAhb41D15RXYmWEREdot/TmS6TFcbVN1whs5SbInzegh0a9gLH0f69GeoJ3Gw=="],
 
     "circuit-json-to-tscircuit": ["circuit-json-to-tscircuit@0.0.50", "", { "peerDependencies": { "typescript": "^5.0.0" } }, "sha512-peP+Xd/HnZJI0cKTOGQkV2vcvgDgtDck7YElZitRQO2GKL16HAo2G3LOv7ICTRIGJoITrf0Iv8kb1ZA2Ajxf1g=="],
 
