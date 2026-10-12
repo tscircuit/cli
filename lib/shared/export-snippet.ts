@@ -61,6 +61,7 @@ export const ALLOWED_EXPORT_FORMATS = [
   "srj",
   "step",
   "assembly-svg",
+  "assembly-step",
   "component-box-3mf",
 ] as const
 
@@ -74,6 +75,7 @@ const OUTPUT_EXTENSIONS: Record<ExportFormat, string> = {
   "pcb-svg": "-pcb.svg",
   "pcb-png": "-pcb.png",
   "assembly-svg": "-assembly.svg",
+  "assembly-step": "-assembly.step",
   gerbers: "-gerbers.zip",
   "readable-netlist": "-readable.netlist",
   gltf: ".gltf",
@@ -351,6 +353,7 @@ export const exportSnippet = async ({
 
     case "step":
       outputContent = await circuitJsonToStep(circuitJson, {
+        exportMode: "pcb",
         includeComponents: true,
         includeExternalMeshes: true,
         fsMap: await loadLocalStepModelFsMap(circuitJson),
@@ -358,6 +361,18 @@ export const exportSnippet = async ({
       break
     case "assembly-svg":
       outputContent = convertCircuitJsonToAssemblySvg(circuitJson)
+      break
+    case "assembly-step":
+      try {
+        outputContent = await circuitJsonToStep(circuitJson, {
+          exportMode: "assembly",
+        })
+      } catch (error) {
+        onError(
+          `Error exporting assembly STEP: ${error instanceof Error ? error.message : String(error)}`,
+        )
+        return onExit(1)
+      }
       break
     case "component-box-3mf":
       outputContent = Buffer.from(
