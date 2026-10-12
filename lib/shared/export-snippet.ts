@@ -75,7 +75,7 @@ const OUTPUT_EXTENSIONS: Record<ExportFormat, string> = {
   "pcb-svg": "-pcb.svg",
   "pcb-png": "-pcb.png",
   "assembly-svg": "-assembly.svg",
-  "assembly-step": "-assembly.step",
+  "assembly-step": "-assembly.zip",
   gerbers: "-gerbers.zip",
   "readable-netlist": "-readable.netlist",
   gltf: ".gltf",
@@ -364,9 +364,14 @@ export const exportSnippet = async ({
       break
     case "assembly-step":
       try {
-        outputContent = await circuitJsonToStep(circuitJson, {
+        const stepFiles = await circuitJsonToStep(circuitJson, {
           exportMode: "assembly",
         })
+        const zip = new JSZip()
+        for (const [fileName, content] of Object.entries(stepFiles)) {
+          zip.file(fileName, content)
+        }
+        outputContent = await zip.generateAsync({ type: "nodebuffer" })
       } catch (error) {
         onError(
           `Error exporting assembly STEP: ${error instanceof Error ? error.message : String(error)}`,

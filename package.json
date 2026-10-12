@@ -55,7 +55,7 @@
     "circuit-json-to-pnp-csv": "^0.0.18",
     "circuit-json-to-readable-netlist": "^0.0.15",
     "circuit-json-to-spice": "^0.0.45",
-    "circuit-json-to-step": "^0.0.45",
+    "circuit-json-to-step": "^0.0.46",
     "circuit-json-to-tscircuit": "^0.0.50",
     "circuit-json-trace-length-analysis": "github:tscircuit/circuit-json-trace-length-analysis#2b44792a40df0ca83b6bfb6ac95ed5e35e7168b8",
     "circuit-to-canvas": "^0.0.123",
@@ -72,6 +72,7 @@
     "get-port": "^7.1.0",
     "globby": "^14.1.0",
     "jose": "^6.1.0",
+    "jscad-to-step": "github:tscircuit/jscad-to-step#e47220e6b7a98746b2135f9be62f5687644e58fc",
     "jsonwebtoken": "^9.0.2",
     "jszip": "^3.10.1",
     "jwt-decode": "^4.0.0",
@@ -124,7 +125,8 @@
     "altiumts": "0.0.59",
     "poppygl": "0.0.34",
     "@tscircuit/core": "^0.0.2121",
-    "jscad-planner": "0.0.18"
+    "jscad-planner": "0.0.18",
+    "jscad-to-step": "$jscad-to-step"
   },
   "scripts": {
     "start": "bun run dev",
@@ -139,5 +141,6 @@
     "cli": "bun ./cli/main.ts",
     "pkg-pr-new-release": "bunx pkg-pr-new publish --comment=off --peerDeps"
   },
-  "type": "module"
+  "type": "module",
+  "trustedDependencies": ["jscad-to-step"]
 }
