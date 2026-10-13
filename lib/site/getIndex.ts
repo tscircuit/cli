@@ -3,6 +3,7 @@ import { getSessionToken } from "lib/cli-config"
 export const getIndex = async (
   mainComponentPath?: string,
   fileServerApiBaseUrl?: string,
+  jscdnBaseUrl?: string,
 ) => {
   const sessionToken = getSessionToken()
   const tokenScript = sessionToken
@@ -10,6 +11,9 @@ export const getIndex = async (
     : ""
   const fileServerApiScript = fileServerApiBaseUrl
     ? `\n        window.TSCIRCUIT_FILESERVER_API_BASE_URL = ${JSON.stringify(fileServerApiBaseUrl)};`
+    : ""
+  const jscdnScript = jscdnBaseUrl
+    ? `\n        window.TSCIRCUIT_JSCDN_BASE_URL = ${JSON.stringify(jscdnBaseUrl).replace(/</g, "\\u003c")};`
     : ""
   return `<html>
     <head>
@@ -19,7 +23,7 @@ export const getIndex = async (
     <body>
       <script>
        ${mainComponentPath ? `window.TSCIRCUIT_DEFAULT_MAIN_COMPONENT_PATH = "${mainComponentPath}";` : ""}
-        window.TSCIRCUIT_USE_RUNFRAME_FOR_CLI = true;${tokenScript}${fileServerApiScript}
+        window.TSCIRCUIT_USE_RUNFRAME_FOR_CLI = true;${tokenScript}${fileServerApiScript}${jscdnScript}
       </script>
       <script src="https://cdn.tailwindcss.com"></script>
       <div id="root">loading...</div>
