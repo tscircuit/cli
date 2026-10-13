@@ -14,6 +14,7 @@ export interface CliTestFixture {
   runCommand: (
     command: string,
   ) => Promise<{ stdout: string; stderr: string; exitCode: number }>
+  startCommand: (command: string) => Bun.Subprocess
   registryServer: any
   registryDb: DbClient
   registryApiUrl: string
@@ -79,8 +80,7 @@ export async function getCliTestFixture(
     cliConfig.set("sessionId", "session-123")
   }
 
-  // Create command runner
-  const runCommand = async (command: string) => {
+  const getCommandOptions = (command: string) => {
     const args = command.split(" ")
     if (args[0] !== "tsci") {
       throw new Error(
@@ -98,14 +98,29 @@ export async function getCliTestFixture(
       TSCIRCUIT_CONFIG_DIR: testConfigDir,
     }
 
+    return { cmd: ["bun", ...args], cwd: tmpDir, env }
+  }
+
+  const runningCommands: Bun.Subprocess[] = []
+  const startCommand = (command: string) => {
+    const task = Bun.spawn({
+      ...getCommandOptions(command),
+      stdout: "inherit",
+      stderr: "inherit",
+    })
+    runningCommands.push(task)
+    return task
+  }
+
+  // Create command runner
+  const runCommand = async (command: string) => {
     let stdout = ""
     let stderr = ""
 
-    const task = Bun.spawn(["bun", ...args], {
-      cwd: tmpDir,
+    const task = Bun.spawn({
+      ...getCommandOptions(command),
       stdout: "pipe",
       stderr: "pipe",
-      env,
     })
 
     // Stream stdout to console and capture
@@ -149,6 +164,10 @@ export async function getCliTestFixture(
 
   // Setup cleanup
   const cleanup = async () => {
+    for (const task of runningCommands) {
+      task.kill("SIGKILL")
+      await task.exited
+    }
     await rm(tmpDir, { recursive: true, force: true })
     if (server && typeof server.stop === "function") {
       await server.stop()
@@ -161,6 +180,7 @@ export async function getCliTestFixture(
   return {
     tmpDir,
     runCommand,
+    startCommand,
     registryServer: server,
     registryDb: db,
     registryApiUrl: apiUrl,

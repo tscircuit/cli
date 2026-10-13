@@ -2,8 +2,9 @@ import { statSync } from "node:fs"
 import { cp } from "node:fs/promises"
 import path from "node:path"
 
-export const getJscdnDir = (): string | undefined => {
-  const directory = process.env.TSCIRCUIT_JSCDN_DIR
+export const getJscdnDir = (
+  directory = process.env.TSCIRCUIT_JSCDN_DIR,
+): string | undefined => {
   if (directory === undefined) return undefined
   if (!directory)
     throw new Error("TSCIRCUIT_JSCDN_DIR must be a directory path")
@@ -26,7 +27,7 @@ export const getSiteJscdnDir = (bundleJscdn = false) => {
   return directory
 }
 
-const isWithinDirectory = (directory: string, filePath: string) => {
+export const isWithinDirectory = (directory: string, filePath: string) => {
   const relative = path.relative(directory, filePath)
   return (
     relative === "" ||

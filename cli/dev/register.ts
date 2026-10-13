@@ -47,6 +47,7 @@ export const registerDev = (program: Command) => {
     .argument("[file]", "Path to the package file or directory")
     .option("-p, --port <number>", "Port to run server on", "3020")
     .option("--kicad-pcm", "Enable KiCad PCM proxy server at /pcm/*")
+    .option("--jscdn-dir <path>", "Serve prepared JS CDN packages at /jscdn/*")
     .option(
       "--autorouter-debug",
       "Log autorouting diagnostics emitted by the dev runframe",
@@ -73,6 +74,7 @@ export const registerDev = (program: Command) => {
         options: {
           port: string
           kicadPcm?: boolean
+          jscdnDir?: string
           autorouterDebug?: boolean
           autorouterPhase?: string
           autorouterTimeout?: string
@@ -106,6 +108,7 @@ export const registerDev = (program: Command) => {
           componentFilePath: absolutePath,
           projectDir,
           kicadPcm: options.kicadPcm,
+          jscdnDir: options.jscdnDir,
           autorouterDebug:
             options.autorouterDebug || autorouterPhase !== undefined,
           autorouterPhase,
