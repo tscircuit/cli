@@ -18,7 +18,10 @@ export const getJscdnDir = (
 }
 
 export const getSiteJscdnDir = (bundleJscdn = false) => {
-  if (!bundleJscdn) return undefined
+  const standaloneJscdn =
+    process.env.TSCIRCUIT_STANDALONE === "1" &&
+    process.env.TSCIRCUIT_JSCDN_DIR !== undefined
+  if (!bundleJscdn && !standaloneJscdn) return undefined
   const directory = getJscdnDir()
   if (!directory)
     throw new Error(
