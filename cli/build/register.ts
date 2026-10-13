@@ -2,7 +2,7 @@ import fs from "node:fs"
 import path from "node:path"
 import JSZip from "jszip"
 import type { PlatformConfig } from "@tscircuit/props"
-import type { Command } from "commander"
+import { type Command, Option } from "commander"
 import kleur from "kleur"
 import { getCircuitJsonOutputDirName } from "lib/shared/circuit-json-build-cache"
 import { loadRuntimeProjectConfig } from "lib/project-config"
@@ -16,6 +16,7 @@ import type { SolverDiagnosticsOptions } from "lib/shared/solver-diagnostics"
 import { convertToKicadLibrary } from "lib/shared/convert-to-kicad-library"
 import { getEntrypoint } from "lib/shared/get-entrypoint"
 import { mergePlatformConfigs } from "lib/shared/platform-config-utils"
+import { copyBundledBrowserModules } from "lib/shared/bundled-browser-modules"
 import {
   type StaticBuildFileReference,
   getStaticIndexHtmlFile,
@@ -130,6 +131,12 @@ export const registerBuild = (program: Command) => {
     .option(
       "--jscdn-base-url <url>",
       "Set the JS CDN base URL for dynamic imports in the generated site",
+    )
+    .addOption(
+      new Option(
+        "--bundle-jscdn",
+        "Include local JS CDN bundles in the generated site (requires --site)",
+      ).conflicts("jscdnBaseUrl"),
     )
     .option("--transpile", "Transpile the entry file to JavaScript")
     .option("--preview-images", "Generate preview images in the dist directory")
@@ -284,6 +291,10 @@ export const registerBuild = (program: Command) => {
 
         if (handled) {
           return
+        }
+
+        if (resolvedOptions?.bundleJscdn && !resolvedOptions.site) {
+          throw new Error("--bundle-jscdn requires --site")
         }
 
         // When --kicad-project is used without a file argument and kicadProjectEntrypointPath is set,
@@ -926,6 +937,9 @@ export const registerBuild = (program: Command) => {
         }
 
         if (resolvedOptions?.site) {
+          if (resolvedOptions.bundleJscdn) {
+            copyBundledBrowserModules(distDir)
+          }
           let standaloneScriptSrc = "./standalone.min.js"
           if (resolvedOptions?.useCdnJavascript) {
             standaloneScriptSrc = await getLatestTscircuitCdnUrl()
@@ -946,7 +960,9 @@ export const registerBuild = (program: Command) => {
               ? normalizeRelativePath(projectDir, siteDefaultComponentPath)
               : undefined,
             packageName: packageName || path.basename(projectDir),
-            jscdnBaseUrl: resolvedOptions?.jscdnBaseUrl,
+            jscdnBaseUrl: resolvedOptions.bundleJscdn
+              ? "./jscdn"
+              : resolvedOptions.jscdnBaseUrl,
           })
           fs.writeFileSync(path.join(distDir, "index.html"), indexHtml)
         }

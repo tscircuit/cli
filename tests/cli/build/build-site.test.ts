@@ -2,6 +2,11 @@ import { getCliTestFixture } from "../../fixtures/get-cli-test-fixture"
 import { test, expect } from "bun:test"
 import { writeFile, readFile, stat } from "node:fs/promises"
 import path from "node:path"
+import { ensureBrowserModules } from "../../fixtures/ensure-browser-modules"
+import {
+  BUNDLED_BROWSER_MODULE_NAMES,
+  type BundledBrowserModuleManifest,
+} from "lib/shared/bundled-browser-modules"
 
 const circuitCode = `
 export default () => (
@@ -34,7 +39,52 @@ test("build with --site generates index.html and standalone.min.js", async () =>
   expect(indexHtml).toContain("window.TSCIRCUIT_RUNFRAME_STATIC_FILE_LIST")
   expect(indexHtml).not.toContain("TSCIRCUIT_JSCDN_BASE_URL")
   expect(standaloneJs.isFile()).toBe(true)
+  await expect(stat(path.join(tmpDir, "dist", "jscdn"))).rejects.toBeTruthy()
 }, 30_000)
+
+test("build --site --bundle-jscdn includes every RunFrame module and sets the local URL", async () => {
+  await ensureBrowserModules()
+  const { tmpDir, runCommand } = await getCliTestFixture()
+  const circuitPath = path.join(tmpDir, "test.circuit.tsx")
+  await writeFile(circuitPath, circuitCode)
+  await writeFile(path.join(tmpDir, "package.json"), "{}")
+
+  const { stderr, exitCode } = await runCommand(
+    `tsci build --site --bundle-jscdn ${circuitPath}`,
+  )
+  expect(stderr).toBe("")
+  expect(exitCode).toBe(0)
+  const html = await readFile(path.join(tmpDir, "dist", "index.html"), "utf-8")
+  expect(html).toContain('window.TSCIRCUIT_JSCDN_BASE_URL = "./jscdn";')
+  const directory = path.join(tmpDir, "dist", "jscdn")
+  const manifest = JSON.parse(
+    await readFile(path.join(directory, "manifest.json"), "utf-8"),
+  ) as BundledBrowserModuleManifest
+  expect(Object.keys(manifest).sort()).toEqual(
+    [...BUNDLED_BROWSER_MODULE_NAMES].sort(),
+  )
+  for (const name of BUNDLED_BROWSER_MODULE_NAMES) {
+    expect(
+      (await stat(path.join(directory, name, "latest", "+esm"))).size,
+    ).toBeGreaterThan(0)
+    expect(
+      (await stat(path.join(directory, name, manifest[name].version, "+esm")))
+        .size,
+    ).toBeGreaterThan(0)
+  }
+}, 60_000)
+
+test("--bundle-jscdn requires --site and cannot be combined with an explicit base URL", async () => {
+  const { runCommand } = await getCliTestFixture()
+  const missingSite = await runCommand("tsci build --bundle-jscdn")
+  expect(missingSite.exitCode).toBe(1)
+  expect(missingSite.stderr).toContain("--bundle-jscdn requires --site")
+  const conflict = await runCommand(
+    "tsci build --site --bundle-jscdn --jscdn-base-url=./other",
+  )
+  expect(conflict.exitCode).toBe(1)
+  expect(conflict.stderr).toContain("cannot be used with")
+})
 
 test("build --site --jscdn-base-url injects the URL before RunFrame loads", async () => {
   const { tmpDir, runCommand } = await getCliTestFixture()

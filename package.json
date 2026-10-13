@@ -12,6 +12,9 @@
   },
   "devDependencies": {
     "@babel/standalone": "^7.26.9",
+    "@resvg/resvg-wasm": "^2.6.2",
+    "browser-circuit-json-to-gltf": "npm:circuit-json-to-gltf@0.0.133",
+    "circuit-json-to-lbrn": "0.0.74",
     "@biomejs/biome": "^1.9.4",
     "@tscircuit/check-shorts": "https://jscdn.tscircuit.com/@tscircuit/check-shorts/0.0.26.tgz",
     "@tscircuit/circuit-json-pcb-style-analysis": "https://jscdn.tscircuit.com/@tscircuit/circuit-json-pcb-style-analysis/0.0.5.tgz",
@@ -28,7 +31,7 @@
     "@tscircuit/math-utils": "0.0.36",
     "@tscircuit/modelprinter": "^0.0.11",
     "@tscircuit/props": "^0.0.698",
-    "@tscircuit/runframe": "^0.0.2981",
+    "@tscircuit/runframe": "^0.0.2982",
     "@tscircuit/schematic-match-adapt": "^0.0.22",
     "@tscircuit/schematic-trace-solver": "^0.0.204",
     "@tscircuit/solver-utils": "0.0.16",
