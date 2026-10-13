@@ -29,14 +29,14 @@ test("JSON project platform options reach browsers and override local CDN defaul
     path.join(directory, "tscircuit.config.json"),
     JSON.stringify({
       platformConfig: {
-        jscdnBaseUrl: "https://enterprise.example/jscdn",
+        jscdnBaseUrl: "https://standalone.example/jscdn",
         partsEngineDisabled: true,
       },
     }),
   )
   const config = await loadRuntimeProjectConfig(directory)
   expect(getBrowserPlatformConfig(config, "/jscdn")).toEqual({
-    jscdnBaseUrl: "https://enterprise.example/jscdn",
+    jscdnBaseUrl: "https://standalone.example/jscdn",
     partsEngineDisabled: true,
   })
 })
@@ -78,7 +78,7 @@ test("browser module bundles local TS dependencies and retains callable hooks", 
     path.join(directory, "browser-platform.ts"),
     `
     import { headerName } from "./headers"
-    export default { platformFetch: (url: string, init?: RequestInit) => fetch(url, { ...init, headers: { [headerName]: "enterprise" } }) }
+    export default { platformFetch: (url: string, init?: RequestInit) => fetch(url, { ...init, headers: { [headerName]: "standalone" } }) }
   `,
   )
   fs.writeFileSync(

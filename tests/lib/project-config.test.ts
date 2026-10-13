@@ -188,7 +188,7 @@ test("platform config merges JSON defaults with TS overrides and preserves hooks
     path.join(tmpDir, "tscircuit.config.json"),
     JSON.stringify({
       platformConfig: {
-        jscdnBaseUrl: "https://enterprise.example/jscdn",
+        jscdnBaseUrl: "https://standalone.example/jscdn",
         partsEngineDisabled: true,
       },
     }),
@@ -204,7 +204,7 @@ test("platform config merges JSON defaults with TS overrides and preserves hooks
   )
   const config = await loadRuntimeProjectConfig(tmpDir)
   expect(config?.platformConfig?.jscdnBaseUrl).toBe(
-    "https://enterprise.example/jscdn",
+    "https://standalone.example/jscdn",
   )
   expect(config?.platformConfig?.partsEngineDisabled).toBe(false)
   expect(typeof config?.platformConfig?.platformFetch).toBe("function")

@@ -80,7 +80,7 @@ test("dev browser config module preserves custom fetch hooks and project scalar 
     path.join(directory, "tscircuit.config.ts"),
     `export default {
     browserPlatformConfigPath: "./browser-platform.ts",
-    platformConfig: { jscdnBaseUrl: "/enterprise-jscdn", platformFetch: fetch },
+    platformConfig: { jscdnBaseUrl: "/standalone-jscdn", platformFetch: fetch },
   }`,
   )
   fs.writeFileSync(
@@ -91,7 +91,7 @@ test("dev browser config module preserves custom fetch hooks and project scalar 
   const origin = `http://localhost:${(server.address() as any).port}`
   try {
     const html = await fetch(origin).then((response) => response.text())
-    expect(html).toContain('"jscdnBaseUrl":"/enterprise-jscdn"')
+    expect(html).toContain('"jscdnBaseUrl":"/standalone-jscdn"')
     expect(html).toContain('import platformConfig from "/platform-config.js"')
     expect(html).toContain('await import("/standalone.min.js")')
     const module = await fetch(`${origin}/platform-config.js`)

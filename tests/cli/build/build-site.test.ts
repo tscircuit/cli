@@ -68,7 +68,7 @@ test("build --site copies browser config with hooks and preserves explicit proje
     path.join(tmpDir, "tscircuit.config.ts"),
     `export default {
     browserPlatformConfigPath: "./browser-platform.ts",
-    platformConfig: { jscdnBaseUrl: "./enterprise-jscdn", platformFetch: fetch },
+    platformConfig: { jscdnBaseUrl: "./standalone-jscdn", platformFetch: fetch },
   }`,
   )
   await writeFile(
@@ -83,7 +83,7 @@ test("build --site copies browser config with hooks and preserves explicit proje
   expect(stderr).toBe("")
   expect(exitCode).toBe(0)
   const html = await readFile(path.join(tmpDir, "dist/index.html"), "utf8")
-  expect(html).toContain('"jscdnBaseUrl":"./enterprise-jscdn"')
+  expect(html).toContain('"jscdnBaseUrl":"./standalone-jscdn"')
   expect(html).toContain('import platformConfig from "./platform-config.js"')
   expect(html).toContain('await import("./standalone.min.js")')
   expect(
