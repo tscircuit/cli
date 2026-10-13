@@ -40,8 +40,12 @@ test("build with --site generates index.html and standalone.min.js", async () =>
   expect(standaloneJs.isFile()).toBe(true)
 }, 30_000)
 
-for (const customBase of [undefined, "/assets/jscdn"]) {
-  test(`--bundle-jscdn copies prepared packages with base ${customBase ?? "./jscdn"}`, async () => {
+for (const { standalone, customBase } of [
+  { standalone: false, customBase: undefined },
+  { standalone: false, customBase: "/assets/jscdn" },
+  { standalone: true, customBase: undefined },
+]) {
+  test(`${standalone ? "standalone build --site" : "--bundle-jscdn"} copies prepared packages with base ${customBase ?? "./jscdn"}`, async () => {
     const { tmpDir } = await getCliTestFixture()
     const source = path.join(tmpDir, "prepared-jscdn")
     await writePreparedJscdn(source)
@@ -60,7 +64,7 @@ for (const customBase of [undefined, "/assets/jscdn"]) {
       "build",
       "test.circuit.json",
       "--site",
-      "--bundle-jscdn",
+      ...(standalone ? [] : ["--bundle-jscdn"]),
     ]
     if (customBase) args.push("--jscdn-base-url", customBase)
     const subprocess = Bun.spawn(args, {
@@ -70,6 +74,7 @@ for (const customBase of [undefined, "/assets/jscdn"]) {
         TSCI_TEST_MODE: "true",
         TSCIRCUIT_CONFIG_DIR: path.join(tmpDir, ".config"),
         TSCIRCUIT_JSCDN_DIR: source,
+        TSCIRCUIT_STANDALONE: standalone ? "1" : "0",
       },
       stdout: "pipe",
       stderr: "pipe",

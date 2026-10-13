@@ -13,10 +13,13 @@ import {
 } from "tests/fixtures/prepared-jscdn"
 
 const originalDir = process.env.TSCIRCUIT_JSCDN_DIR
+const originalStandalone = process.env.TSCIRCUIT_STANDALONE
 const temporaryDirs: string[] = []
 afterEach(async () => {
   if (originalDir === undefined) delete process.env.TSCIRCUIT_JSCDN_DIR
   else process.env.TSCIRCUIT_JSCDN_DIR = originalDir
+  if (originalStandalone === undefined) delete process.env.TSCIRCUIT_STANDALONE
+  else process.env.TSCIRCUIT_STANDALONE = originalStandalone
   await Promise.all(
     temporaryDirs
       .splice(0)
@@ -30,11 +33,16 @@ const makeDirectory = async () => {
   return dir
 }
 
-test("site packages are copied only when explicitly requested", async () => {
+test("site packages are copied when requested or configured by standalone", async () => {
   const directory = await makeDirectory()
+  delete process.env.TSCIRCUIT_STANDALONE
   process.env.TSCIRCUIT_JSCDN_DIR = directory
   expect(getSiteJscdnDir()).toBeUndefined()
   expect(getSiteJscdnDir(true)).toBe(directory)
+  process.env.TSCIRCUIT_STANDALONE = "0"
+  expect(getSiteJscdnDir()).toBeUndefined()
+  process.env.TSCIRCUIT_STANDALONE = "1"
+  expect(getSiteJscdnDir()).toBe(directory)
   delete process.env.TSCIRCUIT_JSCDN_DIR
   expect(getSiteJscdnDir()).toBeUndefined()
   expect(() => getSiteJscdnDir(true)).toThrow("requires TSCIRCUIT_JSCDN_DIR")
