@@ -50,6 +50,9 @@ const setup = async ({
     async fetch(request) {
       const pathname = new URL(request.url).pathname
       requests.push(pathname)
+      // Consume the body before an early response or forwarding it. Streaming
+      // it through the proxy breaks archive-upload fallback on Bun 1.3.5.
+      const requestBody = request.body ? await request.arrayBuffer() : undefined
 
       // The fake registry does not enforce release authorization. Simulate an
       // API refusal so the CLI must stop before uploading or finalizing a release.
@@ -62,7 +65,11 @@ const setup = async ({
 
       const upstreamUrl = new URL(request.url)
       upstreamUrl.host = new URL(registryApiUrl).host
-      const response = await fetch(new Request(upstreamUrl, request))
+      const response = await fetch(upstreamUrl, {
+        method: request.method,
+        headers: request.headers,
+        body: requestBody,
+      })
       if (omitPackagePermissions && pathname === "/api/packages/get") {
         const body = await response.json()
         delete body.package.user_permissions
