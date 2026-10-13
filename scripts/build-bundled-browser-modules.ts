@@ -93,7 +93,11 @@ export const buildBundledBrowserModules = async (outdir = "./dist/jscdn") => {
   const manifest = {} as BundledBrowserModuleManifest
   const transpiler = new Bun.Transpiler({ loader: "js" })
   for (const name of BUNDLED_BROWSER_MODULE_NAMES) {
-    const entry = require.resolve(name)
+    // Keep the CLI's existing Node GLTF renderer stable while packaging the
+    // newer browser converter needed for self-contained rendering.
+    const entry = require.resolve(
+      name === "circuit-json-to-gltf" ? "browser-circuit-json-to-gltf" : name,
+    )
     let directory = path.dirname(entry)
     while (!fs.existsSync(path.join(directory, "package.json"))) {
       directory = path.dirname(directory)

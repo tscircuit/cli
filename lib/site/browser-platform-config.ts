@@ -9,12 +9,29 @@ export const scriptSafeJson = (value: unknown): string =>
     .replace(/\u2028/g, "\\u2028")
     .replace(/\u2029/g, "\\u2029")
 
-/** Transfer data, with browser-only hooks supplied by a separate browser module. */
+const containsCallableHooks = (
+  value: unknown,
+  seen = new Set<object>(),
+): boolean => {
+  if (typeof value === "function") return true
+  if (!value || typeof value !== "object" || seen.has(value)) return false
+  seen.add(value)
+  const prototype = Object.getPrototypeOf(value)
+  if (
+    !Array.isArray(value) &&
+    prototype !== Object.prototype &&
+    prototype !== null
+  ) {
+    return true
+  }
+  return Object.values(value).some((item) => containsCallableHooks(item, seen))
+}
+
+/** CLI hooks stay in the CLI; browser hooks come from the browser module. */
 export const getBrowserPlatformConfig = (
   config: TscircuitRuntimeProjectConfig | null | undefined,
   defaultJscdnBaseUrl: string,
 ): PlatformConfig => {
-  const hasBrowserModule = Boolean(config?.browserPlatformConfigPath)
   const baseUrl = config?.platformConfig?.jscdnBaseUrl
   if (
     baseUrl !== undefined &&
@@ -22,17 +39,15 @@ export const getBrowserPlatformConfig = (
   ) {
     throw new Error("platformConfig.jscdnBaseUrl must be a non-empty string")
   }
-  const json = JSON.stringify(config?.platformConfig ?? {}, (key, value) => {
-    if (typeof value === "function") {
-      if (!hasBrowserModule) {
-        throw new Error(
-          `platformConfig.${key} is a function. Set browserPlatformConfigPath to a browser-safe TS/JS module exporting the browser PlatformConfig, including its callable hooks.`,
-        )
-      }
-      return undefined
-    }
-    return value
-  })
+  // Omit a functional object as a whole so, for example, a CLI SPICE engine
+  // cannot reach the browser as an empty object with its simulate method lost.
+  const json = JSON.stringify(
+    Object.fromEntries(
+      Object.entries(config?.platformConfig ?? {}).filter(
+        ([, value]) => !containsCallableHooks(value),
+      ),
+    ),
+  )
   return {
     jscdnBaseUrl: defaultJscdnBaseUrl,
     ...JSON.parse(json),

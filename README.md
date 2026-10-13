@@ -270,9 +270,10 @@ export default {
 ```
 
 The browser module is bundled with Bun and loaded before RunFrame in dev and
-static sites. Project platform data is injected alongside it. Callable hooks
-in the Node project config require this explicit browser module; they cannot be
-JSON serialized. Keep browser hooks and their imports free of Node APIs and
+static sites. Serializable project platform data is injected alongside it.
+Callable hooks and engine objects in the Node project config run in the CLI and
+are omitted from browser data. To run hooks in RunFrame, export them from the
+browser module. Keep browser hooks and their imports free of Node APIs and
 server secrets. Environment variables are not automatically inlined into the
 browser module. Local converter delivery does not disable unrelated services
 such as registries, part pricing, or remotely referenced CAD models.

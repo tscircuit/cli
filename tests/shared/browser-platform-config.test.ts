@@ -41,23 +41,34 @@ test("JSON project platform options reach browsers and override local CDN defaul
   })
 })
 
-test("callable hooks require an explicit browser module instead of disappearing from JSON", () => {
-  expect(() =>
+test("CLI hooks remain on the CLI config and are omitted from browser data", () => {
+  const simulate = async () => ({})
+  const config = {
+    platformConfig: {
+      platformFetch: fetch,
+      localCacheEngine: { getItem: () => null, setItem: () => {} },
+      spiceEngineMap: { ngspice: { simulate } },
+      useCloudAutorouter: false,
+    },
+  } as any
+  expect(getBrowserPlatformConfig(config, "/jscdn")).toEqual({
+    jscdnBaseUrl: "/jscdn",
+    useCloudAutorouter: false,
+  })
+  expect(config.platformConfig.platformFetch).toBe(fetch)
+  expect(config.platformConfig.spiceEngineMap.ngspice.simulate).toBe(simulate)
+})
+
+test("CLI engine instances do not reach the browser as empty engine objects", () => {
+  class Engine {
+    simulate() {}
+  }
+  expect(
     getBrowserPlatformConfig(
-      { platformConfig: { platformFetch: fetch } },
+      { platformConfig: { spiceEngineMap: { ngspice: new Engine() } } } as any,
       "/jscdn",
     ),
-  ).toThrow("browserPlatformConfigPath")
-  expect(() =>
-    getBrowserPlatformConfig(
-      {
-        platformConfig: {
-          localCacheEngine: { getItem: () => null, setItem: () => {} },
-        },
-      },
-      "/jscdn",
-    ),
-  ).toThrow("browserPlatformConfigPath")
+  ).toEqual({ jscdnBaseUrl: "/jscdn" })
 })
 
 test.each(["", "   ", 42])(
