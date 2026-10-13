@@ -10,6 +10,7 @@ import {
   type AutorouterDiagnosticsOptions,
 } from "./autorouter-diagnostics"
 import { attachAutoroutingArtifacts } from "./autorouting-artifacts"
+import { attachRouteRemainingWarning } from "./route-remaining-warning"
 import { importFromUserLand } from "./importFromUserLand"
 import { registerStaticAssetLoaders } from "./register-static-asset-loaders"
 import {
@@ -94,6 +95,10 @@ export async function generateCircuitJson({
     autorouterDiagnosticsOptions,
   )
   autorouterDiagnostics.attachToRootCircuit(runner)
+  const checkRouteRemainingWarning = attachRouteRemainingWarning(
+    runner,
+    autorouterDiagnosticsOptions?.log,
+  )
   const solverDiagnostics = solverDiagnosticsOptions
     ? new SolverDiagnostics(solverDiagnosticsOptions)
     : null
@@ -188,6 +193,7 @@ export async function generateCircuitJson({
     }
 
     autorouterDiagnostics.checkTimeout()
+    checkRouteRemainingWarning()
     await new Promise((resolve) => setTimeout(resolve, 100))
     runner.render()
   }
@@ -214,3 +220,4 @@ export async function generateCircuitJson({
     rootCircuit: runner,
   }
 }
+
