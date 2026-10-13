@@ -109,6 +109,159 @@ export const getArchivePayload = (
   }
 }
 
+const normalizeManifestFilePath = (filePath: string) =>
+  filePath
+    .trim()
+    .replace(/\\/g, "/")
+    .replace(/\/+/g, "/")
+    .replace(/^\.\//, "")
+    .replace(/^\/+/, "")
+    .replace(/\/+$/, "")
+
+const isAmbiguousArchiveUploadError = (error: unknown): boolean => {
+  if (!error || typeof error !== "object") return false
+  const err = error as {
+    status?: number
+    response?: { status?: number }
+  }
+  const status = err.status ?? err.response?.status
+  if (typeof status === "number") {
+    return status === 408 || status >= 500
+  }
+  return true
+}
+
+const reconcileArchiveUpload = async ({
+  ky,
+  filePaths,
+  projectDir,
+  packageNameWithVersion,
+}: {
+  ky: ReturnType<typeof getRegistryApiKy>
+  filePaths: string[]
+  projectDir: string
+  packageNameWithVersion: string
+}): Promise<Set<string>> => {
+  const verifiedRelativePaths = new Set<string>()
+
+  try {
+    const listResponse = await ky
+      .get<{
+        package_files?: Array<{
+          package_file_id?: string
+          file_path: string
+          content_text?: string | null
+          content_base64?: string | null
+          is_text?: boolean
+        }>
+      }>("package_files/list", {
+        searchParams: {
+          package_name_with_version: packageNameWithVersion,
+        },
+      })
+      .json()
+
+    const remoteFiles = listResponse.package_files ?? []
+    if (remoteFiles.length === 0) {
+      return verifiedRelativePaths
+    }
+
+    const remoteFilesByPath = new Map<string, (typeof remoteFiles)[number]>()
+    for (const remoteFile of remoteFiles) {
+      remoteFilesByPath.set(
+        normalizeManifestFilePath(remoteFile.file_path),
+        remoteFile,
+      )
+    }
+
+    for (const fullFilePath of filePaths) {
+      const relativeFilePath = path.relative(projectDir, fullFilePath)
+      const normalizedPath = normalizeManifestFilePath(relativeFilePath)
+      const remoteFile = remoteFilesByPath.get(normalizedPath)
+      if (!remoteFile) continue
+
+      const fileBuffer = fs.readFileSync(fullFilePath)
+      const isBinary =
+        isBinaryFile(relativeFilePath) || hasBinaryContent(fileBuffer)
+
+      const lookupSearchParams: Record<string, string> =
+        remoteFile.package_file_id
+          ? { package_file_id: remoteFile.package_file_id }
+          : {
+              package_name_with_version: packageNameWithVersion,
+              file_path: remoteFile.file_path,
+            }
+
+      let remoteText = remoteFile.content_text
+      let remoteBase64 = remoteFile.content_base64
+      let packageFileId = remoteFile.package_file_id
+
+      if (remoteText == null && remoteBase64 == null) {
+        try {
+          const getResponse = await ky
+            .get<{
+              package_file?: {
+                package_file_id?: string
+                content_text?: string | null
+                content_base64?: string | null
+                is_text?: boolean
+              }
+            }>("package_files/get", {
+              searchParams: lookupSearchParams,
+            })
+            .json()
+          remoteText = getResponse.package_file?.content_text
+          remoteBase64 = getResponse.package_file?.content_base64
+          packageFileId =
+            getResponse.package_file?.package_file_id ?? packageFileId
+        } catch {
+          continue
+        }
+      }
+
+      if (!isBinary) {
+        const expectedText = fileBuffer.toString("utf8")
+        if (typeof remoteText === "string") {
+          if (remoteText === expectedText) {
+            verifiedRelativePaths.add(relativeFilePath)
+          }
+          continue
+        }
+      } else if (typeof remoteBase64 === "string") {
+        if (Buffer.from(remoteBase64, "base64").equals(fileBuffer)) {
+          verifiedRelativePaths.add(relativeFilePath)
+        }
+        continue
+      }
+
+      try {
+        const downloadSearchParams: Record<string, string> = packageFileId
+          ? { package_file_id: packageFileId }
+          : {
+              package_name_with_version: packageNameWithVersion,
+              file_path: remoteFile.file_path,
+            }
+        const downloadedBytes = Buffer.from(
+          await ky
+            .get("package_files/download", {
+              searchParams: downloadSearchParams,
+            })
+            .arrayBuffer(),
+        )
+        if (downloadedBytes.equals(fileBuffer)) {
+          verifiedRelativePaths.add(relativeFilePath)
+        }
+      } catch {
+        continue
+      }
+    }
+  } catch (reconcileError) {
+    debug("reconcileArchiveUpload failed", reconcileError)
+  }
+
+  return verifiedRelativePaths
+}
+
 export const pushSnippet = async ({
   filePath,
   isPrivate,
@@ -409,6 +562,7 @@ export const pushSnippet = async ({
   } = { succeeded: [], failed: [] }
 
   const packageNameWithVersion = `${scopedPackageName}@${releaseVersion}`
+  let remainingFilePaths = [...filePaths]
   if (compress) {
     log(kleur.gray("Uploading package archive..."))
     try {
@@ -417,25 +571,56 @@ export const pushSnippet = async ({
         projectDir,
         packageNameWithVersion,
       )
+      const configuredArchiveTimeout = Number(
+        process.env.TSCI_UPLOAD_ARCHIVE_TIMEOUT_MS,
+      )
       await ky.post("package_files/upload_archive", {
         json: archivePayload,
+        ...(Number.isFinite(configuredArchiveTimeout) &&
+        configuredArchiveTimeout > 0
+          ? { timeout: configuredArchiveTimeout }
+          : {}),
       })
       for (const fullFilePath of filePaths) {
         const relativeFilePath = path.relative(projectDir, fullFilePath)
         uploadResults.succeeded.push(relativeFilePath)
       }
+      remainingFilePaths = []
       log(kleur.gray(`📦 Uploaded archive with ${filePaths.length} files`))
     } catch (error) {
-      log(
-        kleur.yellow(
-          `Archive upload failed, falling back to file-by-file upload: ${error}`,
-        ),
-      )
+      if (isAmbiguousArchiveUploadError(error)) {
+        const verifiedRelativePaths = await reconcileArchiveUpload({
+          ky,
+          filePaths,
+          projectDir,
+          packageNameWithVersion,
+        })
+        for (const fullFilePath of filePaths) {
+          const relativeFilePath = path.relative(projectDir, fullFilePath)
+          if (verifiedRelativePaths.has(relativeFilePath)) {
+            uploadResults.succeeded.push(relativeFilePath)
+          }
+        }
+        remainingFilePaths = filePaths.filter(
+          (fullFilePath) =>
+            !verifiedRelativePaths.has(path.relative(projectDir, fullFilePath)),
+        )
+      }
+
+      if (remainingFilePaths.length === 0) {
+        log(kleur.gray(`📦 Uploaded archive with ${filePaths.length} files`))
+      } else {
+        log(
+          kleur.yellow(
+            `Archive upload failed, falling back to file-by-file upload: ${error}`,
+          ),
+        )
+      }
     }
   }
 
-  if (uploadResults.succeeded.length === 0) {
-    for (const fullFilePath of filePaths) {
+  if (remainingFilePaths.length > 0) {
+    for (const fullFilePath of remainingFilePaths) {
       const relativeFilePath = path.relative(projectDir, fullFilePath)
 
       // Check if file is binary by extension first, then by content if needed
