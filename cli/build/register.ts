@@ -16,12 +16,6 @@ import type { SolverDiagnosticsOptions } from "lib/shared/solver-diagnostics"
 import { convertToKicadLibrary } from "lib/shared/convert-to-kicad-library"
 import { getEntrypoint } from "lib/shared/get-entrypoint"
 import { mergePlatformConfigs } from "lib/shared/platform-config-utils"
-import { copyBundledBrowserModules } from "lib/shared/bundled-browser-modules"
-import { getRunframeStandaloneCompatibilityError } from "lib/shared/runframe-standalone-compatibility"
-import {
-  bundleBrowserPlatformConfig,
-  getBrowserPlatformConfig,
-} from "lib/site/browser-platform-config"
 import {
   type StaticBuildFileReference,
   getStaticIndexHtmlFile,
@@ -133,6 +127,10 @@ export const registerBuild = (program: Command) => {
     .option("--routing-disabled", "Disable routing during circuit generation")
     .option("--disable-parts-engine", "Disable the parts engine")
     .option("--site", "Generate a static site in the dist directory")
+    .option(
+      "--jscdn-base-url <url>",
+      "Set the JS CDN base URL for dynamic imports in the generated site",
+    )
     .option("--transpile", "Transpile the entry file to JavaScript")
     .option("--preview-images", "Generate preview images in the dist directory")
     .option(
@@ -928,40 +926,13 @@ export const registerBuild = (program: Command) => {
         }
 
         if (resolvedOptions?.site) {
-          const browserPlatformConfig = getBrowserPlatformConfig(
-            projectConfig,
-            "./jscdn",
-          )
-          const browserPlatformConfigBundle = await bundleBrowserPlatformConfig(
-            projectDir,
-            projectConfig?.browserPlatformConfigPath,
-          )
-          copyBundledBrowserModules(distDir)
-          if (browserPlatformConfigBundle) {
-            fs.writeFileSync(
-              path.join(distDir, "platform-config.js"),
-              browserPlatformConfigBundle,
-            )
-          }
           let standaloneScriptSrc = "./standalone.min.js"
           if (resolvedOptions?.useCdnJavascript) {
             standaloneScriptSrc = await getLatestTscircuitCdnUrl()
           } else {
-            const explicitStandalonePath =
-              process.env.RUNFRAME_STANDALONE_FILE_PATH
-            const standaloneBundleContent = explicitStandalonePath
-              ? fs.readFileSync(explicitStandalonePath, "utf8")
-              : runFrameStandaloneBundleContent
-            const compatibilityError = getRunframeStandaloneCompatibilityError(
-              standaloneBundleContent,
-              explicitStandalonePath
-                ? "RUNFRAME_STANDALONE_FILE_PATH"
-                : "The CLI-bundled RunFrame",
-            )
-            if (compatibilityError) throw new Error(compatibilityError)
             fs.writeFileSync(
               path.join(distDir, "standalone.min.js"),
-              standaloneBundleContent,
+              runFrameStandaloneBundleContent,
             )
           }
           const pkgJsonPath = path.join(projectDir, "package.json")
@@ -975,10 +946,7 @@ export const registerBuild = (program: Command) => {
               ? normalizeRelativePath(projectDir, siteDefaultComponentPath)
               : undefined,
             packageName: packageName || path.basename(projectDir),
-            platformConfig: browserPlatformConfig,
-            platformConfigScriptSrc: browserPlatformConfigBundle
-              ? "./platform-config.js"
-              : undefined,
+            jscdnBaseUrl: resolvedOptions?.jscdnBaseUrl,
           })
           fs.writeFileSync(path.join(distDir, "index.html"), indexHtml)
         }

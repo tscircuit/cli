@@ -7,17 +7,11 @@ import runFrameStandaloneBundleContent from "@tscircuit/runframe/standalone" wit
   type: "text",
 }
 import { getNodeHandler } from "winterspec/adapters/node"
+import pkg from "../../package.json"
 
 // @ts-ignore
 import winterspecBundle from "@tscircuit/file-server/dist/bundle.js"
 import { createLocalCacheEngine } from "../shared/get-platform-config-with-cli-defaults"
-import { loadRuntimeProjectConfig } from "../project-config"
-import { resolveBundledBrowserModule } from "../shared/bundled-browser-modules"
-import { getRunframeStandaloneCompatibilityError } from "../shared/runframe-standalone-compatibility"
-import {
-  bundleBrowserPlatformConfig,
-  getBrowserPlatformConfig,
-} from "../site/browser-platform-config"
 import { getIndex } from "../site/getIndex"
 import { createKicadPcmProxy } from "./kicad-pcm-proxy"
 
@@ -66,19 +60,6 @@ export const createHttpServer = async ({
   entryFile?: string
 }) => {
   const fileServerHandler = getNodeHandler(winterspecBundle as any, {})
-  const projectConfig = projectDir
-    ? await loadRuntimeProjectConfig(projectDir)
-    : null
-  const browserPlatformConfig = getBrowserPlatformConfig(
-    projectConfig,
-    "/jscdn",
-  )
-  const browserPlatformConfigBundle = projectDir
-    ? await bundleBrowserPlatformConfig(
-        projectDir,
-        projectConfig?.browserPlatformConfigPath,
-      )
-    : undefined
   const localCacheEngine = projectDir
     ? createLocalCacheEngine(path.join(projectDir, ".tscircuit", "cache"))
     : undefined
@@ -89,66 +70,9 @@ export const createHttpServer = async ({
       ? createKicadPcmProxy({ projectDir, entryFile, port })
       : null
 
-  const serveStandalone = (
-    content: string,
-    source: string,
-    res: http.ServerResponse,
-  ) => {
-    const compatibilityError = getRunframeStandaloneCompatibilityError(
-      content,
-      source,
-    )
-    if (compatibilityError) console.warn(compatibilityError)
-    res.writeHead(compatibilityError ? 409 : 200, {
-      "Content-Type": "application/javascript; charset=utf-8",
-    })
-    res.end(
-      compatibilityError
-        ? `throw new Error(${JSON.stringify(compatibilityError)});`
-        : content,
-    )
-  }
-
   const server = http.createServer(async (req, res) => {
     const requestHost = req.headers.host ?? `localhost:${port}`
     const url = new URL(req.url!, `http://${requestHost}`)
-
-    if (url.pathname.startsWith("/jscdn/")) {
-      if (req.method !== "GET" && req.method !== "HEAD") {
-        res.writeHead(405, { Allow: "GET, HEAD" })
-        res.end()
-        return
-      }
-      try {
-        const modulePath = resolveBundledBrowserModule(url.pathname)
-        if (!modulePath) {
-          res.writeHead(404)
-          res.end("Browser module or version is not bundled with this CLI")
-          return
-        }
-        const content = fs.readFileSync(modulePath)
-        res.writeHead(200, {
-          "Content-Type": "application/javascript; charset=utf-8",
-          "Content-Length": content.length,
-          "X-Content-Type-Options": "nosniff",
-        })
-        res.end(req.method === "HEAD" ? undefined : content)
-      } catch {
-        res.writeHead(503, { "Content-Type": "text/plain; charset=utf-8" })
-        res.end(
-          "Bundled browser modules are missing. Rebuild or reinstall the CLI.",
-        )
-      }
-      return
-    }
-
-    if (url.pathname === "/platform-config.js" && browserPlatformConfigBundle) {
-      res.writeHead(200, {
-        "Content-Type": "application/javascript; charset=utf-8",
-      })
-      res.end(browserPlatformConfigBundle)
-      return
-    }
 
     if (url.pathname === RUNFRAME_CACHE_PATH) {
       const key = url.searchParams.get("key")
@@ -265,11 +189,10 @@ export const createHttpServer = async ({
         if (localStandalonePath) {
           try {
             const content = fs.readFileSync(localStandalonePath, "utf8")
-            serveStandalone(
-              content,
-              "The project-local tscircuit/browser bundle",
-              res,
-            )
+            res.writeHead(200, {
+              "Content-Type": "application/javascript; charset=utf-8",
+            })
+            res.end(content)
             return
           } catch {
             // fall back to the global tscircuit bundle, then the CLI
@@ -283,36 +206,40 @@ export const createHttpServer = async ({
         if (globalStandalonePath) {
           try {
             const content = fs.readFileSync(globalStandalonePath, "utf8")
-            serveStandalone(content, "The global tscircuit/browser bundle", res)
+            res.writeHead(200, {
+              "Content-Type": "application/javascript; charset=utf-8",
+            })
+            res.end(content)
             return
           } catch {
             // fall back to the CLI-bundled runframe standalone below
           }
         }
 
-        serveStandalone(
-          runFrameStandaloneBundleContent,
-          "The CLI-bundled RunFrame",
-          res,
-        )
+        res.writeHead(200, {
+          "Content-Type": "application/javascript; charset=utf-8",
+        })
+        res.end(runFrameStandaloneBundleContent)
         return
       }
 
       try {
         const content = fs.readFileSync(explicitStandalonePath, "utf8")
-        serveStandalone(content, "RUNFRAME_STANDALONE_FILE_PATH", res)
+        res.writeHead(200, {
+          "Content-Type": "application/javascript; charset=utf-8",
+        })
+        res.end(content)
         return
       } catch (error) {
         console.info(
-          "Local runframe standalone not found, falling back to the CLI-bundled version.",
+          "Local runframe standalone not found, falling back to the production version.",
         )
       }
 
-      serveStandalone(
-        runFrameStandaloneBundleContent,
-        "The CLI-bundled RunFrame",
-        res,
-      )
+      res.writeHead(302, {
+        Location: `https://cdn.jsdelivr.net/npm/@tscircuit/runframe@${{ ...pkg.devDependencies }["@tscircuit/runframe"].replace(/^[^0-9]+/, "")}/dist/standalone.min.js`,
+      })
+      res.end()
       return
     }
 
@@ -321,8 +248,6 @@ export const createHttpServer = async ({
       const html = await getIndex(
         defaultMainComponentPath,
         fileServerApiBaseUrl,
-        browserPlatformConfig,
-        browserPlatformConfigBundle ? "/platform-config.js" : undefined,
       )
       res.writeHead(200, { "Content-Type": "text/html" })
       res.end(html)

@@ -1,24 +1,7 @@
 import { getCliTestFixture } from "../../fixtures/get-cli-test-fixture"
-import { beforeAll, test, expect } from "bun:test"
+import { test, expect } from "bun:test"
 import { writeFile, readFile, stat } from "node:fs/promises"
 import path from "node:path"
-import { BUNDLED_BROWSER_MODULE_NAMES } from "lib/shared/bundled-browser-modules"
-import { ensureBrowserModules } from "../../fixtures/ensure-browser-modules"
-
-beforeAll(ensureBrowserModules, 30_000)
-
-// These tests verify CLI packaging. Browser behavior is tested separately with
-// the paired RunFrame build; the currently published bundle predates its hook.
-const standaloneFixture = `export const platformConfig = window.TSCIRCUIT_PLATFORM_CONFIG;\n`
-
-const writeStandaloneFixture = async (
-  tmpDir: string,
-  content = standaloneFixture,
-) => {
-  const standalonePath = path.join(tmpDir, "runframe-fixture.js")
-  await writeFile(standalonePath, content)
-  return { env: { RUNFRAME_STANDALONE_FILE_PATH: standalonePath } }
-}
 
 const circuitCode = `
 export default () => (
@@ -33,12 +16,8 @@ test("build with --site generates index.html and standalone.min.js", async () =>
   await writeFile(circuitPath, circuitCode)
   await writeFile(path.join(tmpDir, "package.json"), "{}")
 
-  const { stderr, exitCode } = await runCommand(
-    `tsci build --site ${circuitPath}`,
-    await writeStandaloneFixture(tmpDir),
-  )
+  const { stderr } = await runCommand(`tsci build --site ${circuitPath}`)
   expect(stderr).toBe("")
-  expect(exitCode).toBe(0)
 
   const indexHtml = await readFile(
     path.join(tmpDir, "dist", "index.html"),
@@ -53,82 +32,27 @@ test("build with --site generates index.html and standalone.min.js", async () =>
   )
   expect(indexHtml).toContain("window.TSCIRCUIT_USE_RUNFRAME_FOR_CLI = false;")
   expect(indexHtml).toContain("window.TSCIRCUIT_RUNFRAME_STATIC_FILE_LIST")
+  expect(indexHtml).not.toContain("TSCIRCUIT_JSCDN_BASE_URL")
   expect(standaloneJs.isFile()).toBe(true)
-  expect(
-    await readFile(path.join(tmpDir, "dist", "standalone.min.js"), "utf8"),
-  ).toBe(standaloneFixture)
-  expect(indexHtml).toContain('"jscdnBaseUrl":"./jscdn"')
-  expect(indexHtml).not.toContain("cdn.tailwindcss.com")
-  expect(indexHtml).not.toContain("github.com/tscircuit.png")
-  const manifest = JSON.parse(
-    await readFile(path.join(tmpDir, "dist/jscdn/manifest.json"), "utf8"),
-  )
-  for (const name of BUNDLED_BROWSER_MODULE_NAMES) {
-    expect(
-      (
-        await stat(path.join(tmpDir, "dist/jscdn", name, "latest/+esm"))
-      ).isFile(),
-    ).toBe(true)
-    expect(
-      (
-        await stat(
-          path.join(tmpDir, "dist/jscdn", name, manifest[name].version, "+esm"),
-        )
-      ).isFile(),
-    ).toBe(true)
-  }
 }, 30_000)
 
-test("build --site copies browser config with hooks and preserves explicit project jscdnBaseUrl", async () => {
+test("build --site --jscdn-base-url injects the URL before RunFrame loads", async () => {
   const { tmpDir, runCommand } = await getCliTestFixture()
   const circuitPath = path.join(tmpDir, "test.circuit.tsx")
   await writeFile(circuitPath, circuitCode)
   await writeFile(path.join(tmpDir, "package.json"), "{}")
-  await writeFile(
-    path.join(tmpDir, "tscircuit.config.ts"),
-    `export default {
-    browserPlatformConfigPath: "./browser-platform.ts",
-    platformConfig: { jscdnBaseUrl: "./standalone-jscdn", platformFetch: fetch },
-  }`,
-  )
-  await writeFile(
-    path.join(tmpDir, "browser-platform.ts"),
-    `export default {
-    platformFetch: (url: RequestInfo | URL, init?: RequestInit) => fetch(url, init),
-  }`,
-  )
+
   const { stderr, exitCode } = await runCommand(
-    `tsci build --site ${circuitPath}`,
-    await writeStandaloneFixture(tmpDir),
+    `tsci build --site --jscdn-base-url=./jscdn ${circuitPath}`,
   )
   expect(stderr).toBe("")
   expect(exitCode).toBe(0)
-  const html = await readFile(path.join(tmpDir, "dist/index.html"), "utf8")
-  expect(html).toContain('"jscdnBaseUrl":"./standalone-jscdn"')
-  expect(html).toContain('import platformConfig from "./platform-config.js"')
-  expect(html).toContain('await import("./standalone.min.js")')
-  expect(
-    await readFile(path.join(tmpDir, "dist/platform-config.js"), "utf8"),
-  ).toContain("platformFetch")
-}, 30_000)
 
-test("build --site rejects an incompatible explicit RunFrame bundle", async () => {
-  const { tmpDir, runCommand } = await getCliTestFixture()
-  const circuitPath = path.join(tmpDir, "test.circuit.tsx")
-  await writeFile(circuitPath, circuitCode)
-  await writeFile(path.join(tmpDir, "package.json"), "{}")
-
-  const { stderr, exitCode } = await runCommand(
-    `tsci build --site ${circuitPath}`,
-    await writeStandaloneFixture(tmpDir, "export const oldRunframe = true;\n"),
+  const html = await readFile(path.join(tmpDir, "dist", "index.html"), "utf-8")
+  expect(html).toContain('window.TSCIRCUIT_JSCDN_BASE_URL = "./jscdn";')
+  expect(html.indexOf("window.TSCIRCUIT_JSCDN_BASE_URL")).toBeLessThan(
+    html.indexOf('<script type="module" src="./standalone.min.js">'),
   )
-  expect(exitCode).toBe(1)
-  expect(stderr).toContain("RUNFRAME_STANDALONE_FILE_PATH")
-  expect(stderr).toContain("does not support TSCIRCUIT_PLATFORM_CONFIG")
-  await expect(stat(path.join(tmpDir, "dist/index.html"))).rejects.toBeTruthy()
-  await expect(
-    stat(path.join(tmpDir, "dist/standalone.min.js")),
-  ).rejects.toBeTruthy()
 }, 30_000)
 
 test("build with --site generates only 3D preview images for every circuit", async () => {
@@ -162,7 +86,7 @@ test("build with --site --use-cdn-javascript uses CDN URL and no standalone.min.
   await writeFile(path.join(tmpDir, "package.json"), "{}")
 
   const { stderr } = await runCommand(
-    `tsci build --site --use-cdn-javascript ${circuitPath}`,
+    `tsci build --site --use-cdn-javascript --jscdn-base-url https://standalone.example/jscdn ${circuitPath}`,
   )
   expect(stderr).toBe("")
 
@@ -175,6 +99,9 @@ test("build with --site --use-cdn-javascript uses CDN URL and no standalone.min.
   expect(indexHtml).toContain("cdn.jsdelivr.net/npm/tscircuit@")
   expect(indexHtml).toContain("/dist/browser.min.js")
   expect(indexHtml).not.toContain('src="./standalone.min.js"')
+  expect(indexHtml).toContain(
+    'window.TSCIRCUIT_JSCDN_BASE_URL = "https://standalone.example/jscdn";',
+  )
 
   // standalone.min.js should NOT be created when using CDN
   await expect(

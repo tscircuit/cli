@@ -6,10 +6,8 @@ import getPort from "get-port"
 import { createLocalCacheEngine } from "lib/shared/get-platform-config-with-cli-defaults"
 import { getCliTestFixture } from "../../fixtures/get-cli-test-fixture"
 
-const LOCAL_BUNDLE =
-  "/* TSCIRCUIT_PLATFORM_CONFIG */ LOCAL_TSCIRCUIT_BUNDLE_SENTINEL"
-const GLOBAL_BUNDLE =
-  "/* TSCIRCUIT_PLATFORM_CONFIG */ GLOBAL_TSCIRCUIT_BUNDLE_SENTINEL"
+const LOCAL_BUNDLE = "LOCAL_TSCIRCUIT_BUNDLE_SENTINEL"
+const GLOBAL_BUNDLE = "GLOBAL_TSCIRCUIT_BUNDLE_SENTINEL"
 
 const writeProject = async (projectDir: string) => {
   await writeFile(
@@ -123,30 +121,6 @@ test("RunFrame's cache API reads and writes the CLI project cache", async () => 
       body: '{"source":"runframe"}',
     })
     expect(cache.getItem("written-by-runframe")).toBe('{"source":"runframe"}')
-  } finally {
-    await devServer.stop()
-  }
-}, 30_000)
-
-test("dev server rejects an incompatible pinned project bundle without changing its version", async () => {
-  const { tmpDir } = await getCliTestFixture()
-  await writeProject(tmpDir)
-  await installLocalTscircuit(tmpDir, "LEGACY_PROJECT_RUNFRAME")
-  const port = await getPort()
-  const devServer = new DevServer({
-    port,
-    componentFilePath: join(tmpDir, "index.tsx"),
-    projectDir: tmpDir,
-  })
-  try {
-    await devServer.start()
-    const response = await fetch(`http://localhost:${port}/standalone.min.js`)
-    expect(response.status).toBe(409)
-    expect(response.headers.get("Location")).toBeNull()
-    const error = await response.text()
-    expect(error).toContain("project-local")
-    expect(error).toContain("RUNFRAME_STANDALONE_FILE_PATH")
-    expect(error).not.toContain("LEGACY_PROJECT_RUNFRAME")
   } finally {
     await devServer.stop()
   }

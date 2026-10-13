@@ -1,5 +1,4 @@
 import { z } from "zod"
-import type { PlatformConfig } from "@tscircuit/props"
 
 export const pcbSnapshotSettingsSchema = z.object({
   layer: z.enum(["top", "bottom"]).optional(),
@@ -24,12 +23,6 @@ export const projectConfigSchema = z.object({
   libraryEntrypoint: z.string().optional(),
   previewComponentPath: z.string().optional(),
   siteDefaultComponentPath: z.string().optional(),
-  browserPlatformConfigPath: z.string().optional(),
-  // Callable hooks belong in a TS/JS config module; JSON supports data only.
-  platformConfig: z
-    .record(z.unknown())
-    .transform((config) => config as PlatformConfig)
-    .optional(),
   ignoredFiles: z.array(z.string()).optional(),
   includeBoardFiles: z.array(z.string()).optional(),
   snapshotsDir: z.string().optional(),

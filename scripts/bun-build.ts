@@ -1,7 +1,6 @@
 import { basename } from "node:path"
 import { cp } from "node:fs/promises"
 import { fileURLToPath } from "node:url"
-import { buildBundledBrowserModules } from "./build-bundled-browser-modules"
 // @ts-ignore
 import tscircuitPackageJson from "tscircuit/package.json"
 
@@ -13,8 +12,6 @@ const ALLOW_BUNDLING = [
   "poppygl",
   "circuit-json-to-pnp-csv",
 ]
-
-await buildBundledBrowserModules()
 
 const result = await Bun.build({
   entrypoints: [

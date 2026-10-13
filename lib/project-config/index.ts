@@ -9,10 +9,7 @@ import {
 
 export type { TscircuitProjectConfig }
 
-export type TscircuitRuntimeProjectConfig = Omit<
-  TscircuitProjectConfig,
-  "platformConfig"
-> & {
+export type TscircuitRuntimeProjectConfig = TscircuitProjectConfig & {
   platformConfig?: PlatformConfig
 }
 
@@ -168,13 +165,6 @@ export const loadRuntimeProjectConfig = async (
       ...jsonConfig?.pcbSnapshotSettings,
       ...moduleConfig?.pcbSnapshotSettings,
     },
-  }
-
-  if (jsonConfig?.platformConfig || moduleConfig?.platformConfig) {
-    mergedConfig.platformConfig = {
-      ...jsonConfig?.platformConfig,
-      ...moduleConfig?.platformConfig,
-    }
   }
 
   if (mergedConfig.useCloudAutorouting !== undefined) {

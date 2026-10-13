@@ -287,7 +287,6 @@ export async function runBrowserTest(
   try {
     browser = await chromium.launch({
       headless: !debug,
-      executablePath: process.env.PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH,
     })
     page = await browser.newPage()
 
