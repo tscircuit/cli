@@ -12,7 +12,6 @@ import { getUnscopedPackageName } from "lib/utils/get-unscoped-package-name"
 import { getPackageAuthor } from "lib/utils/get-package-author"
 import { validatePackageName } from "lib/utils/validate-package-name"
 import { getPackageFilePaths } from "lib/dev/get-package-file-paths"
-import { checkOrgAccess } from "lib/utils/check-org-access"
 import { isBinaryFile } from "./is-binary-file"
 import { hasBinaryContent } from "./has-binary-content"
 import { gzipSync } from "node:zlib"
@@ -219,26 +218,16 @@ export const pushSnippet = async ({
     fs.writeFileSync(packageJsonPath, JSON.stringify(packageJson, null, 2))
   }
 
-  // Determine the account name to use (either user or org)
-  let accountName = currentUsername
+  // The registry authorizes package/release creation and uploads. Organization
+  // administration is not required to publish an organization's packages.
+  const accountName = packageJsonAuthor || currentUsername
 
   if (packageJsonAuthor && currentUsername !== packageJsonAuthor) {
-    const hasOrgAccess = await checkOrgAccess(ky, packageJsonAuthor)
-    if (hasOrgAccess) {
-      accountName = packageJsonAuthor
-      console.log(
-        kleur.gray(
-          `Publishing to org "${packageJsonAuthor}" (user: ${accountName})`,
-        ),
-      )
-    } else {
-      onError(
-        `You don't have access to the org "${packageJsonAuthor}". Either:\n` +
-          `  1. Get added as a member of the "${packageJsonAuthor}" org, or\n` +
-          `  2. Change the package name in package.json to use your username: "@tsci/${currentUsername}.${unscopedPackageName}"`,
-      )
-      return onExit(1)
-    }
+    log(
+      kleur.gray(
+        `Publishing to org "${packageJsonAuthor}" (user: ${currentUsername})`,
+      ),
+    )
   }
 
   const scopedPackageName = `${accountName}/${unscopedPackageName}`
@@ -388,16 +377,16 @@ export const pushSnippet = async ({
     releaseVersion = buildReleaseVersion(packageVersion)
   }
 
-  await ky
-    .post("package_releases/create", {
+  try {
+    await ky.post("package_releases/create", {
       json: {
         package_name_with_version: `${scopedPackageName}@${releaseVersion}`,
       },
     })
-    .catch((error) => {
-      onError(`Error creating release: ${error}`)
-      return onExit(1)
-    })
+  } catch (error) {
+    onError(`Error creating release: ${error}`)
+    return onExit(1)
+  }
 
   const filePaths = getPackageFilePaths(
     projectDir,
