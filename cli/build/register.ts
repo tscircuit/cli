@@ -947,14 +947,21 @@ export const registerBuild = (program: Command) => {
           if (resolvedOptions?.useCdnJavascript) {
             standaloneScriptSrc = await getLatestTscircuitCdnUrl()
           } else {
+            const explicitStandalonePath =
+              process.env.RUNFRAME_STANDALONE_FILE_PATH
+            const standaloneBundleContent = explicitStandalonePath
+              ? fs.readFileSync(explicitStandalonePath, "utf8")
+              : runFrameStandaloneBundleContent
             const compatibilityError = getRunframeStandaloneCompatibilityError(
-              runFrameStandaloneBundleContent,
-              "The CLI-bundled RunFrame",
+              standaloneBundleContent,
+              explicitStandalonePath
+                ? "RUNFRAME_STANDALONE_FILE_PATH"
+                : "The CLI-bundled RunFrame",
             )
             if (compatibilityError) throw new Error(compatibilityError)
             fs.writeFileSync(
               path.join(distDir, "standalone.min.js"),
-              runFrameStandaloneBundleContent,
+              standaloneBundleContent,
             )
           }
           const pkgJsonPath = path.join(projectDir, "package.json")

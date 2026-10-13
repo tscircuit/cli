@@ -7,6 +7,19 @@ import { ensureBrowserModules } from "../../fixtures/ensure-browser-modules"
 
 beforeAll(ensureBrowserModules, 30_000)
 
+// These tests verify CLI packaging. Browser behavior is tested separately with
+// the paired RunFrame build; the currently published bundle predates its hook.
+const standaloneFixture = `export const platformConfig = window.TSCIRCUIT_PLATFORM_CONFIG;\n`
+
+const writeStandaloneFixture = async (
+  tmpDir: string,
+  content = standaloneFixture,
+) => {
+  const standalonePath = path.join(tmpDir, "runframe-fixture.js")
+  await writeFile(standalonePath, content)
+  return { env: { RUNFRAME_STANDALONE_FILE_PATH: standalonePath } }
+}
+
 const circuitCode = `
 export default () => (
   <board width="10mm" height="10mm">
@@ -20,8 +33,12 @@ test("build with --site generates index.html and standalone.min.js", async () =>
   await writeFile(circuitPath, circuitCode)
   await writeFile(path.join(tmpDir, "package.json"), "{}")
 
-  const { stderr } = await runCommand(`tsci build --site ${circuitPath}`)
+  const { stderr, exitCode } = await runCommand(
+    `tsci build --site ${circuitPath}`,
+    await writeStandaloneFixture(tmpDir),
+  )
   expect(stderr).toBe("")
+  expect(exitCode).toBe(0)
 
   const indexHtml = await readFile(
     path.join(tmpDir, "dist", "index.html"),
@@ -37,6 +54,9 @@ test("build with --site generates index.html and standalone.min.js", async () =>
   expect(indexHtml).toContain("window.TSCIRCUIT_USE_RUNFRAME_FOR_CLI = false;")
   expect(indexHtml).toContain("window.TSCIRCUIT_RUNFRAME_STATIC_FILE_LIST")
   expect(standaloneJs.isFile()).toBe(true)
+  expect(
+    await readFile(path.join(tmpDir, "dist", "standalone.min.js"), "utf8"),
+  ).toBe(standaloneFixture)
   expect(indexHtml).toContain('"jscdnBaseUrl":"./jscdn"')
   expect(indexHtml).not.toContain("cdn.tailwindcss.com")
   expect(indexHtml).not.toContain("github.com/tscircuit.png")
@@ -79,6 +99,7 @@ test("build --site copies browser config with hooks and preserves explicit proje
   )
   const { stderr, exitCode } = await runCommand(
     `tsci build --site ${circuitPath}`,
+    await writeStandaloneFixture(tmpDir),
   )
   expect(stderr).toBe("")
   expect(exitCode).toBe(0)
@@ -89,6 +110,25 @@ test("build --site copies browser config with hooks and preserves explicit proje
   expect(
     await readFile(path.join(tmpDir, "dist/platform-config.js"), "utf8"),
   ).toContain("platformFetch")
+}, 30_000)
+
+test("build --site rejects an incompatible explicit RunFrame bundle", async () => {
+  const { tmpDir, runCommand } = await getCliTestFixture()
+  const circuitPath = path.join(tmpDir, "test.circuit.tsx")
+  await writeFile(circuitPath, circuitCode)
+  await writeFile(path.join(tmpDir, "package.json"), "{}")
+
+  const { stderr, exitCode } = await runCommand(
+    `tsci build --site ${circuitPath}`,
+    await writeStandaloneFixture(tmpDir, "export const oldRunframe = true;\n"),
+  )
+  expect(exitCode).toBe(1)
+  expect(stderr).toContain("RUNFRAME_STANDALONE_FILE_PATH")
+  expect(stderr).toContain("does not support TSCIRCUIT_PLATFORM_CONFIG")
+  await expect(stat(path.join(tmpDir, "dist/index.html"))).rejects.toBeTruthy()
+  await expect(
+    stat(path.join(tmpDir, "dist/standalone.min.js")),
+  ).rejects.toBeTruthy()
 }, 30_000)
 
 test("build with --site generates only 3D preview images for every circuit", async () => {
