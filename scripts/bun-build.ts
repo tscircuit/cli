@@ -8,7 +8,6 @@ const tscircuitPackageJsonDeps = Object.keys(tscircuitPackageJson.dependencies)
 
 const ALLOW_BUNDLING = [
   "@tscircuit/runframe",
-  "@tscircuit/internal-dynamic-import",
   "calculate-elbow",
   "poppygl",
   "circuit-json-to-pnp-csv",
