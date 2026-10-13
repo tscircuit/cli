@@ -1,4 +1,5 @@
 import { loadingStateUi } from "./loadingStateUi"
+import { getJscdnImportMap } from "./bundle-jscdn"
 
 export interface StaticBuildFileReference {
   filePath: string
@@ -11,6 +12,8 @@ export interface GetStaticIndexHtmlFileOptions {
   defaultMainComponentPath?: string
   packageName?: string
   jscdnBaseUrl?: string
+  dynamicImportSpecifiers?: string[]
+  bundleJscdn?: boolean
 }
 
 export const getStaticIndexHtmlFile = ({
@@ -19,6 +22,8 @@ export const getStaticIndexHtmlFile = ({
   defaultMainComponentPath,
   packageName,
   jscdnBaseUrl,
+  dynamicImportSpecifiers = [],
+  bundleJscdn = false,
 }: GetStaticIndexHtmlFileOptions) => {
   const scriptLines = [
     "window.TSCIRCUIT_USE_RUNFRAME_FOR_CLI = false;",
@@ -40,6 +45,11 @@ export const getStaticIndexHtmlFile = ({
 
   const scriptBlock = `      <script>\n        ${scriptLines.join("\n        ")}\n      </script>\n`
 
+  const importMapBlock =
+    bundleJscdn && jscdnBaseUrl
+      ? `      <script type="importmap">${JSON.stringify(getJscdnImportMap(dynamicImportSpecifiers, jscdnBaseUrl, bundleJscdn)).replace(/</g, "\\u003c")}</script>\n`
+      : ""
+
   return `<html>
     <head>
       <link rel="icon" type="image/png" href="https://github.com/tscircuit.png">
@@ -48,7 +58,7 @@ export const getStaticIndexHtmlFile = ({
       <meta name="viewport" content="width=device-width, initial-scale=1.0">
     </head>
     <body>
-${scriptBlock}      <script src="https://cdn.tailwindcss.com"></script>
+${scriptBlock}${importMapBlock}      <script src="https://cdn.tailwindcss.com"></script>
       <div id="root">${loadingStateUi}</div>
       <script>
       globalThis.process = { env: { NODE_ENV: "production" } }

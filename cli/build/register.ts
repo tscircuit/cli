@@ -16,6 +16,7 @@ import type { SolverDiagnosticsOptions } from "lib/shared/solver-diagnostics"
 import { convertToKicadLibrary } from "lib/shared/convert-to-kicad-library"
 import { getEntrypoint } from "lib/shared/get-entrypoint"
 import { mergePlatformConfigs } from "lib/shared/platform-config-utils"
+import { bundleJscdn, getRunframeDynamicImports } from "lib/site/bundle-jscdn"
 import {
   type StaticBuildFileReference,
   getStaticIndexHtmlFile,
@@ -127,6 +128,10 @@ export const registerBuild = (program: Command) => {
     .option("--routing-disabled", "Disable routing during circuit generation")
     .option("--disable-parts-engine", "Disable the parts engine")
     .option("--site", "Generate a static site in the dist directory")
+    .option(
+      "--bundle-jscdn",
+      "Bundle runframe's dynamic imports into dist/jscdn (requires --site)",
+    )
     .option(
       "--jscdn-base-url <url>",
       "Set the JS CDN base URL for dynamic imports in the generated site",
@@ -284,6 +289,10 @@ export const registerBuild = (program: Command) => {
 
         if (handled) {
           return
+        }
+
+        if (resolvedOptions?.bundleJscdn && !resolvedOptions?.site) {
+          throw new Error("--bundle-jscdn requires --site")
         }
 
         // When --kicad-project is used without a file argument and kicadProjectEntrypointPath is set,
@@ -939,6 +948,34 @@ export const registerBuild = (program: Command) => {
           const packageName = fs.existsSync(pkgJsonPath)
             ? JSON.parse(fs.readFileSync(pkgJsonPath, "utf-8")).name
             : undefined
+          const jscdnBaseUrl =
+            resolvedOptions?.jscdnBaseUrl ??
+            (resolvedOptions?.bundleJscdn ? "./jscdn" : undefined)
+          let dynamicImportSpecifiers: string[] = []
+          if (resolvedOptions?.bundleJscdn) {
+            let standaloneSource = runFrameStandaloneBundleContent
+            if (resolvedOptions?.useCdnJavascript) {
+              const response = await fetch(standaloneScriptSrc)
+              if (!response.ok)
+                throw new Error(
+                  `Failed to inspect site JavaScript: HTTP ${response.status}`,
+                )
+              standaloneSource = await response.text()
+            }
+            dynamicImportSpecifiers =
+              getRunframeDynamicImports(standaloneSource)
+            if (dynamicImportSpecifiers.length === 0)
+              throw new Error(
+                "Could not find runframe's dynamic imports in the site JavaScript",
+              )
+            console.log(
+              `Bundling ${dynamicImportSpecifiers.length} JS CDN packages...`,
+            )
+            await bundleJscdn({
+              outputDir: path.join(distDir, "jscdn"),
+              specifiers: dynamicImportSpecifiers,
+            })
+          }
           const indexHtml = getStaticIndexHtmlFile({
             files: staticFileReferences,
             standaloneScriptSrc,
@@ -946,7 +983,9 @@ export const registerBuild = (program: Command) => {
               ? normalizeRelativePath(projectDir, siteDefaultComponentPath)
               : undefined,
             packageName: packageName || path.basename(projectDir),
-            jscdnBaseUrl: resolvedOptions?.jscdnBaseUrl,
+            jscdnBaseUrl,
+            dynamicImportSpecifiers,
+            bundleJscdn: resolvedOptions?.bundleJscdn,
           })
           fs.writeFileSync(path.join(distDir, "index.html"), indexHtml)
         }

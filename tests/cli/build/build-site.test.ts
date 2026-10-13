@@ -2,6 +2,7 @@ import { getCliTestFixture } from "../../fixtures/get-cli-test-fixture"
 import { test, expect } from "bun:test"
 import { writeFile, readFile, stat } from "node:fs/promises"
 import path from "node:path"
+import { getRunframeDynamicImports } from "lib/site/bundle-jscdn"
 
 const circuitCode = `
 export default () => (
@@ -108,3 +109,81 @@ test("build with --site --use-cdn-javascript uses CDN URL and no standalone.min.
     stat(path.join(tmpDir, "dist", "standalone.min.js")),
   ).rejects.toBeTruthy()
 }, 30_000)
+
+for (const customBase of [undefined, "/assets/jscdn"]) {
+  test(`build --site --bundle-jscdn bundles every runframe request with base ${customBase ?? "./jscdn"}`, async () => {
+    const { tmpDir } = await getCliTestFixture()
+    await writeFile(path.join(tmpDir, "test.circuit.json"), "[]")
+    await writeFile(path.join(tmpDir, "package.json"), "{}")
+    const preloadPath = path.join(tmpDir, "mock-jscdn.ts")
+    await writeFile(
+      preloadPath,
+      `
+      const originalFetch = globalThis.fetch;
+      globalThis.fetch = (input, init) => String(input).startsWith("https://jscdn.tscircuit.com/")
+        ? Promise.resolve(new Response("export const bundled = true;"))
+        : originalFetch(input, init);
+    `,
+    )
+    const args = [
+      "bun",
+      "--preload",
+      preloadPath,
+      path.resolve("cli/main.ts"),
+      "build",
+      "test.circuit.json",
+      "--site",
+      "--bundle-jscdn",
+    ]
+    if (customBase) args.push("--jscdn-base-url", customBase)
+    const subprocess = Bun.spawn(args, {
+      cwd: tmpDir,
+      env: {
+        ...process.env,
+        TSCI_TEST_MODE: "true",
+        TSCIRCUIT_CONFIG_DIR: path.join(tmpDir, ".config"),
+      },
+      stdout: "pipe",
+      stderr: "pipe",
+    })
+    const [stdout, stderr, exitCode] = await Promise.all([
+      new Response(subprocess.stdout).text(),
+      new Response(subprocess.stderr).text(),
+      subprocess.exited,
+    ])
+    expect(stderr).toBe("")
+    expect(exitCode).toBe(0)
+    const source = await readFile(
+      path.resolve("node_modules/@tscircuit/runframe/dist/standalone.min.js"),
+      "utf8",
+    )
+    const specifiers = getRunframeDynamicImports(source)
+    expect(stdout).toContain(`Bundling ${specifiers.length} JS CDN packages`)
+    const html = await readFile(path.join(tmpDir, "dist/index.html"), "utf8")
+    expect(html).toContain(
+      `window.TSCIRCUIT_JSCDN_BASE_URL = ${JSON.stringify(customBase ?? "./jscdn")};`,
+    )
+    const { imports } = JSON.parse(
+      html.match(/<script type="importmap">(.*?)<\/script>/)![1],
+    )
+    for (const specifier of specifiers) {
+      expect(
+        await readFile(
+          path.join(tmpDir, "dist/jscdn", specifier, "latest/+esm.js"),
+          "utf8",
+        ),
+      ).toBe("export const bundled = true;")
+      expect(imports[`https://esm.run/${specifier}`]).toBe(
+        `${customBase ?? "./jscdn"}/${specifier}/latest/+esm.js`,
+      )
+    }
+    expect(await readFile(path.join(tmpDir, "package.json"), "utf8")).toBe("{}")
+  }, 30_000)
+}
+
+test("build rejects --bundle-jscdn without --site", async () => {
+  const { runCommand } = await getCliTestFixture()
+  const { stderr, exitCode } = await runCommand("tsci build --bundle-jscdn")
+  expect(exitCode).toBe(1)
+  expect(stderr).toContain("requires --site")
+})
