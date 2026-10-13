@@ -10,6 +10,7 @@ export interface GetStaticIndexHtmlFileOptions {
   standaloneScriptSrc?: string
   defaultMainComponentPath?: string
   packageName?: string
+  jscdnBaseUrl?: string
 }
 
 export const getStaticIndexHtmlFile = ({
@@ -17,10 +18,16 @@ export const getStaticIndexHtmlFile = ({
   standaloneScriptSrc = "./standalone.min.js",
   defaultMainComponentPath,
   packageName,
+  jscdnBaseUrl,
 }: GetStaticIndexHtmlFileOptions) => {
   const scriptLines = [
     "window.TSCIRCUIT_USE_RUNFRAME_FOR_CLI = false;",
     `window.TSCIRCUIT_RUNFRAME_STATIC_FILE_LIST = ${JSON.stringify(files)};`,
+    ...(jscdnBaseUrl !== undefined
+      ? [
+          `window.TSCIRCUIT_JSCDN_BASE_URL = ${JSON.stringify(jscdnBaseUrl).replace(/</g, "\\u003c")};`,
+        ]
+      : []),
     ...(defaultMainComponentPath
       ? [
           `window.TSCIRCUIT_DEFAULT_MAIN_COMPONENT_PATH = ${JSON.stringify(defaultMainComponentPath)};`,

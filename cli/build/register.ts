@@ -127,6 +127,10 @@ export const registerBuild = (program: Command) => {
     .option("--routing-disabled", "Disable routing during circuit generation")
     .option("--disable-parts-engine", "Disable the parts engine")
     .option("--site", "Generate a static site in the dist directory")
+    .option(
+      "--jscdn-base-url <url>",
+      "Set the JS CDN base URL for dynamic imports in the generated site",
+    )
     .option("--transpile", "Transpile the entry file to JavaScript")
     .option("--preview-images", "Generate preview images in the dist directory")
     .option(
@@ -942,6 +946,7 @@ export const registerBuild = (program: Command) => {
               ? normalizeRelativePath(projectDir, siteDefaultComponentPath)
               : undefined,
             packageName: packageName || path.basename(projectDir),
+            jscdnBaseUrl: resolvedOptions?.jscdnBaseUrl,
           })
           fs.writeFileSync(path.join(distDir, "index.html"), indexHtml)
         }

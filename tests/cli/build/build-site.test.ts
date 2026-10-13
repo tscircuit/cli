@@ -32,7 +32,27 @@ test("build with --site generates index.html and standalone.min.js", async () =>
   )
   expect(indexHtml).toContain("window.TSCIRCUIT_USE_RUNFRAME_FOR_CLI = false;")
   expect(indexHtml).toContain("window.TSCIRCUIT_RUNFRAME_STATIC_FILE_LIST")
+  expect(indexHtml).not.toContain("TSCIRCUIT_JSCDN_BASE_URL")
   expect(standaloneJs.isFile()).toBe(true)
+}, 30_000)
+
+test("build --site --jscdn-base-url injects the URL before RunFrame loads", async () => {
+  const { tmpDir, runCommand } = await getCliTestFixture()
+  const circuitPath = path.join(tmpDir, "test.circuit.tsx")
+  await writeFile(circuitPath, circuitCode)
+  await writeFile(path.join(tmpDir, "package.json"), "{}")
+
+  const { stderr, exitCode } = await runCommand(
+    `tsci build --site --jscdn-base-url=./jscdn ${circuitPath}`,
+  )
+  expect(stderr).toBe("")
+  expect(exitCode).toBe(0)
+
+  const html = await readFile(path.join(tmpDir, "dist", "index.html"), "utf-8")
+  expect(html).toContain('window.TSCIRCUIT_JSCDN_BASE_URL = "./jscdn";')
+  expect(html.indexOf("window.TSCIRCUIT_JSCDN_BASE_URL")).toBeLessThan(
+    html.indexOf('<script type="module" src="./standalone.min.js">'),
+  )
 }, 30_000)
 
 test("build with --site generates only 3D preview images for every circuit", async () => {
@@ -66,7 +86,7 @@ test("build with --site --use-cdn-javascript uses CDN URL and no standalone.min.
   await writeFile(path.join(tmpDir, "package.json"), "{}")
 
   const { stderr } = await runCommand(
-    `tsci build --site --use-cdn-javascript ${circuitPath}`,
+    `tsci build --site --use-cdn-javascript --jscdn-base-url https://standalone.example/jscdn ${circuitPath}`,
   )
   expect(stderr).toBe("")
 
@@ -79,6 +99,9 @@ test("build with --site --use-cdn-javascript uses CDN URL and no standalone.min.
   expect(indexHtml).toContain("cdn.jsdelivr.net/npm/tscircuit@")
   expect(indexHtml).toContain("/dist/browser.min.js")
   expect(indexHtml).not.toContain('src="./standalone.min.js"')
+  expect(indexHtml).toContain(
+    'window.TSCIRCUIT_JSCDN_BASE_URL = "https://standalone.example/jscdn";',
+  )
 
   // standalone.min.js should NOT be created when using CDN
   await expect(
