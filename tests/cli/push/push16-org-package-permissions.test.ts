@@ -1,10 +1,15 @@
 import { expect, test } from "bun:test"
 import ky from "ky"
+import { getCliConfig } from "lib/cli-config"
 import { writeFileSync } from "node:fs"
 import path from "node:path"
 import { getCliTestFixture } from "tests/fixtures/get-cli-test-fixture"
 
-const setup = async ({ canManageOrg = false } = {}) => {
+const setup = async ({
+  canManageOrg = false,
+  omitPackagePermissions = false,
+  rejectRelease = false,
+} = {}) => {
   const fixture = await getCliTestFixture({ loggedIn: true })
   const { tmpDir, registryDb, registryApiUrl } = fixture
   const account = registryDb.accounts[0]
@@ -38,7 +43,43 @@ const setup = async ({ canManageOrg = false } = {}) => {
     JSON.stringify({ name: packageName, version: "1.0.0" }),
   )
 
-  return { ...fixture, registry, org, membership, pkg, packageName }
+  const requests: string[] = []
+  const proxy = Bun.serve({
+    port: 0,
+    hostname: "127.0.0.1",
+    async fetch(request) {
+      const pathname = new URL(request.url).pathname
+      requests.push(pathname)
+
+      // The fake registry does not enforce release authorization. Simulate an
+      // API refusal so the CLI must stop before uploading or finalizing a release.
+      if (rejectRelease && pathname === "/api/package_releases/create") {
+        return Response.json(
+          { error: { error_code: "forbidden", message: "Publishing denied" } },
+          { status: 403 },
+        )
+      }
+
+      const upstreamUrl = new URL(request.url)
+      upstreamUrl.host = new URL(registryApiUrl).host
+      const response = await fetch(new Request(upstreamUrl, request))
+      if (omitPackagePermissions && pathname === "/api/packages/get") {
+        const body = await response.json()
+        delete body.package.user_permissions
+        return Response.json(body, { status: response.status })
+      }
+      return response
+    },
+  })
+  globalThis.deferredCleanupFns.push(async () => {
+    proxy.stop(true)
+  })
+  getCliConfig({ configDir: path.join(tmpDir, ".config") }).set(
+    "registryApiUrl",
+    `http://127.0.0.1:${proxy.port}/api`,
+  )
+
+  return { ...fixture, registry, org, membership, pkg, packageName, requests }
 }
 
 test("push publishes an existing org package without org-management permission", async () => {
@@ -63,8 +104,26 @@ test("push publishes an existing org package without org-management permission",
     "tsci push --no-compress",
   )
 
-  // Reproduction: push currently exits 1 at checkOrgAccess before checking
-  // the existing package, despite the package-level permission above.
+  // Publishing must not require permission to administer the organization.
+  expect(exitCode).toBe(0)
+  expect(stderr).toBe("")
+  expect(stdout).toContain(
+    '"@tsci/publishing-org.existing-board@1.0.0" published!',
+  )
+  expect(
+    registryDb.packageReleases.find(
+      (release) => release.package_id === pkg.package_id,
+    )?.ready_to_build,
+  ).toBe(true)
+}, 30_000)
+
+test("push publishes with default compression when package permissions are omitted", async () => {
+  const { runCommand, registryDb, pkg } = await setup({
+    omitPackagePermissions: true,
+  })
+
+  const { stdout, stderr, exitCode } = await runCommand("tsci push")
+
   expect(exitCode).toBe(0)
   expect(stderr).toBe("")
   expect(stdout).toContain(
@@ -91,9 +150,16 @@ test("push publishes the same package with org-management permission", async () 
   )
 }, 30_000)
 
-test("push rejects publishing when neither package nor org access is granted", async () => {
-  const { runCommand, registryDb, registry, membership, pkg, packageName } =
-    await setup()
+test("push stops when the registry denies a non-member permission to create a release", async () => {
+  const {
+    runCommand,
+    registryDb,
+    registry,
+    membership,
+    pkg,
+    packageName,
+    requests,
+  } = await setup({ rejectRelease: true })
   registryDb.removeOrganizationAccount({
     org_id: membership.org_id,
     account_id: membership.account_id,
@@ -106,13 +172,38 @@ test("push rejects publishing when neither package nor org access is granted", a
     }>()
   expect(visiblePackage.user_permissions.can_manage_packages).toBe(false)
 
-  const { stderr, exitCode } = await runCommand("tsci push --no-compress")
+  const { stdout, stderr, exitCode } = await runCommand("tsci push")
 
   expect(exitCode).toBe(1)
-  expect(stderr).not.toBe("")
+  expect(stderr).toContain("Error creating release:")
+  expect(stderr).toContain("403")
+  expect(stderr).toContain("Publishing denied")
+  expect(stdout).not.toContain("published!")
+  expect(requests).toContain("/api/package_releases/create")
+  expect(requests).not.toContain("/api/package_files/upload_archive")
+  expect(requests).not.toContain("/api/package_files/create")
+  expect(requests).not.toContain("/api/package_releases/update")
   expect(
     registryDb.packageReleases.filter(
       (release) => release.package_id === pkg.package_id,
     ),
   ).toHaveLength(0)
+}, 30_000)
+
+test("push respects a registry refusal even with org-management permission", async () => {
+  const { runCommand, requests } = await setup({
+    canManageOrg: true,
+    rejectRelease: true,
+  })
+
+  const { stdout, stderr, exitCode } = await runCommand(
+    "tsci push --no-compress",
+  )
+
+  expect(exitCode).toBe(1)
+  expect(stderr).toContain("Publishing denied")
+  expect(stdout).not.toContain("published!")
+  expect(requests).toContain("/api/package_releases/create")
+  expect(requests).not.toContain("/api/package_files/create")
+  expect(requests).not.toContain("/api/package_releases/update")
 }, 30_000)
