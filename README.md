@@ -245,3 +245,45 @@ export RUNFRAME_STANDALONE_FILE_PATH=../runframe/dist/standalone.min.js
 cd ../runframe && bun run build
 cd ../cli && bun run dev
 ```
+
+The CLI bundles RunFrame's optional converter dependencies during `bun run build`
+and serves them from `/jscdn` in dev. `tsci build --site` copies them into
+`dist/jscdn` and injects `platformConfig.jscdnBaseUrl: "./jscdn"`. These routes
+serve only packaged modules and versions; missing modules never proxy a public
+CDN. An explicit project `platformConfig.jscdnBaseUrl` overrides the local default.
+
+To provide callable browser hooks, set `browserPlatformConfigPath` in
+`tscircuit.config.ts` or `tscircuit.config.json` to a browser-safe TS/JS module
+that exports `PlatformConfig` directly:
+
+```ts
+// tscircuit.config.ts
+export default {
+  browserPlatformConfigPath: "./browser-platform.ts",
+  platformConfig: { useCloudAutorouter: false },
+}
+
+// browser-platform.ts
+export default {
+  platformFetch: (url: RequestInfo | URL, init?: RequestInit) => fetch(url, init),
+}
+```
+
+The browser module is bundled with Bun and loaded before RunFrame in dev and
+static sites. Project platform data is injected alongside it. Callable hooks
+in the Node project config require this explicit browser module; they cannot be
+JSON serialized. Keep browser hooks and their imports free of Node APIs and
+server secrets. Environment variables are not automatically inlined into the
+browser module. Local converter delivery does not disable unrelated services
+such as registries, part pricing, or remotely referenced CAD models.
+
+This integration requires the browser platform config hook introduced in
+[RunFrame #5704](https://github.com/tscircuit/runframe/pull/5704), together with
+the `jscdnBaseUrl` field from [props #933](https://github.com/tscircuit/props/pull/933).
+Project-local and global `tscircuit/browser` bundles include their own RunFrame,
+so those aggregate packages must also contain the updated hook. The dev server
+returns an actionable HTTP 409 for an older selected bundle; it preserves the
+project's version pin. Upgrade the selected package or use
+`RUNFRAME_STANDALONE_FILE_PATH` with a compatible local build. Bundled static
+site builds also reject an older CLI RunFrame. `--use-cdn-javascript` explicitly
+uses a remote aggregate bundle and requires a compatible published version.

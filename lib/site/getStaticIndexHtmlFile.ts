@@ -1,4 +1,10 @@
 import { loadingStateUi } from "./loadingStateUi"
+import type { PlatformConfig } from "@tscircuit/props"
+import {
+  escapeHtml,
+  getRunframeBootScript,
+  scriptSafeJson,
+} from "./browser-platform-config"
 
 export interface StaticBuildFileReference {
   filePath: string
@@ -10,6 +16,8 @@ export interface GetStaticIndexHtmlFileOptions {
   standaloneScriptSrc?: string
   defaultMainComponentPath?: string
   packageName?: string
+  platformConfig?: PlatformConfig
+  platformConfigScriptSrc?: string
 }
 
 export const getStaticIndexHtmlFile = ({
@@ -17,17 +25,20 @@ export const getStaticIndexHtmlFile = ({
   standaloneScriptSrc = "./standalone.min.js",
   defaultMainComponentPath,
   packageName,
+  platformConfig = { jscdnBaseUrl: "./jscdn" },
+  platformConfigScriptSrc,
 }: GetStaticIndexHtmlFileOptions) => {
   const scriptLines = [
     "window.TSCIRCUIT_USE_RUNFRAME_FOR_CLI = false;",
-    `window.TSCIRCUIT_RUNFRAME_STATIC_FILE_LIST = ${JSON.stringify(files)};`,
+    `window.TSCIRCUIT_RUNFRAME_STATIC_FILE_LIST = ${scriptSafeJson(files)};`,
+    `window.TSCIRCUIT_PLATFORM_CONFIG = ${scriptSafeJson(platformConfig)};`,
     ...(defaultMainComponentPath
       ? [
-          `window.TSCIRCUIT_DEFAULT_MAIN_COMPONENT_PATH = ${JSON.stringify(defaultMainComponentPath)};`,
+          `window.TSCIRCUIT_DEFAULT_MAIN_COMPONENT_PATH = ${scriptSafeJson(defaultMainComponentPath)};`,
         ]
       : []),
     ...(packageName
-      ? [`window.TSCIRCUIT_PACKAGE_NAME = ${JSON.stringify(packageName)};`]
+      ? [`window.TSCIRCUIT_PACKAGE_NAME = ${scriptSafeJson(packageName)};`]
       : []),
   ]
 
@@ -35,18 +46,17 @@ export const getStaticIndexHtmlFile = ({
 
   return `<html>
     <head>
-      <link rel="icon" type="image/png" href="https://github.com/tscircuit.png">
       <meta charset="UTF-8" />
-      <title>${packageName || "tscircuit"}</title>
+      <title>${escapeHtml(packageName || "tscircuit")}</title>
       <meta name="viewport" content="width=device-width, initial-scale=1.0">
     </head>
     <body>
-${scriptBlock}      <script src="https://cdn.tailwindcss.com"></script>
+${scriptBlock}
       <div id="root">${loadingStateUi}</div>
       <script>
       globalThis.process = { env: { NODE_ENV: "production" } }
       </script>
-      <script type="module" src="${standaloneScriptSrc}"></script>
+      ${getRunframeBootScript(standaloneScriptSrc, platformConfigScriptSrc)}
     </body>
   </html>`
 }

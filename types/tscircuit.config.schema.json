@@ -5,6 +5,14 @@
   "type": "object",
   "additionalProperties": false,
   "properties": {
+    "browserPlatformConfigPath": {
+      "type": "string",
+      "description": "Browser-safe TS/JS module exporting PlatformConfig directly. Bundled for dev and static sites to preserve callable hooks."
+    },
+    "platformConfig": {
+      "type": "object",
+      "description": "PlatformConfig data. Callable hooks can be defined in tscircuit.config.ts; browser hooks must be supplied through browserPlatformConfigPath."
+    },
     "$schema": {
       "type": "string",
       "format": "uri",

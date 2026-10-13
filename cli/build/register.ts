@@ -16,6 +16,12 @@ import type { SolverDiagnosticsOptions } from "lib/shared/solver-diagnostics"
 import { convertToKicadLibrary } from "lib/shared/convert-to-kicad-library"
 import { getEntrypoint } from "lib/shared/get-entrypoint"
 import { mergePlatformConfigs } from "lib/shared/platform-config-utils"
+import { copyBundledBrowserModules } from "lib/shared/bundled-browser-modules"
+import { getRunframeStandaloneCompatibilityError } from "lib/shared/runframe-standalone-compatibility"
+import {
+  bundleBrowserPlatformConfig,
+  getBrowserPlatformConfig,
+} from "lib/site/browser-platform-config"
 import {
   type StaticBuildFileReference,
   getStaticIndexHtmlFile,
@@ -922,10 +928,30 @@ export const registerBuild = (program: Command) => {
         }
 
         if (resolvedOptions?.site) {
+          const browserPlatformConfig = getBrowserPlatformConfig(
+            projectConfig,
+            "./jscdn",
+          )
+          const browserPlatformConfigBundle = await bundleBrowserPlatformConfig(
+            projectDir,
+            projectConfig?.browserPlatformConfigPath,
+          )
+          copyBundledBrowserModules(distDir)
+          if (browserPlatformConfigBundle) {
+            fs.writeFileSync(
+              path.join(distDir, "platform-config.js"),
+              browserPlatformConfigBundle,
+            )
+          }
           let standaloneScriptSrc = "./standalone.min.js"
           if (resolvedOptions?.useCdnJavascript) {
             standaloneScriptSrc = await getLatestTscircuitCdnUrl()
           } else {
+            const compatibilityError = getRunframeStandaloneCompatibilityError(
+              runFrameStandaloneBundleContent,
+              "The CLI-bundled RunFrame",
+            )
+            if (compatibilityError) throw new Error(compatibilityError)
             fs.writeFileSync(
               path.join(distDir, "standalone.min.js"),
               runFrameStandaloneBundleContent,
@@ -942,6 +968,10 @@ export const registerBuild = (program: Command) => {
               ? normalizeRelativePath(projectDir, siteDefaultComponentPath)
               : undefined,
             packageName: packageName || path.basename(projectDir),
+            platformConfig: browserPlatformConfig,
+            platformConfigScriptSrc: browserPlatformConfigBundle
+              ? "./platform-config.js"
+              : undefined,
           })
           fs.writeFileSync(path.join(distDir, "index.html"), indexHtml)
         }
