@@ -219,6 +219,7 @@ export class DevServer {
       persistent: true,
       ignoreInitial: true,
       ignored: (p) =>
+        path.resolve(p) === process.execPath ||
         shouldIgnorePath(path.relative(this.projectDir, p), this.ignoredFiles),
     })
 
