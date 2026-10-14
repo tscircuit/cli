@@ -36,7 +36,10 @@ test.each([false, true])(
     )
 
     const { stderr, exitCode } = await runCommand(
-      `tsci build test.circuit.json --site ${ignoreConfig ? "--ignore-config" : ""}`,
+      [
+        "tsci build test.circuit.json --site",
+        ...(ignoreConfig ? ["--ignore-config"] : []),
+      ].join(" "),
     )
     expect(stderr).toBe("")
     expect(exitCode).toBe(0)
