@@ -392,13 +392,6 @@ async function executeRunBrowserTestStep(
       headless: !debug,
     })
     page = await browser.newPage()
-    // Test the CLI's RunFrame instead of the bundle in the cloned legacy project.
-    await page.route("**/standalone.min.js", (route) =>
-      route.fulfill({
-        path: import.meta.resolveSync("@tscircuit/runframe/standalone"),
-        contentType: "application/javascript",
-      }),
-    )
 
     const result = {
       circuitJson: [] as any[],
