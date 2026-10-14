@@ -84,7 +84,11 @@ export const registerImport = (program: Command) => {
         if (searchJlc) {
           try {
             spinner.text = "Searching JLCPCB parts..."
-            const searchUrl = `${getPartsEngineBaseUrl("jlcsearch", "https://jlcsearch.tscircuit.com")}/api/search?limit=10&q=${encodeURIComponent(query)}`
+            const baseUrl = getPartsEngineBaseUrl(
+              "jlcsearch",
+              "https://jlcsearch.tscircuit.com",
+            )
+            const searchUrl = `${baseUrl}/api/search?limit=10&q=${encodeURIComponent(query)}`
             const resp = await fetch(searchUrl).then((r) => r.json())
             jlcResults = resp.components
           } catch (error) {

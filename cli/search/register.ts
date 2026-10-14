@@ -109,9 +109,11 @@ export const registerSearch = (program: Command) => {
           }
 
           if (searchJlc) {
-            const jlcSearchUrl =
-              `${getPartsEngineBaseUrl("jlcsearch", "https://jlcsearch.tscircuit.com")}/api/search?limit=10&q=` +
-              encodeURIComponent(query)
+            const baseUrl = getPartsEngineBaseUrl(
+              "jlcsearch",
+              "https://jlcsearch.tscircuit.com",
+            )
+            const jlcSearchUrl = `${baseUrl}/api/search?limit=10&q=${encodeURIComponent(query)}`
             const jlcResponse = await fetch(jlcSearchUrl).then((r) => r.json())
             jlcResults = jlcResponse?.components ?? []
           }

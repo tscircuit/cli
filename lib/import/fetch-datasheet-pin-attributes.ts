@@ -23,9 +23,8 @@ export const fetchDatasheetPinAttributes = async (
 
   const signal = AbortSignal.timeout(5_000)
   try {
-    const url = new URL(
-      `${getPartsEngineBaseUrl("datasheet-api", getRegistryApiUrl())}/datasheets/get`,
-    )
+    const baseUrl = getPartsEngineBaseUrl("datasheet-api", getRegistryApiUrl())
+    const url = new URL(`${baseUrl}/datasheets/get`)
     url.searchParams.set("chip_name", chipName)
     const response = await fetch(url, { signal })
     if (response.status === 404) return undefined

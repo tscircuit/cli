@@ -84,7 +84,9 @@ test("dev injects the provider URLs and serves baked files across origins", asyn
     }
   }
   const browser = { window: {} as Record<string, string> }
-  runInNewContext(html.match(/<script>([\s\S]*?)<\/script>/)![1]!, browser)
+  const startupScript = html.match(/<script>([\s\S]*?)<\/script>/)?.[1]
+  expect(startupScript).toBeDefined()
+  runInNewContext(startupScript!, browser)
   const jlcUrl = browser.window.TSCIRCUIT_JLCSEARCH_BASE_URL!
   const assetOrigin = new URL(jlcUrl).origin
   expect(assetOrigin).not.toBe(origin)
@@ -98,7 +100,7 @@ test("dev injects the provider URLs and serves baked files across origins", asyn
       `${assetOrigin}/${provider}`,
     )
   }
-  expect(html.indexOf("window.TSCIRCUIT_JLCSEARCH_BASE_URL")).toBeLessThan(
+  expect(html.indexOf("Object.assign(window,")).toBeLessThan(
     html.indexOf('src="/standalone.min.js"'),
   )
   const response = await fetch(`${jlcUrl}/api/search?q=LM358&limit=10`)

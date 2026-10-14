@@ -8,16 +8,17 @@ export const partsEngineBaseUrlEnvVars = {
 export const getPartsEngineBaseUrl = (
   provider: keyof typeof partsEngineBaseUrlEnvVars,
   defaultBaseUrl: string,
-) =>
-  (process.env[partsEngineBaseUrlEnvVars[provider]] ?? defaultBaseUrl).replace(
-    /\/+$/,
-    "",
-  )
+) => {
+  const environmentVariable = partsEngineBaseUrlEnvVars[provider]
+  const baseUrl = process.env[environmentVariable] ?? defaultBaseUrl
+  return baseUrl.replace(/\/+$/, "")
+}
 
-export const getPartsEngineBaseUrls = (): Record<string, string> =>
-  Object.fromEntries(
-    Object.values(partsEngineBaseUrlEnvVars).flatMap((name) => {
-      const baseUrl = process.env[name]
-      return baseUrl === undefined ? [] : [[name, baseUrl]]
-    }),
-  )
+export const getPartsEngineBaseUrls = () => {
+  const baseUrls: Record<string, string> = {}
+  for (const environmentVariable of Object.values(partsEngineBaseUrlEnvVars)) {
+    const baseUrl = process.env[environmentVariable]
+    if (baseUrl !== undefined) baseUrls[environmentVariable] = baseUrl
+  }
+  return baseUrls
+}

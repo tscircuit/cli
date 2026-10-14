@@ -16,12 +16,10 @@ export const getIndex = async (
   const jscdnScript = jscdnBaseUrl
     ? `\n        window.TSCIRCUIT_JSCDN_BASE_URL = ${JSON.stringify(jscdnBaseUrl).replace(/</g, "\\u003c")};`
     : ""
-  const partsEngineScript = Object.entries(getPartsEngineBaseUrls())
-    .map(
-      ([name, baseUrl]) =>
-        `\n        window.${name} = ${JSON.stringify(baseUrl).replace(/</g, "\\u003c")};`,
-    )
-    .join("")
+  const partsEngineBaseUrls = getPartsEngineBaseUrls()
+  const partsEngineScript = Object.keys(partsEngineBaseUrls).length
+    ? `\n        Object.assign(window, ${JSON.stringify(partsEngineBaseUrls).replace(/</g, "\\u003c")});`
+    : ""
   return `<html>
     <head>
       <meta charset="UTF-8" />
