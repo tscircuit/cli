@@ -39,6 +39,12 @@ export const getStaticIndexHtmlFile = ({
   ]
 
   const scriptBlock = `      <script>\n        ${scriptLines.join("\n        ")}\n      </script>\n`
+  // A failed module script needs a new element to retry on another CDN.
+  const cdnFallback = standaloneScriptSrc.startsWith(
+    "https://cdn.jsdelivr.net/npm/tscircuit@",
+  )
+    ? ` onerror="const script = document.createElement('script'); script.type = 'module'; script.src = this.src.replace('https://cdn.jsdelivr.net/npm/', 'https://unpkg.com/'); this.after(script)"`
+    : ""
 
   return `<html>
     <head>
@@ -53,7 +59,7 @@ ${scriptBlock}      <script src="https://cdn.tailwindcss.com"></script>
       <script>
       globalThis.process = { env: { NODE_ENV: "production" } }
       </script>
-      <script type="module" src="${standaloneScriptSrc}"></script>
+      <script type="module" src="${standaloneScriptSrc}"${cdnFallback}></script>
     </body>
   </html>`
 }
