@@ -29,6 +29,33 @@ const mockFetch = (
     Object.assign(handler, { preconnect: fetch.preconnect }),
   )
 
+test("datasheet requests preserve the configured base URL prefix", async () => {
+  const originalBaseUrl = process.env.TSCIRCUIT_DATASHEET_API_BASE_URL
+  process.env.TSCIRCUIT_DATASHEET_API_BASE_URL =
+    "http://localhost:4200/datasheet-api/"
+  const fetchMock = mockFetch(async (input) => {
+    expect(String(input)).toBe(
+      "http://localhost:4200/datasheet-api/datasheets/get?chip_name=rp2040",
+    )
+    return Response.json({
+      datasheet: {
+        chip_name: "RP2040",
+        pin_attributes: { pin1: { requiresPower: true } },
+      },
+    })
+  })
+  try {
+    expect(await fetchDatasheetPinAttributes("RP2040")).toEqual({
+      pin1: { requiresPower: true },
+    })
+  } finally {
+    fetchMock.mockRestore()
+    if (originalBaseUrl === undefined)
+      delete process.env.TSCIRCUIT_DATASHEET_API_BASE_URL
+    else process.env.TSCIRCUIT_DATASHEET_API_BASE_URL = originalBaseUrl
+  }
+})
+
 const getImportedElement = (source: string, props = {}) => {
   const js = ts.transpileModule(source, {
     compilerOptions: { jsx: ts.JsxEmit.React, module: ts.ModuleKind.CommonJS },

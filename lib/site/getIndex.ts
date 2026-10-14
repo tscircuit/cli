@@ -1,4 +1,5 @@
 import { getSessionToken } from "lib/cli-config"
+import { getPartsEngineBaseUrls } from "lib/shared/parts-engine-base-urls"
 
 export const getIndex = async (
   mainComponentPath?: string,
@@ -15,6 +16,12 @@ export const getIndex = async (
   const jscdnScript = jscdnBaseUrl
     ? `\n        window.TSCIRCUIT_JSCDN_BASE_URL = ${JSON.stringify(jscdnBaseUrl).replace(/</g, "\\u003c")};`
     : ""
+  const partsEngineScript = Object.entries(getPartsEngineBaseUrls())
+    .map(
+      ([name, baseUrl]) =>
+        `\n        window.${name} = ${JSON.stringify(baseUrl).replace(/</g, "\\u003c")};`,
+    )
+    .join("")
   return `<html>
     <head>
       <meta charset="UTF-8" />
@@ -23,7 +30,7 @@ export const getIndex = async (
     <body>
       <script>
        ${mainComponentPath ? `window.TSCIRCUIT_DEFAULT_MAIN_COMPONENT_PATH = "${mainComponentPath}";` : ""}
-        window.TSCIRCUIT_USE_RUNFRAME_FOR_CLI = true;${tokenScript}${fileServerApiScript}${jscdnScript}
+        window.TSCIRCUIT_USE_RUNFRAME_FOR_CLI = true;${tokenScript}${fileServerApiScript}${jscdnScript}${partsEngineScript}
       </script>
       <script src="https://cdn.tailwindcss.com"></script>
       <div id="root">loading...</div>
