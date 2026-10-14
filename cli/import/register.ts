@@ -1,10 +1,14 @@
 import { getQueryFromParts } from "cli/utils/get-query-from-parts"
 import type { Command } from "commander"
+import { normalizeManufacturerPartNumber } from "easyeda"
 import kleur from "kleur"
+import { fetchDatasheet } from "lib/import/fetch-datasheet"
 import { getRegistryApiKy } from "lib/registry-api/get-ky"
 import { addPackage } from "lib/shared/add-package"
 import { prompts } from "lib/utils/prompts"
 import ora from "ora"
+import { mkdir, writeFile } from "node:fs/promises"
+import path from "node:path"
 import { importJlcpcbPart } from "./import-jlcpcb-part"
 import { parseDirectLcscPartNumber } from "./parse-direct-lcsc-part-number"
 import { getPartsEngineBaseUrl } from "lib/shared/parts-engine-base-urls"
@@ -49,6 +53,36 @@ export const registerImport = (program: Command) => {
           text: "Searching...",
           stream: process.stdout,
         }).start()
+
+        if (
+          process.env.TSCIRCUIT_STANDALONE === "1" &&
+          !hasFilters &&
+          !opts.download &&
+          !opts.useExactFootprint &&
+          !opts.excludePinAttributes
+        ) {
+          const datasheet = await fetchDatasheet(query).catch(() => undefined)
+          if (
+            typeof datasheet?.generated_tsx === "string" &&
+            datasheet.generated_tsx.trim()
+          ) {
+            try {
+              const componentName = normalizeManufacturerPartNumber(
+                datasheet.chip_name,
+              )
+              const componentDir = path.join(process.cwd(), "imports")
+              const filePath = path.join(componentDir, `${componentName}.tsx`)
+              await mkdir(componentDir, { recursive: true })
+              await writeFile(filePath, datasheet.generated_tsx)
+              spinner.succeed(kleur.green(`Imported ${filePath}`))
+            } catch (error) {
+              spinner.fail(kleur.red("Failed to import part"))
+              console.error(error instanceof Error ? error.message : error)
+              process.exitCode = 1
+            }
+            return
+          }
+        }
 
         let registryResults: Array<{
           name: string
