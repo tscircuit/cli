@@ -965,6 +965,9 @@ export const registerBuild = (program: Command) => {
               : undefined,
             packageName: packageName || path.basename(projectDir),
             jscdnBaseUrl,
+            extraRunFrameTabs: resolvedOptions?.ignoreConfig
+              ? undefined
+              : projectConfig?.extraRunFrameTabs,
           })
           fs.writeFileSync(path.join(distDir, "index.html"), indexHtml)
         }

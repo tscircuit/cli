@@ -15,6 +15,7 @@ import { createLocalCacheEngine } from "../shared/get-platform-config-with-cli-d
 import { getIndex } from "../site/getIndex"
 import { createKicadPcmProxy } from "./kicad-pcm-proxy"
 import { getJscdnDir, isWithinDirectory } from "../shared/jscdn-directory"
+import { loadRuntimeProjectConfig } from "../project-config"
 
 const RUNFRAME_CACHE_PATH = "/api/cache"
 
@@ -281,14 +282,27 @@ export const createHttpServer = async ({
     }
 
     if (url.pathname === "/") {
-      const fileServerApiBaseUrl = `http://${req.headers.host}/api`
-      const html = await getIndex(
-        defaultMainComponentPath,
-        fileServerApiBaseUrl,
-        preparedJscdnDir ? "/jscdn" : undefined,
-      )
-      res.writeHead(200, { "Content-Type": "text/html" })
-      res.end(html)
+      try {
+        // Read per request so a browser reload picks up edited or removed tabs.
+        const projectConfig = projectDir
+          ? await loadRuntimeProjectConfig(projectDir)
+          : null
+        const fileServerApiBaseUrl = `http://${req.headers.host}/api`
+        const html = await getIndex(
+          defaultMainComponentPath,
+          fileServerApiBaseUrl,
+          preparedJscdnDir ? "/jscdn" : undefined,
+          projectConfig?.extraRunFrameTabs,
+        )
+        res.writeHead(200, { "Content-Type": "text/html" })
+        res.end(html)
+      } catch (error) {
+        console.error("Failed to render the RunFrame page:", error)
+        res.writeHead(500, { "Content-Type": "text/plain; charset=utf-8" })
+        res.end(
+          "Unable to load project configuration. Check the CLI output and reload.",
+        )
+      }
       return
     }
 
