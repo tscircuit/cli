@@ -1,28 +1,46 @@
-import { expect, test } from "bun:test"
+import "bun-match-svg"
+import { beforeAll, expect, test } from "bun:test"
+import { rm, symlink, writeFile } from "node:fs/promises"
+import path from "node:path"
 import type { AnyCircuitElement } from "circuit-json"
 import { EasyEdaJsonSchema } from "easyeda"
 import {
   convertEasyEdaJsonToCircuitJson,
+  fetchEasyEDAComponent,
   generateFootprintTsx,
 } from "easyeda/browser"
 import { convertImportedFootprintToFootprinter } from "lib/import/footprinter/convert-imported-footprint-to-footprinter"
 import { getEasyEdaFootprinterSourceHints } from "lib/import/footprinter/get-easyeda-footprinter-source-hints"
-import c82046 from "tests/fixtures/assets/c82046.raweasy.json"
+import { generateCircuitJson } from "lib/shared/generate-circuit-json"
+import { convertCircuitJsonToPcbSvg } from "lib/shared/render-pcb-svg"
+import { temporaryDirectory } from "tempy"
 
-// Offline repro of `tsci import C82046 --jlcpcb` losing the polarity artwork
+// Live repro of `tsci import C82046 --jlcpcb` losing the polarity artwork
 // retained by `tsci import C82046 --jlcpcb --use-exact-footprint`.
-const supplier = EasyEdaJsonSchema.parse(c82046)
-const circuitJson = convertEasyEdaJsonToCircuitJson(supplier, {
-  shouldRecenter: true,
-  showDesignator: true,
-}) as AnyCircuitElement[]
-const exactTsx = `export const MBR0530T1G = () => (
+let supplier: ReturnType<typeof EasyEdaJsonSchema.parse>
+let circuitJson: AnyCircuitElement[]
+let sourceHints: string[]
+let exactTsx: string
+
+// Fetch outside test.failing so network errors cannot count as a successful repro.
+beforeAll(async () => {
+  const raw = await fetchEasyEDAComponent("C82046", {
+    includeModelMetadata: false,
+  })
+  supplier = EasyEdaJsonSchema.parse(raw)
+  sourceHints = getEasyEdaFootprinterSourceHints(raw)
+  circuitJson = convertEasyEdaJsonToCircuitJson(supplier, {
+    shouldRecenter: true,
+    showDesignator: true,
+  }) as AnyCircuitElement[]
+  exactTsx = `export const MBR0530T1G = () => (
   <diode
     name="D1"
     pinLabels={{ pin1: ["cathode", "neg"], pin2: ["anode", "pos"] }}
     footprint={${generateFootprintTsx(circuitJson)}}
   />
 )`
+}, 30_000)
 
 const polarityArtworkCounts = (tsx: string) => ({
   silkscreenPaths: (tsx.match(/<silkscreenpath\b/g) ?? []).length,
@@ -44,7 +62,7 @@ test.failing(
   () => {
     const normalImport = convertImportedFootprintToFootprinter({
       circuitJson,
-      sourceHints: getEasyEdaFootprinterSourceHints(c82046),
+      sourceHints,
       tsx: exactTsx,
     })
 
@@ -53,3 +71,39 @@ test.failing(
     )
   },
 )
+
+test("C82046 normal import PCB snapshot", async () => {
+  const normalImport = convertImportedFootprintToFootprinter({
+    circuitJson,
+    sourceHints,
+    tsx: exactTsx,
+  })
+  const directory = temporaryDirectory()
+  try {
+    await symlink(
+      path.join(process.cwd(), "node_modules"),
+      path.join(directory, "node_modules"),
+      "dir",
+    )
+    const filePath = path.join(directory, "MBR0530T1G.tsx")
+    await writeFile(filePath, normalImport.tsx)
+    const { circuitJson: rendered } = await generateCircuitJson({ filePath })
+    expect(rendered.filter((e) => e.type === "pcb_smtpad")).toHaveLength(2)
+    expect(rendered.filter((e) => e.type.endsWith("_error"))).toEqual([])
+
+    await expect(
+      convertCircuitJsonToPcbSvg(rendered, {
+        width: 800,
+        height: 600,
+        layer: "top",
+        viewport: { minX: -4, maxX: 4, minY: -2.4, maxY: 3.6 },
+        shouldDrawRatsNest: false,
+        showCourtyards: true,
+        showPinNumbers: true,
+        showFabricationNotes: true,
+      }),
+    ).toMatchSvgSnapshot(import.meta.path, "c82046-polarity-pcb")
+  } finally {
+    await rm(directory, { recursive: true, force: true })
+  }
+}, 30_000)
