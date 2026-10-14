@@ -42,6 +42,8 @@ jobs:
         run: bun run scripts/generate-test-plan.ts
 
       - name: Run tests for node ${{ matrix.node }}
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
         run: |
           if [ ! -f ".github/test-plans/node${{ matrix.node }}-testplan.txt" ]; then
             echo "ERROR: No test plan found for node ${{ matrix.node }}"

@@ -18,7 +18,11 @@ const SKILL_INSTALL_PATHS = [
 ]
 
 async function fetchGitHubContents(apiUrl: string): Promise<GitHubContent[]> {
-  const response = await fetch(apiUrl)
+  const response = await fetch(apiUrl, {
+    headers: process.env.GITHUB_TOKEN
+      ? { Authorization: `Bearer ${process.env.GITHUB_TOKEN}` }
+      : undefined,
+  })
   if (!response.ok) {
     throw new Error(`Failed to fetch ${apiUrl}: ${response.statusText}`)
   }
@@ -105,9 +109,13 @@ export async function setupTscircuitSkill(
   console.info("Setting up tscircuit AI skills...")
 
   try {
+    const downloadedDir = path.join(projectDir, missingSkillPaths[0]!)
+    await downloadSkillRepo(downloadedDir)
     for (const skillPath of missingSkillPaths) {
       const targetDir = path.join(projectDir, skillPath)
-      await downloadSkillRepo(targetDir)
+      if (targetDir !== downloadedDir) {
+        fs.cpSync(downloadedDir, targetDir, { recursive: true })
+      }
       console.info(`tscircuit skill installed at ${skillPath}`)
     }
     return true
