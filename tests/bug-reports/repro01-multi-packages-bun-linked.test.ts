@@ -3,6 +3,9 @@ import { runBrowserTestWithSteps } from "../fixtures/runBrowserTestWithSteps"
 import * as fs from "node:fs"
 import path from "node:path"
 
+const cliEntry = path.resolve(import.meta.dir, "../../cli/main.ts")
+const transpileAndLink = `bun '${cliEntry.replaceAll("'", "'\\''")}' transpile && bun link`
+
 test("repro01-multi-packages-bun-linked", async () => {
   const result = await runBrowserTestWithSteps([
     {
@@ -18,7 +21,7 @@ test("repro01-multi-packages-bun-linked", async () => {
         fs.writeFileSync(packageJsonPath, JSON.stringify(packageJson, null, 2))
         console.log(fs.readFileSync(packageJsonPath, "utf-8"))
       },
-      postInstallScript: "bunx tsci transpile && bun link",
+      postInstallScript: transpileAndLink,
     },
     {
       stepType: "clone_bug_report",
@@ -32,7 +35,7 @@ test("repro01-multi-packages-bun-linked", async () => {
         fs.writeFileSync(packageJsonPath, JSON.stringify(packageJson, null, 2))
         console.log(fs.readFileSync(packageJsonPath, "utf-8"))
       },
-      postInstallScript: "bunx tsci transpile && bun link",
+      postInstallScript: transpileAndLink,
     },
     {
       stepType: "clone_bug_report",
@@ -53,5 +56,6 @@ test("repro01-multi-packages-bun-linked", async () => {
     },
   ])
 
+  expect(result.browserTestResult?.hasExecutionError).toBe(false)
   console.log("Browser test result:", result.browserTestResult)
 }, 120_000)
