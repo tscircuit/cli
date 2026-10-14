@@ -4,7 +4,9 @@ import type { EndpointResponse } from "./endpoint-types"
 
 export type Account = EndpointResponse["accounts/get"]["account"]
 
-export const fetchAccount = async (): Promise<Account | null> => {
+export const fetchAccount = async (
+  opts: { throwOnError?: boolean } = {},
+): Promise<Account | null> => {
   const sessionToken = getSessionToken()
   if (!sessionToken) return null
 
@@ -20,7 +22,8 @@ export const fetchAccount = async (): Promise<Account | null> => {
       })
       .json()
     return account
-  } catch {
+  } catch (error) {
+    if (opts.throwOnError) throw error
     return null
   }
 }

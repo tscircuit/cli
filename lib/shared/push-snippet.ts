@@ -166,9 +166,22 @@ export const pushSnippet = async ({
   }
 
   const ky = getRegistryApiKy({ sessionToken })
-  const currentUsername = process.env.TSCIRCUIT_TOKEN
-    ? (await fetchAccount())?.tscircuit_handle
-    : cliConfig.get("tscircuitHandle")
+  let currentUsername: string | null | undefined
+  if (process.env.TSCIRCUIT_TOKEN) {
+    try {
+      currentUsername = (await fetchAccount({ throwOnError: true }))
+        ?.tscircuit_handle
+    } catch (error) {
+      const reason = error instanceof Error ? error.message : String(error)
+      onError(
+        `Could not look up your tscircuit account: ${reason}\n` +
+          "Check that TSCIRCUIT_TOKEN is valid and the registry is reachable, then try again.",
+      )
+      return onExit(1)
+    }
+  } else {
+    currentUsername = cliConfig.get("tscircuitHandle")
+  }
   if (!currentUsername) {
     onError("You need to set your tscircuit handle to publish packages")
     return onExit(1)
