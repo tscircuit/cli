@@ -1,5 +1,6 @@
 import { commonComponentProps } from "@tscircuit/props"
 import { getRegistryApiUrl } from "lib/cli-config"
+import { getPartsEngineBaseUrl } from "lib/shared/parts-engine-base-urls"
 import { z } from "zod"
 
 const responseSchema = z.object({
@@ -22,9 +23,8 @@ export const fetchDatasheetPinAttributes = async (
 
   const signal = AbortSignal.timeout(5_000)
   try {
-    const url = new URL(
-      `${getRegistryApiUrl().replace(/\/$/, "")}/datasheets/get`,
-    )
+    const baseUrl = getPartsEngineBaseUrl("datasheet-api", getRegistryApiUrl())
+    const url = new URL(`${baseUrl}/datasheets/get`)
     url.searchParams.set("chip_name", chipName)
     const response = await fetch(url, { signal })
     if (response.status === 404) return undefined

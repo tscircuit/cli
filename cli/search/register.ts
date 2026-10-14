@@ -3,6 +3,7 @@ import { getRegistryApiKy } from "lib/registry-api/get-ky"
 import Fuse from "fuse.js"
 import kleur from "kleur"
 import { getQueryFromParts } from "cli/utils/get-query-from-parts"
+import { getPartsEngineBaseUrl } from "lib/shared/parts-engine-base-urls"
 
 export const registerSearch = (program: Command) => {
   program
@@ -108,9 +109,11 @@ export const registerSearch = (program: Command) => {
           }
 
           if (searchJlc) {
-            const jlcSearchUrl =
-              "https://jlcsearch.tscircuit.com/api/search?limit=10&q=" +
-              encodeURIComponent(query)
+            const baseUrl = getPartsEngineBaseUrl(
+              "jlcsearch",
+              "https://jlcsearch.tscircuit.com",
+            )
+            const jlcSearchUrl = `${baseUrl}/api/search?limit=10&q=${encodeURIComponent(query)}`
             const jlcResponse = await fetch(jlcSearchUrl).then((r) => r.json())
             jlcResults = jlcResponse?.components ?? []
           }
@@ -130,7 +133,11 @@ export const registerSearch = (program: Command) => {
 
           for (const distributor of distributors) {
             if (!distributor.enabled) continue
-            const url = `https://${distributor.source}search.tscircuit.com/api/search?limit=10&q=${encodeURIComponent(query)}`
+            const baseUrl = getPartsEngineBaseUrl(
+              distributor.source,
+              `https://${distributor.source}search.tscircuit.com`,
+            )
+            const url = `${baseUrl}/api/search?limit=10&q=${encodeURIComponent(query)}`
             const response = await fetch(url, {
               headers: { accept: "application/json" },
             })
