@@ -1,6 +1,7 @@
 import { getQueryFromParts } from "cli/utils/get-query-from-parts"
 import type { Command } from "commander"
 import kleur from "kleur"
+import { importComponentFromCache } from "lib/import/import-component-from-cache"
 import { getRegistryApiKy } from "lib/registry-api/get-ky"
 import { addPackage } from "lib/shared/add-package"
 import { prompts } from "lib/utils/prompts"
@@ -43,6 +44,31 @@ export const registerImport = (program: Command) => {
         const hasFilters = opts.jlcpcb || opts.lcsc || opts.tscircuit
         const searchJlc = opts.jlcpcb || opts.lcsc || !hasFilters
         const searchTscircuit = opts.tscircuit
+        try {
+          if (
+            opts.tscircuit ||
+            opts.download ||
+            opts.useExactFootprint ||
+            opts.excludePinAttributes
+          ) {
+            if (process.env.TSCIRCUIT_STANDALONE === "1") {
+              throw new Error(
+                "Standalone import supports cached component TSX without --tscircuit, --download, --use-exact-footprint or --exclude-pin-attributes",
+              )
+            }
+          } else {
+            const filePath = await importComponentFromCache(
+              parseDirectLcscPartNumber(query) ?? query,
+            )
+            if (filePath) {
+              console.log(kleur.green(`Imported ${filePath}`))
+              return
+            }
+          }
+        } catch (error) {
+          console.error(error instanceof Error ? error.message : error)
+          process.exit(1)
+        }
         const ky = getRegistryApiKy()
         const spinner = ora({
           text: "Searching...",

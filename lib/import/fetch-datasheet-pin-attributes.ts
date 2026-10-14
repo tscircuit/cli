@@ -10,7 +10,7 @@ const responseSchema = z.object({
 })
 
 // Matches the datasheet API's chip-name normalization.
-const normalizeChipName = (name: string) =>
+export const normalizeChipName = (name: string) =>
   name.replace(/[^0-9a-zA-Z_-]/g, "").toLowerCase()
 
 export const fetchDatasheetPinAttributes = async (
