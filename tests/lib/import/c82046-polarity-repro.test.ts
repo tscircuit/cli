@@ -15,13 +15,13 @@ import { generateCircuitJson } from "lib/shared/generate-circuit-json"
 import { convertCircuitJsonToPcbSvg } from "lib/shared/render-pcb-svg"
 import { temporaryDirectory } from "tempy"
 
-// Live repro of `tsci import C82046 --jlcpcb` losing diode identity and polarity.
+// Live regression for importing C82046 as a diode with explicit cathode polarity.
 let supplier: ReturnType<typeof EasyEdaJsonSchema.parse>
 let circuitJson: AnyCircuitElement[]
 let sourceHints: string[]
 let exactTsx: string
 
-// Fetch outside test.failing so network errors cannot count as a successful repro.
+// Report supplier download failures separately from polarity assertions.
 beforeAll(async () => {
   const raw = await fetchEasyEDAComponent("C82046", {
     includeModelMetadata: false,
@@ -53,20 +53,19 @@ test("C82046 supplier data identifies pin 1 as the cathode", () => {
   expect(cathode.port_hints).toContain("cathode")
 })
 
-test.failing(
-  "C82046 normal import uses a diode string with explicit cathode polarity",
-  () => {
-    const normalImport = convertImportedFootprintToFootprinter({
-      circuitJson,
-      sourceHints,
-      tsx: exactTsx,
-    })
+test("C82046 normal import uses a diode string with explicit cathode polarity", () => {
+  const normalImport = convertImportedFootprintToFootprinter({
+    circuitJson,
+    sourceHints,
+    tsx: exactTsx,
+  })
 
-    expect(normalImport.mode).toBe("footprinter")
-    expect(normalImport.candidate?.family).toBe("diode")
-    expect(normalImport.candidate?.footprinterString).toContain("_cathodepin1")
-  },
-)
+  expect(normalImport.mode).toBe("footprinter")
+  expect(normalImport.candidate?.family).toBe("diode")
+  expect(normalImport.candidate?.footprinterString).toContain("_cathodepin1")
+  expect(normalImport.accuracy).toBeGreaterThan(0.98)
+  expect(normalImport.tsx).not.toContain("<footprint>")
+})
 
 test("C82046 normal import PCB snapshot", async () => {
   const normalImport = convertImportedFootprintToFootprinter({
@@ -86,6 +85,18 @@ test("C82046 normal import PCB snapshot", async () => {
     const { circuitJson: rendered } = await generateCircuitJson({ filePath })
     expect(rendered.filter((e) => e.type === "pcb_smtpad")).toHaveLength(2)
     expect(rendered.filter((e) => e.type.endsWith("_error"))).toEqual([])
+    const negative = rendered.find(
+      (e) => e.type === "pcb_fabrication_note_text" && e.text === "-",
+    )
+    const positive = rendered.find(
+      (e) => e.type === "pcb_fabrication_note_text" && e.text === "+",
+    )
+    if (
+      negative?.type !== "pcb_fabrication_note_text" ||
+      positive?.type !== "pcb_fabrication_note_text"
+    )
+      throw new Error("Expected generated diode polarity labels")
+    expect(negative.anchor_position.x).toBeLessThan(positive.anchor_position.x)
 
     await expect(
       convertCircuitJsonToPcbSvg(rendered, {
