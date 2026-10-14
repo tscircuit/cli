@@ -15,8 +15,7 @@ import { generateCircuitJson } from "lib/shared/generate-circuit-json"
 import { convertCircuitJsonToPcbSvg } from "lib/shared/render-pcb-svg"
 import { temporaryDirectory } from "tempy"
 
-// Live repro of `tsci import C82046 --jlcpcb` losing the polarity artwork
-// retained by `tsci import C82046 --jlcpcb --use-exact-footprint`.
+// Live repro of `tsci import C82046 --jlcpcb` losing diode identity and polarity.
 let supplier: ReturnType<typeof EasyEdaJsonSchema.parse>
 let circuitJson: AnyCircuitElement[]
 let sourceHints: string[]
@@ -42,23 +41,20 @@ beforeAll(async () => {
 )`
 }, 30_000)
 
-const polarityArtworkCounts = (tsx: string) => ({
-  silkscreenPaths: (tsx.match(/<silkscreenpath\b/g) ?? []).length,
-  fabricationNotePaths: (tsx.match(/<fabricationnotepath\b/g) ?? []).length,
-})
-
-test("C82046 exact footprint contains the supplier's polarity artwork", () => {
+test("C82046 supplier data identifies pin 1 as the cathode", () => {
   expect(supplier.lcsc.number).toBe("C82046")
   expect(supplier.dataStr.head.c_para["Manufacturer Part"]).toBe("MBR0530T1G")
   expect(circuitJson.filter((e) => e.type === "pcb_smtpad")).toHaveLength(2)
-  expect(polarityArtworkCounts(exactTsx)).toEqual({
-    silkscreenPaths: 12,
-    fabricationNotePaths: 4,
-  })
+  const cathode = circuitJson.find(
+    (element) =>
+      element.type === "pcb_smtpad" && element.port_hints?.includes("pin1"),
+  )
+  if (cathode?.type !== "pcb_smtpad") throw new Error("Expected cathode pad")
+  expect(cathode.port_hints).toContain("cathode")
 })
 
 test.failing(
-  "C82046 normal import preserves the exact footprint's polarity artwork",
+  "C82046 normal import uses a diode string with explicit cathode polarity",
   () => {
     const normalImport = convertImportedFootprintToFootprinter({
       circuitJson,
@@ -66,9 +62,9 @@ test.failing(
       tsx: exactTsx,
     })
 
-    expect(polarityArtworkCounts(normalImport.tsx)).toEqual(
-      polarityArtworkCounts(exactTsx),
-    )
+    expect(normalImport.mode).toBe("footprinter")
+    expect(normalImport.candidate?.family).toBe("diode")
+    expect(normalImport.candidate?.footprinterString).toContain("_cathodepin1")
   },
 )
 
