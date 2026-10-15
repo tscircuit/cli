@@ -17,6 +17,7 @@ import {
   type ImportedFootprintConversion,
 } from "./footprinter/convert-imported-footprint-to-footprinter"
 import { getEasyEdaFootprinterSourceHints } from "./footprinter/get-easyeda-footprinter-source-hints"
+import { getPlatformFetch } from "lib/shared/get-platform-fetch"
 
 export interface ImportComponentFromJlcpcbOptions {
   download?: boolean
@@ -39,7 +40,9 @@ export const importComponentFromJlcpcb = async (
   projectDir: string = process.cwd(),
   options: ImportComponentFromJlcpcbOptions = {},
 ): Promise<ImportComponentFromJlcpcbResult> => {
-  const rawEasy = await fetchEasyEDAComponent(jlcpcbPartNumber)
+  const rawEasy = await fetchEasyEDAComponent(jlcpcbPartNumber, {
+    fetch: getPlatformFetch(),
+  })
   const betterEasy = EasyEdaJsonSchema.parse(rawEasy)
 
   const rawPn = betterEasy.dataStr.head.c_para["Manufacturer Part"]
