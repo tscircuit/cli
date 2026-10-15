@@ -1,6 +1,7 @@
 import { getRegistryApiUrl, getSessionToken } from "lib/cli-config"
 import ky, { type AfterResponseHook, type KyResponse } from "ky"
 import { getSessionTokenFromNpmrc } from "lib/cli-config"
+import { getPlatformFetch } from "lib/shared/get-platform-fetch"
 
 class PrettyHttpError extends Error {
   constructor(
@@ -80,6 +81,7 @@ export const getRegistryApiKy = ({
   const resolvedToken =
     sessionToken ?? getSessionToken() ?? getSessionTokenFromNpmrc()
   return ky.create({
+    fetch: getPlatformFetch(),
     prefixUrl: getRegistryApiUrl(),
     headers: {
       ...(resolvedToken ? { Authorization: `Bearer ${resolvedToken}` } : {}),

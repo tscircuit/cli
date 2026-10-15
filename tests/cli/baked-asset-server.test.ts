@@ -107,6 +107,13 @@ test("dev injects the provider URLs and serves baked files across origins", asyn
   expect(response.headers.get("access-control-allow-origin")).toBe("*")
   expect(response.headers.get("content-type")).toBe("application/json")
   expect((await response.json()).components[0].mfr).toBe("LM358")
+  const postResponse = await fetch(`${jlcUrl}/api/search`, {
+    method: "POST",
+    headers: { "content-type": "application/x-www-form-urlencoded" },
+    body: "q=LM358&limit=10",
+  })
+  expect(postResponse.status).toBe(200)
+  expect((await postResponse.json()).components[0].mfr).toBe("LM358")
   expect(
     await fetch(`${assetOrigin}/asset.bin`).then((res) => res.text()),
   ).toBe("baked asset")

@@ -4,6 +4,7 @@ import path from "node:path"
 import { getPlatformConfig } from "@tscircuit/eval/platform-config"
 import type { PlatformConfig } from "@tscircuit/props"
 import { mergePlatformConfigs } from "./platform-config-utils"
+import { getPlatformFetch } from "./get-platform-fetch"
 
 export function createLocalCacheEngine(
   cacheDir = path.join(process.cwd(), ".tscircuit", "cache"),
@@ -96,9 +97,10 @@ export function getPlatformConfigWithCliDefaults(
     },
   }
 
-  if (!userConfig) {
-    return defaultConfig
-  }
-
-  return mergePlatformConfigs(defaultConfig, userConfig)!
+  const config = userConfig
+    ? mergePlatformConfigs(defaultConfig, userConfig)!
+    : defaultConfig
+  if (process.env.TSCIRCUIT_BAKED_ASSET_SERVER_BASE_URL)
+    config.platformFetch = getPlatformFetch(config.platformFetch)
+  return config
 }

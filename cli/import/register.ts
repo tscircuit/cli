@@ -12,6 +12,10 @@ import path from "node:path"
 import { importJlcpcbPart } from "./import-jlcpcb-part"
 import { parseDirectLcscPartNumber } from "./parse-direct-lcsc-part-number"
 import { getPartsEngineBaseUrl } from "lib/shared/parts-engine-base-urls"
+import {
+  BakedAssetNotFoundError,
+  getPlatformFetch,
+} from "lib/shared/get-platform-fetch"
 
 export const registerImport = (program: Command) => {
   program
@@ -84,14 +88,6 @@ export const registerImport = (program: Command) => {
           }
         }
 
-        if (process.env.TSCIRCUIT_STANDALONE === "1") {
-          spinner.fail(
-            "This part isn't currently available in tscircuit standalone (enterprise), please contact your representative to get it added",
-          )
-          process.exitCode = 1
-          return
-        }
-
         let registryResults: Array<{
           name: string
           version: string
@@ -119,6 +115,10 @@ export const registerImport = (program: Command) => {
               kleur.red("Error:"),
               error instanceof Error ? error.message : error,
             )
+            if (error instanceof BakedAssetNotFoundError) {
+              process.exitCode = 1
+              return
+            }
             spinner.start()
           }
         }
@@ -131,7 +131,9 @@ export const registerImport = (program: Command) => {
               "https://jlcsearch.tscircuit.com",
             )
             const searchUrl = `${baseUrl}/api/search?limit=10&q=${encodeURIComponent(query)}`
-            const resp = await fetch(searchUrl).then((r) => r.json())
+            const resp = await getPlatformFetch()(searchUrl).then((r) =>
+              r.json(),
+            )
             jlcResults = resp.components
           } catch (error) {
             spinner.fail("Failed to search JLCPCB")
@@ -139,6 +141,10 @@ export const registerImport = (program: Command) => {
               kleur.red("Error:"),
               error instanceof Error ? error.message : error,
             )
+            if (error instanceof BakedAssetNotFoundError) {
+              process.exitCode = 1
+              return
+            }
           }
         }
 
