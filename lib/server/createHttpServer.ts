@@ -216,6 +216,13 @@ export const createHttpServer = async ({
     }
 
     if (url.pathname === "/standalone.min.js") {
+      if (process.env.TSCIRCUIT_STANDALONE === "1") {
+        res.writeHead(200, {
+          "Content-Type": "application/javascript; charset=utf-8",
+        })
+        res.end(runFrameStandaloneBundleContent)
+        return
+      }
       const explicitStandalonePath = process.env.RUNFRAME_STANDALONE_FILE_PATH
 
       if (!explicitStandalonePath) {

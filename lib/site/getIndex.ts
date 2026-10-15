@@ -1,11 +1,20 @@
 import { getSessionToken } from "lib/cli-config"
 import { getPartsEngineBaseUrls } from "lib/shared/parts-engine-base-urls"
+import pkg from "../../package.json"
 
 export const getIndex = async (
   mainComponentPath?: string,
   fileServerApiBaseUrl?: string,
   jscdnBaseUrl?: string,
 ) => {
+  const standalone = process.env.TSCIRCUIT_STANDALONE === "1"
+  const evalVersion = pkg.devDependencies["@tscircuit/eval"]
+  const standaloneScript = standalone
+    ? `
+        window.TSCIRCUIT_LATEST_EVAL_VERSION = ${JSON.stringify(evalVersion)};
+        window.TSCIRCUIT_ALLOW_SELECTING_EVAL_VERSION = false;
+        window.TSCIRCUIT_TELEMETRY_DISABLED = true;`
+    : ""
   const sessionToken = getSessionToken()
   const tokenScript = sessionToken
     ? `\n        window.TSCIRCUIT_REGISTRY_TOKEN = ${JSON.stringify(sessionToken)};`
@@ -23,14 +32,14 @@ export const getIndex = async (
   return `<html>
     <head>
       <meta charset="UTF-8" />
-      <link rel="icon" type="image/png" href="https://github.com/tscircuit.png">
+      ${standalone ? '<link rel="icon" href="data:,">' : '<link rel="icon" type="image/png" href="https://github.com/tscircuit.png">'}
     </head>
     <body>
       <script>
        ${mainComponentPath ? `window.TSCIRCUIT_DEFAULT_MAIN_COMPONENT_PATH = "${mainComponentPath}";` : ""}
-        window.TSCIRCUIT_USE_RUNFRAME_FOR_CLI = true;${tokenScript}${fileServerApiScript}${jscdnScript}${partsEngineScript}
+        window.TSCIRCUIT_USE_RUNFRAME_FOR_CLI = true;${tokenScript}${fileServerApiScript}${jscdnScript}${partsEngineScript}${standaloneScript}
       </script>
-      <script src="https://cdn.tailwindcss.com"></script>
+      ${standalone ? "" : '<script src="https://cdn.tailwindcss.com"></script>'}
       <div id="root">loading...</div>
       <script>
       globalThis.process = { env: { NODE_ENV: "production" } }
