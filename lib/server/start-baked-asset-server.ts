@@ -3,6 +3,7 @@ import { createServer } from "node:http"
 import path from "node:path"
 import { isWithinDirectory } from "lib/shared/jscdn-directory"
 import { partsEngineBaseUrlEnvVars } from "lib/shared/parts-engine-base-urls"
+import { createBakedDatasheetSearch } from "./search-baked-datasheets"
 
 const resolveBakedAssetFilePath = async (
   rootDirectory: string,
@@ -36,6 +37,11 @@ export const startBakedAssetServer = async (
       `Baked asset directory is not a directory: ${rootDirectory}`,
     )
 
+  const searchDatasheets = createBakedDatasheetSearch(async (requestUrl) => {
+    const filePath = await resolveBakedAssetFilePath(rootDirectory, requestUrl)
+    return JSON.parse(await readFile(filePath, "utf8"))
+  })
+
   const server = createServer(async (request, response) => {
     response.setHeader("Access-Control-Allow-Origin", "*")
     if (request.method === "OPTIONS") {
@@ -62,6 +68,21 @@ export const startBakedAssetServer = async (
 
     try {
       const url = new URL(request.url!, "http://localhost")
+      if (
+        (request.method === "GET" || request.method === "HEAD") &&
+        url.pathname === "/datasheet-api/datasheets/search"
+      ) {
+        const datasheets = await searchDatasheets(
+          url.searchParams.get("q") ?? "",
+        )
+        response.writeHead(200, { "Content-Type": "application/json" })
+        response.end(
+          request.method === "HEAD"
+            ? undefined
+            : JSON.stringify({ datasheets }),
+        )
+        return
+      }
       if (request.method === "POST") {
         let body = ""
         for await (const chunk of request) body += chunk.toString()
