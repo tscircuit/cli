@@ -1,12 +1,11 @@
 import "bun-match-svg"
-import { beforeAll, expect, test } from "bun:test"
+import { expect, test } from "bun:test"
 import { rm, symlink, writeFile } from "node:fs/promises"
 import path from "node:path"
 import type { AnyCircuitElement } from "circuit-json"
 import { EasyEdaJsonSchema } from "easyeda"
 import {
   convertEasyEdaJsonToCircuitJson,
-  fetchEasyEDAComponent,
   generateFootprintTsx,
 } from "easyeda/browser"
 import { convertImportedFootprintToFootprinter } from "lib/import/footprinter/convert-imported-footprint-to-footprinter"
@@ -14,32 +13,23 @@ import { getEasyEdaFootprinterSourceHints } from "lib/import/footprinter/get-eas
 import { generateCircuitJson } from "lib/shared/generate-circuit-json"
 import { convertCircuitJsonToPcbSvg } from "lib/shared/render-pcb-svg"
 import { temporaryDirectory } from "tempy"
+import rawC82046 from "../../fixtures/assets/c82046.raweasy.json"
 
-// Live regression for importing C82046 as a diode with explicit cathode polarity.
-let supplier: ReturnType<typeof EasyEdaJsonSchema.parse>
-let circuitJson: AnyCircuitElement[]
-let sourceHints: string[]
-let exactTsx: string
-
-// Report supplier download failures separately from polarity assertions.
-beforeAll(async () => {
-  const raw = await fetchEasyEDAComponent("C82046", {
-    includeModelMetadata: false,
-  })
-  supplier = EasyEdaJsonSchema.parse(raw)
-  sourceHints = getEasyEdaFootprinterSourceHints(raw)
-  circuitJson = convertEasyEdaJsonToCircuitJson(supplier, {
-    shouldRecenter: true,
-    showDesignator: true,
-  }) as AnyCircuitElement[]
-  exactTsx = `export const MBR0530T1G = () => (
+// Pin supplier input so the regression is independent of EasyEDA availability
+// and later changes to the C82046 catalog entry.
+const supplier = EasyEdaJsonSchema.parse(rawC82046)
+const sourceHints = getEasyEdaFootprinterSourceHints(rawC82046)
+const circuitJson = convertEasyEdaJsonToCircuitJson(supplier, {
+  shouldRecenter: true,
+  showDesignator: true,
+}) as AnyCircuitElement[]
+const exactTsx = `export const MBR0530T1G = () => (
   <diode
     name="D1"
     pinLabels={{ pin1: ["cathode", "neg"], pin2: ["anode", "pos"] }}
     footprint={${generateFootprintTsx(circuitJson)}}
   />
 )`
-}, 30_000)
 
 test("C82046 supplier data identifies pin 1 as the cathode", () => {
   expect(supplier.lcsc.number).toBe("C82046")
