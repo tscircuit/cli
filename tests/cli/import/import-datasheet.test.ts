@@ -25,12 +25,37 @@ const tsx = `export const AP2127K_28TRG1 = () => <chip
 />
 `
 
-for (const [name, standalone, generatedTsx] of [
+for (const [
+  name,
+  standalone,
+  generatedTsx,
+  query = "AP2127K-2.8TRG1",
+  options = "",
+] of [
   ["standalone imports generated TSX without JLCSearch", "1", tsx],
   ["normal CLI skips the datasheet import lookup", undefined, tsx],
   ["disabled standalone skips the datasheet import lookup", "0", tsx],
-  ["standalone falls back when generated TSX is null", "1", null],
-  ["standalone falls back when generated TSX is empty", "1", ""],
+  ["standalone rejects a part when generated TSX is null", "1", null],
+  ["standalone rejects a part when generated TSX is empty", "1", ""],
+  ["standalone rejects a missing datasheet", "1", undefined, "MISSING_PART"],
+  ["standalone rejects an unbundled LCSC ID", "1", undefined, "C2040"],
+  ...[
+    "--jlcpcb",
+    "--lcsc",
+    "--tscircuit",
+    "--download",
+    "--use-exact-footprint",
+    "--exclude-pin-attributes",
+  ].map(
+    (option) =>
+      [
+        `standalone rejects the network import path with ${option}`,
+        "1",
+        tsx,
+        "C2040",
+        option,
+      ] as const,
+  ),
 ] as const) {
   test(name, async () => {
     const { tmpDir, runCommand } = await getCliTestFixture()
@@ -42,6 +67,8 @@ for (const [name, standalone, generatedTsx] of [
         const url = new URL(request.url)
         requests.push(url.pathname + url.search)
         if (url.pathname === "/datasheet-api/datasheets/get") {
+          if (generatedTsx === undefined)
+            return new Response(null, { status: 404 })
           return Response.json({
             datasheet: { ...regulator.datasheet, generated_tsx: generatedTsx },
           })
@@ -58,20 +85,28 @@ for (const [name, standalone, generatedTsx] of [
     process.env.TSCIRCUIT_JLCSEARCH_BASE_URL = `${server.url}jlcsearch`
 
     const { stdout, stderr, exitCode } = await runCommand(
-      "tsci import AP2127K-2.8TRG1",
+      `tsci import ${query} ${options}`.trim(),
     )
-    expect(exitCode).toBe(0)
+    const imported = standalone === "1" && Boolean(generatedTsx) && !options
+    const unavailable = standalone === "1" && !imported
+    expect(exitCode).toBe(unavailable ? 1 : 0)
     expect(stderr).toBe("")
     const expectedRequests =
-      standalone === "1"
-        ? ["/datasheet-api/datasheets/get?chip_name=ap2127k-28trg1"]
+      standalone === "1" && !options
+        ? [
+            `/datasheet-api/datasheets/get?chip_name=${query.replace(/[^0-9a-zA-Z_-]/g, "").toLowerCase()}`,
+          ]
         : []
-    const imported = standalone === "1" && Boolean(generatedTsx)
-    if (!imported)
+    if (standalone !== "1")
       expectedRequests.push("/jlcsearch/api/search?limit=10&q=AP2127K-2.8TRG1")
     expect(requests).toEqual(expectedRequests)
     const file = Bun.file(path.join(tmpDir, "imports/AP2127K_28TRG1.tsx"))
     expect(await file.exists()).toBe(imported)
+    if (unavailable) {
+      expect(stdout).toContain(
+        "This part isn't currently available in tscircuit standalone (enterprise), please contact your representative to get it added",
+      )
+    }
     if (imported) {
       expect(await file.text()).toBe(tsx)
       expect(stdout).toContain("Imported")

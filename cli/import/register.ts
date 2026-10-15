@@ -84,6 +84,14 @@ export const registerImport = (program: Command) => {
           }
         }
 
+        if (process.env.TSCIRCUIT_STANDALONE === "1") {
+          spinner.fail(
+            "This part isn't currently available in tscircuit standalone (enterprise), please contact your representative to get it added",
+          )
+          process.exitCode = 1
+          return
+        }
+
         let registryResults: Array<{
           name: string
           version: string
