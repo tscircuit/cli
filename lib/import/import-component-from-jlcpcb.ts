@@ -1,4 +1,3 @@
-import { addInternallyConnectedPinsToTsx } from "./add-internally-connected-pins-to-tsx"
 import { fetchEasyEDAComponent, convertRawEasyToTsx } from "easyeda/browser"
 import {
   EasyEdaJsonSchema,
@@ -63,6 +62,7 @@ export const importComponentFromJlcpcb = async (
   let tsx = await convertRawEasyToTsx({
     rawEasy,
     pinAttributes: datasheetAttributes,
+    internallyConnectedPins: datasheetMetadata?.internallyConnectedPins,
   })
   const footprintConversion = options.useExactFootprint
     ? ({ mode: "exact-requested", tsx } as const)
@@ -72,12 +72,7 @@ export const importComponentFromJlcpcb = async (
         tsx,
       })
   tsx = footprintConversion.tsx
-  if (datasheetMetadata?.internallyConnectedPins !== undefined) {
-    tsx = addInternallyConnectedPinsToTsx(
-      tsx,
-      datasheetMetadata.internallyConnectedPins,
-    )
-  }
+
   const cadComponent = circuitJson.find(
     (item) => item.type === "cad_component",
   ) as ImportedCadComponent | undefined

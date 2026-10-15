@@ -2,7 +2,6 @@ import { expect, spyOn, test } from "bun:test"
 import { readFile, rm } from "node:fs/promises"
 import { temporaryDirectory } from "tempy"
 import { importComponentFromJlcpcb } from "lib/import/import-component-from-jlcpcb"
-import { addInternallyConnectedPinsToTsx } from "lib/import/add-internally-connected-pins-to-tsx"
 import ts from "typescript"
 import raw from "../../fixtures/assets/datasheets/C318884.raweasy.json"
 
@@ -85,14 +84,6 @@ test("tsci imports the TS-1187A-B-A-B permanent pairs into exact and compact TSX
       evaluate(await readFile(filePath, "utf8")).props.internallyConnectedPins,
     ).toBeUndefined()
     expect(requests).toBe(2)
-    expect(
-      evaluate(
-        addInternallyConnectedPinsToTsx(
-          "export const C = (props) => <chip internallyConnectedPins={[[1,2]]} {...props} />",
-          groups,
-        ),
-      ).props.internallyConnectedPins,
-    ).toEqual(groups)
   } finally {
     fetchMock.mockRestore()
     await rm(directory, { recursive: true, force: true })
