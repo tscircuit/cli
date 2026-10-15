@@ -23,6 +23,7 @@ export const getLatestVersion = async () => {
 }
 
 export const checkForTsciUpdates = async () => {
+  if (process.env.TSCIRCUIT_STANDALONE === "1") return false
   if (process.env.TSCI_SKIP_CLI_UPDATE === "true") return false
   if (!shouldBeInteractive()) return false
 
