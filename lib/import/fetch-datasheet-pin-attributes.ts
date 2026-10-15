@@ -1,16 +1,18 @@
 import { fetchDatasheet } from "./fetch-datasheet"
 
-export const fetchDatasheetPinAttributes = async (
+export const fetchDatasheetMetadata = async (
   manufacturerPartNumber: string | null | undefined,
 ) => {
   if (!manufacturerPartNumber) return undefined
 
   const signal = AbortSignal.timeout(5_000)
   try {
-    return (
-      (await fetchDatasheet(manufacturerPartNumber, signal))?.pin_attributes ??
-      undefined
-    )
+    const datasheet = await fetchDatasheet(manufacturerPartNumber, signal)
+    if (!datasheet) return undefined
+    return {
+      pinAttributes: datasheet.pin_attributes ?? undefined,
+      internallyConnectedPins: datasheet.internally_connected_pins ?? undefined,
+    }
   } catch (error) {
     const message =
       signal.aborted ||
@@ -23,3 +25,8 @@ export const fetchDatasheetPinAttributes = async (
     return undefined
   }
 }
+
+/** Compatibility helper for callers requesting only electrical attributes. */
+export const fetchDatasheetPinAttributes = async (
+  manufacturerPartNumber: string | null | undefined,
+) => (await fetchDatasheetMetadata(manufacturerPartNumber))?.pinAttributes

@@ -1,3 +1,4 @@
+import { addInternallyConnectedPinsToTsx } from "./add-internally-connected-pins-to-tsx"
 import { fetchEasyEDAComponent, convertRawEasyToTsx } from "easyeda/browser"
 import {
   EasyEdaJsonSchema,
@@ -6,7 +7,7 @@ import {
 } from "easyeda"
 import fs from "node:fs/promises"
 import path from "node:path"
-import { fetchDatasheetPinAttributes } from "./fetch-datasheet-pin-attributes"
+import { fetchDatasheetMetadata } from "./fetch-datasheet-pin-attributes"
 import {
   addCadModelToTsx,
   type ImportedCadComponent,
@@ -48,12 +49,13 @@ export const importComponentFromJlcpcb = async (
   const rawPn = betterEasy.dataStr.head.c_para["Manufacturer Part"]
   const datasheetAttributesPromise = options.excludePinAttributes
     ? undefined
-    : fetchDatasheetPinAttributes(rawPn)
+    : fetchDatasheetMetadata(rawPn)
   const componentName = rawPn
     ? normalizeManufacturerPartNumber(rawPn)
     : jlcpcbPartNumber
 
-  const datasheetAttributes = await datasheetAttributesPromise
+  const datasheetMetadata = await datasheetAttributesPromise
+  const datasheetAttributes = datasheetMetadata?.pinAttributes
   const circuitJson = convertEasyEdaJsonToCircuitJson(betterEasy, {
     useModelCdn: true,
     pinAttributes: datasheetAttributes,
@@ -70,6 +72,12 @@ export const importComponentFromJlcpcb = async (
         tsx,
       })
   tsx = footprintConversion.tsx
+  if (datasheetMetadata?.internallyConnectedPins !== undefined) {
+    tsx = addInternallyConnectedPinsToTsx(
+      tsx,
+      datasheetMetadata.internallyConnectedPins,
+    )
+  }
   const cadComponent = circuitJson.find(
     (item) => item.type === "cad_component",
   ) as ImportedCadComponent | undefined

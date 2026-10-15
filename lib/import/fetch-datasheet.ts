@@ -7,6 +7,9 @@ import { getPlatformFetch } from "lib/shared/get-platform-fetch"
 const responseSchema = z.object({
   datasheet: z.object({
     chip_name: z.string(),
+    internally_connected_pins: z
+      .array(z.array(z.union([z.string(), z.number()])))
+      .nullish(),
     pin_attributes: commonComponentProps.shape.pinAttributes.nullable(),
     generated_tsx: z.unknown().optional(),
   }),
