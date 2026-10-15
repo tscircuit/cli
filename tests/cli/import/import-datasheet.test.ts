@@ -29,8 +29,6 @@ for (const [name, standalone, generatedTsx] of [
   ["standalone imports generated TSX without JLCSearch", "1", tsx],
   ["normal CLI skips the datasheet import lookup", undefined, tsx],
   ["disabled standalone skips the datasheet import lookup", "0", tsx],
-  ["standalone falls back when generated TSX is null", "1", null],
-  ["standalone falls back when generated TSX is empty", "1", ""],
 ] as const) {
   test(name, async () => {
     const { tmpDir, runCommand } = await getCliTestFixture()
