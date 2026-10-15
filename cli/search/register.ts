@@ -4,6 +4,9 @@ import Fuse from "fuse.js"
 import kleur from "kleur"
 import { getQueryFromParts } from "cli/utils/get-query-from-parts"
 import { getPartsEngineBaseUrl } from "lib/shared/parts-engine-base-urls"
+import { getPlatformFetch } from "lib/shared/get-platform-fetch"
+import { getRegistryApiUrl } from "lib/cli-config"
+import type { BakedDatasheetSearchResult } from "lib/server/search-baked-datasheets"
 
 export const registerSearch = (program: Command) => {
   program
@@ -47,8 +50,13 @@ export const registerSearch = (program: Command) => {
           opts.mouser ||
           opts.tscircuit
         const searchKicad = opts.kicad
-        const searchJlc = opts.jlcpcb || opts.lcsc || !hasFilters
+        const searchBakedDatasheets =
+          !hasFilters && Boolean(process.env.TSCIRCUIT_BAKED_ASSET_SERVER_DIR)
+        const searchJlc =
+          opts.jlcpcb || opts.lcsc || (!hasFilters && !searchBakedDatasheets)
         const searchTscircuit = opts.tscircuit
+        const platformFetch = getPlatformFetch()
+        let bakedDatasheets: BakedDatasheetSearchResult[] = []
 
         let results: {
           packages: Array<{
@@ -99,6 +107,16 @@ export const registerSearch = (program: Command) => {
         let kicadResults: string[] = []
 
         try {
+          if (searchBakedDatasheets) {
+            const baseUrl = getPartsEngineBaseUrl(
+              "datasheet-api",
+              getRegistryApiUrl(),
+            )
+            const response = await platformFetch(
+              `${baseUrl}/datasheets/search?q=${encodeURIComponent(query)}`,
+            )
+            bakedDatasheets = (await response.json()).datasheets
+          }
           if (searchTscircuit) {
             const ky = getRegistryApiKy()
             results = await ky
@@ -114,7 +132,9 @@ export const registerSearch = (program: Command) => {
               "https://jlcsearch.tscircuit.com",
             )
             const jlcSearchUrl = `${baseUrl}/api/search?limit=10&q=${encodeURIComponent(query)}`
-            const jlcResponse = await fetch(jlcSearchUrl).then((r) => r.json())
+            const jlcResponse = await platformFetch(jlcSearchUrl).then((r) =>
+              r.json(),
+            )
             jlcResults = jlcResponse?.components ?? []
           }
 
@@ -122,7 +142,7 @@ export const registerSearch = (program: Command) => {
             const tiSearchUrl =
               "https://tisearch.tscircuit.com/api/search?limit=10&q=" +
               encodeURIComponent(query)
-            const response = await fetch(tiSearchUrl)
+            const response = await platformFetch(tiSearchUrl)
             if (!response.ok)
               throw new Error(`TI search failed (HTTP ${response.status})`)
             const data = await response.json()
@@ -138,7 +158,7 @@ export const registerSearch = (program: Command) => {
               `https://${distributor.source}search.tscircuit.com`,
             )
             const url = `${baseUrl}/api/search?limit=10&q=${encodeURIComponent(query)}`
-            const response = await fetch(url, {
+            const response = await platformFetch(url, {
               headers: { accept: "application/json" },
             })
             if (!response.ok)
@@ -157,7 +177,7 @@ export const registerSearch = (program: Command) => {
           }
 
           if (searchKicad) {
-            const kicadFiles: string[] = await fetch(
+            const kicadFiles: string[] = await platformFetch(
               "https://kicad-mod-cache.tscircuit.com/kicad_files.json",
             ).then((r) => r.json())
             const fuse = new Fuse(kicadFiles)
@@ -176,6 +196,10 @@ export const registerSearch = (program: Command) => {
 
         if (opts.json) {
           const unifiedResults = [
+            ...bakedDatasheets.map((part) => ({
+              source: "datasheet" as const,
+              ...part,
+            })),
             ...kicadResults.map((path) => ({
               source: "kicad" as const,
               path,
@@ -211,6 +235,7 @@ export const registerSearch = (program: Command) => {
         }
 
         if (
+          !bakedDatasheets.length &&
           !kicadResults.length &&
           !results.packages.length &&
           !jlcResults.length &&
@@ -218,6 +243,7 @@ export const registerSearch = (program: Command) => {
           !distributorResults.some(({ components }) => components.length)
         ) {
           const sources = [
+            searchBakedDatasheets && "baked datasheets",
             searchTscircuit && "tscircuit registry",
             searchJlc && "JLCPCB",
             opts.ti && "Texas Instruments",
@@ -230,6 +256,21 @@ export const registerSearch = (program: Command) => {
             ),
           )
           return
+        }
+
+        if (bakedDatasheets.length) {
+          console.log(
+            kleur
+              .bold()
+              .underline(
+                `Found ${bakedDatasheets.length} part(s) in baked datasheets:`,
+              ),
+          )
+          bakedDatasheets.forEach((part, idx) => {
+            console.log(
+              `${idx + 1}. ${part.mfr} (${part.can_import ? "available to import" : "not available to import"})`,
+            )
+          })
         }
 
         if (kicadResults.length) {
