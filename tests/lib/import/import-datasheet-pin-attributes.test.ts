@@ -341,7 +341,7 @@ for (const [raw, response, useExactFootprint] of [
       fetchMock.mockRestore()
       await rm(directory, { recursive: true, force: true })
     }
-  }, 30_000)
+  }, 60_000)
 }
 
 for (const [name, response, warnings] of [

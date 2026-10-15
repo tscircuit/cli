@@ -3,6 +3,14 @@ const asRecord = (value: unknown): Record<string, unknown> | undefined =>
     ? (value as Record<string, unknown>)
     : undefined
 
+const getStringValues = (value: unknown): string[] => {
+  if (typeof value === "string") return [value]
+  if (Array.isArray(value)) return value.flatMap(getStringValues)
+  if (value && typeof value === "object")
+    return Object.values(value).flatMap(getStringValues)
+  return []
+}
+
 export const getEasyEdaFootprinterSourceHints = (rawEasy: unknown) => {
   const component = asRecord(rawEasy)
   const dataStr = asRecord(component?.dataStr)
@@ -15,6 +23,12 @@ export const getEasyEdaFootprinterSourceHints = (rawEasy: unknown) => {
   const values = [
     component?.title,
     component?.description,
+    component?.tags,
+    component?.category,
+    componentParameters?.category,
+    componentParameters?.Category,
+    componentParameters?.["LCSC Category"],
+    componentParameters?.["JLCPCB Category"],
     componentParameters?.package,
     componentParameters?.pre,
     packageDetail?.title,
@@ -25,7 +39,7 @@ export const getEasyEdaFootprinterSourceHints = (rawEasy: unknown) => {
   return [
     ...new Set(
       values
-        .filter((value): value is string => typeof value === "string")
+        .flatMap(getStringValues)
         .map((value) => value.trim())
         .filter(Boolean),
     ),
