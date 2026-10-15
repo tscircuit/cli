@@ -67,7 +67,7 @@
     "debug": "^4.4.0",
     "delay": "^6.0.0",
     "dsn-converter": "^0.0.90",
-    "easyeda": "https://pkg.pr.new/tscircuit/easyeda-converter/easyeda@55fd9a2",
+    "easyeda": "^0.0.379",
     "fuse.js": "^7.1.0",
     "get-port": "^7.1.0",
     "globby": "^14.1.0",
