@@ -54,6 +54,9 @@ test("clone command rejects invalid URL formats", async () => {
     "https://tscircuit.com/user",
     "https://tscircuit.com/user/",
     "http://tscircuit.com/user/board",
+    "https://tscircuit.com/user/board/extra#files",
+    "https://tscircuit.com/user/#files",
+    "https://tscircuit.com/user/?version=1.0.0",
   ]
 
   for (const url of testCases) {
@@ -61,6 +64,26 @@ test("clone command rejects invalid URL formats", async () => {
     expect(stderr).toContain("Invalid package path")
   }
 }, 20_000)
+
+test.each([
+  "https://tscircuit.com/testuser/my-test-board#files",
+  "https://tscircuit.com/testuser/my-test-board/#3d",
+  "https://tscircuit.com/testuser/my-test-board?version=1.0.0",
+  "https://tscircuit.com/testuser/my-test-board/?version=1.0.0#files",
+])(
+  "clone command ignores URL query and fragment in %s",
+  async (url) => {
+    const { tmpDir, runCommand } = await getCliTestFixture()
+    const { stdout, stderr, exitCode } = await runCommand(`tsci clone ${url}`)
+
+    expect(exitCode).toBe(0)
+    expect(stdout).toContain("Cloning testuser/my-test-board...")
+    expect(stdout).toContain("Successfully cloned")
+    expect(stderr).not.toContain("not found")
+    expect(existsSync(join(tmpDir, "my-test-board", "index.tsx"))).toBe(true)
+  },
+  30_000,
+)
 
 test("clone command accepts all valid formats", async () => {
   const { tmpDir, runCommand } = await getCliTestFixture()
