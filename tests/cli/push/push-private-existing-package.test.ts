@@ -7,8 +7,8 @@ let firstPush: Awaited<
   ReturnType<Awaited<ReturnType<typeof getCliTestFixture>>["runCommand"]>
 >
 let privatePush: typeof firstPush
-let wasInitiallyPrivate: boolean | undefined
-let isPrivateAfterPrivatePush: boolean | undefined
+let wasInitiallyPrivate: boolean | null | undefined
+let isPrivateAfterPrivatePush: boolean | null | undefined
 
 beforeAll(async () => {
   const { tmpDir, runCommand, registryDb } = await getCliTestFixture({
