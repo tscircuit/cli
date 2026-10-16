@@ -6,7 +6,7 @@ import {
 } from "easyeda"
 import fs from "node:fs/promises"
 import path from "node:path"
-import { fetchDatasheetPinAttributes } from "./fetch-datasheet-pin-attributes"
+import { fetchDatasheetMetadata } from "./fetch-datasheet-pin-attributes"
 import {
   addCadModelToTsx,
   type ImportedCadComponent,
@@ -48,12 +48,13 @@ export const importComponentFromJlcpcb = async (
   const rawPn = betterEasy.dataStr.head.c_para["Manufacturer Part"]
   const datasheetAttributesPromise = options.excludePinAttributes
     ? undefined
-    : fetchDatasheetPinAttributes(rawPn)
+    : fetchDatasheetMetadata(rawPn)
   const componentName = rawPn
     ? normalizeManufacturerPartNumber(rawPn)
     : jlcpcbPartNumber
 
-  const datasheetAttributes = await datasheetAttributesPromise
+  const datasheetMetadata = await datasheetAttributesPromise
+  const datasheetAttributes = datasheetMetadata?.pinAttributes
   const circuitJson = convertEasyEdaJsonToCircuitJson(betterEasy, {
     useModelCdn: true,
     pinAttributes: datasheetAttributes,
@@ -61,6 +62,7 @@ export const importComponentFromJlcpcb = async (
   let tsx = await convertRawEasyToTsx({
     rawEasy,
     pinAttributes: datasheetAttributes,
+    internallyConnectedPins: datasheetMetadata?.internallyConnectedPins,
   })
   const footprintConversion = options.useExactFootprint
     ? ({ mode: "exact-requested", tsx } as const)
@@ -70,6 +72,7 @@ export const importComponentFromJlcpcb = async (
         tsx,
       })
   tsx = footprintConversion.tsx
+
   const cadComponent = circuitJson.find(
     (item) => item.type === "cad_component",
   ) as ImportedCadComponent | undefined
