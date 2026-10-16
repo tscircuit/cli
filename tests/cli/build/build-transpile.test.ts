@@ -1,6 +1,6 @@
 import { getCliTestFixture } from "../../fixtures/get-cli-test-fixture"
 import { test, expect } from "bun:test"
-import { writeFile, readFile, stat } from "node:fs/promises"
+import { mkdir, writeFile, readFile, stat } from "node:fs/promises"
 import path from "node:path"
 
 const circuitCode = `
@@ -161,4 +161,79 @@ test("build with --transpile JSX with import from other files", async () => {
   expect(cjsContent).toContain("jsx")
   expect(cjsContent).toContain("react/jsx-runtime")
   expect(cjsContent).not.toContain("<board")
+}, 60_000)
+
+test("tsci build without --transpile succeeds when TypeScript 7 is installed", async () => {
+  const { tmpDir, runCommand } = await getCliTestFixture()
+  const circuitPath = path.join(tmpDir, "index.tsx")
+  const tsPkgDir = path.join(tmpDir, "node_modules", "typescript")
+
+  await mkdir(tsPkgDir, { recursive: true })
+  await writeFile(
+    path.join(tsPkgDir, "package.json"),
+    JSON.stringify({
+      name: "typescript",
+      version: "7.0.2",
+      main: "./index.cjs",
+    }),
+  )
+  await writeFile(
+    path.join(tsPkgDir, "index.cjs"),
+    'module.exports = { version: "7.0.2", versionMajorMinor: "7.0" };\n',
+  )
+  await writeFile(circuitPath, circuitCode)
+  await writeFile(
+    path.join(tmpDir, "package.json"),
+    JSON.stringify({ devDependencies: { typescript: "7.0.2" } }),
+  )
+
+  const { stderr, exitCode } = await runCommand(
+    `tsci build ${circuitPath} --ignore-errors`,
+  )
+
+  expect(exitCode).toBe(0)
+  expect(stderr).not.toContain("ModuleKind.ES2015")
+
+  const circuitJsonPath = path.join(tmpDir, "dist", "index", "circuit.json")
+  const circuitJsonStat = await stat(circuitJsonPath)
+  expect(circuitJsonStat.isFile()).toBe(true)
+}, 60_000)
+
+test("tsci build --transpile reports clear error instead of crashing when TypeScript 7 is installed", async () => {
+  const { tmpDir, runCommand } = await getCliTestFixture()
+  const circuitPath = path.join(tmpDir, "index.tsx")
+  const tsPkgDir = path.join(tmpDir, "node_modules", "typescript")
+
+  await mkdir(tsPkgDir, { recursive: true })
+  await writeFile(
+    path.join(tsPkgDir, "package.json"),
+    JSON.stringify({
+      name: "typescript",
+      version: "7.0.2",
+      main: "./index.cjs",
+    }),
+  )
+  await writeFile(
+    path.join(tsPkgDir, "index.cjs"),
+    'module.exports = { version: "7.0.2", versionMajorMinor: "7.0" };\n',
+  )
+  await writeFile(circuitPath, circuitCode)
+  await writeFile(
+    path.join(tmpDir, "package.json"),
+    JSON.stringify({
+      main: "dist/index.js",
+      devDependencies: { typescript: "7.0.2" },
+    }),
+  )
+
+  const { stderr, exitCode } = await runCommand(
+    `tsci build ${circuitPath} --transpile`,
+  )
+
+  expect(exitCode).toBe(1)
+  expect(stderr).toContain("Unsupported TypeScript version (7.0.2)")
+  expect(stderr).toContain("TypeScript 5.x")
+  expect(stderr).not.toContain(
+    "undefined is not an object (evaluating 'ModuleKind.ES2015')",
+  )
 }, 60_000)

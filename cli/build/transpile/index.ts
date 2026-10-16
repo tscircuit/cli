@@ -1,32 +1,114 @@
 import path from "node:path"
 import fs from "node:fs"
-import { rollup } from "rollup"
-import typescript from "@rollup/plugin-typescript"
-import resolve from "@rollup/plugin-node-resolve"
-import commonjs from "@rollup/plugin-commonjs"
-import json from "@rollup/plugin-json"
-import dts from "rollup-plugin-dts"
+import { createRequire } from "node:module"
 import kleur from "kleur"
-import ts from "typescript"
 
 import {
   createStaticAssetPlugin,
   STATIC_ASSET_EXTENSIONS,
 } from "./static-asset-plugin"
 
-const [typescriptMajor, typescriptMinor] = ts.versionMajorMinor
-  .split(".")
-  .map(Number)
-// TypeScript 5.7+ can emit projects that import .ts/.tsx paths by rewriting
-// those specifiers, instead of reporting TS5097 or requiring noEmit.
-const supportsRewriteRelativeImportExtensions =
-  typescriptMajor > 5 || (typescriptMajor === 5 && typescriptMinor >= 7)
-const typescriptExtensionEmitOptions = supportsRewriteRelativeImportExtensions
-  ? {
-      allowImportingTsExtensions: true,
-      rewriteRelativeImportExtensions: true,
+type TypeScriptCompilerModule = typeof import("typescript")
+
+const unwrapTypeScriptModule = (
+  mod: unknown,
+): Record<string, unknown> | null => {
+  if (!mod || typeof mod !== "object") return null
+  const record = mod as Record<string, unknown>
+  if (record.default && typeof record.default === "object") {
+    return {
+      ...record,
+      ...(record.default as Record<string, unknown>),
     }
-  : { allowImportingTsExtensions: false }
+  }
+  return record
+}
+
+const isSupportedTypeScriptCompilerModule = (
+  tsCandidate: unknown,
+): tsCandidate is TypeScriptCompilerModule => {
+  if (!tsCandidate || typeof tsCandidate !== "object") {
+    return false
+  }
+  const tsObj = tsCandidate as Partial<TypeScriptCompilerModule>
+  if (typeof tsObj.versionMajorMinor !== "string") {
+    return false
+  }
+  const [major] = tsObj.versionMajorMinor.split(".").map(Number)
+  if (!Number.isFinite(major) || major >= 6) {
+    return false
+  }
+  return Boolean(
+    tsObj.ModuleKind &&
+      typeof tsObj.ModuleKind.ES2015 === "number" &&
+      tsObj.ScriptTarget &&
+      tsObj.sys &&
+      typeof tsObj.createProgram === "function",
+  )
+}
+
+const loadTypeScriptForTranspile = async (
+  projectDir: string,
+): Promise<
+  | { ok: true; ts: TypeScriptCompilerModule }
+  | { ok: false; detectedVersion: string }
+> => {
+  const candidates: Array<Record<string, unknown>> = []
+
+  try {
+    const projectRequire = createRequire(path.join(projectDir, "package.json"))
+    const projectTs = unwrapTypeScriptModule(projectRequire("typescript"))
+    if (projectTs) {
+      candidates.push(projectTs)
+    }
+  } catch {
+    // Ignore if projectDir does not have its own resolvable typescript package
+  }
+
+  try {
+    const cliTs = unwrapTypeScriptModule(await import("typescript"))
+    if (cliTs) {
+      candidates.push(cliTs)
+    }
+  } catch {
+    // Handled below if no valid candidate was loaded
+  }
+
+  for (const candidate of candidates) {
+    if (!isSupportedTypeScriptCompilerModule(candidate)) {
+      const detectedVersion =
+        typeof candidate.version === "string"
+          ? candidate.version
+          : typeof candidate.versionMajorMinor === "string"
+            ? candidate.versionMajorMinor
+            : "unknown"
+      return { ok: false, detectedVersion }
+    }
+  }
+
+  const resolvedTs = candidates[0]
+  if (!resolvedTs || !isSupportedTypeScriptCompilerModule(resolvedTs)) {
+    return { ok: false, detectedVersion: "unknown" }
+  }
+
+  return { ok: true, ts: resolvedTs }
+}
+
+const getTypeScriptExtensionEmitOptions = (ts: TypeScriptCompilerModule) => {
+  const [typescriptMajor, typescriptMinor] = ts.versionMajorMinor
+    .split(".")
+    .map(Number)
+  // TypeScript 5.7+ can emit projects that import .ts/.tsx paths by rewriting
+  // those specifiers, instead of reporting TS5097 or requiring noEmit.
+  const supportsRewriteRelativeImportExtensions =
+    typescriptMajor > 5 || (typescriptMajor === 5 && typescriptMinor >= 7)
+  return supportsRewriteRelativeImportExtensions
+    ? {
+        allowImportingTsExtensions: true,
+        rewriteRelativeImportExtensions: true,
+      }
+    : { allowImportingTsExtensions: false }
+}
 
 const createExternalFunction =
   (projectDir: string, tsconfigPath?: string) =>
@@ -100,6 +182,36 @@ export const transpileFile = async ({
   projectDir: string
 }): Promise<boolean> => {
   try {
+    const tsLoadResult = await loadTypeScriptForTranspile(projectDir)
+    if (!tsLoadResult.ok) {
+      console.error(
+        kleur.red(
+          `Transpilation failed: Unsupported TypeScript version (${tsLoadResult.detectedVersion}). Transpilation requires TypeScript 5.x with the JavaScript compiler API (e.g. ts.ModuleKind), which is not available in TypeScript 7+. Please install a compatible version such as \`bun add -d typescript@^5.0.0\`.`,
+        ),
+      )
+      return false
+    }
+
+    const typescriptExtensionEmitOptions = getTypeScriptExtensionEmitOptions(
+      tsLoadResult.ts,
+    )
+
+    const [
+      { rollup },
+      { default: typescript },
+      { default: resolve },
+      { default: commonjs },
+      { default: json },
+      { default: dts },
+    ] = await Promise.all([
+      import("rollup"),
+      import("@rollup/plugin-typescript"),
+      import("@rollup/plugin-node-resolve"),
+      import("@rollup/plugin-commonjs"),
+      import("@rollup/plugin-json"),
+      import("rollup-plugin-dts"),
+    ])
+
     fs.mkdirSync(outputDir, { recursive: true })
 
     // Check if user has a tsconfig.json
