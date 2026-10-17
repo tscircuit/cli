@@ -18,7 +18,6 @@ import { gzipSync } from "node:zlib"
 
 type PushOptions = {
   filePath?: string
-  isPrivate?: boolean
   versionTag?: string
   includeDist?: boolean
   compress?: boolean
@@ -110,7 +109,6 @@ export const getArchivePayload = (
 
 export const pushSnippet = async ({
   filePath,
-  isPrivate,
   versionTag,
   includeDist = false,
   compress = true,
@@ -295,8 +293,8 @@ export const pushSnippet = async ({
         type: "select",
         message: "Package Visibility:",
         choices: [
-          { title: "Public", value: "public", selected: !isPrivate },
-          { title: "Private", value: "private", selected: isPrivate },
+          { title: "Public", value: "public", selected: true },
+          { title: "Private", value: "private" },
         ],
       },
     ])
