@@ -55,14 +55,22 @@ const loadTypeScriptForTranspile = async (
 > => {
   const candidates: Array<Record<string, unknown>> = []
 
-  try {
-    const projectRequire = createRequire(path.join(projectDir, "package.json"))
-    const projectTs = unwrapTypeScriptModule(projectRequire("typescript"))
-    if (projectTs) {
-      candidates.push(projectTs)
+  const projectTsPkgPath = path.join(
+    projectDir,
+    "node_modules",
+    "typescript",
+    "package.json",
+  )
+  if (fs.existsSync(projectTsPkgPath)) {
+    try {
+      const projectRequire = createRequire(projectTsPkgPath)
+      const projectTs = unwrapTypeScriptModule(projectRequire("."))
+      if (projectTs) {
+        candidates.push(projectTs)
+      }
+    } catch {
+      // Ignore if projectDir typescript package cannot be loaded
     }
-  } catch {
-    // Ignore if projectDir does not have its own resolvable typescript package
   }
 
   try {

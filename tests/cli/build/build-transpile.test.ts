@@ -1,6 +1,6 @@
 import { getCliTestFixture } from "../../fixtures/get-cli-test-fixture"
 import { test, expect } from "bun:test"
-import { mkdir, writeFile, readFile, stat } from "node:fs/promises"
+import { mkdir, symlink, writeFile, readFile, stat } from "node:fs/promises"
 import path from "node:path"
 
 const circuitCode = `
@@ -169,6 +169,11 @@ test("tsci build without --transpile succeeds when TypeScript 7 is installed", a
   const tsPkgDir = path.join(tmpDir, "node_modules", "typescript")
 
   await mkdir(tsPkgDir, { recursive: true })
+  await symlink(
+    path.join(process.cwd(), "node_modules", "react"),
+    path.join(tmpDir, "node_modules", "react"),
+    "junction",
+  )
   await writeFile(
     path.join(tsPkgDir, "package.json"),
     JSON.stringify({
@@ -205,6 +210,11 @@ test("tsci build --transpile reports clear error instead of crashing when TypeSc
   const tsPkgDir = path.join(tmpDir, "node_modules", "typescript")
 
   await mkdir(tsPkgDir, { recursive: true })
+  await symlink(
+    path.join(process.cwd(), "node_modules", "react"),
+    path.join(tmpDir, "node_modules", "react"),
+    "junction",
+  )
   await writeFile(
     path.join(tsPkgDir, "package.json"),
     JSON.stringify({
