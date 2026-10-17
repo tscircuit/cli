@@ -48,7 +48,7 @@ export const registerClone = (program: Command) => {
         }
 
         const urlMatch = packagePath.match(
-          /^https:\/\/tscircuit\.com\/([^\/]+)\/([^\/]+)\/?$/i,
+          /^https:\/\/tscircuit\.com\/([^\/?#]+)\/([^\/?#]+)\/?(?:[?#].*)?$/i,
         )
         // Then try the original format
         const originalMatch =
