@@ -305,6 +305,18 @@ export const exportSnippet = async ({
         pcbFilename: `${outputBaseName}.kicad_pcb`,
       })
       proConverter.runUntilFinished()
+      const projectOutput = proConverter.getOutput()
+      const pcbBoard = (
+        circuitJson as unknown as Array<Record<string, unknown>>
+      ).find((element) => element?.type === "pcb_board")
+      if (
+        typeof pcbBoard?.min_board_edge_clearance === "number" &&
+        projectOutput?.board?.design_settings?.rules
+      ) {
+        ;(
+          projectOutput.board.design_settings.rules as Record<string, unknown>
+        ).min_copper_edge_clearance = pcbBoard.min_board_edge_clearance
+      }
 
       const zip = new JSZip()
       const schematicFilename = `${outputBaseName}.kicad_sch`
@@ -314,7 +326,10 @@ export const exportSnippet = async ({
         zip.file(schematicFile.filename, schematicFile.content)
       }
       zip.file(`${outputBaseName}.kicad_pcb`, pcbConverter.getOutputString())
-      zip.file(`${outputBaseName}.kicad_pro`, proConverter.getOutputString())
+      zip.file(
+        `${outputBaseName}.kicad_pro`,
+        `${JSON.stringify(projectOutput, null, 2)}\n`,
+      )
 
       await resolveAndLoadKicad3dModelFiles({
         model3dSourcePaths: pcbConverter.getModel3dSourcePaths(),
