@@ -1,20 +1,20 @@
-import type { Command } from "commander"
 import * as fs from "node:fs"
 import * as path from "node:path"
-import { setupTsciProject } from "lib/shared/setup-tsci-packages"
-import { generateTsConfig } from "lib/shared/generate-ts-config"
-import { writeFileIfNotExists } from "lib/shared/write-file-if-not-exists"
+import type { Command } from "commander"
+import { jwtDecode } from "jwt-decode"
+import kleur from "kleur"
+import { cliConfig, getSessionToken } from "lib/cli-config"
+import { saveProjectConfig } from "lib/project-config"
+import { fetchAccount } from "lib/registry-api/fetch-account"
+import { checkForTsciUpdates } from "lib/shared/check-for-cli-update"
 import { generateGitIgnoreFile } from "lib/shared/generate-gitignore-file"
 import { generatePackageJson } from "lib/shared/generate-package-json"
+import { generateTsConfig } from "lib/shared/generate-ts-config"
+import { setupTsciProject } from "lib/shared/setup-tsci-packages"
 import { setupTscircuitSkill } from "lib/shared/setup-tscircuit-skill"
-import { cliConfig, getSessionToken } from "lib/cli-config"
-import { jwtDecode } from "jwt-decode"
-import { saveProjectConfig } from "lib/project-config"
-import { checkForTsciUpdates } from "lib/shared/check-for-cli-update"
-import { prompts } from "lib/utils/prompts"
-import { fetchAccount } from "lib/registry-api/fetch-account"
-import kleur from "kleur"
+import { writeFileIfNotExists } from "lib/shared/write-file-if-not-exists"
 import { captureTelemetryEvent } from "lib/telemetry"
+import { prompts } from "lib/utils/prompts"
 
 export const registerInit = (program: Command) => {
   program
@@ -89,7 +89,9 @@ export const registerInit = (program: Command) => {
               initial: defaultPackageName,
             })
 
-        let authorName = cliConfig.get("tscircuitHandle")
+        let authorName = process.env.TSCIRCUIT_TOKEN
+          ? undefined
+          : cliConfig.get("tscircuitHandle")
         if (!authorName) {
           const account = await fetchAccount()
           if (account?.tscircuit_handle) {
