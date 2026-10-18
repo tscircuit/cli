@@ -101,6 +101,7 @@ const loadProjectEnv = (projectDir: string) => {
  */
 export const loadProjectConfigSync = (
   projectDir: string = process.cwd(),
+  options: { throwOnError?: boolean } = {},
 ): TscircuitProjectConfig | null => {
   const configPath = path.join(projectDir, CONFIG_FILENAME)
 
@@ -113,6 +114,7 @@ export const loadProjectConfigSync = (
     const parsedConfig = JSON.parse(configContent)
     return projectConfigSchema.parse(parsedConfig)
   } catch (error) {
+    if (options.throwOnError) throw error
     console.error(`Error loading tscircuit config: ${error}`)
     return null
   }
@@ -120,6 +122,7 @@ export const loadProjectConfigSync = (
 
 const loadProjectConfigModule = async (
   projectDir: string,
+  options: { throwOnError?: boolean } = {},
 ): Promise<TscircuitRuntimeProjectConfig | null> => {
   loadProjectEnv(projectDir)
 
@@ -136,6 +139,7 @@ const loadProjectConfigModule = async (
         importedModule.default ?? importedModule.config ?? importedModule
       return parseProjectConfigObject(exportedConfig)
     } catch (error) {
+      if (options.throwOnError) throw error
       console.error(`Error loading ${configFileName}: ${error}`)
       return null
     }
@@ -146,9 +150,10 @@ const loadProjectConfigModule = async (
 
 export const loadRuntimeProjectConfig = async (
   projectDir: string = process.cwd(),
+  options: { throwOnError?: boolean } = {},
 ): Promise<TscircuitRuntimeProjectConfig | null> => {
-  const jsonConfig = loadProjectConfigSync(projectDir)
-  const moduleConfig = await loadProjectConfigModule(projectDir)
+  const jsonConfig = loadProjectConfigSync(projectDir, options)
+  const moduleConfig = await loadProjectConfigModule(projectDir, options)
 
   if (!jsonConfig && !moduleConfig) {
     return null

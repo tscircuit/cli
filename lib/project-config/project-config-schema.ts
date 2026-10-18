@@ -18,11 +18,36 @@ export const kicadPcmSettingsSchema = z.object({
 
 export type PcbSnapshotSettings = z.infer<typeof pcbSnapshotSettingsSchema>
 
+export const extraRunFrameTabSchema = z.object({
+  tabName: z.string().trim().min(1),
+  iframeUrl: z
+    .string()
+    .url()
+    .refine((url) => /^https?:\/\//i.test(url), {
+      message: "Extra RunFrame tabs require an HTTP or HTTPS URL",
+    })
+    .refine(
+      (url) => {
+        try {
+          const parsed = new URL(url)
+          return !parsed.username && !parsed.password
+        } catch {
+          return false
+        }
+      },
+      {
+        message: "Extra RunFrame tab URLs must not include credentials",
+      },
+    ),
+  mainComponentPath: z.string().trim().min(1).optional(),
+})
+
 export const projectConfigSchema = z.object({
   mainEntrypoint: z.string().optional(),
   libraryEntrypoint: z.string().optional(),
   previewComponentPath: z.string().optional(),
   siteDefaultComponentPath: z.string().optional(),
+  extraRunFrameTabs: z.array(extraRunFrameTabSchema).optional(),
   ignoredFiles: z.array(z.string()).optional(),
   includeBoardFiles: z.array(z.string()).optional(),
   snapshotsDir: z.string().optional(),
