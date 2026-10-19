@@ -64,7 +64,38 @@ export const checkNetlist = async (file?: string) => {
   const diagnostics = analyzeCircuitJson(typedCircuitJson)
   const netlistErrors = diagnostics.errors.filter(isNetlistDiagnostic)
   const netlistWarnings = diagnostics.warnings.filter(isNetlistDiagnostic)
-  const readableNetlist = convertCircuitJsonToReadableNetlist(typedCircuitJson)
+  const resistorNames = new Set(
+    typedCircuitJson
+      .filter(
+        (el): el is Extract<AnyCircuitElement, { type: "source_component" }> =>
+          el.type === "source_component" &&
+          "ftype" in el &&
+          el.ftype === "simple_resistor",
+      )
+      .map((el) => el.name),
+  )
+  const cleanedCircuitJson = typedCircuitJson.map((el) => {
+    if (el.type !== "source_port" || !Array.isArray(el.port_hints)) return el
+    const owner = typedCircuitJson.find(
+      (c) =>
+        c.type === "source_component" &&
+        c.source_component_id === el.source_component_id,
+    )
+    if (!owner || !("ftype" in owner) || owner.ftype !== "simple_resistor") {
+      return el
+    }
+    return {
+      ...el,
+      port_hints: el.port_hints.filter(
+        (hint) => hint !== "anode" && hint !== "cathode",
+      ),
+    }
+  })
+  const readableNetlist = convertCircuitJsonToReadableNetlist(
+    cleanedCircuitJson,
+  )
+    .replace(/\(([^()\n]+?)\s+undefined\)/g, "($1)")
+    .replace(/^([A-Za-z0-9_]+)\s+\(undefined\)$/gm, "$1")
 
   const diagnosticsLines = [
     `Errors: ${netlistErrors.length}`,

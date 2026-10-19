@@ -53,6 +53,10 @@ test("check netlist includes readable netlist output", async () => {
   expect(stdout).toContain("COMPONENTS:")
   expect(stdout).toContain("R1")
   expect(stdout).toContain("C1")
+  expect(stdout).not.toContain("undefined")
+  expect(stdout).toContain("R1 (1kΩ)")
+  expect(stdout).toContain("- pin1(pos, left):")
+  expect(stdout).toContain("- pin2(neg, right):")
   expect(stdout).toContain("NET: C1_pos")
 }, 20_000)
 
