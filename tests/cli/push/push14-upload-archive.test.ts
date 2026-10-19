@@ -37,7 +37,7 @@ test("compressed upload payload matches the registry archive format", async () =
   })
 })
 
-test("should attempt archive upload when TSCI_PUSH_ARCHIVE is enabled", async () => {
+test("should upload an archive when TSCI_PUSH_ARCHIVE is enabled", async () => {
   const { tmpDir, runCommand } = await getCliTestFixture({ loggedIn: true })
   const snippetFilePath = path.resolve(tmpDir, "snippet.tsx")
 
@@ -62,15 +62,12 @@ test("should attempt archive upload when TSCI_PUSH_ARCHIVE is enabled", async ()
 
   expect(stderr).toBe("")
   expect(stdout).toContain("Uploading package archive...")
-  expect(stdout).toContain(
-    "Archive upload failed, falling back to file-by-file upload",
-  )
-  expect(stdout).toContain("⬆︎ package.json")
-  expect(stdout).toContain("⬆︎ snippet.tsx")
+  expect(stdout).toContain("📦 Uploaded archive with 2 files")
+  expect(stdout).not.toContain("Archive upload failed")
   expect(stdout).toContain('"@tsci/test-user.test-package@1.0.0" published!')
 }, 30_000)
 
-test("should attempt archive upload when --compress is passed", async () => {
+test("should upload an archive when --compress is passed", async () => {
   const { tmpDir, runCommand } = await getCliTestFixture({ loggedIn: true })
   const snippetFilePath = path.resolve(tmpDir, "snippet.tsx")
 
@@ -86,15 +83,12 @@ test("should attempt archive upload when --compress is passed", async () => {
 
   expect(stderr).toBe("")
   expect(stdout).toContain("Uploading package archive...")
-  expect(stdout).toContain(
-    "Archive upload failed, falling back to file-by-file upload",
-  )
-  expect(stdout).toContain("⬆︎ package.json")
-  expect(stdout).toContain("⬆︎ snippet.tsx")
+  expect(stdout).toContain("📦 Uploaded archive with 2 files")
+  expect(stdout).not.toContain("Archive upload failed")
   expect(stdout).toContain('"@tsci/test-user.test-package@1.0.0" published!')
 }, 30_000)
 
-test("should attempt archive upload by default", async () => {
+test("should upload an archive by default", async () => {
   const { tmpDir, runCommand } = await getCliTestFixture({ loggedIn: true })
   const snippetFilePath = path.resolve(tmpDir, "snippet.tsx")
 
@@ -111,6 +105,8 @@ test("should attempt archive upload by default", async () => {
   expect(exitCode).toBe(0)
   expect(stderr).toBe("")
   expect(stdout).toContain("Uploading package archive...")
+  expect(stdout).toContain("📦 Uploaded archive with 2 files")
+  expect(stdout).not.toContain("Archive upload failed")
   expect(stdout).toContain('"@tsci/test-user.test-package@1.0.0" published!')
 }, 30_000)
 
