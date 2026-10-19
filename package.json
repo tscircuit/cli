@@ -1,6 +1,6 @@
 {
   "name": "@tscircuit/cli",
-  "version": "0.1.2371",
+  "version": "0.1.2373",
   "repository": {
     "type": "git",
     "url": "https://github.com/tscircuit/cli"
@@ -20,7 +20,7 @@
     "@tscircuit/circuit-json-schematic-placement-analysis": "https://jscdn.tscircuit.com/@tscircuit/circuit-json-schematic-placement-analysis/0.0.68.tgz",
     "@tscircuit/circuit-json-util": "^0.0.121",
     "@tscircuit/eval": "0.0.1619",
-    "@tscircuit/fake-snippets": "^0.0.182",
+    "@tscircuit/fake-snippets": "^0.0.226",
     "@tscircuit/file-server": "^0.0.32",
     "@tscircuit/footprinter": "^0.0.438",
     "@tscircuit/image-utils": "^0.0.8",
@@ -28,7 +28,7 @@
     "@tscircuit/math-utils": "0.0.36",
     "@tscircuit/modelprinter": "^0.0.11",
     "@tscircuit/props": "^0.0.698",
-    "@tscircuit/runframe": "github:tscircuit/runframe#d2e08f7f8eac52b917bd72de511b7ab9486366bb",
+    "@tscircuit/runframe": "^0.0.3023",
     "@tscircuit/schematic-match-adapt": "^0.0.22",
     "@tscircuit/schematic-trace-solver": "^0.0.204",
     "@tscircuit/solver-utils": "0.0.16",
@@ -81,6 +81,7 @@
     "ky": "^1.7.4",
     "make-vfs": "^1.0.15",
     "md5": "^2.3.0",
+    "mime-types": "^3.0.2",
     "pdf-lib": "^1.17.1",
     "perfect-cli": "^1.0.21",
     "playwright": "^1.57.0",
