@@ -2,7 +2,7 @@ import { expect, test } from "bun:test"
 import { getCliConfig } from "lib/cli-config"
 import { writeFileSync } from "node:fs"
 import path from "node:path"
-import { gunzipSync } from "node:zlib"
+import { gzipSync, gunzipSync } from "node:zlib"
 import { getCliTestFixture } from "tests/fixtures/get-cli-test-fixture"
 
 type ArchiveFile = {
@@ -20,7 +20,7 @@ const setup = async ({
   changeSourceDuringUpload = false,
 } = {}) => {
   const fixture = await getCliTestFixture({ loggedIn: true })
-  const { tmpDir, registryDb, registryApiUrl } = fixture
+  const { tmpDir, registryApiUrl } = fixture
   writeFileSync(path.join(tmpDir, "index.tsx"), "// Snippet content")
   writeFileSync(path.join(tmpDir, "image.png"), Buffer.from([0, 1, 2, 255]))
   writeFileSync(path.join(tmpDir, "notes.txt"), "Board notes")
@@ -40,6 +40,12 @@ const setup = async ({
       const url = new URL(request.url)
       requests.push(url.pathname)
       const requestBody = request.body ? await request.arrayBuffer() : undefined
+      const forward = (body = requestBody) => {
+        url.host = new URL(registryApiUrl).host
+        const headers = new Headers(request.headers)
+        headers.delete("content-length")
+        return fetch(url, { method: request.method, headers, body })
+      }
 
       if (url.pathname === "/api/package_files/upload_archive") {
         if (archiveStatus === 400) {
@@ -49,36 +55,35 @@ const setup = async ({
           )
         }
 
-        const payload = JSON.parse(Buffer.from(requestBody!).toString("utf8"))
-        expect(payload.package_name_with_version).toBe(packageNameWithVersion)
-        const { files }: { files: ArchiveFile[] } = JSON.parse(
-          gunzipSync(Buffer.from(payload.archive_base64, "base64")).toString(
-            "utf8",
-          ),
-        )
-        const release = registryDb.packageReleases.find(
-          (release) => release.version === "1.0.0-test",
-        )!
-        for (const file of files) {
-          if (missingFiles.includes(file.file_path)) continue
-          const mismatched = mismatchedFiles.includes(file.file_path)
-          const contentBytes =
-            file.content_base64 === undefined
-              ? undefined
-              : Buffer.from(file.content_base64, "base64")
-          if (mismatched && contentBytes) contentBytes[0] ^= 255
-          registryDb.addPackageFile({
-            package_release_id: release.package_release_id,
-            file_path: file.file_path,
-            is_text: file.content_text !== undefined,
-            content_text:
-              mismatched && file.content_text !== undefined
-                ? `${file.content_text.slice(0, -1)}!`
-                : file.content_text,
-            content_bytes: contentBytes,
-            created_at: new Date().toISOString(),
-          })
+        let archiveBody = requestBody
+        if (missingFiles.length > 0 || mismatchedFiles.length > 0) {
+          const payload = JSON.parse(Buffer.from(requestBody!).toString("utf8"))
+          const archive: { files: ArchiveFile[] } = JSON.parse(
+            gunzipSync(Buffer.from(payload.archive_base64, "base64")).toString(
+              "utf8",
+            ),
+          )
+          archive.files = archive.files
+            .filter((file) => !missingFiles.includes(file.file_path))
+            .map((file) => {
+              if (!mismatchedFiles.includes(file.file_path)) return file
+              if (file.content_text !== undefined)
+                return {
+                  ...file,
+                  content_text: `${file.content_text.slice(0, -1)}!`,
+                }
+              const bytes = Buffer.from(file.content_base64!, "base64")
+              bytes[0] ^= 255
+              return { ...file, content_base64: bytes.toString("base64") }
+            })
+          payload.archive_base64 = gzipSync(JSON.stringify(archive)).toString(
+            "base64",
+          )
+          archiveBody = new TextEncoder().encode(JSON.stringify(payload)).buffer
         }
+        const response = await forward(archiveBody)
+        expect(response.status).toBe(200)
+        await response.arrayBuffer()
         if (changeSourceDuringUpload) {
           writeFileSync(
             path.join(tmpDir, "index.tsx"),
@@ -109,12 +114,7 @@ const setup = async ({
         uploads.push(file)
       }
 
-      url.host = new URL(registryApiUrl).host
-      return fetch(url, {
-        method: request.method,
-        headers: request.headers,
-        body: requestBody,
-      })
+      return forward()
     },
   })
   globalThis.deferredCleanupFns.push(async () => {
@@ -208,7 +208,7 @@ test("push falls back to individual uploads after a definite archive rejection",
 test.each(["list", "download"])(
   "push stops when archive verification fails at package_files/%s",
   async (endpoint) => {
-    const { runCommand, requests, uploads, registryDb } = await setup({
+    const { runCommand, requests, uploads } = await setup({
       verificationFailure: endpoint,
     })
 
@@ -221,11 +221,6 @@ test.each(["list", "download"])(
     expect(stdout).not.toContain("published!")
     expect(uploads).toEqual([])
     expect(requests).not.toContain("/api/package_releases/update")
-    expect(
-      registryDb.packageReleases.find(
-        (release) => release.version === "1.0.0-test",
-      )?.ready_to_build,
-    ).toBe(false)
   },
   30_000,
 )

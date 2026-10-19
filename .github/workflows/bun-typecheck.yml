@@ -22,5 +22,9 @@ jobs:
       - name: Install dependencies
         run: bun i
 
+      - name: Inspect updated fake registry lock entry
+        run: |
+          bun -e 'console.log((await Bun.file("bun.lock").text()).split("\n").filter((line) => line.includes("@tscircuit/fake-snippets")).join("\n"))'
+
       - name: Run type check
         run: bunx tsc --noEmit

@@ -14,7 +14,7 @@ test("should fail if no package.json is found", async () => {
 })
 
 test("should push a package without an entrypoint", async () => {
-  const { tmpDir, runCommand } = await getCliTestFixture({
+  const { tmpDir, runCommand, registryDb } = await getCliTestFixture({
     loggedIn: true,
   })
 
@@ -35,8 +35,12 @@ test("should push a package without an entrypoint", async () => {
 
   expect(exitCode).toBe(0)
   expect(stderr).toBe("")
-  expect(stdout).toContain("⬆︎ package.json")
-  expect(stdout).toContain("⬆︎ prebuilt.circuit.json")
-  expect(stdout).toContain("⬆︎ tscircuit.config.json")
+  expect(registryDb.packageFiles.map((file) => file.file_path)).toEqual(
+    expect.arrayContaining([
+      "package.json",
+      "prebuilt.circuit.json",
+      "tscircuit.config.json",
+    ]),
+  )
   expect(stdout).toContain('"@tsci/test-user.test-package@1.0.0" published!')
 }, 30_000)
