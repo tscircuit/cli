@@ -3,6 +3,8 @@ import type { Middleware } from "winterspec"
 import { createDatabase } from "@tscircuit/fake-snippets"
 import fakeRegistryBundle from "@tscircuit/fake-snippets/bundle"
 
+process.env.BUN_TEST = "true"
+
 export const startServer = async ({
   port,
   testDbName,
