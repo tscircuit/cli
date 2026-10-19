@@ -1,6 +1,8 @@
 import { expect, test } from "bun:test"
 import fs from "node:fs"
 import path from "node:path"
+import { sign } from "jsonwebtoken"
+import { getCliConfig } from "lib/cli-config"
 import { normalizeGithubRepo } from "cli/registry/packages/update/register"
 import { getCliTestFixture } from "tests/fixtures/get-cli-test-fixture"
 
@@ -109,14 +111,25 @@ test("missing remote package surfaces the registry error", async () => {
   expect(result.stderr).toContain("404")
 }, 30_000)
 
-test("unauthorized update does not modify the package", async () => {
-  const { runCommand, registryDb } = await getCliTestFixture()
+test("an invalidated session cannot modify the package", async () => {
+  const { tmpDir, runCommand, registryDb } = await getCliTestFixture()
+  getCliConfig({ configDir: path.join(tmpDir, ".config") }).set(
+    "sessionToken",
+    sign(
+      {
+        account_id: registryDb.accounts[0].account_id,
+        session_id: "deleted-session",
+      },
+      "test-secret",
+    ),
+  )
   const pkg = registryDb.packages[0]
   const original = pkg.github_repo_full_name
   const result = await runCommand(
     `tsci registry packages update --package-name ${pkg.name} --github-repo owner/repo`,
   )
   expect(result.exitCode).toBe(1)
+  expect(result.stderr).toContain("401")
   expect(
     registryDb.packages.find((p) => p.package_id === pkg.package_id)
       ?.github_repo_full_name,
@@ -128,6 +141,7 @@ test("authenticated user without package access receives a permission error", as
   const pkg = registryDb.packages.find((p) => p.package_id === packageId)!
   pkg.is_private = false
   pkg.owner_org_id = "another-org"
+  pkg.creator_account_id = "another-account"
   const result = await runCommand(
     "tsci registry packages update --package-name test-user/github-board --github-repo owner/repo",
   )
@@ -141,7 +155,6 @@ test("authenticated user without package access receives a permission error", as
 
 test("update payload includes only requested settings and resolves package IDs", async () => {
   const { tmpDir, runCommand } = await getCliTestFixture({ loggedIn: true })
-  const { getCliConfig } = await import("lib/cli-config")
   const requests: Array<{ path: string; body: unknown }> = []
   // The bundled fake registry predates public_dist_enabled, so assert the HTTP
   // contract directly for this existing option and its combination with linking.
