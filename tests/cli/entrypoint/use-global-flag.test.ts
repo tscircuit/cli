@@ -80,3 +80,44 @@ test("entrypoint skips local version when --use-global flag is passed", async ()
 
   rmSync(tmpDir, { recursive: true, force: true })
 })
+
+test("entrypoint falls back to process.execPath when neither bun nor tsx is on PATH", async () => {
+  const tmpDir = temporaryDirectory()
+  const localCliPath = join(tmpDir, "node_modules", "@tscircuit", "cli")
+
+  mkdirSync(localCliPath, { recursive: true })
+  mkdirSync(join(localCliPath, "dist", "cli"), { recursive: true })
+
+  writeFileSync(
+    join(tmpDir, "package.json"),
+    JSON.stringify({ name: "test-project", version: "1.0.0" }),
+  )
+
+  writeFileSync(
+    join(localCliPath, "package.json"),
+    JSON.stringify({ name: "@tscircuit/cli", version: "0.0.999-local" }),
+  )
+
+  writeFileSync(
+    join(localCliPath, "dist", "cli", "main.js"),
+    'console.log("NODE_FALLBACK_CLI_EXECUTED")',
+  )
+
+  const entrypointPath = resolve(process.cwd(), "cli/entrypoint.js")
+
+  const result = spawnSync(process.execPath, [entrypointPath, "--version"], {
+    cwd: tmpDir,
+    encoding: "utf-8",
+    env: {
+      ...process.env,
+      PATH: tmpDir,
+    },
+  })
+
+  const output = result.stdout + result.stderr
+
+  expect(result.status).toBe(0)
+  expect(output).toContain("NODE_FALLBACK_CLI_EXECUTED")
+
+  rmSync(tmpDir, { recursive: true, force: true })
+})
