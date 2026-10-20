@@ -15,6 +15,9 @@ import { createLocalCacheEngine } from "../shared/get-platform-config-with-cli-d
 import { getIndex } from "../site/getIndex"
 import { createKicadPcmProxy } from "./kicad-pcm-proxy"
 import { getJscdnDir, isWithinDirectory } from "../shared/jscdn-directory"
+import { loadRuntimeProjectConfig } from "../project-config"
+import { readExtraRunFrameTabs } from "./read-extra-runframe-tabs"
+import { extraRunFrameTabsClientScript } from "../site/extra-runframe-tabs-client-script"
 
 const RUNFRAME_CACHE_PATH = "/api/cache"
 
@@ -77,6 +80,47 @@ export const createHttpServer = async ({
   const server = http.createServer(async (req, res) => {
     const requestHost = req.headers.host ?? `localhost:${port}`
     const url = new URL(req.url!, `http://${requestHost}`)
+
+    if (url.pathname === "/extra-runframe-tabs.js") {
+      res.writeHead(200, {
+        "Content-Type": "application/javascript; charset=utf-8",
+        "Cache-Control": "no-store",
+      })
+      res.end(extraRunFrameTabsClientScript)
+      return
+    }
+
+    if (url.pathname === "/api/extra_runframe_tabs/list") {
+      if (req.method !== "GET" && req.method !== "POST") {
+        res.writeHead(405, { Allow: "GET, POST" })
+        res.end()
+        return
+      }
+      try {
+        const response = await readExtraRunFrameTabs(projectDir)
+        res.writeHead(200, {
+          "Content-Type": "application/json",
+          "Cache-Control": "no-store",
+        })
+        res.end(JSON.stringify(response))
+      } catch (error) {
+        console.error("Unable to refresh external RunFrame tabs:", error)
+        res.writeHead(500, {
+          "Content-Type": "application/json",
+          "Cache-Control": "no-store",
+        })
+        res.end(
+          JSON.stringify({
+            error: {
+              error_code: "external_tabs_config_invalid",
+              message:
+                "Unable to load external tabs. Check the project configuration.",
+            },
+          }),
+        )
+      }
+      return
+    }
 
     if (preparedJscdnDir && url.pathname.startsWith("/jscdn/")) {
       if (req.method !== "GET" && req.method !== "HEAD") {
@@ -288,14 +332,27 @@ export const createHttpServer = async ({
     }
 
     if (url.pathname === "/") {
-      const fileServerApiBaseUrl = `http://${req.headers.host}/api`
-      const html = await getIndex(
-        defaultMainComponentPath,
-        fileServerApiBaseUrl,
-        preparedJscdnDir ? "/jscdn" : undefined,
-      )
-      res.writeHead(200, { "Content-Type": "text/html" })
-      res.end(html)
+      try {
+        // Read per request so a browser reload picks up edited or removed tabs.
+        const projectConfig = projectDir
+          ? await loadRuntimeProjectConfig(projectDir, { throwOnError: true })
+          : null
+        const fileServerApiBaseUrl = `http://${req.headers.host}/api`
+        const html = await getIndex({
+          mainComponentPath: defaultMainComponentPath,
+          fileServerApiBaseUrl,
+          jscdnBaseUrl: preparedJscdnDir ? "/jscdn" : undefined,
+          extraRunFrameTabs: projectConfig?.extraRunFrameTabs,
+        })
+        res.writeHead(200, { "Content-Type": "text/html" })
+        res.end(html)
+      } catch (error) {
+        console.error("Failed to render the RunFrame page:", error)
+        res.writeHead(500, { "Content-Type": "text/plain; charset=utf-8" })
+        res.end(
+          "Unable to load project configuration. Check the CLI output and reload.",
+        )
+      }
       return
     }
 

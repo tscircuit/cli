@@ -1,12 +1,22 @@
 import { getSessionToken } from "lib/cli-config"
 import { getPartsEngineBaseUrls } from "lib/shared/parts-engine-base-urls"
 import pkg from "../../package.json"
+import type { TscircuitProjectConfig } from "lib/project-config/project-config-schema"
+import { serializeScriptValue } from "./serialize-script-value"
 
-export const getIndex = async (
-  mainComponentPath?: string,
-  fileServerApiBaseUrl?: string,
-  jscdnBaseUrl?: string,
-) => {
+interface GetIndexOptions {
+  mainComponentPath?: string
+  fileServerApiBaseUrl?: string
+  jscdnBaseUrl?: string
+  extraRunFrameTabs?: TscircuitProjectConfig["extraRunFrameTabs"]
+}
+
+export const getIndex = async ({
+  mainComponentPath,
+  fileServerApiBaseUrl,
+  jscdnBaseUrl,
+  extraRunFrameTabs = [],
+}: GetIndexOptions = {}) => {
   const standalone = process.env.TSCIRCUIT_STANDALONE === "1"
   const evalVersion = pkg.devDependencies["@tscircuit/eval"]
   const standaloneScript = standalone
@@ -36,14 +46,16 @@ export const getIndex = async (
     </head>
     <body>
       <script>
-       ${mainComponentPath ? `window.TSCIRCUIT_DEFAULT_MAIN_COMPONENT_PATH = "${mainComponentPath}";` : ""}
+       ${mainComponentPath ? `window.TSCIRCUIT_DEFAULT_MAIN_COMPONENT_PATH = ${serializeScriptValue(mainComponentPath)};` : ""}
         window.TSCIRCUIT_USE_RUNFRAME_FOR_CLI = true;${tokenScript}${fileServerApiScript}${jscdnScript}${partsEngineScript}${standaloneScript}
+        window.TSCIRCUIT_EXTRA_RUNFRAME_TABS = ${serializeScriptValue(extraRunFrameTabs)};
       </script>
       ${standalone ? "" : '<script src="https://cdn.tailwindcss.com"></script>'}
       <div id="root">loading...</div>
       <script>
       globalThis.process = { env: { NODE_ENV: "production" } }
       </script>
+      ${fileServerApiBaseUrl ? '<script src="/extra-runframe-tabs.js" defer></script>' : ""}
       <script type="module" src="/standalone.min.js"></script>
     </body>
   </html>`

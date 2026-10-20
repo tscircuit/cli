@@ -155,6 +155,33 @@
         }
       },
       "description": "Build output toggles."
+    },
+    "extraRunFrameTabs": {
+      "type": "array",
+      "description": "Additional iframe tabs for tsci dev and build --site. Requires a RunFrame bundle with extra tab support.",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["tabName", "iframeUrl"],
+        "properties": {
+          "tabName": {
+            "type": "string",
+            "minLength": 1,
+            "description": "Label displayed in RunFrame."
+          },
+          "iframeUrl": {
+            "type": "string",
+            "format": "uri",
+            "pattern": "^[Hh][Tt][Tt][Pp][Ss]?://",
+            "description": "HTTP or HTTPS iframe URL, including encoded SysConfig content in its fragment."
+          },
+          "mainComponentPath": {
+            "type": "string",
+            "minLength": 1,
+            "description": "Optional project-relative circuit path. Omit to show this tab for every circuit."
+          }
+        }
+      }
     }
   }
 }

@@ -1,4 +1,6 @@
 import { loadingStateUi } from "./loadingStateUi"
+import type { TscircuitProjectConfig } from "lib/project-config/project-config-schema"
+import { serializeScriptValue } from "./serialize-script-value"
 
 export interface StaticBuildFileReference {
   filePath: string
@@ -11,6 +13,7 @@ export interface GetStaticIndexHtmlFileOptions {
   defaultMainComponentPath?: string
   packageName?: string
   jscdnBaseUrl?: string
+  extraRunFrameTabs?: TscircuitProjectConfig["extraRunFrameTabs"]
 }
 
 export const getStaticIndexHtmlFile = ({
@@ -19,9 +22,11 @@ export const getStaticIndexHtmlFile = ({
   defaultMainComponentPath,
   packageName,
   jscdnBaseUrl,
+  extraRunFrameTabs = [],
 }: GetStaticIndexHtmlFileOptions) => {
   const scriptLines = [
     "window.TSCIRCUIT_USE_RUNFRAME_FOR_CLI = false;",
+    `window.TSCIRCUIT_EXTRA_RUNFRAME_TABS = ${serializeScriptValue(extraRunFrameTabs)};`,
     `window.TSCIRCUIT_RUNFRAME_STATIC_FILE_LIST = ${JSON.stringify(files)};`,
     ...(jscdnBaseUrl !== undefined
       ? [
