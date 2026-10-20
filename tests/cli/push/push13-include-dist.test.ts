@@ -4,7 +4,7 @@ import * as fs from "node:fs"
 import * as path from "node:path"
 
 test("should NOT upload dist directory by default", async () => {
-  const { tmpDir, runCommand } = await getCliTestFixture({
+  const { tmpDir, runCommand, registryDb } = await getCliTestFixture({
     loggedIn: true,
   })
   const snippetFilePath = path.resolve(tmpDir, "snippet.tsx")
@@ -21,16 +21,15 @@ test("should NOT upload dist directory by default", async () => {
 
   const { stdout, stderr } = await runCommand(`tsci push ${snippetFilePath}`)
 
-  expect(stdout).not.toContain("dist\\index.js")
-  expect(stdout).not.toContain("dist/index.js")
-  expect(stdout).not.toContain("dist\\index.d.ts")
-  expect(stdout).not.toContain("dist/index.d.ts")
+  const uploadedPaths = registryDb.packageFiles.map((file) => file.file_path)
+  expect(uploadedPaths).not.toContain("dist/index.js")
+  expect(uploadedPaths).not.toContain("dist/index.d.ts")
   expect(stdout).toContain("published!")
   expect(stderr).toBe("")
 }, 30_000)
 
 test("should upload dist directory when --include-dist flag is passed", async () => {
-  const { tmpDir, runCommand } = await getCliTestFixture({
+  const { tmpDir, runCommand, registryDb } = await getCliTestFixture({
     loggedIn: true,
   })
   const snippetFilePath = path.resolve(tmpDir, "snippet.tsx")
@@ -49,8 +48,9 @@ test("should upload dist directory when --include-dist flag is passed", async ()
     `tsci push ${snippetFilePath} --include-dist`,
   )
 
-  expect(stdout).toMatch(/dist[\\\/]index\.js/)
-  expect(stdout).toMatch(/dist[\\\/]index\.d\.ts/)
+  const uploadedPaths = registryDb.packageFiles.map((file) => file.file_path)
+  expect(uploadedPaths).toContain("dist/index.js")
+  expect(uploadedPaths).toContain("dist/index.d.ts")
   expect(stdout).toContain("published!")
   expect(stderr).toBe("")
 }, 30_000)

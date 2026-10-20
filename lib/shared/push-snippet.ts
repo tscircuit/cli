@@ -18,7 +18,6 @@ import { gzipSync } from "node:zlib"
 
 type PushOptions = {
   filePath?: string
-  isPrivate?: boolean
   versionTag?: string
   includeDist?: boolean
   compress?: boolean
@@ -79,13 +78,12 @@ const findPushProject = async ({
   return { snippetFilePath, packageJsonPath, projectDir }
 }
 
-export const getArchivePayload = (
-  filePaths: string[],
-  projectDir: string,
-  packageNameWithVersion: string,
-) => {
-  const files = filePaths.map((fullFilePath) => {
-    const relativeFilePath = path.relative(projectDir, fullFilePath)
+const getUploadFiles = (filePaths: string[], projectDir: string) =>
+  filePaths.map((fullFilePath) => {
+    const relativeFilePath = path
+      .relative(projectDir, fullFilePath)
+      .split(path.sep)
+      .join("/")
     const fileBuffer = fs.readFileSync(fullFilePath)
     const isBinary =
       isBinaryFile(relativeFilePath) || hasBinaryContent(fileBuffer)
@@ -100,6 +98,11 @@ export const getArchivePayload = (
           content_text: fileBuffer.toString("utf8"),
         }
   })
+
+const createArchivePayload = (
+  files: ReturnType<typeof getUploadFiles>,
+  packageNameWithVersion: string,
+) => {
   const archive = gzipSync(JSON.stringify({ files }), { level: 9 })
 
   return {
@@ -108,9 +111,18 @@ export const getArchivePayload = (
   }
 }
 
+export const getArchivePayload = (
+  filePaths: string[],
+  projectDir: string,
+  packageNameWithVersion: string,
+) =>
+  createArchivePayload(
+    getUploadFiles(filePaths, projectDir),
+    packageNameWithVersion,
+  )
+
 export const pushSnippet = async ({
   filePath,
-  isPrivate,
   versionTag,
   includeDist = false,
   compress = true,
@@ -295,8 +307,8 @@ export const pushSnippet = async ({
         type: "select",
         message: "Package Visibility:",
         choices: [
-          { title: "Public", value: "public", selected: !isPrivate },
-          { title: "Private", value: "private", selected: isPrivate },
+          { title: "Public", value: "public", selected: true },
+          { title: "Private", value: "private" },
         ],
       },
     ])
@@ -398,75 +410,108 @@ export const pushSnippet = async ({
   } = { succeeded: [], failed: [] }
 
   const packageNameWithVersion = `${scopedPackageName}@${releaseVersion}`
+  const files = getUploadFiles(filePaths, projectDir)
+  let filesToUpload = files
   if (compress) {
     log(kleur.gray("Uploading package archive..."))
     try {
-      const archivePayload = getArchivePayload(
-        filePaths,
-        projectDir,
-        packageNameWithVersion,
-      )
+      const archivePayload = createArchivePayload(files, packageNameWithVersion)
       await ky.post("package_files/upload_archive", {
         json: archivePayload,
       })
-      for (const fullFilePath of filePaths) {
-        const relativeFilePath = path.relative(projectDir, fullFilePath)
-        uploadResults.succeeded.push(relativeFilePath)
+      for (const file of files) {
+        uploadResults.succeeded.push(file.file_path)
       }
+      filesToUpload = []
       log(kleur.gray(`📦 Uploaded archive with ${filePaths.length} files`))
     } catch (error) {
-      log(
-        kleur.yellow(
-          `Archive upload failed, falling back to file-by-file upload: ${error}`,
-        ),
-      )
+      const status = (error as { response?: { status?: number } })?.response
+        ?.status
+      if (status === undefined || status === 408 || status >= 500) {
+        log(
+          kleur.yellow(
+            `Archive upload outcome unknown, checking release files: ${error}`,
+          ),
+        )
+        try {
+          const { package_files: remoteFiles } = await ky
+            .get<{
+              package_files: { file_path: string; package_file_id: string }[]
+            }>("package_files/list", {
+              searchParams: {
+                package_name_with_version: packageNameWithVersion,
+              },
+            })
+            .json()
+          const remoteIds = new Map(
+            remoteFiles.map((file) => [file.file_path, file.package_file_id]),
+          )
+          filesToUpload = []
+          for (const file of files) {
+            const remoteId = remoteIds.get(file.file_path)
+            if (remoteId) {
+              const remoteContent = await ky
+                .get("package_files/download", {
+                  searchParams: { package_file_id: remoteId },
+                })
+                .arrayBuffer()
+              const localContent =
+                file.content_base64 !== undefined
+                  ? Buffer.from(file.content_base64, "base64")
+                  : Buffer.from(file.content_text, "utf8")
+              if (localContent.equals(Buffer.from(remoteContent))) {
+                uploadResults.succeeded.push(file.file_path)
+                continue
+              }
+            }
+            filesToUpload.push(file)
+          }
+          log(
+            kleur.gray(
+              `Verified ${uploadResults.succeeded.length} archive files; ${filesToUpload.length} files still need uploading`,
+            ),
+          )
+        } catch (verificationError) {
+          onError(
+            `Could not verify archive upload outcome: ${verificationError}. No files were retransmitted; check ${packageNameWithVersion} before retrying.`,
+          )
+          return onExit(1)
+        }
+      } else {
+        log(
+          kleur.yellow(
+            `Archive upload failed, falling back to file-by-file upload: ${error}`,
+          ),
+        )
+      }
     }
   }
 
-  if (uploadResults.succeeded.length === 0) {
-    for (const fullFilePath of filePaths) {
-      const relativeFilePath = path.relative(projectDir, fullFilePath)
-
-      // Check if file is binary by extension first, then by content if needed
-      const fileBuffer = fs.readFileSync(fullFilePath)
-      const isBinary =
-        isBinaryFile(relativeFilePath) || hasBinaryContent(fileBuffer)
-
-      // Build the request payload based on whether the file is binary or text
-      const payload: {
-        file_path: string
-        package_name_with_version: string
-        content_text?: string
-        content_base64?: string
-      } = {
-        file_path: relativeFilePath,
-        package_name_with_version: packageNameWithVersion,
-      }
-
-      if (isBinary) {
-        payload.content_base64 = fileBuffer.toString("base64")
-      } else {
-        payload.content_text = fileBuffer.toString("utf-8")
-      }
-
-      await ky
-        .post("package_files/create", {
-          json: payload,
-        })
-        .then(() => {
-          const icon = isBinary ? "📦" : "⬆︎"
-          console.log(kleur.gray(`${icon} ${relativeFilePath}`))
-          uploadResults.succeeded.push(relativeFilePath)
-        })
-        .catch(async (error) => {
-          const errorDetails = String(error)?.split(`\n\nRequest Body:`)?.[0]
-          console.log(kleur.red(`  ${relativeFilePath} - failed`))
-          uploadResults.failed.push({
-            file: relativeFilePath,
-            error: errorDetails,
-          })
-        })
+  for (const file of filesToUpload) {
+    const relativeFilePath = file.file_path
+    const isBinary = file.content_base64 !== undefined
+    const payload = {
+      ...file,
+      package_name_with_version: packageNameWithVersion,
     }
+
+    await ky
+      .post("package_files/create", {
+        json: payload,
+      })
+      .then(() => {
+        const icon = isBinary ? "📦" : "⬆︎"
+        console.log(kleur.gray(`${icon} ${relativeFilePath}`))
+        uploadResults.succeeded.push(relativeFilePath)
+      })
+      .catch(async (error) => {
+        const errorDetails = String(error)?.split(`\n\nRequest Body:`)?.[0]
+        console.log(kleur.red(`  ${relativeFilePath} - failed`))
+        uploadResults.failed.push({
+          file: relativeFilePath,
+          error: errorDetails,
+        })
+      })
   }
 
   log("\n")

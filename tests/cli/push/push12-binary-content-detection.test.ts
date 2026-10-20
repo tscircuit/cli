@@ -21,7 +21,9 @@ test("should upload files with binary content using base64 encoding", async () =
   const binaryContent = Buffer.from([0x48, 0x65, 0x6c, 0x00, 0x6f]) // "Hel\0o" - contains null byte
   fs.writeFileSync(path.resolve(tmpDir, "data.txt"), binaryContent)
 
-  const { stdout, stderr } = await runCommand(`tsci push ${snippetFilePath}`)
+  const { stdout, stderr } = await runCommand(
+    `tsci push ${snippetFilePath} --no-compress`,
+  )
 
   // Should upload binary content file with 📦 icon
   expect(stdout).toContain("📦 data.txt")

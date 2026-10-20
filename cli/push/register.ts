@@ -6,7 +6,6 @@ export const registerPush = (program: Command) => {
     .command("push")
     .description("Save package code to Registry API")
     .argument("[file]", "Path to the package file")
-    .option("--private", "Make the package private")
     .option(
       "--version-tag <tag>",
       "Publish as a non-latest version using the provided tag",
@@ -24,7 +23,6 @@ export const registerPush = (program: Command) => {
       async (
         filePath?: string,
         options: {
-          private?: boolean
           versionTag?: string
           includeDist?: boolean
           compress?: boolean
@@ -32,7 +30,6 @@ export const registerPush = (program: Command) => {
       ) => {
         await pushSnippet({
           filePath,
-          isPrivate: options.private ?? false,
           versionTag: options.versionTag,
           includeDist: options.includeDist ?? false,
           compress: options.compress ?? true,
