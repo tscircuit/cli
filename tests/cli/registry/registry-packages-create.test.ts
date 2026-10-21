@@ -29,9 +29,9 @@ test(
   { timeout: 30_000 },
 )
 
-test("registry package name uses @tsci org prefix when --org is provided", () => {
+test("registry package name uses org/package when --org is provided", () => {
   expect(getRegistryPackageName({ packageName: "adc", org: "acme" })).toBe(
-    "@tsci/acme.adc",
+    "acme/adc",
   )
   expect(getRegistryPackageName({ packageName: "test-user/adc" })).toBe(
     "test-user/adc",

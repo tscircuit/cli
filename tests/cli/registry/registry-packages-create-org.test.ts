@@ -8,9 +8,9 @@ test("registry package creation with --org", async () => {
     "tsci registry packages create --package-name demo-package --org test-user --public",
   )
 
-  expect(exitCode).toBe(1)
-  expect(stderr).toContain("@tsci/test-user.demo-package")
+  expect(exitCode).toBe(0)
+  expect(stderr).toBe("")
   expect(
     registryDb.packages.find((pkg) => pkg.name === "test-user/demo-package"),
-  ).toBeUndefined()
+  ).toMatchObject({ name: "test-user/demo-package", is_private: false })
 })
