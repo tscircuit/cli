@@ -3,7 +3,7 @@ import { mkdir } from "node:fs/promises"
 import { join } from "node:path"
 import { getCliTestFixture } from "../../fixtures/get-cli-test-fixture"
 
-test("repro5448: init declares a main file that does not exist", async () => {
+test("repro5448: init declares the circuit file it creates", async () => {
   const { tmpDir, runCommand } = await getCliTestFixture()
   const projectDir = join(tmpDir, "my-board")
 
@@ -26,10 +26,25 @@ test("repro5448: init declares a main file that does not exist", async () => {
     true,
   )
 
-  // Characterize #5448 on main. A fix should update this to
-  // { main: "index.circuit.tsx", mainExists: true }.
   expect({
     main: packageJson.main,
     mainExists: await Bun.file(join(projectDir, packageJson.main)).exists(),
-  }).toEqual({ main: "index.tsx", mainExists: false })
+  }).toEqual({ main: "index.circuit.tsx", mainExists: true })
+
+  // Reinitializing an existing project must preserve its custom entrypoint.
+  const customCircuit = "export default () => <board />\n"
+  await Bun.write(join(projectDir, "custom.circuit.tsx"), customCircuit)
+  await Bun.write(
+    join(projectDir, "package.json"),
+    JSON.stringify({ ...packageJson, main: "custom.circuit.tsx" }),
+  )
+  const reinit = await runCommand("tsci init -y --no-install my-board")
+  expect(reinit.exitCode).toBe(0)
+  const existingPackage = await Bun.file(
+    join(projectDir, "package.json"),
+  ).json()
+  expect(existingPackage.main).toBe("custom.circuit.tsx")
+  expect(await Bun.file(join(projectDir, existingPackage.main)).text()).toBe(
+    customCircuit,
+  )
 }, 30_000)
