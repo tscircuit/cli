@@ -127,7 +127,11 @@ export default () => (
 
         console.log("Generating package.json")
         // Generate package.json
-        generatePackageJson(projectDir, { packageName, authorName })
+        generatePackageJson(projectDir, {
+          packageName,
+          authorName,
+          main: "index.circuit.tsx",
+        })
         // Generate tsconfig.json
         generateTsConfig(projectDir)
         // Create .gitignore file

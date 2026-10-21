@@ -3,7 +3,7 @@ import { writeFileIfNotExists } from "./write-file-if-not-exists"
 
 export const generatePackageJson = (
   dir: string,
-  opts: { packageName?: string; authorName?: string } = {},
+  opts: { packageName?: string; authorName?: string; main?: string } = {},
 ) => {
   const packageJsonPath = path.join(dir, "package.json")
   const baseName = opts.packageName || path.basename(dir)
@@ -15,7 +15,7 @@ export const generatePackageJson = (
     name,
     version: "1.0.0",
     description: "A tscircuit component package",
-    main: "index.tsx",
+    main: opts.main ?? "index.tsx",
     keywords: ["tscircuit", "circuit", "pcb", "electronics"],
     scripts: {
       dev: "tsci dev",
