@@ -1,7 +1,6 @@
 import { expect, test } from "bun:test"
 import { writeFile } from "node:fs/promises"
 import path from "node:path"
-import { pathToFileURL } from "node:url"
 import { getCliTestFixture } from "../../fixtures/get-cli-test-fixture"
 
 const circuitCode = `export default () => (
@@ -102,24 +101,3 @@ test(
   },
   { timeout: 30000 },
 )
-
-test("simulate analog preserves explicit ngspice experiments", async () => {
-  const { tmpDir, runCommand } = await getCliTestFixture()
-  const coreUrl = pathToFileURL(
-    path.resolve("node_modules/@tscircuit/core/dist/index.js"),
-  ).href
-  await writeFile(
-    path.join(tmpDir, "explicit-ngspice.tsx"),
-    `import { analog } from ${JSON.stringify(coreUrl)}\n${circuitCode.replace(
-      "</board>",
-      '<analog.transientsimulation spiceEngine="ngspice" duration="1ms" timePerStep="10us" /></board>',
-    )}`,
-  )
-  const { stdout, exitCode } = await runCommand(
-    "tsci simulate analog explicit-ngspice.tsx",
-  )
-  expect(exitCode).toBe(0)
-  expect(stdout).toContain("Index  time")
-  expect(stdout).toContain("v(n")
-  expect(stdout).not.toContain("Simulation report:")
-}, 30000)

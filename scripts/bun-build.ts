@@ -1,5 +1,5 @@
-import { cp } from "node:fs/promises"
 import { basename } from "node:path"
+import { cp } from "node:fs/promises"
 import { fileURLToPath } from "node:url"
 // @ts-ignore
 import tscircuitPackageJson from "tscircuit/package.json"
@@ -57,3 +57,5 @@ for (const output of outputs) {
     `${basename(output.path)} ${(output.size / 1024 / 1024).toFixed(2)} MB`,
   )
 }
+
+export {}

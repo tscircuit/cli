@@ -11,47 +11,26 @@ https://github.com/user-attachments/assets/0228e09d-48fc-4bf5-814b-762b60fc35c7
 tsci dev
 ```
 
-`tsci simulate analog index.circuit.tsx` uses the existing ngspice simulation
-unless a native `<analog.transientsimulation spiceEngine="pcb_spice" ... />`
-selects the PCB backend. PCB entries export `modeling` using the upstream
-[pcb-spice-pipeline API](https://github.com/tscircuit/pcb-spice-pipeline).
-Default TSX boards, `ImportedBoard`, exported `circuitJson` arrays, and pipeline
-JSON entries containing a relative `circuit` path are supported. Saved routing,
-stackups and native IBIS/stimulus/probe/eye declarations are serialized upstream.
+`tsci simulate analog index.circuit.tsx` prints ngspice results by default.
+Native `<analog.transientsimulation spiceEngine="pcb_spice" ... />` experiments
+use [pcb-spice-pipeline](https://github.com/tscircuit/pcb-spice-pipeline), preserving
+saved routing, stackups and native simulation declarations. Export `modeling`
+from a TSX or `circuitJson` entry, or use a pipeline JSON entry with a relative
+`circuit` path.
 
 ```bash
-# From a circuit project with pcb-spice-pipeline installed:
 npx pcb-spice-pipeline --setup
 npx pcb-spice-pipeline --check-tools
-
 tsci simulate analog index.circuit.tsx --output runs/first --open
 ```
 
-The PCB backend requires **Node.js 22+** (`node` on PATH), even when `tsci`
-runs under Bun, plus native declarations from `@tscircuit/core` >=0.0.2188,
-`@tscircuit/props` >=0.0.705 and `circuit-json` >=0.0.531. FastHenry, FasterCap
-and native ngspice are separate executables;
-the setup command downloads/builds the pinned toolchain and records its hashes.
-Enable package install scripts: the pinned Git pipeline builds its distribution
-during installation; the converter archive already contains its runtime and
-bundled declarations. For Bun consumers, trust `pcb-spice-pipeline` in
-`trustedDependencies`; for pnpm, allow its build script and follow upstream's
-`allowBuilds`/`blockExoticSubdeps` instructions. Projects importing
-`pcb-spice-pipeline/tsx` must share React with core's renderer (the pinned pipeline
-uses React 19.2.4; use a project override if another dependency installs a second
-copy). Tools default to `~/.cache/pcb-spice-pipeline/tools`; custom build paths
-must not contain spaces. `PCB_SPICE_TOOLS` selects a custom tools manifest and
-`PCB_SPICE_CACHE` selects the project vendor cache.
-
-Use a fresh `--output` directory for each solve (default:
-`runs/simulation-<timestamp>`). It contains `results.html`, waveform/eye data,
-Circuit JSON results and `receipt.json`. `--open` opens the completed report
-with macOS `open`, Linux `xdg-open`, or Windows `rundll32`; native solver support
-depends on the upstream toolchain. Solver failures exit unsuccessfully and do
-not open a report. `--open` and `--output` apply to the PCB backend; ordinary
-ngspice simulations continue to print their result table. PCB rendering uses
-upstream's loader; CLI platform/parts-engine overrides apply to the regular
-CLI circuit build used for dispatch.
+The upstream TSX loader currently requires Node.js 22+, including when `tsci`
+runs under Bun. The pipeline also needs FastHenry, FasterCap and native ngspice;
+its setup command installs the pinned tools. Allow the pipeline's install script
+when using Bun or pnpm. `--output` must name a fresh directory (default:
+`runs/simulation-<timestamp>`). It contains `results.html` and `receipt.json`;
+`--open` opens the report after a successful solve. Both flags apply to
+`pcb_spice` experiments. `PCB_SPICE_TOOLS` selects a custom tools manifest.
 
 ## Installation
 

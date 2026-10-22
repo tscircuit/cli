@@ -6,7 +6,6 @@
       "name": "@tscircuit/cli",
       "dependencies": {
         "pcb-spice-pipeline": "github:tscircuit/pcb-spice-pipeline#cd1e7db4384bdd599c29002a49aa91680659d449",
-        "react": "19.2.4",
       },
       "devDependencies": {
         "@babel/standalone": "^7.26.9",
@@ -97,7 +96,6 @@
         "tscircuit": "0.0.2647-libonly",
         "tsx": "^4.7.1",
         "typed-ky": "^0.0.4",
-        "typescript": "5.9.3",
         "zod": "^3.23.8",
       },
       "peerDependencies": {
