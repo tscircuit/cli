@@ -12,13 +12,15 @@ tsci dev
 ```
 
 `tsci simulate analog index.circuit.tsx` prints ngspice results by default.
-For native `spiceEngine="pcb_spice"` experiments, install the
-[pcb-spice-pipeline tools](https://github.com/tscircuit/pcb-spice-pipeline)
-with `npx pcb-spice-pipeline --setup` and run
+For `spiceEngine="pcb_spice"` experiments, install FastHenry, FasterCap and
+ngspice on PATH, then run
 `tsci simulate analog index.circuit.tsx --output runs/first`.
-Export `modeling` alongside the default board or `circuitJson`, or pass a pipeline
-JSON entry with a relative `circuit` path. The pipeline requires Node.js 22+ and
-a fresh output directory for `results.html` and `receipt.json`.
+Export `modeling` alongside the default board or named `circuitJson`, or use
+`--modeling modeling.json` with raw Circuit JSON. Pipeline JSON entries with a
+relative `circuit` path remain supported. The fresh output directory contains
+`circuit-results.json`, `results.html` and solver artifacts. `PCB_SPICE_TOOLS`
+may point to a caller-owned JSON map of `fasthenry`, `fastercap` and `ngspice`
+binary paths. Simulation does not install tools or download models.
 
 ## Installation
 

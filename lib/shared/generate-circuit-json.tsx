@@ -2,9 +2,9 @@ import fs from "node:fs"
 import path from "node:path"
 import { pathToFileURL } from "node:url"
 import type { PlatformConfig } from "@tscircuit/props"
+import type { AnyCircuitElement } from "circuit-json"
+import type { PipelineModeling } from "@tscircuit/pcb-spice-pipeline"
 import Debug from "debug"
-import { abbreviateStringifyObject } from "lib/utils/abbreviate-stringify-object"
-import { getVirtualFileSystemFromDirPath } from "make-vfs"
 import {
   AutorouterDiagnostics,
   type AutorouterDiagnosticsOptions,
@@ -14,7 +14,9 @@ import { importFromUserLand } from "./importFromUserLand"
 import { registerStaticAssetLoaders } from "./register-static-asset-loaders"
 import {
   addSourceFilesystemHash,
+  getCircuitJsonRenderOptionsHash,
   getSourceFilesystemMd5Hash,
+  writeCircuitJsonBuildMetadata,
 } from "./circuit-json-build-cache"
 import {
   SolverDiagnostics,
@@ -22,22 +24,6 @@ import {
 } from "./solver-diagnostics"
 
 const debug = Debug("tsci:generate-circuit-json")
-
-const ALLOWED_FILE_EXTENSIONS = [
-  ".tsx",
-  ".ts",
-  ".jsx",
-  ".js",
-  ".json",
-  ".txt",
-  ".md",
-  ".obj",
-  ".kicad_mod",
-  ".kicad_pcb",
-  ".kicad_pro",
-  ".kicad_sch",
-  ".kicad_sym",
-]
 
 type GenerateCircuitJsonOptions = {
   filePath: string
@@ -76,6 +62,10 @@ export async function generateCircuitJson({
 
   const currentSourceFilesystemMd5Hash =
     sourceFilesystemMd5Hash ?? getSourceFilesystemMd5Hash(filePath)
+  const renderOptionsHash = getCircuitJsonRenderOptionsHash({
+    platformConfig,
+    injectedProps,
+  })
 
   // Import React and make it globally available for packages referencing it
   const projectRootDir = path.resolve(projectDirOption ?? process.cwd())
@@ -120,84 +110,82 @@ export async function generateCircuitJson({
   debug(`Relative component path: ${relativeComponentPath}`)
   debug(`Output path: ${outputPath}`)
 
-  // Create a virtual file system with the project files
-  const fsMap = {
-    ...((await getVirtualFileSystemFromDirPath({
-      dirPath: sourceDir,
-      fileMatchFn: (filePath) => {
-        const normalizedFilePath = filePath.replace(/\\/g, "/")
-
-        // Allow imported KiCad library files from node_modules.
-        if (
-          normalizedFilePath.endsWith(".kicad_mod") ||
-          normalizedFilePath.endsWith(".kicad_sym")
-        ) {
-          return true
-        }
-
-        if (normalizedFilePath.includes("node_modules/")) return false
-        if (normalizedFilePath.includes("dist/")) return false
-        if (normalizedFilePath.includes("build/")) return false
-        if (normalizedFilePath.match(/^\.[^/]/)) return false
-        if (!ALLOWED_FILE_EXTENSIONS.includes(path.extname(normalizedFilePath)))
-          return false
-        return true
-      },
-      contentFormat: "string",
-    })) as Record<string, string>),
-  }
-
-  debug(`fsMap: ${abbreviateStringifyObject(fsMap)}`)
-
-  // Execute the circuit runner with the virtual file system
+  // Import once after initializing the project renderer and asset loaders
   const MainComponent = await import(pathToFileURL(absoluteFilePath).href)
 
-  // Handle both default export and named exports
-  const Component =
-    MainComponent.default ||
-    (Object.keys(MainComponent).find((k) => k[0] === k[0].toUpperCase()) !==
-    undefined
-      ? MainComponent[
-          Object.keys(MainComponent).find(
-            (k) => k[0] === k[0].toUpperCase(),
-          ) as keyof typeof MainComponent
-        ]
-      : undefined)
+  let records: AnyCircuitElement[]
+  if (Array.isArray(MainComponent.circuitJson)) {
+    records = MainComponent.circuitJson
+  } else {
+    // Mount functions through the normal React renderer, including root hooks.
+    const Component =
+      MainComponent.default ||
+      (Object.keys(MainComponent).find((k) => k[0] === k[0].toUpperCase()) !==
+      undefined
+        ? MainComponent[
+            Object.keys(MainComponent).find(
+              (k) => k[0] === k[0].toUpperCase(),
+            ) as keyof typeof MainComponent
+          ]
+        : undefined)
 
-  if (!Component) {
-    throw new Error(
-      `No component found in "${absoluteFilePath}". Make sure you export a component.`,
-    )
-  }
-
-  runner.add(<Component {...(injectedProps ?? {})} />)
-
-  runner.render()
-
-  const loggedAsyncEffectNames = new Set<string>()
-
-  while (!runner.isDoneRendering()) {
-    for (const asyncEffect of runner.getRunningAsyncEffects()) {
-      const asyncEffectName = asyncEffect.effectName
-      if (!asyncEffectName || loggedAsyncEffectNames.has(asyncEffectName)) {
-        continue
-      }
-
-      loggedAsyncEffectNames.add(asyncEffectName)
-      onAsyncEffectStatus?.(asyncEffectName)
+    if (!Component) {
+      throw new Error(
+        `No component found in "${absoluteFilePath}". Make sure you export a component.`,
+      )
     }
 
-    autorouterDiagnostics.checkTimeout()
-    await new Promise((resolve) => setTimeout(resolve, 100))
+    runner.add(<Component {...(injectedProps ?? {})} />)
+
     runner.render()
+
+    const loggedAsyncEffectNames = new Set<string>()
+
+    while (!runner.isDoneRendering()) {
+      for (const asyncEffect of runner.getRunningAsyncEffects()) {
+        const asyncEffectName = asyncEffect.effectName
+        if (!asyncEffectName || loggedAsyncEffectNames.has(asyncEffectName)) {
+          continue
+        }
+
+        loggedAsyncEffectNames.add(asyncEffectName)
+        onAsyncEffectStatus?.(asyncEffectName)
+      }
+
+      autorouterDiagnostics.checkTimeout()
+      await new Promise((resolve) => setTimeout(resolve, 100))
+      runner.render()
+    }
+
+    runner.emit("renderComplete")
+    solverDiagnostics?.finalize()
+
+    const hasImportedBoard = runner.children.some((component: any) =>
+      [component, ...component.getDescendants()].some(
+        (instance: any) =>
+          instance[Symbol.for("pcb-spice-pipeline.imported-board.v2")],
+      ),
+    )
+    // Resolve the serializer from the same project as ImportedBoard. This keeps
+    // its optional React/core peers on the consumer's renderer runtime.
+    records = hasImportedBoard
+      ? (
+          await importFromUserLand(
+            "@tscircuit/pcb-spice-pipeline/tsx",
+            projectRootDir,
+          )
+        ).serializeSimulation(runner)
+      : await runner.getCircuitJson()
   }
 
-  runner.emit("renderComplete")
-  solverDiagnostics?.finalize()
-
-  // Get the circuit JSON
+  const modeling = MainComponent.modeling as PipelineModeling | undefined
+  const buildMetadata = {
+    sourceFilesystemMd5Hash: currentSourceFilesystemMd5Hash,
+    renderOptionsHash,
+    modeling,
+  }
   const circuitJson = addSourceFilesystemHash(
-    await runner.getCircuitJson(),
+    records,
     currentSourceFilesystemMd5Hash,
   )
   await autorouterDiagnostics.finalize(circuitJson)
@@ -206,11 +194,14 @@ export async function generateCircuitJson({
   if (saveToFile) {
     debug(`Saving circuit JSON to ${outputPath}`)
     fs.writeFileSync(outputPath, JSON.stringify(circuitJson, null, 2))
+    writeCircuitJsonBuildMetadata(outputPath, buildMetadata)
   }
 
   return {
     circuitJson,
     outputPath,
     rootCircuit: runner,
+    modeling,
+    buildMetadata,
   }
 }

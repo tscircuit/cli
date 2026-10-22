@@ -23,7 +23,14 @@ test("source filesystem hash tracks source files and ignores build artifacts", (
     path.join(projectDir, "dist", "boards", "main", "circuit.json"),
     "[]",
   )
-  fs.writeFileSync(path.join(projectDir, "boards", "main.circuit.json"), "[]")
+  fs.writeFileSync(
+    path.join(projectDir, "boards", "main.circuit.circuit.json"),
+    "[]",
+  )
+  fs.writeFileSync(
+    path.join(projectDir, "boards", "main.circuit.circuit.json.metadata.json"),
+    "{}",
+  )
 
   expect(getSourceFilesystemMd5Hash(circuitPath)).toBe(initialHash)
   expect(getCircuitJsonBuildOutputPath(circuitPath)).toBe(

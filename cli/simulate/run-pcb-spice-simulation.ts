@@ -1,32 +1,49 @@
-import { spawn } from "node:child_process"
-import { once } from "node:events"
-import { createRequire } from "node:module"
+import { readFile, stat } from "node:fs/promises"
 import { resolve } from "node:path"
-import { fileURLToPath } from "node:url"
+import {
+  runPipeline,
+  type PipelineModeling,
+} from "@tscircuit/pcb-spice-pipeline"
+import {
+  createNativeSolver,
+  loadIbisSources,
+  writePipelineOutput,
+} from "@tscircuit/pcb-spice-pipeline/node"
+import type { AnyCircuitElement } from "circuit-json"
 
 export const runPcbSpiceSimulation = async ({
-  file,
+  circuitJson,
+  modeling,
   output,
-  projectDir,
+  baseDir,
 }: {
-  file: string
+  circuitJson: AnyCircuitElement[]
+  modeling?: PipelineModeling
   output?: string
-  projectDir: string
+  baseDir: string
 }) => {
-  const outputDir = resolve(output ?? `runs/simulation-${Date.now()}`)
-  // Upstream's loadEntry uses tsx/esm/api, whose loader requires Node.
-  const executable = fileURLToPath(
-    new URL("./cli.mjs", import.meta.resolve("pcb-spice-pipeline")),
-  )
-  const require = createRequire(executable)
-  const tsx = require.resolve("tsx/esm")
-  const child = spawn(
-    process.versions.bun ? "node" : process.execPath,
-    ["--import", tsx, executable, resolve(file), "--out", outputDir],
-    { stdio: "inherit", cwd: projectDir },
-  )
-  const [code, signal] = await once(child, "exit")
-  if (code !== 0) {
-    throw new Error(`pcb_spice failed (${signal ?? `exit ${code}`})`)
+  if (!modeling) {
+    throw new Error(
+      "pcb_spice requires explicit modeling: export modeling or use --modeling <file>",
+    )
   }
+  const outputDir = resolve(output ?? `runs/simulation-${Date.now()}`)
+  try {
+    await stat(outputDir)
+    throw new Error(`Use a fresh output directory: ${outputDir}`)
+  } catch (error) {
+    if ((error as NodeJS.ErrnoException).code !== "ENOENT") throw error
+  }
+  const tools = process.env.PCB_SPICE_TOOLS
+    ? JSON.parse(await readFile(resolve(process.env.PCB_SPICE_TOOLS), "utf8"))
+    : undefined
+  const result = await runPipeline({
+    circuitJson,
+    modeling,
+    ibisSources: await loadIbisSources({ circuitJson, baseDir }),
+    runSolver: createNativeSolver({ tools }),
+  })
+  await writePipelineOutput({ result, outputDir })
+  console.log(`Simulation results written to ${outputDir}`)
+  return result
 }

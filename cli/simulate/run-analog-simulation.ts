@@ -1,3 +1,5 @@
+import { readFile } from "node:fs/promises"
+import { resolve } from "node:path"
 import type { PlatformConfig } from "@tscircuit/props"
 import { runSimulation } from "lib/eecircuit-engine/run-simulation"
 import { loadRuntimeProjectConfig } from "lib/project-config"
@@ -12,6 +14,7 @@ import { runPcbSpiceSimulation } from "./run-pcb-spice-simulation"
 export type AnalogOptions = {
   disablePartsEngine?: boolean
   output?: string
+  modeling?: string
 }
 
 export const runAnalogSimulation = async (
@@ -20,10 +23,7 @@ export const runAnalogSimulation = async (
 ) => {
   const projectDir = findCircuitProjectDir(file)
   const projectConfig = await loadRuntimeProjectConfig(projectDir)
-  // Dispatch and schematic SPICE need connectivity, not a PCB autoroute.
-  // The PCB backend renders its physical input separately through upstream.
   const commandPlatformConfig: PlatformConfig = {
-    routingDisabled: true,
     ...(options.disablePartsEngine ? { partsEngineDisabled: true } : {}),
   }
   const platformConfig = mergePlatformConfigs(
@@ -31,30 +31,39 @@ export const runAnalogSimulation = async (
     commandPlatformConfig,
   )
 
-  const { circuitJson, isPipelineJsonEntry } = await loadAnalogInput({
+  const input = await loadAnalogInput({
     file,
     projectDir,
     platformConfig: getPlatformConfigWithCliDefaults(platformConfig, {
       projectDir,
     }),
   })
-  if (
-    circuitJson.some(
-      (record) =>
-        record.type === "simulation_experiment" &&
-        record.spice_engine === "pcb_spice",
-    )
-  ) {
-    if (file.endsWith(".json") && !isPipelineJsonEntry) {
+  const { circuitJson, baseDir } = input
+  const engines = circuitJson.flatMap((record) =>
+    record.type === "simulation_experiment" ? [record.spice_engine] : [],
+  )
+  if (engines.includes("pcb_spice")) {
+    if (engines.some((engine) => engine !== "pcb_spice")) {
       throw new Error(
-        "pcb_spice requires a TSX entry exporting modeling, or a pipeline JSON entry with modeling and a circuit path",
+        "Mixed pcb_spice and other SPICE engines are unsupported; run separate entries for each engine",
       )
     }
-    await runPcbSpiceSimulation({ file, ...options, projectDir })
-    process.exit(0)
+    const modeling = options.modeling
+      ? JSON.parse(await readFile(resolve(options.modeling), "utf8"))
+      : input.modeling
+    await runPcbSpiceSimulation({
+      circuitJson,
+      modeling,
+      output: options.output,
+      baseDir,
+    })
+    return
   }
-  if (options.output) {
-    throw new Error('--output requires spiceEngine="pcb_spice"')
+  if (engines.some((engine) => engine && engine !== "ngspice")) {
+    throw new Error("simulate analog supports ngspice or pcb_spice experiments")
+  }
+  if (options.output || options.modeling) {
+    throw new Error('--output and --modeling require spiceEngine="pcb_spice"')
   }
   const spiceString = getSpiceWithPaddedSim(circuitJson)
 

@@ -32,7 +32,6 @@ const result = await Bun.build({
     "react",
     "react-dom",
     "react-reconciler",
-    "pcb-spice-pipeline",
   ],
 })
 

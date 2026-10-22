@@ -2,6 +2,38 @@ import fs from "node:fs"
 import path from "node:path"
 import { createHash } from "node:crypto"
 import type { AnyCircuitElement } from "circuit-json"
+import type { PlatformConfig } from "@tscircuit/props"
+import type { PipelineModeling } from "@tscircuit/pcb-spice-pipeline"
+
+export type CircuitJsonBuildMetadata = {
+  sourceFilesystemMd5Hash: string
+  renderOptionsHash: string
+  modeling?: PipelineModeling
+}
+
+// Versioned so artifacts from before canonical saved-board serialization expire.
+export const getCircuitJsonRenderOptionsHash = (options: {
+  platformConfig?: PlatformConfig
+  injectedProps?: Record<string, unknown>
+}) =>
+  createHash("sha256")
+    .update("canonical-circuit-json-v1:")
+    .update(
+      JSON.stringify(
+        {
+          platformConfig: options.platformConfig,
+          injectedProps: options.injectedProps,
+        },
+        (_key, value) =>
+          typeof value === "function" ? value.toString() : value,
+      ),
+    )
+    .digest("hex")
+
+export const writeCircuitJsonBuildMetadata = (
+  outputPath: string,
+  metadata: CircuitJsonBuildMetadata,
+) => fs.writeFileSync(`${outputPath}.metadata.json`, JSON.stringify(metadata))
 
 type SourceProjectMetadataWithFilesystemHash = Extract<
   AnyCircuitElement,
@@ -92,6 +124,14 @@ export const getCircuitJsonBuildOutputPath = (filePath: string) => {
 
 const getSourceFilePaths = (projectDir: string) => {
   const sourceFilePaths: string[] = []
+  // Keep saved JSON assets in the hash; only skip the renderer's adjacent output.
+  const isGeneratedCircuitJson = (entryPath: string) => {
+    if (!entryPath.endsWith(".circuit.json")) return false
+    const stem = entryPath.slice(0, -".circuit.json".length)
+    return [".tsx", ".ts", ".jsx", ".js"].some((extension) =>
+      fs.existsSync(`${stem}${extension}`),
+    )
+  }
 
   const visit = (directoryPath: string) => {
     const entries = fs
@@ -114,7 +154,8 @@ const getSourceFilePaths = (projectDir: string) => {
 
       if (
         !entry.isFile() ||
-        entry.name.endsWith(".circuit.json") ||
+        isGeneratedCircuitJson(entryPath) ||
+        entry.name.endsWith(".circuit.json.metadata.json") ||
         !SOURCE_FILE_EXTENSIONS.has(path.extname(entry.name).toLowerCase())
       ) {
         continue
@@ -180,15 +221,26 @@ export const addSourceFilesystemHash = (
 export const readCurrentCircuitJsonBuild = ({
   filePath,
   sourceFilesystemMd5Hash,
+  renderOptionsHash,
 }: {
   filePath: string
   sourceFilesystemMd5Hash: string
+  renderOptionsHash?: string
 }) => {
   const outputPath = getCircuitJsonBuildOutputPath(filePath)
 
   try {
     const parsed = JSON.parse(fs.readFileSync(outputPath, "utf-8"))
     if (!Array.isArray(parsed)) return null
+    const metadata: CircuitJsonBuildMetadata | undefined = renderOptionsHash
+      ? JSON.parse(fs.readFileSync(`${outputPath}.metadata.json`, "utf-8"))
+      : undefined
+    if (
+      renderOptionsHash &&
+      (metadata?.renderOptionsHash !== renderOptionsHash ||
+        metadata?.sourceFilesystemMd5Hash !== sourceFilesystemMd5Hash)
+    )
+      return null
 
     const hasCurrentFilesystemHash = parsed.some(
       (element) =>
@@ -200,6 +252,7 @@ export const readCurrentCircuitJsonBuild = ({
       ? {
           circuitJson: parsed as AnyCircuitElement[],
           outputPath,
+          modeling: metadata?.modeling,
         }
       : null
   } catch {

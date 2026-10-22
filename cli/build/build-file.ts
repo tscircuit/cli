@@ -5,6 +5,10 @@ import type { AnyCircuitElement } from "circuit-json"
 import kleur from "kleur"
 import { analyzeCircuitJson } from "lib/shared/circuit-json-diagnostics"
 import { generateCircuitJson } from "lib/shared/generate-circuit-json"
+import {
+  type CircuitJsonBuildMetadata,
+  writeCircuitJsonBuildMetadata,
+} from "lib/shared/circuit-json-build-cache"
 import { getPlatformConfigWithCliDefaults } from "lib/shared/get-platform-config-with-cli-defaults"
 import type { AutorouterDiagnosticsOptions } from "lib/shared/autorouter-diagnostics"
 import type { SolverDiagnosticsOptions } from "lib/shared/solver-diagnostics"
@@ -46,6 +50,7 @@ export const buildFile = async (
       normalizedInputPath.endsWith(".circuit.json") ||
       normalizedInputPath.endsWith("/circuit.json")
     let circuitJson: AnyCircuitElement[] = []
+    let buildMetadata: CircuitJsonBuildMetadata | undefined
 
     if (isPrebuiltCircuitJson) {
       const parsed = JSON.parse(fs.readFileSync(input, "utf-8"))
@@ -68,10 +73,12 @@ export const buildFile = async (
         solverDiagnostics: options?.solverDiagnostics,
       })
       circuitJson = result.circuitJson
+      buildMetadata = result.buildMetadata
     }
 
     fs.mkdirSync(path.dirname(output), { recursive: true })
     fs.writeFileSync(output, JSON.stringify(circuitJson, null, 2))
+    if (buildMetadata) writeCircuitJsonBuildMetadata(output, buildMetadata)
     console.log(`Circuit JSON written to ${path.relative(projectDir, output)}`)
 
     const diagnostics = analyzeCircuitJson(circuitJson)

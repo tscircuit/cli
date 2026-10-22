@@ -27,6 +27,7 @@
     "@tscircuit/krt-wasm": "^0.1.6",
     "@tscircuit/math-utils": "0.0.36",
     "@tscircuit/modelprinter": "^0.0.11",
+    "@tscircuit/pcb-spice-pipeline": "file:../pcb-spice-pipeline",
     "@tscircuit/props": "^0.0.705",
     "@tscircuit/runframe": "^0.0.3054",
     "@tscircuit/schematic-match-adapt": "^0.0.22",
@@ -79,10 +80,8 @@
     "kicadts": "^0.0.58",
     "kleur": "^4.1.5",
     "ky": "^1.7.4",
-    "make-vfs": "^1.0.15",
     "md5": "^2.3.0",
     "mime-types": "^3.0.2",
-    "pcb-spice-pipeline": "github:tscircuit/pcb-spice-pipeline#cd1e7db4384bdd599c29002a49aa91680659d449",
     "pdf-lib": "^1.17.1",
     "perfect-cli": "^1.0.21",
     "playwright": "^1.57.0",
@@ -106,7 +105,6 @@
     "@tscircuit/math-utils": "0.0.36",
     "circuit-json": "^0.0.531",
     "circuit-to-svg": "^0.0.447",
-    "pcb-spice-pipeline": "github:tscircuit/pcb-spice-pipeline#cd1e7db4384bdd599c29002a49aa91680659d449",
     "tscircuit": "*"
   },
   "bin": {
