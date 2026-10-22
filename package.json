@@ -103,15 +103,14 @@
     "typescript": "5.9.3"
   },
   "dependencies": {
-    "pcb-spice-pipeline": "github:tscircuit/pcb-spice-pipeline#9c45976f7a84aecece41ef1b4f09b46af4e1ccd0",
+    "pcb-spice-pipeline": "github:tscircuit/pcb-spice-pipeline#cd1e7db4384bdd599c29002a49aa91680659d449",
     "react": "19.2.4"
   },
   "trustedDependencies": [
     "@biomejs/biome",
     "esbuild",
     "pcb-spice-pipeline",
-    "sharp",
-    "@tscircuit/ibis-to-spice"
+    "sharp"
   ],
   "peerDependencies": {
     "@tscircuit/math-utils": "0.0.36",

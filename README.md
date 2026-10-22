@@ -20,9 +20,8 @@ JSON entries containing a relative `circuit` path are supported. Saved routing,
 stackups and native IBIS/stimulus/probe/eye declarations are serialized upstream.
 
 ```bash
-# Run once from the circuit project to install the verified native tools
-npx pcb-spice-pipeline --setup --tools-dir /tmp/pcb-spice-tools
-export PCB_SPICE_TOOLS=/tmp/pcb-spice-tools/tools.json
+# From a circuit project with pcb-spice-pipeline installed:
+npx pcb-spice-pipeline --setup
 npx pcb-spice-pipeline --check-tools
 
 tsci simulate analog index.circuit.tsx --output runs/first --open
@@ -33,15 +32,16 @@ runs under Bun, plus native declarations from `@tscircuit/core` >=0.0.2188,
 `@tscircuit/props` >=0.0.705 and `circuit-json` >=0.0.531. FastHenry, FasterCap
 and native ngspice are separate executables;
 the setup command downloads/builds the pinned toolchain and records its hashes.
-Enable package install scripts: the pinned Git dependency builds its distribution
-and IBIS converter during installation. For Bun consumers, trust
-`@tscircuit/cli` and `pcb-spice-pipeline` in `trustedDependencies`; for pnpm,
-allow both build scripts and follow upstream's
+Enable package install scripts: the pinned Git pipeline builds its distribution
+during installation; the converter archive already contains its runtime and
+bundled declarations. For Bun consumers, trust `pcb-spice-pipeline` in
+`trustedDependencies`; for pnpm, allow its build script and follow upstream's
 `allowBuilds`/`blockExoticSubdeps` instructions. Projects importing
 `pcb-spice-pipeline/tsx` must share React with core's renderer (the pinned pipeline
 uses React 19.2.4; use a project override if another dependency installs a second
-copy). Native tool build paths must not contain spaces; `PCB_SPICE_TOOLS` selects
-the shared tools manifest and `PCB_SPICE_CACHE` selects the project cache.
+copy). Tools default to `~/.cache/pcb-spice-pipeline/tools`; custom build paths
+must not contain spaces. `PCB_SPICE_TOOLS` selects a custom tools manifest and
+`PCB_SPICE_CACHE` selects the project vendor cache.
 
 Use a fresh `--output` directory for each solve (default:
 `runs/simulation-<timestamp>`). It contains `results.html`, waveform/eye data,
