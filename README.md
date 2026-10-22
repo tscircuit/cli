@@ -11,6 +11,48 @@ https://github.com/user-attachments/assets/0228e09d-48fc-4bf5-814b-762b60fc35c7
 tsci dev
 ```
 
+`tsci simulate analog index.circuit.tsx` uses the existing ngspice simulation
+unless a native `<analog.transientsimulation spiceEngine="pcb_spice" ... />`
+selects the PCB backend. PCB entries export `modeling` using the upstream
+[pcb-spice-pipeline API](https://github.com/tscircuit/pcb-spice-pipeline).
+Default TSX boards, `ImportedBoard`, exported `circuitJson` arrays, and pipeline
+JSON entries containing a relative `circuit` path are supported. Saved routing,
+stackups and native IBIS/stimulus/probe/eye declarations are serialized upstream.
+
+```bash
+# Run once from the circuit project to install the verified native tools
+npx pcb-spice-pipeline --setup --tools-dir /tmp/pcb-spice-tools
+export PCB_SPICE_TOOLS=/tmp/pcb-spice-tools/tools.json
+npx pcb-spice-pipeline --check-tools
+
+tsci simulate analog index.circuit.tsx --output runs/first --open
+```
+
+The PCB backend requires **Node.js 22+** (`node` on PATH), even when `tsci`
+runs under Bun, plus native declarations from `@tscircuit/core` >=0.0.2188,
+`@tscircuit/props` >=0.0.705 and `circuit-json` >=0.0.531. FastHenry, FasterCap
+and native ngspice are separate executables;
+the setup command downloads/builds the pinned toolchain and records its hashes.
+Enable package install scripts: the pinned Git dependency builds its distribution
+and IBIS converter during installation. For Bun consumers, trust
+`@tscircuit/cli` and `pcb-spice-pipeline` in `trustedDependencies`; for pnpm,
+allow both build scripts and follow upstream's
+`allowBuilds`/`blockExoticSubdeps` instructions. Projects importing
+`pcb-spice-pipeline/tsx` must share React with core's renderer (the pinned pipeline
+uses React 19.2.4; use a project override if another dependency installs a second
+copy). Native tool build paths must not contain spaces; `PCB_SPICE_TOOLS` selects
+the shared tools manifest and `PCB_SPICE_CACHE` selects the project cache.
+
+Use a fresh `--output` directory for each solve (default:
+`runs/simulation-<timestamp>`). It contains `results.html`, waveform/eye data,
+Circuit JSON results and `receipt.json`. `--open` opens the completed report
+with macOS `open`, Linux `xdg-open`, or Windows `rundll32`; native solver support
+depends on the upstream toolchain. Solver failures exit unsuccessfully and do
+not open a report. `--open` and `--output` apply to the PCB backend; ordinary
+ngspice simulations continue to print their result table. PCB rendering uses
+upstream's loader; CLI platform/parts-engine overrides apply to the regular
+CLI circuit build used for dispatch.
+
 ## Installation
 
 ```bash

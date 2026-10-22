@@ -3,7 +3,10 @@
 import { readFileSync } from "node:fs"
 import { exit } from "node:process"
 
-const ALLOWED_DEPENDENCIES: string[] = []
+// The pipeline resolves native tool manifests, source and reports relative to
+// its installed package, so it must remain an external runtime dependency.
+// ImportedBoard and core's renderer must also share React's hook dispatcher.
+const ALLOWED_DEPENDENCIES: string[] = ["pcb-spice-pipeline", "react"]
 
 console.log("Checking for non-dev dependencies...")
 

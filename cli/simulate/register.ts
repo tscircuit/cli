@@ -1,14 +1,21 @@
-import type { Command } from "commander"
-import { getOrGenerateCircuitJson } from "lib/shared/get-or-generate-circuit-json"
-import { runSimulation } from "lib/eecircuit-engine/run-simulation"
-import { resultToTable } from "lib/shared/result-to-table"
-import { getSpiceWithPaddedSim } from "lib/shared/get-spice-with-sim"
 import type { PlatformConfig } from "@tscircuit/props"
+import type { Command } from "commander"
+import { runSimulation } from "lib/eecircuit-engine/run-simulation"
 import { loadRuntimeProjectConfig } from "lib/project-config"
-import { mergePlatformConfigs } from "lib/shared/platform-config-utils"
-import { getPlatformConfigWithCliDefaults } from "lib/shared/get-platform-config-with-cli-defaults"
 import { findCircuitProjectDir } from "lib/shared/circuit-json-build-cache"
+import { getPlatformConfigWithCliDefaults } from "lib/shared/get-platform-config-with-cli-defaults"
+import { getSpiceWithPaddedSim } from "lib/shared/get-spice-with-sim"
+import { mergePlatformConfigs } from "lib/shared/platform-config-utils"
+import { resultToTable } from "lib/shared/result-to-table"
+import { loadAnalogInput } from "./load-analog-input"
 import { registerReturnCurrentSimulation } from "./register-return-current"
+import { runPcbSpiceSimulation } from "./run-pcb-spice-simulation"
+
+type AnalogOptions = {
+  disablePartsEngine?: boolean
+  output?: string
+  open?: boolean
+}
 
 export const registerSimulate = (program: Command) => {
   const simulateCommand = program
@@ -22,27 +29,50 @@ export const registerSimulate = (program: Command) => {
     .description("Run an analog SPICE simulation")
     .argument("<file>", "Path to tscircuit tsx or circuit json file")
     .option("--disable-parts-engine", "Disable the parts engine")
-    .action(async (file: string, options: { disablePartsEngine?: boolean }) => {
-      const projectConfig = await loadRuntimeProjectConfig(process.cwd())
-      const commandPlatformConfig: PlatformConfig | undefined =
-        options.disablePartsEngine === true
-          ? { partsEngineDisabled: true }
-          : undefined
+    .option("--output <directory>", "Fresh pcb_spice report directory")
+    .option("--open", "Open the pcb_spice HTML report after simulation")
+    .action(async (file: string, options: AnalogOptions, command: Command) => {
+      const projectDir = findCircuitProjectDir(file)
+      const projectConfig = await loadRuntimeProjectConfig(projectDir)
+      // Dispatch and schematic SPICE need connectivity, not a PCB autoroute.
+      // The PCB backend renders its physical input separately through upstream.
+      const commandPlatformConfig: PlatformConfig = {
+        routingDisabled: true,
+        ...(options.disablePartsEngine ? { partsEngineDisabled: true } : {}),
+      }
       const platformConfig = mergePlatformConfigs(
         projectConfig?.platformConfig,
         commandPlatformConfig,
       )
 
-      const { circuitJson } = await getOrGenerateCircuitJson({
-        filePath: file,
-        saveToFile: false,
-        platformConfig: getPlatformConfigWithCliDefaults(platformConfig, {
-          projectDir: findCircuitProjectDir(file),
+      const { circuitJson, pipelineJsonEntry } = await loadAnalogInput(
+        file,
+        projectDir,
+        getPlatformConfigWithCliDefaults(platformConfig, {
+          projectDir,
         }),
-      })
+      )
       if (!circuitJson) {
         console.log("error: Failed to generate circuit JSON")
         process.exit(1)
+      }
+      if (
+        circuitJson.some(
+          (record: { type: string; spice_engine?: string }) =>
+            record.type === "simulation_experiment" &&
+            record.spice_engine === "pcb_spice",
+        )
+      ) {
+        if (file.endsWith(".json") && !pipelineJsonEntry) {
+          command.error(
+            "pcb_spice requires a TSX entry exporting modeling, or a pipeline JSON entry with modeling and a circuit path",
+          )
+        }
+        await runPcbSpiceSimulation(file, options, projectDir)
+        process.exit(0)
+      }
+      if (options.open || options.output) {
+        command.error('--open and --output require spiceEngine="pcb_spice"')
       }
       const spiceString = getSpiceWithPaddedSim(circuitJson)
 
