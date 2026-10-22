@@ -78,7 +78,7 @@ export const buildFile = async (
 
     fs.mkdirSync(path.dirname(output), { recursive: true })
     fs.writeFileSync(output, JSON.stringify(circuitJson, null, 2))
-    if (buildMetadata) writeCircuitJsonBuildMetadata(output, buildMetadata)
+    writeCircuitJsonBuildMetadata(output, buildMetadata)
     console.log(`Circuit JSON written to ${path.relative(projectDir, output)}`)
 
     const diagnostics = analyzeCircuitJson(circuitJson)

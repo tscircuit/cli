@@ -32,8 +32,12 @@ export const getCircuitJsonRenderOptionsHash = (options: {
 
 export const writeCircuitJsonBuildMetadata = (
   outputPath: string,
-  metadata: CircuitJsonBuildMetadata,
-) => fs.writeFileSync(`${outputPath}.metadata.json`, JSON.stringify(metadata))
+  metadata?: CircuitJsonBuildMetadata,
+) => {
+  const metadataPath = `${outputPath}.metadata.json`
+  if (metadata) fs.writeFileSync(metadataPath, JSON.stringify(metadata))
+  else fs.rmSync(metadataPath, { force: true })
+}
 
 type SourceProjectMetadataWithFilesystemHash = Extract<
   AnyCircuitElement,
