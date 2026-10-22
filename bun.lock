@@ -4,9 +4,6 @@
   "workspaces": {
     "": {
       "name": "@tscircuit/cli",
-      "dependencies": {
-        "pcb-spice-pipeline": "github:tscircuit/pcb-spice-pipeline#cd1e7db4384bdd599c29002a49aa91680659d449",
-      },
       "devDependencies": {
         "@babel/standalone": "^7.26.9",
         "@biomejs/biome": "^1.9.4",
@@ -79,6 +76,7 @@
         "make-vfs": "^1.0.15",
         "md5": "^2.3.0",
         "mime-types": "^3.0.2",
+        "pcb-spice-pipeline": "github:tscircuit/pcb-spice-pipeline#cd1e7db4384bdd599c29002a49aa91680659d449",
         "pdf-lib": "^1.17.1",
         "perfect-cli": "^1.0.21",
         "playwright": "^1.57.0",
@@ -102,16 +100,11 @@
         "@tscircuit/math-utils": "0.0.36",
         "circuit-json": "^0.0.531",
         "circuit-to-svg": "^0.0.447",
+        "pcb-spice-pipeline": "github:tscircuit/pcb-spice-pipeline#cd1e7db4384bdd599c29002a49aa91680659d449",
         "tscircuit": "*",
       },
     },
   },
-  "trustedDependencies": [
-    "esbuild",
-    "sharp",
-    "@biomejs/biome",
-    "pcb-spice-pipeline",
-  ],
   "overrides": {
     "@tscircuit/core": "^0.0.2188",
     "altiumts": "0.0.59",

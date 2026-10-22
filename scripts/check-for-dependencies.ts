@@ -3,8 +3,7 @@
 import { readFileSync } from "node:fs"
 import { exit } from "node:process"
 
-// The pipeline loads native tool manifests and report assets from its package.
-const ALLOWED_DEPENDENCIES: string[] = ["pcb-spice-pipeline"]
+const ALLOWED_DEPENDENCIES: string[] = []
 
 console.log("Checking for non-dev dependencies...")
 

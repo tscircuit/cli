@@ -1,7 +1,7 @@
-import { expect, test } from "bun:test"
-import { writeFile } from "node:fs/promises"
-import path from "node:path"
 import { getCliTestFixture } from "../../fixtures/get-cli-test-fixture"
+import { test, expect } from "bun:test"
+import { writeFile, readFile } from "node:fs/promises"
+import path from "node:path"
 
 const circuitCode = `export default () => (
   <board width={30} height={30}>

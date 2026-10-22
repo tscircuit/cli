@@ -82,6 +82,7 @@
     "make-vfs": "^1.0.15",
     "md5": "^2.3.0",
     "mime-types": "^3.0.2",
+    "pcb-spice-pipeline": "github:tscircuit/pcb-spice-pipeline#cd1e7db4384bdd599c29002a49aa91680659d449",
     "pdf-lib": "^1.17.1",
     "perfect-cli": "^1.0.21",
     "playwright": "^1.57.0",
@@ -101,19 +102,11 @@
     "typed-ky": "^0.0.4",
     "zod": "^3.23.8"
   },
-  "dependencies": {
-    "pcb-spice-pipeline": "github:tscircuit/pcb-spice-pipeline#cd1e7db4384bdd599c29002a49aa91680659d449"
-  },
-  "trustedDependencies": [
-    "@biomejs/biome",
-    "esbuild",
-    "pcb-spice-pipeline",
-    "sharp"
-  ],
   "peerDependencies": {
     "@tscircuit/math-utils": "0.0.36",
     "circuit-json": "^0.0.531",
     "circuit-to-svg": "^0.0.447",
+    "pcb-spice-pipeline": "github:tscircuit/pcb-spice-pipeline#cd1e7db4384bdd599c29002a49aa91680659d449",
     "tscircuit": "*"
   },
   "bin": {
@@ -143,7 +136,7 @@
     "dev:kicad-pcm": "bun --hot ./cli/main.ts dev ./examples/scaffold --kicad-pcm",
     "setup": "bun run build && npm install -g .",
     "build": "bun run build:bun",
-    "build:bun": "bun run scripts/bun-build.ts",
+    "build:bun": "bun run --cwd node_modules/pcb-spice-pipeline build && bun run scripts/bun-build.ts",
     "smoketest": "docker build --progress=plain -f Dockerfile.smoketest .",
     "format": "biome format --write .",
     "format:check": "biome format .",
