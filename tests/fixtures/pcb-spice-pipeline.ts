@@ -2,9 +2,6 @@ import { mkdir, writeFile } from "node:fs/promises"
 import { join, resolve } from "node:path"
 import { Command } from "commander"
 import { loadEntry } from "pcb-spice-pipeline"
-import React from "react"
-
-Object.assign(globalThis, { React })
 
 await new Command()
   .argument("<entry>")

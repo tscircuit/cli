@@ -14,5 +14,5 @@ export default () => <board width={10} height={10} routingDisabled>
   expect(result.exitCode).toBe(0)
   expect(result.stdout).toContain("Index  time")
   expect(result.stdout).toContain("v(n")
-  expect(result.stdout).not.toContain("Simulation report:")
+  expect(result.stdout).not.toContain("results.html")
 }, 30000)

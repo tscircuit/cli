@@ -4,6 +4,10 @@ import { pathToFileURL } from "node:url"
 import { gunzipSync } from "node:zlib"
 import type { PlatformConfig } from "@tscircuit/props"
 import type { AnyCircuitElement } from "circuit-json"
+import {
+  getSourceFilesystemMd5Hash,
+  readCurrentCircuitJsonBuild,
+} from "lib/shared/circuit-json-build-cache"
 import { getOrGenerateCircuitJson } from "lib/shared/get-or-generate-circuit-json"
 import { importFromUserLand } from "lib/shared/importFromUserLand"
 import { registerStaticAssetLoaders } from "lib/shared/register-static-asset-loaders"
@@ -41,6 +45,14 @@ export const loadAnalogInput = async ({
       throw new Error("Expected an array of Circuit JSON records")
     }
     return { circuitJson, isPipelineJsonEntry: true }
+  }
+
+  const cachedBuild = readCurrentCircuitJsonBuild({
+    filePath: file,
+    sourceFilesystemMd5Hash: getSourceFilesystemMd5Hash(file),
+  })
+  if (cachedBuild) {
+    return { circuitJson: cachedBuild.circuitJson, isPipelineJsonEntry: false }
   }
 
   const React = await importFromUserLand("react", projectDir)
