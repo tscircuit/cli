@@ -135,7 +135,7 @@
     "dev:kicad-pcm": "bun --hot ./cli/main.ts dev ./examples/scaffold --kicad-pcm",
     "setup": "bun run build && npm install -g .",
     "build": "bun run build:bun",
-    "build:bun": "bun run --cwd node_modules/pcb-spice-pipeline build && bun run scripts/bun-build.ts",
+    "build:bun": "bun run scripts/bun-build.ts",
     "smoketest": "docker build --progress=plain -f Dockerfile.smoketest .",
     "format": "biome format --write .",
     "format:check": "biome format .",
