@@ -9,7 +9,6 @@ import {
   readCurrentCircuitJsonBuild,
 } from "lib/shared/circuit-json-build-cache"
 import { getOrGenerateCircuitJson } from "lib/shared/get-or-generate-circuit-json"
-import { importFromUserLand } from "lib/shared/importFromUserLand"
 import { registerStaticAssetLoaders } from "lib/shared/register-static-asset-loaders"
 
 export const loadAnalogInput = async ({
@@ -55,8 +54,6 @@ export const loadAnalogInput = async ({
     return { circuitJson: cachedBuild.circuitJson, isPipelineJsonEntry: false }
   }
 
-  const React = await importFromUserLand("react", projectDir)
-  Object.assign(globalThis, { React })
   registerStaticAssetLoaders(platformConfig, projectDir)
   const entry: { circuitJson?: AnyCircuitElement[] } = await import(
     pathToFileURL(resolve(file)).href

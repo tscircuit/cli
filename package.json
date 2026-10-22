@@ -127,7 +127,6 @@
     "altiumts": "0.0.59",
     "poppygl": "0.0.34",
     "@tscircuit/core": "^0.0.2188",
-    "react": "^19.1.0",
     "jscad-planner": "0.0.18"
   },
   "scripts": {
