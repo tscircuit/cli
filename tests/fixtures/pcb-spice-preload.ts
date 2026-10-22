@@ -1,6 +1,6 @@
 import { mock } from "bun:test"
 import * as childProcess from "node:child_process"
-import { resolve } from "node:path"
+import { basename, resolve } from "node:path"
 
 const spawn = childProcess.spawn
 const pipelineFixture = resolve(import.meta.dir, "pcb-spice-pipeline.ts")
@@ -10,7 +10,7 @@ if (process.env.PCB_SPICE_MOCK_PIPELINE === "true") {
   mock.module("node:child_process", () => ({
     ...childProcess,
     spawn: (...[command, args = [], options]: Parameters<typeof spawn>) => {
-      const cliIndex = args.findIndex((arg) => arg.endsWith("/cli.mjs"))
+      const cliIndex = args.findIndex((arg) => basename(arg) === "cli.mjs")
       return cliIndex < 0
         ? spawn(command, args, options)
         : spawn(

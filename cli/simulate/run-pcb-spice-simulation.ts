@@ -1,19 +1,16 @@
-import { execFile, spawn } from "node:child_process"
+import { spawn } from "node:child_process"
 import { once } from "node:events"
 import { createRequire } from "node:module"
 import { resolve } from "node:path"
 import { fileURLToPath, pathToFileURL } from "node:url"
-import { promisify } from "node:util"
 
 export const runPcbSpiceSimulation = async ({
   file,
   output,
-  open,
   projectDir,
 }: {
   file: string
   output?: string
-  open?: boolean
   projectDir: string
 }) => {
   const outputDir = resolve(output ?? `runs/simulation-${Date.now()}`)
@@ -37,18 +34,11 @@ export const runPcbSpiceSimulation = async ({
       resolve(file),
       "--out",
       outputDir,
-      ...(open && process.platform !== "win32" ? ["--open"] : []),
     ],
     { stdio: "inherit", cwd: projectDir },
   )
   const [code, signal] = await once(child, "exit")
   if (code !== 0) {
     throw new Error(`pcb_spice failed (${signal ?? `exit ${code}`})`)
-  }
-  if (open && process.platform === "win32") {
-    await promisify(execFile)("rundll32", [
-      "url.dll,FileProtocolHandler",
-      resolve(outputDir, "results.html"),
-    ])
   }
 }

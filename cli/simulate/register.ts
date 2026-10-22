@@ -15,6 +15,5 @@ export const registerSimulate = (program: Command) => {
     .argument("<file>", "Path to tscircuit tsx or circuit json file")
     .option("--disable-parts-engine", "Disable the parts engine")
     .option("--output <directory>", "Fresh pcb_spice report directory")
-    .option("--open", "Open the pcb_spice HTML report after simulation")
     .action(runAnalogSimulation)
 }

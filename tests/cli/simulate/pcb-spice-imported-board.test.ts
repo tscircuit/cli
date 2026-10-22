@@ -4,7 +4,6 @@ import { join } from "node:path"
 import { gzipSync } from "node:zlib"
 import {
   getPcbSpiceFixture,
-  pcbSpiceBoard,
   pcbSpiceDeclarations,
   readPcbSpiceReceipt,
   runPcbSpiceCli,
@@ -12,19 +11,26 @@ import {
 
 test("analog preserves ImportedBoard geometry through TSX and exported Circuit JSON", async () => {
   const cwd =
-    await getPcbSpiceFixture(`import { Circuit, analog } from "@tscircuit/core"
+    await getPcbSpiceFixture(`import { writeFile } from "node:fs/promises"
+import { Circuit, analog } from "@tscircuit/core"
 import { ImportedBoard } from "pcb-spice-pipeline/tsx"
 const source = new Circuit()
-source.add(${pcbSpiceBoard})
+source.add(<board width={10} height={10} schematicDisabled>
+  <chip name="U1" pinLabels={{pin1: "DATA", pin2: "GND", pin3: "VCC"}} footprint="sot23" />
+  <resistor name="R1" resistance="50" footprint="0402" pcbX={-3} pcbY={0.95} />
+  <trace from=".U1 > .DATA" to=".R1 > .pin2" pcbStraightLine />
+</board>)
 await source.renderUntilSettled()
-const saved = source.getCircuitJson().map(record => Object.fromEntries(Object.entries(record).map(([key, field]) =>
-  [key, key.endsWith("_id") && typeof field === "string" ? "saved_" + field : field])))
+const saved = JSON.parse(JSON.stringify(source.getCircuitJson()), (key, field) => {
+  if (key.endsWith("_ids") && Array.isArray(field)) return field.map(id => "saved_" + id)
+  return key.endsWith("_id") && typeof field === "string" ? "saved_" + field : field
+})
 const savedBoard = saved.find(record => record.type === "pcb_board")
-savedBoard.center = {x: 123, y: -45}
 saved.push({type: "pcb_stackup", pcb_stackup_id: "saved-stackup", pcb_board_id: savedBoard.pcb_board_id,
   layers: [{layer_type: "copper", layer: "top", thickness: .035},
     {layer_type: "dielectric", thickness: 1.53, relative_permittivity: 4.1},
     {layer_type: "copper", layer: "bottom", thickness: .035}]})
+await writeFile("saved.json", JSON.stringify(saved))
 export const modeling = {description: "Saved routing"}
 export default () => <ImportedBoard circuitJson={saved}>${pcbSpiceDeclarations}</ImportedBoard>`)
   const result = await runPcbSpiceCli({
@@ -34,15 +40,24 @@ export default () => <ImportedBoard circuitJson={saved}>${pcbSpiceDeclarations}<
   expect(result.stderr).toBe("")
   expect(result.exitCode).toBe(0)
   const { circuitJson } = await readPcbSpiceReceipt(join(cwd, "saved-report"))
+  const saved = await Bun.file(join(cwd, "saved.json")).json()
+  expect(circuitJson.slice(0, saved.length)).toEqual(saved)
+  const sourceTrace = circuitJson.find(
+    (record) => record.type === "source_trace",
+  )
+  expect(sourceTrace?.connected_source_port_ids).toHaveLength(2)
+  for (const sourcePortId of sourceTrace!.connected_source_port_ids) {
+    expect(
+      circuitJson.some(
+        (record) =>
+          record.type === "source_port" &&
+          record.source_port_id === sourcePortId,
+      ),
+    ).toBe(true)
+  }
   expect(
-    circuitJson.find((record) => record.type === "pcb_board")?.pcb_board_id,
-  ).toStartWith("saved_")
-  expect(
-    circuitJson.find((record) => record.type === "pcb_board")?.center,
-  ).toEqual({ x: 123, y: -45 })
-  expect(
-    circuitJson.find((record) => record.type === "pcb_stackup")?.pcb_stackup_id,
-  ).toBe("saved-stackup")
+    circuitJson.filter((record) => record.type === "pcb_trace"),
+  ).toHaveLength(1)
   expect(
     circuitJson.find((record) => record.type === "simulation_ibis_model")
       ?.source_component_id,

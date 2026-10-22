@@ -6,8 +6,7 @@ import { loadEntry } from "pcb-spice-pipeline"
 await new Command()
   .argument("<entry>")
   .requiredOption("--out <directory>")
-  .option("--open")
-  .action(async (entry: string, options: { out: string; open?: boolean }) => {
+  .action(async (entry: string, options: { out: string }) => {
     const input = await loadEntry(resolve(entry))
     if (process.env.PCB_SPICE_FAIL_PIPELINE === "true") {
       throw new Error("Native solver failed")
@@ -17,8 +16,5 @@ await new Command()
     const reportPath = join(options.out, "results.html")
     await writeFile(reportPath, "<html>Test report</html>")
     console.log(reportPath)
-    if (options.open) {
-      await writeFile("opened.json", JSON.stringify({ args: [reportPath] }))
-    }
   })
   .parseAsync(process.argv)

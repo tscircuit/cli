@@ -8,16 +8,15 @@ import {
   runPcbSpiceCli,
 } from "tests/fixtures/pcb-spice"
 
-test("pcb_spice solver and entry errors fail the CLI without opening a report", async () => {
+test("pcb_spice solver and entry errors fail the CLI", async () => {
   const cwd = await getPcbSpiceFixture()
   const result = await runPcbSpiceCli({
     cwd,
-    args: ["entry.tsx", "--output", "failed", "--open"],
+    args: ["entry.tsx", "--output", "failed"],
     fail: true,
   })
   expect(result.exitCode).not.toBe(0)
   expect(result.stderr).toContain("Native solver failed")
-  expect(await Bun.file(join(cwd, "opened.json")).exists()).toBe(false)
   expect(await Bun.file(join(cwd, "failed", "results.html")).exists()).toBe(
     false,
   )

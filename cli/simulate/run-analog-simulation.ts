@@ -12,7 +12,6 @@ import { runPcbSpiceSimulation } from "./run-pcb-spice-simulation"
 export type AnalogOptions = {
   disablePartsEngine?: boolean
   output?: string
-  open?: boolean
 }
 
 export const runAnalogSimulation = async (
@@ -39,13 +38,9 @@ export const runAnalogSimulation = async (
       projectDir,
     }),
   })
-  if (!circuitJson) {
-    console.log("error: Failed to generate circuit JSON")
-    process.exit(1)
-  }
   if (
     circuitJson.some(
-      (record: { type: string; spice_engine?: string }) =>
+      (record) =>
         record.type === "simulation_experiment" &&
         record.spice_engine === "pcb_spice",
     )
@@ -58,8 +53,8 @@ export const runAnalogSimulation = async (
     await runPcbSpiceSimulation({ file, ...options, projectDir })
     process.exit(0)
   }
-  if (options.open || options.output) {
-    throw new Error('--open and --output require spiceEngine="pcb_spice"')
+  if (options.output) {
+    throw new Error('--output requires spiceEngine="pcb_spice"')
   }
   const spiceString = getSpiceWithPaddedSim(circuitJson)
 

@@ -6,12 +6,12 @@ import {
   runPcbSpiceCli,
 } from "tests/fixtures/pcb-spice"
 
-test("analog dispatches native pcb_spice TSX and opens the completed report", async () => {
+test("analog dispatches native pcb_spice TSX and writes the completed report", async () => {
   const cwd = await getPcbSpiceFixture()
   const outputDir = join(cwd, "report with spaces")
   const result = await runPcbSpiceCli({
     cwd,
-    args: ["entry.tsx", "--output", outputDir, "--open"],
+    args: ["entry.tsx", "--output", outputDir],
   })
   expect(result.exitCode).toBe(0)
   expect(result.stderr).toBe("")
@@ -39,6 +39,4 @@ test("analog dispatches native pcb_spice TSX and opens the completed report", as
       (record) => record.type === "simulation_experiment",
     )?.spice_engine,
   ).toBe("pcb_spice")
-  const opened = await Bun.file(join(cwd, "opened.json")).json()
-  expect(opened.args.at(-1)).toBe(join(outputDir, "results.html"))
 }, 30000)
