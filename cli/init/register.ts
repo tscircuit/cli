@@ -61,6 +61,7 @@ export const registerInit = (program: Command) => {
         const projectDir = directory
           ? path.resolve(process.cwd(), directory)
           : process.cwd()
+        const isCurrentDir = projectDir === process.cwd()
 
         let tsciHandle: string | null = null
         const token = getSessionToken()
@@ -106,9 +107,11 @@ export const registerInit = (program: Command) => {
           `
 export default () => (
   <board>
+    <schematicsheet />
     <resistor resistance="1k" footprint="0402" name="R1" />
     <capacitor capacitance="1000pF" footprint="0402" name="C1" />
-    <trace from=".R1 > .pin1" to=".C1 > .pin1" />
+    <trace name="SIGNAL" from=".R1 > .pin1" to=".C1 > .pin1" />
+    <trace name="RETURN" from=".R1 > .pin2" to=".C1 > .pin2" />
   </board>
 )
 `,
@@ -156,7 +159,7 @@ export default () => (
           kleur.bold(
             kleur.blue(
               `${
-                directory ? `${kleur.bold(`cd ${directory}`)} && ` : ""
+                isCurrentDir ? "" : `${kleur.bold(`cd ${directory}`)} && `
               }${kleur.bold("tsci dev")}`,
             ),
           ),
