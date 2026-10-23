@@ -110,24 +110,18 @@ export async function generateCircuitJson({
   debug(`Relative component path: ${relativeComponentPath}`)
   debug(`Output path: ${outputPath}`)
 
-  // Import once after initializing the project renderer and asset loaders
   const MainComponent = await import(pathToFileURL(absoluteFilePath).href)
 
   let records: AnyCircuitElement[]
   if (Array.isArray(MainComponent.circuitJson)) {
     records = MainComponent.circuitJson
   } else {
-    // Mount functions through the normal React renderer, including root hooks.
+    const namedComponent = Object.keys(MainComponent).find(
+      (key) => key[0] === key[0].toUpperCase(),
+    )
     const Component =
       MainComponent.default ||
-      (Object.keys(MainComponent).find((k) => k[0] === k[0].toUpperCase()) !==
-      undefined
-        ? MainComponent[
-            Object.keys(MainComponent).find(
-              (k) => k[0] === k[0].toUpperCase(),
-            ) as keyof typeof MainComponent
-          ]
-        : undefined)
+      (namedComponent ? MainComponent[namedComponent] : undefined)
 
     if (!Component) {
       throw new Error(
@@ -166,8 +160,6 @@ export async function generateCircuitJson({
           instance[Symbol.for("pcb-spice-pipeline.imported-board.v2")],
       ),
     )
-    // Resolve the serializer from the same project as ImportedBoard. This keeps
-    // its optional React/core peers on the consumer's renderer runtime.
     records = hasImportedBoard
       ? (
           await importFromUserLand(

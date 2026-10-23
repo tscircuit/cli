@@ -7,7 +7,6 @@ export async function importFromUserLand(
   moduleName: string,
   projectDir = process.cwd(),
 ) {
-  // Resolve before importing to avoid Bun auto-install and keep load errors intact.
   for (const parent of [
     pathToFileURL(path.join(projectDir, "noop.js")).href,
     import.meta.url,
@@ -17,7 +16,6 @@ export async function importFromUserLand(
       resolved = resolve(moduleName, parent)
     } catch (error: any) {
       if (error?.code === "ERR_PACKAGE_PATH_NOT_EXPORTED") {
-        // Preserve support for packages that expose only a require condition.
         resolved = pathToFileURL(createRequire(parent).resolve(moduleName)).href
       } else if (error?.code === "ERR_MODULE_NOT_FOUND") {
         continue

@@ -11,7 +11,6 @@ export type CircuitJsonBuildMetadata = {
   modeling?: PipelineModeling
 }
 
-// Versioned so artifacts from before canonical saved-board serialization expire.
 export const getCircuitJsonRenderOptionsHash = (options: {
   platformConfig?: PlatformConfig
   injectedProps?: Record<string, unknown>
@@ -128,12 +127,13 @@ export const getCircuitJsonBuildOutputPath = (filePath: string) => {
 
 const getSourceFilePaths = (projectDir: string) => {
   const sourceFilePaths: string[] = []
-  // Keep saved JSON assets in the hash; only skip the renderer's adjacent output.
   const isGeneratedCircuitJson = (entryPath: string) => {
     if (!entryPath.endsWith(".circuit.json")) return false
     const stem = entryPath.slice(0, -".circuit.json".length)
-    return [".tsx", ".ts", ".jsx", ".js"].some((extension) =>
-      fs.existsSync(`${stem}${extension}`),
+    return [".tsx", ".ts", ".jsx", ".js"].some(
+      (extension) =>
+        fs.existsSync(`${stem}${extension}`) ||
+        fs.existsSync(`${stem}.circuit${extension}`),
     )
   }
 
