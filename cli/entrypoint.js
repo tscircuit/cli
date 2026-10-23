@@ -14,7 +14,11 @@ function commandExists(cmd) {
   }
 }
 
-const runner = commandExists("bun") ? "bun" : "tsx"
+const runner = commandExists("bun")
+  ? "bun"
+  : commandExists("tsx")
+    ? "tsx"
+    : process.execPath
 
 const __dirname = dirname(fileURLToPath(import.meta.url))
 const packageRoot = join(__dirname, "..")
@@ -46,8 +50,13 @@ if (!useGlobal) {
   } catch {}
 }
 
-const { status } = spawnSync(runner, [mainPath, ...args], {
+const { status, error } = spawnSync(runner, [mainPath, ...args], {
   stdio: "inherit",
 })
+
+if (error) {
+  console.error(error.message)
+  process.exit(1)
+}
 
 process.exit(status ?? 0)

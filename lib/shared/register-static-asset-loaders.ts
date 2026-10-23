@@ -1,6 +1,9 @@
 import fs from "node:fs"
+import module from "node:module"
 import path from "node:path"
+import { fileURLToPath, pathToFileURL } from "node:url"
 import type { PlatformConfig } from "@tscircuit/props"
+import ts from "typescript"
 
 const STATIC_ASSET_EXTENSIONS = [
   ".glb",
@@ -106,9 +109,9 @@ export const registerStaticAssetLoaders = (
   if (registered) return
   registered = true
 
-  if (typeof Bun !== "undefined" && typeof Bun.plugin === "function") {
-    const baseUrl = getBaseUrlFromTsConfig(projectDir)
+  const baseUrl = getBaseUrlFromTsConfig(projectDir)
 
+  if (typeof Bun !== "undefined" && typeof Bun.plugin === "function") {
     Bun.plugin({
       name: "tsci-static-assets",
       setup(build) {
@@ -148,6 +151,92 @@ export const registerStaticAssetLoaders = (
             loader: "object",
           }
         })
+      },
+    })
+    return
+  }
+
+  if (typeof (module as any).registerHooks === "function") {
+    ;(module as any).registerHooks({
+      resolve(specifier: string, context: any, nextResolve: any) {
+        try {
+          return nextResolve(specifier, context)
+        } catch (err: any) {
+          if (
+            err?.code === "ERR_MODULE_NOT_FOUND" &&
+            context?.parentURL?.startsWith("file:") &&
+            (specifier.startsWith("./") ||
+              specifier.startsWith("../") ||
+              specifier.startsWith("/"))
+          ) {
+            const parentDir = path.dirname(fileURLToPath(context.parentURL))
+            const baseCandidate = path.resolve(parentDir, specifier)
+            const candidateSuffixes = [
+              ".tsx",
+              ".ts",
+              ".jsx",
+              ".js",
+              "/index.tsx",
+              "/index.ts",
+              "/index.jsx",
+              "/index.js",
+            ]
+            for (const suffix of candidateSuffixes) {
+              const candidatePath = `${baseCandidate}${suffix}`
+              if (
+                fs.existsSync(candidatePath) &&
+                fs.statSync(candidatePath).isFile()
+              ) {
+                return {
+                  url: pathToFileURL(candidatePath).href,
+                  shortCircuit: true,
+                }
+              }
+            }
+          }
+          throw err
+        }
+      },
+      load(url: string, context: any, nextLoad: any) {
+        if (url.startsWith("file:")) {
+          const filePath = fileURLToPath(url)
+
+          if (staticAssetFilter.test(filePath)) {
+            const baseDir = baseUrl
+              ? path.resolve(projectDir, baseUrl)
+              : projectDir
+            const relativePath = path
+              .relative(baseDir, filePath)
+              .split(path.sep)
+              .join("/")
+            const pathStr = `./${relativePath}`
+            return {
+              format: "module",
+              shortCircuit: true,
+              source: `export const __esModule = true;\nexport default ${JSON.stringify(pathStr)};\n`,
+            }
+          }
+
+          if (/\.(tsx|ts|jsx)$/i.test(filePath)) {
+            const rawSource = fs.readFileSync(filePath, "utf-8")
+            const transpiled = ts.transpileModule(rawSource, {
+              fileName: filePath,
+              compilerOptions: {
+                module: ts.ModuleKind.ESNext,
+                target: ts.ScriptTarget.ES2022,
+                jsx: ts.JsxEmit.ReactJSX,
+                esModuleInterop: true,
+                allowSyntheticDefaultImports: true,
+              },
+            })
+            return {
+              format: "module",
+              shortCircuit: true,
+              source: transpiled.outputText,
+            }
+          }
+        }
+        return nextLoad(url, context)
       },
     })
   }
