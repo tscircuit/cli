@@ -1,6 +1,6 @@
 import { expect, test } from "bun:test"
-import path from "node:path"
 import { writeFile } from "node:fs/promises"
+import path from "node:path"
 import { getCliTestFixture } from "../../fixtures/get-cli-test-fixture"
 
 const circuitCode = `
@@ -53,6 +53,10 @@ test("check netlist includes readable netlist output", async () => {
   expect(stdout).toContain("COMPONENTS:")
   expect(stdout).toContain("R1")
   expect(stdout).toContain("C1")
+  expect(stdout).not.toContain("undefined")
+  expect(stdout).toContain("R1 (1k\u03a9)")
+  expect(stdout).toContain("- pin1(pos, left):")
+  expect(stdout).toContain("- pin2(neg, right):")
   expect(stdout).toContain("NET: C1_pos")
 }, 20_000)
 
