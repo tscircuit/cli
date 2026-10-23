@@ -22,11 +22,6 @@ export const runPcbSpiceSimulation = async ({
   output?: string
   baseDir: string
 }) => {
-  if (!modeling) {
-    throw new Error(
-      "pcb_spice requires explicit modeling: export modeling or use --modeling <file>",
-    )
-  }
   const outputDir = resolve(output ?? `runs/simulation-${Date.now()}`)
   try {
     await stat(outputDir)
