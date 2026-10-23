@@ -69,9 +69,7 @@ test(
 
     await writeFile(circuitPath, circuitCode)
 
-    const { stdout, stderr } = await runCommand(
-      `tsci simulate ${circuitPath}`,
-    )
+    const { stdout, stderr } = await runCommand(`tsci simulate ${circuitPath}`)
 
     // Check for tabular headers
     expect(stdout).toContain("Index  time")

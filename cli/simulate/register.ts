@@ -64,9 +64,7 @@ export const registerSimulate = (program: Command) => {
         return
       }
       if (engines.some((engine) => engine && engine !== "ngspice")) {
-        throw new Error(
-          "simulate supports ngspice or pcb_spice experiments",
-        )
+        throw new Error("simulate supports ngspice or pcb_spice experiments")
       }
       if (options.output) {
         throw new Error('--output requires spiceEngine="pcb_spice"')
