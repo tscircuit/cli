@@ -217,7 +217,6 @@ else writeFileSync("waveform.dat", ${JSON.stringify(waveform)})
     const missing = await run(["circuit.json", "--output", "missing-results"])
     expect(missing.exitCode).not.toBe(0)
     expect(missing.stderr).toContain("missing pcb_spice_channel")
-    // Explicit --modeling remains authoritative over an invalid circuit declaration.
     const invalid = structuredClone(original)
     invalid.find(
       (record: any) => record.type === "simulation_experiment",
