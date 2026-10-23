@@ -80,18 +80,6 @@ The `build` command also accepts the following options:
 - `--ignore-pin-specification-drc` - suppress pin-specification DRC diagnostics
 - `--ignore-placement-drc` - suppress placement DRC diagnostics
 - `--ignore-routing-drc` - suppress routing DRC diagnostics
-- `--use-cdn-javascript` - with `--site`, load the version-pinned RunFrame
-  standalone viewer from a CDN, without the embedded circuit-evaluation worker
-
-For a single-circuit site, run
-`tsci build index.circuit.tsx --site --use-cdn-javascript` and deploy just
-`dist/index.html`. Circuit JSON is embedded in the page, and PCB, schematic,
-3D views and configured custom tabs remain available. The viewer, external
-CAD models and custom iframe tabs still require their external URLs; this is
-not an offline export. Explicit `--bundle-jscdn` or a local `--jscdn-base-url`
-also requires deploying those assets. Multi-circuit sites retain their gallery
-and separate Circuit JSON/thumbnail files. Omit `--use-cdn-javascript` to keep
-the viewer and Circuit JSON as local site assets.
 
 ### Altium export
 
