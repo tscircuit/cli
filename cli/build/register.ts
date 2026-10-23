@@ -948,7 +948,7 @@ export const registerBuild = (program: Command) => {
         if (resolvedOptions?.site) {
           let standaloneScriptSrc = "./standalone.min.js"
           if (resolvedOptions.useCdnJavascript) {
-            standaloneScriptSrc = getRunFrameCdnUrl()
+            standaloneScriptSrc = await getRunFrameCdnUrl()
           } else {
             fs.writeFileSync(
               path.join(distDir, "standalone.min.js"),

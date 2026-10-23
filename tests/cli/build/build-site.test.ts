@@ -7,6 +7,10 @@ import {
   writePreparedJscdn,
 } from "tests/fixtures/prepared-jscdn"
 
+const runFrameCdnPreload = path.resolve(
+  "tests/fixtures/runframe-cdn-preload.ts",
+)
+
 const circuitCode = `
 export default () => (
   <board width="10mm" height="10mm">
@@ -55,7 +59,10 @@ for (const { standalone, customBase, cdn } of [
     const preload = path.join(tmpDir, "no-fetch.ts")
     await writeFile(
       preload,
-      'globalThis.fetch = () => { throw new Error("Site bundling must not fetch packages") }\n',
+      `globalThis.fetch = (input) => {
+        ${cdn ? 'if (String(input) === "https://registry.npmjs.org/@tscircuit/runframe/latest") return Promise.resolve(Response.json({ version: "0.0.9999" }))' : ""}
+        throw new Error("Site bundling must not fetch packages")
+      }`,
     )
     const args = [
       "bun",
@@ -149,7 +156,9 @@ test("build --site --jscdn-base-url injects the URL before RunFrame loads", asyn
 }, 30_000)
 
 test("build with --site generates only 3D preview images for every circuit", async () => {
-  const { tmpDir, runCommand } = await getCliTestFixture()
+  const { tmpDir, runCommand } = await getCliTestFixture({
+    preload: runFrameCdnPreload,
+  })
   await writeFile(path.join(tmpDir, "first.circuit.tsx"), circuitCode)
   await writeFile(path.join(tmpDir, "second.circuit.tsx"), circuitCode)
   await writeFile(path.join(tmpDir, "package.json"), "{}")
@@ -157,6 +166,7 @@ test("build with --site generates only 3D preview images for every circuit", asy
   const { stderr } = await runCommand("tsci build --site --use-cdn-javascript")
   expect(stderr).toBe("")
   const html = await readFile(path.join(tmpDir, "dist/index.html"), "utf8")
+  expect(html).toContain("@tscircuit/runframe@0.0.9999/dist/standalone.min.js")
   expect(html).not.toContain("URL.createObjectURL")
   expect(html).toContain("./first/circuit.json")
   expect(html).toContain("./second/circuit.json")
@@ -177,7 +187,9 @@ test("build with --site generates only 3D preview images for every circuit", asy
 }, 60_000)
 
 test("build with --site --use-cdn-javascript uses CDN URL and no standalone.min.js", async () => {
-  const { tmpDir, runCommand } = await getCliTestFixture()
+  const { tmpDir, runCommand } = await getCliTestFixture({
+    preload: runFrameCdnPreload,
+  })
   const circuitPath = path.join(tmpDir, "test.circuit.tsx")
   await writeFile(circuitPath, circuitCode)
   await writeFile(path.join(tmpDir, "package.json"), "{}")
@@ -193,8 +205,9 @@ test("build with --site --use-cdn-javascript uses CDN URL and no standalone.min.
   )
 
   // Should use CDN URL instead of local standalone.min.js
-  expect(indexHtml).toContain("cdn.jsdelivr.net/npm/@tscircuit/runframe@")
-  expect(indexHtml).toContain("/dist/standalone.min.js")
+  expect(indexHtml).toContain(
+    "cdn.jsdelivr.net/npm/@tscircuit/runframe@0.0.9999/dist/standalone.min.js",
+  )
   expect(indexHtml).not.toContain("/dist/browser.min.js")
   expect(indexHtml).not.toContain('src="./standalone.min.js"')
   expect(indexHtml).toContain(

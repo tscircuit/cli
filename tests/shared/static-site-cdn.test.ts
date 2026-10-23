@@ -1,7 +1,6 @@
 import { expect, test } from "bun:test"
 import { statSync } from "node:fs"
 import { runInNewContext } from "node:vm"
-import { getRunFrameCdnUrl } from "cli/utils/get-runframe-cdn-url"
 import { getStaticIndexHtmlFile } from "lib/site/getStaticIndexHtmlFile"
 
 test("embedded Circuit JSON safely round-trips through the standalone viewer's Blob URL", async () => {
@@ -17,7 +16,8 @@ test("embedded Circuit JSON safely round-trips through the standalone viewer's B
   const html = getStaticIndexHtmlFile({
     files,
     embeddedCircuitJson,
-    standaloneScriptSrc: getRunFrameCdnUrl(),
+    standaloneScriptSrc:
+      "https://cdn.jsdelivr.net/npm/@tscircuit/runframe@0.0.9999/dist/standalone.min.js",
     packageName: hostile,
     defaultMainComponentPath: hostile,
     extraRunFrameTabs,
@@ -64,12 +64,7 @@ test("local and multi-circuit sites keep their original file references", () => 
   ).toThrow("exactly one circuit")
 })
 
-test("the CDN URL pins the worker-free standalone asset below jsDelivr's file limit", () => {
-  const url = getRunFrameCdnUrl()
-  expect(url).toMatch(
-    /^https:\/\/cdn\.jsdelivr\.net\/npm\/@tscircuit\/runframe@\d+\.\d+\.\d+\/dist\/standalone\.min\.js$/,
-  )
-  expect(url).not.toContain("browser.min.js")
+test("the installed standalone artifact stays below jsDelivr's file limit", () => {
   expect(
     statSync(new URL(import.meta.resolve("@tscircuit/runframe/standalone")))
       .size,

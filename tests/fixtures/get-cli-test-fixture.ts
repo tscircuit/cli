@@ -24,6 +24,7 @@ export interface CliTestFixture {
 export async function getCliTestFixture(
   opts: {
     loggedIn?: boolean
+    preload?: string
   } = {},
 ): Promise<CliTestFixture> {
   // Setup temporary directory
@@ -98,7 +99,15 @@ export async function getCliTestFixture(
       TSCIRCUIT_CONFIG_DIR: testConfigDir,
     }
 
-    return { cmd: ["bun", ...args], cwd: tmpDir, env }
+    return {
+      cmd: [
+        "bun",
+        ...(opts.preload ? ["--preload", opts.preload] : []),
+        ...args,
+      ],
+      cwd: tmpDir,
+      env,
+    }
   }
 
   const runningCommands: Bun.Subprocess[] = []

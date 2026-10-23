@@ -4,6 +4,10 @@ import path from "node:path"
 import { runInNewContext } from "node:vm"
 import { getCliTestFixture } from "tests/fixtures/get-cli-test-fixture"
 
+const runFrameCdnPreload = path.resolve(
+  "tests/fixtures/runframe-cdn-preload.ts",
+)
+
 const readCircuitFromHtml = async (html: string) => {
   const window: Record<string, unknown> = {}
   runInNewContext(html.match(/<script>([\s\S]*?)<\/script>/)![1], {
@@ -23,7 +27,7 @@ const readCircuitFromHtml = async (html: string) => {
 }
 
 for (const standalone of [false, true]) {
-  test(`single-circuit CDN sites embed JSON without network access or local site assets (standalone=${standalone})`, async () => {
+  test(`single-circuit CDN sites only fetch RunFrame metadata and embed JSON without local site assets (standalone=${standalone})`, async () => {
     const { tmpDir } = await getCliTestFixture()
     const circuitJson = [
       {
@@ -42,7 +46,12 @@ for (const standalone of [false, true]) {
     const preload = path.join(tmpDir, "no-fetch.ts")
     await writeFile(
       preload,
-      'globalThis.fetch = () => { throw new Error("Unexpected build-time network request") }',
+      `globalThis.fetch = (input) => {
+        if (String(input) === "https://registry.npmjs.org/@tscircuit/runframe/latest") {
+          return Promise.resolve(Response.json({ version: "0.0.9999" }))
+        }
+        throw new Error("Unexpected build-time network request")
+      }`,
     )
     const subprocess = Bun.spawn(
       [
@@ -77,7 +86,9 @@ for (const standalone of [false, true]) {
     expect(exitCode).toBe(0)
     const html = await readFile(path.join(tmpDir, "dist/index.html"), "utf8")
     expect(await readCircuitFromHtml(html)).toEqual(circuitJson)
-    expect(html).toContain("/dist/standalone.min.js")
+    expect(html).toContain(
+      "@tscircuit/runframe@0.0.9999/dist/standalone.min.js",
+    )
     expect(html).toContain("URL.createObjectURL(new Blob(")
     expect(html).not.toContain('"./jscdn"')
     await expect(
@@ -91,7 +102,9 @@ for (const standalone of [false, true]) {
 
 for (const concurrency of [1, 2]) {
   test(`CDN sites embed compiled TSX with concurrency ${concurrency}`, async () => {
-    const { tmpDir, runCommand } = await getCliTestFixture()
+    const { tmpDir, runCommand } = await getCliTestFixture({
+      preload: runFrameCdnPreload,
+    })
     await writeFile(path.join(tmpDir, "package.json"), "{}")
     await symlink(
       path.resolve("node_modules"),
@@ -122,7 +135,9 @@ for (const concurrency of [1, 2]) {
 }
 
 test("CDN sites preserve configured custom tabs with embedded JSON", async () => {
-  const { tmpDir, runCommand } = await getCliTestFixture()
+  const { tmpDir, runCommand } = await getCliTestFixture({
+    preload: runFrameCdnPreload,
+  })
   const extraRunFrameTabs = [
     {
       tabName: "Docs",
@@ -157,7 +172,9 @@ test("CDN sites preserve configured custom tabs with embedded JSON", async () =>
 }, 30_000)
 
 test("single-circuit CDN sites still honor explicit preview image options", async () => {
-  const { tmpDir, runCommand } = await getCliTestFixture()
+  const { tmpDir, runCommand } = await getCliTestFixture({
+    preload: runFrameCdnPreload,
+  })
   await writeFile(path.join(tmpDir, "board.circuit.json"), "[]")
   const { stderr, exitCode } = await runCommand(
     "tsci build board.circuit.json --site --use-cdn-javascript --3d-png",

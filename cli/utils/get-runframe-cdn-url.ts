@@ -1,10 +1,17 @@
-import pkg from "../../package.json"
+const RUNFRAME_NPMJS_API_URL =
+  "https://registry.npmjs.org/@tscircuit/runframe/latest"
 
-/** Use the CLI's tested RunFrame version without the embedded eval worker. */
-export function getRunFrameCdnUrl(): string {
-  const version = pkg.devDependencies["@tscircuit/runframe"].replace(
-    /^[^0-9]+/,
-    "",
-  )
+/** Resolve the latest RunFrame release and pin its standalone viewer URL. */
+export async function getRunFrameCdnUrl(): Promise<string> {
+  const response = await fetch(RUNFRAME_NPMJS_API_URL)
+  if (!response.ok) {
+    throw new Error(
+      `Failed to fetch RunFrame version from npm: ${response.statusText}`,
+    )
+  }
+  const { version } = (await response.json()) as { version?: unknown }
+  if (typeof version !== "string" || !version) {
+    throw new Error("npm returned an invalid RunFrame version")
+  }
   return `https://cdn.jsdelivr.net/npm/@tscircuit/runframe@${version}/dist/standalone.min.js`
 }
