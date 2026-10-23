@@ -1,38 +1,30 @@
 import { createRequire } from "node:module"
-import fs from "node:fs"
-import path, { relative, resolve } from "node:path"
+import path from "node:path"
+import { pathToFileURL } from "node:url"
+import { resolve } from "import-meta-resolve"
 
 export async function importFromUserLand(
   moduleName: string,
   projectDir = process.cwd(),
 ) {
-  // First try to resolve relative to the user's project without triggering
-  // Bun's auto-install (which can pull in inconsistent dependency versions)
-  const userModulePath = path.join(projectDir, "node_modules", moduleName)
-  if (fs.existsSync(userModulePath)) {
-    const userRequire = createRequire(path.join(projectDir, "noop.js"))
+  for (const parent of [
+    pathToFileURL(path.join(projectDir, "noop.js")).href,
+    import.meta.url,
+  ]) {
+    let resolved: string
     try {
-      const resolvedUserPath = userRequire.resolve(moduleName)
-      return await import(resolvedUserPath)
+      resolved = resolve(moduleName, parent)
     } catch (error: any) {
-      if (error?.code !== "MODULE_NOT_FOUND") {
+      if (error?.code === "ERR_PACKAGE_PATH_NOT_EXPORTED") {
+        resolved = pathToFileURL(createRequire(parent).resolve(moduleName)).href
+      } else if (error?.code === "ERR_MODULE_NOT_FOUND") {
+        continue
+      } else {
         throw error
       }
     }
+    return import(resolved)
   }
 
-  // Next, fall back to the CLI's own dependencies to ensure we use the
-  // versions bundled with the tool when the user hasn't installed them.
-  const cliRequire = createRequire(import.meta.url)
-  try {
-    const resolvedCliPath = cliRequire.resolve(moduleName)
-    return await import(resolvedCliPath)
-  } catch (error: any) {
-    if (error?.code !== "MODULE_NOT_FOUND") {
-      throw error
-    }
-  }
-
-  // Final fallback to dynamic import (may trigger auto-install)
   return import(moduleName)
 }

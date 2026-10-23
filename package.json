@@ -27,7 +27,8 @@
     "@tscircuit/krt-wasm": "^0.1.6",
     "@tscircuit/math-utils": "0.0.36",
     "@tscircuit/modelprinter": "^0.0.11",
-    "@tscircuit/props": "^0.0.698",
+    "@tscircuit/pcb-spice-pipeline": "https://api.github.com/repos/tscircuit/pcb-spice-pipeline/tarball/63d15671ec68833225132066df317a8d7e4820e7",
+    "@tscircuit/props": "^0.0.709",
     "@tscircuit/runframe": "^0.0.3054",
     "@tscircuit/schematic-match-adapt": "^0.0.22",
     "@tscircuit/schematic-trace-solver": "^0.0.204",
@@ -43,7 +44,7 @@
     "@types/semver": "^7.5.8",
     "bun-match-svg": "^0.0.12",
     "chokidar": "4.0.1",
-    "circuit-json": "^0.0.525",
+    "circuit-json": "^0.0.534",
     "circuit-json-to-3d-png": "^0.0.6",
     "circuit-json-to-altium": "github:tscircuit/circuit-json-to-altium#1a50d0dd2c0737cf940d92c0315852dc0111dd87",
     "circuit-json-to-bom-csv": "^0.0.21",
@@ -71,6 +72,7 @@
     "fuse.js": "^7.1.0",
     "get-port": "^7.1.0",
     "globby": "^14.1.0",
+    "import-meta-resolve": "^4.2.0",
     "jose": "^6.1.0",
     "jsonwebtoken": "^9.0.2",
     "jszip": "^3.10.1",
@@ -103,7 +105,7 @@
   },
   "peerDependencies": {
     "@tscircuit/math-utils": "0.0.36",
-    "circuit-json": "^0.0.525",
+    "circuit-json": "^0.0.534",
     "circuit-to-svg": "^0.0.447",
     "tscircuit": "*"
   },
@@ -121,10 +123,10 @@
     }
   },
   "overrides": {
-    "circuit-json": "^0.0.525",
+    "circuit-json": "^0.0.534",
     "altiumts": "0.0.59",
     "poppygl": "0.0.34",
-    "@tscircuit/core": "^0.0.2121",
+    "@tscircuit/core": "^0.0.2188",
     "jscad-planner": "0.0.18"
   },
   "scripts": {

@@ -2,6 +2,8 @@ import fs from "node:fs"
 import path from "node:path"
 import { pathToFileURL } from "node:url"
 import type { PlatformConfig } from "@tscircuit/props"
+import type { AnyCircuitElement } from "circuit-json"
+import type { PipelineModeling } from "@tscircuit/pcb-spice-pipeline"
 import Debug from "debug"
 import { abbreviateStringifyObject } from "lib/utils/abbreviate-stringify-object"
 import { getVirtualFileSystemFromDirPath } from "make-vfs"
@@ -152,52 +154,67 @@ export async function generateCircuitJson({
   // Execute the circuit runner with the virtual file system
   const MainComponent = await import(pathToFileURL(absoluteFilePath).href)
 
-  // Handle both default export and named exports
-  const Component =
-    MainComponent.default ||
-    (Object.keys(MainComponent).find((k) => k[0] === k[0].toUpperCase()) !==
-    undefined
-      ? MainComponent[
-          Object.keys(MainComponent).find(
-            (k) => k[0] === k[0].toUpperCase(),
-          ) as keyof typeof MainComponent
-        ]
-      : undefined)
-
-  if (!Component) {
-    throw new Error(
-      `No component found in "${absoluteFilePath}". Make sure you export a component.`,
+  let records: AnyCircuitElement[]
+  if (Array.isArray(MainComponent.circuitJson)) {
+    records = MainComponent.circuitJson
+  } else {
+    const namedComponent = Object.keys(MainComponent).find(
+      (key) => key[0] === key[0].toUpperCase(),
     )
-  }
+    const Component =
+      MainComponent.default ||
+      (namedComponent ? MainComponent[namedComponent] : undefined)
 
-  runner.add(<Component {...(injectedProps ?? {})} />)
-
-  runner.render()
-
-  const loggedAsyncEffectNames = new Set<string>()
-
-  while (!runner.isDoneRendering()) {
-    for (const asyncEffect of runner.getRunningAsyncEffects()) {
-      const asyncEffectName = asyncEffect.effectName
-      if (!asyncEffectName || loggedAsyncEffectNames.has(asyncEffectName)) {
-        continue
-      }
-
-      loggedAsyncEffectNames.add(asyncEffectName)
-      onAsyncEffectStatus?.(asyncEffectName)
+    if (!Component) {
+      throw new Error(
+        `No component found in "${absoluteFilePath}". Make sure you export a component.`,
+      )
     }
 
-    autorouterDiagnostics.checkTimeout()
-    await new Promise((resolve) => setTimeout(resolve, 100))
+    runner.add(<Component {...(injectedProps ?? {})} />)
+
     runner.render()
+
+    const loggedAsyncEffectNames = new Set<string>()
+
+    while (!runner.isDoneRendering()) {
+      for (const asyncEffect of runner.getRunningAsyncEffects()) {
+        const asyncEffectName = asyncEffect.effectName
+        if (!asyncEffectName || loggedAsyncEffectNames.has(asyncEffectName)) {
+          continue
+        }
+
+        loggedAsyncEffectNames.add(asyncEffectName)
+        onAsyncEffectStatus?.(asyncEffectName)
+      }
+
+      autorouterDiagnostics.checkTimeout()
+      await new Promise((resolve) => setTimeout(resolve, 100))
+      runner.render()
+    }
+
+    runner.emit("renderComplete")
+    solverDiagnostics?.finalize()
+
+    const hasImportedBoard = runner.children.some((component: any) =>
+      [component, ...component.getDescendants()].some(
+        (instance: any) =>
+          instance[Symbol.for("pcb-spice-pipeline.imported-board.v2")],
+      ),
+    )
+    records = hasImportedBoard
+      ? (
+          await importFromUserLand(
+            "@tscircuit/pcb-spice-pipeline/tsx",
+            projectRootDir,
+          )
+        ).serializeSimulation(runner)
+      : await runner.getCircuitJson()
   }
 
-  runner.emit("renderComplete")
-  solverDiagnostics?.finalize()
-
-  // Get the circuit JSON
+  const modeling = MainComponent.modeling as PipelineModeling | undefined
   const circuitJson = addSourceFilesystemHash(
-    await runner.getCircuitJson(),
+    records,
     currentSourceFilesystemMd5Hash,
   )
   await autorouterDiagnostics.finalize(circuitJson)
@@ -212,5 +229,6 @@ export async function generateCircuitJson({
     circuitJson,
     outputPath,
     rootCircuit: runner,
+    modeling,
   }
 }

@@ -1,5 +1,4 @@
 import type { Command } from "commander"
-import { getOrGenerateCircuitJson } from "lib/shared/get-or-generate-circuit-json"
 import { runSimulation } from "lib/eecircuit-engine/run-simulation"
 import { resultToTable } from "lib/shared/result-to-table"
 import { getSpiceWithPaddedSim } from "lib/shared/get-spice-with-sim"
@@ -9,6 +8,11 @@ import { mergePlatformConfigs } from "lib/shared/platform-config-utils"
 import { getPlatformConfigWithCliDefaults } from "lib/shared/get-platform-config-with-cli-defaults"
 import { findCircuitProjectDir } from "lib/shared/circuit-json-build-cache"
 import { registerReturnCurrentSimulation } from "./register-return-current"
+
+import { loadAnalogInput } from "./load-analog-input"
+import { runPcbSpiceSimulation } from "./run-pcb-spice-simulation"
+
+type AnalogOptions = { disablePartsEngine?: boolean; output?: string }
 
 export const registerSimulate = (program: Command) => {
   const simulateCommand = program
@@ -22,8 +26,10 @@ export const registerSimulate = (program: Command) => {
     .description("Run an analog SPICE simulation")
     .argument("<file>", "Path to tscircuit tsx or circuit json file")
     .option("--disable-parts-engine", "Disable the parts engine")
-    .action(async (file: string, options: { disablePartsEngine?: boolean }) => {
-      const projectConfig = await loadRuntimeProjectConfig(process.cwd())
+    .option("--output <directory>", "Fresh pcb_spice report directory")
+    .action(async (file: string, options: AnalogOptions) => {
+      const projectDir = findCircuitProjectDir(file)
+      const projectConfig = await loadRuntimeProjectConfig(projectDir)
       const commandPlatformConfig: PlatformConfig | undefined =
         options.disablePartsEngine === true
           ? { partsEngineDisabled: true }
@@ -33,16 +39,38 @@ export const registerSimulate = (program: Command) => {
         commandPlatformConfig,
       )
 
-      const { circuitJson } = await getOrGenerateCircuitJson({
-        filePath: file,
-        saveToFile: false,
+      const input = await loadAnalogInput({
+        file,
+        projectDir,
         platformConfig: getPlatformConfigWithCliDefaults(platformConfig, {
-          projectDir: findCircuitProjectDir(file),
+          projectDir,
         }),
       })
-      if (!circuitJson) {
-        console.log("error: Failed to generate circuit JSON")
-        process.exit(1)
+      const { circuitJson, baseDir } = input
+      const engines = circuitJson.flatMap((record) =>
+        record.type === "simulation_experiment" ? [record.spice_engine] : [],
+      )
+      if (engines.includes("pcb_spice")) {
+        if (engines.some((engine) => engine !== "pcb_spice")) {
+          throw new Error(
+            "Mixed pcb_spice and other SPICE engines are unsupported; run separate entries for each engine",
+          )
+        }
+        await runPcbSpiceSimulation({
+          circuitJson,
+          modeling: input.modeling,
+          output: options.output,
+          baseDir,
+        })
+        return
+      }
+      if (engines.some((engine) => engine && engine !== "ngspice")) {
+        throw new Error(
+          "simulate analog supports ngspice or pcb_spice experiments",
+        )
+      }
+      if (options.output) {
+        throw new Error('--output requires spiceEngine="pcb_spice"')
       }
       const spiceString = getSpiceWithPaddedSim(circuitJson)
 
