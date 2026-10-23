@@ -93,7 +93,6 @@ export const MyResistor = () => (
       "lib/",
       "lib/index/",
       "lib/index/circuit.json",
-      "lib/index/circuit.json.metadata.json",
       "pcm/",
       "pcm/com.tscircuit.testuser.my-resistor-1.0.0.zip",
       "pcm/packages.json",

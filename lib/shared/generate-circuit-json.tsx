@@ -5,6 +5,8 @@ import type { PlatformConfig } from "@tscircuit/props"
 import type { AnyCircuitElement } from "circuit-json"
 import type { PipelineModeling } from "@tscircuit/pcb-spice-pipeline"
 import Debug from "debug"
+import { abbreviateStringifyObject } from "lib/utils/abbreviate-stringify-object"
+import { getVirtualFileSystemFromDirPath } from "make-vfs"
 import {
   AutorouterDiagnostics,
   type AutorouterDiagnosticsOptions,
@@ -14,9 +16,7 @@ import { importFromUserLand } from "./importFromUserLand"
 import { registerStaticAssetLoaders } from "./register-static-asset-loaders"
 import {
   addSourceFilesystemHash,
-  getCircuitJsonRenderOptionsHash,
   getSourceFilesystemMd5Hash,
-  writeCircuitJsonBuildMetadata,
 } from "./circuit-json-build-cache"
 import {
   SolverDiagnostics,
@@ -24,6 +24,22 @@ import {
 } from "./solver-diagnostics"
 
 const debug = Debug("tsci:generate-circuit-json")
+
+const ALLOWED_FILE_EXTENSIONS = [
+  ".tsx",
+  ".ts",
+  ".jsx",
+  ".js",
+  ".json",
+  ".txt",
+  ".md",
+  ".obj",
+  ".kicad_mod",
+  ".kicad_pcb",
+  ".kicad_pro",
+  ".kicad_sch",
+  ".kicad_sym",
+]
 
 type GenerateCircuitJsonOptions = {
   filePath: string
@@ -62,10 +78,6 @@ export async function generateCircuitJson({
 
   const currentSourceFilesystemMd5Hash =
     sourceFilesystemMd5Hash ?? getSourceFilesystemMd5Hash(filePath)
-  const renderOptionsHash = getCircuitJsonRenderOptionsHash({
-    platformConfig,
-    injectedProps,
-  })
 
   // Import React and make it globally available for packages referencing it
   const projectRootDir = path.resolve(projectDirOption ?? process.cwd())
@@ -110,6 +122,36 @@ export async function generateCircuitJson({
   debug(`Relative component path: ${relativeComponentPath}`)
   debug(`Output path: ${outputPath}`)
 
+  // Create a virtual file system with the project files
+  const fsMap = {
+    ...((await getVirtualFileSystemFromDirPath({
+      dirPath: sourceDir,
+      fileMatchFn: (filePath) => {
+        const normalizedFilePath = filePath.replace(/\\/g, "/")
+
+        // Allow imported KiCad library files from node_modules.
+        if (
+          normalizedFilePath.endsWith(".kicad_mod") ||
+          normalizedFilePath.endsWith(".kicad_sym")
+        ) {
+          return true
+        }
+
+        if (normalizedFilePath.includes("node_modules/")) return false
+        if (normalizedFilePath.includes("dist/")) return false
+        if (normalizedFilePath.includes("build/")) return false
+        if (normalizedFilePath.match(/^\.[^/]/)) return false
+        if (!ALLOWED_FILE_EXTENSIONS.includes(path.extname(normalizedFilePath)))
+          return false
+        return true
+      },
+      contentFormat: "string",
+    })) as Record<string, string>),
+  }
+
+  debug(`fsMap: ${abbreviateStringifyObject(fsMap)}`)
+
+  // Execute the circuit runner with the virtual file system
   const MainComponent = await import(pathToFileURL(absoluteFilePath).href)
 
   let records: AnyCircuitElement[]
@@ -171,11 +213,6 @@ export async function generateCircuitJson({
   }
 
   const modeling = MainComponent.modeling as PipelineModeling | undefined
-  const buildMetadata = {
-    sourceFilesystemMd5Hash: currentSourceFilesystemMd5Hash,
-    renderOptionsHash,
-    modeling,
-  }
   const circuitJson = addSourceFilesystemHash(
     records,
     currentSourceFilesystemMd5Hash,
@@ -186,7 +223,6 @@ export async function generateCircuitJson({
   if (saveToFile) {
     debug(`Saving circuit JSON to ${outputPath}`)
     fs.writeFileSync(outputPath, JSON.stringify(circuitJson, null, 2))
-    writeCircuitJsonBuildMetadata(outputPath, buildMetadata)
   }
 
   return {
@@ -194,6 +230,5 @@ export async function generateCircuitJson({
     outputPath,
     rootCircuit: runner,
     modeling,
-    buildMetadata,
   }
 }

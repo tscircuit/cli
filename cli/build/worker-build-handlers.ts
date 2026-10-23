@@ -4,7 +4,6 @@ import type { PlatformConfig } from "@tscircuit/props"
 import type { AnyCircuitElement } from "circuit-json"
 import { loadRuntimeProjectConfig } from "lib/project-config"
 import { analyzeCircuitJson } from "../../lib/shared/circuit-json-diagnostics"
-import { writeCircuitJsonBuildMetadata } from "../../lib/shared/circuit-json-build-cache"
 import { generateCircuitJson } from "../../lib/shared/generate-circuit-json"
 import { getPlatformConfigWithCliDefaults } from "../../lib/shared/get-platform-config-with-cli-defaults"
 import { mergePlatformConfigs } from "../../lib/shared/platform-config-utils"
@@ -65,37 +64,34 @@ export const handleBuildFile = async (
       normalizedInputPath.endsWith(".circuit.json") ||
       normalizedInputPath.endsWith("/circuit.json")
 
-    const generated = isPrebuiltCircuitJson
-      ? {
-          circuitJson: loadCircuitJsonFromInputFile(filePath),
-          buildMetadata: undefined,
-        }
-      : await generateCircuitJson({
-          filePath,
-          projectDir,
-          platformConfig: platformConfigWithCliDefaults,
-          injectedProps: options?.injectedProps,
-          autorouterDiagnostics: options?.autorouterDiagnostics
-            ? {
-                ...options.autorouterDiagnostics,
-                log: (message) => workerLog(message),
-              }
-            : undefined,
-          solverDiagnostics: options?.solverDiagnostics
-            ? {
-                ...options.solverDiagnostics,
-                log: (message) => workerLog(message),
-              }
-            : undefined,
-          onAsyncEffectStatus: (asyncEffectName) => {
-            workerStatus(`waiting on ${asyncEffectName}…`)
-          },
-        })
-    const { circuitJson, buildMetadata } = generated
+    const circuitJson = isPrebuiltCircuitJson
+      ? loadCircuitJsonFromInputFile(filePath)
+      : (
+          await generateCircuitJson({
+            filePath,
+            projectDir,
+            platformConfig: platformConfigWithCliDefaults,
+            injectedProps: options?.injectedProps,
+            autorouterDiagnostics: options?.autorouterDiagnostics
+              ? {
+                  ...options.autorouterDiagnostics,
+                  log: (message) => workerLog(message),
+                }
+              : undefined,
+            solverDiagnostics: options?.solverDiagnostics
+              ? {
+                  ...options.solverDiagnostics,
+                  log: (message) => workerLog(message),
+                }
+              : undefined,
+            onAsyncEffectStatus: (asyncEffectName) => {
+              workerStatus(`waiting on ${asyncEffectName}…`)
+            },
+          })
+        ).circuitJson
 
     fs.mkdirSync(path.dirname(outputPath), { recursive: true })
     fs.writeFileSync(outputPath, JSON.stringify(circuitJson, null, 2))
-    writeCircuitJsonBuildMetadata(outputPath, buildMetadata)
 
     workerLog(
       `Circuit JSON written to ${path.relative(projectDir, outputPath)}`,

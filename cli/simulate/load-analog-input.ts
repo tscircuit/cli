@@ -4,7 +4,7 @@ import { gunzipSync } from "node:zlib"
 import type { PipelineModeling } from "@tscircuit/pcb-spice-pipeline"
 import type { PlatformConfig } from "@tscircuit/props"
 import type { AnyCircuitElement } from "circuit-json"
-import { getOrGenerateCircuitJson } from "lib/shared/get-or-generate-circuit-json"
+import { generateCircuitJson } from "lib/shared/generate-circuit-json"
 
 export const loadAnalogInput = async ({
   file,
@@ -17,7 +17,7 @@ export const loadAnalogInput = async ({
 }) => {
   if (!file.endsWith(".json") && !file.endsWith(".json.gz")) {
     return {
-      ...(await getOrGenerateCircuitJson({
+      ...(await generateCircuitJson({
         filePath: resolve(file),
         projectDir,
         platformConfig,

@@ -1,5 +1,4 @@
 import {
-  getCircuitJsonRenderOptionsHash,
   getSourceFilesystemMd5Hash,
   readCurrentCircuitJsonBuild,
 } from "./circuit-json-build-cache"
@@ -18,7 +17,6 @@ export const getOrGenerateCircuitJson = async (
   const cachedBuild = readCurrentCircuitJsonBuild({
     filePath: options.filePath,
     sourceFilesystemMd5Hash,
-    renderOptionsHash: getCircuitJsonRenderOptionsHash(options),
   })
 
   if (cachedBuild) {
