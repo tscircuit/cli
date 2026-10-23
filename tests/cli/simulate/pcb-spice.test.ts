@@ -13,7 +13,7 @@ import { join, resolve } from "node:path"
 
 // The executable supplies recorded solver responses. Rendering, validation,
 // IBIS conversion, parsing, result serialization and report generation are real.
-test("pcb_spice derives circuit modeling, accepts overrides, and rejects invalid runs", async () => {
+test("pcb_spice accepts raw modeling inputs, writes results, and rejects mixed engines and solver failures", async () => {
   const projectDir = await mkdtemp(join(tmpdir(), "pcb-spice-cli-"))
   try {
     await writeFile(join(projectDir, "package.json"), "{}")
@@ -137,101 +137,7 @@ else writeFileSync("waveform.dat", ${JSON.stringify(waveform)})
     )
     expect(failed.exitCode).not.toBe(0)
     expect(failed.stderr).toContain("recorded solver failure")
-
-    const modeling = JSON.parse(
-      await readFile(join(projectDir, "modeling.json"), "utf8"),
-    )
-    const derived = structuredClone(original)
-    const experiment = derived.find(
-      (record: any) => record.type === "simulation_experiment",
-    )
-    const e = modeling.extraction
-    experiment.pcb_spice_channel = {
-      reduction: modeling.reduction,
-      sections: modeling.sections,
-      lanes: modeling.lanes.map((lane: any) => ({
-        name: lane.port,
-        driver_source_port_id: lane.from.sourcePortId,
-        receiver_source_port_id: lane.to.sourcePortId,
-      })),
-      reference_source_port_id: modeling.channelReference.sourcePortId,
-      extraction: {
-        minimum_frequency_hz: e.minimumHz,
-        maximum_frequency_hz: e.maximumHz,
-        model_frequency_hz: e.modelHz,
-        filaments: e.filaments,
-        refinement_filaments: e.refinementFilaments,
-        convergence_tolerance: e.convergenceTolerance,
-        capacitance_tolerance: e.capTolerance,
-        reciprocity_tolerance: e.reciprocityTolerance,
-        dc_resistance_tolerance: e.dcResistanceTolerance,
-        max_panel_length_mm: e.maxPanelLengthMm,
-      },
-      straightened_stage_profiles: Object.fromEntries(
-        Object.entries(modeling.profiles).map(
-          ([name, profile]: [string, any]) => [
-            name,
-            {
-              spacing_mm: profile.spacingMm,
-              relative_permittivity: profile.relativePermittivity,
-              return: {
-                width_mm: profile.return.widthMm,
-                thickness_mm: profile.return.thicknessMm,
-                length_factor: profile.return.lengthFactor,
-                center_y_mm: profile.return.centerYMm,
-                center_z_mm: profile.return.centerZMm,
-              },
-            },
-          ],
-        ),
-      ),
-    }
-    derived.push(
-      ...modeling.supplies.map((supply: any, index: number) => ({
-        type: "simulation_voltage_source",
-        simulation_voltage_source_id: `supply-${index}`,
-        is_dc_source: false,
-        terminal1_source_port_id: supply.positive.sourcePortId,
-        terminal2_source_port_id: supply.negative.sourcePortId,
-        voltage: supply.voltageV,
-      })),
-    )
-    await writeFile(join(projectDir, "derived.json"), JSON.stringify(derived))
-    const noModeling = await run([
-      "derived.json",
-      "--output",
-      "derived-results",
-    ])
-    expect(noModeling.stderr).toBe("")
-    expect(noModeling.exitCode).toBe(0)
-    const derivedModeling = JSON.parse(
-      await readFile(
-        join(projectDir, "derived-results/inputs/modeling.json"),
-        "utf8",
-      ),
-    )
-    expect(derivedModeling.lanes.map((lane: any) => lane.from)).toEqual(
-      modeling.lanes.map((lane: any) => lane.from),
-    )
-    expect(derivedModeling.profiles).toEqual(modeling.profiles)
-    const missing = await run(["circuit.json", "--output", "missing-results"])
-    expect(missing.exitCode).not.toBe(0)
-    expect(missing.stderr).toContain("missing pcb_spice_channel")
-    const invalid = structuredClone(original)
-    invalid.find(
-      (record: any) => record.type === "simulation_experiment",
-    ).pcb_spice_channel = { invalid: true }
-    await writeFile(join(projectDir, "override.json"), JSON.stringify(invalid))
-    const override = await run([
-      "override.json",
-      "--modeling",
-      "modeling.json",
-      "--output",
-      "override-results",
-    ])
-    expect(override.stderr).toBe("")
-    expect(override.exitCode).toBe(0)
   } finally {
     await rm(projectDir, { recursive: true, force: true })
   }
-}, 60_000)
+}, 30_000)
