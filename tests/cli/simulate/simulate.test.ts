@@ -62,16 +62,14 @@ const circuitCode = `export default () => (
 )`
 
 test(
-  "simulate analog",
+  "simulate",
   async () => {
     const { tmpDir, runCommand } = await getCliTestFixture()
     const circuitPath = path.join(tmpDir, "test-circuit.tsx")
 
     await writeFile(circuitPath, circuitCode)
 
-    const { stdout, stderr } = await runCommand(
-      `tsci simulate analog ${circuitPath}`,
-    )
+    const { stdout, stderr } = await runCommand(`tsci simulate ${circuitPath}`)
 
     // Check for tabular headers
     expect(stdout).toContain("Index  time")
