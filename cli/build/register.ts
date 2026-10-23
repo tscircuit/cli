@@ -17,12 +17,13 @@ import { convertToKicadLibrary } from "lib/shared/convert-to-kicad-library"
 import { getEntrypoint } from "lib/shared/get-entrypoint"
 import { mergePlatformConfigs } from "lib/shared/platform-config-utils"
 import { copyJscdnFiles, getSiteJscdnDir } from "lib/shared/jscdn-directory"
+import { getSingleHtmlIndexFile } from "lib/site/get-single-html-index-file"
 import {
   type StaticBuildFileReference,
   getStaticIndexHtmlFile,
 } from "lib/site/getStaticIndexHtmlFile"
 import { resolveKicadLibraryName } from "lib/utils/resolve-kicad-library-name"
-import { getLatestTscircuitCdnUrl } from "../utils/get-latest-tscircuit-cdn-url"
+import { getRunFrameCdnUrl } from "../utils/get-runframe-cdn-url"
 import { validateMainInDist } from "../utils/validate-main-in-dist"
 import { type BuildCommandOptions, applyCiBuildOptions } from "./build-ci"
 import { buildFile } from "./build-file"
@@ -128,6 +129,10 @@ export const registerBuild = (program: Command) => {
     .option("--routing-disabled", "Disable routing during circuit generation")
     .option("--disable-parts-engine", "Disable the parts engine")
     .option("--site", "Generate a static site in the dist directory")
+    .option(
+      "--single-html",
+      "Embed one circuit in index.html with a CDN preview viewer (requires --site)",
+    )
     .option(
       "--bundle-jscdn",
       "Copy TSCIRCUIT_JSCDN_DIR into dist/jscdn (requires --site)",
@@ -294,9 +299,34 @@ export const registerBuild = (program: Command) => {
         if (resolvedOptions?.bundleJscdn && !resolvedOptions?.site) {
           throw new Error("--bundle-jscdn requires --site")
         }
-        const jscdnDir = resolvedOptions?.site
-          ? getSiteJscdnDir(resolvedOptions?.bundleJscdn)
-          : undefined
+        if (resolvedOptions?.singleHtml) {
+          if (!resolvedOptions.site) {
+            throw new Error("--single-html requires --site")
+          }
+          if (resolvedOptions.bundleJscdn) {
+            throw new Error("--single-html cannot be used with --bundle-jscdn")
+          }
+          if (
+            resolvedOptions.jscdnBaseUrl &&
+            !/^https?:\/\//i.test(resolvedOptions.jscdnBaseUrl)
+          ) {
+            throw new Error(
+              "--single-html requires an absolute HTTP(S) --jscdn-base-url",
+            )
+          }
+          if (
+            !resolvedOptions.ignoreConfig &&
+            projectConfig?.extraRunFrameTabs?.length
+          ) {
+            throw new Error(
+              "--single-html does not support extraRunFrameTabs; use --site without --single-html",
+            )
+          }
+        }
+        const jscdnDir =
+          resolvedOptions?.site && !resolvedOptions.singleHtml
+            ? getSiteJscdnDir(resolvedOptions?.bundleJscdn)
+            : undefined
 
         // When --kicad-project is used without a file argument and kicadProjectEntrypointPath is set,
         // use that as the file to build
@@ -317,6 +347,11 @@ export const registerBuild = (program: Command) => {
         } = await getBuildEntrypoints({
           fileOrDir: fileOrDirForBuild,
         })
+        if (resolvedOptions?.singleHtml && circuitFiles.length !== 1) {
+          throw new Error(
+            "--single-html requires exactly one circuit; pass an entry file to build",
+          )
+        }
 
         const commandPlatformConfig: PlatformConfig | undefined = (() => {
           if (
@@ -487,6 +522,7 @@ export const registerBuild = (program: Command) => {
         )
         const shouldGenerateSite3dImages = Boolean(
           resolvedOptions?.site &&
+            !resolvedOptions.singleHtml &&
             !(
               shouldGenerateAllPreviewImages && imageFormatSelection.threeDPngs
             ),
@@ -939,8 +975,10 @@ export const registerBuild = (program: Command) => {
 
         if (resolvedOptions?.site) {
           let standaloneScriptSrc = "./standalone.min.js"
-          if (resolvedOptions?.useCdnJavascript) {
-            standaloneScriptSrc = await getLatestTscircuitCdnUrl()
+          if (resolvedOptions?.useCdnJavascript || resolvedOptions.singleHtml) {
+            standaloneScriptSrc = getRunFrameCdnUrl({
+              previewOnly: resolvedOptions.singleHtml,
+            })
           } else {
             fs.writeFileSync(
               path.join(distDir, "standalone.min.js"),
@@ -957,18 +995,35 @@ export const registerBuild = (program: Command) => {
             console.log("Copying prepared JS CDN packages into dist/jscdn...")
             await copyJscdnFiles(jscdnDir, path.join(distDir, "jscdn"))
           }
-          const indexHtml = getStaticIndexHtmlFile({
-            files: staticFileReferences,
-            standaloneScriptSrc,
-            defaultMainComponentPath: siteDefaultComponentPath
-              ? normalizeRelativePath(projectDir, siteDefaultComponentPath)
-              : undefined,
-            packageName: packageName || path.basename(projectDir),
-            jscdnBaseUrl,
-            extraRunFrameTabs: resolvedOptions?.ignoreConfig
-              ? undefined
-              : projectConfig?.extraRunFrameTabs,
-          })
+          const singleHtmlBuild = resolvedOptions.singleHtml
+            ? builtFiles.find((build) => build.ok)
+            : undefined
+          if (resolvedOptions.singleHtml && !singleHtmlBuild) {
+            throw new Error(
+              "Cannot generate --single-html because the circuit build failed",
+            )
+          }
+          const indexHtml = singleHtmlBuild
+            ? getSingleHtmlIndexFile({
+                circuitJson: JSON.parse(
+                  fs.readFileSync(singleHtmlBuild.outputPath, "utf-8"),
+                ),
+                standaloneScriptSrc,
+                packageName: packageName || path.basename(projectDir),
+                jscdnBaseUrl,
+              })
+            : getStaticIndexHtmlFile({
+                files: staticFileReferences,
+                standaloneScriptSrc,
+                defaultMainComponentPath: siteDefaultComponentPath
+                  ? normalizeRelativePath(projectDir, siteDefaultComponentPath)
+                  : undefined,
+                packageName: packageName || path.basename(projectDir),
+                jscdnBaseUrl,
+                extraRunFrameTabs: resolvedOptions?.ignoreConfig
+                  ? undefined
+                  : projectConfig?.extraRunFrameTabs,
+              })
           fs.writeFileSync(path.join(distDir, "index.html"), indexHtml)
         }
 
@@ -1072,6 +1127,7 @@ export const registerBuild = (program: Command) => {
         const failCount = builtFiles.length - successCount
         const enabledOpts = [
           resolvedOptions?.site && "site",
+          resolvedOptions?.singleHtml && "single-html",
           resolvedOptions?.transpile && "transpile",
           resolvedOptions?.ignoreNetlistDrc && "ignore-netlist-drc",
           resolvedOptions?.ignorePinSpecificationDrc &&

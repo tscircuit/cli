@@ -80,6 +80,16 @@ The `build` command also accepts the following options:
 - `--ignore-pin-specification-drc` - suppress pin-specification DRC diagnostics
 - `--ignore-placement-drc` - suppress placement DRC diagnostics
 - `--ignore-routing-drc` - suppress routing DRC diagnostics
+- `--single-html` - with `--site`, embed one circuit's JSON in `dist/index.html`
+  and load a version-pinned CDN preview viewer; only the HTML needs deploying
+
+For a one-file site, run `tsci build index.circuit.tsx --site --single-html`.
+The page includes PCB, schematic and 3D views. It still needs internet access
+for the viewer and external CAD model URLs; it is not an offline export.
+Select one entry file when the project contains multiple circuits. Galleries
+and configured `extraRunFrameTabs` remain available through regular `--site`
+builds. `--use-cdn-javascript` on regular sites also uses the version-pinned
+RunFrame standalone bundle, without an embedded circuit-evaluation worker.
 
 ### Altium export
 
