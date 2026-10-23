@@ -27,7 +27,7 @@
     "@tscircuit/krt-wasm": "^0.1.6",
     "@tscircuit/math-utils": "0.0.36",
     "@tscircuit/modelprinter": "^0.0.11",
-    "@tscircuit/pcb-spice-pipeline": "https://api.github.com/repos/tscircuit/pcb-spice-pipeline/tarball/262d3a8271692c0c4d8c0e92ad67806158efc10e",
+    "@tscircuit/pcb-spice-pipeline": "https://api.github.com/repos/tscircuit/pcb-spice-pipeline/tarball/61604969163860cdc0135b31761490d73bc68a6f",
     "@tscircuit/props": "^0.0.705",
     "@tscircuit/runframe": "^0.0.3054",
     "@tscircuit/schematic-match-adapt": "^0.0.22",
