@@ -243,7 +243,7 @@ test("export circuit-json consumes runtime platformConfig from tscircuit.config.
   ).toBe(true)
 }, 30_000)
 
-test("simulate analog consumes runtime platformConfig from tscircuit.config.ts", async () => {
+test("simulate consumes runtime platformConfig from tscircuit.config.ts", async () => {
   const { tmpDir, runCommand } = await getCliTestFixture()
   const circuitPath = join(tmpDir, "analog.circuit.tsx")
 
@@ -254,7 +254,7 @@ test("simulate analog consumes runtime platformConfig from tscircuit.config.ts",
   )
 
   const { stdout, stderr, exitCode } = await runCommand(
-    `tsci simulate analog ${circuitPath}`,
+    `tsci simulate ${circuitPath}`,
   )
 
   expect(exitCode).toBe(0)
