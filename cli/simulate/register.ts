@@ -56,6 +56,8 @@ export const registerSimulate = (program: Command) => {
           )
         }
         await runPcbSpiceSimulation({
+          file,
+          projectDir,
           circuitJson,
           modeling: input.modeling,
           output: options.output,

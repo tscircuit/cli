@@ -1,5 +1,5 @@
 import { stat } from "node:fs/promises"
-import { resolve } from "node:path"
+import { join, relative, resolve } from "node:path"
 import {
   runPipeline,
   type PipelineModeling,
@@ -12,17 +12,32 @@ import {
 import type { AnyCircuitElement } from "circuit-json"
 
 export const runPcbSpiceSimulation = async ({
+  file,
+  projectDir,
   circuitJson,
   modeling,
   output,
   baseDir,
 }: {
+  file: string
+  projectDir: string
   circuitJson: AnyCircuitElement[]
   modeling?: PipelineModeling
   output?: string
   baseDir: string
 }) => {
-  const outputDir = resolve(output ?? `runs/simulation-${Date.now()}`)
+  const name = relative(projectDir, resolve(file))
+    .replace(/(?:\.(?:board|circuit))?\.(?:[jt]sx?|json(?:\.gz)?)$/i, "")
+    .replace(/[^a-z0-9_-]+/gi, "-")
+    .slice(0, 120)
+  const outputDir = resolve(
+    output ??
+      join(
+        projectDir,
+        ".tscircuit",
+        `simulation-${name || "circuit"}-${Date.now()}`,
+      ),
+  )
   try {
     await stat(outputDir)
     throw new Error(`Use a fresh output directory: ${outputDir}`)
