@@ -1,3 +1,4 @@
+import { getKicadPcbContent } from "cli/build/generate-kicad-project"
 import { convertSvgToPngBuffer } from "./convert-svg-to-png"
 import { convertCircuitJsonToPcbSvg } from "lib/shared/render-pcb-svg"
 import fs from "node:fs"
@@ -288,7 +289,7 @@ export const exportSnippet = async ({
     case "kicad_pcb": {
       const converter = new CircuitJsonToKicadPcbConverter(circuitJson)
       converter.runUntilFinished()
-      outputContent = converter.getOutputString()
+      outputContent = getKicadPcbContent(converter)
       break
     }
     case "kicad_zip": {
@@ -313,7 +314,7 @@ export const exportSnippet = async ({
       })) {
         zip.file(schematicFile.filename, schematicFile.content)
       }
-      zip.file(`${outputBaseName}.kicad_pcb`, pcbConverter.getOutputString())
+      zip.file(`${outputBaseName}.kicad_pcb`, getKicadPcbContent(pcbConverter))
       zip.file(`${outputBaseName}.kicad_pro`, proConverter.getOutputString())
 
       await resolveAndLoadKicad3dModelFiles({
