@@ -16,14 +16,13 @@ type AnalogOptions = { disablePartsEngine?: boolean; output?: string }
 
 export const registerSimulate = (program: Command) => {
   const simulateCommand = program
+    .enablePositionalOptions()
     .command("simulate")
     .description("Run a simulation")
 
   registerReturnCurrentSimulation(simulateCommand)
 
   simulateCommand
-    .command("analog")
-    .description("Run an analog SPICE simulation")
     .argument("<file>", "Path to tscircuit tsx or circuit json file")
     .option("--disable-parts-engine", "Disable the parts engine")
     .option("--output <directory>", "Fresh pcb_spice report directory")
@@ -66,7 +65,7 @@ export const registerSimulate = (program: Command) => {
       }
       if (engines.some((engine) => engine && engine !== "ngspice")) {
         throw new Error(
-          "simulate analog supports ngspice or pcb_spice experiments",
+          "simulate supports ngspice or pcb_spice experiments",
         )
       }
       if (options.output) {
