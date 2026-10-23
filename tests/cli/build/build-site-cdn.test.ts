@@ -4,14 +4,26 @@ import path from "node:path"
 import { runInNewContext } from "node:vm"
 import { getCliTestFixture } from "tests/fixtures/get-cli-test-fixture"
 
-const readCircuitFromHtml = (html: string) => {
+const readCircuitFromHtml = async (html: string) => {
   const window: Record<string, unknown> = {}
-  runInNewContext(html.match(/<script>([\s\S]*?)<\/script>/)![1], { window })
-  return window.CIRCUIT_JSON
+  runInNewContext(html.match(/<script>([\s\S]*?)<\/script>/)![1], {
+    window,
+    URL,
+    Blob,
+  })
+  const files = window.TSCIRCUIT_RUNFRAME_STATIC_FILE_LIST as Array<{
+    fileStaticAssetUrl: string
+  }>
+  const url = files[0]!.fileStaticAssetUrl
+  try {
+    return await fetch(url).then((response) => response.json())
+  } finally {
+    URL.revokeObjectURL(url)
+  }
 }
 
 for (const standalone of [false, true]) {
-  test(`single HTML builds without network access or local site assets (standalone=${standalone})`, async () => {
+  test(`single-circuit CDN sites embed JSON without network access or local site assets (standalone=${standalone})`, async () => {
     const { tmpDir } = await getCliTestFixture()
     const circuitJson = [
       {
@@ -25,7 +37,7 @@ for (const standalone of [false, true]) {
     )
     await writeFile(
       path.join(tmpDir, "package.json"),
-      '{"name":"test/single-html"}',
+      '{"name":"test/cdn-site"}',
     )
     const preload = path.join(tmpDir, "no-fetch.ts")
     await writeFile(
@@ -41,7 +53,7 @@ for (const standalone of [false, true]) {
         "build",
         "board.circuit.json",
         "--site",
-        "--single-html",
+        "--use-cdn-javascript",
       ],
       {
         cwd: tmpDir,
@@ -64,9 +76,9 @@ for (const standalone of [false, true]) {
     expect(stderr).toBe("")
     expect(exitCode).toBe(0)
     const html = await readFile(path.join(tmpDir, "dist/index.html"), "utf8")
-    expect(readCircuitFromHtml(html)).toEqual(circuitJson)
-    expect(html).toContain("/dist/standalone-preview.min.js")
-    expect(html).not.toContain("./board/circuit.json")
+    expect(await readCircuitFromHtml(html)).toEqual(circuitJson)
+    expect(html).toContain("/dist/standalone.min.js")
+    expect(html).toContain("URL.createObjectURL(new Blob(")
     expect(html).not.toContain('"./jscdn"')
     await expect(
       stat(path.join(tmpDir, "dist/standalone.min.js")),
@@ -78,7 +90,7 @@ for (const standalone of [false, true]) {
 }
 
 for (const concurrency of [1, 2]) {
-  test(`single HTML embeds compiled TSX with concurrency ${concurrency}`, async () => {
+  test(`CDN sites embed compiled TSX with concurrency ${concurrency}`, async () => {
     const { tmpDir, runCommand } = await getCliTestFixture()
     await writeFile(path.join(tmpDir, "package.json"), "{}")
     await symlink(
@@ -94,7 +106,7 @@ for (const concurrency of [1, 2]) {
     )`,
     )
     const { stderr, exitCode } = await runCommand(
-      `tsci build board.circuit.tsx --site --single-html --concurrency ${concurrency}`,
+      `tsci build board.circuit.tsx --site --use-cdn-javascript --concurrency ${concurrency}`,
     )
     expect(stderr).toBe("")
     expect(exitCode).toBe(0)
@@ -105,71 +117,53 @@ for (const concurrency of [1, 2]) {
     expect(circuitJson.some((item: any) => item.type === "pcb_board")).toBe(
       true,
     )
-    expect(readCircuitFromHtml(html)).toEqual(circuitJson)
+    expect(await readCircuitFromHtml(html)).toEqual(circuitJson)
   }, 30_000)
 }
 
-for (const [options, error] of [
-  ["--single-html", "--single-html requires --site"],
-  [
-    "--site --single-html --bundle-jscdn",
-    "--single-html cannot be used with --bundle-jscdn",
-  ],
-  [
-    "--site --single-html --jscdn-base-url ./jscdn",
-    "--single-html requires an absolute HTTP(S) --jscdn-base-url",
-  ],
-]) {
-  test(`rejects invalid single HTML options: ${options}`, async () => {
-    const { tmpDir, runCommand } = await getCliTestFixture()
-    await writeFile(path.join(tmpDir, "board.circuit.json"), "[]")
-    const { stderr, exitCode } = await runCommand(
-      `tsci build board.circuit.json ${options}`,
-    )
-    expect(exitCode).toBe(1)
-    expect(stderr).toContain(error)
-    await expect(
-      stat(path.join(tmpDir, "dist/index.html")),
-    ).rejects.toBeTruthy()
-  })
-}
-
-test("single HTML requires an explicit entry when there are multiple circuits", async () => {
+test("CDN sites preserve configured custom tabs with embedded JSON", async () => {
   const { tmpDir, runCommand } = await getCliTestFixture()
-  await writeFile(path.join(tmpDir, "first.circuit.json"), "[]")
-  await writeFile(path.join(tmpDir, "second.circuit.json"), "[]")
-  const { stderr, exitCode } = await runCommand(
-    "tsci build --site --single-html",
-  )
-  expect(exitCode).toBe(1)
-  expect(stderr).toContain("--single-html requires exactly one circuit")
-  await expect(stat(path.join(tmpDir, "dist/index.html"))).rejects.toBeTruthy()
-})
-
-test("single HTML reports unsupported custom tabs instead of discarding them", async () => {
-  const { tmpDir, runCommand } = await getCliTestFixture()
+  const extraRunFrameTabs = [
+    {
+      tabName: "Docs",
+      iframeUrl: "https://example.com",
+      mainComponentPath: "board.circuit.json",
+    },
+  ]
   await writeFile(path.join(tmpDir, "board.circuit.json"), "[]")
   await writeFile(
     path.join(tmpDir, "tscircuit.config.json"),
-    JSON.stringify({
-      extraRunFrameTabs: [
-        { tabName: "Docs", iframeUrl: "https://example.com" },
-      ],
-    }),
+    JSON.stringify({ extraRunFrameTabs }),
   )
   const { stderr, exitCode } = await runCommand(
-    "tsci build board.circuit.json --site --single-html",
+    "tsci build board.circuit.json --site --use-cdn-javascript",
   )
-  expect(exitCode).toBe(1)
-  expect(stderr).toContain("--single-html does not support extraRunFrameTabs")
-})
+  expect(stderr).toBe("")
+  expect(exitCode).toBe(0)
+  const html = await readFile(path.join(tmpDir, "dist/index.html"), "utf8")
+  const window: Record<string, any> = {}
+  runInNewContext(html.match(/<script>([\s\S]*?)<\/script>/)![1], {
+    window,
+    URL,
+    Blob,
+  })
+  expect(window.TSCIRCUIT_EXTRA_RUNFRAME_TABS).toEqual(extraRunFrameTabs)
+  const url = window.TSCIRCUIT_RUNFRAME_STATIC_FILE_LIST[0].fileStaticAssetUrl
+  try {
+    expect(await fetch(url).then((r) => r.json())).toEqual([])
+  } finally {
+    URL.revokeObjectURL(url)
+  }
+}, 30_000)
 
-test("failed circuits cannot produce an apparently successful single HTML site", async () => {
+test("single-circuit CDN sites still honor explicit preview image options", async () => {
   const { tmpDir, runCommand } = await getCliTestFixture()
-  await writeFile(path.join(tmpDir, "board.circuit.json"), "invalid JSON")
-  const { exitCode } = await runCommand(
-    "tsci build board.circuit.json --site --single-html",
+  await writeFile(path.join(tmpDir, "board.circuit.json"), "[]")
+  const { stderr, exitCode } = await runCommand(
+    "tsci build board.circuit.json --site --use-cdn-javascript --3d-png",
   )
-  expect(exitCode).toBe(1)
-  await expect(stat(path.join(tmpDir, "dist/index.html"))).rejects.toBeTruthy()
-})
+  expect(stderr).toBe("")
+  expect(exitCode).toBe(0)
+  const png = await readFile(path.join(tmpDir, "dist/board/3d.png"))
+  expect(png.subarray(0, 4)).toEqual(Buffer.from([0x89, 0x50, 0x4e, 0x47]))
+}, 30_000)

@@ -80,16 +80,18 @@ The `build` command also accepts the following options:
 - `--ignore-pin-specification-drc` - suppress pin-specification DRC diagnostics
 - `--ignore-placement-drc` - suppress placement DRC diagnostics
 - `--ignore-routing-drc` - suppress routing DRC diagnostics
-- `--single-html` - with `--site`, embed one circuit's JSON in `dist/index.html`
-  and load a version-pinned CDN preview viewer; only the HTML needs deploying
+- `--use-cdn-javascript` - with `--site`, load the version-pinned RunFrame
+  standalone viewer from a CDN, without the embedded circuit-evaluation worker
 
-For a one-file site, run `tsci build index.circuit.tsx --site --single-html`.
-The page includes PCB, schematic and 3D views. It still needs internet access
-for the viewer and external CAD model URLs; it is not an offline export.
-Select one entry file when the project contains multiple circuits. Galleries
-and configured `extraRunFrameTabs` remain available through regular `--site`
-builds. `--use-cdn-javascript` on regular sites also uses the version-pinned
-RunFrame standalone bundle, without an embedded circuit-evaluation worker.
+For a single-circuit site, run
+`tsci build index.circuit.tsx --site --use-cdn-javascript` and deploy just
+`dist/index.html`. Circuit JSON is embedded in the page, and PCB, schematic,
+3D views and configured custom tabs remain available. The viewer, external
+CAD models and custom iframe tabs still require their external URLs; this is
+not an offline export. Explicit `--bundle-jscdn` or a local `--jscdn-base-url`
+also requires deploying those assets. Multi-circuit sites retain their gallery
+and separate Circuit JSON/thumbnail files. Omit `--use-cdn-javascript` to keep
+the viewer and Circuit JSON as local site assets.
 
 ### Altium export
 

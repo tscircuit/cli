@@ -40,12 +40,13 @@ test("build with --site generates index.html and standalone.min.js", async () =>
   expect(standaloneJs.isFile()).toBe(true)
 }, 30_000)
 
-for (const { standalone, customBase } of [
-  { standalone: false, customBase: undefined },
-  { standalone: false, customBase: "/assets/jscdn" },
-  { standalone: true, customBase: undefined },
+for (const { standalone, customBase, cdn } of [
+  { standalone: false, customBase: undefined, cdn: false },
+  { standalone: false, customBase: "/assets/jscdn", cdn: false },
+  { standalone: true, customBase: undefined, cdn: false },
+  { standalone: false, customBase: undefined, cdn: true },
 ]) {
-  test(`${standalone ? "standalone build --site" : "--bundle-jscdn"} copies prepared packages with base ${customBase ?? "./jscdn"}`, async () => {
+  test(`${standalone ? "standalone build --site" : "--bundle-jscdn"}${cdn ? " --use-cdn-javascript" : ""} copies prepared packages with base ${customBase ?? "./jscdn"}`, async () => {
     const { tmpDir } = await getCliTestFixture()
     const source = path.join(tmpDir, "prepared-jscdn")
     await writePreparedJscdn(source)
@@ -67,6 +68,7 @@ for (const { standalone, customBase } of [
       ...(standalone ? [] : ["--bundle-jscdn"]),
     ]
     if (customBase) args.push("--jscdn-base-url", customBase)
+    if (cdn) args.push("--use-cdn-javascript")
     const subprocess = Bun.spawn(args, {
       cwd: tmpDir,
       env: {
@@ -154,6 +156,10 @@ test("build with --site generates only 3D preview images for every circuit", asy
 
   const { stderr } = await runCommand("tsci build --site --use-cdn-javascript")
   expect(stderr).toBe("")
+  const html = await readFile(path.join(tmpDir, "dist/index.html"), "utf8")
+  expect(html).not.toContain("URL.createObjectURL")
+  expect(html).toContain("./first/circuit.json")
+  expect(html).toContain("./second/circuit.json")
 
   for (const circuitName of ["first", "second"]) {
     const outputDir = path.join(tmpDir, "dist", circuitName)
