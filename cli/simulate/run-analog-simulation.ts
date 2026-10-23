@@ -1,5 +1,3 @@
-import { readFile } from "node:fs/promises"
-import { resolve } from "node:path"
 import type { PlatformConfig } from "@tscircuit/props"
 import { runSimulation } from "lib/eecircuit-engine/run-simulation"
 import { loadRuntimeProjectConfig } from "lib/project-config"
@@ -14,7 +12,6 @@ import { runPcbSpiceSimulation } from "./run-pcb-spice-simulation"
 export type AnalogOptions = {
   disablePartsEngine?: boolean
   output?: string
-  modeling?: string
 }
 
 export const runAnalogSimulation = async (
@@ -48,12 +45,9 @@ export const runAnalogSimulation = async (
         "Mixed pcb_spice and other SPICE engines are unsupported; run separate entries for each engine",
       )
     }
-    const modeling = options.modeling
-      ? JSON.parse(await readFile(resolve(options.modeling), "utf8"))
-      : input.modeling
     await runPcbSpiceSimulation({
       circuitJson,
-      modeling,
+      modeling: input.modeling,
       output: options.output,
       baseDir,
     })
@@ -62,8 +56,8 @@ export const runAnalogSimulation = async (
   if (engines.some((engine) => engine && engine !== "ngspice")) {
     throw new Error("simulate analog supports ngspice or pcb_spice experiments")
   }
-  if (options.output || options.modeling) {
-    throw new Error('--output and --modeling require spiceEngine="pcb_spice"')
+  if (options.output) {
+    throw new Error('--output requires spiceEngine="pcb_spice"')
   }
   const spiceString = getSpiceWithPaddedSim(circuitJson)
 
