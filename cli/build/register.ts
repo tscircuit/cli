@@ -22,7 +22,7 @@ import {
   getStaticIndexHtmlFile,
 } from "lib/site/getStaticIndexHtmlFile"
 import { resolveKicadLibraryName } from "lib/utils/resolve-kicad-library-name"
-import { getLatestTscircuitCdnUrl } from "../utils/get-latest-tscircuit-cdn-url"
+import { getRunFrameCdnUrl } from "../utils/get-runframe-cdn-url"
 import { validateMainInDist } from "../utils/validate-main-in-dist"
 import { type BuildCommandOptions, applyCiBuildOptions } from "./build-ci"
 import { buildFile } from "./build-file"
@@ -294,9 +294,11 @@ export const registerBuild = (program: Command) => {
         if (resolvedOptions?.bundleJscdn && !resolvedOptions?.site) {
           throw new Error("--bundle-jscdn requires --site")
         }
-        const jscdnDir = resolvedOptions?.site
-          ? getSiteJscdnDir(resolvedOptions?.bundleJscdn)
-          : undefined
+        const jscdnDir =
+          resolvedOptions?.site &&
+          (!resolvedOptions.useCdnJavascript || resolvedOptions.bundleJscdn)
+            ? getSiteJscdnDir(resolvedOptions?.bundleJscdn)
+            : undefined
 
         // When --kicad-project is used without a file argument and kicadProjectEntrypointPath is set,
         // use that as the file to build
@@ -317,6 +319,11 @@ export const registerBuild = (program: Command) => {
         } = await getBuildEntrypoints({
           fileOrDir: fileOrDirForBuild,
         })
+        const isSingleCircuitCdnSite = Boolean(
+          resolvedOptions?.site &&
+            resolvedOptions.useCdnJavascript &&
+            circuitFiles.length === 1,
+        )
 
         const commandPlatformConfig: PlatformConfig | undefined = (() => {
           if (
@@ -487,6 +494,7 @@ export const registerBuild = (program: Command) => {
         )
         const shouldGenerateSite3dImages = Boolean(
           resolvedOptions?.site &&
+            !isSingleCircuitCdnSite &&
             !(
               shouldGenerateAllPreviewImages && imageFormatSelection.threeDPngs
             ),
@@ -939,8 +947,8 @@ export const registerBuild = (program: Command) => {
 
         if (resolvedOptions?.site) {
           let standaloneScriptSrc = "./standalone.min.js"
-          if (resolvedOptions?.useCdnJavascript) {
-            standaloneScriptSrc = await getLatestTscircuitCdnUrl()
+          if (resolvedOptions.useCdnJavascript) {
+            standaloneScriptSrc = await getRunFrameCdnUrl()
           } else {
             fs.writeFileSync(
               path.join(distDir, "standalone.min.js"),
@@ -957,9 +965,15 @@ export const registerBuild = (program: Command) => {
             console.log("Copying prepared JS CDN packages into dist/jscdn...")
             await copyJscdnFiles(jscdnDir, path.join(distDir, "jscdn"))
           }
+          const embeddedBuild = isSingleCircuitCdnSite
+            ? builtFiles.find((build) => build.ok)
+            : undefined
           const indexHtml = getStaticIndexHtmlFile({
             files: staticFileReferences,
             standaloneScriptSrc,
+            embeddedCircuitJson: embeddedBuild
+              ? JSON.parse(fs.readFileSync(embeddedBuild.outputPath, "utf-8"))
+              : undefined,
             defaultMainComponentPath: siteDefaultComponentPath
               ? normalizeRelativePath(projectDir, siteDefaultComponentPath)
               : undefined,
