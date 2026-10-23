@@ -1,4 +1,4 @@
-import { readFile, stat } from "node:fs/promises"
+import { stat } from "node:fs/promises"
 import { resolve } from "node:path"
 import {
   runPipeline,
@@ -29,14 +29,11 @@ export const runPcbSpiceSimulation = async ({
   } catch (error) {
     if ((error as NodeJS.ErrnoException).code !== "ENOENT") throw error
   }
-  const tools = process.env.PCB_SPICE_TOOLS
-    ? JSON.parse(await readFile(resolve(process.env.PCB_SPICE_TOOLS), "utf8"))
-    : undefined
   const result = await runPipeline({
     circuitJson,
     modeling,
     ibisSources: await loadIbisSources({ circuitJson, baseDir }),
-    runSolver: createNativeSolver({ tools }),
+    runSolver: createNativeSolver(),
   })
   await writePipelineOutput({ result, outputDir })
   console.log(`Simulation results written to ${outputDir}`)
