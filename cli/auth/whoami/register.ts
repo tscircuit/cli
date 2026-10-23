@@ -1,7 +1,7 @@
 import type { Command } from "commander"
+import kleur from "kleur"
 import { cliConfig, getSessionToken } from "lib/cli-config"
 import { fetchAccount } from "lib/registry-api/fetch-account"
-import kleur from "kleur"
 
 const formatDate = (date: string | undefined): string | null => {
   if (!date) return null
@@ -25,7 +25,17 @@ export const registerAuthWhoami = (program: Command) => {
         return
       }
 
-      const account = await fetchAccount()
+      let account: Awaited<ReturnType<typeof fetchAccount>>
+      try {
+        account = await fetchAccount({ throwOnError: true })
+      } catch (error) {
+        console.error(
+          kleur.red(
+            `Could not verify your account: ${error instanceof Error ? error.message : String(error)}`,
+          ),
+        )
+        process.exit(1)
+      }
 
       console.log(kleur.bold().green("\nLogged in user:\n"))
       console.log(

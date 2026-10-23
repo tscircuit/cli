@@ -1,6 +1,6 @@
 import { afterEach, beforeEach, expect, spyOn, test } from "bun:test"
-import { Command } from "commander"
 import { registerAuthPrintToken } from "cli/auth/print-token/register"
+import { Command } from "commander"
 import { cliConfig, getSessionToken } from "lib/cli-config"
 import { fetchAccount } from "lib/registry-api/fetch-account"
 import { getRegistryApiKy } from "lib/registry-api/get-ky"
@@ -110,6 +110,51 @@ test("fetchAccount uses the environment token's account instead of the saved acc
 
   try {
     expect((await fetchAccount())?.account_id).toBe("environment-account")
+  } finally {
+    server.stop()
+  }
+})
+
+test("fetchAccount throws on registry HTTP failure when throwOnError is true", async () => {
+  process.env.TSCIRCUIT_TOKEN = "environment-token"
+  const server = Bun.serve({
+    port: 0,
+    fetch: () =>
+      Response.json(
+        {
+          error: {
+            error_code: "service_unavailable",
+            message: "Database connection failed",
+          },
+        },
+        { status: 503 },
+      ),
+  })
+  cliConfig.set("registryApiUrl", server.url.toString())
+
+  try {
+    expect(await fetchAccount()).toBeNull()
+    await expect(fetchAccount({ throwOnError: true })).rejects.toThrow(
+      "FAIL [503]: POST /accounts/get\nservice_unavailable: Database connection failed",
+    )
+  } finally {
+    server.stop()
+  }
+})
+
+test("fetchAccount throws when registry returns 200 without an account object", async () => {
+  process.env.TSCIRCUIT_TOKEN = "environment-token"
+  const server = Bun.serve({
+    port: 0,
+    fetch: () => Response.json({ ok: true }),
+  })
+  cliConfig.set("registryApiUrl", server.url.toString())
+
+  try {
+    expect(await fetchAccount()).toBeNull()
+    await expect(fetchAccount({ throwOnError: true })).rejects.toThrow(
+      "Invalid response from registry /accounts/get: missing account object",
+    )
   } finally {
     server.stop()
   }

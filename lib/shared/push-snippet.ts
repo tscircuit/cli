@@ -1,20 +1,20 @@
-import { cliConfig, getSessionToken } from "lib/cli-config"
-import { fetchAccount } from "lib/registry-api/fetch-account"
-import { getRegistryApiKy } from "lib/registry-api/get-ky"
 import * as fs from "node:fs"
 import * as path from "node:path"
-import semver from "semver"
+import { gzipSync } from "node:zlib"
 import Debug from "debug"
 import kleur from "kleur"
-import { getEntrypoint } from "./get-entrypoint"
-import prompts from "lib/utils/prompts"
-import { getUnscopedPackageName } from "lib/utils/get-unscoped-package-name"
-import { getPackageAuthor } from "lib/utils/get-package-author"
-import { validatePackageName } from "lib/utils/validate-package-name"
+import { cliConfig, getSessionToken } from "lib/cli-config"
 import { getPackageFilePaths } from "lib/dev/get-package-file-paths"
-import { isBinaryFile } from "./is-binary-file"
+import { fetchAccount } from "lib/registry-api/fetch-account"
+import { getRegistryApiKy } from "lib/registry-api/get-ky"
+import { getPackageAuthor } from "lib/utils/get-package-author"
+import { getUnscopedPackageName } from "lib/utils/get-unscoped-package-name"
+import prompts from "lib/utils/prompts"
+import { validatePackageName } from "lib/utils/validate-package-name"
+import semver from "semver"
+import { getEntrypoint } from "./get-entrypoint"
 import { hasBinaryContent } from "./has-binary-content"
-import { gzipSync } from "node:zlib"
+import { isBinaryFile } from "./is-binary-file"
 
 type PushOptions = {
   filePath?: string
@@ -178,9 +178,20 @@ export const pushSnippet = async ({
   }
 
   const ky = getRegistryApiKy({ sessionToken })
-  const currentUsername = process.env.TSCIRCUIT_TOKEN
-    ? (await fetchAccount())?.tscircuit_handle
-    : cliConfig.get("tscircuitHandle")
+  let currentUsername: string | undefined
+  if (process.env.TSCIRCUIT_TOKEN) {
+    try {
+      const account = await fetchAccount({ throwOnError: true })
+      currentUsername = account?.tscircuit_handle
+    } catch (error) {
+      onError(
+        `Could not verify your account for publishing: ${error instanceof Error ? error.message : String(error)}\nRetry when the registry is available.`,
+      )
+      return onExit(1)
+    }
+  } else {
+    currentUsername = cliConfig.get("tscircuitHandle")
+  }
   if (!currentUsername) {
     onError("You need to set your tscircuit handle to publish packages")
     return onExit(1)
