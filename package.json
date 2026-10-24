@@ -15,7 +15,7 @@
     "@biomejs/biome": "^1.9.4",
     "@tscircuit/check-shorts": "https://jscdn.tscircuit.com/@tscircuit/check-shorts/0.0.26.tgz",
     "@tscircuit/circuit-json-pcb-style-analysis": "https://jscdn.tscircuit.com/@tscircuit/circuit-json-pcb-style-analysis/0.0.5.tgz",
-    "@tscircuit/circuit-json-placement-analysis": "^0.0.15",
+    "@tscircuit/circuit-json-placement-analysis": "^0.0.17",
     "@tscircuit/circuit-json-routing-analysis": "^0.0.8",
     "@tscircuit/circuit-json-schematic-placement-analysis": "https://jscdn.tscircuit.com/@tscircuit/circuit-json-schematic-placement-analysis/0.0.72.tgz",
     "@tscircuit/circuit-json-util": "^0.0.121",

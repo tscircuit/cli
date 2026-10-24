@@ -9,7 +9,7 @@
         "@biomejs/biome": "^1.9.4",
         "@tscircuit/check-shorts": "https://jscdn.tscircuit.com/@tscircuit/check-shorts/0.0.26.tgz",
         "@tscircuit/circuit-json-pcb-style-analysis": "https://jscdn.tscircuit.com/@tscircuit/circuit-json-pcb-style-analysis/0.0.5.tgz",
-        "@tscircuit/circuit-json-placement-analysis": "^0.0.15",
+        "@tscircuit/circuit-json-placement-analysis": "^0.0.17",
         "@tscircuit/circuit-json-routing-analysis": "^0.0.8",
         "@tscircuit/circuit-json-schematic-placement-analysis": "https://jscdn.tscircuit.com/@tscircuit/circuit-json-schematic-placement-analysis/0.0.72.tgz",
         "@tscircuit/circuit-json-util": "^0.0.121",
@@ -413,7 +413,7 @@
 
     "@tscircuit/circuit-json-pcb-style-analysis": ["@tscircuit/circuit-json-pcb-style-analysis@https://jscdn.tscircuit.com/@tscircuit/circuit-json-pcb-style-analysis/0.0.5.tgz", { "dependencies": { "@tscircuit/solver-utils": "0.0.21", "graphics-debug": "0.0.94" }, "peerDependencies": { "circuit-json": "*", "typescript": "^5" }, "bin": { "pcb-style-analysis": "./lib/cli.ts" } }, "sha512-s8gNjg384vzkJIwtoVFIpm/8MCTgyYLpHo5cs1+iAoCZO7NmCMdHKl7/LJDJlslJzFIYWwTIZYubL7IQgEaIgQ=="],
 
-    "@tscircuit/circuit-json-placement-analysis": ["@tscircuit/circuit-json-placement-analysis@0.0.15", "", { "dependencies": { "flatbush": "^4.5.1", "rbush": "^4.0.1" }, "peerDependencies": { "typescript": "^5" } }, "sha512-6ihkUeXEYN/Wm1YUIS3Q9quT+RLrPav6mTvYxmRyRKU40IVY6T9B5CdLl8jpGpMom4zFJX9CYzj8kFFc8WS4SA=="],
+    "@tscircuit/circuit-json-placement-analysis": ["@tscircuit/circuit-json-placement-analysis@0.0.17", "", { "dependencies": { "flatbush": "^4.5.1", "rbush": "^4.0.1" }, "peerDependencies": { "typescript": "^5" } }, "sha512-sPNY62nFD+e8syoDlc3e2lmw/SzeovRLl1syFUzm4b4aewLDkFu/4OEkhgg1Ge38ukNFu1oiajGyVIWok30Bjg=="],
 
     "@tscircuit/circuit-json-routing-analysis": ["@tscircuit/circuit-json-routing-analysis@0.0.8", "", { "peerDependencies": { "circuit-json": "*", "typescript": "^5" } }, "sha512-mZxRSUbqVb6iZ47ZhNL3mDL7BY9kUcbLg7o4f8Jn5amkDGvmTo52547JQ5ui/6WSJHXmaW7hmRVTEj6PlivskQ=="],
 
