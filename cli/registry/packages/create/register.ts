@@ -18,7 +18,7 @@ export const getRegistryPackageName = ({
   org?: string
 }) => {
   if (!org) return packageName
-  return `@tsci/${org}.${packageName}`
+  return `${org}/${packageName}`
 }
 
 export const getIsPrivateFromOptions = ({
