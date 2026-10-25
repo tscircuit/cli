@@ -1,0 +1,89 @@
+{
+  "scope": "Generated native two-stage event/artifact retention benchmark; no routing algorithm changes",
+  "bun": "1.4.2",
+  "cases": [
+    {
+      "mode": "single",
+      "inputFixtureSha256": "c57a676e797d5f5e25be9d88a0e5f840fe902bda6cbd9769ac95e7fd290197aa",
+      "retainedInputs": 1,
+      "retainedOutputs": 1,
+      "allStageOutputsRetained": true,
+      "outputHashes": [
+        "906a5e8fb1d40b4a898ab3e08c163ee259949042465f7a49c0a3a4b9e235bda2"
+      ],
+      "retainedImages": 0,
+      "allStageInputsRetained": true,
+      "legacySingleStageNames": true,
+      "finalImageSha256": null,
+      "files": [
+        "board.meta.json",
+        "phase-7.input.simple-route.json",
+        "phase-7.output.traces.json"
+      ],
+      "medianMs": 0.2929680000000019,
+      "trialsMs": [
+        0.20028500000000804,
+        0.21014499999998293,
+        0.2929680000000019,
+        0.31610800000001404,
+        0.329008999999985
+      ]
+    },
+    {
+      "mode": "two",
+      "inputFixtureSha256": "c57a676e797d5f5e25be9d88a0e5f840fe902bda6cbd9769ac95e7fd290197aa",
+      "retainedInputs": 1,
+      "retainedOutputs": 1,
+      "allStageOutputsRetained": false,
+      "outputHashes": [
+        "906a5e8fb1d40b4a898ab3e08c163ee259949042465f7a49c0a3a4b9e235bda2"
+      ],
+      "retainedImages": 0,
+      "allStageInputsRetained": false,
+      "legacySingleStageNames": true,
+      "finalImageSha256": null,
+      "files": [
+        "board.meta.json",
+        "phase-7.input.simple-route.json",
+        "phase-7.output.traces.json"
+      ],
+      "medianMs": 0.36012999999999806,
+      "trialsMs": [
+        0.2912870000000112,
+        0.35496899999998277,
+        0.36012999999999806,
+        0.4341519999999832,
+        0.4586319999999944
+      ]
+    },
+    {
+      "mode": "two_images",
+      "inputFixtureSha256": "c57a676e797d5f5e25be9d88a0e5f840fe902bda6cbd9769ac95e7fd290197aa",
+      "retainedInputs": 1,
+      "retainedOutputs": 1,
+      "allStageOutputsRetained": false,
+      "outputHashes": [
+        "906a5e8fb1d40b4a898ab3e08c163ee259949042465f7a49c0a3a4b9e235bda2"
+      ],
+      "retainedImages": 1,
+      "allStageInputsRetained": false,
+      "legacySingleStageNames": true,
+      "finalImageSha256": "84c9b19f244800b165af344fcf138084047c596273d46dbb64cefe13d9b55bcc",
+      "files": [
+        "board.meta.json",
+        "phase-7-routed.png",
+        "phase-7.input.simple-route.json",
+        "phase-7.output.traces.json",
+        "placement-unrouted.png"
+      ],
+      "medianMs": 94.825605,
+      "trialsMs": [
+        87.09903700000001,
+        92.162374,
+        94.825605,
+        96.895981,
+        103.73558499999996
+      ]
+    }
+  ]
+}

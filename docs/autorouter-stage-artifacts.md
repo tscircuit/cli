@@ -24,3 +24,11 @@ artifact costs on a synthetic control, not a board-routing speed claim.
 Raw local reports: [base](autorouter-stage-artifacts-local-base.json) and
 [head](autorouter-stage-artifacts-local-head.json). Blacksmith CI repeats the
 paired comparison on every PR and checks content retention and compatibility.
+
+Hosted Blacksmith run [40227035922](https://github.com/tscircuit/cli/actions/runs/40227035922)
+is green (Bun 1.4.2, 8 ARM CPUs): retention and hash compatibility checks pass,
+and 12/12 focused tests pass with 77 assertions. Median milliseconds base/head:
+single 0.293/0.220, two without images 0.360/0.397, two with images 94.826/88.838.
+This is a small synthetic diagnostic workload; no board routing speed inference.
+Raw hosted reports: [base](autorouter-stage-artifacts-blacksmith-base.json),
+[head](autorouter-stage-artifacts-blacksmith-head.json).
