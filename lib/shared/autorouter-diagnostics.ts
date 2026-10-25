@@ -410,7 +410,7 @@ export class AutorouterDiagnostics {
 
     if (this.options.enabled) {
       this.writePngSnapshot(
-        `phase-${activePhase.routingPhaseIndex}-routed.png`,
+        `${this.getPhaseArtifactPrefix(activePhase)}-routed.png`,
         this.getCircuitJsonWithCompletedPhaseTraces(),
       )
     }
@@ -752,9 +752,19 @@ export class AutorouterDiagnostics {
     return element.type === "pcb_trace" || element.type === "pcb_via"
   }
 
-  private getPhaseFileName(activePhase: ActivePhase, suffix: string) {
+  private getPhaseArtifactPrefix(activePhase: ActivePhase) {
     const phaseNumber = activePhase.routingPhaseIndex
-    return `phase-${phaseNumber}.${suffix}`
+    const stage =
+      activePhase.phaseStageCount !== undefined &&
+      activePhase.phaseStageCount > 1 &&
+      activePhase.phaseStageIndex !== undefined
+        ? `-stage-${activePhase.phaseStageIndex}`
+        : ""
+    return `phase-${phaseNumber}${stage}`
+  }
+
+  private getPhaseFileName(activePhase: ActivePhase, suffix: string) {
+    return `${this.getPhaseArtifactPrefix(activePhase)}.${suffix}`
   }
 
   private getPhaseLabel(activePhase: ActivePhase) {

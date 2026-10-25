@@ -1,7 +1,7 @@
 import { EventEmitter } from "node:events"
 import type { CircuitJson } from "circuit-json"
-import fixture from "./native-two-stage-diagnostics.json"
 import { AutorouterDiagnostics } from "lib/shared/autorouter-diagnostics"
+import fixture from "./native-two-stage-diagnostics.json"
 /** Re-emits captured synthetic native events. Geometry is unchanged PCB-world
  * points in mm, +X right, +Y up, +Z above, right handed. */
 export function emitNativeTwoStageDiagnostics(

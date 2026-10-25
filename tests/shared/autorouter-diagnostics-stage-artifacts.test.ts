@@ -11,16 +11,16 @@ test("keeps inputs, outputs and routed images for both stages of the same phase"
     const { stages } = emitNativeTwoStageDiagnostics(directory)
     for (const [stageIndex, stage] of stages.entries()) {
       const prefix = path.join(directory, `phase-7-stage-${stageIndex}`)
-      expect(fs.existsSync(prefix + ".input.simple-route.json")).toBe(true)
+      expect(fs.existsSync(`${prefix}.input.simple-route.json`)).toBe(true)
       expect(
         JSON.parse(
-          fs.readFileSync(prefix + ".input.simple-route.json", "utf8"),
+          fs.readFileSync(`${prefix}.input.simple-route.json`, "utf8"),
         ),
       ).toEqual(stage.input)
       expect(
-        JSON.parse(fs.readFileSync(prefix + ".output.traces.json", "utf8")),
+        JSON.parse(fs.readFileSync(`${prefix}.output.traces.json`, "utf8")),
       ).toEqual(stage.output.traces)
-      expect(fs.statSync(prefix + "-routed.png").size).toBeGreaterThan(0)
+      expect(fs.statSync(`${prefix}-routed.png`).size).toBeGreaterThan(0)
     }
     expect(
       fs

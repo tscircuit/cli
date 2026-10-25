@@ -1,0 +1,37 @@
+name: Autorouter stage artifact comparison
+on:
+  pull_request:
+  workflow_dispatch:
+jobs:
+  compare:
+    runs-on: blacksmith-8vcpu-ubuntu-2404-arm
+    timeout-minutes: 20
+    env:
+      BASE_SHA: ${{ github.event.pull_request.base.sha }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: 1.4.2
+      - run: bun install
+      - name: Compare identical native events on base and head
+        shell: bash
+        run: |
+          set -euo pipefail
+          base="${BASE_SHA:-66dddfe}"
+          git worktree add --detach "$RUNNER_TEMP/artifact-base" "$base"
+          ln -s "$GITHUB_WORKSPACE/node_modules" "$RUNNER_TEMP/artifact-base/node_modules"
+          mkdir -p "$RUNNER_TEMP/artifact-base/scripts" "$RUNNER_TEMP/artifact-base/tests/fixtures" comparison
+          cp scripts/benchmark-autorouter-stage-artifacts.ts "$RUNNER_TEMP/artifact-base/scripts/"
+          cp tests/fixtures/emit-native-two-stage-diagnostics.ts tests/fixtures/native-two-stage-diagnostics.json "$RUNNER_TEMP/artifact-base/tests/fixtures/"
+          (cd "$RUNNER_TEMP/artifact-base" && bun scripts/benchmark-autorouter-stage-artifacts.ts "$GITHUB_WORKSPACE/comparison/base.json")
+          bun scripts/benchmark-autorouter-stage-artifacts.ts comparison/head.json
+          bun scripts/check-autorouter-stage-artifact-comparison.ts comparison/base.json comparison/head.json
+          bun test tests/shared/autorouter-diagnostics.test.ts tests/shared/autorouter-diagnostics-stage-artifacts.test.ts
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: autorouter-stage-artifact-comparison
+          path: comparison

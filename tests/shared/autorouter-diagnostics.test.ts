@@ -119,8 +119,12 @@ describe("autorouter diagnostics", () => {
     expect(fs.existsSync(path.join(debugDir, "placement-unrouted.png"))).toBe(
       true,
     )
-    expect(fs.existsSync(path.join(debugDir, "phase-0-routed.png"))).toBe(true)
-    expect(fs.existsSync(path.join(debugDir, "phase-1-routed.png"))).toBe(true)
+    expect(
+      fs.existsSync(path.join(debugDir, "phase-0-stage-0-routed.png")),
+    ).toBe(true)
+    expect(
+      fs.existsSync(path.join(debugDir, "phase-1-stage-1-routed.png")),
+    ).toBe(true)
     expect(fs.existsSync(path.join(debugDir, "phase-2-routed.png"))).toBe(false)
 
     const summary = JSON.parse(
