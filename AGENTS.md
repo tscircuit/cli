@@ -84,3 +84,10 @@ Avoid adding new README sections for individual features unless explicitly reque
 ## Runtime
 
 The CLI entrypoint (`cli/entrypoint.js`) selects between Bun and tsx as the TypeScript runner, preferring Bun when available. This allows hot-reload during development while maintaining Node.js compatibility.
+
+## Benchmark and visual evidence
+
+Every PR must include an inspected native visual and benchmark-effect analysis.
+Compare identical inputs and options on base/head, report retained diagnostics,
+completion, failures, timing and compatibility controls. Do not merge without
+reporting those effects; reproduction PRs may deliberately fail the new test.
