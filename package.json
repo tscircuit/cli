@@ -29,7 +29,7 @@
     "@tscircuit/modelprinter": "^0.0.11",
     "@tscircuit/pcb-spice-pipeline": "https://api.github.com/repos/tscircuit/pcb-spice-pipeline/tarball/63d15671ec68833225132066df317a8d7e4820e7",
     "@tscircuit/props": "^0.0.709",
-    "@tscircuit/runframe": "^0.0.3054",
+    "@tscircuit/runframe": "^0.0.3069",
     "@tscircuit/schematic-match-adapt": "^0.0.22",
     "@tscircuit/schematic-trace-solver": "^0.0.204",
     "@tscircuit/solver-utils": "0.0.16",
