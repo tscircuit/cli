@@ -12,6 +12,7 @@ import { getUnscopedPackageName } from "lib/utils/get-unscoped-package-name"
 import { getPackageAuthor } from "lib/utils/get-package-author"
 import { validatePackageName } from "lib/utils/validate-package-name"
 import { getPackageFilePaths } from "lib/dev/get-package-file-paths"
+import { loadProjectConfig } from "lib/project-config"
 import { isBinaryFile } from "./is-binary-file"
 import { hasBinaryContent } from "./has-binary-content"
 import { gzipSync } from "node:zlib"
@@ -400,10 +401,11 @@ export const pushSnippet = async ({
     return onExit(1)
   }
 
-  const filePaths = getPackageFilePaths(
-    projectDir,
-    includeDist ? [] : ["**/dist/**"],
-  )
+  const projectConfig = loadProjectConfig(projectDir)
+  const filePaths = getPackageFilePaths(projectDir, [
+    ...(projectConfig?.ignoredFiles ?? []),
+    ...(includeDist ? [] : ["**/dist/**"]),
+  ])
   const uploadResults: {
     succeeded: string[]
     failed: { file: string; error: string }[]
