@@ -178,9 +178,19 @@ export const pushSnippet = async ({
   }
 
   const ky = getRegistryApiKy({ sessionToken })
-  const currentUsername = process.env.TSCIRCUIT_TOKEN
-    ? (await fetchAccount())?.tscircuit_handle
-    : cliConfig.get("tscircuitHandle")
+  let currentUsername: string | null | undefined
+  try {
+    currentUsername = process.env.TSCIRCUIT_TOKEN
+      ? (await fetchAccount())?.tscircuit_handle
+      : cliConfig.get("tscircuitHandle")
+  } catch (error) {
+    onError(
+      error instanceof Error
+        ? error.message
+        : "Could not retrieve your account.",
+    )
+    return onExit(1)
+  }
   if (!currentUsername) {
     onError("You need to set your tscircuit handle to publish packages")
     return onExit(1)

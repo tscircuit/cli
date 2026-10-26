@@ -91,7 +91,8 @@ export const registerInit = (program: Command) => {
 
         let authorName = cliConfig.get("tscircuitHandle")
         if (!authorName) {
-          const account = await fetchAccount()
+          // Account metadata is optional when initializing a local project.
+          const account = await fetchAccount().catch(() => null)
           if (account?.tscircuit_handle) {
             authorName = account.tscircuit_handle
           }

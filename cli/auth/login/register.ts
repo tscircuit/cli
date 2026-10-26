@@ -13,7 +13,18 @@ export const registerAuthLogin = (program: Command) => {
     const sessionToken = getSessionToken()
     const tscircuitHandle = cliConfig.get("tscircuitHandle")
     if (sessionToken) {
-      const account = await fetchAccount()
+      let account: Awaited<ReturnType<typeof fetchAccount>>
+      try {
+        account = await fetchAccount()
+      } catch (error) {
+        console.error(
+          error instanceof Error
+            ? error.message
+            : "Could not retrieve your account.",
+        )
+        process.exitCode = 1
+        return
+      }
       console.log(
         kleur.yellow(
           `Already logged in as ${tscircuitHandle ? kleur.bold(`@${tscircuitHandle}`) : kleur.underline(`@${account?.tscircuit_handle ?? account?.account_id}`)}! Use ${kleur.cyan("tsci logout")} to switch accounts.`,

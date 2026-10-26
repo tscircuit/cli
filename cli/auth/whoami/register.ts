@@ -25,7 +25,18 @@ export const registerAuthWhoami = (program: Command) => {
         return
       }
 
-      const account = await fetchAccount()
+      let account: Awaited<ReturnType<typeof fetchAccount>>
+      try {
+        account = await fetchAccount()
+      } catch (error) {
+        console.error(
+          error instanceof Error
+            ? error.message
+            : "Could not retrieve your account.",
+        )
+        process.exitCode = 1
+        return
+      }
 
       console.log(kleur.bold().green("\nLogged in user:\n"))
       console.log(
