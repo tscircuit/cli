@@ -152,6 +152,14 @@
         "typescriptLibrary": {
           "type": "boolean",
           "description": "Enable TypeScript library output in build."
+        },
+        "drawings": {
+          "type": "boolean",
+          "description": "Generate drawing SVGs for every successful build."
+        },
+        "drawing": {
+          "type": "string",
+          "description": "Select a drawing page by name or SVG filename."
         }
       },
       "description": "Build output toggles."

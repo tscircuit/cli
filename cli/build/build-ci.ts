@@ -27,6 +27,8 @@ export interface BuildCommandOptions {
   kicadLibraryName?: string
   kicadPcm?: boolean
   previewGltf?: boolean
+  drawings?: boolean
+  drawing?: string
   glbs?: boolean
   step?: boolean
   profile?: boolean

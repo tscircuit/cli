@@ -67,6 +67,8 @@ export const projectConfigSchema = z.object({
       kicadLibrary: z.boolean().optional(),
       kicadPcm: z.boolean().optional(),
       previewImages: z.boolean().optional(),
+      drawings: z.boolean().optional(),
+      drawing: z.string().optional(),
       glbs: z.boolean().optional(),
       step: z.boolean().optional(),
       workerTimeoutMs: z.number().int().positive().optional(),
