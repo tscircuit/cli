@@ -173,27 +173,39 @@ export async function generateCircuitJson({
 
     runner.add(<Component {...(injectedProps ?? {})} />)
 
-    runner.render()
+    let renderNeeded = false
+    const markRenderNeeded = () => {
+      renderNeeded = true
+    }
+    runner.on("asyncEffect:end", markRenderNeeded)
+    try {
+      runner.render()
+      const loggedAsyncEffectNames = new Set<string>()
 
-    const loggedAsyncEffectNames = new Set<string>()
+      while (!runner.isDoneRendering()) {
+        for (const asyncEffect of runner.getRunningAsyncEffects()) {
+          const asyncEffectName = asyncEffect.effectName
+          if (!asyncEffectName || loggedAsyncEffectNames.has(asyncEffectName)) {
+            continue
+          }
 
-    while (!runner.isDoneRendering()) {
-      for (const asyncEffect of runner.getRunningAsyncEffects()) {
-        const asyncEffectName = asyncEffect.effectName
-        if (!asyncEffectName || loggedAsyncEffectNames.has(asyncEffectName)) {
-          continue
+          loggedAsyncEffectNames.add(asyncEffectName)
+          onAsyncEffectStatus?.(asyncEffectName)
         }
 
-        loggedAsyncEffectNames.add(asyncEffectName)
-        onAsyncEffectStatus?.(asyncEffectName)
+        autorouterDiagnostics.checkTimeout()
+        await new Promise((resolve) => setTimeout(resolve, 100))
+        // Pending effects block dependent phases; metrics polls need no render.
+        if (renderNeeded || runner.getRunningAsyncEffects().length === 0) {
+          renderNeeded = false
+          runner.render()
+        }
       }
 
-      autorouterDiagnostics.checkTimeout()
-      await new Promise((resolve) => setTimeout(resolve, 100))
-      runner.render()
+      runner.emit("renderComplete")
+    } finally {
+      runner.removeListener("asyncEffect:end", markRenderNeeded)
     }
-
-    runner.emit("renderComplete")
     solverDiagnostics?.finalize()
 
     const hasImportedBoard = runner.children.some((component: any) =>

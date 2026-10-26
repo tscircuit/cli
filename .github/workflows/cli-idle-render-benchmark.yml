@@ -30,10 +30,12 @@ jobs:
             (cd "$RUNNER_TEMP/idle-base" && bun scripts/benchmark-cli-idle-render-polls.ts "$count" "$GITHUB_WORKSPACE/comparison/base-$count.json") > "comparison/base-$count.log"
             bun scripts/benchmark-cli-idle-render-polls.ts "$count" "comparison/head-$count.json" > "comparison/head-$count.log"
           done
-          python3 - <<'PYCODE'
+          (cd "$RUNNER_TEMP/idle-base" && bun scripts/benchmark-cli-idle-render-polls.ts 2 "$GITHUB_WORKSPACE/comparison/base-immediate.json" --immediate) > comparison/base-immediate.log
+          bun scripts/benchmark-cli-idle-render-polls.ts 2 comparison/head-immediate.json --immediate > comparison/head-immediate.log
+          python3 - <<'PYCODE' 
           import json
           from pathlib import Path
-          for count in [2,128,512]:
+          for count in [2,128,512,'immediate']:
             a=json.loads(Path(f'comparison/base-{count}.json').read_text());b=json.loads(Path(f'comparison/head-{count}.json').read_text())
             for x,y in zip(a['trials'],b['trials']):
               for k in ['components','inputSha256','nativeCopperSha256','traceCount','viaCount','errorCount','statuses']:assert x[k]==y[k],(count,k,x[k],y[k])
