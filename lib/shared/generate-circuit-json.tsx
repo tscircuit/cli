@@ -173,27 +173,64 @@ export async function generateCircuitJson({
 
     runner.add(<Component {...(injectedProps ?? {})} />)
 
-    runner.render()
-
     const loggedAsyncEffectNames = new Set<string>()
 
-    while (!runner.isDoneRendering()) {
-      for (const asyncEffect of runner.getRunningAsyncEffects()) {
-        const asyncEffectName = asyncEffect.effectName
-        if (!asyncEffectName || loggedAsyncEffectNames.has(asyncEffectName)) {
-          continue
+    if (
+      typeof runner.isDoneRendering === "function" &&
+      typeof runner.getRunningAsyncEffects === "function"
+    ) {
+      runner.render()
+
+      while (!runner.isDoneRendering()) {
+        for (const asyncEffect of runner.getRunningAsyncEffects()) {
+          const asyncEffectName = asyncEffect.effectName
+          if (!asyncEffectName || loggedAsyncEffectNames.has(asyncEffectName)) {
+            continue
+          }
+
+          loggedAsyncEffectNames.add(asyncEffectName)
+          onAsyncEffectStatus?.(asyncEffectName)
         }
 
-        loggedAsyncEffectNames.add(asyncEffectName)
-        onAsyncEffectStatus?.(asyncEffectName)
+        autorouterDiagnostics.checkTimeout()
+        await new Promise((resolve) => setTimeout(resolve, 100))
+        runner.render()
       }
 
-      autorouterDiagnostics.checkTimeout()
-      await new Promise((resolve) => setTimeout(resolve, 100))
-      runner.render()
-    }
+      runner.emit("renderComplete")
+    } else {
+      // Older project-local cores expose only the blocking render API.
+      const originalRender = runner.render
+      const renderDescriptor = Object.getOwnPropertyDescriptor(runner, "render")
+      const onAsyncEffectStart = (event: { effectName?: string }) => {
+        const effectName = event.effectName
+        if (!effectName || loggedAsyncEffectNames.has(effectName)) return
+        loggedAsyncEffectNames.add(effectName)
+        onAsyncEffectStatus?.(effectName)
+      }
 
-    runner.emit("renderComplete")
+      Object.defineProperty(runner, "render", {
+        configurable: true,
+        enumerable: renderDescriptor?.enumerable ?? false,
+        writable: true,
+        value: () => {
+          const result = originalRender.call(runner)
+          autorouterDiagnostics.checkTimeout()
+          return result
+        },
+      })
+      try {
+        runner.on("asyncEffect:start", onAsyncEffectStart)
+        await runner.renderUntilSettled()
+      } finally {
+        runner.removeListener("asyncEffect:start", onAsyncEffectStart)
+        if (renderDescriptor) {
+          Object.defineProperty(runner, "render", renderDescriptor)
+        } else {
+          delete runner.render
+        }
+      }
+    }
     solverDiagnostics?.finalize()
 
     const hasImportedBoard = runner.children.some((component: any) =>
