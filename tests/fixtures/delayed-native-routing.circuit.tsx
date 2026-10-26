@@ -1,6 +1,5 @@
 import {EventEmitter} from "node:events"
 import {RootCircuit} from "tscircuit"
-import {withAutorouterCache} from "@tscircuit/core"
 import {AutoroutingPipelineSolver9_PreloadedTraceGraph} from "@tscircuit/capacity-autorouter"
 
 export const stats={componentCount:2,delayMs:500,waiting:false,rendersWhileWaiting:0,totalRenders:0,inputs:[] as unknown[]}
@@ -30,7 +29,7 @@ class DelayedNativeAutorouter extends EventEmitter {
   }
   stop():void {if(this.timer)clearTimeout(this.timer);stats.waiting=false;this.isRouting=false}
 }
-const factory=withAutorouterCache((input:any)=>new DelayedNativeAutorouter(input),"cli-delayed-native-routing-repro")
+const factory=(input:any)=>new DelayedNativeAutorouter(input)
 export default function DelayedNativeRouting() {
   const columns=Math.min(32,stats.componentCount),rows=Math.ceil(stats.componentCount/columns)
   return <board width={columns*2+4} height={rows*2+4} layers={4} minViaHoleDiameter={0.3} minViaPadDiameter={0.5} allowBlindAndBuriedVias={false} schAutoLayoutEnabled={false}>
