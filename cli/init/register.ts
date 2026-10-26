@@ -33,6 +33,9 @@ export const registerInit = (program: Command) => {
         directory?: string,
         options?: { yes?: boolean; install?: boolean },
       ) => {
+        if (process.env.TSCIRCUIT_STANDALONE !== undefined) {
+          options = { ...options, install: false }
+        }
         await checkForTsciUpdates()
 
         if (!directory && !options?.yes) {
