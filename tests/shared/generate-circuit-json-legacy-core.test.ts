@@ -66,12 +66,19 @@ const fixture = async () => {
     fs.mkdirSync(packageDir, { recursive: true })
     fs.writeFileSync(
       path.join(packageDir, "package.json"),
-      JSON.stringify({ name: "tscircuit", type: "module", exports: "./index.mjs" }),
+      JSON.stringify({
+        name: "tscircuit",
+        type: "module",
+        exports: "./index.mjs",
+      }),
     )
     const runtimePath = path.join(packageDir, "index.mjs")
     fs.writeFileSync(runtimePath, runtimeSource)
     const filePath = path.join(dir, "board.js")
-    fs.writeFileSync(filePath, "export default function Board() { return null }\n")
+    fs.writeFileSync(
+      filePath,
+      "export default function Board() { return null }\n",
+    )
     const runtime = await import(pathToFileURL(runtimePath).href)
     return {
       runtime,
