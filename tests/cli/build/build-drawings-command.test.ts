@@ -1,5 +1,5 @@
 import { expect, test } from "bun:test"
-import { writeFile, readFile, symlink } from "node:fs/promises"
+import { writeFile, readFile, symlink, rm } from "node:fs/promises"
 import path from "node:path"
 import { getCliTestFixture } from "../../fixtures/get-cli-test-fixture"
 
@@ -19,6 +19,7 @@ test("build generates named drawing pages in serial and worker modes", async () 
     "--drawings",
     "--drawing carrier-plan.svg --concurrency 2",
   ]) {
+    await rm(path.join(tmpDir, "dist"), { recursive: true, force: true })
     const result = await runCommand(
       `tsci build ${path.join(tmpDir, "carrier.circuit.tsx")} ${flags} --disable-parts-engine`,
     )

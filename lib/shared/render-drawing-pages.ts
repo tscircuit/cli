@@ -33,7 +33,7 @@ export const selectDrawingPages = (
         : `Drawing "${selector}" not found. Available drawings: ${pages.map(({ page, fileName }) => page.name || fileName).join(", ") || "none"}`,
     )
   }
-  const names = selected.map(({ fileName }) => fileName)
+  const names = selected.map(({ fileName }) => fileName.toLowerCase())
   if (new Set(names).size !== names.length)
     throw new Error(
       "Drawing filenames collide. Give each drawing a unique name.",
