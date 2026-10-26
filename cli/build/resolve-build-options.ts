@@ -33,6 +33,10 @@ export const resolveBuildOptions = ({
   if (!cliOptions?.previewImages && configBuild?.previewImages) {
     configAppliedOpts.push("preview-images")
   }
+  if (!cliOptions?.drawings && configBuild?.drawings)
+    configAppliedOpts.push("drawings")
+  if (!cliOptions?.drawing && configBuild?.drawing)
+    configAppliedOpts.push("drawing")
   if (!cliOptions?.glbs && configBuild?.glbs) {
     configAppliedOpts.push("glbs")
   }
@@ -57,6 +61,8 @@ export const resolveBuildOptions = ({
       cliOptions?.kicadLibraryName ?? projectConfig?.kicadLibraryName,
     kicadPcm: cliOptions?.kicadPcm ?? configBuild?.kicadPcm,
     previewImages: cliOptions?.previewImages ?? configBuild?.previewImages,
+    drawings: cliOptions?.drawings ?? configBuild?.drawings,
+    drawing: cliOptions?.drawing ?? configBuild?.drawing,
     glbs: cliOptions?.glbs ?? configBuild?.glbs,
     step: cliOptions?.step ?? configBuild?.step,
     routingDisabled:

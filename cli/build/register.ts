@@ -26,6 +26,7 @@ import { getRunFrameCdnUrl } from "../utils/get-runframe-cdn-url"
 import { validateMainInDist } from "../utils/validate-main-in-dist"
 import { type BuildCommandOptions, applyCiBuildOptions } from "./build-ci"
 import { buildFile } from "./build-file"
+import { buildDrawings } from "./build-drawings"
 import { buildGlbs } from "./build-glbs"
 import { buildKicadPcm } from "./build-kicad-pcm"
 import { buildStepFiles } from "./build-step-files"
@@ -190,6 +191,11 @@ export const registerBuild = (program: Command) => {
       "Generate a GLTF file from the preview entrypoint",
     )
     .option("--show-courtyards", "Show courtyard outlines in PCB SVG outputs")
+    .option("--drawings", "Generate drawing SVGs for every successful build")
+    .option(
+      "--drawing <name-or-filename>",
+      "Generate a drawing selected by name or SVG filename",
+    )
     .option("--glbs", "Generate GLB 3D model files for every successful build")
     .option("--step", "Generate STEP 3D model files for every successful build")
     .option(
@@ -864,6 +870,10 @@ export const registerBuild = (program: Command) => {
           })
         }
 
+        if (resolvedOptions?.drawings || resolvedOptions?.drawing) {
+          await buildDrawings({ builtFiles, drawing: resolvedOptions.drawing })
+        }
+
         if (resolvedOptions?.previewGltf) {
           console.log("Generating preview GLTF...")
           await buildPreviewGltf({
@@ -1107,6 +1117,8 @@ export const registerBuild = (program: Command) => {
           resolvedOptions?.["3d"] && "3d",
           resolvedOptions?.pcbOnly && "pcb-only",
           resolvedOptions?.schematicOnly && "schematic-only",
+          resolvedOptions?.drawings && "drawings",
+          resolvedOptions?.drawing && `drawing=${resolvedOptions.drawing}`,
           resolvedOptions?.glbs && "glbs",
           resolvedOptions?.step && "step",
           resolvedOptions?.kicadProject && "kicad-project",

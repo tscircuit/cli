@@ -88,7 +88,7 @@
     "perfect-cli": "^1.0.21",
     "playwright": "^1.57.0",
     "polygon-clipping": "^0.15.7",
-    "poppygl": "0.0.34",
+    "poppygl": "0.0.37",
     "prompts": "^2.4.2",
     "proper-lockfile": "^4.1.2",
     "redaxios": "^0.5.1",
@@ -101,7 +101,8 @@
     "tscircuit": "0.0.2647-libonly",
     "tsx": "^4.7.1",
     "typed-ky": "^0.0.4",
-    "zod": "^3.23.8"
+    "zod": "^3.23.8",
+    "@tscircuit/circuit-json-to-drawing": "https://jscdn.tscircuit.com/@tscircuit/circuit-json-to-drawing/0.0.3.tgz"
   },
   "peerDependencies": {
     "@tscircuit/math-utils": "0.0.36",
@@ -125,9 +126,10 @@
   "overrides": {
     "circuit-json": "^0.0.534",
     "altiumts": "0.0.59",
-    "poppygl": "0.0.34",
-    "@tscircuit/core": "^0.0.2188",
-    "jscad-planner": "0.0.18"
+    "poppygl": "0.0.37",
+    "@tscircuit/core": "^0.0.2204",
+    "jscad-planner": "0.0.21",
+    "jscad-fiber": "0.0.92"
   },
   "scripts": {
     "start": "bun run dev",

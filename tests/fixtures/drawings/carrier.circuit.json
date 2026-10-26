@@ -1,0 +1,48 @@
+[
+  {
+    "type": "pcb_board",
+    "pcb_board_id": "pcb_board_0",
+    "center": { "x": 0, "y": 0 },
+    "width": 30,
+    "height": 20,
+    "thickness": 1.6,
+    "outline": [
+      { "x": -15, "y": -10 },
+      { "x": 15, "y": -10 },
+      { "x": 15, "y": 10 },
+      { "x": -15, "y": 10 }
+    ]
+  },
+  {
+    "type": "drawing_page",
+    "drawing_page_id": "plan",
+    "name": "carrier-plan",
+    "width": 80,
+    "height": 60
+  },
+  {
+    "type": "drawing_part_view",
+    "drawing_part_view_id": "plan-view",
+    "drawing_page_id": "plan",
+    "direction": "z_positive",
+    "center": { "x": 0, "y": 0 },
+    "width": 60,
+    "height": 40
+  },
+  {
+    "type": "drawing_page",
+    "drawing_page_id": "side",
+    "name": "carrier-side",
+    "width": 80,
+    "height": 60
+  },
+  {
+    "type": "drawing_part_view",
+    "drawing_part_view_id": "side-view",
+    "drawing_page_id": "side",
+    "direction": "isometric",
+    "center": { "x": 0, "y": 0 },
+    "width": 60,
+    "height": 40
+  }
+]

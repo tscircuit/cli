@@ -28,6 +28,10 @@ export const registerExport = (program: Command) => {
       `Output format (${ALLOWED_EXPORT_FORMATS.join(", ")})`,
     )
     .option("-o, --output <path>", "Output file path")
+    .option(
+      "--drawing <name-or-filename>",
+      "Select a drawing page by name or SVG filename",
+    )
     .option("--layer <layer>", "PCB front layer: top or bottom")
     .option("--disable-parts-engine", "Disable the parts engine")
     .option("--show-courtyards", "Show courtyard outlines in PCB SVG output")
@@ -36,13 +40,17 @@ export const registerExport = (program: Command) => {
         file,
         options: {
           layer?: "top" | "bottom"
+          drawing?: string
           format?: string
           output?: string
           disablePartsEngine?: boolean
           showCourtyards?: boolean
         } & PcbXRayCliOptions,
       ) => {
-        const formatOption = options.format ?? "json"
+        const formatOption =
+          options.format ?? (options.drawing ? "drawing-svg" : "json")
+        if (options.drawing && formatOption !== "drawing-svg")
+          throw new Error("--drawing requires --format drawing-svg")
         if (options.layer && !["top", "bottom"].includes(options.layer)) {
           console.error("Unknown PCB layer. Valid layers: top, bottom")
           process.exit(1)
@@ -111,6 +119,7 @@ export const registerExport = (program: Command) => {
         await exportSnippet({
           filePath: file,
           format,
+          drawing: options.drawing,
           outputPath: options.output,
           platformConfig: platformConfigWithCliDefaults,
           pcbSnapshotSettings: {

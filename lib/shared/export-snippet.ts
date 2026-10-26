@@ -1,3 +1,4 @@
+import { renderDrawingPages, selectDrawingPages } from "./render-drawing-pages"
 import { convertSvgToPngBuffer } from "./convert-svg-to-png"
 import { convertCircuitJsonToPcbSvg } from "lib/shared/render-pcb-svg"
 import fs from "node:fs"
@@ -44,6 +45,7 @@ const writeFileAsync = promisify(fs.writeFile)
 export const ALLOWED_EXPORT_FORMATS = [
   "json",
   "circuit-json",
+  "drawing-svg",
   "schematic-svg",
   "schematic-pdf",
   "pcb-svg",
@@ -70,6 +72,7 @@ export type ExportFormat = (typeof ALLOWED_EXPORT_FORMATS)[number]
 const OUTPUT_EXTENSIONS: Record<ExportFormat, string> = {
   json: ".circuit.json",
   "circuit-json": ".circuit.json",
+  "drawing-svg": "-drawing.svg",
   "schematic-svg": "-schematic.svg",
   "schematic-pdf": "-schematic.pdf",
   "pcb-svg": "-pcb.svg",
@@ -111,6 +114,7 @@ const unwrapSimpleRouteJson = (value: unknown) => {
 type ExportOptions = {
   filePath: string
   format: ExportFormat
+  drawing?: string
   writeFile?: boolean
   outputPath?: string
   platformConfig?: PlatformConfig
@@ -126,6 +130,7 @@ type ExportOptions = {
 export const exportSnippet = async ({
   filePath,
   format,
+  drawing,
   outputPath,
   platformConfig,
   pcbSnapshotSettings,
@@ -142,7 +147,7 @@ export const exportSnippet = async ({
   const projectDir = path.dirname(filePath)
   const outputBaseName = path.basename(filePath).replace(/\.[^.]+$/, "")
   const outputFileName = `${outputBaseName}${OUTPUT_EXTENSIONS[format]}`
-  const outputDestination =
+  let outputDestination =
     outputPath && path.isAbsolute(outputPath)
       ? outputPath
       : path.join(projectDir, outputPath ?? outputFileName)
@@ -216,6 +221,28 @@ export const exportSnippet = async ({
   let outputContent: string | Buffer
 
   switch (format) {
+    case "drawing-svg": {
+      try {
+        const pages = selectDrawingPages(circuitJson, drawing)
+        if (pages.length !== 1) {
+          onError(
+            pages.length
+              ? "Multiple drawing pages found. Select one with --drawing <name-or-filename>."
+              : "No drawing pages found in this circuit.",
+          )
+          return onExit(1)
+        }
+        if (!outputPath)
+          outputDestination = path.join(projectDir, pages[0]!.fileName)
+        outputContent = (await renderDrawingPages(circuitJson, drawing))[0]!.svg
+      } catch (error) {
+        onError(
+          `Error exporting drawing: ${error instanceof Error ? error.message : String(error)}`,
+        )
+        return onExit(1)
+      }
+      break
+    }
     case "schematic-svg":
       outputContent = convertCircuitJsonToStackedSchematicSheetsSvg(circuitJson)
       break
