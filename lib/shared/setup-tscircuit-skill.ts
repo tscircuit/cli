@@ -78,6 +78,8 @@ export async function setupTscircuitSkill(
   projectDir: string,
   skipPrompt = false,
 ): Promise<boolean> {
+  if (process.env.TSCI_SKIP_SKILL_SETUP === "true") return false
+
   const missingSkillPaths = SKILL_INSTALL_PATHS.filter(
     (skillPath) => !fs.existsSync(path.join(projectDir, skillPath, "SKILL.md")),
   )
