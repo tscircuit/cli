@@ -1,5 +1,5 @@
 import { afterEach, expect, mock, test } from "bun:test"
-import { fetchAccount } from "lib/registry-api/fetch-account"
+import { type Account, fetchAccount } from "lib/registry-api/fetch-account"
 
 const originalFetch = globalThis.fetch
 const originalSkipAccountFetch = process.env.TSCI_SKIP_ACCOUNT_FETCH
@@ -36,9 +36,13 @@ test.each([undefined, "false"])(
     if (value === undefined) delete process.env.TSCI_SKIP_ACCOUNT_FETCH
     else process.env.TSCI_SKIP_ACCOUNT_FETCH = value
     process.env.TSCIRCUIT_TOKEN = "test-session-token"
-    const account = {
+    const account: Account = {
       account_id: "00000000-0000-4000-8000-000000000001",
+      github_username: null,
       tscircuit_handle: "test-account",
+      personal_org_id: "00000000-0000-4000-8000-000000000002",
+      created_at: "2026-10-26T00:00:00.000Z",
+      email: "test@example.com",
     }
     const fetchSpy = mock(async () => Response.json({ account }))
     globalThis.fetch = Object.assign(fetchSpy, {
