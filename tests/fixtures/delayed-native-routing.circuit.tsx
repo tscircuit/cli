@@ -1,6 +1,5 @@
 import { EventEmitter } from "node:events"
 import { RootCircuit } from "tscircuit"
-import { withAutorouterCache } from "@tscircuit/core"
 import { AutoroutingPipelineSolver9_PreloadedTraceGraph } from "@tscircuit/capacity-autorouter"
 
 export const stats = {
@@ -65,10 +64,10 @@ export function stopDelayedNativeRouting(): void {
   pendingRouter?.stop()
   pendingRouter = undefined
 }
-const factory = withAutorouterCache((input: any) => {
+const factory = (input: any) => {
   pendingRouter = new DelayedNativeAutorouter(input)
   return pendingRouter
-}, "cli-delayed-native-routing-repro")
+}
 export default function DelayedNativeRouting() {
   const columns = Math.min(32, stats.componentCount),
     rows = Math.ceil(stats.componentCount / columns)
