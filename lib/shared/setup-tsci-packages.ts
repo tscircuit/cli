@@ -40,7 +40,10 @@ export async function setupTsciProject(
 
   fs.writeFileSync(packageJsonPath, JSON.stringify(packageJson, null, 2))
 
-  if (devDependencies.length > 0) {
+  if (
+    devDependencies.length > 0 &&
+    process.env.TSCI_SKIP_DEPENDENCY_INSTALL !== "true"
+  ) {
     console.log("Installing dependencies...")
     try {
       await packageManager.installDeps({
