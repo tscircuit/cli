@@ -14,7 +14,7 @@ Unmodified npm @tscircuit/cli@0.1.2408: dist/cli/main.js
 377530:   fileNames.sort();
 377531:   return fileNames.map((fileName) => path70.join(projectDir, fileName)).filter((filePath) => path70.resolve(filePath) !== process.execPath);
 377532: };
-377533: 
+377533:
 377534: // lib/shared/is-binary-file.ts
 377535: import * as path71 from "node:path";
 377536: var BINARY_FILE_EXTENSIONS = new Set([
