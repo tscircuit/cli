@@ -1,0 +1,74 @@
+Unmodified npm @tscircuit/cli@0.1.2408: dist/cli/main.js
+
+377519: // lib/dev/get-package-file-paths.ts
+377520: import * as path70 from "node:path";
+377521: var getPackageFilePaths = (projectDir, ignored = []) => {
+377522:   const ignorePatterns = [
+377523:     ...DEFAULT_IGNORED_PATTERNS,
+377524:     ...ignored.map(normalizeIgnorePattern)
+377525:   ];
+377526:   const fileNames = globbySync("**", {
+377527:     cwd: projectDir,
+377528:     ignore: ignorePatterns
+377529:   });
+377530:   fileNames.sort();
+377531:   return fileNames.map((fileName) => path70.join(projectDir, fileName)).filter((filePath) => path70.resolve(filePath) !== process.execPath);
+377532: };
+377533: 
+377534: // lib/shared/is-binary-file.ts
+377535: import * as path71 from "node:path";
+377536: var BINARY_FILE_EXTENSIONS = new Set([
+377537:   ".glb",
+
+377606: var getUploadFiles = (filePaths, projectDir) => filePaths.map((fullFilePath) => {
+377607:   const relativeFilePath = path72.relative(projectDir, fullFilePath).split(path72.sep).join("/");
+377608:   const fileBuffer = fs58.readFileSync(fullFilePath);
+377609:   const isBinary = isBinaryFile(relativeFilePath) || hasBinaryContent(fileBuffer);
+377610:   return isBinary ? {
+377611:     file_path: relativeFilePath,
+377612:     content_base64: fileBuffer.toString("base64")
+377613:   } : {
+377614:     file_path: relativeFilePath,
+377615:     content_text: fileBuffer.toString("utf8")
+377616:   };
+377617: });
+377618: var createArchivePayload = (files, packageNameWithVersion) => {
+377619:   const archive = gzipSync(JSON.stringify({ files }), { level: 9 });
+377620:   return {
+377621:     package_name_with_version: packageNameWithVersion,
+377622:     archive_base64: archive.toString("base64")
+
+377822:   const filePaths = getPackageFilePaths(projectDir, includeDist ? [] : ["**/dist/**"]);
+377823:   const uploadResults = { succeeded: [], failed: [] };
+377824:   const packageNameWithVersion = `${scopedPackageName}@${releaseVersion}`;
+377825:   const files = getUploadFiles(filePaths, projectDir);
+377826:   let filesToUpload = files;
+
+377996:     const projectConfig = loadProjectConfig(this.projectDir);
+377997:     this.ignoredFiles = projectConfig?.ignoredFiles ?? [];
+377998:     this.fsKy = distribution_default.create({
+
+378158:   async upsertInitialFiles() {
+378159:     await this.fsKy.post("api/events/reset", {
+378160:       json: {}
+378161:     });
+378162:     const filePaths = getPackageFilePaths(this.projectDir, this.ignoredFiles);
+378163:     for (const filePath of filePaths) {
+378164:       const relativeFilePath = path73.relative(this.projectDir, filePath);
+378165:       const filePayload = this.createFileUploadPayload(filePath, relativeFilePath);
+378166:       await this.postFileUpsert({
+378167:         filePath: relativeFilePath,
+378168:         initiator: "filesystem_change",
+378169:         filePayload
+378170:       });
+378171:     }
+378172:     await this.uploadInitialNodeModules();
+378173:     await this.fsKy.post("api/events/create", {
+378174:       json: {
+378175:         event_type: "INITIAL_FILES_UPLOADED",
+378176:         file_count: filePaths.length
+378177:       },
+378178:       throwHttpErrors: false
+378179:     });
+378180:   }
+378181:   async uploadInitialNodeModules() {

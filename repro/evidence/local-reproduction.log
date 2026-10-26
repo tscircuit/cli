@@ -1,0 +1,136 @@
+Published @tscircuit/cli: 0.1.2408
+Node: v24.19.0; mock registry: loopback only
+MOCK ONLY: CLI 'published' messages below reflect canned local responses, not live publication.
+
+push-archive: exit=0
+Uploading package archive...
+📦 Uploaded archive with 4 files
+
+
+Upload Summary
+  Succeeded: 4 files
+
+
+"@tsci/repro-user.ignored-files-repro@0.0.1" published!
+https://tscircuit.com/repro-user/ignored-files-repro
+Requests: /package_releases/list, /packages/get, /package_releases/get, /package_releases/create, /package_files/upload_archive, /package_releases/update
+Captured files: ["datasheets/test.txt","index.circuit.tsx","package.json","tscircuit.config.json"]
+BUG REPRODUCED LOCALLY: excluded dummy bytes reached the upload request
+
+push-individual: exit=0
+⬆︎ datasheets/test.txt
+⬆︎ index.circuit.tsx
+⬆︎ package.json
+⬆︎ tscircuit.config.json
+
+
+Upload Summary
+  Succeeded: 4 files
+
+
+"@tsci/repro-user.ignored-files-repro@0.0.1" published!
+https://tscircuit.com/repro-user/ignored-files-repro
+Requests: /package_releases/list, /packages/get, /package_releases/get, /package_releases/create, /package_files/create, /package_files/create, /package_files/create, /package_files/create, /package_releases/update
+Captured files: ["datasheets/test.txt","index.circuit.tsx","package.json","tscircuit.config.json"]
+BUG REPRODUCED LOCALLY: excluded dummy bytes reached the upload request
+
+dev-ignored: exit=0
+Analyzing node_modules dependencies...
+Found 0 node_modules files to upload
+Node modules uploaded successfully
+Requests: /api/events/reset, /api/files/upsert, /api/files/upsert, /api/files/upsert, /api/events/create
+Captured files: ["index.circuit.tsx","package.json","tscircuit.config.json"]
+DevServer initial upload contains dummy: false
+
+dev-control: exit=0
+Analyzing node_modules dependencies...
+Found 0 node_modules files to upload
+Node modules uploaded successfully
+Requests: /api/events/reset, /api/files/upsert, /api/files/upsert, /api/files/upsert, /api/files/upsert, /api/events/create
+Captured files: ["datasheets/test.txt","index.circuit.tsx","package.json","tscircuit.config.json"]
+DevServer initial upload contains dummy: true
+
+Confirmed local behavior in both push transports, with dev positive/negative controls.
+No live registry push performed; mock success responses do not prove public publication.
+{
+  "cliVersion": "0.1.2408",
+  "results": [
+    {
+      "mode": "push-archive",
+      "exitCode": 0,
+      "requests": [
+        "/package_releases/list",
+        "/packages/get",
+        "/package_releases/get",
+        "/package_releases/create",
+        "/package_files/upload_archive",
+        "/package_releases/update"
+      ],
+      "files": [
+        "datasheets/test.txt",
+        "index.circuit.tsx",
+        "package.json",
+        "tscircuit.config.json"
+      ],
+      "dummyIncluded": true
+    },
+    {
+      "mode": "push-individual",
+      "exitCode": 0,
+      "requests": [
+        "/package_releases/list",
+        "/packages/get",
+        "/package_releases/get",
+        "/package_releases/create",
+        "/package_files/create",
+        "/package_files/create",
+        "/package_files/create",
+        "/package_files/create",
+        "/package_releases/update"
+      ],
+      "files": [
+        "datasheets/test.txt",
+        "index.circuit.tsx",
+        "package.json",
+        "tscircuit.config.json"
+      ],
+      "dummyIncluded": true
+    },
+    {
+      "mode": "dev-ignored",
+      "exitCode": 0,
+      "requests": [
+        "/api/events/reset",
+        "/api/files/upsert",
+        "/api/files/upsert",
+        "/api/files/upsert",
+        "/api/events/create"
+      ],
+      "files": [
+        "index.circuit.tsx",
+        "package.json",
+        "tscircuit.config.json"
+      ],
+      "dummyIncluded": false
+    },
+    {
+      "mode": "dev-control",
+      "exitCode": 0,
+      "requests": [
+        "/api/events/reset",
+        "/api/files/upsert",
+        "/api/files/upsert",
+        "/api/files/upsert",
+        "/api/files/upsert",
+        "/api/events/create"
+      ],
+      "files": [
+        "datasheets/test.txt",
+        "index.circuit.tsx",
+        "package.json",
+        "tscircuit.config.json"
+      ],
+      "dummyIncluded": true
+    }
+  ]
+}

@@ -1,0 +1,14 @@
+Usage: tsci push [options] [file]
+
+Save package code to Registry API
+
+Arguments:
+  file                 Path to the package file
+
+Options:
+  --version-tag <tag>  Publish as a non-latest version using the provided tag
+  --include-dist       Include the dist directory in the push
+  --compress           Compress project files into a single archive upload for
+                       faster pushes (default)
+  --no-compress        Upload project files individually without compression
+  -h, --help           display help for command

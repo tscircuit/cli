@@ -1,0 +1,15 @@
+{
+  "id": "@tscircuit/cli@0.1.2408",
+  "version": "0.1.2408",
+  "shasum": "656517ccb32d2c6facf596a5c9be51a51531574f",
+  "integrity": "sha512-97bZEFx92JK/ht6zrxKHfwSAD+fMH92OJVQHXWPCBV62m7jmgIWlVPKxf6DrRuW7v+JdnHPYleU8xlxfkdt39A==",
+  "filename": "tscircuit-cli-0.1.2408.tgz",
+  "checked_at_utc": "2026-10-26",
+  "npm_dist_tag": "latest",
+  "peer_versions": {
+    "tscircuit": "0.0.3016",
+    "circuit-json": "0.0.535",
+    "circuit-to-svg": "0.0.453",
+    "@tscircuit/math-utils": "0.0.36"
+  }
+}
