@@ -18,7 +18,7 @@
     "@tscircuit/circuit-json-placement-analysis": "^0.0.17",
     "@tscircuit/circuit-json-routing-analysis": "^0.0.8",
     "@tscircuit/circuit-json-schematic-placement-analysis": "https://jscdn.tscircuit.com/@tscircuit/circuit-json-schematic-placement-analysis/0.0.82.tgz",
-    "@tscircuit/circuit-json-util": "^0.0.121",
+    "@tscircuit/circuit-json-util": "^0.0.129",
     "@tscircuit/eval": "0.0.1619",
     "@tscircuit/fake-snippets": "^0.0.226",
     "@tscircuit/file-server": "^0.0.32",
