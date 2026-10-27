@@ -20,6 +20,7 @@ import { pushSnippet } from "lib/shared/push-snippet"
 import { shouldIgnorePath } from "lib/shared/should-ignore-path"
 import type { TypedKyInstance } from "typed-ky"
 import { getPackageFilePaths } from "./get-package-file-paths"
+import { CoalescedFileSync } from "./coalesced-file-sync"
 
 const debug = Debug("tscircuit:devserver")
 
@@ -126,6 +127,20 @@ export class DevServer {
    */
   private uploadedNodeModules: Set<string> = new Set()
   private autorouterPhaseReached = false
+  private syncedContents = new Map<string, string | Buffer>()
+  private fileSync = new CoalescedFileSync(
+    async (filePath) => {
+      try {
+        if (fs.statSync(filePath).isFile()) {
+          await this.handleFileChangedOnFilesystem(filePath)
+        }
+      } catch (error) {
+        if ((error as NodeJS.ErrnoException).code !== "ENOENT") throw error
+        await this.handleFileRemovedFromFilesystem(filePath)
+      }
+    },
+    (filePath, error) => console.error(`Failed to sync ${filePath}:`, error),
+  )
 
   constructor({
     port,
@@ -218,22 +233,24 @@ export class DevServer {
     this.filesystemWatcher = chokidar.watch(this.projectDir, {
       persistent: true,
       ignoreInitial: true,
+      // Fold editor unlink/recreate saves into a change before batching saves.
+      atomic: 100,
       ignored: (p) =>
         path.resolve(p) === process.execPath ||
         shouldIgnorePath(path.relative(this.projectDir, p), this.ignoredFiles),
     })
 
     this.filesystemWatcher.on("change", (filePath) =>
-      this.handleFileChangedOnFilesystem(filePath),
+      this.fileSync.enqueue(filePath),
     )
     this.filesystemWatcher.on("add", (filePath) =>
-      this.handleFileChangedOnFilesystem(filePath),
+      this.fileSync.enqueue(filePath),
     )
     this.filesystemWatcher.on("unlink", (filePath) =>
-      this.handleFileRemovedFromFilesystem(filePath),
+      this.fileSync.enqueue(filePath),
     )
     this.filesystemWatcher.on("unlinkDir", (filePath) =>
-      this.handleFileRemovedFromFilesystem(filePath),
+      this.fileSync.enqueue(filePath),
     )
     this.filesystemWatcher.on("rename", (oldPath, newPath) =>
       this.handleFileRename(oldPath, newPath),
@@ -262,8 +279,10 @@ export class DevServer {
     if (file.binary_content_b64) {
       const decodedContent = Buffer.from(file.binary_content_b64, "base64")
       fs.writeFileSync(fullPath, decodedContent)
+      this.syncedContents.set(ev.file_path, decodedContent)
     } else {
       fs.writeFileSync(fullPath, file.text_content ?? "", "utf-8")
+      this.syncedContents.set(ev.file_path, file.text_content ?? "")
     }
   }
 
@@ -289,6 +308,20 @@ export class DevServer {
       absoluteFilePath,
       relativeFilePath,
     )
+    const content =
+      "text_content" in filePayload
+        ? filePayload.text_content
+        : filePayload.binary_content
+    const previous = this.syncedContents.get(relativeFilePath)
+    if (
+      typeof content === "string"
+        ? content === previous
+        : Buffer.isBuffer(previous) && content.equals(previous)
+    )
+      return
+
+    // Make newly imported local dependencies available before publishing source.
+    await this.checkAndUploadNewNodeModules(absoluteFilePath)
 
     console.log(kleur.green(`Saving: ${relativeFilePath}`))
     await this.postFileUpsert({
@@ -296,9 +329,6 @@ export class DevServer {
       initiator: "filesystem_change",
       filePayload,
     })
-
-    // Check if this file has new node_modules dependencies
-    await this.checkAndUploadNewNodeModules(absoluteFilePath)
   }
 
   /**
@@ -396,6 +426,7 @@ export class DevServer {
     }
 
     debug(`Successfully deleted file ${relativeFilePath} from server`)
+    this.syncedContents.delete(relativeFilePath)
   }
   async handleFileRename(oldPath: string, newPath: string) {
     const oldRelativePath = path.relative(this.projectDir, oldPath)
@@ -523,6 +554,7 @@ export class DevServer {
           initiator,
           binaryContent: filePayload.binary_content,
         })
+        this.syncedContents.set(filePath, filePayload.binary_content)
         return
       }
 
@@ -533,6 +565,7 @@ export class DevServer {
           ...filePayload,
         },
       })
+      this.syncedContents.set(filePath, filePayload.text_content)
     } catch (error) {
       this.logFileUpsertTimeout(error, filePath)
       throw error
@@ -626,9 +659,10 @@ export class DevServer {
     })
   }
   async stop() {
-    this.httpServer?.close()
     this.eventsWatcher?.stop()
     await this.filesystemWatcher?.close()
+    await this.fileSync.stop()
+    this.httpServer?.close()
   }
 
   private createFileUploadPayload(
