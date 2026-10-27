@@ -26,10 +26,12 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version-file: .bun-version
       - uses: actions/setup-node@v4
         with:
           node-version: 22
-      - run: bun install
+      - run: bun install --frozen-lockfile
       - run: bun test tests/cli/check/check-pcb-style.test.ts
       - run: bun run build
       - name: Smoke test compiled CLI under Node

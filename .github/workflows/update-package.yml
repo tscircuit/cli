@@ -27,6 +27,8 @@ jobs:
         with:
           token: ${{ secrets.TSCIRCUIT_BOT_GITHUB_TOKEN }}
       - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version-file: .bun-version
       - name: Update packages
         run: |
           IFS=',' read -ra PACKAGES <<< "${{ env.PACKAGE_NAMES }}"

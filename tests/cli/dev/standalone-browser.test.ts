@@ -4,7 +4,7 @@ import path from "node:path"
 import { runInNewContext } from "node:vm"
 import getPort from "get-port"
 import { getCliTestFixture } from "tests/fixtures/get-cli-test-fixture"
-import pkg from "../../../package.json"
+import { getTscircuitDependencyVersion } from "lib/shared/get-tscircuit-dependency-version"
 
 const environmentVariables = [
   "TSCIRCUIT_STANDALONE",
@@ -40,7 +40,7 @@ for (const standalone of [false, true]) {
     await writeFile(path.join(localPackage, "browser.js"), "PROJECT_BUNDLE")
     const override = path.join(tmpDir, "override.js")
     await writeFile(override, "OVERRIDE_BUNDLE")
-    const version = pkg.devDependencies["@tscircuit/eval"]
+    const version = getTscircuitDependencyVersion("@tscircuit/eval")
     process.env.TSCIRCUIT_STANDALONE = standalone ? "1" : "0"
     process.env.TSCIRCUIT_GLOBAL_STANDALONE_FILE_PATH = override
     process.env.RUNFRAME_STANDALONE_FILE_PATH = override
