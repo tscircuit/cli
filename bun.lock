@@ -73,7 +73,7 @@
         "jszip": "^3.10.1",
         "jwt-decode": "^4.0.0",
         "kicad-to-circuit-json": "^0.0.113",
-        "kicadts": "^0.0.58",
+        "kicadts": "^0.0.59",
         "kleur": "^4.1.5",
         "ky": "^1.7.4",
         "make-vfs": "^1.0.15",
@@ -931,7 +931,7 @@
 
     "kicad-to-circuit-json": ["kicad-to-circuit-json@0.0.113", "", { "peerDependencies": { "typescript": "^5" } }, "sha512-C3st/sJvqUG+jvtV5m95akOQ4BkqG/4G6TAR6qdLIUF71NLCB9FGJ1Ry0L0v3vjx2SDlthHOvXwy3VGzVVftHg=="],
 
-    "kicadts": ["kicadts@0.0.58", "", { "peerDependencies": { "typescript": "^5" } }, "sha512-T7iseLx25vy2JOYy+OTMsMQ6lU0rHmfwWhclfJy+E457pdyRmOrQPt3lea1dIKnbpLRDePxqhgJWsqdQicsVgA=="],
+    "kicadts": ["kicadts@0.0.59", "", { "peerDependencies": { "typescript": "^5" } }, "sha512-A2UWxOmqI+jbGtLn8kEN8QKuABmnkcuNInSWrXcILEU3vDtTgMytf5BNaneM1/eMgGv4XcLiK74FauZ8MbNM5A=="],
 
     "kind-of": ["kind-of@3.2.2", "", { "dependencies": { "is-buffer": "^1.1.5" } }, "sha512-NOW9QQXMoZGg/oqnVNoNTTIFEIid1627WCffUBJEdMxYApq7mNE7CpzucIPc+ZQg25Phej7IJSmX3hO+oblOtQ=="],
 
