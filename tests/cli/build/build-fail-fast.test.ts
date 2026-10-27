@@ -4,12 +4,10 @@ import path from "node:path"
 import { getCliTestFixture } from "../../fixtures/get-cli-test-fixture"
 
 const invalidCircuitCode = `
-import {SmdUsbC} from "@tsci/seveibar.smd-usb-c"
-export default () => (
-  <board width="10mm" height="10mm">
-    <SmdUsbC name="USBC" />
-  </board>
-)`
+export default () => {
+  throw new Error("Intentional circuit generation failure")
+}
+`
 
 const validCircuitCode = `
 export default () => (
