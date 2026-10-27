@@ -25,6 +25,7 @@ export async function getCliTestFixture(
   opts: {
     loggedIn?: boolean
     preload?: string
+    skipSkillSetup?: boolean
   } = {},
 ): Promise<CliTestFixture> {
   // Setup temporary directory
@@ -94,6 +95,7 @@ export async function getCliTestFixture(
     const env = {
       ...process.env,
       TSCI_TEST_MODE: "true",
+      ...(opts.skipSkillSetup ? { TSCI_SKIP_SKILL_SETUP: "true" } : {}),
       FORCE_COLOR: "0",
       NODE_ENV: "test",
       TSCIRCUIT_CONFIG_DIR: testConfigDir,

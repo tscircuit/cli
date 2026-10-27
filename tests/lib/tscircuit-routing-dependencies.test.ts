@@ -11,6 +11,7 @@ type PackageManifest = {
   version: string
   dependencies: Record<string, string>
   optionalDependencies?: Record<string, string>
+  peerDependencies?: Record<string, string>
 }
 
 function readPackage(entryUrl: string): PackageManifest {
@@ -37,7 +38,15 @@ test("installed core and autorouter follow the tscircuit dependency contract", (
     "@tscircuit/cli",
   )
   for (const name of Object.keys(tscircuitPackage.dependencies)) {
-    expect(cliPackage.devDependencies).not.toHaveProperty(name)
+    // Bun hoists a helper's older footprinter ahead of core's wildcard peer.
+    // This development-only mirror must track tscircuit's range exactly.
+    if (name === "@tscircuit/footprinter") {
+      expect(cliPackage.devDependencies[name]).toBe(
+        tscircuitPackage.dependencies[name],
+      )
+    } else {
+      expect(cliPackage.devDependencies).not.toHaveProperty(name)
+    }
     expect(cliPackage.peerDependencies).not.toHaveProperty(name)
     expect(cliPackage.overrides).not.toHaveProperty(name)
   }
@@ -59,11 +68,10 @@ test("installed core and autorouter follow the tscircuit dependency contract", (
     expect(cliPackage.overrides).not.toHaveProperty(name)
     expect(cliPackage.devDependencies).not.toHaveProperty(name)
   }
-  for (const name of [
-    "@tscircuit/capacity-autorouter",
-    "@tscircuit/props",
-    "circuit-json",
-  ]) {
+  for (const name of Object.keys(
+    readPackage(coreEntry).peerDependencies ?? {},
+  )) {
+    if (!(name in tscircuitPackage.dependencies)) continue
     expect(resolve(name, coreEntry)).toBe(resolve(name, tscircuitEntry))
   }
 })

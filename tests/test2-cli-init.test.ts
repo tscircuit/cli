@@ -4,7 +4,10 @@ import fs from "node:fs"
 import path from "node:path"
 
 test("basic init", async () => {
-  const { tmpDir, runCommand } = await getCliTestFixture()
+  const { tmpDir, runCommand } = await getCliTestFixture({
+    // Skill downloads have separate tests; this checks the generated scaffold.
+    skipSkillSetup: true,
+  })
 
   // Run the `tsci init` command
   const { stdout, stderr } = await runCommand("tsci init project")

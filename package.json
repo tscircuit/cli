@@ -18,8 +18,10 @@
     "@tscircuit/circuit-json-placement-analysis": "^0.0.17",
     "@tscircuit/circuit-json-routing-analysis": "^0.0.8",
     "@tscircuit/circuit-json-schematic-placement-analysis": "https://jscdn.tscircuit.com/@tscircuit/circuit-json-schematic-placement-analysis/0.0.82.tgz",
+    "@tscircuit/circuit-json-to-drawing": "https://jscdn.tscircuit.com/@tscircuit/circuit-json-to-drawing/0.0.3.tgz",
     "@tscircuit/fake-snippets": "^0.0.226",
     "@tscircuit/file-server": "^0.0.32",
+    "@tscircuit/footprinter": "^0.0.445",
     "@tscircuit/pcb-spice-pipeline": "https://api.github.com/repos/tscircuit/pcb-spice-pipeline/tarball/63d15671ec68833225132066df317a8d7e4820e7",
     "@tscircuit/schematic-trace-solver": "^0.0.204",
     "@types/bun": "^1.2.2",
@@ -78,8 +80,7 @@
     "tempy": "^3.1.0",
     "tscircuit": "0.0.3031-libonly",
     "tsx": "^4.7.1",
-    "typed-ky": "^0.0.4",
-    "@tscircuit/circuit-json-to-drawing": "https://jscdn.tscircuit.com/@tscircuit/circuit-json-to-drawing/0.0.3.tgz"
+    "typed-ky": "^0.0.4"
   },
   "peerDependencies": {
     "tscircuit": "*"
