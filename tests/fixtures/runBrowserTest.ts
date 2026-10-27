@@ -28,7 +28,7 @@ interface RunBrowserTestOptions {
    */
   debug?: boolean
   /**
-   * Custom registry API URL (default: https://registry-api.tscircuit.com)
+   * Custom registry API URL (default: https://api.tscircuit.com)
    */
   registryApiUrl?: string
 }
@@ -130,7 +130,7 @@ export async function runBrowserTest(
     modifyFs,
     timeout = 60000,
     debug = false,
-    registryApiUrl = "https://registry-api.tscircuit.com",
+    registryApiUrl = "https://api.tscircuit.com",
   } = options
 
   const trimmedBugReportId = bugReportId.trim()

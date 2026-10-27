@@ -55,7 +55,7 @@ type TestStep = CloneBugReportStep | RunBrowserTestStep
 
 interface RunBrowserTestWithStepsOptions {
   /**
-   * Custom registry API URL (default: https://registry-api.tscircuit.com)
+   * Custom registry API URL (default: https://api.tscircuit.com)
    */
   registryApiUrl?: string
 }
@@ -477,7 +477,7 @@ export async function runBrowserTestWithSteps(
   options: RunBrowserTestWithStepsOptions = {},
 ): Promise<RunBrowserTestWithStepsResult> {
   const registryApiUrl =
-    options.registryApiUrl ?? "https://registry-api.tscircuit.com"
+    options.registryApiUrl ?? "https://api.tscircuit.com"
 
   const clonedReports = new Map<string, ClonedBugReport>()
   let browserTestResult: RunBrowserTestWithStepsResult["browserTestResult"]
