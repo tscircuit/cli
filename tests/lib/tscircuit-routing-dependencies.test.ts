@@ -10,6 +10,7 @@ type PackageManifest = {
   name: string
   version: string
   dependencies: Record<string, string>
+  optionalDependencies?: Record<string, string>
 }
 
 function readPackage(entryUrl: string): PackageManifest {
@@ -27,6 +28,14 @@ function readPackage(entryUrl: string): PackageManifest {
 test("installed core and autorouter follow the tscircuit dependency contract", () => {
   const tscircuitEntry = resolve("tscircuit", import.meta.url)
   const tscircuitPackage = readPackage(tscircuitEntry)
+  // The public tscircuit package includes the CLI. Developing the CLI against
+  // libonly breaks that installation cycle while preserving its library deps.
+  expect(cliPackage.devDependencies.tscircuit).toEndWith("-libonly")
+  expect(tscircuitPackage.version).toEndWith("-libonly")
+  expect(tscircuitPackage.dependencies).not.toHaveProperty("@tscircuit/cli")
+  expect(tscircuitPackage.optionalDependencies ?? {}).not.toHaveProperty(
+    "@tscircuit/cli",
+  )
   for (const name of Object.keys(tscircuitPackage.dependencies)) {
     expect(cliPackage.devDependencies).not.toHaveProperty(name)
     expect(cliPackage.peerDependencies).not.toHaveProperty(name)
@@ -38,6 +47,8 @@ test("installed core and autorouter follow the tscircuit dependency contract", (
   for (const [name, entry] of [
     ["@tscircuit/core", coreEntry],
     ["@tscircuit/capacity-autorouter", routerEntry],
+    ["@tscircuit/props", resolve("@tscircuit/props", tscircuitEntry)],
+    ["circuit-json", resolve("circuit-json", tscircuitEntry)],
   ]) {
     expect(
       satisfies(
@@ -48,5 +59,11 @@ test("installed core and autorouter follow the tscircuit dependency contract", (
     expect(cliPackage.overrides).not.toHaveProperty(name)
     expect(cliPackage.devDependencies).not.toHaveProperty(name)
   }
-  expect(resolve("@tscircuit/capacity-autorouter", coreEntry)).toBe(routerEntry)
+  for (const name of [
+    "@tscircuit/capacity-autorouter",
+    "@tscircuit/props",
+    "circuit-json",
+  ]) {
+    expect(resolve(name, coreEntry)).toBe(resolve(name, tscircuitEntry))
+  }
 })

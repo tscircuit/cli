@@ -413,7 +413,11 @@ export const exportSnippet = async ({
       break
     case "component-box-3mf":
       outputContent = Buffer.from(
-        await circuitJsonToFdmComponentBox(circuitJson),
+        // The converter's declarations use an older Circuit JSON union. Its
+        // runtime reads component metadata and ignores other element types.
+        await circuitJsonToFdmComponentBox(
+          circuitJson as Parameters<typeof circuitJsonToFdmComponentBox>[0],
+        ),
       )
       break
     default:

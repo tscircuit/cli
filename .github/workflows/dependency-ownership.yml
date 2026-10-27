@@ -1,0 +1,23 @@
+name: Dependency Ownership
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+jobs:
+  dependency-ownership:
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os: [ubuntu-latest, windows-latest]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version-file: .bun-version
+      # Use a fresh install to verify the published libonly dependency graph,
+      # without an old node_modules cache hiding hoisting or cycle problems.
+      - run: bun install --frozen-lockfile
+      - name: Verify tscircuit dependency ownership and project resolution
+        run: bun test tests/lib/tscircuit-routing-dependencies.test.ts tests/shared/import-from-user-land-tscircuit.test.ts

@@ -7,7 +7,7 @@ import runFrameStandaloneBundleContent from "@tscircuit/runframe/standalone" wit
   type: "text",
 }
 import { getNodeHandler } from "winterspec/adapters/node"
-import pkg from "../../package.json"
+import runframePackage from "@tscircuit/runframe/package.json"
 
 // @ts-ignore
 import winterspecBundle from "@tscircuit/file-server/dist/bundle.js"
@@ -325,7 +325,7 @@ export const createHttpServer = async ({
       }
 
       res.writeHead(302, {
-        Location: `https://cdn.jsdelivr.net/npm/@tscircuit/runframe@${{ ...pkg.devDependencies }["@tscircuit/runframe"].replace(/^[^0-9]+/, "")}/dist/standalone.min.js`,
+        Location: `https://cdn.jsdelivr.net/npm/@tscircuit/runframe@${runframePackage.version}/dist/standalone.min.js`,
       })
       res.end()
       return

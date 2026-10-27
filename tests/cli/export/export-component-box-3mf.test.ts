@@ -1,5 +1,5 @@
 import { expect, test } from "bun:test"
-import type { CircuitJson } from "circuit-json"
+import type { CircuitJson } from "circuit-json-to-fdm-component-box"
 import { renderFdmComponentBoxPng } from "circuit-json-to-fdm-component-box"
 import { readFile, writeFile } from "node:fs/promises"
 import path from "node:path"
