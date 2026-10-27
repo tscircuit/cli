@@ -19,7 +19,7 @@ import {
   resolveAndLoadKicad3dModelFiles,
 } from "circuit-json-to-kicad"
 import { convertCircuitJsonToPickAndPlaceCsv } from "circuit-json-to-pnp-csv"
-import { convertCircuitJsonToReadableNetlist } from "circuit-json-to-readable-netlist"
+import { convertCircuitJsonToReadableNetlist } from "./convert-circuit-json-to-readable-netlist"
 import { circuitJsonToStep } from "circuit-json-to-step"
 import { circuitJsonToFdmComponentBox } from "circuit-json-to-fdm-component-box"
 import {
