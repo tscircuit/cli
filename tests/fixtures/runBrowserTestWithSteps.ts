@@ -476,8 +476,7 @@ export async function runBrowserTestWithSteps(
   steps: TestStep[],
   options: RunBrowserTestWithStepsOptions = {},
 ): Promise<RunBrowserTestWithStepsResult> {
-  const registryApiUrl =
-    options.registryApiUrl ?? "https://api.tscircuit.com"
+  const registryApiUrl = options.registryApiUrl ?? "https://api.tscircuit.com"
 
   const clonedReports = new Map<string, ClonedBugReport>()
   let browserTestResult: RunBrowserTestWithStepsResult["browserTestResult"]
