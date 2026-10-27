@@ -24,7 +24,7 @@ test(
     await writeFile(circuitPath, circuitCode)
 
     const { stdout, stderr, exitCode } = await runCommand(
-      `tsci export ${circuitPath} -f component-box-3mf`,
+      `tsci export ${circuitPath} -f component-box-3mf --disable-parts-engine`,
     )
 
     expect(exitCode).toBe(0)
@@ -40,7 +40,7 @@ test(
 
     const circuitJsonPath = path.join(tmpDir, "assembly.circuit.json")
     const circuitJsonExport = await runCommand(
-      `tsci export ${circuitPath} -f circuit-json -o assembly.circuit.json`,
+      `tsci export ${circuitPath} -f circuit-json -o assembly.circuit.json --disable-parts-engine`,
     )
     expect(circuitJsonExport.exitCode).toBe(0)
     expect(circuitJsonExport.stderr).toBe("")

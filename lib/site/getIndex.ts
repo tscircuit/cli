@@ -1,6 +1,6 @@
 import { getSessionToken } from "lib/cli-config"
 import { getPartsEngineBaseUrls } from "lib/shared/parts-engine-base-urls"
-import evalPackage from "@tscircuit/eval/package.json"
+import { getTscircuitDependencyVersion } from "lib/shared/get-tscircuit-dependency-version"
 import type { TscircuitProjectConfig } from "lib/project-config/project-config-schema"
 import { serializeScriptValue } from "./serialize-script-value"
 
@@ -18,7 +18,7 @@ export const getIndex = async ({
   extraRunFrameTabs = [],
 }: GetIndexOptions = {}) => {
   const standalone = process.env.TSCIRCUIT_STANDALONE === "1"
-  const evalVersion = evalPackage.version
+  const evalVersion = getTscircuitDependencyVersion("@tscircuit/eval")
   const standaloneScript = standalone
     ? `
         window.TSCIRCUIT_LATEST_EVAL_VERSION = ${JSON.stringify(evalVersion)};
