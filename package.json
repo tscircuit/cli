@@ -22,7 +22,7 @@
     "@tscircuit/fake-snippets": "^0.0.226",
     "@tscircuit/file-server": "^0.0.32",
     "@tscircuit/footprinter": "^0.0.445",
-    "@tscircuit/pcb-spice-pipeline": "https://api.github.com/repos/tscircuit/pcb-spice-pipeline/tarball/63d15671ec68833225132066df317a8d7e4820e7",
+    "@tscircuit/pcb-spice-pipeline": "https://github.com/tscircuit/pcb-spice-pipeline/releases/download/v0.1.0/tscircuit-pcb-spice-pipeline-0.1.0.tgz",
     "@tscircuit/schematic-trace-solver": "^0.0.204",
     "@types/bun": "^1.2.2",
     "@types/configstore": "^6.0.2",
