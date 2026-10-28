@@ -127,7 +127,7 @@ export class DevServer {
    */
   private uploadedNodeModules: Set<string> = new Set()
   private autorouterPhaseReached = false
-  private syncedContents = new Map<string, string | Buffer>()
+  private syncedContents = new Map<string, Buffer>()
   private fileSync = new CoalescedFileSync(
     async (filePath) => {
       try {
@@ -282,7 +282,10 @@ export class DevServer {
       this.syncedContents.set(ev.file_path, decodedContent)
     } else {
       fs.writeFileSync(fullPath, file.text_content ?? "", "utf-8")
-      this.syncedContents.set(ev.file_path, file.text_content ?? "")
+      this.syncedContents.set(
+        ev.file_path,
+        Buffer.from(file.text_content ?? "", "utf-8"),
+      )
     }
   }
 
@@ -310,15 +313,10 @@ export class DevServer {
     )
     const content =
       "text_content" in filePayload
-        ? filePayload.text_content
+        ? Buffer.from(filePayload.text_content, "utf-8")
         : filePayload.binary_content
     const previous = this.syncedContents.get(relativeFilePath)
-    if (
-      typeof content === "string"
-        ? content === previous
-        : Buffer.isBuffer(previous) && content.equals(previous)
-    )
-      return
+    if (previous?.equals(content)) return
 
     // Make newly imported local dependencies available before publishing source.
     await this.checkAndUploadNewNodeModules(absoluteFilePath)
@@ -565,7 +563,10 @@ export class DevServer {
           ...filePayload,
         },
       })
-      this.syncedContents.set(filePath, filePayload.text_content)
+      this.syncedContents.set(
+        filePath,
+        Buffer.from(filePayload.text_content, "utf-8"),
+      )
     } catch (error) {
       this.logFileUpsertTimeout(error, filePath)
       throw error
