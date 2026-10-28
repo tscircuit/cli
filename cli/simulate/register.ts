@@ -1,4 +1,4 @@
-import type { Command } from "commander"
+import { type Command, InvalidArgumentError } from "commander"
 import { runSimulation } from "lib/eecircuit-engine/run-simulation"
 import { resultToTable } from "lib/shared/result-to-table"
 import { getSpiceWithPaddedSim } from "lib/shared/get-spice-with-sim"
@@ -12,7 +12,11 @@ import { registerReturnCurrentSimulation } from "./register-return-current"
 import { loadAnalogInput } from "./load-analog-input"
 import { runPcbSpiceSimulation } from "./run-pcb-spice-simulation"
 
-type AnalogOptions = { disablePartsEngine?: boolean; output?: string }
+type AnalogOptions = {
+  disablePartsEngine?: boolean
+  output?: string
+  solverTimeoutMs?: number
+}
 
 export const registerSimulate = (program: Command) => {
   const simulateCommand = program
@@ -26,6 +30,23 @@ export const registerSimulate = (program: Command) => {
     .argument("<file>", "Path to tscircuit tsx or circuit json file")
     .option("--disable-parts-engine", "Disable the parts engine")
     .option("--output <directory>", "Fresh pcb_spice report directory")
+    .option(
+      "--solver-timeout-ms <milliseconds>",
+      "Per-process pcb_spice timeout (default: 900000 ms)",
+      (value: string) => {
+        const timeout = Number(value)
+        if (
+          !Number.isSafeInteger(timeout) ||
+          timeout <= 0 ||
+          timeout > 2_147_483_647
+        ) {
+          throw new InvalidArgumentError(
+            "Expected a positive safe integer up to 2147483647 milliseconds",
+          )
+        }
+        return timeout
+      },
+    )
     .action(async (file: string, options: AnalogOptions) => {
       const projectDir = findCircuitProjectDir(file)
       const projectConfig = await loadRuntimeProjectConfig(projectDir)
@@ -61,12 +82,16 @@ export const registerSimulate = (program: Command) => {
           circuitJson,
           modeling: input.modeling,
           output: options.output,
+          solverTimeoutMs: options.solverTimeoutMs,
           baseDir,
         })
         return
       }
       if (engines.some((engine) => engine && engine !== "ngspice")) {
         throw new Error("simulate supports ngspice or pcb_spice experiments")
+      }
+      if (options.solverTimeoutMs !== undefined) {
+        throw new Error('--solver-timeout-ms requires spiceEngine="pcb_spice"')
       }
       if (options.output) {
         throw new Error('--output requires spiceEngine="pcb_spice"')

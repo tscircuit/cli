@@ -17,6 +17,7 @@ export const runPcbSpiceSimulation = async ({
   circuitJson,
   modeling,
   output,
+  solverTimeoutMs,
   baseDir,
 }: {
   file: string
@@ -24,6 +25,7 @@ export const runPcbSpiceSimulation = async ({
   circuitJson: AnyCircuitElement[]
   modeling?: PipelineModeling
   output?: string
+  solverTimeoutMs?: number
   baseDir: string
 }) => {
   const name = relative(projectDir, resolve(file))
@@ -48,7 +50,7 @@ export const runPcbSpiceSimulation = async ({
     circuitJson,
     modeling,
     ibisSources: await loadIbisSources({ circuitJson, baseDir }),
-    runSolver: createNativeSolver(),
+    runSolver: createNativeSolver({ timeoutMs: solverTimeoutMs }),
   })
   await writePipelineOutput({ result, outputDir })
   console.log(`Simulation results written to ${outputDir}`)
