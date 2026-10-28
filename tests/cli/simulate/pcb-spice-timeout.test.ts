@@ -32,6 +32,17 @@ export default () => <board width={10} height={10} routingDisabled schematicDisa
       JSON.parse(await readFile(join(tmpDir, "native-options.json"), "utf8")),
     ).toEqual(expected)
   }
+  await writeFile(
+    file,
+    `export default () => <board width={10} height={10} routingDisabled schematicDisabled />`,
+  )
+  const nonNative = await runCommand(
+    `tsci simulate ${file} --disable-parts-engine --solver-timeout-ms 1000`,
+  )
+  expect(nonNative.exitCode).not.toBe(0)
+  expect(nonNative.stderr).toContain(
+    '--solver-timeout-ms requires spiceEngine="pcb_spice"',
+  )
 }, 30_000)
 
 test("simulate rejects invalid native deadlines before loading a circuit", async () => {
@@ -43,6 +54,7 @@ test("simulate rejects invalid native deadlines before loading a circuit", async
     "NaN",
     "Infinity",
     "9007199254740992",
+    "2147483648",
   ]) {
     const { exitCode, stderr } = await runCommand(
       `tsci simulate missing.tsx --solver-timeout-ms ${value}`,
