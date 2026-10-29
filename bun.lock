@@ -34,7 +34,7 @@
         "circuit-json-to-bom-csv": "^0.0.21",
         "circuit-json-to-fdm-component-box": "^0.0.2",
         "circuit-json-to-footprinter": "^0.0.59",
-        "circuit-json-to-gerber": "^0.0.120",
+        "circuit-json-to-gerber": "^0.0.122",
         "circuit-json-to-kicad": "0.0.257",
         "circuit-json-to-readable-netlist": "^0.0.15",
         "circuit-json-to-step": "^0.0.47",
@@ -599,7 +599,7 @@
 
     "circuit-json-to-footprinter": ["circuit-json-to-footprinter@0.0.59", "", { "dependencies": { "@tscircuit/footprinter": "0.0.430", "@tscircuit/manifold-2d": "^0.0.8", "@tscircuit/math-utils": "^0.0.36", "circuit-json": "^0.0.484", "format-si-unit": "^0.0.14" } }, "sha512-Aug9LrNatO+pT/cOS1yqu6D2G6ALWxGsEeUmoIeUiea5b2bXakn9jJFWwd/t9xyZlJ8j5a9Fz2YMMZw+McaxFw=="],
 
-    "circuit-json-to-gerber": ["circuit-json-to-gerber@0.0.120", "", { "dependencies": { "@tscircuit/alphabet": "^0.0.25", "fast-json-stable-stringify": "^2.1.0", "polygon-clipping": "^0.15.7", "transformation-matrix": "^3.0.0" }, "peerDependencies": { "circuit-json": "*", "tscircuit": "*", "typescript": "^5.0.0" }, "bin": { "circuit-to-gerber": "dist/cli.js" } }, "sha512-dQVMkR63amJPXJVTyZ9J6ZF+dEVA1jDXY/I/GtGLCnpPcNuhSOS268SfcUqOmwG2e/+VnhpscIGpSBtvVjnmvQ=="],
+    "circuit-json-to-gerber": ["circuit-json-to-gerber@0.0.122", "", { "dependencies": { "@tscircuit/alphabet": "^0.0.25", "fast-json-stable-stringify": "^2.1.0", "polygon-clipping": "^0.15.7", "transformation-matrix": "^3.0.0" }, "peerDependencies": { "@tscircuit/circuit-json-util": "*", "circuit-json": "*", "tscircuit": "*", "typescript": "^5.0.0" }, "bin": { "circuit-to-gerber": "dist/cli.js" } }, "sha512-YCXDbl0GeYvbrR2UfkLxHPnpy68Dv/5feR9Jij2zGnROmjcjayUCuU3Bv0YuzVJu1RKamBpKqvJMb6sRD+XVmQ=="],
 
     "circuit-json-to-gltf": ["circuit-json-to-gltf@0.0.151", "", { "dependencies": { "@jscad/modeling": "^2.12.6", "@tscircuit/alphabet": "^0.0.25", "@tscircuit/cableprinter": "^0.0.6", "earcut": "^3.0.2", "gl-matrix": "^3.4.4", "jscad-electronics": "^0.0.210", "jscad-planner": "^0.0.19", "jscad-to-gltf": "^0.0.5", "occt-import-js": "^0.0.23" }, "peerDependencies": { "@resvg/resvg-js": "2", "@resvg/resvg-wasm": "2", "@tscircuit/circuit-json-util": "*", "circuit-json": "*", "circuit-to-svg": ">=0.0.445", "typescript": "^5" }, "optionalPeers": ["@resvg/resvg-js", "@resvg/resvg-wasm"] }, "sha512-grhSbZl25w3bTxoEx6cYHsYhdg3erynfdirrVS/HmLkSpyOQthcQez7+TZLdrId4b80AdTUnf3bGMcPLK3u83Q=="],
 
