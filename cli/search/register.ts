@@ -1,9 +1,23 @@
+import { getQueryFromParts } from "cli/utils/get-query-from-parts"
 import type { Command } from "commander"
-import { getRegistryApiKy } from "lib/registry-api/get-ky"
 import Fuse from "fuse.js"
 import kleur from "kleur"
-import { getQueryFromParts } from "cli/utils/get-query-from-parts"
+import { getRegistryApiKy } from "lib/registry-api/get-ky"
 import { getPartsEngineBaseUrl } from "lib/shared/parts-engine-base-urls"
+import {
+  type DatasheetSearchResult,
+  searchDatasheets,
+} from "./search-datasheets"
+
+const searchSources = [
+  "kicad",
+  "jlcpcb",
+  "ti",
+  "digikey",
+  "mouser",
+  "tscircuit",
+  "datasheets",
+]
 
 export const registerSearch = (program: Command) => {
   program
@@ -22,7 +36,12 @@ export const registerSearch = (program: Command) => {
     .option("--digikey", "Search DigiKey components")
     .option("--mouser", "Search Mouser components")
     .option("--tscircuit", "Search tscircuit registry packages")
+    .option("--datasheets", "Search parts in the datasheet catalog")
     .option("--json", "Output search results as JSON")
+    .addHelpText(
+      "after",
+      `\nSet TSCIRCUIT_DEFAULT_SEARCH_SOURCE to choose the source used without a flag.\nAvailable sources: ${searchSources.join(", ")} (default: jlcpcb).\n`,
+    )
     .action(
       async (
         queryParts: string[],
@@ -34,6 +53,7 @@ export const registerSearch = (program: Command) => {
           digikey?: boolean
           mouser?: boolean
           tscircuit?: boolean
+          datasheets?: boolean
           json?: boolean
         },
       ) => {
@@ -45,10 +65,19 @@ export const registerSearch = (program: Command) => {
           opts.ti ||
           opts.digikey ||
           opts.mouser ||
-          opts.tscircuit
-        const searchKicad = opts.kicad
-        const searchJlc = opts.jlcpcb || opts.lcsc || !hasFilters
-        const searchTscircuit = opts.tscircuit
+          opts.tscircuit ||
+          opts.datasheets
+        const defaultSource =
+          process.env.TSCIRCUIT_DEFAULT_SEARCH_SOURCE ?? "jlcpcb"
+        const selected = (source: string, enabled?: boolean) =>
+          enabled || (!hasFilters && defaultSource === source)
+        const searchKicad = selected("kicad", opts.kicad)
+        const searchJlc = selected("jlcpcb", opts.jlcpcb || opts.lcsc)
+        const searchTscircuit = selected("tscircuit", opts.tscircuit)
+        const searchTi = selected("ti", opts.ti)
+        const searchDatasheetCatalog = selected("datasheets", opts.datasheets)
+
+        let datasheetResults: DatasheetSearchResult[] = []
 
         let results: {
           packages: Array<{
@@ -80,8 +109,16 @@ export const registerSearch = (program: Command) => {
         }> = []
 
         const distributors = [
-          { source: "digikey", label: "DigiKey", enabled: opts.digikey },
-          { source: "mouser", label: "Mouser", enabled: opts.mouser },
+          {
+            source: "digikey",
+            label: "DigiKey",
+            enabled: selected("digikey", opts.digikey),
+          },
+          {
+            source: "mouser",
+            label: "Mouser",
+            enabled: selected("mouser", opts.mouser),
+          },
         ] as const
         const distributorResults: Array<{
           source: "digikey" | "mouser"
@@ -99,6 +136,14 @@ export const registerSearch = (program: Command) => {
         let kicadResults: string[] = []
 
         try {
+          if (!hasFilters && !searchSources.includes(defaultSource))
+            throw new Error(
+              `Invalid TSCIRCUIT_DEFAULT_SEARCH_SOURCE: ${defaultSource}. Expected one of: ${searchSources.join(", ")}`,
+            )
+
+          if (searchDatasheetCatalog)
+            datasheetResults = await searchDatasheets(query)
+
           if (searchTscircuit) {
             const ky = getRegistryApiKy()
             results = await ky
@@ -118,10 +163,8 @@ export const registerSearch = (program: Command) => {
             jlcResults = jlcResponse?.components ?? []
           }
 
-          if (opts.ti) {
-            const tiSearchUrl =
-              "https://tisearch.tscircuit.com/api/search?limit=10&q=" +
-              encodeURIComponent(query)
+          if (searchTi) {
+            const tiSearchUrl = `https://tisearch.tscircuit.com/api/search?limit=10&q=${encodeURIComponent(query)}`
             const response = await fetch(tiSearchUrl)
             if (!response.ok)
               throw new Error(`TI search failed (HTTP ${response.status})`)
@@ -176,6 +219,10 @@ export const registerSearch = (program: Command) => {
 
         if (opts.json) {
           const unifiedResults = [
+            ...datasheetResults.map((datasheet) => ({
+              source: "datasheets" as const,
+              ...datasheet,
+            })),
             ...kicadResults.map((path) => ({
               source: "kicad" as const,
               path,
@@ -215,12 +262,14 @@ export const registerSearch = (program: Command) => {
           !results.packages.length &&
           !jlcResults.length &&
           !tiResults.length &&
+          !datasheetResults.length &&
           !distributorResults.some(({ components }) => components.length)
         ) {
           const sources = [
             searchTscircuit && "tscircuit registry",
             searchJlc && "JLCPCB",
-            opts.ti && "Texas Instruments",
+            searchTi && "Texas Instruments",
+            searchDatasheetCatalog && "datasheet catalog",
             ...distributors.filter((d) => d.enabled).map((d) => d.label),
             searchKicad && "KiCad",
           ].filter(Boolean)
@@ -230,6 +279,19 @@ export const registerSearch = (program: Command) => {
             ),
           )
           return
+        }
+
+        if (datasheetResults.length) {
+          console.log(
+            kleur
+              .bold()
+              .underline(
+                `Found ${datasheetResults.length} part(s) in the datasheet catalog:`,
+              ),
+          )
+          datasheetResults.forEach((datasheet, idx) => {
+            console.log(`${idx + 1}. ${datasheet.chip_name}`)
+          })
         }
 
         if (kicadResults.length) {
