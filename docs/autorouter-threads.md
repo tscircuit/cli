@@ -1,8 +1,9 @@
 # Local autorouting threads
 
-The CLI defaults to four local routing workers per active Pipeline9
-autorouter. This setting is `autorouterThreads` in the platform configuration;
-`threads` is not a supported platform-config field.
+The CLI defaults to four local routing workers per active Pipeline9 autorouter
+on Node and Bun 1.4.2 or newer. On older Bun releases, the CLI defaults to one
+thread (inline routing). This setting is `autorouterThreads` in the platform
+configuration; `threads` is not a supported platform-config field.
 
 ## Configure a project
 
@@ -25,8 +26,11 @@ configuration field, not a field in the JSON project-config schema.
 
 Counts greater than one enable worker-backed `solveAsync` for the default local
 Pipeline9 solver on Node and Bun. Bun requires version 1.4.2 or newer. The CLI
-prefers Bun when it is installed, including an older Bun, so check `bun --version`.
-There is no automatic fallback for a worker startup failure. Browsers route inline.
+prefers Bun when it is installed. Its platform-config loader checks the running
+Bun version and selects inline routing by default when workers are unsupported.
+An explicit `autorouterThreads` override still takes precedence; requesting more
+than one thread on older Bun requires upgrading Bun. Worker startup failures are
+not retried inline. Browsers route inline.
 Cloud routing, alternative pipelines, and custom `algorithmFn` routers retain
 their own execution behavior. A board with routing disabled or no unrouted
 connections may create no workers.

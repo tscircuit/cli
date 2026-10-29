@@ -3,17 +3,50 @@ import type { PlatformConfig } from "@tscircuit/props"
 import { getPlatformConfigWithCliDefaults } from "lib/shared/get-platform-config-with-cli-defaults"
 import { mergePlatformConfigs } from "lib/shared/platform-config-utils"
 
-test("CLI requests four routing workers and preserves explicit thread overrides", () => {
-  expect(getPlatformConfigWithCliDefaults().autorouterThreads).toBe(4)
-  expect(
-    getPlatformConfigWithCliDefaults({ autorouterThreads: 1 })
-      .autorouterThreads,
-  ).toBe(1)
-  expect(
-    getPlatformConfigWithCliDefaults({ autorouterThreads: 2 })
-      .autorouterThreads,
-  ).toBe(2)
-})
+const withBunVersion = (version: string | undefined, run: () => void) => {
+  const descriptor = Object.getOwnPropertyDescriptor(process.versions, "bun")
+  Object.defineProperty(process.versions, "bun", {
+    configurable: true,
+    value: version,
+  })
+  try {
+    run()
+  } finally {
+    if (descriptor) Object.defineProperty(process.versions, "bun", descriptor)
+    else delete process.versions.bun
+  }
+}
+
+test.each([
+  [undefined, 4],
+  ["1.3.11", 1],
+  ["1.4.1", 1],
+  ["1.4.2-canary.1", 1],
+  ["1.4.2", 4],
+  ["1.4.4", 4],
+  ["invalid", 1],
+] as const)(
+  "CLI routing thread default for Bun %s is %i",
+  (version, threads) => {
+    withBunVersion(version, () => {
+      expect(getPlatformConfigWithCliDefaults().autorouterThreads).toBe(threads)
+    })
+  },
+)
+
+test.each(["1.3.11", "1.4.4"])(
+  "explicit thread overrides take precedence on Bun %s",
+  (version) => {
+    withBunVersion(version, () => {
+      for (const autorouterThreads of [1, 2, 4]) {
+        expect(
+          getPlatformConfigWithCliDefaults({ autorouterThreads })
+            .autorouterThreads,
+        ).toBe(autorouterThreads)
+      }
+    })
+  },
+)
 
 test("a pipeline-merged SPICE-only override preserves every default platform map", () => {
   const customSpiceEngine = {
