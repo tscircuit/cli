@@ -13,7 +13,7 @@ const withBunVersion = (version: string | undefined, run: () => void) => {
     run()
   } finally {
     if (descriptor) Object.defineProperty(process.versions, "bun", descriptor)
-    else delete process.versions.bun
+    else Reflect.deleteProperty(process.versions, "bun")
   }
 }
 
