@@ -90,7 +90,7 @@ export const getCircuitJsonBuildOutputPath = (filePath: string) => {
   )
 }
 
-const getSourceFilePaths = (projectDir: string) => {
+export const getSourceFilePaths = (projectDir: string) => {
   const sourceFilePaths: string[] = []
 
   const visit = (directoryPath: string) => {
