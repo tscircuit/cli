@@ -3,6 +3,18 @@ import type { PlatformConfig } from "@tscircuit/props"
 import { getPlatformConfigWithCliDefaults } from "lib/shared/get-platform-config-with-cli-defaults"
 import { mergePlatformConfigs } from "lib/shared/platform-config-utils"
 
+test("CLI requests four routing workers and preserves explicit thread overrides", () => {
+  expect(getPlatformConfigWithCliDefaults().autorouterThreads).toBe(4)
+  expect(
+    getPlatformConfigWithCliDefaults({ autorouterThreads: 1 })
+      .autorouterThreads,
+  ).toBe(1)
+  expect(
+    getPlatformConfigWithCliDefaults({ autorouterThreads: 2 })
+      .autorouterThreads,
+  ).toBe(2)
+})
+
 test("a pipeline-merged SPICE-only override preserves every default platform map", () => {
   const customSpiceEngine = {
     simulate: async () => ({ simulationResultCircuitJson: [] }),

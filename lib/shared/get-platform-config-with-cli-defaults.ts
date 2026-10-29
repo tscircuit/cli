@@ -59,6 +59,7 @@ export function getPlatformConfigWithCliDefaults(
 
   const defaultConfig: PlatformConfig = {
     ...basePlatformConfig,
+    autorouterThreads: 4,
     checkAvailability: true,
     localCacheEngine: createLocalCacheEngine(cacheDir),
     // Override footprintFileParserMap to handle file paths from native imports
