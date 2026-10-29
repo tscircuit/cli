@@ -40,7 +40,7 @@
     "circuit-json-to-bom-csv": "^0.0.21",
     "circuit-json-to-fdm-component-box": "^0.0.2",
     "circuit-json-to-footprinter": "^0.0.59",
-    "circuit-json-to-gerber": "^0.0.120",
+    "circuit-json-to-gerber": "^0.0.122",
     "circuit-json-to-kicad": "0.0.257",
     "circuit-json-to-readable-netlist": "^0.0.15",
     "circuit-json-to-step": "^0.0.47",
