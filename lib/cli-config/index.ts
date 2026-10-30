@@ -68,5 +68,5 @@ export const clearSession = () => {
 }
 
 export const getRegistryApiUrl = (): string => {
-  return cliConfig.get("registryApiUrl") ?? "https://registry-api.tscircuit.com"
+  return cliConfig.get("registryApiUrl") ?? "https://api.tscircuit.com"
 }
