@@ -6,10 +6,14 @@ import getPort from "get-port"
 import { getCliTestFixture } from "tests/fixtures/get-cli-test-fixture"
 
 const originalDir = process.env.TSCIRCUIT_BAKED_ASSET_SERVER_DIR
+const originalSources = process.env.TSCIRCUIT_DEFAULT_SEARCH_SOURCES
 afterEach(() => {
   if (originalDir === undefined)
-    delete process.env.TSCIRCUIT_BAKED_ASSET_SERVER_DIR
+    Reflect.deleteProperty(process.env, "TSCIRCUIT_BAKED_ASSET_SERVER_DIR")
   else process.env.TSCIRCUIT_BAKED_ASSET_SERVER_DIR = originalDir
+  if (originalSources === undefined)
+    Reflect.deleteProperty(process.env, "TSCIRCUIT_DEFAULT_SEARCH_SOURCES")
+  else process.env.TSCIRCUIT_DEFAULT_SEARCH_SOURCES = originalSources
 })
 
 const writeBakedAssets = async (directory: string) => {
@@ -54,6 +58,38 @@ test("search uses baked responses for all three providers and exits normally", a
   expect(imported.exitCode).toBe(0)
   expect(imported.stdout).toContain('No results found for "missing"')
   expect((await runCommand("tsci version")).exitCode).toBe(0)
+}, 20_000)
+
+test("configured default sources search baked inventories and explicit flags narrow them", async () => {
+  const { tmpDir, runCommand } = await getCliTestFixture()
+  const directory = path.join(tmpDir, "baked")
+  await writeBakedAssets(directory)
+  const inventory = path.join(directory, "datasheet-api/datasheets/list")
+  await mkdir(path.dirname(inventory), { recursive: true })
+  await writeFile(
+    inventory,
+    JSON.stringify({
+      datasheets: [{ datasheet_id: "lm358", chip_name: "LM358" }],
+    }),
+  )
+  process.env.TSCIRCUIT_BAKED_ASSET_SERVER_DIR = directory
+  process.env.TSCIRCUIT_DEFAULT_SEARCH_SOURCES = "datasheets,jlcpcb"
+  for (const { flags, sources } of [
+    { flags: [], sources: ["datasheets", "jlcpcb"] },
+    { flags: ["--datasheets"], sources: ["datasheets"] },
+    { flags: ["--jlcpcb"], sources: ["jlcpcb"] },
+  ]) {
+    const { stdout, stderr, exitCode } = await runCommand(
+      ["tsci", "search", ...flags, "--json", "LM358"].join(" "),
+    )
+    expect(exitCode).toBe(0)
+    expect(stderr).toBe("")
+    const response = JSON.parse(stdout)
+    expect(
+      response.results.map((part: { source: string }) => part.source),
+    ).toEqual(sources)
+    expect(response.errors).toBeUndefined()
+  }
 }, 20_000)
 
 test("dev injects the provider URLs and serves baked files across origins", async () => {

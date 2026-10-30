@@ -4,7 +4,7 @@ import { Command } from "commander"
 import { getRegistryApiUrl } from "lib/cli-config"
 
 const environmentVariables = [
-  "TSCIRCUIT_DEFAULT_SEARCH_SOURCE",
+  "TSCIRCUIT_DEFAULT_SEARCH_SOURCES",
   "TSCIRCUIT_DATASHEET_API_BASE_URL",
   "TSCIRCUIT_BAKED_ASSET_SERVER_BASE_URL",
   "TSCIRCUIT_JLCSEARCH_BASE_URL",
@@ -98,8 +98,8 @@ test("datasheet search preserves local mirror paths through platform fetch", asy
   expect(json(log).results[0].chip_name).toBe("RP2040")
 })
 
-test("normal searches still use JLCPCB by default", async () => {
-  const { fetcher, log } = await run(["--json", "RP2040"], () =>
+test("--jlcpcb restricts the search to JLCPCB", async () => {
+  const { fetcher, log } = await run(["--jlcpcb", "--json", "RP2040"], () =>
     Response.json({ components: [] }),
   )
   expect(fetcher).toHaveBeenCalledTimes(1)
@@ -110,12 +110,28 @@ test("normal searches still use JLCPCB by default", async () => {
 })
 
 test("the configured default can select datasheets without a source flag", async () => {
-  process.env.TSCIRCUIT_DEFAULT_SEARCH_SOURCE = "datasheets"
+  process.env.TSCIRCUIT_DEFAULT_SEARCH_SOURCES = "datasheets"
   const { log } = await run(["--json", "RP2040"])
   expect(json(log).results[0]).toEqual({
     source: "datasheets",
     ...part("RP2040"),
   })
+})
+
+test("configured defaults accept multiple sources, whitespace, and duplicates", async () => {
+  process.env.TSCIRCUIT_DEFAULT_SEARCH_SOURCES =
+    " datasheets, jlcpcb, datasheets "
+  const { fetcher, log } = await run(["--json", "RP2040"], (url) =>
+    Response.json(
+      url.pathname.endsWith("/datasheets/list")
+        ? { datasheets: inventory }
+        : { components: [{ mfr: "RP2040", lcsc: 2040 }] },
+    ),
+  )
+  expect(fetcher).toHaveBeenCalledTimes(2)
+  expect(
+    json(log).results.map((row: { source: string }) => row.source),
+  ).toEqual(["datasheets", "jlcpcb"])
 })
 
 for (const { source, endpoint, response } of [
@@ -152,7 +168,7 @@ for (const { source, endpoint, response } of [
   },
 ]) {
   test(`the configured default can select ${source} without a source flag`, async () => {
-    process.env.TSCIRCUIT_DEFAULT_SEARCH_SOURCE = source
+    process.env.TSCIRCUIT_DEFAULT_SEARCH_SOURCES = source
     const { fetcher, log } = await run(["--json", "RP2040"], () =>
       Response.json(response),
     )
@@ -173,7 +189,7 @@ for (const source of [
   "tscircuit",
 ]) {
   test(`--${source} overrides the configured datasheet default`, async () => {
-    process.env.TSCIRCUIT_DEFAULT_SEARCH_SOURCE = "datasheets"
+    process.env.TSCIRCUIT_DEFAULT_SEARCH_SOURCES = "datasheets"
     const { fetcher } = await run([`--${source}`, "--json", "RP2040"], () =>
       Response.json(
         source === "kicad"
@@ -192,7 +208,7 @@ for (const source of [
 }
 
 test("--datasheets overrides another configured default without querying it", async () => {
-  process.env.TSCIRCUIT_DEFAULT_SEARCH_SOURCE = "digikey"
+  process.env.TSCIRCUIT_DEFAULT_SEARCH_SOURCES = "digikey"
   const { fetcher, log } = await run(["--datasheets", "--json", "RP2040"])
   expect(fetcher).toHaveBeenCalledTimes(1)
   expect(fetcher.mock.calls[0][0]).toBe(
@@ -242,6 +258,7 @@ test("an empty inventory is a successful empty search", async () => {
 test("matching is bounded, ranks exact names first, and is deterministic", async () => {
   const parts = [
     ...Array.from({ length: 15 }, (_, index) => part(`LM358-${index}`)),
+    part("A-LM358"),
     part("LM358"),
   ]
   const first = await run(["--datasheets", "--json", "LM358"], () =>
@@ -257,6 +274,26 @@ test("matching is bounded, ranks exact names first, and is deterministic", async
     Response.json({ datasheets: [...parts].reverse() }),
   )
   expect(json(second.log).results).toEqual(results)
+})
+
+test("datasheet matches are literal substrings, rather than approximate names", async () => {
+  const { log } = await run(["--datasheets", "--json", "RP2041"])
+  expect(json(log).results).toEqual([])
+})
+
+test("datasheet matching treats punctuation literally", async () => {
+  const { log } = await run(["--datasheets", "--json", "a+b"], () =>
+    Response.json({ datasheets: [part("A+B-1"), part("AAAB-1")] }),
+  )
+  expect(json(log).results).toEqual([
+    { source: "datasheets", ...part("A+B-1") },
+  ])
+})
+
+test("blank datasheet queries return no matches without requesting the inventory", async () => {
+  const { fetcher, log } = await run(["--datasheets", "--json", "   "])
+  expect(fetcher).not.toHaveBeenCalled()
+  expect(json(log).results).toEqual([])
 })
 
 test("catalog metadata cannot overwrite the source or expand JSON output", async () => {
@@ -302,22 +339,25 @@ for (const [label, response, message] of [
   })
 }
 
-test("invalid default sources fail clearly before making requests", async () => {
-  process.env.TSCIRCUIT_DEFAULT_SEARCH_SOURCE = "invalid"
-  const exit = spyOn(process, "exit").mockImplementation(() => {
-    throw new Error("exit")
+for (const value of ["invalid", "datasheets,invalid", "", "datasheets,"]) {
+  test(`invalid defaults ${JSON.stringify(value)} fail before making requests`, async () => {
+    process.env.TSCIRCUIT_DEFAULT_SEARCH_SOURCES = value
+    const exit = spyOn(process, "exit").mockImplementation(() => {
+      throw new Error("exit")
+    })
+    restore.push(() => exit.mockRestore())
+    await expect(run(["RP2040"])).rejects.toThrow("exit")
+    expect(console.error).toHaveBeenCalledWith(
+      expect.any(String),
+      expect.stringContaining("Invalid TSCIRCUIT_DEFAULT_SEARCH_SOURCES:"),
+    )
+    expect(exit).toHaveBeenCalledWith(1)
+    expect(fetch).not.toHaveBeenCalled()
   })
-  restore.push(() => exit.mockRestore())
-  await expect(run(["RP2040"])).rejects.toThrow("exit")
-  expect(console.error).toHaveBeenCalledWith(
-    expect.any(String),
-    expect.stringContaining("Invalid TSCIRCUIT_DEFAULT_SEARCH_SOURCE: invalid"),
-  )
-  expect(fetch).not.toHaveBeenCalled()
-})
+}
 
 test("explicit flags also override an invalid default source", async () => {
-  process.env.TSCIRCUIT_DEFAULT_SEARCH_SOURCE = "invalid"
+  process.env.TSCIRCUIT_DEFAULT_SEARCH_SOURCES = "invalid"
   const { log } = await run(["--datasheets", "--json", "RP2040"])
   expect(json(log).results[0].source).toBe("datasheets")
 })

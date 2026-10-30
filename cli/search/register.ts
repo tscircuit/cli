@@ -17,7 +17,9 @@ const searchSources = [
   "mouser",
   "tscircuit",
   "datasheets",
-]
+] as const
+
+type SearchSource = (typeof searchSources)[number]
 
 export const registerSearch = (program: Command) => {
   program
@@ -40,7 +42,7 @@ export const registerSearch = (program: Command) => {
     .option("--json", "Output search results as JSON")
     .addHelpText(
       "after",
-      `\nSet TSCIRCUIT_DEFAULT_SEARCH_SOURCE to choose the source used without a flag.\nAvailable sources: ${searchSources.join(", ")} (default: jlcpcb).\n`,
+      `\nSearches all sources by default. Source flags restrict the search.\nSet TSCIRCUIT_DEFAULT_SEARCH_SOURCES to a comma-separated list to override the defaults.\nAvailable sources: ${searchSources.join(", ")}.\n`,
     )
     .action(
       async (
@@ -58,24 +60,25 @@ export const registerSearch = (program: Command) => {
         },
       ) => {
         const query = getQueryFromParts(queryParts)
-        const hasFilters =
-          opts.kicad ||
-          opts.jlcpcb ||
-          opts.lcsc ||
-          opts.ti ||
-          opts.digikey ||
-          opts.mouser ||
-          opts.tscircuit ||
-          opts.datasheets
-        const defaultSource =
-          process.env.TSCIRCUIT_DEFAULT_SEARCH_SOURCE ?? "jlcpcb"
-        const selected = (source: string, enabled?: boolean) =>
-          enabled || (!hasFilters && defaultSource === source)
-        const searchKicad = selected("kicad", opts.kicad)
-        const searchJlc = selected("jlcpcb", opts.jlcpcb || opts.lcsc)
-        const searchTscircuit = selected("tscircuit", opts.tscircuit)
-        const searchTi = selected("ti", opts.ti)
-        const searchDatasheetCatalog = selected("datasheets", opts.datasheets)
+        const explicitSources = searchSources.filter(
+          (source) => opts[source] || (source === "jlcpcb" && opts.lcsc),
+        )
+        const hasFilters = explicitSources.length > 0
+        const defaultSources: readonly string[] =
+          process.env.TSCIRCUIT_DEFAULT_SEARCH_SOURCES?.split(",").map(
+            (source) => source.trim(),
+          ) ?? searchSources
+        const selected = (source: SearchSource) =>
+          hasFilters
+            ? explicitSources.includes(source)
+            : defaultSources.includes(source)
+        const searchKicad = selected("kicad")
+        const searchJlc = selected("jlcpcb")
+        const searchTscircuit = selected("tscircuit")
+        const searchTi = selected("ti")
+        const searchDatasheetCatalog = selected("datasheets")
+
+        let searchErrors: Array<{ source: SearchSource; message: string }> = []
 
         let datasheetResults: DatasheetSearchResult[] = []
 
@@ -112,12 +115,12 @@ export const registerSearch = (program: Command) => {
           {
             source: "digikey",
             label: "DigiKey",
-            enabled: selected("digikey", opts.digikey),
+            enabled: selected("digikey"),
           },
           {
             source: "mouser",
             label: "Mouser",
-            enabled: selected("mouser", opts.mouser),
+            enabled: selected("mouser"),
           },
         ] as const
         const distributorResults: Array<{
@@ -136,79 +139,171 @@ export const registerSearch = (program: Command) => {
         let kicadResults: string[] = []
 
         try {
-          if (!hasFilters && !searchSources.includes(defaultSource))
+          const invalidSources = defaultSources.filter(
+            (source) =>
+              !searchSources.some((available) => available === source),
+          )
+          if (!hasFilters && invalidSources.length)
             throw new Error(
-              `Invalid TSCIRCUIT_DEFAULT_SEARCH_SOURCE: ${defaultSource}. Expected one of: ${searchSources.join(", ")}`,
+              `Invalid TSCIRCUIT_DEFAULT_SEARCH_SOURCES: ${JSON.stringify(invalidSources)}. Expected a comma-separated list of: ${searchSources.join(", ")}`,
             )
 
-          if (searchDatasheetCatalog)
-            datasheetResults = await searchDatasheets(query)
+          const signal = AbortSignal.timeout(10_000)
+          const searches: Array<{
+            source: SearchSource
+            run: () => Promise<void>
+          }> = []
+
+          if (searchDatasheetCatalog) {
+            searches.push({
+              source: "datasheets",
+              async run() {
+                datasheetResults = await searchDatasheets(query, signal)
+              },
+            })
+          }
 
           if (searchTscircuit) {
-            const ky = getRegistryApiKy()
-            results = await ky
-              .post("packages/search", {
-                json: { query },
-              })
-              .json()
+            searches.push({
+              source: "tscircuit",
+              async run() {
+                const ky = getRegistryApiKy()
+                const data = await ky
+                  .post("packages/search", { json: { query }, signal })
+                  .json<typeof results>()
+                if (!Array.isArray(data?.packages))
+                  throw new Error(
+                    "Registry search returned an invalid response",
+                  )
+                results = data
+              },
+            })
           }
 
           if (searchJlc) {
-            const baseUrl = getPartsEngineBaseUrl(
-              "jlcsearch",
-              "https://jlcsearch.tscircuit.com",
-            )
-            const jlcSearchUrl = `${baseUrl}/api/search?limit=10&q=${encodeURIComponent(query)}`
-            const jlcResponse = await fetch(jlcSearchUrl).then((r) => r.json())
-            jlcResults = jlcResponse?.components ?? []
+            searches.push({
+              source: "jlcpcb",
+              async run() {
+                const baseUrl = getPartsEngineBaseUrl(
+                  "jlcsearch",
+                  "https://jlcsearch.tscircuit.com",
+                )
+                const url = `${baseUrl}/api/search?limit=10&q=${encodeURIComponent(query)}`
+                const response = await fetch(url, { signal })
+                if (!response.ok)
+                  throw new Error(
+                    `JLCPCB search failed (HTTP ${response.status})`,
+                  )
+                const data = await response.json()
+                if (!Array.isArray(data?.components))
+                  throw new Error("JLCPCB search returned an invalid response")
+                jlcResults = data.components
+              },
+            })
           }
 
           if (searchTi) {
-            const tiSearchUrl = `https://tisearch.tscircuit.com/api/search?limit=10&q=${encodeURIComponent(query)}`
-            const response = await fetch(tiSearchUrl)
-            if (!response.ok)
-              throw new Error(`TI search failed (HTTP ${response.status})`)
-            const data = await response.json()
-            if (!Array.isArray(data?.components))
-              throw new Error("TI search returned an invalid response")
-            tiResults = data.components
+            searches.push({
+              source: "ti",
+              async run() {
+                const url = `https://tisearch.tscircuit.com/api/search?limit=10&q=${encodeURIComponent(query)}`
+                const response = await fetch(url, { signal })
+                if (!response.ok)
+                  throw new Error(`TI search failed (HTTP ${response.status})`)
+                const data = await response.json()
+                if (!Array.isArray(data?.components))
+                  throw new Error("TI search returned an invalid response")
+                tiResults = data.components
+              },
+            })
           }
 
           for (const distributor of distributors) {
             if (!distributor.enabled) continue
-            const baseUrl = getPartsEngineBaseUrl(
-              distributor.source,
-              `https://${distributor.source}search.tscircuit.com`,
-            )
-            const url = `${baseUrl}/api/search?limit=10&q=${encodeURIComponent(query)}`
-            const response = await fetch(url, {
-              headers: { accept: "application/json" },
-            })
-            if (!response.ok)
-              throw new Error(
-                `${distributor.label} search failed (HTTP ${response.status})`,
-              )
-            const data = await response.json()
-            if (!Array.isArray(data?.components))
-              throw new Error(
-                `${distributor.label} search returned an invalid response`,
-              )
-            distributorResults.push({
-              ...distributor,
-              components: data.components,
+            searches.push({
+              source: distributor.source,
+              async run() {
+                const baseUrl = getPartsEngineBaseUrl(
+                  distributor.source,
+                  `https://${distributor.source}search.tscircuit.com`,
+                )
+                const url = `${baseUrl}/api/search?limit=10&q=${encodeURIComponent(query)}`
+                const response = await fetch(url, {
+                  headers: { accept: "application/json" },
+                  signal,
+                })
+                if (!response.ok)
+                  throw new Error(
+                    `${distributor.label} search failed (HTTP ${response.status})`,
+                  )
+                const data = await response.json()
+                if (!Array.isArray(data?.components))
+                  throw new Error(
+                    `${distributor.label} search returned an invalid response`,
+                  )
+                distributorResults.push({
+                  ...distributor,
+                  components: data.components,
+                })
+              },
             })
           }
 
           if (searchKicad) {
-            const kicadFiles: string[] = await fetch(
-              "https://kicad-mod-cache.tscircuit.com/kicad_files.json",
-            ).then((r) => r.json())
-            const fuse = new Fuse(kicadFiles)
-            kicadResults = fuse
-              .search(query)
-              .slice(0, 10)
-              .map((r) => r.item)
+            searches.push({
+              source: "kicad",
+              async run() {
+                const response = await fetch(
+                  "https://kicad-mod-cache.tscircuit.com/kicad_files.json",
+                  { signal },
+                )
+                if (!response.ok)
+                  throw new Error(
+                    `KiCad search failed (HTTP ${response.status})`,
+                  )
+                const files = await response.json()
+                if (
+                  !Array.isArray(files) ||
+                  files.some((file) => typeof file !== "string")
+                )
+                  throw new Error("KiCad search returned an invalid response")
+                const fuse = new Fuse<string>(files)
+                kicadResults = fuse
+                  .search(query, { limit: 10 })
+                  .map(({ item }) => item)
+              },
+            })
           }
+
+          const outcomes = await Promise.allSettled(
+            searches.map(({ run }) => run()),
+          )
+          searchErrors = outcomes.flatMap((outcome, index) =>
+            outcome.status === "rejected"
+              ? [
+                  {
+                    source: searches[index]!.source,
+                    message:
+                      outcome.reason instanceof Error
+                        ? outcome.reason.message
+                        : String(outcome.reason),
+                  },
+                ]
+              : [],
+          )
+          if (searchErrors.length === searches.length) {
+            throw new Error(
+              searchErrors.length === 1
+                ? searchErrors[0]!.message
+                : searchErrors
+                    .map(({ source, message }) => `${source}: ${message}`)
+                    .join("; "),
+            )
+          }
+          for (const { source, message } of searchErrors)
+            console.error(kleur.yellow(`Failed to search ${source}:`), message)
+          // Keep output stable when distributor requests finish in a different order.
+          distributorResults.sort((a, b) => a.source.localeCompare(b.source))
         } catch (error) {
           console.error(
             kleur.red("Failed to search:"),
@@ -249,6 +344,7 @@ export const registerSearch = (program: Command) => {
               {
                 query,
                 results: unifiedResults,
+                ...(searchErrors.length ? { errors: searchErrors } : {}),
               },
               null,
               2,
@@ -265,13 +361,18 @@ export const registerSearch = (program: Command) => {
           !datasheetResults.length &&
           !distributorResults.some(({ components }) => components.length)
         ) {
+          const succeeded = (source: SearchSource) =>
+            selected(source) &&
+            !searchErrors.some((error) => error.source === source)
           const sources = [
-            searchTscircuit && "tscircuit registry",
-            searchJlc && "JLCPCB",
-            searchTi && "Texas Instruments",
-            searchDatasheetCatalog && "datasheet catalog",
-            ...distributors.filter((d) => d.enabled).map((d) => d.label),
-            searchKicad && "KiCad",
+            succeeded("tscircuit") && "tscircuit registry",
+            succeeded("jlcpcb") && "JLCPCB",
+            succeeded("ti") && "Texas Instruments",
+            succeeded("datasheets") && "datasheet catalog",
+            ...distributors
+              .filter((d) => succeeded(d.source))
+              .map((d) => d.label),
+            succeeded("kicad") && "KiCad",
           ].filter(Boolean)
           console.log(
             kleur.yellow(
