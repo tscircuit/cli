@@ -6,20 +6,52 @@ import type { PlatformConfig } from "@tscircuit/props"
 import semver from "semver"
 import { mergePlatformConfigs } from "./platform-config-utils"
 import { getPlatformFetch } from "./get-platform-fetch"
+import { getAlgorithmFnFingerprint } from "./algorithm-fn-fingerprint"
+
+// Matches the `<source hash>-<dependency hash>` from getAlgorithmFnFingerprint
+// inside core's `...:algorithm:<fingerprint>:srj:...` route cache keys.
+const ALGORITHM_FN_CACHE_KEY_PATTERN = /:algorithm:([a-f0-9]+)-([a-f0-9]+):/
+const ALGORITHM_FN_CACHE_FILE_PATTERN = /^algorithm-([a-f0-9]+)-([a-f0-9]+)-/
 
 export function createLocalCacheEngine(
   cacheDir = path.join(process.cwd(), ".tscircuit", "cache"),
+  options: { projectDir?: string } = {},
 ) {
+  const getCacheFilePath = (key: string) => {
+    const hash = createHash("md5").update(key).digest("hex")
+    const algorithmFnMatch = key.match(ALGORITHM_FN_CACHE_KEY_PATTERN)
+    if (algorithmFnMatch) {
+      return path.join(
+        cacheDir,
+        `algorithm-${algorithmFnMatch[1]}-${algorithmFnMatch[2]}-${hash}.json`,
+      )
+    }
+    const keyWithSafeCharacters = key.replace(/[^a-zA-Z0-9]/g, "_")
+    return path.join(
+      cacheDir,
+      `${keyWithSafeCharacters.slice(keyWithSafeCharacters.length - 10, keyWithSafeCharacters.length)}-${hash}.json`,
+    )
+  }
+
+  /** Deletes results cached for earlier versions of this algorithm's code. */
+  const clearStaleAlgorithmFnCacheFiles = (fingerprint: string) => {
+    const [sourceHash, dependencyHash] = fingerprint.split("-")
+    try {
+      for (const fileName of fs.readdirSync(cacheDir)) {
+        const match = fileName.match(ALGORITHM_FN_CACHE_FILE_PATTERN)
+        if (match?.[1] === sourceHash && match[2] !== dependencyHash) {
+          fs.rmSync(path.join(cacheDir, fileName), { force: true })
+        }
+      }
+    } catch {
+      // The cache directory may not exist yet
+    }
+  }
+
   return {
     getItem: (key: string): string | null => {
       try {
-        const hash = createHash("md5").update(key).digest("hex")
-        const keyWithSafeCharacters = key.replace(/[^a-zA-Z0-9]/g, "_")
-        const filePath = path.join(
-          cacheDir,
-          `${keyWithSafeCharacters.slice(keyWithSafeCharacters.length - 10, keyWithSafeCharacters.length)}-${hash}.json`,
-        )
-        return fs.readFileSync(filePath, "utf-8")
+        return fs.readFileSync(getCacheFilePath(key), "utf-8")
       } catch {
         return null
       }
@@ -27,17 +59,27 @@ export function createLocalCacheEngine(
     setItem: (key: string, value: string): void => {
       try {
         fs.mkdirSync(cacheDir, { recursive: true })
-        const hash = createHash("md5").update(key).digest("hex")
-        const keyWithSafeCharacters = key.replace(/[^a-zA-Z0-9]/g, "_")
-        const filePath = path.join(
-          cacheDir,
-          `${keyWithSafeCharacters.slice(keyWithSafeCharacters.length - 10, keyWithSafeCharacters.length)}-${hash}.json`,
-        )
-        fs.writeFileSync(filePath, value)
+        fs.writeFileSync(getCacheFilePath(key), value)
       } catch {
         // Silently ignore write errors
       }
     },
+    ...(options.projectDir
+      ? {
+          getAlgorithmFnFingerprint: (algorithmFn: Function): string | null => {
+            try {
+              const fingerprint = getAlgorithmFnFingerprint(
+                algorithmFn,
+                options.projectDir!,
+              )
+              if (fingerprint) clearStaleAlgorithmFnCacheFiles(fingerprint)
+              return fingerprint
+            } catch {
+              return null
+            }
+          },
+        }
+      : {}),
   }
 }
 
@@ -66,7 +108,7 @@ export function getPlatformConfigWithCliDefaults(
         ? 1
         : 4,
     checkAvailability: true,
-    localCacheEngine: createLocalCacheEngine(cacheDir),
+    localCacheEngine: createLocalCacheEngine(cacheDir, { projectDir }),
     // Override footprintFileParserMap to handle file paths from native imports
     footprintFileParserMap: {
       ...basePlatformConfig.footprintFileParserMap,
