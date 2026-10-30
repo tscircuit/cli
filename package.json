@@ -53,7 +53,7 @@
     "cosmiconfig": "^9.0.0",
     "delay": "^6.0.0",
     "dsn-converter": "^0.0.90",
-    "easyeda": "^0.0.383",
+    "easyeda": "^0.0.386",
     "fuse.js": "^7.1.0",
     "get-port": "^7.1.0",
     "globby": "^14.1.0",
