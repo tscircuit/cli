@@ -1,6 +1,6 @@
 import { afterEach, expect, spyOn, test } from "bun:test"
-import { Command } from "commander"
 import { registerSearch } from "cli/search/register"
+import { Command } from "commander"
 
 const part = (source: string) => ({
   mfr: "LM358DR",
@@ -58,7 +58,10 @@ for (const [source, label] of [
     expect(fetcher).toHaveBeenCalledTimes(1)
     expect(fetcher.mock.calls[0]).toEqual([
       `https://${source}search.tscircuit.com/api/search?limit=10&q=LM358%2FNOPB%20%26%20amplifier`,
-      { headers: { accept: "application/json" } },
+      {
+        headers: { accept: "application/json" },
+        signal: expect.any(AbortSignal),
+      },
     ])
     expect(JSON.parse(String(log.mock.calls[0][0]))).toEqual({
       query: "LM358/NOPB & amplifier",
