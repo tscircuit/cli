@@ -7,6 +7,9 @@ const environmentVariables = [
   "TSCIRCUIT_DEFAULT_SEARCH_SOURCE",
   "TSCIRCUIT_DATASHEET_API_BASE_URL",
   "TSCIRCUIT_BAKED_ASSET_SERVER_BASE_URL",
+  "TSCIRCUIT_JLCSEARCH_BASE_URL",
+  "TSCIRCUIT_DIGIKEY_BASE_URL",
+  "TSCIRCUIT_MOUSER_BASE_URL",
 ] as const
 let restore: Array<() => void> = []
 beforeEach(() => {
@@ -16,9 +19,8 @@ beforeEach(() => {
       if (original === undefined) delete process.env[variable]
       else process.env[variable] = original
     })
+    Reflect.deleteProperty(process.env, variable)
   }
-  Reflect.deleteProperty(process.env, "TSCIRCUIT_DEFAULT_SEARCH_SOURCE")
-  Reflect.deleteProperty(process.env, "TSCIRCUIT_BAKED_ASSET_SERVER_BASE_URL")
   process.env.TSCIRCUIT_DATASHEET_API_BASE_URL =
     "https://parts.example/mirror/datasheet-api/"
 })
@@ -116,16 +118,88 @@ test("the configured default can select datasheets without a source flag", async
   })
 })
 
-for (const source of ["jlcpcb", "lcsc", "ti", "digikey", "mouser", "kicad"]) {
+for (const { source, endpoint, response } of [
+  {
+    source: "jlcpcb",
+    endpoint: "https://jlcsearch.tscircuit.com/api/search?limit=10&q=RP2040",
+    response: { components: [] },
+  },
+  {
+    source: "ti",
+    endpoint: "https://tisearch.tscircuit.com/api/search?limit=10&q=RP2040",
+    response: { components: [] },
+  },
+  {
+    source: "digikey",
+    endpoint:
+      "https://digikeysearch.tscircuit.com/api/search?limit=10&q=RP2040",
+    response: { components: [] },
+  },
+  {
+    source: "mouser",
+    endpoint: "https://mousersearch.tscircuit.com/api/search?limit=10&q=RP2040",
+    response: { components: [] },
+  },
+  {
+    source: "kicad",
+    endpoint: "https://kicad-mod-cache.tscircuit.com/kicad_files.json",
+    response: [],
+  },
+  {
+    source: "tscircuit",
+    endpoint: `${getRegistryApiUrl().replace(/\/+$/, "")}/packages/search`,
+    response: { packages: [] },
+  },
+]) {
+  test(`the configured default can select ${source} without a source flag`, async () => {
+    process.env.TSCIRCUIT_DEFAULT_SEARCH_SOURCE = source
+    const { fetcher, log } = await run(["--json", "RP2040"], () =>
+      Response.json(response),
+    )
+    expect(fetcher).toHaveBeenCalledTimes(1)
+    const input = fetcher.mock.calls[0][0]
+    expect(input instanceof Request ? input.url : String(input)).toBe(endpoint)
+    expect(json(log)).toEqual({ query: "RP2040", results: [] })
+  })
+}
+
+for (const source of [
+  "jlcpcb",
+  "lcsc",
+  "ti",
+  "digikey",
+  "mouser",
+  "kicad",
+  "tscircuit",
+]) {
   test(`--${source} overrides the configured datasheet default`, async () => {
     process.env.TSCIRCUIT_DEFAULT_SEARCH_SOURCE = "datasheets"
     const { fetcher } = await run([`--${source}`, "--json", "RP2040"], () =>
-      Response.json(source === "kicad" ? [] : { components: [] }),
+      Response.json(
+        source === "kicad"
+          ? []
+          : source === "tscircuit"
+            ? { packages: [] }
+            : { components: [] },
+      ),
     )
     expect(fetcher).toHaveBeenCalledTimes(1)
-    expect(String(fetcher.mock.calls[0][0])).not.toContain("/datasheets/list")
+    const input = fetcher.mock.calls[0][0]
+    expect(input instanceof Request ? input.url : String(input)).not.toContain(
+      "/datasheets/list",
+    )
   })
 }
+
+test("--datasheets overrides another configured default without querying it", async () => {
+  process.env.TSCIRCUIT_DEFAULT_SEARCH_SOURCE = "digikey"
+  const { fetcher, log } = await run(["--datasheets", "--json", "RP2040"])
+  expect(fetcher).toHaveBeenCalledTimes(1)
+  expect(fetcher.mock.calls[0][0]).toBe(
+    "https://parts.example/mirror/datasheet-api/datasheets/list",
+  )
+  expect(json(log).results[0].source).toBe("datasheets")
+})
 
 test("datasheets combine with explicit providers and preserve source identities", async () => {
   const { fetcher, log } = await run(
