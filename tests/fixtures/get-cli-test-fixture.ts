@@ -104,6 +104,7 @@ export async function getCliTestFixture(
     return {
       cmd: [
         "bun",
+        "run",
         ...(opts.preload ? ["--preload", opts.preload] : []),
         ...args,
       ],
