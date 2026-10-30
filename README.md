@@ -233,6 +233,9 @@ of `cli/main.ts`
 
 Utility functions are defined in `lib/*`
 
+See [local autorouting threads](docs/autorouter-threads.md) for project thread
+configuration, runtime requirements, and creating and disposing routing workers.
+
 ## Development
 
 ### Dynamically Loading Runframe

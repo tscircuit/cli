@@ -3,6 +3,7 @@ import fs from "node:fs"
 import path from "node:path"
 import { getPlatformConfig } from "@tscircuit/eval/platform-config"
 import type { PlatformConfig } from "@tscircuit/props"
+import semver from "semver"
 import { mergePlatformConfigs } from "./platform-config-utils"
 import { getPlatformFetch } from "./get-platform-fetch"
 
@@ -59,6 +60,11 @@ export function getPlatformConfigWithCliDefaults(
 
   const defaultConfig: PlatformConfig = {
     ...basePlatformConfig,
+    // Bun's routing workers require 1.4.2; keep older hosts on inline routing.
+    autorouterThreads:
+      process.versions.bun && !semver.satisfies(process.versions.bun, ">=1.4.2")
+        ? 1
+        : 4,
     checkAvailability: true,
     localCacheEngine: createLocalCacheEngine(cacheDir),
     // Override footprintFileParserMap to handle file paths from native imports
