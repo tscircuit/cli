@@ -26,6 +26,7 @@ export async function getCliTestFixture(
     loggedIn?: boolean
     preload?: string
     skipSkillSetup?: boolean
+    env?: Record<string, string | undefined>
   } = {},
 ): Promise<CliTestFixture> {
   // Setup temporary directory
@@ -94,6 +95,7 @@ export async function getCliTestFixture(
     // Set test mode environment variable
     const env = {
       ...process.env,
+      ...opts.env,
       TSCI_TEST_MODE: "true",
       ...(opts.skipSkillSetup ? { TSCI_SKIP_SKILL_SETUP: "true" } : {}),
       FORCE_COLOR: "0",
