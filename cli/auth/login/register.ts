@@ -11,12 +11,18 @@ export const registerAuthLogin = (program: Command) => {
   // Define the login action once to share between both commands
   const loginAction = async () => {
     const sessionToken = getSessionToken()
-    const tscircuitHandle = cliConfig.get("tscircuitHandle")
+    const tscircuitHandle = process.env.TSCIRCUIT_TOKEN
+      ? undefined
+      : cliConfig.get("tscircuitHandle")
     if (sessionToken) {
       const account = await fetchAccount()
+      const identity =
+        tscircuitHandle ?? account?.tscircuit_handle ?? account?.account_id
       console.log(
         kleur.yellow(
-          `Already logged in as ${tscircuitHandle ? kleur.bold(`@${tscircuitHandle}`) : kleur.underline(`@${account?.tscircuit_handle ?? account?.account_id}`)}! Use ${kleur.cyan("tsci logout")} to switch accounts.`,
+          identity
+            ? `Already logged in as ${tscircuitHandle ? kleur.bold(`@${tscircuitHandle}`) : kleur.underline(`@${identity}`)}! Use ${kleur.cyan("tsci logout")} to switch accounts.`
+            : `Already logged in! Use ${kleur.cyan("tsci logout")} to switch accounts.`,
         ),
       )
       return

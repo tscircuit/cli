@@ -1,9 +1,13 @@
 import { afterEach, beforeEach, expect, spyOn, test } from "bun:test"
 import { Command } from "commander"
+import * as fs from "node:fs"
+import * as os from "node:os"
+import * as path from "node:path"
 import { registerAuthPrintToken } from "cli/auth/print-token/register"
 import { cliConfig, getSessionToken } from "lib/cli-config"
 import { fetchAccount } from "lib/registry-api/fetch-account"
 import { getRegistryApiKy } from "lib/registry-api/get-ky"
+import { pushSnippet } from "lib/shared/push-snippet"
 
 const originalToken = process.env.TSCIRCUIT_TOKEN
 let originalConfig: typeof cliConfig.store
@@ -112,5 +116,81 @@ test("fetchAccount uses the environment token's account instead of the saved acc
     expect((await fetchAccount())?.account_id).toBe("environment-account")
   } finally {
     server.stop()
+  }
+})
+
+test("pushSnippet reports account lookup failure instead of missing handle when TSCIRCUIT_TOKEN lookup fails", async () => {
+  process.env.TSCIRCUIT_TOKEN = "environment-token"
+  cliConfig.set("tscircuitHandle", "cached-handle")
+
+  let statusToReturn = 503
+  let bodyToReturn = JSON.stringify({
+    error: {
+      error_code: "service_unavailable",
+      message: "Simulated outage",
+    },
+  })
+
+  const server = Bun.serve({
+    port: 0,
+    fetch: () =>
+      new Response(bodyToReturn, {
+        status: statusToReturn,
+        headers: { "Content-Type": "application/json" },
+      }),
+  })
+  cliConfig.set("registryApiUrl", server.url.toString())
+
+  const tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), "tsci-push-token-"))
+  const snippetPath = path.join(tmpDir, "index.circuit.tsx")
+  fs.writeFileSync(snippetPath, "export default () => null\n")
+  fs.writeFileSync(
+    path.join(tmpDir, "package.json"),
+    JSON.stringify({ name: "@tsci/test-user.board", version: "0.0.1" }),
+  )
+
+  try {
+    const errors503: string[] = []
+    let exitCode503: number | undefined
+    await pushSnippet({
+      filePath: snippetPath,
+      onError: (msg) => errors503.push(msg),
+      onExit: (code) => {
+        exitCode503 = code
+      },
+    })
+    expect(exitCode503).toBe(1)
+    expect(errors503.join("\n")).toContain(
+      "Could not verify your account for publishing",
+    )
+    expect(errors503.join("\n")).toContain("503")
+    expect(errors503.join("\n")).not.toContain(
+      "You need to set your tscircuit handle",
+    )
+
+    // Genuine missing handle (HTTP 200 with account lacking tscircuit_handle)
+    statusToReturn = 200
+    bodyToReturn = JSON.stringify({
+      account: {
+        account_id: "acc_1",
+        tscircuit_handle: null,
+      },
+    })
+    const errorsMissingHandle: string[] = []
+    let exitCodeMissingHandle: number | undefined
+    await pushSnippet({
+      filePath: snippetPath,
+      onError: (msg) => errorsMissingHandle.push(msg),
+      onExit: (code) => {
+        exitCodeMissingHandle = code
+      },
+    })
+    expect(exitCodeMissingHandle).toBe(1)
+    expect(errorsMissingHandle).toEqual([
+      "You need to set your tscircuit handle to publish packages",
+    ])
+  } finally {
+    server.stop()
+    fs.rmSync(tmpDir, { recursive: true, force: true })
   }
 })
