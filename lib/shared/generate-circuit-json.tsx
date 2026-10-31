@@ -1,10 +1,12 @@
 import fs from "node:fs"
+import Module from "node:module"
 import path from "node:path"
-import { pathToFileURL } from "node:url"
+import { fileURLToPath, pathToFileURL } from "node:url"
+import type { PipelineModeling } from "@tscircuit/pcb-spice-pipeline"
 import type { PlatformConfig } from "@tscircuit/props"
 import type { AnyCircuitElement } from "circuit-json"
-import type { PipelineModeling } from "@tscircuit/pcb-spice-pipeline"
 import Debug from "debug"
+import { resolve as resolveEsm } from "import-meta-resolve"
 import { abbreviateStringifyObject } from "lib/utils/abbreviate-stringify-object"
 import { getVirtualFileSystemFromDirPath } from "make-vfs"
 import {
@@ -12,18 +14,106 @@ import {
   type AutorouterDiagnosticsOptions,
 } from "./autorouter-diagnostics"
 import { attachAutoroutingArtifacts } from "./autorouting-artifacts"
-import { importFromUserLand } from "./importFromUserLand"
-import { registerStaticAssetLoaders } from "./register-static-asset-loaders"
 import {
   addSourceFilesystemHash,
   getSourceFilesystemMd5Hash,
 } from "./circuit-json-build-cache"
+import { importFromUserLand } from "./importFromUserLand"
+import { registerStaticAssetLoaders } from "./register-static-asset-loaders"
 import {
   SolverDiagnostics,
   type SolverDiagnosticsOptions,
 } from "./solver-diagnostics"
 
 const debug = Debug("tsci:generate-circuit-json")
+
+let isCjsCoreFallbackRegistered = false
+const activeCjsFallbackEntryPaths = new Map<string, string>()
+
+async function registerCjsCoreFallback(projectDir: string) {
+  const userLandParentUrl = pathToFileURL(path.join(projectDir, "noop.js")).href
+  let tscircuitParentUrl: string | undefined
+  try {
+    tscircuitParentUrl = resolveEsm("tscircuit", userLandParentUrl)
+  } catch {
+    // Ignore if tscircuit is not directly resolvable from projectDir
+  }
+
+  const moduleWithInternals = Module as typeof Module & {
+    _cache?: Record<string, unknown>
+    _resolveFilename?: (
+      request: string,
+      parent: unknown,
+      isMain: boolean,
+      options?: unknown,
+    ) => string
+  }
+  const caches = [
+    moduleWithInternals._cache,
+    Module.createRequire(import.meta.url).cache as
+      | Record<string, unknown>
+      | undefined,
+  ]
+
+  for (const specifier of ["@tscircuit/core", "react", "react/jsx-runtime"]) {
+    let resolvedUrl: string | undefined
+    for (const parentUrl of [
+      userLandParentUrl,
+      tscircuitParentUrl,
+      import.meta.url,
+    ]) {
+      if (!parentUrl) continue
+      try {
+        resolvedUrl = resolveEsm(specifier, parentUrl)
+        break
+      } catch {}
+    }
+    if (!resolvedUrl) continue
+
+    const entryPath = fileURLToPath(resolvedUrl)
+    activeCjsFallbackEntryPaths.set(specifier, entryPath)
+    const modNamespace = await import(resolvedUrl)
+    const exportedValue =
+      specifier === "@tscircuit/core"
+        ? modNamespace
+        : (modNamespace.default ?? modNamespace)
+
+    for (const cache of caches) {
+      if (cache && !cache[entryPath]) {
+        cache[entryPath] = {
+          id: entryPath,
+          filename: entryPath,
+          loaded: true,
+          exports: exportedValue,
+        }
+      }
+    }
+  }
+
+  if (
+    !isCjsCoreFallbackRegistered &&
+    typeof moduleWithInternals._resolveFilename === "function"
+  ) {
+    isCjsCoreFallbackRegistered = true
+    const origResolveFilename = moduleWithInternals._resolveFilename
+    moduleWithInternals._resolveFilename = function (
+      request: string,
+      parent: unknown,
+      isMain: boolean,
+      options?: unknown,
+    ) {
+      try {
+        return origResolveFilename.call(this, request, parent, isMain, options)
+      } catch (error) {
+        const fallbackPath = activeCjsFallbackEntryPaths.get(request)
+        if (fallbackPath) {
+          return fallbackPath
+        }
+        throw error
+      }
+    }
+  }
+}
 
 const ALLOWED_FILE_EXTENSIONS = [
   ".tsx",
@@ -84,6 +174,7 @@ export async function generateCircuitJson({
   const React = await importFromUserLand("react", projectRootDir)
   ;(globalThis as any).React = React
   registerStaticAssetLoaders(platformConfig, projectRootDir)
+  await registerCjsCoreFallback(projectRootDir)
   const userLandTscircuit = await importFromUserLand(
     "tscircuit",
     projectRootDir,
