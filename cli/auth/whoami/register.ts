@@ -25,20 +25,34 @@ export const registerAuthWhoami = (program: Command) => {
         return
       }
 
-      const account = await fetchAccount()
+      let account: Awaited<ReturnType<typeof fetchAccount>> = null
+      try {
+        account = await fetchAccount({ throwOnError: true })
+      } catch (error) {
+        console.error(
+          kleur.red(
+            `Could not verify your account: ${
+              error instanceof Error ? error.message : String(error)
+            }`,
+          ),
+        )
+        process.exit(1)
+      }
+
+      const useSavedMetadata = !process.env.TSCIRCUIT_TOKEN
 
       console.log(kleur.bold().green("\nLogged in user:\n"))
       console.log(
         `  ${kleur.cyan("TscHandle:")}    @${kleur.white(account?.tscircuit_handle ?? kleur.dim("(not set)"))}`,
       )
       console.log(
-        `  ${kleur.cyan("Account ID:")}   ${kleur.white(account?.account_id ?? cliConfig.get("accountId") ?? kleur.dim("(unknown)"))}`,
+        `  ${kleur.cyan("Account ID:")}   ${kleur.white(account?.account_id ?? (useSavedMetadata ? cliConfig.get("accountId") : undefined) ?? kleur.dim("(unknown)"))}`,
       )
       console.log(
         `  ${kleur.cyan("Email:")}        ${kleur.white(account?.email ?? kleur.dim("(unknown)"))}`,
       )
       console.log(
-        `  ${kleur.cyan("Session ID:")}   ${kleur.white(cliConfig.get("sessionId") ?? kleur.dim("(unknown)"))}`,
+        `  ${kleur.cyan("Session ID:")}   ${kleur.white((useSavedMetadata ? cliConfig.get("sessionId") : undefined) ?? kleur.dim("(unknown)"))}`,
       )
       console.log(
         `  ${kleur.cyan("Personal Org:")} ${kleur.white(account?.personal_org_id ?? kleur.dim("(unknown)"))}`,

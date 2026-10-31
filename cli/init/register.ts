@@ -89,7 +89,9 @@ export const registerInit = (program: Command) => {
               initial: defaultPackageName,
             })
 
-        let authorName = cliConfig.get("tscircuitHandle")
+        let authorName = process.env.TSCIRCUIT_TOKEN
+          ? undefined
+          : cliConfig.get("tscircuitHandle")
         if (!authorName) {
           const account = await fetchAccount()
           if (account?.tscircuit_handle) {
