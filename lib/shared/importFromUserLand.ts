@@ -3,7 +3,7 @@ import path from "node:path"
 import { pathToFileURL } from "node:url"
 import { resolve } from "import-meta-resolve"
 
-export async function importFromUserLand(
+export function resolveFromUserLand(
   moduleName: string,
   projectDir = process.cwd(),
 ) {
@@ -23,8 +23,15 @@ export async function importFromUserLand(
         throw error
       }
     }
-    return import(resolved)
+    return resolved
   }
 
-  return import(moduleName)
+  return resolve(moduleName, import.meta.url)
+}
+
+export async function importFromUserLand(
+  moduleName: string,
+  projectDir = process.cwd(),
+) {
+  return import(resolveFromUserLand(moduleName, projectDir))
 }

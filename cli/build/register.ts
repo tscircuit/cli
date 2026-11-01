@@ -116,6 +116,10 @@ export const registerBuild = (program: Command) => {
       "Run install and optional prebuild/build commands (or default CI build)",
     )
     .option("--ignore-errors", "Do not exit with code 1 on errors")
+    .option(
+      "--incremental",
+      "Reuse completed builds for unchanged deterministic project inputs",
+    )
     .option("--ignore-warnings", "Do not log warnings")
     .option("--ignore-netlist-drc", "Ignore netlist DRC errors/warnings")
     .option(
@@ -481,6 +485,7 @@ export const registerBuild = (program: Command) => {
           ignoreRoutingDrc: resolvedOptions?.ignoreRoutingDrc,
           platformConfig,
           profile: resolvedOptions?.profile,
+          incremental: resolvedOptions?.incremental,
           injectedProps,
           generatePreviewAssets: false,
           imageFormats: imageFormatSelection,
@@ -1126,6 +1131,7 @@ export const registerBuild = (program: Command) => {
           resolvedOptions?.kicadPcm && "kicad-pcm",
           resolvedOptions?.previewGltf && "preview-gltf",
           resolvedOptions?.profile && "profile",
+          resolvedOptions?.incremental && "incremental",
           resolvedOptions?.autorouterDebug && "autorouter-debug",
           resolvedOptions?.autorouterPhase && "autorouter-phase",
           resolvedOptions?.autorouterTimeout && "autorouter-timeout",

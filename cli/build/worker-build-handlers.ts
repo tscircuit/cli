@@ -4,8 +4,7 @@ import type { PlatformConfig } from "@tscircuit/props"
 import type { AnyCircuitElement } from "circuit-json"
 import { loadRuntimeProjectConfig } from "lib/project-config"
 import { analyzeCircuitJson } from "../../lib/shared/circuit-json-diagnostics"
-import { generateCircuitJson } from "../../lib/shared/generate-circuit-json"
-import { getPlatformConfigWithCliDefaults } from "../../lib/shared/get-platform-config-with-cli-defaults"
+import { generateCircuitJsonWithBuildCache } from "../../lib/shared/generate-circuit-json-with-build-cache"
 import { mergePlatformConfigs } from "../../lib/shared/platform-config-utils"
 import { registerStaticAssetLoaders } from "../../lib/shared/register-static-asset-loaders"
 import { filterDiagnosticsByDrcCategory } from "./drc-diagnostic-filter"
@@ -54,41 +53,42 @@ export const handleBuildFile = async (
       projectConfig?.platformConfig,
       options?.platformConfig as PlatformConfig,
     )
-    const platformConfigWithCliDefaults = getPlatformConfigWithCliDefaults(
-      platformConfig,
-      { projectDir },
-    )
 
     const normalizedInputPath = filePath.toLowerCase().replaceAll("\\", "/")
     const isPrebuiltCircuitJson =
       normalizedInputPath.endsWith(".circuit.json") ||
       normalizedInputPath.endsWith("/circuit.json")
 
-    const circuitJson = isPrebuiltCircuitJson
-      ? loadCircuitJsonFromInputFile(filePath)
-      : (
-          await generateCircuitJson({
-            filePath,
-            projectDir,
-            platformConfig: platformConfigWithCliDefaults,
-            injectedProps: options?.injectedProps,
-            autorouterDiagnostics: options?.autorouterDiagnostics
-              ? {
-                  ...options.autorouterDiagnostics,
-                  log: (message) => workerLog(message),
-                }
-              : undefined,
-            solverDiagnostics: options?.solverDiagnostics
-              ? {
-                  ...options.solverDiagnostics,
-                  log: (message) => workerLog(message),
-                }
-              : undefined,
-            onAsyncEffectStatus: (asyncEffectName) => {
-              workerStatus(`waiting on ${asyncEffectName}…`)
-            },
-          })
-        ).circuitJson
+    let circuitJson: AnyCircuitElement[]
+    if (isPrebuiltCircuitJson) {
+      circuitJson = loadCircuitJsonFromInputFile(filePath)
+    } else {
+      const result = await generateCircuitJsonWithBuildCache({
+        filePath,
+        projectDir,
+        platformConfig,
+        incremental: options?.incremental,
+        injectedProps: options?.injectedProps,
+        autorouterDiagnostics: options?.autorouterDiagnostics
+          ? {
+              ...options.autorouterDiagnostics,
+              log: (message) => workerLog(message),
+            }
+          : undefined,
+        solverDiagnostics: options?.solverDiagnostics
+          ? {
+              ...options.solverDiagnostics,
+              log: (message) => workerLog(message),
+            }
+          : undefined,
+        onAsyncEffectStatus: (asyncEffectName) => {
+          workerStatus(`waiting on ${asyncEffectName}…`)
+        },
+      })
+      circuitJson = result.circuitJson
+      if (options?.incremental)
+        workerLog(`Incremental build cache: ${result.cacheStatus}`)
+    }
 
     fs.mkdirSync(path.dirname(outputPath), { recursive: true })
     fs.writeFileSync(outputPath, JSON.stringify(circuitJson, null, 2))

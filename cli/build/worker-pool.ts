@@ -28,6 +28,7 @@ type BuildJob = {
   } & DrcIgnoreOptions & {
       platformConfig?: PlatformConfig
       profile?: boolean
+      incremental?: boolean
       injectedProps?: Record<string, unknown>
       autorouterDiagnostics?: AutorouterDiagnosticsOptions
       solverDiagnostics?: SolverDiagnosticsOptions
@@ -75,6 +76,7 @@ export async function buildFilesWithWorkerPool(options: {
   } & DrcIgnoreOptions & {
       platformConfig?: PlatformConfig
       profile?: boolean
+      incremental?: boolean
       injectedProps?: Record<string, unknown>
       autorouterDiagnostics?: AutorouterDiagnosticsOptions
       solverDiagnostics?: SolverDiagnosticsOptions

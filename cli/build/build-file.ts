@@ -4,8 +4,7 @@ import type { PlatformConfig } from "@tscircuit/props"
 import type { AnyCircuitElement } from "circuit-json"
 import kleur from "kleur"
 import { analyzeCircuitJson } from "lib/shared/circuit-json-diagnostics"
-import { generateCircuitJson } from "lib/shared/generate-circuit-json"
-import { getPlatformConfigWithCliDefaults } from "lib/shared/get-platform-config-with-cli-defaults"
+import { generateCircuitJsonWithBuildCache } from "lib/shared/generate-circuit-json-with-build-cache"
 import type { AutorouterDiagnosticsOptions } from "lib/shared/autorouter-diagnostics"
 import type { SolverDiagnosticsOptions } from "lib/shared/solver-diagnostics"
 import {
@@ -33,6 +32,7 @@ export const buildFile = async (
     ignoreWarnings?: boolean
   } & DrcIgnoreOptions & {
       platformConfig?: PlatformConfig
+      incremental?: boolean
       injectedProps?: Record<string, unknown>
       autorouterDiagnostics?: AutorouterDiagnosticsOptions
       solverDiagnostics?: SolverDiagnosticsOptions
@@ -52,22 +52,19 @@ export const buildFile = async (
       circuitJson = Array.isArray(parsed) ? parsed : []
     }
 
-    // Get complete platform config with kicad_mod support
-    const platformConfigWithCliDefaults = getPlatformConfigWithCliDefaults(
-      options?.platformConfig,
-      { projectDir },
-    )
-
     if (!isPrebuiltCircuitJson) {
-      const result = await generateCircuitJson({
+      const result = await generateCircuitJsonWithBuildCache({
         filePath: input,
         projectDir,
-        platformConfig: platformConfigWithCliDefaults,
+        platformConfig: options?.platformConfig,
+        incremental: options?.incremental,
         injectedProps: options?.injectedProps,
         autorouterDiagnostics: options?.autorouterDiagnostics,
         solverDiagnostics: options?.solverDiagnostics,
       })
       circuitJson = result.circuitJson
+      if (options?.incremental)
+        console.log(`Incremental build cache: ${result.cacheStatus}`)
     }
 
     fs.mkdirSync(path.dirname(output), { recursive: true })

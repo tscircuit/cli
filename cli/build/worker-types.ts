@@ -22,6 +22,7 @@ export type BuildFileMessage = {
   } & DrcIgnoreOptions & {
       platformConfig?: PlatformConfig
       profile?: boolean
+      incremental?: boolean
       injectedProps?: Record<string, unknown>
       autorouterDiagnostics?: AutorouterDiagnosticsOptions
       solverDiagnostics?: SolverDiagnosticsOptions
