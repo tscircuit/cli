@@ -6,7 +6,10 @@ import { pathToFileURL } from "node:url"
  * The circuit-json-to-gltf library uses fetch() to load GLB/STL/OBJ/GLTF files,
  * which requires proper URLs rather than local file paths.
  */
-export const convertModelUrlsToFileUrls = (circuitJson: any[]): any[] => {
+export const convertModelUrlsToFileUrls = (
+  circuitJson: any[],
+  baseDirectory = process.cwd(),
+): any[] => {
   const modelUrlKeys = [
     "model_glb_url",
     "glb_model_url",
@@ -34,8 +37,8 @@ export const convertModelUrlsToFileUrls = (circuitJson: any[]): any[] => {
           // Absolute path (Unix or Windows)
           updated[key] = pathToFileURL(value).href
         } else if (value.startsWith(".")) {
-          // Relative path (e.g. ./chip.glb) — resolve against cwd
-          updated[key] = pathToFileURL(path.resolve(process.cwd(), value)).href
+          // Relative path (e.g. ./chip.glb) — resolve against the input project.
+          updated[key] = pathToFileURL(path.resolve(baseDirectory, value)).href
         }
       }
     }

@@ -6,7 +6,19 @@ exports[`GLB and GLTF export include a relative local STEP model 1`] = `
   "modelNodes": [
     {
       "name": "SW1",
-      "vertexCount": 24,
+      "vertexCount": 5316,
+    },
+  ],
+}
+`;
+
+exports[`GLB and GLTF export include a relative local STEP model 2`] = `
+{
+  "format": "gltf",
+  "modelNodes": [
+    {
+      "name": "SW1",
+      "vertexCount": 5316,
     },
   ],
 }
