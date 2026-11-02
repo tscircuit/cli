@@ -41,7 +41,7 @@ export default () => (
             height: 480,
             camPos: [30, 30, 30],
             lookAt: [0, 0, 0],
-            background: [0.94, 0.96, 0.98, 1],
+            backgroundColor: [0.94, 0.96, 0.98],
           }),
         ).toMatchPngSnapshot(import.meta.path)
       }
