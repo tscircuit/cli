@@ -27,6 +27,11 @@ export const registerInit = (program: Command) => {
       "Directory name (optional, defaults to current directory)",
     )
     .option("-y, --yes", "Use defaults and skip prompts")
+    .option(
+      "--install",
+      "Install project dependencies",
+      process.env.TSCIRCUIT_STANDALONE !== "1",
+    )
     .option("--no-install", "Skip installing dependencies")
     .action(
       async (
