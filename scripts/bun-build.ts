@@ -1,5 +1,5 @@
+import { cp, rename, writeFile } from "node:fs/promises"
 import { basename } from "node:path"
-import { cp } from "node:fs/promises"
 import { fileURLToPath } from "node:url"
 // @ts-ignore
 import tscircuitPackageJson from "tscircuit/package.json"
@@ -19,6 +19,7 @@ const result = await Bun.build({
     "./cli/build/build.worker.ts",
     "./cli/snapshot/snapshot.worker.ts",
     "./lib/index.ts",
+    "./lib/shared/register-static-asset-loaders.ts",
   ],
   target: "node",
   outdir: "./dist",
@@ -42,6 +43,19 @@ if (!success) {
   process.exit(1)
 }
 
+await rename("./dist/cli/main.js", "./dist/cli/main-bundle.js")
+await writeFile(
+  "./dist/cli/main.js",
+  [
+    "#!/usr/bin/env node",
+    'import { registerStaticAssetLoaders } from "../lib/shared/register-static-asset-loaders.js"',
+    "registerStaticAssetLoaders()",
+    'const { program } = await import("./main-bundle.js")',
+    "export { program }",
+    "",
+  ].join("\n"),
+)
+
 // Palace's bundled orchestration resolves these scripts beside main.js.
 await cp(
   fileURLToPath(
@@ -56,5 +70,3 @@ for (const output of outputs) {
     `${basename(output.path)} ${(output.size / 1024 / 1024).toFixed(2)} MB`,
   )
 }
-
-export {}

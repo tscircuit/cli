@@ -14,11 +14,17 @@ function commandExists(cmd) {
   }
 }
 
-const runner = commandExists("bun") ? "bun" : "tsx"
-
 const __dirname = dirname(fileURLToPath(import.meta.url))
 const packageRoot = join(__dirname, "..")
 const require = createRequire(import.meta.url)
+
+function resolveRunner(mainPath, cliArgs) {
+  if (commandExists("bun")) {
+    return { command: "bun", args: [mainPath, ...cliArgs] }
+  }
+
+  return { command: process.execPath, args: [mainPath, ...cliArgs] }
+}
 
 const globalPackageJson = require("../package.json")
 
@@ -46,8 +52,16 @@ if (!useGlobal) {
   } catch {}
 }
 
-const { status } = spawnSync(runner, [mainPath, ...args], {
+const runner = resolveRunner(mainPath, args)
+const { status, error, signal } = spawnSync(runner.command, runner.args, {
   stdio: "inherit",
 })
 
-process.exit(status ?? 0)
+if (error) {
+  console.error(
+    `Failed to launch tscircuit CLI with "${runner.command}": ${error.message}`,
+  )
+  process.exit(1)
+}
+
+process.exit(status ?? (signal ? 1 : 0))
