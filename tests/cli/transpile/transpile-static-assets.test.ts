@@ -69,7 +69,9 @@ test("transpile copies static assets and preserves glb_model_url", async () => {
       | undefined
     const glbUrl =
       cadComponentWithGlb?.glb_model_url ?? cadComponentWithGlb?.model_glb_url
-    expect(glbUrl).toBe(expectedAssetPath)
+    // Core can serialize local model URLs relative to the working directory.
+    expect(glbUrl).toBeDefined()
+    expect(path.resolve(glbUrl!)).toBe(expectedAssetPath)
   } finally {
     await runner.kill()
   }
