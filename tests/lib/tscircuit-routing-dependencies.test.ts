@@ -26,6 +26,23 @@ function readPackage(entryUrl: string): PackageManifest {
   throw new Error(`No package.json found for ${entryUrl}`)
 }
 
+test("runtime JSCAD dependencies do not use the tscircuit CDN", () => {
+  const runtimeEntry = resolve("tscircuit", import.meta.url)
+  const gltfEntry = resolve("circuit-json-to-gltf", runtimeEntry)
+  const electronicsEntry = resolve("jscad-electronics", gltfEntry)
+  for (const entry of [
+    electronicsEntry,
+    resolve("jscad-fiber", electronicsEntry),
+    resolve("jscad-fiber", runtimeEntry),
+  ]) {
+    const manifest = readPackage(entry)
+    expect(
+      manifest.dependencies["@tscircuit/jscad"] ?? "",
+      `${manifest.name}@${manifest.version}`,
+    ).not.toContain("jscdn.tscircuit.com")
+  }
+})
+
 test("installed core and autorouter follow the tscircuit dependency contract", () => {
   const tscircuitEntry = resolve("tscircuit", import.meta.url)
   const tscircuitPackage = readPackage(tscircuitEntry)

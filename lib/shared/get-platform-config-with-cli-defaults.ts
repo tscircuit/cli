@@ -1,7 +1,7 @@
 import { createHash } from "node:crypto"
 import fs from "node:fs"
 import path from "node:path"
-import { getPlatformConfig } from "@tscircuit/eval/platform-config"
+import { getPlatformConfig } from "tscircuit"
 import type { PlatformConfig } from "@tscircuit/props"
 import semver from "semver"
 import { mergePlatformConfigs } from "./platform-config-utils"
