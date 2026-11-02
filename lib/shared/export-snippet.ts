@@ -12,6 +12,7 @@ import {
 } from "circuit-json-to-bom-csv"
 import { convertCircuitJsonToGerberFiles } from "circuit-json-to-gerber"
 import { convertCircuitJsonToGltf } from "circuit-json-to-gltf"
+import { convertModelUrlsToFileUrls } from "cli/build/convert-model-urls-to-file-urls"
 import {
   CircuitJsonToKicadPcbConverter,
   CircuitJsonToKicadProConverter,
@@ -268,24 +269,34 @@ export const exportSnippet = async ({
     case "readable-netlist":
       outputContent = convertCircuitJsonToReadableNetlist(circuitJson)
       break
-    case "gltf":
+    case "gltf": {
+      const circuitJsonWithFileUrls = convertModelUrlsToFileUrls(
+        circuitJson,
+        projectDir,
+      )
       outputContent = JSON.stringify(
         await convertCircuitJsonToGltf(
-          circuitJson,
+          circuitJsonWithFileUrls,
           getCircuitJsonToGltfOptions({ format: "gltf" }),
         ),
         null,
         2,
       )
       break
-    case "glb":
+    }
+    case "glb": {
+      const circuitJsonWithFileUrls = convertModelUrlsToFileUrls(
+        circuitJson,
+        projectDir,
+      )
       outputContent = Buffer.from(
         (await convertCircuitJsonToGltf(
-          circuitJson,
+          circuitJsonWithFileUrls,
           getCircuitJsonToGltfOptions({ format: "glb" }),
         )) as ArrayBuffer,
       )
       break
+    }
     case "srj":
       {
         const userLandTscircuit = await importFromUserLand("tscircuit")
