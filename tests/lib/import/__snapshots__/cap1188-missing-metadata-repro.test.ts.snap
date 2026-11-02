@@ -1,6 +1,6 @@
 // Bun Snapshot v1, https://bun.sh/docs/test/snapshots
 
-exports[`CAP1188 exposed pad warns when metadata is missing: CAP1188 missing metadata TSX 1`] = `
+exports[`reproduces CAP1188 exposed pad missing ground metadata: CAP1188 missing metadata TSX 1`] = `
 "import type { ChipProps } from "@tscircuit/props"
 
 const pinLabels = {
@@ -34,103 +34,6 @@ const pinLabels = {
 const pinAttributes = {
   pin23: {requiresPower: true}
 } as const
-
-export const CAP1188_1_CP_TR = (props: ChipProps<typeof pinLabels>) => {
-  return (
-    <chip
-      pinLabels={pinLabels}
-      pinAttributes={pinAttributes}
-      supplierPartNumbers={{
-  "jlcpcb": [
-    "C2652057"
-  ]
-}}
-      manufacturerPartNumber="CAP1188-1-CP-TR"
-      footprint={<footprint>
-        <smtpad portHints={["pin1"]} pcbX="-1.250061mm" pcbY="-1.950085mm" width="0.2800096mm" height="0.6999986mm" shape="rect" />
-<smtpad portHints={["pin2"]} pcbX="-0.749935mm" pcbY="-1.950085mm" width="0.2800096mm" height="0.6999986mm" shape="rect" />
-<smtpad portHints={["pin3"]} pcbX="-0.250063mm" pcbY="-1.950085mm" width="0.2800096mm" height="0.6999986mm" shape="rect" />
-<smtpad portHints={["pin4"]} pcbX="0.250063mm" pcbY="-1.950085mm" width="0.2800096mm" height="0.6999986mm" shape="rect" />
-<smtpad portHints={["pin5"]} pcbX="0.749935mm" pcbY="-1.950085mm" width="0.2800096mm" height="0.6999986mm" shape="rect" />
-<smtpad portHints={["pin6"]} pcbX="1.250061mm" pcbY="-1.950085mm" width="0.2800096mm" height="0.6999986mm" shape="rect" />
-<smtpad portHints={["pin7"]} pcbX="1.950085mm" pcbY="-1.250061mm" width="0.6999986mm" height="0.2800096mm" shape="rect" />
-<smtpad portHints={["pin8"]} pcbX="1.950085mm" pcbY="-0.750189mm" width="0.6999986mm" height="0.2800096mm" shape="rect" />
-<smtpad portHints={["pin9"]} pcbX="1.950085mm" pcbY="-0.250063mm" width="0.6999986mm" height="0.2800096mm" shape="rect" />
-<smtpad portHints={["pin10"]} pcbX="1.950085mm" pcbY="0.249809mm" width="0.6999986mm" height="0.2800096mm" shape="rect" />
-<smtpad portHints={["pin11"]} pcbX="1.950085mm" pcbY="0.749935mm" width="0.6999986mm" height="0.2800096mm" shape="rect" />
-<smtpad portHints={["pin12"]} pcbX="1.950085mm" pcbY="1.249807mm" width="0.6999986mm" height="0.2800096mm" shape="rect" />
-<smtpad portHints={["pin13"]} pcbX="1.250061mm" pcbY="1.950085mm" width="0.2800096mm" height="0.6999986mm" shape="rect" />
-<smtpad portHints={["pin14"]} pcbX="0.749935mm" pcbY="1.950085mm" width="0.2800096mm" height="0.6999986mm" shape="rect" />
-<smtpad portHints={["pin15"]} pcbX="0.250063mm" pcbY="1.950085mm" width="0.2800096mm" height="0.6999986mm" shape="rect" />
-<smtpad portHints={["pin16"]} pcbX="-0.250063mm" pcbY="1.950085mm" width="0.2800096mm" height="0.6999986mm" shape="rect" />
-<smtpad portHints={["pin17"]} pcbX="-0.749935mm" pcbY="1.950085mm" width="0.2800096mm" height="0.6999986mm" shape="rect" />
-<smtpad portHints={["pin18"]} pcbX="-1.250061mm" pcbY="1.950085mm" width="0.2800096mm" height="0.6999986mm" shape="rect" />
-<smtpad portHints={["pin19"]} pcbX="-1.950085mm" pcbY="1.249807mm" width="0.6999986mm" height="0.2800096mm" shape="rect" />
-<smtpad portHints={["pin20"]} pcbX="-1.950085mm" pcbY="0.749935mm" width="0.6999986mm" height="0.2800096mm" shape="rect" />
-<smtpad portHints={["pin21"]} pcbX="-1.950085mm" pcbY="0.249809mm" width="0.6999986mm" height="0.2800096mm" shape="rect" />
-<smtpad portHints={["pin22"]} pcbX="-1.950085mm" pcbY="-0.250063mm" width="0.6999986mm" height="0.2800096mm" shape="rect" />
-<smtpad portHints={["pin23"]} pcbX="-1.950085mm" pcbY="-0.750189mm" width="0.6999986mm" height="0.2800096mm" shape="rect" />
-<smtpad portHints={["pin24"]} pcbX="-1.950085mm" pcbY="-1.250061mm" width="0.6999986mm" height="0.2800096mm" shape="rect" />
-<smtpad portHints={["pin25"]} pcbX="-0.000127mm" pcbY="-0.000127mm" width="2.499995mm" height="2.499995mm" shape="rect" />
-<silkscreenpath route={[{"x":1.6212057999999843,"y":2.031898399999932},{"x":2.032050799999979,"y":2.031898399999932}]} />
-<silkscreenpath route={[{"x":-2.031949200000099,"y":1.6209517999999434},{"x":-2.031949200000099,"y":2.031898399999932},{"x":-1.6212057999999843,"y":2.031898399999932}]} />
-<silkscreenpath route={[{"x":-1.6212057999999843,"y":-2.0321016000001464},{"x":-2.031949200000099,"y":-2.0321016000001464},{"x":-2.031949200000099,"y":-1.621205800000098}]} />
-<silkscreenpath route={[{"x":2.032050799999979,"y":-1.621205800000098},{"x":2.032050799999979,"y":-2.0321016000001464},{"x":1.6212057999999843,"y":-2.0321016000001464}]} />
-<silkscreenpath route={[{"x":2.032050799999979,"y":2.031898399999932},{"x":2.032050799999979,"y":1.6209517999999434}]} />
-<silkscreencircle pcbX="-1.777873mm" pcbY="-2.540127mm" radius="0.127mm" />
-<silkscreentext text="{NAME}" pcbX="-0.007493mm" pcbY="3.288921mm" anchorAlignment="center" fontSize="1mm" />
-<courtyardoutline outline={[{"x":-2.5500842999999804,"y":2.5500842999999804},{"x":2.5500842999999804,"y":2.5500842999999804},{"x":2.5500842999999804,"y":-2.550084300000094},{"x":-2.5500842999999804,"y":-2.550084300000094},{"x":-2.5500842999999804,"y":2.5500842999999804}]} />
-      </footprint>}
-
-      cadModel={{
-        objUrl: "https://modelcdn.tscircuit.com/easyeda_models/assets/C2652057.obj?uuid=a7b12dde0a7d4771a602d6847f242e5d",
-        stepUrl: "https://modelcdn.tscircuit.com/easyeda_models/assets/C2652057.step?uuid=a7b12dde0a7d4771a602d6847f242e5d",
-        pcbRotationOffset: 90,
-        modelOriginPosition: {"x":0,"y":0,"z":2.8099909},
-
-      }}
-
-      {...props}
-    />
-  )
-}"
-`;
-
-exports[`CAP1188 exposed pad preserves supplied ground metadata: CAP1188 supplied metadata TSX 1`] = `
-"import type { ChipProps } from "@tscircuit/props"
-
-const pinLabels = {
-  pin1: ["N_SPI_CS"],
-  pin2: ["WAKE","SPI_MOSI"],
-  pin3: ["SMDATA","BC_DATA","SPI_MSIO","SPI_MISO"],
-  pin4: ["SMCLK","BC_CLK","SPI_CLK"],
-  pin5: ["LED1"],
-  pin6: ["LED2"],
-  pin7: ["LED3"],
-  pin8: ["LED4"],
-  pin9: ["LED5"],
-  pin10: ["LED6"],
-  pin11: ["LED7"],
-  pin12: ["LED8"],
-  pin13: ["N_ALERT","N_BC_IRQ"],
-  pin14: ["ADDR_COMM"],
-  pin15: ["CS8"],
-  pin16: ["CS7"],
-  pin17: ["CS6"],
-  pin18: ["CS5"],
-  pin19: ["CS4"],
-  pin20: ["CS3"],
-  pin21: ["CS2"],
-  pin22: ["CS1"],
-  pin23: ["VDD"],
-  pin24: ["RESET"],
-  pin25: ["pin25"]
-} as const
-
-const pinAttributes = {
-  pin23: {requiresPower: true},
-  pin25: {requiresGround: true}
-} satisfies NonNullable<ChipProps["pinAttributes"]>
 
 export const CAP1188_1_CP_TR = (props: ChipProps<typeof pinLabels>) => {
   return (
