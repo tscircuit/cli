@@ -49,15 +49,12 @@ test("exportSnippet with format glb loads relative modelUrl without 404 (#5654)"
   const temporaryDirectory = await mkdtemp(
     path.join(tmpdir(), "tsci-export-glb-"),
   )
-  const circuitJsonPath = path.join(
-    temporaryDirectory,
-    "index.circuit.json",
-  )
+  const circuitJsonPath = path.join(temporaryDirectory, "index.circuit.json")
   const librariesDir = path.join(temporaryDirectory, "libraries")
   await mkdir(librariesDir, { recursive: true })
   await writeFile(path.join(librariesDir, "cap.glb"), createMinimalGlb())
 
-  const circuitJson: AnyCircuitElement[] = [
+  const circuitJson: any[] = [
     {
       type: "pcb_board",
       pcb_board_id: "board_1",
@@ -66,6 +63,7 @@ test("exportSnippet with format glb loads relative modelUrl without 404 (#5654)"
       height: 10,
       thickness: 1.6,
       num_layers: 2,
+      material: "fr4",
     },
     {
       type: "pcb_component",
@@ -104,7 +102,9 @@ test("exportSnippet with format glb loads relative modelUrl without 404 (#5654)"
     expect(glbBuffer).toBeDefined()
     expect(glbBuffer!.subarray(0, 4).toString()).toBe("glTF")
 
-    const writtenGlb = await readFile(path.join(temporaryDirectory, "index.glb"))
+    const writtenGlb = await readFile(
+      path.join(temporaryDirectory, "index.glb"),
+    )
     expect(writtenGlb.subarray(0, 4).toString()).toBe("glTF")
   } finally {
     await rm(temporaryDirectory, { recursive: true, force: true })
