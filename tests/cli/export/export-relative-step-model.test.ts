@@ -1,6 +1,7 @@
 import { expect, test } from "bun:test"
 import { copyFile, mkdir, readFile, writeFile } from "node:fs/promises"
 import path from "node:path"
+import { renderGLTFToPNGFromGLB } from "poppygl"
 import { getCliTestFixture } from "../../fixtures/get-cli-test-fixture"
 
 test(
@@ -33,6 +34,17 @@ export default () => (
       const exported = await readFile(
         path.join(projectDir, `switch.circuit.${format}`),
       )
+      if (format === "glb") {
+        await expect(
+          renderGLTFToPNGFromGLB(new Uint8Array(exported).buffer, {
+            width: 640,
+            height: 480,
+            camPos: [30, 30, 30],
+            lookAt: [0, 0, 0],
+            background: [0.94, 0.96, 0.98, 1],
+          }),
+        ).toMatchPngSnapshot(import.meta.path)
+      }
       const document =
         format === "glb"
           ? JSON.parse(
