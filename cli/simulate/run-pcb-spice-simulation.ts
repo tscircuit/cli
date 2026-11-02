@@ -2,7 +2,6 @@ import { stat } from "node:fs/promises"
 import { join, relative, resolve } from "node:path"
 import {
   runPipeline,
-  type CircuitJson as PcbSpiceCircuitJson,
   type PipelineModeling,
 } from "@tscircuit/pcb-spice-pipeline"
 import {
@@ -47,14 +46,11 @@ export const runPcbSpiceSimulation = async ({
   } catch (error) {
     if ((error as NodeJS.ErrnoException).code !== "ENOENT") throw error
   }
-  // The released pipeline uses an older Circuit JSON union and validates every
-  // record against its own schema. Keep all records for that validation boundary.
-  const pcbSpiceCircuitJson = circuitJson as PcbSpiceCircuitJson
   const result = await runPipeline({
-    circuitJson: pcbSpiceCircuitJson,
+    circuitJson,
     modeling,
     ibisSources: await loadIbisSources({
-      circuitJson: pcbSpiceCircuitJson,
+      circuitJson,
       baseDir,
     }),
     runSolver: createNativeSolver({ timeoutMs: solverTimeoutMs }),

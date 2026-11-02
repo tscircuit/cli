@@ -1,4 +1,4 @@
-import type { PlatformConfig } from "@tscircuit/props"
+import type { PlatformConfig } from "lib/shared/platform-config"
 import type { AutorouterDiagnosticsOptions } from "lib/shared/autorouter-diagnostics"
 import type { SolverDiagnosticsOptions } from "lib/shared/solver-diagnostics"
 import type { PcbSnapshotSettings } from "lib/project-config/project-config-schema"

@@ -3,7 +3,7 @@ import { mkdtempSync, rmSync, symlinkSync, writeFileSync } from "node:fs"
 import { tmpdir } from "node:os"
 import path from "node:path"
 import { getPlatformConfig } from "tscircuit"
-import type { PlatformConfig } from "@tscircuit/props"
+import type { PlatformConfig } from "lib/shared/platform-config"
 import { generateCircuitJson } from "lib/shared/generate-circuit-json"
 import { getPlatformConfigWithCliDefaults } from "lib/shared/get-platform-config-with-cli-defaults"
 

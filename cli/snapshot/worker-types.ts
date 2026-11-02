@@ -1,4 +1,4 @@
-import type { PlatformConfig } from "@tscircuit/props"
+import type { PlatformConfig } from "lib/shared/platform-config"
 import type { VisibleLayerRef } from "circuit-json"
 import type { CameraPreset } from "circuit-json-to-3d-png"
 import type { PcbSnapshotSettings } from "lib/project-config/project-config-schema"

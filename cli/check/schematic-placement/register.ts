@@ -1,5 +1,5 @@
 import { analyzeSchematicPlacement } from "@tscircuit/circuit-json-schematic-placement-analysis"
-import type { PlatformConfig } from "@tscircuit/props"
+import type { PlatformConfig } from "lib/shared/platform-config"
 import type { AnyCircuitElement, CircuitJson } from "circuit-json"
 import type { Command } from "commander"
 import { getCircuitJsonForCheck, resolveCheckInputFilePath } from "../shared"

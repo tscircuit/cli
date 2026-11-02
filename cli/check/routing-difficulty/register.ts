@@ -1,5 +1,5 @@
 import { analyzeRouting } from "@tscircuit/circuit-json-routing-analysis"
-import type { PlatformConfig } from "@tscircuit/props"
+import type { PlatformConfig } from "lib/shared/platform-config"
 import type { Command } from "commander"
 import path from "node:path"
 import { getCircuitJsonForCheck, resolveCheckInputFilePath } from "../shared"

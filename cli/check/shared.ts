@@ -1,6 +1,6 @@
 import fs from "node:fs"
 import path from "node:path"
-import type { PlatformConfig } from "@tscircuit/props"
+import type { PlatformConfig } from "lib/shared/platform-config"
 import type { AnyCircuitElement } from "circuit-json"
 import type { AutorouterDiagnosticsOptions } from "lib/shared/autorouter-diagnostics"
 import { getOrGenerateCircuitJson } from "lib/shared/get-or-generate-circuit-json"

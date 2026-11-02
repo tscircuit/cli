@@ -1,7 +1,7 @@
 import fs from "node:fs"
 import path from "node:path"
 import JSZip from "jszip"
-import type { PlatformConfig } from "@tscircuit/props"
+import type { PlatformConfig } from "lib/shared/platform-config"
 import type { Command } from "commander"
 import kleur from "kleur"
 import { getCircuitJsonOutputDirName } from "lib/shared/circuit-json-build-cache"

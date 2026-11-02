@@ -3,7 +3,7 @@ import {
   categorizeErrorOrWarning,
   type DrcCategory,
 } from "@tscircuit/circuit-json-util"
-import type { PlatformConfig } from "@tscircuit/props"
+import type { PlatformConfig } from "lib/shared/platform-config"
 import type { AnyCircuitElement } from "circuit-json"
 import type { Command } from "commander"
 import { getOrGenerateCircuitJson } from "lib/shared/get-or-generate-circuit-json"

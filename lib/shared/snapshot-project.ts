@@ -1,6 +1,6 @@
 import fs from "node:fs"
 import path from "node:path"
-import type { PlatformConfig } from "@tscircuit/props"
+import type { PlatformConfig } from "lib/shared/platform-config"
 import type { VisibleLayerRef } from "circuit-json"
 import { snapshotFilesWithWorkerPool } from "cli/snapshot/worker-pool"
 import kleur from "kleur"

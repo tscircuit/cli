@@ -5,7 +5,7 @@ import { join } from "node:path"
 import { pcb_quote_estimate } from "circuit-json"
 import { runPcbSpiceSimulation } from "cli/simulate/run-pcb-spice-simulation"
 
-test("PCB simulation retains validation for records from newer Circuit JSON", async () => {
+test("PCB simulation validates fields of current Circuit JSON records", async () => {
   const projectDir = await mkdtemp(join(tmpdir(), "tsci-pcb-spice-schema-"))
   const output = join(projectDir, "output")
   const quote = pcb_quote_estimate.parse({
@@ -18,6 +18,7 @@ test("PCB simulation retains validation for records from newer Circuit JSON", as
     is_manufacturing_cost_complete: false,
     is_landed_cost_complete: false,
   })
+  quote.quantity = 0
   try {
     await expect(
       runPcbSpiceSimulation({
@@ -51,7 +52,7 @@ test("PCB simulation retains validation for records from newer Circuit JSON", as
           },
         },
       }),
-    ).rejects.toThrow(/pcb_quote_estimate.*no registered record schema/)
+    ).rejects.toThrow(/circuit_schema: pcb_quote_estimate.*quantity/)
     expect(await Bun.file(join(output, "report.html")).exists()).toBe(false)
   } finally {
     await rm(projectDir, { recursive: true, force: true })

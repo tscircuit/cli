@@ -1,5 +1,5 @@
 import { expect, test } from "bun:test"
-import type { PlatformConfig } from "@tscircuit/props"
+import type { PlatformConfig } from "lib/shared/platform-config"
 import { getPlatformConfigWithCliDefaults } from "lib/shared/get-platform-config-with-cli-defaults"
 import { mergePlatformConfigs } from "lib/shared/platform-config-utils"
 

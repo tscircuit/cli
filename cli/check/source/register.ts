@@ -1,5 +1,5 @@
 import { categorizeErrorOrWarning } from "@tscircuit/circuit-json-util"
-import type { PlatformConfig } from "@tscircuit/props"
+import type { PlatformConfig } from "lib/shared/platform-config"
 import type { AnyCircuitElement } from "circuit-json"
 import type { Command } from "commander"
 import {

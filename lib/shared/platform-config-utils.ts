@@ -1,4 +1,4 @@
-import type { PlatformConfig } from "@tscircuit/props"
+import type { PlatformConfig } from "lib/shared/platform-config"
 
 export const mergePlatformConfigs = (
   ...configs: Array<PlatformConfig | null | undefined>

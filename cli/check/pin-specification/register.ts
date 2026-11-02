@@ -1,4 +1,4 @@
-import type { PlatformConfig } from "@tscircuit/props"
+import type { PlatformConfig } from "lib/shared/platform-config"
 import { runAllPinSpecificationChecks } from "@tscircuit/checks"
 import type { AnyCircuitElement } from "circuit-json"
 import type { Command } from "commander"

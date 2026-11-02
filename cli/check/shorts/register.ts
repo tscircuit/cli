@@ -4,7 +4,7 @@ import type {
   BitmapShort,
   FindBitmapShortsOptions,
 } from "@tscircuit/check-shorts"
-import type { PlatformConfig } from "@tscircuit/props"
+import type { PlatformConfig } from "lib/shared/platform-config"
 import { all_layers, layer_string } from "circuit-json"
 import type { Command } from "commander"
 import { getCircuitJsonForCheck, resolveCheckInputFilePath } from "../shared"
