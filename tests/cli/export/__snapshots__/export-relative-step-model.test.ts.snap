@@ -1,0 +1,8 @@
+// Bun Snapshot v1, https://bun.sh/docs/test/snapshots
+
+exports[`GLB and GLTF export include a relative local STEP model 1`] = `
+{
+  "format": "glb",
+  "modelNodes": [],
+}
+`;
