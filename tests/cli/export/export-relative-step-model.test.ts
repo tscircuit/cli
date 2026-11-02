@@ -39,21 +39,39 @@ export default () => (
               exported.subarray(20, 20 + exported.readUInt32LE(12)).toString(),
             )
           : JSON.parse(exported.toString())
-      // The STEP mesh is named after its source URL. A valid GLB header alone
-      // would also pass when conversion silently drops the component model.
-      const modelNodes = document.nodes.filter((node: { name?: string }) =>
-        node.name?.includes("switch.step"),
+      // A valid GLB header also passes when the model is silently dropped.
+      // The fixture STEP contains thousands of vertices, unlike a fallback box.
+      const modelNodes = document.nodes.filter(
+        (node: { name?: string }) => node.name === "SW1",
       )
       expect({
         format,
         modelNodes: modelNodes.map((node: { name: string; mesh?: number }) => ({
-          name: node.name.replace(/^.*libraries\//, "libraries/"),
-          hasMesh: typeof node.mesh === "number",
+          name: node.name,
+          vertexCount:
+            typeof node.mesh === "number"
+              ? document.meshes[node.mesh].primitives.reduce(
+                  (
+                    count: number,
+                    primitive: { attributes: { POSITION: number } },
+                  ) =>
+                    count +
+                    document.accessors[primitive.attributes.POSITION].count,
+                  0,
+                )
+              : 0,
         })),
       }).toMatchSnapshot()
       expect(exitCode).toBe(0)
       expect(`${stdout}\n${stderr}`).not.toContain("Failed to load")
       expect(modelNodes.length).toBeGreaterThan(0)
+      expect(
+        document.meshes[modelNodes[0].mesh].primitives.reduce(
+          (count: number, primitive: { attributes: { POSITION: number } }) =>
+            count + document.accessors[primitive.attributes.POSITION].count,
+          0,
+        ),
+      ).toBeGreaterThan(1000)
     }
   },
   { timeout: 60_000 },
