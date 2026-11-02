@@ -2,6 +2,7 @@ import { createHash, randomUUID } from "node:crypto"
 import fs from "node:fs"
 import path from "node:path"
 import { fileURLToPath } from "node:url"
+import { isDeepStrictEqual } from "node:util"
 import type { AnyCircuitElement } from "circuit-json"
 import { z } from "zod"
 import { resolve } from "import-meta-resolve"
@@ -82,44 +83,19 @@ function getCliIdentity() {
 
 function getBuildInputHash(options: GenerationOptions) {
   const projectDir = path.resolve(options.projectDir ?? process.cwd())
-  const serializedInputs = JSON.stringify(
-    {
-      platformConfig: options.platformConfig,
-      injectedProps: options.injectedProps,
-      environment: Object.fromEntries(
-        Object.entries(process.env).sort(([left], [right]) =>
-          left.localeCompare(right),
-        ),
+  const buildInputs = {
+    platformConfig: options.platformConfig ?? null,
+    injectedProps: options.injectedProps ?? null,
+    environment: Object.fromEntries(
+      Object.entries(process.env).sort(([left], [right]) =>
+        left.localeCompare(right),
       ),
-    },
-    function (this: Record<string, unknown>, key: string, input: unknown) {
-      const originalInput = this[key]
-      if (
-        typeof originalInput === "function" ||
-        typeof originalInput === "symbol" ||
-        typeof originalInput === "bigint"
-      ) {
-        throw new Error("Non-JSON build options require a fresh build")
-      }
-      if (
-        typeof originalInput === "number" &&
-        !Number.isFinite(originalInput)
-      ) {
-        throw new Error("Non-finite build options require a fresh build")
-      }
-      if (
-        originalInput &&
-        typeof originalInput === "object" &&
-        !Array.isArray(originalInput)
-      ) {
-        const prototype = Object.getPrototypeOf(originalInput)
-        if (prototype !== Object.prototype && prototype !== null) {
-          throw new Error("Non-JSON build options require a fresh build")
-        }
-      }
-      return input
-    },
-  )
+    ),
+  }
+  const serializedInputs = JSON.stringify(buildInputs)
+  if (!isDeepStrictEqual(JSON.parse(serializedInputs), buildInputs)) {
+    throw new Error("Non-JSON build options require a fresh build")
+  }
   const hash = createHash("sha256")
     .update(String(CACHE_FORMAT_VERSION))
     .update(getCliIdentity())
@@ -195,41 +171,37 @@ export async function generateCircuitJsonWithBuildCache(
       projectDir: options.projectDir,
     }),
   })
-  if (inputHash && cachePath) {
-    const hasRenderFailure = analyzeCircuitJson(circuitJson).errors.some(
-      (error) => {
-        const category = categorizeErrorOrWarning(error)
-        return category === "source" || category === "unknown"
-      },
+  if (!inputHash || !cachePath) return { circuitJson, cacheStatus: "disabled" }
+  const hasRenderFailure = analyzeCircuitJson(circuitJson).errors.some(
+    (error) => {
+      const category = categorizeErrorOrWarning(error)
+      return category === "source" || category === "unknown"
+    },
+  )
+  if (hasRenderFailure) return { circuitJson, cacheStatus: "disabled" }
+
+  const temporaryPath = `${cachePath}.${randomUUID()}.tmp`
+  try {
+    if (getBuildInputHash(options) !== inputHash)
+      return { circuitJson, cacheStatus: "disabled" }
+    const serializedCircuitJson = JSON.stringify(circuitJson)
+    fs.mkdirSync(path.dirname(cachePath), { recursive: true })
+    fs.writeFileSync(
+      temporaryPath,
+      JSON.stringify({
+        format_version: CACHE_FORMAT_VERSION,
+        input_hash: inputHash,
+        circuit_json_sha256: hashText(serializedCircuitJson),
+        circuit_json: serializedCircuitJson,
+      }),
     )
-    if (hasRenderFailure) return { circuitJson, cacheStatus: "disabled" }
-    let temporaryPath: string | undefined
+    fs.renameSync(temporaryPath, cachePath)
+  } catch {
+    // Cache storage must not turn a completed build into a failure.
+  } finally {
     try {
-      if (getBuildInputHash(options) === inputHash) {
-        const serializedCircuitJson = JSON.stringify(circuitJson)
-        fs.mkdirSync(path.dirname(cachePath), { recursive: true })
-        temporaryPath = `${cachePath}.${randomUUID()}.tmp`
-        fs.writeFileSync(
-          temporaryPath,
-          JSON.stringify({
-            format_version: CACHE_FORMAT_VERSION,
-            input_hash: inputHash,
-            circuit_json_sha256: hashText(serializedCircuitJson),
-            circuit_json: serializedCircuitJson,
-          }),
-        )
-        fs.renameSync(temporaryPath, cachePath)
-      }
-    } catch {
-      // Cache storage must not turn a completed build into a failure.
-    } finally {
-      if (temporaryPath) {
-        try {
-          fs.rmSync(temporaryPath, { force: true })
-        } catch {}
-      }
-    }
-    return { circuitJson, cacheStatus: "miss" }
+      fs.rmSync(temporaryPath, { force: true })
+    } catch {}
   }
-  return { circuitJson, cacheStatus: "disabled" }
+  return { circuitJson, cacheStatus: "miss" }
 }

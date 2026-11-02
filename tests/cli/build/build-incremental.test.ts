@@ -196,3 +196,22 @@ test("render failures are retried instead of becoming cached board results", asy
     await readdir(path.join(tmpDir, ".tscircuit/build-cache")).catch(() => []),
   ).toHaveLength(0)
 }, 30_000)
+
+test("function-valued platform config keeps incremental builds fresh", async () => {
+  const { tmpDir, runCommand } = await getCliTestFixture()
+  await writeFile(path.join(tmpDir, "package.json"), "{}")
+  await writeFile(path.join(tmpDir, "index.circuit.tsx"), circuitCode)
+  await writeFile(
+    path.join(tmpDir, "tscircuit.config.ts"),
+    "export default { platformConfig: { platformFetch: fetch } }",
+  )
+  await runCommand(
+    "tsci build index.circuit.tsx --incremental --disable-parts-engine",
+  )
+  const retry = await runCommand(
+    "tsci build index.circuit.tsx --incremental --disable-parts-engine",
+  )
+  expect(retry.exitCode).toBe(0)
+  expect(retry.stdout).toContain("Incremental build cache: disabled")
+  expect(retry.stdout).toContain("Rendering incremental fixture")
+}, 30_000)

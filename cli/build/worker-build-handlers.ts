@@ -69,18 +69,14 @@ export const handleBuildFile = async (
         platformConfig,
         incremental: options?.incremental,
         injectedProps: options?.injectedProps,
-        autorouterDiagnostics: options?.autorouterDiagnostics
-          ? {
-              ...options.autorouterDiagnostics,
-              log: (message) => workerLog(message),
-            }
-          : undefined,
-        solverDiagnostics: options?.solverDiagnostics
-          ? {
-              ...options.solverDiagnostics,
-              log: (message) => workerLog(message),
-            }
-          : undefined,
+        autorouterDiagnostics: options?.autorouterDiagnostics && {
+          ...options.autorouterDiagnostics,
+          log: workerLog,
+        },
+        solverDiagnostics: options?.solverDiagnostics && {
+          ...options.solverDiagnostics,
+          log: workerLog,
+        },
         onAsyncEffectStatus: (asyncEffectName) => {
           workerStatus(`waiting on ${asyncEffectName}…`)
         },
