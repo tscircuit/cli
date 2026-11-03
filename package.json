@@ -91,6 +91,7 @@
   "files": [
     "dist",
     "cli/entrypoint.js",
+    "cli/node-runtime.js",
     "types"
   ],
   "peerDependenciesMeta": {

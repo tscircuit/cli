@@ -1,7 +1,5 @@
 import ky from "ky"
 import { getPackageManager } from "./get-package-manager"
-import { getGlobalDepsInstallCommand } from "lib/shared/get-dep-install-command"
-import { execSync } from "node:child_process"
 import { program } from "cli/main"
 import semver from "semver"
 import { version as pkgVersion } from "../../package.json"
@@ -55,13 +53,14 @@ export const updateTsciIfNewVersionIsAvailable = async () => {
 
 export const updateTsci = async () => {
   const packageManager = getPackageManager()
-  const installCommand = getGlobalDepsInstallCommand(
-    packageManager.name,
-    "tscircuit@latest",
-  )
+  const installCommand =
+    packageManager.getGlobalInstallCommand("tscircuit@latest")
   try {
     console.log(`Updating tsci using: ${installCommand}`)
-    execSync(installCommand, { stdio: "inherit" })
+    packageManager.installGlobal({
+      name: "tscircuit@latest",
+      cwd: process.cwd(),
+    })
     console.log(kleur.green("tsci has been updated successfully!"))
   } catch {
     console.warn("Update failed. You can try updating manually by running:")
