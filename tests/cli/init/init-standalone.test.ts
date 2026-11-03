@@ -2,8 +2,21 @@ import { expect, test } from "bun:test"
 import { join } from "node:path"
 import { getCliTestFixture } from "../../fixtures/get-cli-test-fixture"
 
-const cases = [
+const cases: Array<{
+  name: string
+  standalone: string
+  flags: string
+  install: boolean
+  runtime?: string
+}> = [
   { name: "standalone default", standalone: "1", flags: "", install: false },
+  {
+    name: "standalone configured runtime",
+    standalone: "1",
+    flags: "",
+    install: true,
+    runtime: "bun",
+  },
   {
     name: "standalone explicit install",
     standalone: "1",
@@ -31,7 +44,7 @@ const cases = [
   },
 ]
 
-for (const { name, standalone, flags, install } of cases) {
+for (const { name, standalone, flags, install, runtime } of cases) {
   test(`init ${name}`, async () => {
     const { tmpDir, runCommand } = await getCliTestFixture({
       preload: new URL(
@@ -39,7 +52,10 @@ for (const { name, standalone, flags, install } of cases) {
         import.meta.url,
       ).pathname,
       skipSkillSetup: true,
-      env: { TSCIRCUIT_STANDALONE: standalone },
+      env: {
+        TSCIRCUIT_STANDALONE: standalone,
+        ...(runtime ? { TSCIRCUIT_NODE_RUNTIME: runtime } : {}),
+      },
     })
     const { stdout, stderr, exitCode } = await runCommand(
       `tsci init board --yes ${flags}`.trim(),

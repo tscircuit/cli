@@ -4,6 +4,7 @@ import { existsSync } from "node:fs"
 import { createRequire } from "node:module"
 import { dirname, join } from "node:path"
 import { fileURLToPath } from "node:url"
+import { getNodeRuntime } from "./node-runtime.js"
 
 function commandExists(cmd) {
   try {
@@ -14,7 +15,10 @@ function commandExists(cmd) {
   }
 }
 
-const runner = commandExists("bun") ? "bun" : "tsx"
+const runtime = process.env.TSCIRCUIT_NODE_RUNTIME
+  ? getNodeRuntime()
+  : undefined
+const runner = runtime?.executable ?? (commandExists("bun") ? "bun" : "tsx")
 
 const __dirname = dirname(fileURLToPath(import.meta.url))
 const packageRoot = join(__dirname, "..")
@@ -46,8 +50,13 @@ if (!useGlobal) {
   } catch {}
 }
 
-const { status } = spawnSync(runner, [mainPath, ...args], {
-  stdio: "inherit",
-})
+const { status } = spawnSync(
+  runner,
+  [...(runtime?.args ?? []), mainPath, ...args],
+  {
+    stdio: "inherit",
+    ...(runtime ? { env: runtime.env } : {}),
+  },
+)
 
-process.exit(status ?? 0)
+process.exit(status ?? 1)

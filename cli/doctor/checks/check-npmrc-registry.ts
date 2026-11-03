@@ -3,9 +3,14 @@ import fs from "node:fs"
 import os from "node:os"
 import path from "node:path"
 import type { DoctorCheckResult } from "../types"
+import { getNodeRuntime } from "../../node-runtime.js"
 
 const hasBunInstalled = (): boolean => {
-  const result = spawnSync("bun", ["--version"], { stdio: "ignore" })
+  const runtime = getNodeRuntime()
+  const result = spawnSync(runtime.executable, [...runtime.args, "--version"], {
+    stdio: "ignore",
+    env: runtime.env,
+  })
   return result.status === 0
 }
 
@@ -40,14 +45,19 @@ export const checkGlobalNpmrcRegistry =
     try {
       createTempProject(tempDir)
 
-      const result = spawnSync("bun", ["install"], {
-        cwd: tempDir,
-        env: {
-          ...process.env,
-          BUN_DEBUG: "network",
+      const runtime = getNodeRuntime()
+      const result = spawnSync(
+        runtime.executable,
+        [...runtime.args, "install"],
+        {
+          cwd: tempDir,
+          env: {
+            ...runtime.env,
+            BUN_DEBUG: "network",
+          },
+          encoding: "utf-8",
         },
-        encoding: "utf-8",
-      })
+      )
 
       const output = `${result.stdout ?? ""}\n${result.stderr ?? ""}`
       const usedRegistry = /npm\.tscircuit\.com/i.test(output)

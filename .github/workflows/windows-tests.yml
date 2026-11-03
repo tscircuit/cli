@@ -35,4 +35,4 @@ jobs:
         shell: bash
         run: |
           shopt -s globstar
-          bun run scripts/run-tests-with-retry.ts --timeout 30000 tests/windows/**/*.test.ts
+          bun run scripts/run-tests-with-retry.ts --timeout 30000 tests/windows/**/*.test.ts tests/runtime/node-runtime.test.ts

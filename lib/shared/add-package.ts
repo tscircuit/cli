@@ -145,7 +145,7 @@ async function addPackagesUnlocked(packageSpecs: string[], projectDir: string) {
   const packageManager = getPackageManager()
   try {
     await packageManager.install({
-      name: installTargets.join(" "),
+      name: installTargets,
       cwd: projectDir,
     })
     console.log(kleur.green(`✓ Added ${kleur.bold(displayNames)} successfully`))

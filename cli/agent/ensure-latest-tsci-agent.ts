@@ -1,7 +1,5 @@
 import kleur from "kleur"
-import { execSync } from "node:child_process"
 import semver from "semver"
-import { getGlobalDepsInstallCommand } from "lib/shared/get-dep-install-command"
 import { getPackageManager } from "lib/shared/get-package-manager"
 import { confirmInstallOrUpdate } from "./confirm-install-or-update"
 import { TSCI_AGENT_PACKAGE_NAME } from "./constants"
@@ -31,8 +29,8 @@ export async function ensureLatestTsciAgent() {
 
   if (!shouldInstall && !shouldUpdate) return true
 
-  const installCommand = getGlobalDepsInstallCommand(
-    getPackageManager().name,
+  const packageManager = getPackageManager()
+  const installCommand = packageManager.getGlobalInstallCommand(
     `${TSCI_AGENT_PACKAGE_NAME}@latest`,
   )
 
@@ -60,7 +58,10 @@ export async function ensureLatestTsciAgent() {
 
   try {
     console.log(kleur.gray(`> ${installCommand}`))
-    execSync(installCommand, { stdio: "inherit" })
+    packageManager.installGlobal({
+      name: `${TSCI_AGENT_PACKAGE_NAME}@latest`,
+      cwd: process.cwd(),
+    })
     return true
   } catch {
     console.error(kleur.red(`Failed to ${action} ${TSCI_AGENT_PACKAGE_NAME}.`))

@@ -2,6 +2,8 @@ import fs from "fs"
 import kleur from "kleur"
 import { exec, execSync } from "node:child_process"
 import { promisify } from "node:util"
+import { getBunPackageManager } from "./get-bun-package-manager"
+import { getGlobalDepsInstallCommand } from "./get-dep-install-command"
 
 const execAsync = promisify(exec)
 
@@ -33,9 +35,11 @@ function detectPackageManager(): "npm" | "yarn" | "pnpm" | "bun" {
 
 export interface PackageManager {
   name: "npm" | "yarn" | "pnpm" | "bun"
-  uninstall: (opts: { name: string; cwd: string }) => void
-  install: (opts: { name: string; cwd: string }) => Promise<void>
-  update: (opts: { name: string; cwd: string }) => void
+  uninstall: (opts: { name: string | string[]; cwd: string }) => void
+  install: (opts: { name: string | string[]; cwd: string }) => Promise<void>
+  update: (opts: { name: string | string[]; cwd: string }) => void
+  installGlobal: (opts: { name: string | string[]; cwd: string }) => void
+  getGlobalInstallCommand: (name: string | string[]) => string
   init: (opts: { cwd: string }) => void
   installDeps: (opts: {
     deps: string[]
@@ -49,10 +53,12 @@ export interface PackageManager {
 }
 
 export function getPackageManager(): PackageManager {
+  if (process.env.TSCIRCUIT_NODE_RUNTIME) return getBunPackageManager()
   const pm = detectPackageManager()
   return {
     name: pm,
     uninstall: ({ name, cwd }) => {
+      name = Array.isArray(name) ? name.join(" ") : name
       let uninstallCommand: string
       if (pm === "yarn") {
         uninstallCommand = `yarn remove ${name}`
@@ -66,6 +72,7 @@ export function getPackageManager(): PackageManager {
       execSync(uninstallCommand, { stdio: "pipe", cwd })
     },
     install: async ({ name, cwd }) => {
+      name = Array.isArray(name) ? name.join(" ") : name
       let installCommand: string
       if (pm === "yarn") {
         installCommand = `yarn add ${name}`
@@ -86,6 +93,7 @@ export function getPackageManager(): PackageManager {
       if (stderr) process.stderr.write(stderr)
     },
     update: ({ name, cwd }) => {
+      name = Array.isArray(name) ? name.join(" ") : name
       let updateCommand: string
       if (pm === "yarn") {
         updateCommand = `yarn upgrade ${name}`
@@ -132,6 +140,20 @@ export function getPackageManager(): PackageManager {
       }
     },
     getInstallAllCommand,
+    getGlobalInstallCommand: (name) =>
+      getGlobalDepsInstallCommand(
+        pm,
+        Array.isArray(name) ? name.join(" ") : name,
+      ),
+    installGlobal: ({ name, cwd }) => {
+      execSync(
+        getGlobalDepsInstallCommand(
+          pm,
+          Array.isArray(name) ? name.join(" ") : name,
+        ),
+        { cwd, stdio: "inherit" },
+      )
+    },
   }
 
   function getInitCommand() {

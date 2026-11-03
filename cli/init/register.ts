@@ -30,7 +30,8 @@ export const registerInit = (program: Command) => {
     .option(
       "--install",
       "Install project dependencies",
-      process.env.TSCIRCUIT_STANDALONE !== "1",
+      process.env.TSCIRCUIT_STANDALONE !== "1" ||
+        Boolean(process.env.TSCIRCUIT_NODE_RUNTIME),
     )
     .option("--no-install", "Skip installing dependencies")
     .action(

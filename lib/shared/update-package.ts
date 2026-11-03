@@ -44,7 +44,7 @@ export async function updatePackage(
     )
 
     try {
-      packageManager.update({ name: targetList, cwd: projectDir })
+      packageManager.update({ name: tsciPackages, cwd: projectDir })
       console.log(kleur.green(`✓ Updated all tscircuit packages successfully`))
     } catch (error) {
       const errorMessage =
