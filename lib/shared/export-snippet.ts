@@ -21,6 +21,7 @@ import {
 import { convertCircuitJsonToPickAndPlaceCsv } from "circuit-json-to-pnp-csv"
 import { convertCircuitJsonToReadableNetlist } from "circuit-json-to-readable-netlist"
 import { circuitJsonToStep } from "circuit-json-to-step"
+import { convertCircuitJsonToAssemblyStepFiles } from "./convert-circuit-json-to-assembly-step-files"
 import { circuitJsonToFdmComponentBox } from "circuit-json-to-fdm-component-box"
 import {
   convertCircuitJsonToAssemblySvg,
@@ -396,9 +397,8 @@ export const exportSnippet = async ({
       break
     case "assembly-step":
       try {
-        const stepFiles = await circuitJsonToStep(circuitJson, {
-          exportMode: "assembly",
-        })
+        const stepFiles =
+          await convertCircuitJsonToAssemblyStepFiles(circuitJson)
         const zip = new JSZip()
         for (const [fileName, content] of Object.entries(stepFiles)) {
           zip.file(fileName, content)
