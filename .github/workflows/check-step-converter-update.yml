@@ -1,0 +1,55 @@
+name: Check STEP converter updates
+
+on:
+  schedule:
+    - cron: "23 * * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: check-step-converter-updates
+  cancel-in-progress: false
+
+jobs:
+  check-step-converter:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    env:
+      GH_REPO: ${{ github.repository }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: main
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version-file: .bun-version
+      - name: Check for an available STEP converter update
+        id: update
+        env:
+          GH_TOKEN: ${{ secrets.TSCIRCUIT_BOT_GITHUB_TOKEN }}
+        run: |
+          # The shared updater closes existing bot chore PRs. Let them finish first.
+          pending_prs=$(gh pr list --state open --author tscircuitbot --limit 100 \
+            --json title --jq '[.[] | select(.title | startswith("chore:"))] | length')
+          if [ "$pending_prs" -gt 0 ]; then
+            echo "An automatic update PR is pending; deferring the STEP check."
+            echo "available=false" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+
+          bun update circuit-json-to-step --latest --lockfile-only --ignore-scripts
+          if git diff --quiet -- package.json bun.lock; then
+            echo "STEP converter is already up to date."
+            echo "available=false" >> "$GITHUB_OUTPUT"
+          else
+            echo "available=true" >> "$GITHUB_OUTPUT"
+          fi
+      - name: Dispatch the existing package updater
+        if: steps.update.outputs.available == 'true'
+        env:
+          GH_TOKEN: ${{ secrets.TSCIRCUIT_BOT_GITHUB_TOKEN }}
+        run: |
+          gh workflow run update-package.yml --ref main \
+            -f package_names=circuit-json-to-step
