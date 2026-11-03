@@ -1,9 +1,11 @@
+import { createDependencyBundle } from "../../fixtures/create-dependency-bundle"
+import { temporaryFile } from "tempy"
 import { expect, test } from "bun:test"
 import { join } from "node:path"
 import { getCliTestFixture } from "../../fixtures/get-cli-test-fixture"
 
 const cases = [
-  { name: "standalone default", standalone: "1", flags: "", install: false },
+  { name: "standalone default", standalone: "1", flags: "", install: true },
   {
     name: "standalone explicit install",
     standalone: "1",
@@ -33,13 +35,19 @@ const cases = [
 
 for (const { name, standalone, flags, install } of cases) {
   test(`init ${name}`, async () => {
+    const bundle = temporaryFile({ extension: "zip" })
+    await createDependencyBundle(bundle)
+    globalThis.deferredCleanupFns.push(() => Bun.file(bundle).delete())
     const { tmpDir, runCommand } = await getCliTestFixture({
       preload: new URL(
         "../../fixtures/init-package-manager-preload.ts",
         import.meta.url,
       ).pathname,
       skipSkillSetup: true,
-      env: { TSCIRCUIT_STANDALONE: standalone },
+      env: {
+        TSCIRCUIT_STANDALONE: standalone,
+        TSCIRCUIT_DEPENDENCY_BUNDLE: bundle,
+      },
     })
     const { stdout, stderr, exitCode } = await runCommand(
       `tsci init board --yes ${flags}`.trim(),
@@ -56,6 +64,18 @@ for (const { name, standalone, flags, install } of cases) {
     const recordedInstall = Bun.file(
       join(projectDir, ".test-installed-dependencies.json"),
     )
+    if (standalone === "1") {
+      expect(await recordedInstall.exists()).toBe(false)
+      expect(
+        await Bun.file(
+          join(projectDir, "node_modules/tscircuit/package.json"),
+        ).exists(),
+      ).toBe(install)
+      const pkg = await Bun.file(join(projectDir, "package.json")).json()
+      expect(pkg.devDependencies.tscircuit).toBe("1.2.3")
+      expect(await Bun.file(join(projectDir, ".npmrc")).exists()).toBe(false)
+      return
+    }
     expect(await recordedInstall.exists()).toBe(install)
     if (install) {
       expect(await recordedInstall.json()).toEqual({

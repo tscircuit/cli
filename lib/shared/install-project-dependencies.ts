@@ -1,3 +1,8 @@
+import {
+  isStandalone,
+  installStandaloneDependencies,
+  standaloneStarterDependencies,
+} from "./standalone-dependencies"
 import fs from "node:fs"
 import path from "node:path"
 import kleur from "kleur"
@@ -27,6 +32,25 @@ export async function installProjectDependencies({
   const projectRoot = path.resolve(cwd)
   const packageJsonPath = path.join(projectRoot, "package.json")
   const npmrcPath = path.join(projectRoot, ".npmrc")
+  if (isStandalone()) {
+    if (!fs.existsSync(projectRoot))
+      throw new Error(`Directory not found: ${projectRoot}`)
+    if (!fs.existsSync(packageJsonPath)) {
+      generatePackageJson(projectRoot, {
+        devDependencies: await standaloneStarterDependencies(),
+      })
+      const pkg = JSON.parse(fs.readFileSync(packageJsonPath, "utf8"))
+      pkg.dependencies = Object.fromEntries(
+        collectTsciDependencies({ cwd: projectRoot }).map((name) => [
+          name,
+          "latest",
+        ]),
+      )
+      fs.writeFileSync(packageJsonPath, `${JSON.stringify(pkg, null, 2)}\n`)
+    }
+    generateTsConfig(projectRoot)
+    return installStandaloneDependencies(projectRoot)
+  }
   const packageManager = getPackageManager()
 
   if (!fs.existsSync(projectRoot)) {

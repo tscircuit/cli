@@ -1,3 +1,7 @@
+import {
+  isStandalone,
+  installStandaloneDependencies,
+} from "./standalone-dependencies"
 import fs from "node:fs"
 import path from "node:path"
 import { getPackageManager } from "./get-package-manager"
@@ -10,18 +14,20 @@ export async function setupTsciProject(
   if (!fs.existsSync(projectPath)) {
     fs.mkdirSync(projectPath, { recursive: true })
   }
-  const packageManager = getPackageManager()
+  const packageManager = isStandalone() ? undefined : getPackageManager()
 
   console.log(`Initializing project in ${projectPath}...`)
   process.chdir(projectPath)
 
   if (!fs.existsSync("package.json")) {
     try {
+      if (!packageManager)
+        throw new Error("Standalone init requires package.json")
       packageManager.init({ cwd: projectPath })
       console.log("Project initialized successfully.")
     } catch (error) {
       console.warn("Failed to automatically initialize project.")
-      const initCommand = packageManager.getInitCommand()
+      const initCommand = packageManager?.getInitCommand() ?? "tsci init"
       console.warn("Please initialize using the command:")
       console.warn(`  ${initCommand}`)
     }
@@ -41,9 +47,13 @@ export async function setupTsciProject(
   fs.writeFileSync(packageJsonPath, JSON.stringify(packageJson, null, 2))
 
   if (devDependencies.length > 0) {
+    if (isStandalone()) {
+      await installStandaloneDependencies(projectPath)
+      return packageJson.name || "unknown"
+    }
     console.log("Installing dependencies...")
     try {
-      await packageManager.installDeps({
+      await packageManager!.installDeps({
         deps: devDependencies,
         cwd: projectPath,
         dev: true,
@@ -51,7 +61,7 @@ export async function setupTsciProject(
       console.log("Dependencies installed successfully.")
     } catch (error) {
       console.warn("Failed to automatically install the required dependencies.")
-      const installCommand = packageManager.getInstallDepsCommand(
+      const installCommand = packageManager!.getInstallDepsCommand(
         devDependencies,
         true,
       )

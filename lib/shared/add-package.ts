@@ -1,3 +1,7 @@
+import {
+  isStandalone,
+  installStandaloneDependencies,
+} from "./standalone-dependencies"
 import * as fs from "node:fs"
 import * as path from "node:path"
 import kleur from "kleur"
@@ -79,6 +83,12 @@ export async function addPackages(
   packageSpecs: string[],
   projectDir: string = process.cwd(),
 ) {
+  if (isStandalone()) {
+    return installStandaloneDependencies(
+      projectDir,
+      packageSpecs.map((spec) => normalizeTscircuitPackageName(spec) ?? spec),
+    )
+  }
   // Cover registry setup and post-install setup as well as the package manager.
   return withProjectInstallLock(projectDir, () =>
     addPackagesUnlocked(packageSpecs, projectDir),

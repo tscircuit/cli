@@ -1,3 +1,7 @@
+import {
+  isStandalone,
+  standaloneStarterDependencies,
+} from "lib/shared/standalone-dependencies"
 import type { Command } from "commander"
 import * as fs from "node:fs"
 import * as path from "node:path"
@@ -27,17 +31,16 @@ export const registerInit = (program: Command) => {
       "Directory name (optional, defaults to current directory)",
     )
     .option("-y, --yes", "Use defaults and skip prompts")
-    .option(
-      "--install",
-      "Install project dependencies",
-      process.env.TSCIRCUIT_STANDALONE !== "1",
-    )
+    .option("--install", "Install project dependencies", true)
     .option("--no-install", "Skip installing dependencies")
     .action(
       async (
         directory?: string,
         options?: { yes?: boolean; install?: boolean },
       ) => {
+        const bundledDependencies = isStandalone()
+          ? await standaloneStarterDependencies()
+          : undefined
         await checkForTsciUpdates()
 
         if (!directory && !options?.yes) {
@@ -123,12 +126,13 @@ export default () => (
           console.log("Created tscircuit.config.json with schema")
         }
 
-        writeFileIfNotExists(
-          path.join(projectDir, ".npmrc"),
-          `
+        if (!isStandalone())
+          writeFileIfNotExists(
+            path.join(projectDir, ".npmrc"),
+            `
 @tsci:registry=https://npm.tscircuit.com
 `,
-        )
+          )
 
         console.log("Generating package.json")
         // Generate package.json
@@ -136,6 +140,7 @@ export default () => (
           packageName,
           authorName,
           main: "index.circuit.tsx",
+          devDependencies: bundledDependencies,
         })
         // Generate tsconfig.json
         generateTsConfig(projectDir)

@@ -27,7 +27,10 @@ const joinUrl = (host: string, path: string) =>
 export const getTelemetryConfigFromEnv = (
   env: NodeJS.ProcessEnv = process.env,
 ): TelemetryConfig => {
-  if (isTruthy(env.TSCI_TELEMETRY_DISABLED)) {
+  if (
+    env.TSCIRCUIT_STANDALONE === "1" ||
+    isTruthy(env.TSCI_TELEMETRY_DISABLED)
+  ) {
     return { enabled: false }
   }
 

@@ -49,6 +49,11 @@ export interface PackageManager {
 }
 
 export function getPackageManager(): PackageManager {
+  if (process.env.TSCIRCUIT_STANDALONE === "1") {
+    throw new Error(
+      "External package managers are disabled in standalone. Use tsci install with the bundled dependencies.",
+    )
+  }
   const pm = detectPackageManager()
   return {
     name: pm,
