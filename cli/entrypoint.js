@@ -50,7 +50,7 @@ if (!useGlobal) {
   } catch {}
 }
 
-const { status } = spawnSync(
+const { status, error } = spawnSync(
   runner,
   [...(runtime?.args ?? []), mainPath, ...args],
   {
@@ -59,4 +59,5 @@ const { status } = spawnSync(
   },
 )
 
+if (error) console.error(`Unable to start runtime ${runner}: ${error.message}`)
 process.exit(status ?? 1)

@@ -138,6 +138,15 @@ test("entrypoint starts the CLI with the configured embedded runtime", async () 
     path: "",
     bun: "1",
   })
+  const missing = await run(
+    `process.argv=['node','entrypoint','--use-global']; await import(${entrypoint})`,
+    {
+      TSCIRCUIT_NODE_RUNTIME: join(root, "missing runtime"),
+      TSCIRCUIT_NODE_RUNTIME_ARGS: "[]",
+    },
+  )
+  expect(missing.code).toBe(1)
+  expect(missing.stderr).toContain("Unable to start runtime")
 })
 
 test("an unavailable configured runtime fails instead of selecting another package manager", async () => {
