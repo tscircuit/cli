@@ -193,6 +193,22 @@ test("build keeps default discovery and explicit external file behavior", async 
   ).toEqual(circuitJson)
 }, 30_000)
 
+test("build internal directory beginning with two dots preserves caller exclusions", async () => {
+  const { caller } = await createProjects()
+  const internal = path.join(caller, "..boards")
+  await writeCircuit(path.join(internal, "selected.circuit.json"))
+  await writeCircuit(path.join(internal, "ignored.circuit.json"))
+  await writeFile(path.join(internal, "package.json"), "{}")
+  await writeConfig(internal, { includeBoardFiles: ["ignored.circuit.json"] })
+  await writeConfig(caller, { includeBoardFiles: ["public/*.circuit.json"] })
+
+  const excluded = await runBuild(caller, ["..boards"])
+  expect(excluded.exitCode).toBe(1)
+  expect(excluded.stderr).toContain('["public/*.circuit.json"]')
+  expect(existsSync(path.join(caller, "dist"))).toBe(false)
+  expect(existsSync(path.join(internal, "dist"))).toBe(false)
+}, 30_000)
+
 test("build external directory reports its own no-match patterns", async () => {
   const { caller, target } = await createProjects()
   await writeCircuit(path.join(target, "ignored.circuit.json"))

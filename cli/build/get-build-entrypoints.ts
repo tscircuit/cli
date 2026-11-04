@@ -66,9 +66,12 @@ export const getDirectoryBuildProjectDir = (
 ): string => {
   const resolvedRoot = path.resolve(rootDir)
   const resolvedDirectory = path.resolve(resolvedRoot, directoryPath)
-  return isSubPath(resolvedDirectory, resolvedRoot)
-    ? resolvedRoot
-    : findProjectRoot(resolvedDirectory)
+  const relative = path.relative(resolvedRoot, resolvedDirectory)
+  const isInsideProject =
+    relative !== ".." &&
+    !relative.startsWith(`..${path.sep}`) &&
+    !path.isAbsolute(relative)
+  return isInsideProject ? resolvedRoot : findProjectRoot(resolvedDirectory)
 }
 
 export async function getBuildEntrypoints({
