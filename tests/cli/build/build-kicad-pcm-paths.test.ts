@@ -204,14 +204,26 @@ export const MySwitch = () => (
       (pad "1" smd rect
         (at -2 0 0)
         (size 2 1)
-        (layers F.Cu F.Paste F.Mask)
+        (layers F.Cu F.Mask)
         (uuid 633a4dec-1f37-b14c-24ca-eb5468cd87f4)
       )
       (pad "2" smd rect
         (at 2 0 0)
         (size 2 1)
-        (layers F.Cu F.Paste F.Mask)
+        (layers F.Cu F.Mask)
         (uuid 07e0ff52-4be3-9bf2-7019-c76e2c172ace)
+      )
+      (pad "" smd rect
+        (at -2 0 0)
+        (size 1.4 0.7)
+        (layers F.Paste)
+        (uuid 6c2be560-3f08-1c01-11e4-52a21b3f76bd)
+      )
+      (pad "" smd rect
+        (at 2 0 0)
+        (size 1.4 0.7)
+        (layers F.Paste)
+        (uuid 1a59d540-477d-9e9f-74a1-67fe5e3acea3)
       )
       (model "\${KICAD_3RD_PARTY}/3dmodels/com_tscircuit_testauthor_my-switch-lib/my-switch-lib.3dshapes/test_model.step"
         (offset
