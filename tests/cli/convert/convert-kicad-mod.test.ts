@@ -114,6 +114,60 @@ test("convert kicad_mod to tsx", async () => {
   const tsxPath = path.join(tmpDir, "R_01005_0402Metric.tsx")
   const tsx = await readFile(tsxPath, "utf-8")
   expect(tsx).toContain("export const R_01005_0402Metric")
+  expect(tsx).toContain('text="{REF}"')
+  expect(tsx).toContain('text="REFERENCE"')
+})
+
+test("converted kicad_mod TSX component resolves instance reference designators on build", async () => {
+  const { tmpDir, runCommand } = await getCliTestFixture()
+  const modPath = path.join(tmpDir, "two-pad.kicad_mod")
+  const twoPadMod = `(footprint "TwoPad"
+ (version 20240108)
+ (generator "pcbnew")
+ (layer "F.Cu")
+ (attr smd)
+ (fp_text reference "REF**" (at 0 -2) (layer "F.SilkS") (effects (font (size 1 1) (thickness 0.15))))
+ (fp_text user "USER_TEXT" (at 0 2) (layer "F.SilkS") (effects (font (size 1 1) (thickness 0.15))))
+ (pad "1" smd rect (at -0.8 0) (size 0.9 1) (layers "F.Cu" "F.Paste" "F.Mask"))
+ (pad "2" smd rect (at 0.8 0) (size 0.9 1) (layers "F.Cu" "F.Paste" "F.Mask"))
+)`
+  await writeFile(modPath, twoPadMod)
+
+  const tsxOutPath = path.join(tmpDir, "TwoPad.tsx")
+  const convertResult = await runCommand(
+    `tsci convert ${modPath} --name TwoPad --output ${tsxOutPath}`,
+  )
+  expect(convertResult.exitCode).toBe(0)
+
+  const tsx = await readFile(tsxOutPath, "utf-8")
+  expect(tsx).toContain('text="{REF}"')
+  expect(tsx).toContain('text="USER_TEXT"')
+  expect(tsx).not.toContain('text="REF**"')
+
+  const boardPath = path.join(tmpDir, "converted-labels.tsx")
+  await writeFile(
+    boardPath,
+    `import { TwoPad } from "./TwoPad"\nexport default () => (\n  <board width={12} height={8}>\n    <TwoPad name="U1" pcbX={-3} schX={-2} />\n    <TwoPad name="U2" pcbX={3} schX={2} />\n  </board>\n)\n`,
+  )
+
+  const buildResult = await runCommand(`tsci build ${boardPath}`)
+  expect(buildResult.exitCode).toBe(0)
+
+  const circuitJsonPath = path.join(
+    tmpDir,
+    "dist",
+    "converted-labels",
+    "circuit.json",
+  )
+  const circuitJson = JSON.parse(await readFile(circuitJsonPath, "utf-8"))
+  const silkscreenTexts = circuitJson
+    .filter((el: { type: string }) => el.type === "pcb_silkscreen_text")
+    .map((el: { text: string }) => el.text)
+
+  expect(silkscreenTexts).toContain("U1")
+  expect(silkscreenTexts).toContain("U2")
+  expect(silkscreenTexts).toContain("USER_TEXT")
+  expect(silkscreenTexts).not.toContain("REF**")
 })
 
 test("convert kicad_mod to a footprinter string", async () => {
