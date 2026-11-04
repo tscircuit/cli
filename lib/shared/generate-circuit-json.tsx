@@ -196,20 +196,20 @@ export async function generateCircuitJson({
     runner.emit("renderComplete")
     solverDiagnostics?.finalize()
 
+    // ImportedBoard is an internal test helper of @tscircuit/pcb-spice-pipeline.
+    // Its rendered output is a preview, not the saved board, so never emit it.
     const hasImportedBoard = runner.children.some((component: any) =>
       [component, ...component.getDescendants()].some(
         (instance: any) =>
           instance[Symbol.for("pcb-spice-pipeline.imported-board.v2")],
       ),
     )
-    records = hasImportedBoard
-      ? (
-          await importFromUserLand(
-            "@tscircuit/pcb-spice-pipeline/tsx",
-            projectRootDir,
-          )
-        ).serializeSimulation(runner)
-      : await runner.getCircuitJson()
+    if (hasImportedBoard) {
+      throw new Error(
+        "ImportedBoard is internal to @tscircuit/pcb-spice-pipeline and is not supported in tsci projects. Declare simulations (ibismodel, analog.transientsimulation, voltageprobe, analog.eyediagram) as children of your own <board>.",
+      )
+    }
+    records = await runner.getCircuitJson()
   }
 
   const modeling = MainComponent.modeling as PipelineModeling | undefined
