@@ -1,3 +1,4 @@
+import "bun-match-svg"
 import { expect, test } from "bun:test"
 import { writeFile, readFile, symlink, rm } from "node:fs/promises"
 import path from "node:path"
@@ -29,5 +30,9 @@ test("build generates named drawing pages in serial and worker modes", async () 
       "utf8",
     )
     expect(svg).toContain("<svg")
+    await expect(svg).toMatchSvgSnapshot(
+      import.meta.path,
+      "build-assembly-drawing",
+    )
   }
 }, 120_000)

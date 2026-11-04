@@ -1,3 +1,4 @@
+import "bun-match-svg"
 import { expect, test } from "bun:test"
 import { readFile, writeFile } from "node:fs/promises"
 import path from "node:path"
@@ -17,6 +18,7 @@ test("assembly SVG export renders component outlines and labels from TSX and Cir
     expect(svg).toContain("assembly-component")
     expect(svg).toContain(">R1<")
     expect(svg).not.toMatch(/NaN|Infinity/)
+    await expect(svg).toMatchSvgSnapshot(import.meta.path, "assembly")
     if (file === source) {
       const json = await runCommand(
         `tsci export ${source} -f circuit-json --disable-parts-engine`,

@@ -1,3 +1,4 @@
+import "bun-match-svg"
 import { expect, test } from "bun:test"
 import { readFile, writeFile, symlink } from "node:fs/promises"
 import path from "node:path"
@@ -20,6 +21,7 @@ test("system SVG export generates TSX pages and exports Circuit JSON with page s
   expect(svg).toContain("I2C")
   expect(svg).not.toContain("Radio module")
   expect(svg).not.toMatch(/NaN|Infinity/)
+  await expect(svg).toMatchSvgSnapshot(import.meta.path, "system-overview")
 
   const json = await runCommand(
     `tsci export ${source} -f circuit-json --disable-parts-engine`,
@@ -37,6 +39,7 @@ test("system SVG export generates TSX pages and exports Circuit JSON with page s
     const detail = await readFile(path.join(tmpDir, "selected.svg"), "utf8")
     expect(detail).toContain("Radio module")
     expect(detail).not.toContain("Main controller")
+    await expect(detail).toMatchSvgSnapshot(import.meta.path, "system-detail")
   }
   const missing = await runCommand(
     `tsci export ${circuitPath} -f system-svg --system-page missing`,

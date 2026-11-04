@@ -1,3 +1,4 @@
+import "bun-match-svg"
 import { expect, test } from "bun:test"
 import {
   mkdir,
@@ -56,6 +57,18 @@ for (const concurrency of [1, 2]) {
       expect(detail).not.toContain("Main controller")
       expect(assembly).toContain(">R1<")
       expect(overview + detail + assembly).not.toMatch(/NaN|Infinity/)
+      await expect(overview).toMatchSvgSnapshot(
+        import.meta.path,
+        "build-system-overview",
+      )
+      await expect(detail).toMatchSvgSnapshot(
+        import.meta.path,
+        "build-system-detail",
+      )
+      await expect(assembly).toMatchSvgSnapshot(
+        import.meta.path,
+        "build-assembly",
+      )
       if (flags !== "--svgs") {
         expect(await Bun.file(path.join(outputDir, "pcb.svg")).exists()).toBe(
           false,
