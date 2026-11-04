@@ -60,6 +60,17 @@ const findProjectRoot = (startDir: string): string => {
   return startDir
 }
 
+export const getDirectoryBuildProjectDir = (
+  directoryPath: string,
+  rootDir = process.cwd(),
+): string => {
+  const resolvedRoot = path.resolve(rootDir)
+  const resolvedDirectory = path.resolve(resolvedRoot, directoryPath)
+  return isSubPath(resolvedDirectory, resolvedRoot)
+    ? resolvedRoot
+    : findProjectRoot(resolvedDirectory)
+}
+
 export async function getBuildEntrypoints({
   fileOrDir,
   rootDir = process.cwd(),
@@ -75,7 +86,14 @@ export async function getBuildEntrypoints({
   siteDefaultComponentPath?: string
   circuitFiles: string[]
 }> {
-  const resolvedRoot = path.resolve(rootDir)
+  const resolved = fileOrDir ? path.resolve(rootDir, fileOrDir) : undefined
+  const isDirectory = Boolean(
+    resolved && fs.existsSync(resolved) && fs.statSync(resolved).isDirectory(),
+  )
+  const resolvedRoot =
+    resolved && isDirectory && includeBoardFiles
+      ? getDirectoryBuildProjectDir(resolved, rootDir)
+      : path.resolve(rootDir)
   const rootProjectConfig = await loadRuntimeProjectConfig(resolvedRoot)
   const includeBoardFilePatterns = includeBoardFiles
     ? (rootProjectConfig?.includeBoardFiles?.filter((pattern) =>
@@ -142,9 +160,8 @@ export async function getBuildEntrypoints({
     }
   }
 
-  if (fileOrDir) {
-    const resolved = path.resolve(resolvedRoot, fileOrDir)
-    if (fs.existsSync(resolved) && fs.statSync(resolved).isDirectory()) {
+  if (resolved) {
+    if (isDirectory) {
       const projectConfig = rootProjectConfig
       const resolvedPreviewComponentPath = projectConfig?.previewComponentPath
         ? path.resolve(resolvedRoot, projectConfig.previewComponentPath)

@@ -42,6 +42,7 @@ import type { GeneratedKicadProject } from "./generate-kicad-project"
 import {
   BuildNoMatchingFilesError,
   getBuildEntrypoints,
+  getDirectoryBuildProjectDir,
 } from "./get-build-entrypoints"
 import {
   hasAnyImageFormatSelected,
@@ -270,7 +271,7 @@ export const registerBuild = (program: Command) => {
         if (file) {
           const resolved = path.resolve(resolvedRoot, file)
           if (fs.existsSync(resolved) && fs.statSync(resolved).isDirectory()) {
-            projectDir = resolvedRoot
+            projectDir = getDirectoryBuildProjectDir(resolved, resolvedRoot)
           } else {
             // Find project root by looking for package.json
             let currentDir = path.dirname(resolved)
