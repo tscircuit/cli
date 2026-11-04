@@ -7,6 +7,10 @@ import tscircuitPackageJson from "tscircuit/package.json"
 const tscircuitPackageJsonDeps = Object.keys(tscircuitPackageJson.dependencies)
 
 const ALLOW_BUNDLING = [
+  // Keep compiler consumers in the CLI bundle so their TypeScript imports
+  // resolve to the CLI's compatible dependency, not the project's compiler.
+  "@rollup/plugin-typescript",
+  "rollup-plugin-dts",
   "@tscircuit/runframe",
   "calculate-elbow",
   "poppygl",

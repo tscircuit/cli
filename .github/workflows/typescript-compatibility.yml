@@ -1,0 +1,75 @@
+name: TypeScript Compatibility
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+jobs:
+  typescript-compatibility:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        typescript: ["5.9.3", "7.0.2"]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version-file: .bun-version
+      - run: bun install --frozen-lockfile
+      - run: bun run build
+      - run: bun pm pack
+
+      # Source tests resolve the repository's compiler and cannot catch a
+      # published bundle loading the consumer's incompatible TypeScript.
+      - name: Install packed CLI alongside project TypeScript
+        env:
+          TYPESCRIPT_VERSION: ${{ matrix.typescript }}
+        run: |
+          PACKAGE_FILE="$GITHUB_WORKSPACE/tscircuit-cli-$(bun -p 'require("./package.json").version').tgz"
+          TSCIRCUIT_VERSION=$(bun -p 'require("./package.json").devDependencies.tscircuit')
+          mkdir -p "$RUNNER_TEMP/tsci-typescript"
+          cd "$RUNNER_TEMP/tsci-typescript"
+          echo '{"private":true,"type":"module"}' > package.json
+          bun add --exact "$PACKAGE_FILE" "tscircuit@$TSCIRCUIT_VERSION" "typescript@$TYPESCRIPT_VERSION"
+
+      - name: Verify startup, circuit build, export, and transpilation
+        env:
+          TYPESCRIPT_VERSION: ${{ matrix.typescript }}
+        run: |
+          cd "$RUNNER_TEMP/tsci-typescript"
+          CLI=node_modules/@tscircuit/cli/dist/cli/main.js
+          bun -e '
+            import { strict as assert } from "node:assert"
+            import { createRequire } from "node:module"
+            import { resolve } from "node:path"
+            assert.equal(require("typescript").version, process.env.TYPESCRIPT_VERSION)
+            const cliRequire = createRequire(resolve("node_modules/@tscircuit/cli/dist/cli/main.js"))
+            assert.equal(typeof cliRequire("typescript").createProgram, "function")
+          '
+          bun "$CLI" --version
+          cat > index.tsx <<'EOF'
+          export default () => <board width={10} height={10}><resistor name="R1" resistance="1k" footprint="0603" /></board>
+          EOF
+          cat > tsconfig.json <<'EOF'
+          {"compilerOptions":{"jsx":"react-jsx","moduleResolution":"Bundler","module":"ESNext","target":"ESNext","skipLibCheck":true}}
+          EOF
+          bun "$CLI" build index.tsx
+          bun -e '
+            import { strict as assert } from "node:assert"
+            const circuit = await Bun.file("dist/index/circuit.json").json()
+            assert(circuit.some((item) => item.type === "source_component" && item.name === "R1"))
+          '
+          bun "$CLI" export index.tsx -f kicad_pcb -o board.kicad_pcb
+          test -s board.kicad_pcb
+          mkdir library
+          echo 'export const resistance: number = 1000' > library/index.ts
+          echo '{"compilerOptions":{"module":"ESNext","skipLibCheck":true}}' > library/tsconfig.json
+          echo '{"private":true,"type":"module"}' > library/package.json
+          bun "$CLI" transpile library/index.ts
+          bun -e '
+            import { strict as assert } from "node:assert"
+            assert.equal((await import("./library/dist/index.js")).resistance, 1000)
+            assert.equal(require("./library/dist/index.cjs").resistance, 1000)
+            assert.match(await Bun.file("library/dist/index.d.ts").text(), /resistance.*number/)
+          '
