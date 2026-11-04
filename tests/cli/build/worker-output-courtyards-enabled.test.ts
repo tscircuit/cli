@@ -25,6 +25,8 @@ test("writeImageAssetsFromCircuitJson includes courtyards when showCourtyards is
       pcbPngs: false,
       schematicPngs: false,
       schematicSvgs: false,
+      systemSvgs: false,
+      assemblySvgs: false,
       simulationSvgs: false,
       simulationSchematicSvgs: false,
       threeDPngs: false,

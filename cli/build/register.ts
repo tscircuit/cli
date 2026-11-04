@@ -152,6 +152,14 @@ export const registerBuild = (program: Command) => {
     .option("--svgs", "Generate SVG outputs during build generation")
     .option("--pcb-svgs", "Generate PCB SVG outputs during build generation")
     .option(
+      "--system-svgs",
+      "Generate system diagram SVG outputs during build generation",
+    )
+    .option(
+      "--assembly-svgs",
+      "Generate assembly SVG outputs during build generation",
+    )
+    .option(
       "--schematic-svgs",
       "Generate schematic SVG outputs during build generation",
     )
@@ -1109,6 +1117,8 @@ export const registerBuild = (program: Command) => {
           resolvedOptions?.schematicPng && "schematic-png",
           resolvedOptions?.svgs && "svgs",
           resolvedOptions?.pcbSvgs && "pcb-svgs",
+          resolvedOptions?.systemSvgs && "system-svgs",
+          resolvedOptions?.assemblySvgs && "assembly-svgs",
           resolvedOptions?.schematicSvgs && "schematic-svgs",
           resolvedOptions?.simulationSvgs && "simulation-svgs",
           resolvedOptions?.simulationSchematicSvgs &&

@@ -40,6 +40,7 @@ import { convertCircuitJsonToSchematicPdf } from "./convert-circuit-json-to-sche
 import { convertToKicadLibrary } from "./convert-to-kicad-library"
 import { importFromUserLand } from "./importFromUserLand"
 import { isCircuitJsonFile } from "./is-circuit-json-file"
+import { renderSystemSvg } from "./system-svg-assets"
 
 const writeFileAsync = promisify(fs.writeFile)
 
@@ -47,6 +48,7 @@ export const ALLOWED_EXPORT_FORMATS = [
   "json",
   "circuit-json",
   "drawing-svg",
+  "system-svg",
   "schematic-svg",
   "schematic-pdf",
   "pcb-svg",
@@ -74,6 +76,7 @@ const OUTPUT_EXTENSIONS: Record<ExportFormat, string> = {
   json: ".circuit.json",
   "circuit-json": ".circuit.json",
   "drawing-svg": "-drawing.svg",
+  "system-svg": "-system.svg",
   "schematic-svg": "-schematic.svg",
   "schematic-pdf": "-schematic.pdf",
   "pcb-svg": "-pcb.svg",
@@ -116,6 +119,7 @@ type ExportOptions = {
   filePath: string
   format: ExportFormat
   drawing?: string
+  systemPage?: string
   writeFile?: boolean
   outputPath?: string
   platformConfig?: PlatformConfig
@@ -132,6 +136,7 @@ export const exportSnippet = async ({
   filePath,
   format,
   drawing,
+  systemPage,
   outputPath,
   platformConfig,
   pcbSnapshotSettings,
@@ -222,6 +227,38 @@ export const exportSnippet = async ({
   let outputContent: string | Buffer
 
   switch (format) {
+    case "system-svg": {
+      try {
+        const pages = circuitJson.filter((e) => e.type === "system_block_page")
+        const matches = systemPage
+          ? pages.filter(
+              (e) =>
+                e.system_block_page_id === systemPage || e.name === systemPage,
+            )
+          : pages.slice(0, 1)
+        if (matches.length > 1)
+          throw new Error(
+            `System page "${systemPage}" is ambiguous. Use a page ID.`,
+          )
+        const page = matches[0]
+        if (!page)
+          throw new Error(
+            systemPage
+              ? `System page "${systemPage}" not found.`
+              : "No system pages found in this circuit.",
+          )
+        outputContent = await renderSystemSvg(
+          circuitJson,
+          page.system_block_page_id,
+        )
+      } catch (error) {
+        onError(
+          `Error exporting system diagram: ${error instanceof Error ? error.message : String(error)}`,
+        )
+        return onExit(1)
+      }
+      break
+    }
     case "drawing-svg": {
       try {
         const pages = selectDrawingPages(circuitJson, drawing)
@@ -393,7 +430,13 @@ export const exportSnippet = async ({
       })
       break
     case "assembly-svg":
-      outputContent = convertCircuitJsonToAssemblySvg(circuitJson)
+      if (!circuitJson.some((e) => e.type === "pcb_board")) {
+        onError(
+          "No PCB board found for assembly SVG export. Use --format drawing-svg for assembly drawing pages.",
+        )
+        return onExit(1)
+      }
+      outputContent = convertCircuitJsonToAssemblySvg([...circuitJson])
       break
     case "assembly-step":
       try {
