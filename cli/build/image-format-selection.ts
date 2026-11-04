@@ -6,6 +6,8 @@ export type BuildImageFormatSelection = {
   schematicPngs: boolean
   pcbSvgs: boolean
   schematicSvgs: boolean
+  systemSvgs: boolean
+  assemblySvgs: boolean
   simulationSvgs: boolean
   simulationSchematicSvgs: boolean
 }
@@ -16,6 +18,8 @@ export const DEFAULT_IMAGE_FORMAT_SELECTION: BuildImageFormatSelection = {
   schematicPngs: false,
   pcbSvgs: true,
   schematicSvgs: true,
+  systemSvgs: false,
+  assemblySvgs: false,
   simulationSvgs: false,
   simulationSchematicSvgs: false,
 }
@@ -26,6 +30,8 @@ export const EMPTY_IMAGE_FORMAT_SELECTION: BuildImageFormatSelection = {
   schematicPngs: false,
   pcbSvgs: false,
   schematicSvgs: false,
+  systemSvgs: false,
+  assemblySvgs: false,
   simulationSvgs: false,
   simulationSchematicSvgs: false,
 }
@@ -43,6 +49,8 @@ export const hasAnyImageFormatSelected = (
   selection.schematicPngs ||
   selection.pcbSvgs ||
   selection.schematicSvgs ||
+  selection.systemSvgs ||
+  selection.assemblySvgs ||
   selection.simulationSvgs ||
   selection.simulationSchematicSvgs
 
@@ -53,6 +61,8 @@ const hasNewOutputFlags = (options?: BuildCommandOptions) =>
       options?.schematicPng ||
       options?.svgs ||
       options?.pcbSvgs ||
+      options?.systemSvgs ||
+      options?.assemblySvgs ||
       options?.simulationSvgs ||
       options?.simulationSchematicSvgs ||
       options?.schematicSvgs,
@@ -90,6 +100,8 @@ export const resolveImageFormatSelection = (
       schematicPngs: false,
       pcbSvgs: true,
       schematicSvgs: true,
+      systemSvgs: false,
+      assemblySvgs: false,
       simulationSvgs: false,
       simulationSchematicSvgs: false,
     }
@@ -112,12 +124,16 @@ export const resolveImageFormatSelection = (
   if (options?.svgs) {
     selection.pcbSvgs = true
     selection.schematicSvgs = true
+    selection.systemSvgs = true
+    selection.assemblySvgs = true
     selection.simulationSvgs = true
     selection.simulationSchematicSvgs = true
   }
   if (options?.pcbSvgs) {
     selection.pcbSvgs = true
   }
+  if (options?.systemSvgs) selection.systemSvgs = true
+  if (options?.assemblySvgs) selection.assemblySvgs = true
   if (options?.pcbPng) {
     selection.pcbPngs = true
   }

@@ -5,7 +5,11 @@ import type { AnyCircuitElement } from "circuit-json"
 import { render3dThumbnail } from "lib/shared/render-3d-thumbnail"
 import { convertCircuitJsonToGltf } from "circuit-json-to-gltf"
 import { circuitJsonToStep } from "circuit-json-to-step"
-import { convertCircuitJsonToSchematicSvg } from "circuit-to-svg"
+import {
+  convertCircuitJsonToAssemblySvg,
+  convertCircuitJsonToSchematicSvg,
+} from "circuit-to-svg"
+import { getSystemSvgAssets } from "lib/shared/system-svg-assets"
 import { loadLocalStepModelFsMap } from "lib/shared/load-local-step-model-fs-map"
 import { getSimulationSvgAssetsFromCircuitJson } from "lib/shared/simulation-svg-assets"
 import type { PcbSnapshotSettings } from "../../lib/project-config/project-config-schema"
@@ -14,6 +18,38 @@ import { getCircuitJsonToGltfOptions } from "../../lib/shared/get-circuit-json-t
 import { convertModelUrlsToFileUrls } from "./convert-model-urls-to-file-urls"
 import type { BuildImageFormatSelection } from "./image-format-selection"
 import { normalizeToUint8Array } from "./worker-binary-utils"
+
+export const writeDiagramSvgAssetsFromCircuitJson = async (
+  circuitJson: AnyCircuitElement[],
+  outputDir: string,
+  imageFormats: BuildImageFormatSelection,
+) => {
+  if (!imageFormats.systemSvgs && !imageFormats.assemblySvgs) return []
+  const assets: Array<{ fileName: string; svg: string }> = []
+  if (imageFormats.systemSvgs)
+    assets.push(...(await getSystemSvgAssets(circuitJson)))
+  if (
+    imageFormats.assemblySvgs &&
+    circuitJson.some((e) => e.type === "pcb_board")
+  ) {
+    assets.push({
+      fileName: "assembly.svg",
+      svg: convertCircuitJsonToAssemblySvg([...circuitJson]),
+    })
+  }
+  // Remove previews for pages or boards that disappeared since the last build.
+  const generatedNames = new Set(assets.map((asset) => asset.fileName))
+  for (const fileName of fs.readdirSync(outputDir)) {
+    const selected =
+      (imageFormats.systemSvgs && /^system(?:-.*)?\.svg$/.test(fileName)) ||
+      (imageFormats.assemblySvgs && fileName === "assembly.svg")
+    if (selected && !generatedNames.has(fileName))
+      fs.rmSync(path.join(outputDir, fileName), { force: true })
+  }
+  for (const { fileName, svg } of assets)
+    fs.writeFileSync(path.join(outputDir, fileName), svg, "utf-8")
+  return assets.map((asset) => asset.fileName)
+}
 
 export const writeSimulationSvgAssetsFromCircuitJson = (
   circuitJson: AnyCircuitElement[],
@@ -139,6 +175,11 @@ export const writeImageAssetsFromCircuitJson = async (
   }
 
   writeSimulationSvgAssetsFromCircuitJson(circuitJson, outputDir, imageFormats)
+  await writeDiagramSvgAssetsFromCircuitJson(
+    circuitJson,
+    outputDir,
+    imageFormats,
+  )
 
   if (imageFormats.threeDPngs) {
     const pngBuffer = await render3dThumbnail(circuitJson)

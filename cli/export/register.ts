@@ -29,6 +29,10 @@ export const registerExport = (program: Command) => {
     )
     .option("-o, --output <path>", "Output file path")
     .option(
+      "--system-page <name-or-id>",
+      "Select a system diagram page (requires --format system-svg)",
+    )
+    .option(
       "--drawing <name-or-filename>",
       "Select a drawing page by name or SVG filename",
     )
@@ -41,6 +45,7 @@ export const registerExport = (program: Command) => {
         options: {
           layer?: "top" | "bottom"
           drawing?: string
+          systemPage?: string
           format?: string
           output?: string
           disablePartsEngine?: boolean
@@ -51,6 +56,8 @@ export const registerExport = (program: Command) => {
           options.format ?? (options.drawing ? "drawing-svg" : "json")
         if (options.drawing && formatOption !== "drawing-svg")
           throw new Error("--drawing requires --format drawing-svg")
+        if (options.systemPage && formatOption !== "system-svg")
+          throw new Error("--system-page requires --format system-svg")
         if (options.layer && !["top", "bottom"].includes(options.layer)) {
           console.error("Unknown PCB layer. Valid layers: top, bottom")
           process.exit(1)
@@ -120,6 +127,7 @@ export const registerExport = (program: Command) => {
           filePath: file,
           format,
           drawing: options.drawing,
+          systemPage: options.systemPage,
           outputPath: options.output,
           platformConfig: platformConfigWithCliDefaults,
           pcbSnapshotSettings: {

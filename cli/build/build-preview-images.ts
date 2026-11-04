@@ -7,7 +7,10 @@ import { convertCircuitJsonToSchematicSvg } from "circuit-to-svg"
 import type { PcbSnapshotSettings } from "lib/project-config/project-config-schema"
 import { convertSvgToPngBuffer } from "lib/shared/convert-svg-to-png"
 import type { BuildImageFormatSelection } from "./image-format-selection"
-import { writeSimulationSvgAssetsFromCircuitJson } from "./worker-output-generators"
+import {
+  writeSimulationSvgAssetsFromCircuitJson,
+  writeDiagramSvgAssetsFromCircuitJson,
+} from "./worker-output-generators"
 
 export interface BuildFileResult {
   sourcePath: string
@@ -128,6 +131,20 @@ const generatePreviewAssets = async ({
       }
     } catch (error) {
       console.error(`${prefix}Failed to generate simulation SVGs:`, error)
+    }
+  }
+
+  if (imageFormats.systemSvgs || imageFormats.assemblySvgs) {
+    try {
+      for (const fileName of await writeDiagramSvgAssetsFromCircuitJson(
+        circuitJson,
+        outputDir,
+        imageFormats,
+      )) {
+        console.log(`${prefix}Written ${fileName}`)
+      }
+    } catch (error) {
+      console.error(`${prefix}Failed to generate diagram SVGs:`, error)
     }
   }
 
