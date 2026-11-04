@@ -196,20 +196,7 @@ export async function generateCircuitJson({
     runner.emit("renderComplete")
     solverDiagnostics?.finalize()
 
-    const hasImportedBoard = runner.children.some((component: any) =>
-      [component, ...component.getDescendants()].some(
-        (instance: any) =>
-          instance[Symbol.for("pcb-spice-pipeline.imported-board.v2")],
-      ),
-    )
-    records = hasImportedBoard
-      ? (
-          await importFromUserLand(
-            "@tscircuit/pcb-spice-pipeline/tsx",
-            projectRootDir,
-          )
-        ).serializeSimulation(runner)
-      : await runner.getCircuitJson()
+    records = await runner.getCircuitJson()
   }
 
   const modeling = MainComponent.modeling as PipelineModeling | undefined
