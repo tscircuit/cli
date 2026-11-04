@@ -51,6 +51,7 @@ import {
 import { resolveBuildOptions } from "./resolve-build-options"
 import { transpileFile } from "./transpile"
 import { exitBuild } from "./utils/exit-build"
+import { readTscircuitBrowserBundle } from "lib/shared/read-tscircuit-browser-bundle"
 import { buildFilesWithWorkerPool } from "./worker-pool"
 import type { BuildJobResult } from "./worker-types"
 
@@ -970,7 +971,10 @@ export const registerBuild = (program: Command) => {
           } else {
             fs.writeFileSync(
               path.join(distDir, "standalone.min.js"),
-              runFrameStandaloneBundleContent,
+              process.env.TSCIRCUIT_STANDALONE === "1"
+                ? (readTscircuitBrowserBundle(import.meta.url) ??
+                    runFrameStandaloneBundleContent)
+                : runFrameStandaloneBundleContent,
             )
           }
           const pkgJsonPath = path.join(projectDir, "package.json")
