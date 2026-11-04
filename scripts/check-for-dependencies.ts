@@ -3,7 +3,9 @@
 import { readFileSync } from "node:fs"
 import { exit } from "node:process"
 
-const ALLOWED_DEPENDENCIES: string[] = []
+// The CLI needs its own compiler API and standard library files at runtime.
+// Project TypeScript 7 does not provide the API used by the bundled plugins.
+const ALLOWED_DEPENDENCIES: string[] = ["typescript"]
 
 console.log("Checking for non-dev dependencies...")
 
