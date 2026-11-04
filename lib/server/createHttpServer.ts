@@ -8,6 +8,7 @@ import runFrameStandaloneBundleContent from "@tscircuit/runframe/standalone" wit
 }
 import { getNodeHandler } from "winterspec/adapters/node"
 import { getTscircuitDependencyVersion } from "lib/shared/get-tscircuit-dependency-version"
+import { readTscircuitBrowserBundle } from "lib/shared/read-tscircuit-browser-bundle"
 
 // @ts-ignore
 import winterspecBundle from "@tscircuit/file-server/dist/bundle.js"
@@ -264,7 +265,11 @@ export const createHttpServer = async ({
         res.writeHead(200, {
           "Content-Type": "application/javascript; charset=utf-8",
         })
-        res.end(runFrameStandaloneBundleContent)
+        // The installed runtime bundle already includes its matching eval worker.
+        res.end(
+          readTscircuitBrowserBundle(import.meta.url) ??
+            runFrameStandaloneBundleContent,
+        )
         return
       }
       const explicitStandalonePath = process.env.RUNFRAME_STANDALONE_FILE_PATH
