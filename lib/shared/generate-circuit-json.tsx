@@ -4,6 +4,7 @@ import { pathToFileURL } from "node:url"
 import type { PlatformConfig } from "@tscircuit/props"
 import type { AnyCircuitElement } from "circuit-json"
 import type { PipelineModeling } from "@tscircuit/pcb-spice-pipeline"
+import { serializeSimulation } from "@tscircuit/pcb-spice-pipeline/serialize"
 import Debug from "debug"
 import { abbreviateStringifyObject } from "lib/utils/abbreviate-stringify-object"
 import { getVirtualFileSystemFromDirPath } from "make-vfs"
@@ -202,13 +203,10 @@ export async function generateCircuitJson({
           instance[Symbol.for("pcb-spice-pipeline.imported-board.v2")],
       ),
     )
+    // The serializer is bundled with the CLI: projects only need the
+    // ImportedBoard component, which identifies itself through a global symbol.
     records = hasImportedBoard
-      ? (
-          await importFromUserLand(
-            "@tscircuit/pcb-spice-pipeline/tsx",
-            projectRootDir,
-          )
-        ).serializeSimulation(runner)
+      ? serializeSimulation(runner)
       : await runner.getCircuitJson()
   }
 
