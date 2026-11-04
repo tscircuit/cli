@@ -35,6 +35,7 @@ import { getCircuitJsonToGltfOptions } from "lib/shared/get-circuit-json-to-gltf
 import { getOrGenerateCircuitJson } from "lib/shared/get-or-generate-circuit-json"
 import { getPlatformConfigWithCliDefaults } from "lib/shared/get-platform-config-with-cli-defaults"
 import { loadLocalStepModelFsMap } from "lib/shared/load-local-step-model-fs-map"
+import { normalizeCircuitJsonForStepExport } from "lib/shared/normalize-circuit-json-for-step-export"
 import { mergePlatformConfigs } from "lib/shared/platform-config-utils"
 import { convertCircuitJsonToSchematicPdf } from "./convert-circuit-json-to-schematic-pdf"
 import { convertToKicadLibrary } from "./convert-to-kicad-library"
@@ -385,12 +386,15 @@ export const exportSnippet = async ({
     }
 
     case "step":
-      outputContent = await circuitJsonToStep(circuitJson, {
-        exportMode: "pcb",
-        includeComponents: true,
-        includeExternalMeshes: true,
-        fsMap: await loadLocalStepModelFsMap(circuitJson),
-      })
+      outputContent = await circuitJsonToStep(
+        normalizeCircuitJsonForStepExport(circuitJson),
+        {
+          exportMode: "pcb",
+          includeComponents: true,
+          includeExternalMeshes: true,
+          fsMap: await loadLocalStepModelFsMap(circuitJson),
+        },
+      )
       break
     case "assembly-svg":
       outputContent = convertCircuitJsonToAssemblySvg(circuitJson)
