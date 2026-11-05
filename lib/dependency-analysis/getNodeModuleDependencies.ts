@@ -596,5 +596,20 @@ export function getAllNodeModuleFilePaths(
     }
   }
 
+  // tscircuit itself is provided by the runtime, but the evaluator reads its
+  // package.json to allow importing packages that come with it (e.g.
+  // @tscircuit/ngspice-spice-engine) without declaring them
+  if (allDependencyPackages.has("tscircuit")) {
+    const tscircuitPackageJsonPath = path.join(
+      projectDir,
+      "node_modules",
+      "tscircuit",
+      "package.json",
+    )
+    if (fs.existsSync(tscircuitPackageJsonPath)) {
+      allFiles.add(tscircuitPackageJsonPath)
+    }
+  }
+
   return Array.from(allFiles)
 }
