@@ -7,6 +7,7 @@ const isRemoteUrl = (value: string) => /^https?:\/\//i.test(value)
 
 export async function loadLocalStepModelFsMap(
   circuitJson: AnyCircuitElement[],
+  baseDir: string = process.cwd(),
 ) {
   const fsMap: Record<string, string> = {}
 
@@ -17,7 +18,9 @@ export async function loadLocalStepModelFsMap(
     if (typeof modelUrl !== "string" || modelUrl.length === 0) continue
     if (isRemoteUrl(modelUrl) || fsMap[modelUrl]) continue
 
-    const localPath = path.resolve(process.cwd(), modelUrl)
+    const localPath = path.isAbsolute(modelUrl)
+      ? modelUrl
+      : path.resolve(baseDir, modelUrl)
     if (!existsSync(localPath)) continue
 
     fsMap[modelUrl] = await readFile(localPath, "utf-8")
