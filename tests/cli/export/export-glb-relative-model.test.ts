@@ -41,7 +41,10 @@ test("loadLocalStepModelFsMap resolves relative step model against specified bas
   const tmpDir = path.join(os.tmpdir(), `test-step-${Date.now()}`)
   await mkdir(path.join(tmpDir, "libraries"), { recursive: true })
   const stepFile = path.join(tmpDir, "libraries", "cap.step")
-  await writeFile(stepFile, "ISO-10303-21; HEADER; ENDSEC; DATA; ENDSEC; END-ISO-10303-21;")
+  await writeFile(
+    stepFile,
+    "ISO-10303-21; HEADER; ENDSEC; DATA; ENDSEC; END-ISO-10303-21;",
+  )
 
   try {
     const circuitJson = [
