@@ -50,7 +50,7 @@
         "cosmiconfig": "^9.0.0",
         "delay": "^6.0.0",
         "dsn-converter": "^0.0.90",
-        "easyeda": "^0.0.388",
+        "easyeda": "^0.0.389",
         "fuse.js": "^7.1.0",
         "get-port": "^7.1.0",
         "globby": "^14.1.0",
@@ -716,7 +716,7 @@
 
     "earcut": ["earcut@3.2.4", "", {}, "sha512-FHc6yNpnTORB0tM5kmZ03iD2mDuNakDE2lvf4Hw1XkfxtEHIGVi01B/GqUSwx+NcC1WGjidAfpTXzeALtPtfpg=="],
 
-    "easyeda": ["easyeda@0.0.388", "", { "peerDependencies": { "typescript": "^5.5.2", "zod": "3" }, "bin": { "easyeda": "dist/main.cjs", "easyeda-converter": "dist/main.cjs" } }, "sha512-+Y0NVRs4v81mbDVXJRNssLoIG8frmwyra3UVGuV+/8w7wYZYbipQ2OYI9Q48PtzjRleMl4hDHKEitq5k+tYEAA=="],
+    "easyeda": ["easyeda@0.0.389", "", { "peerDependencies": { "typescript": "^5.5.2", "zod": "3" }, "bin": { "easyeda": "dist/main.cjs", "easyeda-converter": "dist/main.cjs" } }, "sha512-j2/dwqcNSbEWNW20NCoSBD9d8FPU5/HpU75v3JLYYONEdM2qYTDEIqLGz1AlLlGhACEgzpldSNjoQp7Zws1xBA=="],
 
     "ecdsa-sig-formatter": ["ecdsa-sig-formatter@1.0.11", "", { "dependencies": { "safe-buffer": "^5.0.1" } }, "sha512-nagl3RYrbNv6kQkeJIpt6NJZy8twLB/2vtz6yN9Z4vRKHN4/QZJIEbqohALSgwKdnksuY3k5Addp5lg8sVoVcQ=="],
 
