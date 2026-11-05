@@ -12,6 +12,7 @@ export interface BuildCommandOptions {
   ignoreRoutingDrc?: boolean
   disablePcb?: boolean
   routingDisabled?: boolean
+  disableSchematicRouting?: boolean
   disablePartsEngine?: boolean
   ignoreConfig?: boolean
   ci?: boolean

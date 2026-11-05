@@ -107,6 +107,10 @@
       "type": "boolean",
       "description": "Use networked Pipeline9 autorouting at effort 1. Omitted or false keeps local routing; explicit alternative pipelines and effort levels retain their local solver."
     },
+    "schematicTraceRoutingDisabled": {
+      "type": "boolean",
+      "description": "Skip automatic schematic trace routing while keeping the schematic."
+    },
     "build": {
       "type": "object",
       "additionalProperties": false,
@@ -148,6 +152,14 @@
         "routingDisabled": {
           "type": "boolean",
           "description": "Disable routing during circuit generation in build."
+        },
+        "disableSchematicRouting": {
+          "type": "boolean",
+          "description": "Disable automatic schematic trace routing during circuit generation in build."
+        },
+        "schematicTraceRoutingDisabled": {
+          "type": "boolean",
+          "description": "Skip automatic schematic trace routing during circuit generation in build."
         },
         "typescriptLibrary": {
           "type": "boolean",

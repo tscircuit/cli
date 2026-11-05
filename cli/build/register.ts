@@ -141,6 +141,10 @@ export const registerBuild = (program: Command) => {
       },
     )
     .option("--routing-disabled", "Disable routing during circuit generation")
+    .option(
+      "--disable-schematic-routing",
+      "Disable automatic schematic trace routing during circuit generation",
+    )
     .option("--disable-parts-engine", "Disable the parts engine")
     .option("--site", "Generate a static site in the dist directory")
     .option(
@@ -358,13 +362,16 @@ export const registerBuild = (program: Command) => {
             !resolvedOptions?.disablePcb &&
             !resolvedOptions?.routingDisabled &&
             resolvedOptions?.autorouterThreads === undefined &&
+            !resolvedOptions?.disableSchematicRouting &&
             !resolvedOptions?.disablePartsEngine &&
             !resolvedOptions?.ignorePlacementDrc
           ) {
             return
           }
 
-          const config: PlatformConfig = {}
+          const config: PlatformConfig & {
+            schematicTraceRoutingDisabled?: boolean
+          } = {}
           if (resolvedOptions?.autorouterThreads !== undefined) {
             config.autorouterThreads = resolvedOptions.autorouterThreads
           }
@@ -375,6 +382,10 @@ export const registerBuild = (program: Command) => {
 
           if (resolvedOptions?.routingDisabled) {
             config.routingDisabled = true
+          }
+
+          if (resolvedOptions?.disableSchematicRouting) {
+            config.schematicTraceRoutingDisabled = true
           }
 
           if (resolvedOptions?.disablePartsEngine) {
