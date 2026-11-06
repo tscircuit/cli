@@ -2,6 +2,7 @@ import { getQueryFromParts } from "cli/utils/get-query-from-parts"
 import type { Command } from "commander"
 import Fuse from "fuse.js"
 import kleur from "kleur"
+import { getPlatformFetch } from "lib/shared/get-platform-fetch"
 import { getRegistryApiKy } from "lib/registry-api/get-ky"
 import { getPartsEngineBaseUrl } from "lib/shared/parts-engine-base-urls"
 import {
@@ -189,7 +190,7 @@ export const registerSearch = (program: Command) => {
                   "https://jlcsearch.tscircuit.com",
                 )
                 const url = `${baseUrl}/api/search?limit=10&q=${encodeURIComponent(query)}`
-                const response = await fetch(url, { signal })
+                const response = await getPlatformFetch()(url, { signal })
                 if (!response.ok)
                   throw new Error(
                     `JLCPCB search failed (HTTP ${response.status})`,
@@ -207,7 +208,7 @@ export const registerSearch = (program: Command) => {
               source: "ti",
               async run() {
                 const url = `https://tisearch.tscircuit.com/api/search?limit=10&q=${encodeURIComponent(query)}`
-                const response = await fetch(url, { signal })
+                const response = await getPlatformFetch()(url, { signal })
                 if (!response.ok)
                   throw new Error(`TI search failed (HTTP ${response.status})`)
                 const data = await response.json()
@@ -228,7 +229,7 @@ export const registerSearch = (program: Command) => {
                   `https://${distributor.source}search.tscircuit.com`,
                 )
                 const url = `${baseUrl}/api/search?limit=10&q=${encodeURIComponent(query)}`
-                const response = await fetch(url, {
+                const response = await getPlatformFetch()(url, {
                   headers: { accept: "application/json" },
                   signal,
                 })
@@ -253,7 +254,7 @@ export const registerSearch = (program: Command) => {
             searches.push({
               source: "kicad",
               async run() {
-                const response = await fetch(
+                const response = await getPlatformFetch()(
                   "https://kicad-mod-cache.tscircuit.com/kicad_files.json",
                   { signal },
                 )
