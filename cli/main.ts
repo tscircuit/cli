@@ -1,7 +1,6 @@
 #!/usr/bin/env node
 import { Command } from "commander"
 import { registerStaticAssetLoaders } from "lib/shared/register-static-asset-loaders"
-import { startBakedAssetServer } from "lib/server/start-baked-asset-server"
 import { perfectCli } from "perfect-cli"
 import { getVersion } from "./../lib/getVersion"
 import { registerAdd } from "./add/register"
@@ -105,16 +104,10 @@ registerRegistryPackages(program)
 registerRegistryPackagesCreate(program)
 registerRegistryPackagesUpdate(program)
 
-const searchCommand = registerSearch(program)
+registerSearch(program)
 registerImport(program)
 registerConvert(program)
 registerSimulate(program)
-
-// The other commands still use the HTTP adapter for baked assets. Search
-// reads the catalog directly, including when launched from the interactive menu.
-program.hook("preAction", async (_program, command) => {
-  if (command !== searchCommand) await startBakedAssetServer()
-})
 
 // Manually handle top-level --version, -v, and -V flags.
 // Do not intercept subcommand arguments, e.g. `tsci agent --version` should
@@ -154,5 +147,5 @@ if (process.argv.length === 2) {
     throw err
   })
 } else {
-  await program.parseAsync()
+  program.parse()
 }

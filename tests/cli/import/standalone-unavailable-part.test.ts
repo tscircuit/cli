@@ -41,7 +41,7 @@ test("standalone import routes the EasyEDA fallback to the baked asset server", 
 
   expect(exitCode).toBe(1)
   expect(stdout + stderr).toContain(
-    "This part isn't currently available in tscircuit standalone (enterprise), please contact your representative to get it added",
+    "Resource is not available from the configured platform source",
   )
   expect(requests).toEqual([
     "GET /datasheet-api/datasheets/get",

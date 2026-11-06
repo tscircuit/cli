@@ -7,6 +7,7 @@ import { resolveDevTarget } from "./resolve-dev-target"
 import kleur from "kleur"
 import { DevServer } from "lib/dev/DevServer"
 import { getVersion } from "lib/getVersion"
+import { startPlatformServer } from "lib/server/start-platform-server"
 
 const isPortAvailable = (port: number): Promise<boolean> => {
   return new Promise((resolve) => {
@@ -114,6 +115,7 @@ export const registerDev = (program: Command) => {
           autorouterPhase,
         })
 
+        await startPlatformServer()
         await server.start()
 
         const timeToStart = Date.now() - startTime

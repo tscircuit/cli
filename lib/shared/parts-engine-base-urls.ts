@@ -1,3 +1,5 @@
+import { getPlatformBaseUrl } from "./get-platform-base-url"
+
 export const partsEngineBaseUrlEnvVars = {
   jlcsearch: "TSCIRCUIT_JLCSEARCH_BASE_URL",
   digikey: "TSCIRCUIT_DIGIKEY_BASE_URL",
@@ -10,7 +12,10 @@ export const getPartsEngineBaseUrl = (
   defaultBaseUrl: string,
 ) => {
   const environmentVariable = partsEngineBaseUrlEnvVars[provider]
-  const baseUrl = process.env[environmentVariable] ?? defaultBaseUrl
+  const platformBaseUrl = getPlatformBaseUrl()
+  const baseUrl =
+    process.env[environmentVariable] ??
+    (platformBaseUrl ? `${platformBaseUrl}/${provider}` : defaultBaseUrl)
   return baseUrl.replace(/\/+$/, "")
 }
 

@@ -2,8 +2,9 @@ import { expect, test } from "bun:test"
 import { mkdir, mkdtemp, rm, writeFile } from "node:fs/promises"
 import { tmpdir } from "node:os"
 import { join, resolve } from "node:path"
+import { pathToFileURL } from "node:url"
 
-test("baked search uses no HTTP for matches, misses, or source overrides", async () => {
+test("file-backed search uses no HTTP for matches, misses, or source overrides", async () => {
   const directory = await mkdtemp(join(tmpdir(), "tsci-offline-search-"))
   try {
     const catalog = join(directory, "datasheet-api", "datasheets")
@@ -45,9 +46,8 @@ globalThis.fetch = Server.prototype.listen = Socket.prototype.connect = denyNetw
             ...process.env,
             FORCE_COLOR: "0",
             TSCIRCUIT_CONFIG_DIR: directory,
-            TSCIRCUIT_STANDALONE: "1",
-            TSCIRCUIT_BAKED_ASSET_SERVER_DIR: directory,
-            TSCIRCUIT_DEFAULT_SEARCH_SOURCES: "ti,kicad,tscircuit",
+            TSCIRCUIT_PLATFORM_BASE_URL: pathToFileURL(directory).href,
+            TSCIRCUIT_DEFAULT_SEARCH_SOURCES: "datasheets",
           },
         },
       )
@@ -65,7 +65,7 @@ globalThis.fetch = Server.prototype.listen = Socket.prototype.connect = denyNetw
     const unavailable = search("--ti", "--kicad", "--tscircuit", "rp2040")
     expect(unavailable.exitCode).toBe(1)
     expect(unavailable.stderr.toString()).toContain(
-      "Search sources unavailable offline",
+      "Resource is not available from the configured platform source",
     )
 
     const bundledSupplier = search("--lcsc", "rp2040", "--json")
@@ -74,10 +74,23 @@ globalThis.fetch = Server.prototype.listen = Socket.prototype.connect = denyNetw
       { source: "jlcpcb", mfr: "RP2040", lcsc: 2040 },
     ])
 
+    // Source support is data-driven; the CLI has no local-source allowlist.
+    const ti = join(directory, "tisearch.tscircuit.com", "api", "search")
+    await mkdir(ti, { recursive: true })
+    await writeFile(
+      join(ti, "limit%3D10%26q%3Drp2040.json"),
+      JSON.stringify({ components: [{ mfr: "RP2040", stock: 1 }] }),
+    )
+    const localTi = search("--ti", "rp2040", "--json")
+    expect(localTi.exitCode, localTi.stderr.toString()).toBe(0)
+    expect(JSON.parse(localTi.stdout.toString()).results).toEqual([
+      { source: "ti", mfr: "RP2040", stock: 1 },
+    ])
+
     const unbundledSupplier = search("--jlcpcb", "tps63001")
     expect(unbundledSupplier.exitCode).toBe(1)
     expect(unbundledSupplier.stderr.toString()).toContain(
-      "isn't currently available",
+      "Resource is not available from the configured platform source",
     )
   } finally {
     await rm(directory, { recursive: true, force: true })

@@ -2,7 +2,6 @@ import { getRegistryApiUrl } from "lib/cli-config"
 import { getPlatformFetch } from "lib/shared/get-platform-fetch"
 import { getPartsEngineBaseUrl } from "lib/shared/parts-engine-base-urls"
 import { z } from "zod"
-import { readBakedSearchJson } from "./read-baked-search-json"
 
 const responseSchema = z.object({
   datasheets: z.array(
@@ -20,18 +19,18 @@ export type DatasheetSearchResult = z.infer<
 export const searchDatasheets = async (
   query: string,
   signal?: AbortSignal,
-  bakedDirectory?: string,
 ): Promise<DatasheetSearchResult[]> => {
   const normalizedQuery = query.trim().toLowerCase()
   if (!normalizedQuery) return []
-  const catalog = bakedDirectory
-    ? await readBakedSearchJson(
-        bakedDirectory,
-        "datasheet-api/datasheets/list",
-        signal,
-      )
-    : await fetchDatasheetIndex(signal)
-  const parsed = responseSchema.safeParse(catalog)
+  const baseUrl = getPartsEngineBaseUrl("datasheet-api", getRegistryApiUrl())
+  // Search the inventory locally so the same API works with static mirrors.
+  const response = await getPlatformFetch()(`${baseUrl}/datasheets/list`, {
+    headers: { accept: "application/json" },
+    signal: signal ?? AbortSignal.timeout(10_000),
+  })
+  if (!response.ok)
+    throw new Error(`Datasheet search failed (HTTP ${response.status})`)
+  const parsed = responseSchema.safeParse(await response.json())
   if (!parsed.success)
     throw new Error("Datasheet search returned an invalid response")
   return parsed.data.datasheets
@@ -46,15 +45,4 @@ export const searchDatasheets = async (
         a.datasheet_id.localeCompare(b.datasheet_id, "en"),
     )
     .slice(0, 10)
-}
-
-const fetchDatasheetIndex = async (signal?: AbortSignal): Promise<unknown> => {
-  const baseUrl = getPartsEngineBaseUrl("datasheet-api", getRegistryApiUrl())
-  const response = await getPlatformFetch()(`${baseUrl}/datasheets/list`, {
-    headers: { accept: "application/json" },
-    signal: signal ?? AbortSignal.timeout(10_000),
-  })
-  if (!response.ok)
-    throw new Error(`Datasheet search failed (HTTP ${response.status})`)
-  return response.json()
 }

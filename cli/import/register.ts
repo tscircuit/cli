@@ -13,7 +13,7 @@ import { importJlcpcbPart } from "./import-jlcpcb-part"
 import { parseDirectLcscPartNumber } from "./parse-direct-lcsc-part-number"
 import { getPartsEngineBaseUrl } from "lib/shared/parts-engine-base-urls"
 import {
-  BakedAssetNotFoundError,
+  PlatformResourceNotFoundError,
   getPlatformFetch,
 } from "lib/shared/get-platform-fetch"
 
@@ -115,7 +115,7 @@ export const registerImport = (program: Command) => {
               kleur.red("Error:"),
               error instanceof Error ? error.message : error,
             )
-            if (error instanceof BakedAssetNotFoundError) {
+            if (error instanceof PlatformResourceNotFoundError) {
               process.exitCode = 1
               return
             }
@@ -141,7 +141,7 @@ export const registerImport = (program: Command) => {
               kleur.red("Error:"),
               error instanceof Error ? error.message : error,
             )
-            if (error instanceof BakedAssetNotFoundError) {
+            if (error instanceof PlatformResourceNotFoundError) {
               process.exitCode = 1
               return
             }
