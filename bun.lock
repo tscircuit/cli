@@ -19,7 +19,7 @@
         "@tscircuit/fake-snippets": "^0.0.226",
         "@tscircuit/file-server": "^0.0.32",
         "@tscircuit/footprinter": "^0.0.450",
-        "@tscircuit/pcb-spice-pipeline": "https://github.com/tscircuit/pcb-spice-pipeline/releases/download/v0.1.6/tscircuit-pcb-spice-pipeline-0.1.6.tgz",
+        "@tscircuit/pcb-spice-pipeline": "https://github.com/tscircuit/pcb-spice-pipeline/releases/download/v0.1.8/tscircuit-pcb-spice-pipeline-0.1.8.tgz",
         "@tscircuit/schematic-trace-solver": "^0.0.204",
         "@types/bun": "^1.2.2",
         "@types/configstore": "^6.0.2",
@@ -448,7 +448,7 @@
 
     "@tscircuit/ngspice-spice-engine": ["@tscircuit/ngspice-spice-engine@0.0.20", "", { "peerDependencies": { "@tscircuit/props": "*", "circuit-json": "*", "spicets": "*", "typescript": "^5" } }, "sha512-dXjH51Wl95B6yEVkWCz65DpAHWTJRLHDyD/09eJUpGwLcYfd1F9m4E0XWbuiYZ8wKygYlACTozrSX9n3/LtfwA=="],
 
-    "@tscircuit/pcb-spice-pipeline": ["@tscircuit/pcb-spice-pipeline@https://github.com/tscircuit/pcb-spice-pipeline/releases/download/v0.1.6/tscircuit-pcb-spice-pipeline-0.1.6.tgz", { "dependencies": { "@noble/hashes": "1.8.0", "@tscircuit/ibis-to-spice": "https://api.github.com/repos/tscircuit/ibis-to-spice/tarball/ad1ec9e640a92a4d370fc76acbbd8db245563317", "clipper2-ts": "2.0.1-18", "earcut": "3.2.4", "format-si-unit": "0.0.12", "zod": "3.25.76" }, "peerDependencies": { "@tscircuit/core": ">=0.0.2188", "@tscircuit/props": ">=0.0.705", "circuit-json": "*", "react": "^19.0.0" }, "optionalPeers": ["@tscircuit/core", "@tscircuit/props", "react"] }, "sha512-MwnXFcOmJRlnzPqlqa6p4Xof9w7MWyI9/8mH021GUqgBc/0t0wT28gBv/WE+3KqUSmgUC/fMzgV/6kLCqTGYOw=="],
+    "@tscircuit/pcb-spice-pipeline": ["@tscircuit/pcb-spice-pipeline@https://github.com/tscircuit/pcb-spice-pipeline/releases/download/v0.1.8/tscircuit-pcb-spice-pipeline-0.1.8.tgz", { "dependencies": { "@noble/hashes": "1.8.0", "@tscircuit/ibis-to-spice": "https://api.github.com/repos/tscircuit/ibis-to-spice/tarball/ad1ec9e640a92a4d370fc76acbbd8db245563317", "clipper2-ts": "2.0.1-18", "earcut": "3.2.4", "format-si-unit": "0.0.12", "zod": "3.25.76" }, "peerDependencies": { "@tscircuit/core": ">=0.0.2188", "@tscircuit/props": ">=0.0.705", "circuit-json": "*", "react": "^19.0.0" }, "optionalPeers": ["@tscircuit/core", "@tscircuit/props", "react"] }, "sha512-Z3+lWN5pfQnNmO6b4NU0gkwB8B4veMv4FbVz49Qerblh8nsjt9nYK0SE0XMUAjspgy5hhIDJhHRMQsZMJLSCkg=="],
 
     "@tscircuit/props": ["@tscircuit/props@0.0.717", "", { "peerDependencies": { "circuit-json": "*", "react": "*", "zod": "*" } }, "sha512-GW1MkDypo481l5Wxnhzf7mmvB7Z2ja3gbFhGPGzVYlgsf0JqTcvelIL1urxWLGXyQl0qDRtv4BwKGslyWrKLHA=="],
 
