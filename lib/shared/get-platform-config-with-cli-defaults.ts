@@ -6,7 +6,6 @@ import type { PlatformConfig } from "@tscircuit/props"
 import semver from "semver"
 import { mergePlatformConfigs } from "./platform-config-utils"
 import { getPlatformFetch } from "./get-platform-fetch"
-import { getPlatformBaseUrl } from "./get-platform-base-url"
 
 export function createLocalCacheEngine(
   cacheDir = path.join(process.cwd(), ".tscircuit", "cache"),
@@ -107,7 +106,7 @@ export function getPlatformConfigWithCliDefaults(
   const config = userConfig
     ? mergePlatformConfigs(defaultConfig, userConfig)!
     : defaultConfig
-  if (getPlatformBaseUrl())
+  if (process.env.TSCIRCUIT_BAKED_ASSET_SERVER_BASE_URL)
     config.platformFetch = getPlatformFetch(config.platformFetch)
   return config
 }
