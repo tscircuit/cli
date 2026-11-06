@@ -1,12 +1,13 @@
 import fs from "node:fs"
 import path from "node:path"
 import type { PlatformConfig } from "@tscircuit/props"
+import type { AnyCircuitElement } from "circuit-json"
 import {
   CircuitJsonToKicadPcbConverter,
+  CircuitJsonToKicadProConverter,
   CircuitJsonToKicadSchConverter,
   resolveAndLoadKicad3dModelFiles,
 } from "circuit-json-to-kicad"
-import type { AnyCircuitElement } from "circuit-json"
 
 type GenerateKicadProjectOptions = {
   circuitJson: unknown[]
@@ -23,33 +24,6 @@ export type GeneratedKicadProject = {
   outputDir: string
   projectName: string
 }
-
-const createKicadProContent = ({
-  projectName,
-  schematicFileName,
-  boardFileName,
-}: {
-  projectName: string
-  schematicFileName: string
-  boardFileName: string
-}) =>
-  JSON.stringify(
-    {
-      head: {
-        version: 1,
-        generator: "tsci",
-      },
-      project: {
-        name: projectName,
-        files: {
-          schematic: schematicFileName,
-          board: boardFileName,
-        },
-      },
-    },
-    null,
-    2,
-  )
 
 export const generateKicadProject = async ({
   circuitJson,
@@ -85,11 +59,16 @@ export const generateKicadProject = async ({
   pcbConverter.runUntilFinished()
   const pcbContent = pcbConverter.getOutputString()
 
-  const proContent = createKicadProContent({
-    projectName: sanitizedProjectName,
-    schematicFileName,
-    boardFileName,
-  })
+  const proConverter = new CircuitJsonToKicadProConverter(
+    circuitJson as AnyCircuitElement[],
+    {
+      projectName: sanitizedProjectName,
+      schematicFilename: schematicFileName,
+      pcbFilename: boardFileName,
+    },
+  )
+  proConverter.runUntilFinished()
+  const proContent = proConverter.getOutputString()
 
   if (writeFiles) {
     fs.mkdirSync(outputDir, { recursive: true })
