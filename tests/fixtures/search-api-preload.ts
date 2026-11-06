@@ -3,6 +3,7 @@ import { partsEngineBaseUrlEnvVars } from "../../lib/shared/parts-engine-base-ur
 // Keep external catalogs deterministic while the command uses the fixture's registry server.
 for (const name of [
   "TSCIRCUIT_DEFAULT_SEARCH_SOURCES",
+  "TSCIRCUIT_PLATFORM_BASE_URL",
   "TSCIRCUIT_BAKED_ASSET_SERVER_DIR",
   "TSCIRCUIT_BAKED_ASSET_SERVER_BASE_URL",
   ...Object.values(partsEngineBaseUrlEnvVars),
