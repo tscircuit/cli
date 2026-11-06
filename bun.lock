@@ -19,7 +19,7 @@
         "@tscircuit/fake-snippets": "^0.0.226",
         "@tscircuit/file-server": "^0.0.32",
         "@tscircuit/footprinter": "^0.0.450",
-        "@tscircuit/pcb-spice-pipeline": "https://github.com/tscircuit/pcb-spice-pipeline/releases/download/v0.1.6/tscircuit-pcb-spice-pipeline-0.1.6.tgz",
+        "@tscircuit/pcb-spice-pipeline": "https://github.com/tscircuit/pcb-spice-pipeline/releases/download/v0.1.8/tscircuit-pcb-spice-pipeline-0.1.8.tgz",
         "@tscircuit/schematic-trace-solver": "^0.0.204",
         "@types/bun": "^1.2.2",
         "@types/configstore": "^6.0.2",
@@ -38,7 +38,7 @@
         "circuit-json-to-fdm-component-box": "^0.0.2",
         "circuit-json-to-footprinter": "^0.0.59",
         "circuit-json-to-gerber": "^0.0.120",
-        "circuit-json-to-kicad": "0.0.267",
+        "circuit-json-to-kicad": "0.0.269",
         "circuit-json-to-readable-netlist": "^0.0.15",
         "circuit-json-to-step": "^0.0.63",
         "circuit-json-to-tscircuit": "^0.0.50",
@@ -448,7 +448,7 @@
 
     "@tscircuit/ngspice-spice-engine": ["@tscircuit/ngspice-spice-engine@0.0.20", "", { "peerDependencies": { "@tscircuit/props": "*", "circuit-json": "*", "spicets": "*", "typescript": "^5" } }, "sha512-dXjH51Wl95B6yEVkWCz65DpAHWTJRLHDyD/09eJUpGwLcYfd1F9m4E0XWbuiYZ8wKygYlACTozrSX9n3/LtfwA=="],
 
-    "@tscircuit/pcb-spice-pipeline": ["@tscircuit/pcb-spice-pipeline@https://github.com/tscircuit/pcb-spice-pipeline/releases/download/v0.1.6/tscircuit-pcb-spice-pipeline-0.1.6.tgz", { "dependencies": { "@noble/hashes": "1.8.0", "@tscircuit/ibis-to-spice": "https://api.github.com/repos/tscircuit/ibis-to-spice/tarball/ad1ec9e640a92a4d370fc76acbbd8db245563317", "clipper2-ts": "2.0.1-18", "earcut": "3.2.4", "format-si-unit": "0.0.12", "zod": "3.25.76" }, "peerDependencies": { "@tscircuit/core": ">=0.0.2188", "@tscircuit/props": ">=0.0.705", "circuit-json": "*", "react": "^19.0.0" }, "optionalPeers": ["@tscircuit/core", "@tscircuit/props", "react"] }, "sha512-MwnXFcOmJRlnzPqlqa6p4Xof9w7MWyI9/8mH021GUqgBc/0t0wT28gBv/WE+3KqUSmgUC/fMzgV/6kLCqTGYOw=="],
+    "@tscircuit/pcb-spice-pipeline": ["@tscircuit/pcb-spice-pipeline@https://github.com/tscircuit/pcb-spice-pipeline/releases/download/v0.1.8/tscircuit-pcb-spice-pipeline-0.1.8.tgz", { "dependencies": { "@noble/hashes": "1.8.0", "@tscircuit/ibis-to-spice": "https://api.github.com/repos/tscircuit/ibis-to-spice/tarball/ad1ec9e640a92a4d370fc76acbbd8db245563317", "clipper2-ts": "2.0.1-18", "earcut": "3.2.4", "format-si-unit": "0.0.12", "zod": "3.25.76" }, "peerDependencies": { "@tscircuit/core": ">=0.0.2188", "@tscircuit/props": ">=0.0.705", "circuit-json": "*", "react": "^19.0.0" }, "optionalPeers": ["@tscircuit/core", "@tscircuit/props", "react"] }, "sha512-Z3+lWN5pfQnNmO6b4NU0gkwB8B4veMv4FbVz49Qerblh8nsjt9nYK0SE0XMUAjspgy5hhIDJhHRMQsZMJLSCkg=="],
 
     "@tscircuit/props": ["@tscircuit/props@0.0.717", "", { "peerDependencies": { "circuit-json": "*", "react": "*", "zod": "*" } }, "sha512-GW1MkDypo481l5Wxnhzf7mmvB7Z2ja3gbFhGPGzVYlgsf0JqTcvelIL1urxWLGXyQl0qDRtv4BwKGslyWrKLHA=="],
 
@@ -608,7 +608,7 @@
 
     "circuit-json-to-gltf": ["circuit-json-to-gltf@0.0.164", "", { "dependencies": { "@jscad/modeling": "^2.12.6", "@tscircuit/alphabet": "^0.0.25", "@tscircuit/cableprinter": "^0.0.6", "@tscircuit/footprinter": "^0.0.431", "earcut": "^3.0.2", "gl-matrix": "^3.4.4", "jscad-electronics": "^0.0.243", "jscad-planner": "^0.0.19", "jscad-to-gltf": "^0.0.5", "occt-import-js": "^0.0.23" }, "peerDependencies": { "@resvg/resvg-js": "2", "@resvg/resvg-wasm": "2", "@tscircuit/circuit-json-util": "*", "circuit-json": ">=0.0.539", "circuit-to-svg": ">=0.0.445", "typescript": "^5" }, "optionalPeers": ["@resvg/resvg-js", "@resvg/resvg-wasm"] }, "sha512-a03y7Md+EnM2wO+KKKpAg+i5TVpbJEbGvPUSq58VT5ybx9ui5CxeLiuyE5EcubDTeP2Y0IQd/XUfqlbz2eYO6A=="],
 
-    "circuit-json-to-kicad": ["circuit-json-to-kicad@0.0.267", "", { "peerDependencies": { "typescript": "^5" } }, "sha512-XhrOlDzO7kY1s+8ob04+4pPdyPa3CfwblyGuDs7XGdkmvZtEsB3jVdnZA98iM6xLBdM5XpeYMiI2YQsGLWeSJA=="],
+    "circuit-json-to-kicad": ["circuit-json-to-kicad@0.0.269", "", { "peerDependencies": { "typescript": "^5" } }, "sha512-xqgQoYTaH9ftxzg26KZ/p80/ZB8xoYphLHEwNmtWsRUo3nH6CuiJSHRTGxibrw6ymE+bsMAF4sgCl4X/ldNFLQ=="],
 
     "circuit-json-to-pnp-csv": ["circuit-json-to-pnp-csv@0.0.20", "", { "dependencies": { "papaparse": "^5.4.1" }, "peerDependencies": { "@tscircuit/circuit-json-util": "*", "@tscircuit/soup-util": "*", "circuit-json": "*", "typescript": "*" } }, "sha512-8zKl6jNSvhLcVfOz4D7pGyEyNlzZ5WedPPGxEKikhDVANJ7n10ecruszHb6krqsIsNS8yGPJUlQM0RBZ+dXjtQ=="],
 
