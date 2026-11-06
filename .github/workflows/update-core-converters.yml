@@ -1,0 +1,52 @@
+name: Update converters from core
+
+on:
+  workflow_dispatch:
+    inputs:
+      core_version:
+        description: Published core version to copy converter versions from
+        type: string
+        required: true
+        default: latest
+
+permissions:
+  contents: write
+  pull-requests: write
+
+concurrency:
+  group: dependency-updates
+  cancel-in-progress: false
+
+jobs:
+  update-converters:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.TSCIRCUIT_BOT_GITHUB_TOKEN }}
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version-file: .bun-version
+      - run: bun install --frozen-lockfile
+      - name: Copy converter versions and refresh lockfile
+        run: bun run copy-core-versions
+        env:
+          CORE_VERSION: ${{ inputs.core_version }}
+      - name: Verify converter synchronization and dependency ownership
+        run: bun test tests/scripts/copy-core-versions.test.ts tests/lib/tscircuit-routing-dependencies.test.ts tests/shared/import-from-user-land-tscircuit.test.ts
+      - name: Create update pull request
+        id: create-pr
+        uses: peter-evans/create-pull-request@v7
+        with:
+          token: ${{ secrets.TSCIRCUIT_BOT_GITHUB_TOKEN }}
+          branch: update-core-converters
+          delete-branch: true
+          commit-message: "chore: sync converter versions from core"
+          title: "chore: sync converter versions from core"
+          body: "Copy converter dependency specifications from the published core manifest and refresh the lockfile."
+      - name: Enable auto-merge with CI checks
+        if: steps.create-pr.outputs.pull-request-number != ''
+        env:
+          GH_TOKEN: ${{ secrets.TSCIRCUIT_BOT_GITHUB_TOKEN }}
+          PR_NUMBER: ${{ steps.create-pr.outputs.pull-request-number }}
+        run: gh pr merge "$PR_NUMBER" --auto --squash --delete-branch

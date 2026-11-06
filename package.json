@@ -116,7 +116,8 @@
     "format": "biome format --write .",
     "format:check": "biome format .",
     "cli": "bun ./cli/main.ts",
-    "pkg-pr-new-release": "bunx pkg-pr-new publish --comment=off --peerDeps"
+    "pkg-pr-new-release": "bunx pkg-pr-new publish --comment=off --peerDeps",
+    "copy-core-versions": "bun run scripts/copy-core-versions.ts && bun install --ignore-scripts"
   },
   "type": "module"
 }
