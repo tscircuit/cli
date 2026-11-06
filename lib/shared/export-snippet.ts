@@ -12,6 +12,7 @@ import {
 } from "circuit-json-to-bom-csv"
 import { convertCircuitJsonToGerberFiles } from "circuit-json-to-gerber"
 import { convertCircuitJsonToGltf } from "circuit-json-to-gltf"
+import { convertModelUrlsToFileUrls } from "cli/build/convert-model-urls-to-file-urls"
 import {
   CircuitJsonToKicadPcbConverter,
   CircuitJsonToKicadProConverter,
@@ -309,7 +310,7 @@ export const exportSnippet = async ({
     case "gltf":
       outputContent = JSON.stringify(
         await convertCircuitJsonToGltf(
-          circuitJson,
+          convertModelUrlsToFileUrls(circuitJson, projectDir),
           getCircuitJsonToGltfOptions({ format: "gltf" }),
         ),
         null,
@@ -319,7 +320,7 @@ export const exportSnippet = async ({
     case "glb":
       outputContent = Buffer.from(
         (await convertCircuitJsonToGltf(
-          circuitJson,
+          convertModelUrlsToFileUrls(circuitJson, projectDir),
           getCircuitJsonToGltfOptions({ format: "glb" }),
         )) as ArrayBuffer,
       )
@@ -426,7 +427,7 @@ export const exportSnippet = async ({
         exportMode: "pcb",
         includeComponents: true,
         includeExternalMeshes: true,
-        fsMap: await loadLocalStepModelFsMap(circuitJson),
+        fsMap: await loadLocalStepModelFsMap(circuitJson, projectDir),
       })
       break
     case "assembly-svg":
