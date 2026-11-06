@@ -20,7 +20,7 @@ function getMeshVertexCount(gltfScene: ExportedGltfScene, meshIndex?: number) {
 }
 
 test(
-  "GLB and GLTF export include a relative local STEP model",
+  "repro: relative local STEP exports silently use a fallback box",
   async () => {
     const { tmpDir, runCommand } = await getCliTestFixture()
     const projectDir = path.join(tmpDir, "nested-project")
@@ -79,11 +79,12 @@ export default () => (
         })),
       }).toMatchSnapshot()
       expect(exitCode).toBe(0)
-      expect(`${stdout}\n${stderr}`).not.toContain("Failed to load")
+      // This lower stack layer records the current bug: export succeeds but
+      // the local STEP fails to load, leaving a 24-vertex fallback box.
+      // The fix PR replaces these assertions and this same image with the model.
+      expect(`${stdout}\n${stderr}`).toContain("Failed to load")
       expect(modelNodes.length).toBeGreaterThan(0)
-      expect(getMeshVertexCount(gltfScene, modelNodes[0].mesh)).toBeGreaterThan(
-        1000,
-      )
+      expect(getMeshVertexCount(gltfScene, modelNodes[0].mesh)).toBe(24)
     }
   },
   { timeout: 60_000 },

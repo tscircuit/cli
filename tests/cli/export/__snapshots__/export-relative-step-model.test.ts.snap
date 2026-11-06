@@ -11,3 +11,39 @@ exports[`GLB and GLTF export include a relative local STEP model 1`] = `
   ],
 }
 `;
+
+exports[`GLB and GLTF export include a relative local STEP model 2`] = `
+{
+  "format": "gltf",
+  "modelNodes": [
+    {
+      "name": "SW1",
+      "vertexCount": 24,
+    },
+  ],
+}
+`;
+
+exports[`repro: relative local STEP exports silently use a fallback box 1`] = `
+{
+  "format": "glb",
+  "modelNodes": [
+    {
+      "name": "SW1",
+      "vertexCount": 24,
+    },
+  ],
+}
+`;
+
+exports[`repro: relative local STEP exports silently use a fallback box 2`] = `
+{
+  "format": "gltf",
+  "modelNodes": [
+    {
+      "name": "SW1",
+      "vertexCount": 24,
+    },
+  ],
+}
+`;
