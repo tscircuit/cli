@@ -128,6 +128,10 @@ export const registerBuild = (program: Command) => {
     .option("--ignore-config", "Ignore options from tscircuit.config.json")
     .option("--disable-pcb", "Disable PCB outputs")
     .option("--routing-disabled", "Disable routing during circuit generation")
+    .option(
+      "--disable-schematic-routing",
+      "Disable automatic schematic trace routing during circuit generation",
+    )
     .option("--disable-parts-engine", "Disable the parts engine")
     .option("--site", "Generate a static site in the dist directory")
     .option(
@@ -344,13 +348,16 @@ export const registerBuild = (program: Command) => {
           if (
             !resolvedOptions?.disablePcb &&
             !resolvedOptions?.routingDisabled &&
+            !resolvedOptions?.disableSchematicRouting &&
             !resolvedOptions?.disablePartsEngine &&
             !resolvedOptions?.ignorePlacementDrc
           ) {
             return
           }
 
-          const config: PlatformConfig = {}
+          const config: PlatformConfig & {
+            schematicTraceRoutingDisabled?: boolean
+          } = {}
 
           if (resolvedOptions?.disablePcb) {
             config.pcbDisabled = true
@@ -358,6 +365,10 @@ export const registerBuild = (program: Command) => {
 
           if (resolvedOptions?.routingDisabled) {
             config.routingDisabled = true
+          }
+
+          if (resolvedOptions?.disableSchematicRouting) {
+            config.schematicTraceRoutingDisabled = true
           }
 
           if (resolvedOptions?.disablePartsEngine) {
