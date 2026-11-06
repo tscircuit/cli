@@ -1,10 +1,9 @@
 import { expect, test } from "bun:test"
-import { mkdir, mkdtemp, rm, writeFile } from "node:fs/promises"
+import { mkdir, mkdtemp, readFile, rm, writeFile } from "node:fs/promises"
 import { tmpdir } from "node:os"
 import { join, resolve } from "node:path"
-import { pathToFileURL } from "node:url"
 
-test("file-backed search uses no HTTP for matches, misses, or source overrides", async () => {
+test("search uses only the configured local proxy for matches, misses, and source overrides", async () => {
   const directory = await mkdtemp(join(tmpdir(), "tsci-offline-search-"))
   try {
     const catalog = join(directory, "datasheet-api", "datasheets")
@@ -20,12 +19,22 @@ test("file-backed search uses no HTTP for matches, misses, or source overrides",
       join(supplier, "limit%3D10%26q%3Drp2040.json"),
       JSON.stringify({ components: [{ mfr: "RP2040", lcsc: 2040 }] }),
     )
-    const preload = join(directory, "deny-network.mjs")
+    const requestLog = join(directory, "requests.log")
+    const preload = join(directory, "local-proxy-only.mjs")
     await writeFile(
       preload,
-      `import { Server, Socket } from "node:net"
-const denyNetwork = () => { console.error("Unexpected network access"); process.exit(88) }
-globalThis.fetch = Server.prototype.listen = Socket.prototype.connect = denyNetwork
+      `import { appendFileSync } from "node:fs"
+const upstreamFetch = globalThis.fetch
+globalThis.fetch = Object.assign(async (input, init) => {
+  const url = new URL(input instanceof Request ? input.url : input)
+  const proxy = process.env.TSCIRCUIT_BAKED_ASSET_SERVER_BASE_URL
+  if (!proxy || url.origin !== new URL(proxy).origin) {
+    console.error("Unexpected public request:", url.href)
+    process.exit(88)
+  }
+  appendFileSync(${JSON.stringify(requestLog)}, url.pathname + "\\n")
+  return upstreamFetch(input, init)
+}, { preconnect: upstreamFetch.preconnect })
 `,
     )
 
@@ -46,7 +55,7 @@ globalThis.fetch = Server.prototype.listen = Socket.prototype.connect = denyNetw
             ...process.env,
             FORCE_COLOR: "0",
             TSCIRCUIT_CONFIG_DIR: directory,
-            TSCIRCUIT_PLATFORM_BASE_URL: pathToFileURL(directory).href,
+            TSCIRCUIT_BAKED_ASSET_SERVER_DIR: directory,
             TSCIRCUIT_DEFAULT_SEARCH_SOURCES: "datasheets",
           },
         },
@@ -58,15 +67,16 @@ globalThis.fetch = Server.prototype.listen = Socket.prototype.connect = denyNetw
       query: "rp2040",
       results: [{ source: "datasheets", ...part }],
     })
+    expect((await readFile(requestLog, "utf8")).trim().split("\n")).toEqual([
+      "/datasheet-api/datasheets/list",
+    ])
     const missing = search("tps63001", "--json")
     expect(missing.exitCode, missing.stderr.toString()).toBe(0)
     expect(JSON.parse(missing.stdout.toString()).results).toEqual([])
 
     const unavailable = search("--ti", "--kicad", "--tscircuit", "rp2040")
     expect(unavailable.exitCode).toBe(1)
-    expect(unavailable.stderr.toString()).toContain(
-      "Resource is not available from the configured platform source",
-    )
+    expect(unavailable.stderr.toString()).toContain("isn't currently available")
 
     const bundledSupplier = search("--lcsc", "rp2040", "--json")
     expect(bundledSupplier.exitCode, bundledSupplier.stderr.toString()).toBe(0)
@@ -90,7 +100,7 @@ globalThis.fetch = Server.prototype.listen = Socket.prototype.connect = denyNetw
     const unbundledSupplier = search("--jlcpcb", "tps63001")
     expect(unbundledSupplier.exitCode).toBe(1)
     expect(unbundledSupplier.stderr.toString()).toContain(
-      "Resource is not available from the configured platform source",
+      "isn't currently available",
     )
   } finally {
     await rm(directory, { recursive: true, force: true })

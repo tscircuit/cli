@@ -215,22 +215,18 @@ pricing, and product links. No TI API credentials are needed. Search reads the
 indexed catalog; stock and metadata reflect the latest completed background
 refresh. This flag provides part discovery, not TSX component import.
 
-Search uses the configured platform transport. Set `TSCIRCUIT_PLATFORM_BASE_URL`
-to a `file://` directory URL to read saved responses without networking, or to
-an HTTP(S) URL to use a platform proxy. For example:
+To search a datasheet catalog served by a local file server, set its API URL:
 
 ```sh
-TSCIRCUIT_PLATFORM_BASE_URL=file:///path/to/catalog \
+TSCIRCUIT_DATASHEET_API_BASE_URL=http://127.0.0.1:3000/catalog/datasheet-api \
 TSCIRCUIT_DEFAULT_SEARCH_SOURCES=datasheets tsci search RP2040
 ```
 
-The datasheet index lives at `datasheet-api/datasheets/list` below that directory.
-Provider responses use their API paths; query parameters become sorted,
-URL-encoded JSON filenames (for example,
-`jlcsearch/api/search/limit%3D10%26q%3DRP2040.json`). Other URLs map under their
-hostname. Missing local responses fail locally, including explicit source flags;
-there is no HTTP fallback. `tsci dev` exposes the same files through a local
-HTTP server for its browser UI.
+The CLI requests `/datasheets/list` below that URL. If the URL variable is
+unset, it uses the normal registry endpoint. An empty catalog or an unavailable
+configured server does not trigger a fallback to the public catalog. The existing
+`TSCIRCUIT_BAKED_ASSET_SERVER_DIR` setting starts a local file server and supplies
+the provider URLs automatically.
 
 ## Development
 

@@ -1,6 +1,7 @@
 #!/usr/bin/env node
 import { Command } from "commander"
 import { registerStaticAssetLoaders } from "lib/shared/register-static-asset-loaders"
+import { startBakedAssetServer } from "lib/server/start-baked-asset-server"
 import { perfectCli } from "perfect-cli"
 import { getVersion } from "./../lib/getVersion"
 import { registerAdd } from "./add/register"
@@ -55,6 +56,7 @@ export const program = new Command()
 program.name("tsci").description("CLI for developing tscircuit packages")
 
 registerStaticAssetLoaders()
+await startBakedAssetServer()
 
 registerInit(program)
 
