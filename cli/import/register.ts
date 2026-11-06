@@ -93,6 +93,7 @@ export const registerImport = (program: Command) => {
           version: string
           description?: string
         }> = []
+        let isCompactJlcCatalog = false
         let jlcResults: Array<{
           lcsc: number
           mfr: string
@@ -135,6 +136,7 @@ export const registerImport = (program: Command) => {
               r.json(),
             )
             jlcResults = resp.components
+            isCompactJlcCatalog = resp.catalog?.coverage === "subset"
           } catch (error) {
             spinner.fail("Failed to search JLCPCB")
             console.error(
@@ -149,6 +151,13 @@ export const registerImport = (program: Command) => {
         }
 
         spinner.stop()
+        if (isCompactJlcCatalog) {
+          console.log(
+            kleur.yellow(
+              "Searching a bundled JLCPCB subset. Import assets are bundled separately.",
+            ),
+          )
+        }
 
         if (!registryResults.length && !jlcResults?.length) {
           const directLcscPartNumber = searchJlc
@@ -169,6 +178,15 @@ export const registerImport = (program: Command) => {
               `No results found for "${query}" in the tscircuit registry or JLCPCB.`,
             ),
           )
+          if (isCompactJlcCatalog) {
+            const onlineUrl = new URL(
+              "https://jlcsearch.tscircuit.com/components/list",
+            )
+            onlineUrl.searchParams.set("search", query)
+            console.log(
+              `To search the full catalog in your browser: ${onlineUrl}`,
+            )
+          }
           return
         }
 
