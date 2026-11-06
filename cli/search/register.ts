@@ -3,11 +3,12 @@ import type { Command } from "commander"
 import Fuse from "fuse.js"
 import kleur from "kleur"
 import { getRegistryApiKy } from "lib/registry-api/get-ky"
-import { getPartsEngineBaseUrl } from "lib/shared/parts-engine-base-urls"
+import { resolveBakedAssetDirectory } from "lib/shared/baked-assets"
 import {
   type DatasheetSearchResult,
   searchDatasheets,
 } from "./search-datasheets"
+import { searchSupplier } from "./search-supplier"
 
 const searchSources = [
   "kicad",
@@ -20,8 +21,14 @@ const searchSources = [
 ] as const
 
 type SearchSource = (typeof searchSources)[number]
+const bakedSearchSources: readonly SearchSource[] = [
+  "datasheets",
+  "jlcpcb",
+  "digikey",
+  "mouser",
+]
 
-export const registerSearch = (program: Command) => {
+export const registerSearch = (program: Command) =>
   program
     .command("search")
     .description(
@@ -42,7 +49,7 @@ export const registerSearch = (program: Command) => {
     .option("--json", "Output search results as JSON")
     .addHelpText(
       "after",
-      `\nSearches all sources by default. Source flags restrict the search.\nSet TSCIRCUIT_DEFAULT_SEARCH_SOURCES to a comma-separated list to override the defaults.\nAvailable sources: ${searchSources.join(", ")}.\n`,
+      `\nSearches all sources by default, or datasheets when using baked assets.\nSet TSCIRCUIT_DEFAULT_SEARCH_SOURCES to a comma-separated list to override the defaults.\nBaked searches use only local data.\nAvailable sources: ${searchSources.join(", ")}.\n`,
     )
     .action(
       async (
@@ -60,6 +67,10 @@ export const registerSearch = (program: Command) => {
         },
       ) => {
         const query = getQueryFromParts(queryParts)
+        const bakedDirectory = process.env.TSCIRCUIT_BAKED_ASSET_SERVER_DIR
+        const offline =
+          bakedDirectory !== undefined ||
+          process.env.TSCIRCUIT_STANDALONE === "1"
         const explicitSources = searchSources.filter(
           (source) => opts[source] || (source === "jlcpcb" && opts.lcsc),
         )
@@ -67,11 +78,18 @@ export const registerSearch = (program: Command) => {
         const defaultSources: readonly string[] =
           process.env.TSCIRCUIT_DEFAULT_SEARCH_SOURCES?.split(",").map(
             (source) => source.trim(),
-          ) ?? searchSources
+          ) ?? (offline ? ["datasheets"] : searchSources)
+        let selectedSources = hasFilters ? explicitSources : defaultSources
+        if (offline && !hasFilters) {
+          const availableDefaults = bakedSearchSources.filter((source) =>
+            defaultSources.includes(source),
+          )
+          selectedSources = availableDefaults.length
+            ? availableDefaults
+            : ["datasheets"]
+        }
         const selected = (source: SearchSource) =>
-          hasFilters
-            ? explicitSources.includes(source)
-            : defaultSources.includes(source)
+          selectedSources.includes(source)
         const searchKicad = selected("kicad")
         const searchJlc = selected("jlcpcb")
         const searchTscircuit = selected("tscircuit")
@@ -147,6 +165,21 @@ export const registerSearch = (program: Command) => {
             throw new Error(
               `Invalid TSCIRCUIT_DEFAULT_SEARCH_SOURCES: ${JSON.stringify(invalidSources)}. Expected a comma-separated list of: ${searchSources.join(", ")}`,
             )
+          let rootDirectory: string | undefined
+          if (offline) {
+            const unavailable = explicitSources.filter(
+              (source) => !bakedSearchSources.includes(source),
+            )
+            if (unavailable.length)
+              throw new Error(
+                `Search sources unavailable offline: ${unavailable.join(", ")}`,
+              )
+            if (bakedDirectory === undefined)
+              throw new Error(
+                "Offline search requires TSCIRCUIT_BAKED_ASSET_SERVER_DIR",
+              )
+            rootDirectory = await resolveBakedAssetDirectory(bakedDirectory)
+          }
 
           const signal = AbortSignal.timeout(10_000)
           const searches: Array<{
@@ -158,7 +191,11 @@ export const registerSearch = (program: Command) => {
             searches.push({
               source: "datasheets",
               async run() {
-                datasheetResults = await searchDatasheets(query, signal)
+                datasheetResults = await searchDatasheets(
+                  query,
+                  signal,
+                  rootDirectory,
+                )
               },
             })
           }
@@ -184,20 +221,13 @@ export const registerSearch = (program: Command) => {
             searches.push({
               source: "jlcpcb",
               async run() {
-                const baseUrl = getPartsEngineBaseUrl(
+                jlcResults = await searchSupplier(
                   "jlcsearch",
-                  "https://jlcsearch.tscircuit.com",
+                  "JLCPCB",
+                  query,
+                  signal,
+                  rootDirectory,
                 )
-                const url = `${baseUrl}/api/search?limit=10&q=${encodeURIComponent(query)}`
-                const response = await fetch(url, { signal })
-                if (!response.ok)
-                  throw new Error(
-                    `JLCPCB search failed (HTTP ${response.status})`,
-                  )
-                const data = await response.json()
-                if (!Array.isArray(data?.components))
-                  throw new Error("JLCPCB search returned an invalid response")
-                jlcResults = data.components
               },
             })
           }
@@ -223,27 +253,18 @@ export const registerSearch = (program: Command) => {
             searches.push({
               source: distributor.source,
               async run() {
-                const baseUrl = getPartsEngineBaseUrl(
+                const components = await searchSupplier<
+                  (typeof distributorResults)[number]["components"][number]
+                >(
                   distributor.source,
-                  `https://${distributor.source}search.tscircuit.com`,
-                )
-                const url = `${baseUrl}/api/search?limit=10&q=${encodeURIComponent(query)}`
-                const response = await fetch(url, {
-                  headers: { accept: "application/json" },
+                  distributor.label,
+                  query,
                   signal,
-                })
-                if (!response.ok)
-                  throw new Error(
-                    `${distributor.label} search failed (HTTP ${response.status})`,
-                  )
-                const data = await response.json()
-                if (!Array.isArray(data?.components))
-                  throw new Error(
-                    `${distributor.label} search returned an invalid response`,
-                  )
+                  rootDirectory,
+                )
                 distributorResults.push({
                   ...distributor,
-                  components: data.components,
+                  components,
                 })
               },
             })
@@ -488,4 +509,3 @@ export const registerSearch = (program: Command) => {
         console.log("\n")
       },
     )
-}
