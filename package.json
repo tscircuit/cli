@@ -1,6 +1,6 @@
 {
   "name": "@tscircuit/cli",
-  "version": "0.1.2440",
+  "version": "0.1.2443",
   "repository": {
     "type": "git",
     "url": "https://github.com/tscircuit/cli"
@@ -25,7 +25,7 @@
     "@tscircuit/fake-snippets": "^0.0.226",
     "@tscircuit/file-server": "^0.0.32",
     "@tscircuit/footprinter": "^0.0.450",
-    "@tscircuit/pcb-spice-pipeline": "https://github.com/tscircuit/pcb-spice-pipeline/releases/download/v0.1.6/tscircuit-pcb-spice-pipeline-0.1.6.tgz",
+    "@tscircuit/pcb-spice-pipeline": "https://github.com/tscircuit/pcb-spice-pipeline/releases/download/v0.1.8/tscircuit-pcb-spice-pipeline-0.1.8.tgz",
     "@tscircuit/schematic-trace-solver": "^0.0.204",
     "@types/bun": "^1.2.2",
     "@types/configstore": "^6.0.2",
@@ -44,7 +44,7 @@
     "circuit-json-to-fdm-component-box": "^0.0.2",
     "circuit-json-to-footprinter": "^0.0.59",
     "circuit-json-to-gerber": "^0.0.120",
-    "circuit-json-to-kicad": "0.0.267",
+    "circuit-json-to-kicad": "0.0.269",
     "circuit-json-to-readable-netlist": "^0.0.15",
     "circuit-json-to-step": "^0.0.63",
     "circuit-json-to-tscircuit": "^0.0.50",
