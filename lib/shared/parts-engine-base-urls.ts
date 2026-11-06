@@ -1,4 +1,6 @@
 export const partsEngineBaseUrlEnvVars = {
+  ti: "TSCIRCUIT_TI_BASE_URL",
+  kicad: "TSCIRCUIT_KICAD_BASE_URL",
   jlcsearch: "TSCIRCUIT_JLCSEARCH_BASE_URL",
   digikey: "TSCIRCUIT_DIGIKEY_BASE_URL",
   mouser: "TSCIRCUIT_MOUSER_BASE_URL",

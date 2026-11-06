@@ -1,3 +1,5 @@
+import { getPartsEngineBaseUrls } from "./parts-engine-base-urls"
+
 export class BakedAssetNotFoundError extends Error {
   constructor() {
     super(
@@ -15,11 +17,27 @@ export const getPlatformFetch = (
   )
   if (!baseUrl) return upstreamFetch
   const origin = new URL(baseUrl).origin
+  // Explicit API configuration takes precedence over the generic asset mirror.
+  const serviceUrls = [
+    ...Object.values(getPartsEngineBaseUrls()),
+    process.env.TSCIRCUIT_REGISTRY_API_URL,
+  ]
+    .filter((url): url is string => Boolean(url))
+    .map((url) => new URL(url))
 
   return Object.assign(
     async (input: Parameters<typeof fetch>[0], init?: RequestInit) => {
       const url = new URL(input instanceof Request ? input.url : input)
       if (url.protocol !== "http:" && url.protocol !== "https:")
+        return upstreamFetch(input, init)
+      if (
+        serviceUrls.some(
+          (base) =>
+            url.origin === base.origin &&
+            (url.pathname === base.pathname.replace(/\/+$/, "") ||
+              url.pathname.startsWith(`${base.pathname.replace(/\/+$/, "")}/`)),
+        )
+      )
         return upstreamFetch(input, init)
       const target =
         url.origin === origin

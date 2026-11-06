@@ -99,7 +99,7 @@ export const startBakedAssetServer = async (
   for (const [providerPath, environmentVariable] of Object.entries(
     partsEngineBaseUrlEnvVars,
   )) {
-    process.env[environmentVariable] = `${serverOrigin}/${providerPath}`
+    process.env[environmentVariable] ??= `${serverOrigin}/${providerPath}`
   }
   return server
 }

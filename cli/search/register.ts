@@ -78,6 +78,23 @@ export const registerSearch = (program: Command) => {
         const searchTi = selected("ti")
         const searchDatasheetCatalog = selected("datasheets")
 
+        const catalogs = new Map<
+          string,
+          { source: string; coverage: string; generated_at: string }
+        >()
+        const recordCatalog = (response: Response) => {
+          const header = response.headers.get("x-tscircuit-catalog")
+          if (header) {
+            const metadata = JSON.parse(header)
+            catalogs.set(metadata.source, metadata)
+          }
+          return response
+        }
+        const searchFetch: typeof fetch = Object.assign(
+          async (...args: Parameters<typeof fetch>) =>
+            recordCatalog(await fetch(...args)),
+          { preconnect: fetch.preconnect },
+        )
         let searchErrors: Array<{ source: SearchSource; message: string }> = []
 
         let datasheetResults: DatasheetSearchResult[] = []
@@ -96,7 +113,7 @@ export const registerSearch = (program: Command) => {
           mfr: string
           package: string
           description: string
-          stock: number
+          stock: number | null
           price: number
         }> = []
 
@@ -104,7 +121,7 @@ export const registerSearch = (program: Command) => {
           mfr: string
           package: string
           description: string
-          stock: number
+          stock: number | null
           price: number | null
           ti_product_number?: string
           product_url?: string
@@ -129,7 +146,7 @@ export const registerSearch = (program: Command) => {
           components: Array<{
             mfr: string
             description: string
-            stock: number
+            stock: number | null
             supplier_part_number?: string
             digikey_product_number?: string
             mouser_product_number?: string
@@ -168,9 +185,12 @@ export const registerSearch = (program: Command) => {
               source: "tscircuit",
               async run() {
                 const ky = getRegistryApiKy()
-                const data = await ky
-                  .post("packages/search", { json: { query }, signal })
-                  .json<typeof results>()
+                const response = await ky.post("packages/search", {
+                  json: { query },
+                  signal,
+                })
+                recordCatalog(response)
+                const data = await response.json<typeof results>()
                 if (!Array.isArray(data?.packages))
                   throw new Error(
                     "Registry search returned an invalid response",
@@ -189,7 +209,7 @@ export const registerSearch = (program: Command) => {
                   "https://jlcsearch.tscircuit.com",
                 )
                 const url = `${baseUrl}/api/search?limit=10&q=${encodeURIComponent(query)}`
-                const response = await fetch(url, { signal })
+                const response = await searchFetch(url, { signal })
                 if (!response.ok)
                   throw new Error(
                     `JLCPCB search failed (HTTP ${response.status})`,
@@ -206,8 +226,12 @@ export const registerSearch = (program: Command) => {
             searches.push({
               source: "ti",
               async run() {
-                const url = `https://tisearch.tscircuit.com/api/search?limit=10&q=${encodeURIComponent(query)}`
-                const response = await fetch(url, { signal })
+                const baseUrl = getPartsEngineBaseUrl(
+                  "ti",
+                  "https://tisearch.tscircuit.com",
+                )
+                const url = `${baseUrl}/api/search?limit=10&q=${encodeURIComponent(query)}`
+                const response = await searchFetch(url, { signal })
                 if (!response.ok)
                   throw new Error(`TI search failed (HTTP ${response.status})`)
                 const data = await response.json()
@@ -228,7 +252,7 @@ export const registerSearch = (program: Command) => {
                   `https://${distributor.source}search.tscircuit.com`,
                 )
                 const url = `${baseUrl}/api/search?limit=10&q=${encodeURIComponent(query)}`
-                const response = await fetch(url, {
+                const response = await searchFetch(url, {
                   headers: { accept: "application/json" },
                   signal,
                 })
@@ -253,8 +277,8 @@ export const registerSearch = (program: Command) => {
             searches.push({
               source: "kicad",
               async run() {
-                const response = await fetch(
-                  "https://kicad-mod-cache.tscircuit.com/kicad_files.json",
+                const response = await searchFetch(
+                  `${getPartsEngineBaseUrl("kicad", "https://kicad-mod-cache.tscircuit.com")}/kicad_files.json`,
                   { signal },
                 )
                 if (!response.ok)
@@ -345,12 +369,27 @@ export const registerSearch = (program: Command) => {
                 query,
                 results: unifiedResults,
                 ...(searchErrors.length ? { errors: searchErrors } : {}),
+                ...(catalogs.size
+                  ? {
+                      catalogs: [...catalogs.values()].sort((a, b) =>
+                        a.source.localeCompare(b.source),
+                      ),
+                    }
+                  : {}),
               },
               null,
               2,
             ),
           )
           return
+        }
+
+        if (catalogs.size) {
+          console.error(
+            kleur.yellow(
+              "Searching bundled catalog subsets. Missing results may be available online; stock and prices are snapshots. Import assets are bundled separately.",
+            ),
+          )
         }
 
         if (
@@ -445,7 +484,7 @@ export const registerSearch = (program: Command) => {
 
           jlcResults.forEach((comp, idx) => {
             console.log(
-              `${idx + 1}. ${comp.mfr} (C${comp.lcsc}) - ${comp.description} (stock: ${comp.stock.toLocaleString("en-US")})`,
+              `${idx + 1}. ${comp.mfr} (C${comp.lcsc}) - ${comp.description} (stock: ${comp.stock?.toLocaleString("en-US") ?? "unknown"})`,
             )
           })
         }
@@ -460,7 +499,7 @@ export const registerSearch = (program: Command) => {
           )
           tiResults.forEach((comp, idx) => {
             console.log(
-              `${idx + 1}. ${comp.mfr} - ${comp.description} (stock: ${comp.stock.toLocaleString("en-US")})`,
+              `${idx + 1}. ${comp.mfr} - ${comp.description} (stock: ${comp.stock?.toLocaleString("en-US") ?? "unknown"})`,
             )
           })
         }
@@ -481,7 +520,7 @@ export const registerSearch = (program: Command) => {
               ? `${comp.mfr} (${supplierNumber})`
               : comp.mfr
             console.log(
-              `${idx + 1}. ${identity} - ${comp.description} (stock: ${comp.stock.toLocaleString("en-US")})`,
+              `${idx + 1}. ${identity} - ${comp.description} (stock: ${comp.stock?.toLocaleString("en-US") ?? "unknown"})`,
             )
           })
         }
