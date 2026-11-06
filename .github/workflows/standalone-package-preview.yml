@@ -1,0 +1,19 @@
+name: Standalone package preview
+on:
+  push:
+    branches: [ci/offline-search-package-preview]
+permissions:
+  contents: read
+  id-token: write
+jobs:
+  preview:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version-file: .bun-version
+      - run: bun install --frozen-lockfile
+      - run: bun run build
+      - run: bun run pkg-pr-new-release
