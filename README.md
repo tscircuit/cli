@@ -215,19 +215,6 @@ pricing, and product links. No TI API credentials are needed. Search reads the
 indexed catalog; stock and metadata reflect the latest completed background
 refresh. This flag provides part discovery, not TSX component import.
 
-To search a datasheet catalog served by a local file server, set its API URL:
-
-```sh
-TSCIRCUIT_DATASHEET_API_BASE_URL=http://127.0.0.1:3000/catalog/datasheet-api \
-TSCIRCUIT_DEFAULT_SEARCH_SOURCES=datasheets tsci search RP2040
-```
-
-The CLI requests `/datasheets/list` below that URL. If the URL variable is
-unset, it uses the normal registry endpoint. An empty catalog or an unavailable
-configured server does not trigger a fallback to the public catalog. The existing
-`TSCIRCUIT_BAKED_ASSET_SERVER_DIR` setting starts a local file server and supplies
-the provider URLs automatically.
-
 ## Development
 
 This command will open the `index.tsx` file for editing.
