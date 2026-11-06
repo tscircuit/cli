@@ -3,7 +3,6 @@ import type { Command } from "commander"
 import Fuse from "fuse.js"
 import kleur from "kleur"
 import { getRegistryApiKy } from "lib/registry-api/get-ky"
-import { getPlatformFetch } from "lib/shared/get-platform-fetch"
 import { getPartsEngineBaseUrl } from "lib/shared/parts-engine-base-urls"
 import {
   type DatasheetSearchResult,
@@ -93,7 +92,7 @@ export const registerSearch = (program: Command) => {
         }
         const searchFetch: typeof fetch = Object.assign(
           async (...args: Parameters<typeof fetch>) =>
-            recordCatalog(await getPlatformFetch()(...args)),
+            recordCatalog(await fetch(...args)),
           { preconnect: fetch.preconnect },
         )
         let searchErrors: Array<{ source: SearchSource; message: string }> = []

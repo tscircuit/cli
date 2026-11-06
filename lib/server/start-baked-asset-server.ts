@@ -2,7 +2,6 @@ import { readFile, realpath, stat } from "node:fs/promises"
 import { createServer } from "node:http"
 import path from "node:path"
 import { isWithinDirectory } from "lib/shared/jscdn-directory"
-import { createStandaloneSearchHandler } from "./standalone-search-catalog"
 import { partsEngineBaseUrlEnvVars } from "lib/shared/parts-engine-base-urls"
 
 const resolveBakedAssetFilePath = async (
@@ -37,34 +36,23 @@ export const startBakedAssetServer = async (
       `Baked asset directory is not a directory: ${rootDirectory}`,
     )
 
-  const searchCatalog = createStandaloneSearchHandler(rootDirectory)
   const server = createServer(async (request, response) => {
     response.setHeader("Access-Control-Allow-Origin", "*")
-    response.setHeader("Access-Control-Expose-Headers", "X-Tscircuit-Catalog")
     if (request.method === "OPTIONS") {
       response.writeHead(204, {
         "Access-Control-Allow-Methods": "GET, HEAD, POST",
-        "Access-Control-Allow-Headers": "Content-Type",
       })
       response.end()
       return
     }
-    const requestUrl = new URL(request.url!, "http://localhost")
-    const registrySearch = /^\/[^/]+\/(?:api\/)?packages\/search$/.test(
-      requestUrl.pathname,
-    )
-    const jsonSearch =
-      registrySearch &&
-      request.headers["content-type"]?.startsWith("application/json")
     if (
       request.method !== "GET" &&
       request.method !== "HEAD" &&
       !(
         request.method === "POST" &&
-        (jsonSearch ||
-          request.headers["content-type"]?.startsWith(
-            "application/x-www-form-urlencoded",
-          ))
+        request.headers["content-type"]?.startsWith(
+          "application/x-www-form-urlencoded",
+        )
       )
     ) {
       response.writeHead(405, { Allow: "GET, HEAD, POST, OPTIONS" })
@@ -73,37 +61,12 @@ export const startBakedAssetServer = async (
     }
 
     try {
-      const url = requestUrl
-      let registryQuery: string | undefined
+      const url = new URL(request.url!, "http://localhost")
       if (request.method === "POST") {
         let body = ""
-        for await (const chunk of request) {
-          body += chunk.toString()
-          if (body.length > 64 * 1024) {
-            response.writeHead(413)
-            response.end("Search request too large")
-            return
-          }
-        }
-        if (jsonSearch) {
-          const parsed = JSON.parse(body)
-          if (typeof parsed.query !== "string") throw new Error("Invalid query")
-          registryQuery = parsed.query
-        } else {
-          for (const [key, value] of new URLSearchParams(body))
-            url.searchParams.append(key, value)
-        }
-      }
-      const result = await searchCatalog(url, registryQuery)
-      if (result) {
-        result.headers.forEach((value, key) => response.setHeader(key, value))
-        response.writeHead(result.status)
-        response.end(
-          request.method === "HEAD"
-            ? undefined
-            : Buffer.from(await result.arrayBuffer()),
-        )
-        return
+        for await (const chunk of request) body += chunk.toString()
+        for (const [key, value] of new URLSearchParams(body))
+          url.searchParams.append(key, value)
       }
       const filePath = await resolveBakedAssetFilePath(
         rootDirectory,
@@ -136,7 +99,7 @@ export const startBakedAssetServer = async (
   for (const [providerPath, environmentVariable] of Object.entries(
     partsEngineBaseUrlEnvVars,
   )) {
-    process.env[environmentVariable] = `${serverOrigin}/${providerPath}`
+    process.env[environmentVariable] ??= `${serverOrigin}/${providerPath}`
   }
   return server
 }
