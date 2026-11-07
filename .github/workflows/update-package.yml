@@ -18,6 +18,10 @@ on:
 env:
   PACKAGE_NAMES: ${{ inputs.package_names }}
 
+concurrency:
+  group: dependency-updates
+  cancel-in-progress: false
+
 jobs:
   update-package:
     runs-on: ubuntu-latest
@@ -37,9 +41,11 @@ jobs:
               bun update --latest "$package"
             fi
           done
+      - name: Synchronize converter versions from core
+        run: bun run copy-core-versions
       - name: Close existing PRs
         run: |
-          gh pr list --repo ${{ github.repository }} --state open --author "tscircuitbot" --json number,title --jq '.[] | select(.title | startswith("chore:")) | .number' | xargs -I{} gh pr close {} --comment "Closing in favor of a new update PR" 
+          gh pr list --repo ${{ github.repository }} --state open --author "tscircuitbot" --json number,title --jq '.[] | select(.title | startswith("chore: update packages ")) | .number' | xargs -r -I{} gh pr close {} --comment "Closing in favor of a new update PR"
         env:
           GH_TOKEN: ${{ secrets.TSCIRCUIT_BOT_GITHUB_TOKEN }}
       - name: Create Pull Request
