@@ -1,6 +1,13 @@
 import { expect, test } from "bun:test"
 import { execFile } from "node:child_process"
-import { copyFile, mkdir, readFile, symlink, writeFile } from "node:fs/promises"
+import {
+  copyFile,
+  mkdir,
+  readFile,
+  rm,
+  symlink,
+  writeFile,
+} from "node:fs/promises"
 import path from "node:path"
 import { promisify } from "node:util"
 import { getCliTestFixture } from "../../fixtures/get-cli-test-fixture"
@@ -8,17 +15,19 @@ import { loadRp2040ExplosionFixture } from "../../fixtures/explosion/load-fixtur
 
 const run = promisify(execFile)
 const matchVideoStoryboard = async (storyboard: string, name: string) => {
+  const actualPath = path.join(
+    import.meta.dir,
+    `__snapshots__/export-explosion-mp4-${name}.actual.png`,
+  )
   try {
     await expect(await readFile(storyboard)).toMatchPngSnapshot(
       import.meta.path,
       name,
     )
+    await rm(actualPath, { force: true })
   } catch (error) {
     // Preserve decoded output so codec/platform differences are diagnosable.
-    await copyFile(
-      storyboard,
-      path.join(import.meta.dir, `__snapshots__/${name}.actual.png`),
-    )
+    await copyFile(storyboard, actualPath)
     throw error
   }
 }
@@ -76,6 +85,8 @@ test("export the real RP2040/NEMA17 explosion as a playable stage-by-stage MP4",
     "error",
     "-i",
     output,
+    "-sws_flags",
+    "+accurate_rnd+bitexact",
     "-vf",
     "select='eq(n,0)+eq(n,11)+eq(n,17)+eq(n,35)+eq(n,53)+eq(n,71)',tile=3x2",
     "-frames:v",
@@ -104,6 +115,8 @@ test("export the real RP2040/NEMA17 explosion as a playable stage-by-stage MP4",
     "error",
     "-i",
     artifact,
+    "-sws_flags",
+    "+accurate_rnd+bitexact",
     "-vf",
     "select='eq(n,0)+eq(n,11)+eq(n,17)+eq(n,35)+eq(n,53)+eq(n,71)',tile=3x2",
     "-frames:v",
@@ -171,6 +184,8 @@ export default () => (
     "error",
     "-i",
     output,
+    "-sws_flags",
+    "+accurate_rnd+bitexact",
     "-vf",
     "tile=3x1",
     "-frames:v",

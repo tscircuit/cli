@@ -31,7 +31,7 @@ import {
 
 /** Render authored Circuit JSON translations through the normal glTF exporter.
  * PoppyGL reads guide lines from glTF extras; no separate movement/line renderer.
- * Only one scene and one RGBA frame are retained while encoding the video.
+ * Scenes are rendered and streamed to the encoder without retaining the movie.
  */
 export async function renderExplosionVideo(
   circuitJson: AnyCircuitElement[],
@@ -165,8 +165,13 @@ export async function renderExplosionVideo(
       "-i",
       "pipe:0",
       "-an",
+      // Use canonical color conversion and encoding across CPU architectures.
+      "-sws_flags",
+      "+accurate_rnd+bitexact",
       "-c:v",
       "libx264",
+      "-x264-params",
+      "cpu-independent=1",
       "-threads",
       "1",
       "-preset",
