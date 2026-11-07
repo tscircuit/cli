@@ -38,9 +38,9 @@ test("installed core and autorouter follow the tscircuit dependency contract", (
     "@tscircuit/cli",
   )
   for (const name of Object.keys(tscircuitPackage.dependencies)) {
-    // Bun hoists a helper's older footprinter ahead of core's wildcard peer.
+    // Bun hoists older helper dependencies ahead of tscircuit's versions.
     // This development-only mirror must track tscircuit's range exactly.
-    if (name === "@tscircuit/footprinter") {
+    if (name === "@tscircuit/footprinter" || name === "poppygl") {
       expect(cliPackage.devDependencies[name]).toBe(
         tscircuitPackage.dependencies[name],
       )
