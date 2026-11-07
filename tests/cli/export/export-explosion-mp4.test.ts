@@ -7,6 +7,21 @@ import { getCliTestFixture } from "../../fixtures/get-cli-test-fixture"
 import { loadRp2040ExplosionFixture } from "../../fixtures/explosion/load-fixture"
 
 const run = promisify(execFile)
+const matchVideoStoryboard = async (storyboard: string, name: string) => {
+  try {
+    await expect(await readFile(storyboard)).toMatchPngSnapshot(
+      import.meta.path,
+      name,
+    )
+  } catch (error) {
+    // Preserve decoded output so codec/platform differences are diagnosable.
+    await copyFile(
+      storyboard,
+      path.join(import.meta.dir, `__snapshots__/${name}.actual.png`),
+    )
+    throw error
+  }
+}
 const probe = async (file: string) =>
   JSON.parse(
     (
@@ -67,10 +82,7 @@ test("export the real RP2040/NEMA17 explosion as a playable stage-by-stage MP4",
     "1",
     storyboard,
   ])
-  await expect(await readFile(storyboard)).toMatchPngSnapshot(
-    import.meta.path,
-    "stages",
-  )
+  await matchVideoStoryboard(storyboard, "stages")
   const artifact = path.join(
     import.meta.dir,
     "__snapshots__/rp2040-explosion.mp4",
@@ -165,10 +177,7 @@ export default () => (
     "1",
     storyboard,
   ])
-  await expect(await readFile(storyboard)).toMatchPngSnapshot(
-    import.meta.path,
-    "tsx-out-and-back",
-  )
+  await matchVideoStoryboard(storyboard, "tsx-out-and-back")
 }, 60_000)
 
 test("reject video options on other formats and invalid dimensions before compiling", async () => {
