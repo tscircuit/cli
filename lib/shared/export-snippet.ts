@@ -31,6 +31,7 @@ import { convertCircuitJsonToDsnString } from "dsn-converter"
 import JSZip from "jszip"
 import type { PcbSnapshotSettings } from "lib/project-config/project-config-schema"
 import { generateCircuitJson } from "lib/shared/generate-circuit-json"
+import { convertModelUrlsToFileUrls } from "cli/build/convert-model-urls-to-file-urls"
 import { getCircuitJsonToGltfOptions } from "lib/shared/get-circuit-json-to-gltf-options"
 import { getOrGenerateCircuitJson } from "lib/shared/get-or-generate-circuit-json"
 import { getPlatformConfigWithCliDefaults } from "lib/shared/get-platform-config-with-cli-defaults"
@@ -309,7 +310,7 @@ export const exportSnippet = async ({
     case "gltf":
       outputContent = JSON.stringify(
         await convertCircuitJsonToGltf(
-          circuitJson,
+          convertModelUrlsToFileUrls(circuitJson),
           getCircuitJsonToGltfOptions({ format: "gltf" }),
         ),
         null,
@@ -319,7 +320,7 @@ export const exportSnippet = async ({
     case "glb":
       outputContent = Buffer.from(
         (await convertCircuitJsonToGltf(
-          circuitJson,
+          convertModelUrlsToFileUrls(circuitJson),
           getCircuitJsonToGltfOptions({ format: "glb" }),
         )) as ArrayBuffer,
       )
