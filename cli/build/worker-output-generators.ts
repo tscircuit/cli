@@ -11,6 +11,7 @@ import {
 } from "circuit-to-svg"
 import { getSystemSvgAssets } from "lib/shared/system-svg-assets"
 import { loadLocalStepModelFsMap } from "lib/shared/load-local-step-model-fs-map"
+import { normalizeCircuitJsonForStepExport } from "lib/shared/normalize-circuit-json-for-step-export"
 import { getSimulationSvgAssetsFromCircuitJson } from "lib/shared/simulation-svg-assets"
 import type { PcbSnapshotSettings } from "../../lib/project-config/project-config-schema"
 import { convertSvgToPngBuffer } from "../../lib/shared/convert-svg-to-png"
@@ -115,12 +116,15 @@ export const writeStepFromCircuitJson = async (
   circuitJson: AnyCircuitElement[],
   stepOutputPath: string,
 ) => {
-  const stepContent = await circuitJsonToStep(circuitJson, {
-    exportMode: "pcb",
-    includeComponents: true,
-    includeExternalMeshes: true,
-    fsMap: await loadLocalStepModelFsMap(circuitJson),
-  })
+  const stepContent = await circuitJsonToStep(
+    normalizeCircuitJsonForStepExport(circuitJson),
+    {
+      exportMode: "pcb",
+      includeComponents: true,
+      includeExternalMeshes: true,
+      fsMap: await loadLocalStepModelFsMap(circuitJson),
+    },
+  )
 
   fs.mkdirSync(path.dirname(stepOutputPath), { recursive: true })
   fs.writeFileSync(stepOutputPath, stepContent)

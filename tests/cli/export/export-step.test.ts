@@ -95,3 +95,42 @@ test(
   },
   { timeout: 30000 },
 )
+
+test(
+  "export step does not emit NaN directions for pill plated holes with a round drill",
+  async () => {
+    const { tmpDir, runCommand } = await getCliTestFixture()
+    const circuitPath = path.join(tmpDir, "pill-round-drill.circuit.tsx")
+
+    await writeFile(
+      circuitPath,
+      `
+export default () => (
+  <board width="10mm" height="10mm">
+    <platedhole
+      shape="pill"
+      outerWidth={1.7}
+      outerHeight={1.95}
+      holeWidth={0.95}
+      holeHeight={0.95}
+      pcbX={0}
+      pcbY={0}
+    />
+  </board>
+)
+`,
+    )
+
+    const { stderr } = await runCommand(`tsci export ${circuitPath} -f step`)
+    expect(stderr).toBe("")
+
+    const stepContent = await readFile(
+      path.join(tmpDir, "pill-round-drill.circuit.step"),
+      "utf-8",
+    )
+
+    expect(stepContent).toContain("ISO-10303-21")
+    expect(stepContent).not.toContain("NaN")
+  },
+  { timeout: 30000 },
+)
