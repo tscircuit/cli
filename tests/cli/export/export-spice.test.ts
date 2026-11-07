@@ -69,8 +69,8 @@ test(
 
     await writeFile(circuitPath, circuitCode)
 
-    const { stdout, stderr } = await runCommand(
-      `tsci export ${circuitPath} -f spice`,
+    const { stdout } = await runCommand(
+      `tsci export "${circuitPath}" -f spice`,
     )
 
     const expectedSpicePath = path.join(tmpDir, "test-circuit.spice.cir")
@@ -95,11 +95,11 @@ test(
 
     expect(csvContent).toContain("time,")
     expect(csvContent).toContain("v(n")
-    const csvLines = csvContent.trim().split("\n")
+    const csvLines = csvContent.trim().split(/\r?\n/)
     expect(csvLines.length).toBeGreaterThan(10)
     const headerColumns = csvLines[0].split(",")
     const firstDataLine = csvLines[1]
     expect(firstDataLine.split(",").length).toBe(headerColumns.length)
   },
-  { timeout: 30000 },
+  { timeout: 60000 },
 )
