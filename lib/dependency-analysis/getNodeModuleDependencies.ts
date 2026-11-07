@@ -493,16 +493,16 @@ export function getAllNodeModuleFilePaths(
 ): string[] {
   const allDependencyPackages = getAllDependencyPackages(projectDir)
 
-  // Early return if no dependencies are defined
-  if (allDependencyPackages.size === 0) {
-    return []
-  }
-
-  // Collect all node_modules dependencies from the entry file
+  // Collect all node_modules dependencies from the entry file (including transitive packages imported by tscircuit.config.ts)
   const dependencies = collectAllNodeModuleDependencies(
     entryFilePath,
     projectDir,
   )
+
+  // Early return if no dependencies are defined or discovered from imports
+  if (allDependencyPackages.size === 0 && dependencies.size === 0) {
+    return []
+  }
 
   // Ensure all direct dependencies are included even if not imported
   for (const packageName of allDependencyPackages) {
