@@ -41,6 +41,7 @@ import { convertToKicadLibrary } from "./convert-to-kicad-library"
 import { importFromUserLand } from "./importFromUserLand"
 import { isCircuitJsonFile } from "./is-circuit-json-file"
 import { renderSystemSvg } from "./system-svg-assets"
+import type { ExplosionVideoOptions } from "./explosion-video-options"
 
 const writeFileAsync = promisify(fs.writeFile)
 
@@ -68,6 +69,7 @@ export const ALLOWED_EXPORT_FORMATS = [
   "assembly-svg",
   "assembly-step",
   "component-box-3mf",
+  "explosion-mp4",
 ] as const
 
 export type ExportFormat = (typeof ALLOWED_EXPORT_FORMATS)[number]
@@ -96,6 +98,7 @@ const OUTPUT_EXTENSIONS: Record<ExportFormat, string> = {
   srj: ".simple-route.json",
   step: ".step",
   "component-box-3mf": "-component-box.3mf",
+  "explosion-mp4": "-explosion.mp4",
 }
 
 const isRecord = (value: unknown): value is Record<string, unknown> =>
@@ -124,6 +127,7 @@ type ExportOptions = {
   outputPath?: string
   platformConfig?: PlatformConfig
   pcbSnapshotSettings?: PcbSnapshotSettings
+  explosionVideoOptions?: Partial<ExplosionVideoOptions>
   onExit?: (code: number) => void
   onError?: (message: string) => void
   onSuccess: (data: {
@@ -140,6 +144,7 @@ export const exportSnippet = async ({
   outputPath,
   platformConfig,
   pcbSnapshotSettings,
+  explosionVideoOptions,
   writeFile = true,
   onExit = (code) => process.exit(code),
   onError = (message) => console.error(message),
@@ -227,6 +232,23 @@ export const exportSnippet = async ({
   let outputContent: string | Buffer
 
   switch (format) {
+    case "explosion-mp4": {
+      try {
+        const { renderExplosionVideo } = await import(
+          "./render-explosion-video"
+        )
+        outputContent = await renderExplosionVideo(
+          circuitJson,
+          explosionVideoOptions,
+        )
+      } catch (error) {
+        onError(
+          `Error exporting explosion video: ${error instanceof Error ? error.message : String(error)}`,
+        )
+        return onExit(1)
+      }
+      break
+    }
     case "system-svg": {
       try {
         const pages = circuitJson.filter((e) => e.type === "system_block_page")

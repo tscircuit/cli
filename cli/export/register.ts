@@ -18,6 +18,10 @@ import { loadRuntimeProjectConfig } from "lib/project-config"
 import { mergePlatformConfigs } from "lib/shared/platform-config-utils"
 import { getPlatformConfigWithCliDefaults } from "lib/shared/get-platform-config-with-cli-defaults"
 import { findCircuitProjectDir } from "lib/shared/circuit-json-build-cache"
+import {
+  resolveExplosionVideoOptions,
+  type ExplosionVideoOptions,
+} from "lib/shared/explosion-video-options"
 
 export const registerExport = (program: Command) => {
   addPcbXRayOptions(program.command("export"))
@@ -28,6 +32,23 @@ export const registerExport = (program: Command) => {
       `Output format (${ALLOWED_EXPORT_FORMATS.join(", ")})`,
     )
     .option("-o, --output <path>", "Output file path")
+    .option("--fps <number>", "Explosion MP4 frames per second (default: 24)")
+    .option(
+      "--width <pixels>",
+      "Explosion MP4 width, an even integer (default: 960)",
+    )
+    .option(
+      "--height <pixels>",
+      "Explosion MP4 height, an even integer (default: 720)",
+    )
+    .option(
+      "--stage-duration <seconds>",
+      "Explosion movement time per stage (default: 1)",
+    )
+    .option(
+      "--hold-duration <seconds>",
+      "Pause at assembled and completed stages (default: 0.5)",
+    )
     .option(
       "--system-page <name-or-id>",
       "Select a system diagram page (requires --format system-svg)",
@@ -50,10 +71,24 @@ export const registerExport = (program: Command) => {
           output?: string
           disablePartsEngine?: boolean
           showCourtyards?: boolean
-        } & PcbXRayCliOptions,
+        } & PcbXRayCliOptions &
+          Partial<Record<keyof ExplosionVideoOptions, string>>,
       ) => {
         const formatOption =
           options.format ?? (options.drawing ? "drawing-svg" : "json")
+        const hasVideoOptions = [
+          options.fps,
+          options.width,
+          options.height,
+          options.stageDuration,
+          options.holdDuration,
+        ].some((v) => v !== undefined)
+        if (hasVideoOptions && formatOption !== "explosion-mp4")
+          throw new Error("Video options require --format explosion-mp4")
+        const explosionVideoOptions =
+          formatOption === "explosion-mp4"
+            ? resolveExplosionVideoOptions(options)
+            : undefined
         if (options.drawing && formatOption !== "drawing-svg")
           throw new Error("--drawing requires --format drawing-svg")
         if (options.systemPage && formatOption !== "system-svg")
@@ -129,6 +164,7 @@ export const registerExport = (program: Command) => {
           drawing: options.drawing,
           systemPage: options.systemPage,
           outputPath: options.output,
+          explosionVideoOptions,
           platformConfig: platformConfigWithCliDefaults,
           pcbSnapshotSettings: {
             ...projectConfig?.pcbSnapshotSettings,
