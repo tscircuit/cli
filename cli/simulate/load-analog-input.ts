@@ -18,7 +18,20 @@ export const loadAnalogInput = async ({
     return generateCircuitJson({
       filePath: resolve(file),
       projectDir,
-      platformConfig,
+      platformConfig: {
+        ...platformConfig,
+        platformFetch: Object.assign(
+          async (input: Parameters<typeof fetch>[0], init?: RequestInit) => {
+            if (typeof input === "string" && !URL.canParse(input))
+              return new Response(await readFile(resolve(projectDir, input)))
+            return (platformConfig.platformFetch ?? fetch)(input, init)
+          },
+          {
+            preconnect:
+              platformConfig.platformFetch?.preconnect ?? fetch.preconnect,
+          },
+        ),
+      },
     })
   }
 

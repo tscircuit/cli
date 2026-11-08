@@ -1,5 +1,5 @@
-import { mkdir, writeFile } from "node:fs/promises"
-import { join, relative, resolve } from "node:path"
+import { mkdir, mkdtemp, rename, rm, writeFile } from "node:fs/promises"
+import { basename, dirname, join, relative, resolve } from "node:path"
 import type { AnyCircuitElement } from "circuit-json"
 
 export const runSignalIntegritySimulation = async ({
@@ -14,7 +14,14 @@ export const runSignalIntegritySimulation = async ({
   output?: string
 }) => {
   const { runPipeline } = await import("@tscircuit/signal-integrity-pipeline")
-  const results: AnyCircuitElement[] = await runPipeline(circuitJson)
+  const { loadIbisSources, createNativeSolver, writePipelineOutput } =
+    await import("@tscircuit/signal-integrity-pipeline/node")
+  const result = await runPipeline({
+    circuitJson,
+    ibisSources: await loadIbisSources({ circuitJson, baseDir: projectDir }),
+    runSolver: createNativeSolver(),
+  })
+  const results = result.blocks.flatMap((block) => block.results)
   if (results.length === 0) return results
 
   const name = relative(projectDir, resolve(file))
@@ -29,26 +36,46 @@ export const runSignalIntegritySimulation = async ({
         `simulation-${name || "circuit"}-${Date.now()}`,
       ),
   )
-  await mkdir(outputDir, { recursive: true })
-  await writeFile(
-    join(outputDir, "results.circuit.json"),
-    JSON.stringify(results, null, 2),
+  await mkdir(dirname(outputDir), { recursive: true })
+  const stagedDir = await mkdtemp(
+    join(dirname(outputDir), `.${basename(outputDir)}-`),
   )
-
-  for (const block of circuitJson) {
-    if (block.type !== "simulation_signal_integrity") continue
-    console.log(
-      `Signal integrity: ${block.name ?? block.simulation_signal_integrity_id}`,
+  const previousDir = `${stagedDir}.previous`
+  let replaced = false
+  try {
+    await writePipelineOutput({ result, outputDir: stagedDir })
+    await writeFile(
+      join(stagedDir, "results.circuit.json"),
+      JSON.stringify(result.simulationResultCircuitJson, null, 2),
     )
+    try {
+      await rename(outputDir, previousDir)
+      replaced = true
+    } catch (error) {
+      if ((error as NodeJS.ErrnoException).code !== "ENOENT") throw error
+    }
+    try {
+      await rename(stagedDir, outputDir)
+    } catch (error) {
+      if (replaced) await rename(previousDir, outputDir)
+      throw error
+    }
+  } finally {
+    await rm(stagedDir, { recursive: true, force: true })
+  }
+  if (replaced) await rm(previousDir, { recursive: true, force: true })
+
+  for (const block of result.blocks) {
+    console.log(`Signal integrity: ${block.name}`)
     for (const signal of circuitJson) {
       if (
         signal.type !== "simulation_signal" ||
         signal.simulation_signal_integrity_id !==
-          block.simulation_signal_integrity_id
+          block.simulationSignalIntegrityId
       )
         continue
       console.log(`  ${signal.name}`)
-      for (const result of results) {
+      for (const result of block.results) {
         if (
           !("simulation_signal_id" in result) ||
           result.simulation_signal_id !== signal.simulation_signal_id
@@ -61,7 +88,7 @@ export const runSignalIntegritySimulation = async ({
           )
         } else if (result.type === "simulation_signal_crosstalk") {
           console.log(
-            `    ${result.source_port_id}: NEXT peak ${value(result.peak_next_v, "V")}, FEXT peak ${value(result.peak_fext_v, "V")}`,
+            `    ${result.source_port_id}: ${result.end === "near" ? "NEXT" : "FEXT"}, idle voltage ${value(result.idle_voltage_v, "V")}, positive peak ${value(result.peak_positive_v, "V")}, negative peak ${value(result.peak_negative_v, "V")}`,
           )
         } else if (result.type === "simulation_signal_strobe_margin") {
           console.log(

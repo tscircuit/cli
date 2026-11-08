@@ -28,7 +28,10 @@ export const registerSimulate = (program: Command) => {
   simulateCommand
     .argument("<file>", "Path to tscircuit tsx or circuit json file")
     .option("--disable-parts-engine", "Disable the parts engine")
-    .option("--output <directory>", "Fresh signal integrity report directory")
+    .option(
+      "--output <directory>",
+      "Signal integrity report directory (replaced on success)",
+    )
     .action(async (file: string, options: AnalogOptions) => {
       const projectDir = findCircuitProjectDir(file)
       const projectConfig = await loadRuntimeProjectConfig(projectDir)

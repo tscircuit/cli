@@ -1,10 +1,27 @@
-The signal-integrity fixture uses the real TI SN74LVC1G04 DCK 3.3 V models.
-The tests copy `TSCI_TEST_IBIS_PATH` when set, otherwise download
-https://www.ti.com/lit/zip/scem216c and extract
-`SN74LVC1G04_IBIS/sn74lvc1g04.ibs`. The SHA-256 is checked before use.
-Vendor IBIS contents are not redistributed in this repository.
+The TSX fixtures use real TI SN74LVC1G04 DBV and SN65HVD72D models. The
+SN65HVD72 D and /RE inputs receive data and strobe on the same chip.
+Tests download https://www.ti.com/lit/zip/scem216c and
+https://www.ti.com/lit/zip/sllm183, or copy `TSCI_TEST_IBIS_PATH` and
+`TSCI_TEST_TRANSCEIVER_IBIS_PATH`. Both SHA-256 hashes are checked. Vendor
+IBIS contents are not redistributed in this repository.
 
-Only `runPipeline(circuitJson)` is mocked in the CLI child. Its result records
-are synthetic formatting fixtures. Rendering `<signalintegrity>` requires the
-props, circuit-json and core sibling PRs for https://github.com/tscircuit/rfc/pull/26.
-A real solver run also requires the signal-integrity-pipeline sibling PR.
+Only `runPipeline({ circuitJson, ibisSources, runSolver })` is mocked in
+formatting tests. It accepts real IBIS bytes loaded by the unmocked `/node`
+adapter and returns a typed `PipelineResult`, with per-block records in
+`blocks[].results` and source plus result records in
+`simulationResultCircuitJson`. Metrics are synthetic formatting fixtures.
+The empty-result/ngspice regression also runs with the real pipeline.
+
+The final RFC is https://github.com/tscircuit/rfc/pull/28 at
+`ae2c01a336534386886bfe6d3bb916c18c0c445b`. Rendering requires the unpublished
+props #995, circuit-json #983 and core #5286 branches. The pipeline API
+requires signal-integrity-pipeline #62. Local sibling builds may be overlaid
+in `node_modules` for verification; local links are not committed.
+
+Dependency publication is still pending: npm returns 404 for
+`@tscircuit/signal-integrity-pipeline@^0.1.0`. The available GitHub release
+v0.1.11 predates the final API (it has no `blocks`), so it cannot substitute
+for #62. The dependency remains declared in package.json. bun.lock omits an
+unresolved root entry so it remains parseable; regenerate it against the
+final published artifact before merging. A frozen install currently stops
+on the missing package, rather than an invalid lockfile.
