@@ -3,7 +3,6 @@ import path from "node:path"
 import { pathToFileURL } from "node:url"
 import type { PlatformConfig } from "@tscircuit/props"
 import type { AnyCircuitElement } from "circuit-json"
-import type { PipelineModeling } from "@tscircuit/pcb-spice-pipeline"
 import Debug from "debug"
 import { abbreviateStringifyObject } from "lib/utils/abbreviate-stringify-object"
 import { getVirtualFileSystemFromDirPath } from "make-vfs"
@@ -199,7 +198,6 @@ export async function generateCircuitJson({
     records = await runner.getCircuitJson()
   }
 
-  const modeling = MainComponent.modeling as PipelineModeling | undefined
   const circuitJson = addSourceFilesystemHash(
     records,
     currentSourceFilesystemMd5Hash,
@@ -216,6 +214,5 @@ export async function generateCircuitJson({
     circuitJson,
     outputPath,
     rootCircuit: runner,
-    modeling,
   }
 }

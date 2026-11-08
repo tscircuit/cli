@@ -1,4 +1,4 @@
-import { type Command, InvalidArgumentError } from "commander"
+import type { Command } from "commander"
 import { runSimulation } from "lib/eecircuit-engine/run-simulation"
 import { resultToTable } from "lib/shared/result-to-table"
 import { getSpiceWithPaddedSim } from "lib/shared/get-spice-with-sim"
@@ -10,12 +10,11 @@ import { findCircuitProjectDir } from "lib/shared/circuit-json-build-cache"
 import { registerReturnCurrentSimulation } from "./register-return-current"
 
 import { loadAnalogInput } from "./load-analog-input"
-import { runPcbSpiceSimulation } from "./run-pcb-spice-simulation"
+import { runSignalIntegritySimulation } from "./run-signal-integrity-simulation"
 
 type AnalogOptions = {
   disablePartsEngine?: boolean
   output?: string
-  solverTimeoutMs?: number
 }
 
 export const registerSimulate = (program: Command) => {
@@ -29,24 +28,7 @@ export const registerSimulate = (program: Command) => {
   simulateCommand
     .argument("<file>", "Path to tscircuit tsx or circuit json file")
     .option("--disable-parts-engine", "Disable the parts engine")
-    .option("--output <directory>", "Fresh pcb_spice report directory")
-    .option(
-      "--solver-timeout-ms <milliseconds>",
-      "Per-process pcb_spice timeout (default: 900000 ms)",
-      (value: string) => {
-        const timeout = Number(value)
-        if (
-          !Number.isSafeInteger(timeout) ||
-          timeout <= 0 ||
-          timeout > 2_147_483_647
-        ) {
-          throw new InvalidArgumentError(
-            "Expected a positive safe integer up to 2147483647 milliseconds",
-          )
-        }
-        return timeout
-      },
-    )
+    .option("--output <directory>", "Fresh signal integrity report directory")
     .action(async (file: string, options: AnalogOptions) => {
       const projectDir = findCircuitProjectDir(file)
       const projectConfig = await loadRuntimeProjectConfig(projectDir)
@@ -59,43 +41,36 @@ export const registerSimulate = (program: Command) => {
         commandPlatformConfig,
       )
 
-      const input = await loadAnalogInput({
+      const { circuitJson } = await loadAnalogInput({
         file,
         projectDir,
         platformConfig: getPlatformConfigWithCliDefaults(platformConfig, {
           projectDir,
         }),
       })
-      const { circuitJson, baseDir } = input
       const engines = circuitJson.flatMap((record) =>
         record.type === "simulation_experiment" ? [record.spice_engine] : [],
       )
-      if (engines.includes("pcb_spice")) {
-        if (engines.some((engine) => engine !== "pcb_spice")) {
-          throw new Error(
-            "Mixed pcb_spice and other SPICE engines are unsupported; run separate entries for each engine",
-          )
-        }
-        await runPcbSpiceSimulation({
+      if (engines.some((engine) => engine && engine !== "ngspice")) {
+        throw new Error("simulate supports ngspice experiments")
+      }
+      const hasSignalIntegrity = circuitJson.some(
+        (record) => record.type === "simulation_signal_integrity",
+      )
+      if (hasSignalIntegrity) {
+        await runSignalIntegritySimulation({
           file,
           projectDir,
           circuitJson,
-          modeling: input.modeling,
           output: options.output,
-          solverTimeoutMs: options.solverTimeoutMs,
-          baseDir,
         })
-        return
+      } else {
+        console.log(`No <signalintegrity> blocks found in ${file}`)
+        if (options.output) {
+          throw new Error("--output requires a <signalintegrity> block")
+        }
       }
-      if (engines.some((engine) => engine && engine !== "ngspice")) {
-        throw new Error("simulate supports ngspice or pcb_spice experiments")
-      }
-      if (options.solverTimeoutMs !== undefined) {
-        throw new Error('--solver-timeout-ms requires spiceEngine="pcb_spice"')
-      }
-      if (options.output) {
-        throw new Error('--output requires spiceEngine="pcb_spice"')
-      }
+      if (hasSignalIntegrity && engines.length === 0) return
       const spiceString = getSpiceWithPaddedSim(circuitJson)
 
       const { result, info, errors } = await runSimulation(spiceString)
