@@ -54,23 +54,13 @@ export const registerSimulate = (program: Command) => {
       if (engines.some((engine) => engine && engine !== "ngspice")) {
         throw new Error("simulate supports ngspice experiments")
       }
-      const hasSignalIntegrity = circuitJson.some(
-        (record) => record.type === "simulation_signal_integrity",
-      )
-      if (hasSignalIntegrity) {
-        await runSignalIntegritySimulation({
-          file,
-          projectDir,
-          circuitJson,
-          output: options.output,
-        })
-      } else {
-        console.log(`No <signalintegrity> blocks found in ${file}`)
-        if (options.output) {
-          throw new Error("--output requires a <signalintegrity> block")
-        }
-      }
-      if (hasSignalIntegrity && engines.length === 0) return
+      const results = await runSignalIntegritySimulation({
+        file,
+        projectDir,
+        circuitJson,
+        output: options.output,
+      })
+      if (results.length > 0 && engines.length === 0) return
       const spiceString = getSpiceWithPaddedSim(circuitJson)
 
       const { result, info, errors } = await runSimulation(spiceString)

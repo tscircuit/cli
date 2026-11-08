@@ -110,11 +110,6 @@ test("simulate discovers a Level 1 TSX block, prints the eye, and writes all pip
       ),
     ).toEqual(records)
   }
-  const repeat = await runCommand(
-    "tsci simulate board.json --output report-json",
-  )
-  expect(repeat.exitCode).not.toBe(0)
-  expect(repeat.stderr).toContain("Use a fresh output directory")
 }, 60_000)
 
 test("simulate runs all blocks in one pipeline call and groups quiet and strobed signals", async () => {
@@ -156,7 +151,7 @@ export default () => <SignalIntegrityBoard clock>
   ).toHaveLength(2)
 }, 60_000)
 
-test("simulate reports missing blocks and keeps ordinary SPICE simulation", async () => {
+test("simulate without blocks runs ordinary SPICE simulation only", async () => {
   const { tmpDir, runCommand } = await getCliTestFixture({ preload })
   await writeFile(
     join(tmpDir, "analog.tsx"),
@@ -172,13 +167,9 @@ test("simulate reports missing blocks and keeps ordinary SPICE simulation", asyn
     "tsci simulate analog.tsx --disable-parts-engine",
   )
   expect(result.exitCode).toBe(0)
-  expect(result.stdout).toContain(
-    "No <signalintegrity> blocks found in analog.tsx",
-  )
+  expect(result.stdout).not.toContain("Signal integrity:")
   expect(result.stdout).toContain("Index  time")
-  expect(await Bun.file(join(tmpDir, "pipeline-input.json")).exists()).toBe(
-    false,
-  )
+  expect(await Bun.file(join(tmpDir, ".tscircuit")).exists()).toBe(false)
 }, 30_000)
 
 test("simulate rejects removed modeling entries and native solver options", async () => {

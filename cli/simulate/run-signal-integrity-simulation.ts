@@ -13,6 +13,10 @@ export const runSignalIntegritySimulation = async ({
   circuitJson: AnyCircuitElement[]
   output?: string
 }) => {
+  const { runPipeline } = await import("@tscircuit/signal-integrity-pipeline")
+  const results: AnyCircuitElement[] = await runPipeline(circuitJson)
+  if (results.length === 0) return results
+
   const name = relative(projectDir, resolve(file))
     .replace(/(?:\.(?:board|circuit))?\.(?:[jt]sx?|json(?:\.gz)?)$/i, "")
     .replace(/[^a-z0-9_-]+/gi, "-")
@@ -25,18 +29,7 @@ export const runSignalIntegritySimulation = async ({
         `simulation-${name || "circuit"}-${Date.now()}`,
       ),
   )
-  await mkdir(resolve(outputDir, ".."), { recursive: true })
-  try {
-    await mkdir(outputDir)
-  } catch (error) {
-    if ((error as NodeJS.ErrnoException).code === "EEXIST") {
-      throw new Error(`Use a fresh output directory: ${outputDir}`)
-    }
-    throw error
-  }
-
-  const { runPipeline } = await import("@tscircuit/signal-integrity-pipeline")
-  const results: AnyCircuitElement[] = await runPipeline(circuitJson)
+  await mkdir(outputDir, { recursive: true })
   await writeFile(
     join(outputDir, "results.circuit.json"),
     JSON.stringify(results, null, 2),
@@ -79,4 +72,5 @@ export const runSignalIntegritySimulation = async ({
     }
   }
   console.log(`Simulation results written to ${outputDir}`)
+  return results
 }
