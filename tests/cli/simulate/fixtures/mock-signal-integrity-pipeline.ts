@@ -6,7 +6,7 @@ import type {
   PipelineOptions,
   PipelineResult,
 } from "@tscircuit/signal-integrity-pipeline"
-import type { SimulationSignal } from "circuit-json"
+import { any_circuit_element, type SimulationSignal } from "circuit-json"
 
 // Only the true public pipeline boundary is mocked, in an isolated CLI process.
 // Metrics are synthetic formatting fixtures, not electrical measurements.
@@ -177,6 +177,8 @@ mock.module("@tscircuit/signal-integrity-pipeline", () => ({
         },
       ]
     })
+    for (const block of blocks)
+      for (const record of block.results) any_circuit_element.parse(record)
     return {
       circuitJson,
       simulationResultCircuitJson: [
