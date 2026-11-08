@@ -95,9 +95,21 @@ export function getPlatformConfigWithCliDefaults(
             }
           }
           // Delegate to the original loadFromUrl from eval
-          return basePlatformConfig.footprintFileParserMap!.kicad_mod.loadFromUrl(
-            fetchUrl,
-          )
+          const result =
+            await basePlatformConfig.footprintFileParserMap!.kicad_mod.loadFromUrl(
+              fetchUrl,
+            )
+          return {
+            ...result,
+            footprintCircuitJson: result.footprintCircuitJson.filter(
+              (el: any) =>
+                !(
+                  el.type === "pcb_courtyard_outline" &&
+                  Array.isArray(el.outline) &&
+                  el.outline.length < 3
+                ),
+            ),
+          }
         },
       },
     },

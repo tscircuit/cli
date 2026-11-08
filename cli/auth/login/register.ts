@@ -11,12 +11,36 @@ export const registerAuthLogin = (program: Command) => {
   // Define the login action once to share between both commands
   const loginAction = async () => {
     const sessionToken = getSessionToken()
-    const tscircuitHandle = cliConfig.get("tscircuitHandle")
+    const tscircuitHandle = process.env.TSCIRCUIT_TOKEN
+      ? undefined
+      : cliConfig.get("tscircuitHandle")
     if (sessionToken) {
-      const account = await fetchAccount()
+      if (tscircuitHandle) {
+        console.log(
+          kleur.yellow(
+            `Already logged in as ${kleur.bold(`@${tscircuitHandle}`)}! Use ${kleur.cyan("tsci logout")} to switch accounts.`,
+          ),
+        )
+        return
+      }
+      let account: Awaited<ReturnType<typeof fetchAccount>> = null
+      try {
+        account = await fetchAccount({ throwOnError: true })
+      } catch (error) {
+        const message = error instanceof Error ? error.message : String(error)
+        console.error(
+          kleur.red(`Could not verify current login session: ${message}`),
+        )
+        process.exitCode = 1
+        return
+      }
+      const identity =
+        account?.tscircuit_handle ??
+        account?.account_id ??
+        cliConfig.get("accountId")
       console.log(
         kleur.yellow(
-          `Already logged in as ${tscircuitHandle ? kleur.bold(`@${tscircuitHandle}`) : kleur.underline(`@${account?.tscircuit_handle ?? account?.account_id}`)}! Use ${kleur.cyan("tsci logout")} to switch accounts.`,
+          `Already logged in${identity ? ` as ${kleur.underline(`@${identity}`)}` : ""}! Use ${kleur.cyan("tsci logout")} to switch accounts.`,
         ),
       )
       return
