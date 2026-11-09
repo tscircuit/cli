@@ -1,0 +1,16 @@
+{
+  "name": "ne555-timer-presets",
+  "version": "1.0.0",
+  "type": "module",
+  "scripts": {
+    "build": "tscircuit-cli build --ci --concurrency 4 --glbs --all-images",
+    "push": "tscircuit-cli push"
+  },
+  "dependencies": {
+    "tscircuit": "0.0.3087-libonly",
+    "zod": "3.25.76"
+  },
+  "devDependencies": {
+    "@tscircuit/cli": "latest"
+  }
+}

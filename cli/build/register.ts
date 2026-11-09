@@ -54,6 +54,7 @@ import { exitBuild } from "./utils/exit-build"
 import { readTscircuitBrowserBundle } from "lib/shared/read-tscircuit-browser-bundle"
 import { buildFilesWithWorkerPool } from "./worker-pool"
 import type { BuildJobResult } from "./worker-types"
+import { getBuildTargets } from "./get-build-targets"
 
 // @ts-ignore
 import runFrameStandaloneBundleContent from "@tscircuit/runframe/standalone" with {
@@ -334,12 +335,6 @@ export const registerBuild = (program: Command) => {
         } = await getBuildEntrypoints({
           fileOrDir: fileOrDirForBuild,
         })
-        const isSingleCircuitCdnSite = Boolean(
-          resolvedOptions?.site &&
-            resolvedOptions.useCdnJavascript &&
-            circuitFiles.length === 1,
-        )
-
         const commandPlatformConfig: PlatformConfig | undefined = (() => {
           if (
             !resolvedOptions?.disablePcb &&
@@ -377,6 +372,23 @@ export const registerBuild = (program: Command) => {
         const platformConfig = mergePlatformConfigs(
           projectConfig?.platformConfig,
           commandPlatformConfig,
+        )
+
+        const injectedProps = parseInjectedProps({
+          injectProps: resolvedOptions?.injectProps,
+          injectPropsFile: resolvedOptions?.injectPropsFile,
+          projectDir,
+        })
+        const buildTargets = await getBuildTargets({
+          circuitFiles,
+          projectDir,
+          injectedProps,
+          platformConfig,
+        })
+        const isSingleCircuitCdnSite = Boolean(
+          resolvedOptions?.site &&
+            resolvedOptions.useCdnJavascript &&
+            buildTargets.length === 1,
         )
 
         const distDir = path.join(projectDir, "dist")
@@ -437,12 +449,14 @@ export const registerBuild = (program: Command) => {
           Number.parseInt(resolvedOptions?.concurrency || "1", 10),
         )
 
+        const buildKind =
+          buildTargets.length === circuitFiles.length ? "file(s)" : "build(s)"
         if (concurrencyValue > 1) {
           console.log(
-            `Building ${circuitFiles.length} file(s) with concurrency ${concurrencyValue}...`,
+            `Building ${buildTargets.length} ${buildKind} with concurrency ${concurrencyValue}...`,
           )
         } else {
-          console.log(`Building ${circuitFiles.length} file(s)...`)
+          console.log(`Building ${buildTargets.length} ${buildKind}...`)
         }
 
         let hasErrors = false
@@ -468,12 +482,6 @@ export const registerBuild = (program: Command) => {
           resolvedOptions?.kicadProject ||
           resolvedOptions?.kicadProjectZip ||
           resolvedOptions?.kicadLibrary
-
-        const injectedProps = parseInjectedProps({
-          injectProps: resolvedOptions?.injectProps,
-          injectPropsFile: resolvedOptions?.injectPropsFile,
-          projectDir,
-        })
 
         // Prepare build options for reuse
         const {
@@ -540,7 +548,7 @@ export const registerBuild = (program: Command) => {
           },
         ) => {
           const relative = path.relative(projectDir, filePath)
-          const outputDirName = getCircuitJsonOutputDirName(relative)
+          const outputDirName = path.relative(distDir, path.dirname(outputPath))
 
           builtFiles.push({
             sourcePath: filePath,
@@ -576,7 +584,10 @@ export const registerBuild = (program: Command) => {
               )
             }
           } else if (resolvedOptions?.site) {
-            const normalizedSourcePath = relative.split(path.sep).join("/")
+            const normalizedSourcePath =
+              outputDirName === getCircuitJsonOutputDirName(relative)
+                ? relative.split(path.sep).join("/")
+                : normalizeRelativePath(projectDir, outputPath)
             const relativeOutputPath = path.join(outputDirName, "circuit.json")
             const normalizedOutputPath = relativeOutputPath
               .split(path.sep)
@@ -654,10 +665,10 @@ export const registerBuild = (program: Command) => {
 
         // Sequential build function (used when concurrency is 1)
         const buildSequentially = async () => {
-          for (const filePath of circuitFiles) {
+          for (const target of buildTargets) {
+            const { filePath, outputDirName } = target
             const relative = path.relative(projectDir, filePath)
             console.log(`Building ${relative}...`)
-            const outputDirName = getCircuitJsonOutputDirName(relative)
             const outputPath = path.join(distDir, outputDirName, "circuit.json")
             const startedAt = resolvedOptions?.profile ? performance.now() : 0
             const buildOutcome = await buildFile(
@@ -666,6 +677,7 @@ export const registerBuild = (program: Command) => {
               projectDir,
               {
                 ...buildOptions,
+                injectedProps: target.injectedProps,
                 autorouterDiagnostics,
                 solverDiagnostics: getSolverDiagnostics({
                   relativeEntrypoint: relative,
@@ -691,9 +703,9 @@ export const registerBuild = (program: Command) => {
 
         // Parallel build function (used when concurrency > 1)
         const buildWithWorkers = async () => {
-          const filesToBuild = circuitFiles.map((filePath) => {
+          const filesToBuild = buildTargets.map((target) => {
+            const { filePath, outputDirName } = target
             const relative = path.relative(projectDir, filePath)
-            const outputDirName = getCircuitJsonOutputDirName(relative)
             const outputPath = path.join(distDir, outputDirName, "circuit.json")
             const glbOutputPath = resolvedOptions?.glbs
               ? path.join(distDir, outputDirName, "3d.glb")
@@ -736,6 +748,7 @@ export const registerBuild = (program: Command) => {
                 outputDirName,
               }),
               generatePreviewAssets,
+              injectedProps: target.injectedProps,
             }
           })
 
@@ -835,6 +848,24 @@ export const registerBuild = (program: Command) => {
         } else {
           await buildSequentially()
         }
+
+        // Worker completion order must not choose a preset as the default preview.
+        type BuildOutputPath = string
+        const buildOrder = new Map<BuildOutputPath, number>(
+          buildTargets.map((target, index) => [
+            path.join(distDir, target.outputDirName, "circuit.json"),
+            index,
+          ]),
+        )
+        builtFiles.sort(
+          (a, b) =>
+            buildOrder.get(a.outputPath)! - buildOrder.get(b.outputPath)!,
+        )
+        staticFileReferences.sort(
+          (a, b) =>
+            buildOrder.get(path.resolve(distDir, a.fileStaticAssetUrl))! -
+            buildOrder.get(path.resolve(distDir, b.fileStaticAssetUrl))!,
+        )
 
         if (shouldGeneratePreviewImages) {
           if (shouldGeneratePreviewAssetsInWorker) {

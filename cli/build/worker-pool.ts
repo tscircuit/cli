@@ -66,6 +66,7 @@ export async function buildFilesWithWorkerPool(options: {
     previewOutputDir?: string
     solverDiagnostics?: SolverDiagnosticsOptions
     generatePreviewAssets?: boolean
+    injectedProps?: Record<string, unknown>
   }>
   projectDir: string
   concurrency: number
@@ -180,6 +181,8 @@ export async function buildFilesWithWorkerPool(options: {
         projectDir: options.projectDir,
         options: {
           ...options.buildOptions,
+          injectedProps:
+            file.injectedProps ?? options.buildOptions?.injectedProps,
           solverDiagnostics:
             file.solverDiagnostics ?? options.buildOptions?.solverDiagnostics,
           generatePreviewAssets:

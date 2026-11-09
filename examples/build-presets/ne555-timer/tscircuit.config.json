@@ -1,0 +1,4 @@
+{
+  "mainEntrypoint": "index.circuit.tsx",
+  "buildCommand": "bun run build"
+}
