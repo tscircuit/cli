@@ -1,0 +1,11 @@
+{
+  "mainEntrypoint": "index.circuit.tsx",
+  "referenceDesigns": [
+    {
+      "name": "ne555_timer",
+      "displayName": "NE555 timer",
+      "componentPath": "index.circuit.tsx",
+      "chipNames": ["NE555DR"]
+    }
+  ]
+}

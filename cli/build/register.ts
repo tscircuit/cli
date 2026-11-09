@@ -1,4 +1,5 @@
 import fs from "node:fs"
+import { buildReferenceDesigns } from "./reference-designs/build-reference-designs"
 import path from "node:path"
 import JSZip from "jszip"
 import type { PlatformConfig } from "@tscircuit/props"
@@ -381,6 +382,7 @@ export const registerBuild = (program: Command) => {
 
         const distDir = path.join(projectDir, "dist")
         fs.mkdirSync(distDir, { recursive: true })
+        fs.rmSync(path.join(distDir, "reference-designs.json"), { force: true })
 
         const autorouterTimeoutMs = resolvedOptions?.autorouterTimeout
           ? parseAutorouterTimeout(resolvedOptions.autorouterTimeout)
@@ -962,6 +964,20 @@ export const registerBuild = (program: Command) => {
               exitBuild(1, "transpile command failed")
             }
           }
+        }
+
+        if (
+          !hasErrors &&
+          !resolvedOptions?.ignoreConfig &&
+          projectConfig?.referenceDesigns
+        ) {
+          await buildReferenceDesigns({
+            definitions: projectConfig.referenceDesigns,
+            projectDir,
+            platformConfig: commandPlatformConfig,
+            concurrency: concurrencyValue,
+            workerJobTimeoutMs: projectConfig.build?.workerTimeoutMs,
+          })
         }
 
         if (resolvedOptions?.site) {

@@ -1,4 +1,5 @@
 import { z } from "zod"
+import { referenceDesignDefinitionSchema } from "./reference-design-definition"
 
 export const pcbSnapshotSettingsSchema = z.object({
   layer: z.enum(["top", "bottom"]).optional(),
@@ -44,6 +45,7 @@ export const extraRunFrameTabSchema = z.object({
 
 export const projectConfigSchema = z.object({
   mainEntrypoint: z.string().optional(),
+  referenceDesigns: z.array(referenceDesignDefinitionSchema).optional(),
   libraryEntrypoint: z.string().optional(),
   previewComponentPath: z.string().optional(),
   siteDefaultComponentPath: z.string().optional(),
