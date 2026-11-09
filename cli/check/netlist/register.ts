@@ -16,6 +16,40 @@ import {
 import path from "node:path"
 import { findCircuitProjectDir } from "lib/shared/circuit-json-build-cache"
 
+const POLARIZED_PIN_ALIASES = new Set(["anode", "cathode"])
+
+const sanitizeReadableNetlist = (
+  readableNetlist: string,
+  circuitJson: AnyCircuitElement[],
+): string => {
+  const nonPolarizedComponents = new Set<string>()
+  for (const el of circuitJson) {
+    if (el.type !== "source_component") continue
+    if (
+      el.ftype === "simple_resistor" ||
+      (el.ftype === "simple_capacitor" && !(el as any).is_polarized)
+    ) {
+      nonPolarizedComponents.add(el.name)
+    }
+  }
+
+  return readableNetlist
+    .split("\n")
+    .map((line) => {
+      const cleanedHeader = line.replace(/\s+undefined\)$/, ")")
+      const pinMatch = cleanedHeader.match(/^(\s*-\s*)([^.\s]+)\.(\S+)(.*)$/)
+      if (!pinMatch) return cleanedHeader
+      const [, prefix, compName, aliasesRaw, rest] = pinMatch
+      if (!nonPolarizedComponents.has(compName)) return cleanedHeader
+      const filteredAliases = aliasesRaw
+        .split(",")
+        .filter((alias) => !POLARIZED_PIN_ALIASES.has(alias.toLowerCase()))
+      if (filteredAliases.length === 0) return cleanedHeader
+      return `${prefix}${compName}.${filteredAliases.join(",")}${rest}`
+    })
+    .join("\n")
+}
+
 const normalizeCategory = (category: string): DrcCategory =>
   category === "netlist" ||
   category === "pin_specification" ||
@@ -64,7 +98,10 @@ export const checkNetlist = async (file?: string) => {
   const diagnostics = analyzeCircuitJson(typedCircuitJson)
   const netlistErrors = diagnostics.errors.filter(isNetlistDiagnostic)
   const netlistWarnings = diagnostics.warnings.filter(isNetlistDiagnostic)
-  const readableNetlist = convertCircuitJsonToReadableNetlist(typedCircuitJson)
+  const readableNetlist = sanitizeReadableNetlist(
+    convertCircuitJsonToReadableNetlist(typedCircuitJson),
+    typedCircuitJson,
+  )
 
   const diagnosticsLines = [
     `Errors: ${netlistErrors.length}`,
