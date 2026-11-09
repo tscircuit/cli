@@ -185,8 +185,7 @@ export const pushSnippet = async ({
       const account = await fetchAccount({ throwOnError: true })
       currentUsername = account?.tscircuit_handle ?? undefined
     } catch (error) {
-      const detail =
-        error instanceof Error ? error.message : String(error)
+      const detail = error instanceof Error ? error.message : String(error)
       onError(
         `Failed to fetch account information using TSCIRCUIT_TOKEN: ${detail}`,
       )
