@@ -14,6 +14,7 @@ import { registerAuthSetToken } from "./auth/set-token/register"
 import { registerAuthSetupNpmrc } from "./auth/setup-npmrc/register"
 import { registerAuthWhoami } from "./auth/whoami/register"
 import { registerBuild } from "./build/register"
+import { registerCheckAll } from "./check/all/register"
 import { registerCheckNetlist } from "./check/netlist/register"
 import { registerCheckPcbStyle } from "./check/pcb-style/register"
 import { registerCheckPinSpecification } from "./check/pin-specification/register"
@@ -91,6 +92,7 @@ registerDoctor(program)
 registerReport(program)
 registerReportAutorouter(program)
 registerCheck(program)
+registerCheckAll(program)
 registerCheckNetlist(program)
 registerCheckPcbStyle(program)
 registerCheckPinSpecification(program)
