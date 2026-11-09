@@ -16,9 +16,5 @@ jobs:
         with:
           bun-version-file: .bun-version
       - run: bun install
-      - uses: actions/upload-artifact@v4
-        with:
-          name: preview-lockfile
-          path: bun.lock
       - run: bun run build
       - run: bun run pkg-pr-new-release
