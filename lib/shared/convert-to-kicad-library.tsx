@@ -119,7 +119,11 @@ export async function convertToKicadLibrary({
     fs.mkdirSync(dir, { recursive: true })
 
     if (typeof content === "string") {
-      fs.writeFileSync(fullPath, content)
+      const normalizedContent =
+        isPcm && relativePath.endsWith(".kicad_mod")
+          ? content.replaceAll("${KICAD_3RD_PARTY}/", "${KICAD9_3RD_PARTY}/")
+          : content
+      fs.writeFileSync(fullPath, normalizedContent)
     } else {
       fs.writeFileSync(fullPath, content as Buffer)
     }
