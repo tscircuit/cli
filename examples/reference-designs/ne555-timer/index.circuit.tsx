@@ -114,6 +114,7 @@ export default function Ne555Timer(input: z.input<typeof propsSchema>) {
             name="D1"
             color="red"
             footprint="0805"
+            pinLabels={{ pin1: "cathode", pin2: "anode" }}
             pcbX={15}
             pcbY={-7}
             schX={7}
