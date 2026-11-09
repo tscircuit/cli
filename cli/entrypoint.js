@@ -15,14 +15,31 @@ function commandExists(cmd) {
   }
 }
 
-const runtime = process.env.TSCIRCUIT_NODE_RUNTIME
-  ? getNodeRuntime()
-  : undefined
-const runner = runtime?.executable ?? (commandExists("bun") ? "bun" : "tsx")
-
 const __dirname = dirname(fileURLToPath(import.meta.url))
 const packageRoot = join(__dirname, "..")
 const require = createRequire(import.meta.url)
+
+function resolveNodeTsxRuntime() {
+  try {
+    const tsxEsmPath = require.resolve("tsx/esm")
+    return {
+      executable: process.execPath,
+      args: ["--import", tsxEsmPath],
+    }
+  } catch {
+    return {
+      executable: commandExists("tsx") ? "tsx" : process.execPath,
+      args: [],
+    }
+  }
+}
+
+const runtime = process.env.TSCIRCUIT_NODE_RUNTIME
+  ? getNodeRuntime()
+  : commandExists("bun")
+    ? { executable: "bun", args: [] }
+    : resolveNodeTsxRuntime()
+const runner = runtime.executable
 
 const globalPackageJson = require("../package.json")
 
