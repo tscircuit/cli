@@ -1,6 +1,6 @@
 {
   "name": "@tscircuit/cli",
-  "version": "0.1.2444",
+  "version": "0.1.2446",
   "repository": {
     "type": "git",
     "url": "https://github.com/tscircuit/cli"
@@ -43,7 +43,7 @@
     "circuit-json-to-bom-csv": "^0.0.26",
     "circuit-json-to-fdm-component-box": "^0.0.2",
     "circuit-json-to-footprinter": "^0.0.59",
-    "circuit-json-to-gerber": "^0.0.120",
+    "circuit-json-to-gerber": "^0.0.122",
     "circuit-json-to-kicad": "0.0.270",
     "circuit-json-to-readable-netlist": "^0.0.15",
     "circuit-json-to-step": "^0.0.63",
@@ -74,6 +74,7 @@
     "perfect-cli": "^1.0.21",
     "playwright": "^1.57.0",
     "polygon-clipping": "^0.15.7",
+    "poppygl": "0.0.38",
     "prompts": "^2.4.2",
     "proper-lockfile": "^4.1.2",
     "redaxios": "^0.5.1",

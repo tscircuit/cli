@@ -36,6 +36,9 @@ jobs:
       
       - run: bunx playwright install chromium
 
+      - name: Install FFmpeg for explosion video tests
+        run: command -v ffmpeg && command -v ffprobe || (sudo apt-get update && sudo apt-get install -y ffmpeg)
+
       - name: Generate test plans
         run: bun run scripts/generate-test-plan.ts
 
@@ -62,5 +65,7 @@ jobs:
           name: snapshots-node${{ matrix.node }}
           path: |
             tests/**/__snapshots__/*.diff.png
+            tests/**/__snapshots__/*.actual.png
             tests/**/__snapshots__/*.snap.png
+            tests/**/__snapshots__/*.mp4
           if-no-files-found: ignore
