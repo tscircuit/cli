@@ -16,9 +16,9 @@ props and artifact paths. Circuit JSON and GLB hashes identify the exact artifac
 and allow viewers to reject mismatched mutable builds. Publish the generated dist
 files alongside the original TSX using the existing package publishing workflow.
 
-While reviewing these branches, `@tscircuit/runframe-reference-designs` aliases
-the RunFrame PR package for its manifest-only entrypoint. The CLI's existing
-viewer still comes from `tscircuit`, preserving its dependency ownership rules.
+The manifest contract comes from `@tscircuit/reference-designs`, a Zod-only
+package published from the RunFrame repository. The CLI's viewer still comes
+from `tscircuit`, preserving its compiler and viewer dependency ownership.
 
 See `examples/reference-designs/ne555-timer` for a complete component with three
 configurations. Run `tsci build` from that directory to generate its manifest.

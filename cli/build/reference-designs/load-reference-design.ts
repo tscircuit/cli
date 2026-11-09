@@ -1,7 +1,7 @@
 import path from "node:path"
 import { pathToFileURL } from "node:url"
 import { z, type ZodType } from "zod"
-import { referenceDesignName } from "@tscircuit/runframe-reference-designs/reference-designs"
+import { referenceDesignName } from "@tscircuit/reference-designs"
 import { importFromUserLand } from "lib/shared/importFromUserLand"
 import { registerStaticAssetLoaders } from "lib/shared/register-static-asset-loaders"
 
