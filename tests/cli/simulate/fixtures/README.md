@@ -1,3 +1,8 @@
+The TSX fixtures use `signalintegrity.simulation`, `signalintegrity.signal` and
+`signalintegrity.ibismodel` imported from `@tscircuit/core`, with `driverRef`,
+`receiverRef`, `strobeRef` and spelled-out authoring corners. Serialized
+Circuit JSON names, fields and abbreviated corner data remain unchanged.
+
 The TSX fixtures use real TI SN74LVC1G04 DBV and SN65HVD72D models. The
 SN65HVD72 D and /RE inputs receive data and strobe on the same chip.
 Tests download https://www.ti.com/lit/zip/scem216c and
@@ -13,7 +18,7 @@ adapter and returns a typed `PipelineResult`, with per-block records in
 The empty-result/ngspice regression also runs with the real pipeline.
 
 The final RFC is https://github.com/tscircuit/rfc/pull/28 at
-`ae2c01a336534386886bfe6d3bb916c18c0c445b`. Rendering requires the unpublished
+`d79a8d14d40765b2dda7db557e45e101f2aa62ba`. Rendering requires the unpublished
 props #995, circuit-json #983 and core #5286 branches. The pipeline API
 requires signal-integrity-pipeline #62. Local sibling builds may be overlaid
 in `node_modules` for verification; local links are not committed.

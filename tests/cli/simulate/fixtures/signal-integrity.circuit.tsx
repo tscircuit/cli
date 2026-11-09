@@ -1,3 +1,4 @@
+import { signalintegrity } from "@tscircuit/core"
 import type { ReactNode } from "react"
 
 // TI SN74LVC1G04, SOT23-5 (DBV), 3.3 V models. See README.md for the vendor file.
@@ -11,7 +12,7 @@ const Inverter = ({ name, x, y }: { name: string; x: number; y: number }) => (
       pcbY={y}
       pinLabels={{ pin1: "NC", pin2: "A", pin3: "GND", pin4: "Y", pin5: "VCC" }}
     />
-    <ibismodel
+    <signalintegrity.ibismodel
       componentRef={`.${name}`}
       ibisModelAsset={{
         url: "./models/sn74lvc1g04.ibs",
@@ -60,7 +61,7 @@ const ClockReceiver = () => (
         pin8: "VCC",
       }}
     />
-    <ibismodel
+    <signalintegrity.ibismodel
       componentRef=".RX"
       ibisModelAsset={{
         url: "./models/sn65hvd72.ibs",
@@ -126,8 +127,12 @@ export const SignalIntegrityBoard = ({
 
 export default () => (
   <SignalIntegrityBoard>
-    <signalintegrity bitRate="20Mbps" unrouted="ideal" pdn="ideal">
-      <signal name="DATA" driver=".TX > .Y" receiver=".RX > .A" />
-    </signalintegrity>
+    <signalintegrity.simulation bitRate="20Mbps" unrouted="ideal" pdn="ideal">
+      <signalintegrity.signal
+        name="DATA"
+        driverRef=".TX > .Y"
+        receiverRef=".RX > .A"
+      />
+    </signalintegrity.simulation>
   </SignalIntegrityBoard>
 )

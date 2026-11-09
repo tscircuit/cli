@@ -83,6 +83,10 @@ test("simulate discovers a Level 1 TSX block, prints the eye, and writes all pip
     kind: "single",
     source_port_id: expect.any(String),
   })
+  expect(
+    input.find((record: any) => record.type === "simulation_signal_integrity")
+      .corner,
+  ).toBe("typ")
   expect(input.some((record: any) => record.type === "source_component")).toBe(
     true,
   )
@@ -157,15 +161,16 @@ test("simulate runs all blocks in one pipeline call and groups quiet and strobed
   const { tmpDir, runCommand } = await setup()
   await writeFile(
     join(tmpDir, "multi.circuit.tsx"),
-    `import { SignalIntegrityBoard } from "./board.circuit"
+    `import { signalintegrity } from "@tscircuit/core"
+import { SignalIntegrityBoard } from "./board.circuit"
 export default () => <SignalIntegrityBoard clock>
-  <signalintegrity name="WRITE" bitRate="20Mbps" unrouted="ideal" pdn="ideal">
-    <signal name="DQS" driver=".CLK_TX > .Y" receiver=".RX > .CLK" pattern="clock" />
-    <signal name="DATA" driver=".TX > .Y" receiver=".RX > .A" strobe="DQS" mask={{ setup: "75ps", hold: "100ps" }} />
-  </signalintegrity>
-  <signalintegrity name="QUIET" bitRate="20Mbps" unrouted="ideal" pdn="ideal">
-    <signal name="DATA" driver=".TX > .Y" receiver={[".RX > .A", ".RX2 > .A"]} quiet="low" />
-  </signalintegrity>
+  <signalintegrity.simulation name="WRITE" bitRate="20Mbps" corner="minimum" unrouted="ideal" pdn="ideal">
+    <signalintegrity.signal name="DQS" driverRef=".CLK_TX > .Y" receiverRef=".RX > .CLK" pattern="clock" />
+    <signalintegrity.signal name="DATA" driverRef=".TX > .Y" receiverRef=".RX > .A" strobeRef="DQS" mask={{ setup: "75ps", hold: "100ps" }} />
+  </signalintegrity.simulation>
+  <signalintegrity.simulation name="QUIET" bitRate="20Mbps" corner="maximum" unrouted="ideal" pdn="ideal">
+    <signalintegrity.signal name="DATA" driverRef=".TX > .Y" receiverRef={[".RX > .A", ".RX2 > .A"]} quiet="low" />
+  </signalintegrity.simulation>
 </SignalIntegrityBoard>`,
   )
   const result = await runCommand(
@@ -198,6 +203,20 @@ export default () => <SignalIntegrityBoard clock>
       (record: any) => record.type === "simulation_signal_integrity",
     ),
   ).toHaveLength(2)
+  expect(
+    input.find(
+      (record: any) =>
+        record.type === "simulation_signal_integrity" &&
+        record.name === "WRITE",
+    ).corner,
+  ).toBe("min")
+  expect(
+    input.find(
+      (record: any) =>
+        record.type === "simulation_signal_integrity" &&
+        record.name === "QUIET",
+    ).corner,
+  ).toBe("max")
   const quietSignal = input.find(
     (record: any) => record.type === "simulation_signal" && record.quiet,
   )
