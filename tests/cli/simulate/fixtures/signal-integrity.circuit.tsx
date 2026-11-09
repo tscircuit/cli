@@ -1,4 +1,4 @@
-import { signalintegrity } from "@tscircuit/core"
+import { simulation } from "@tscircuit/core"
 import type { ReactNode } from "react"
 
 // TI SN74LVC1G04, SOT23-5 (DBV), 3.3 V models. See README.md for the vendor file.
@@ -12,7 +12,7 @@ const Inverter = ({ name, x, y }: { name: string; x: number; y: number }) => (
       pcbY={y}
       pinLabels={{ pin1: "NC", pin2: "A", pin3: "GND", pin4: "Y", pin5: "VCC" }}
     />
-    <signalintegrity.ibismodel
+    <simulation.ibismodel
       componentRef={`.${name}`}
       ibisModelAsset={{
         url: "./models/sn74lvc1g04.ibs",
@@ -42,7 +42,7 @@ const Inverter = ({ name, x, y }: { name: string; x: number; y: number }) => (
   </>
 )
 
-// The D and /RE inputs receive data and strobe on the same physical chip.
+// The D and /RE inputs receive two channels on the same physical chip.
 const ClockReceiver = () => (
   <>
     <chip
@@ -61,7 +61,7 @@ const ClockReceiver = () => (
         pin8: "VCC",
       }}
     />
-    <signalintegrity.ibismodel
+    <simulation.ibismodel
       componentRef=".RX"
       ibisModelAsset={{
         url: "./models/sn65hvd72.ibs",
@@ -127,12 +127,16 @@ export const SignalIntegrityBoard = ({
 
 export default () => (
   <SignalIntegrityBoard>
-    <signalintegrity.simulation bitRate="20Mbps" unrouted="ideal" pdn="ideal">
-      <signalintegrity.signal
+    <simulation.pcbtransientchannelsimulation
+      bitRate="20Mbps"
+      unrouted="ideal"
+      pdn="ideal"
+    >
+      <simulation.pcbchannel
         name="DATA"
         driverRef=".TX > .Y"
         receiverRef=".RX > .A"
       />
-    </signalintegrity.simulation>
+    </simulation.pcbtransientchannelsimulation>
   </SignalIntegrityBoard>
 )

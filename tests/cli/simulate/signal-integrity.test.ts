@@ -57,20 +57,16 @@ const setup = async (env?: Record<string, string>) => {
   return fixture
 }
 
-test("simulate discovers a Level 1 TSX block, prints the eye, and writes all pipeline records", async () => {
+test("simulate discovers a Level 1 TSX block, prints waveform samples, and writes all pipeline records", async () => {
   const { tmpDir, runCommand } = await setup()
   const result = await runCommand(
     "tsci simulate board.circuit.tsx --disable-parts-engine",
   )
   expect(result.exitCode).toBe(0)
-  expect(result.stdout).toContain("Signal integrity:")
+  expect(result.stdout).toContain("PCB transient channel simulation:")
   expect(result.stdout).toContain("  DATA\n")
-  expect(result.stdout).toContain(
-    "eye height 2.500 V, eye width 4.000e-8 s, mask margin -0.1000 V",
-  )
-  const input = JSON.parse(
-    await readFile(join(tmpDir, "pipeline-input.json"), "utf8"),
-  )
+  expect(result.stdout).toContain("far, 2 samples")
+  const input = await Bun.file(join(tmpDir, "pipeline-input.json")).json()
   expect(
     input.filter(
       (record: any) => record.type === "simulation_signal_integrity",
@@ -86,32 +82,39 @@ test("simulate discovers a Level 1 TSX block, prints the eye, and writes all pip
   expect(
     input.find((record: any) => record.type === "simulation_signal_integrity")
       .corner,
-  ).toBe("typ")
+  ).toBe("typical")
   expect(input.some((record: any) => record.type === "source_component")).toBe(
     true,
   )
   const [report] = await readdir(join(tmpDir, ".tscircuit"))
   expect(report).toStartWith("simulation-board-")
-  const records = JSON.parse(
-    await readFile(
-      join(tmpDir, ".tscircuit", report, "results.circuit.json"),
-      "utf8",
-    ),
-  )
+  const records = await Bun.file(
+    join(tmpDir, ".tscircuit", report, "results.circuit.json"),
+  ).json()
   expect(records.slice(0, input.length)).toEqual(input)
+  expect(signal).not.toHaveProperty("mask")
+  expect(signal).not.toHaveProperty("strobe_simulation_signal_id")
+  const waveform = records.find(
+    (record: any) => record.type === "simulation_signal_waveform",
+  )
+  expect(waveform).not.toHaveProperty("idle_voltage_v")
+  const csv = await readFile(
+    join(tmpDir, ".tscircuit", report, "waveforms.csv"),
+    "utf8",
+  )
+  expect(csv).toContain(
+    "simulation_signal_id,end,source_port_id,time_s,voltage_v,idle_voltage_v",
+  )
+  expect(csv).toContain(
+    `${signal.simulation_signal_id},far,${waveform.source_port_id},0,0,`,
+  )
+
   expect(
     records
       .slice(input.length)
       .map((record: any) => record.type)
       .sort(),
-  ).toEqual([
-    "simulation_signal_eye",
-    "simulation_signal_integrity_rlgc",
-    "simulation_signal_waveform",
-  ])
-  expect(
-    await Bun.file(join(tmpDir, ".tscircuit", report, "results.html")).exists(),
-  ).toBe(true)
+  ).toEqual(["simulation_signal_integrity_rlgc", "simulation_signal_waveform"])
   expect(
     await Bun.file(
       join(tmpDir, ".tscircuit", report, "blocks/summary.json"),
@@ -140,14 +143,11 @@ test("simulate discovers a Level 1 TSX block, prints the eye, and writes all pip
       `tsci simulate board.${suffix} --output report-${suffix}`,
     )
     expect(result.exitCode).toBe(0)
-    expect(result.stdout).toContain("eye height 2.500 V")
+    expect(result.stdout).toContain("far, 2 samples")
     expect(
-      JSON.parse(
-        await readFile(
-          join(tmpDir, `report-${suffix}`, "results.circuit.json"),
-          "utf8",
-        ),
-      ),
+      await Bun.file(
+        join(tmpDir, `report-${suffix}`, "results.circuit.json"),
+      ).json(),
     ).toEqual(records)
     expect(
       await Bun.file(
@@ -157,47 +157,37 @@ test("simulate discovers a Level 1 TSX block, prints the eye, and writes all pip
   }
 }, 60_000)
 
-test("simulate runs all blocks in one pipeline call and groups quiet and strobed signals", async () => {
+test("simulate runs all blocks in one pipeline call and groups quiet and switching waveforms", async () => {
   const { tmpDir, runCommand } = await setup()
   await writeFile(
     join(tmpDir, "multi.circuit.tsx"),
-    `import { signalintegrity } from "@tscircuit/core"
+    `import { simulation } from "@tscircuit/core"
 import { SignalIntegrityBoard } from "./board.circuit"
 export default () => <SignalIntegrityBoard clock>
-  <signalintegrity.simulation name="WRITE" bitRate="20Mbps" corner="minimum" unrouted="ideal" pdn="ideal">
-    <signalintegrity.signal name="DQS" driverRef=".CLK_TX > .Y" receiverRef=".RX > .CLK" pattern="clock" />
-    <signalintegrity.signal name="DATA" driverRef=".TX > .Y" receiverRef=".RX > .A" strobeRef="DQS" mask={{ setup: "75ps", hold: "100ps" }} />
-  </signalintegrity.simulation>
-  <signalintegrity.simulation name="QUIET" bitRate="20Mbps" corner="maximum" unrouted="ideal" pdn="ideal">
-    <signalintegrity.signal name="DATA" driverRef=".TX > .Y" receiverRef={[".RX > .A", ".RX2 > .A"]} quiet="low" />
-  </signalintegrity.simulation>
+  <simulation.pcbtransientchannelsimulation name="WRITE" bitRate="20Mbps" corner="minimum" unrouted="ideal" pdn="ideal">
+    <simulation.pcbchannel name="DQS" driverRef=".CLK_TX > .Y" receiverRef=".RX > .CLK" pattern="clock" />
+    <simulation.pcbchannel name="DATA" driverRef=".TX > .Y" receiverRef=".RX > .A" />
+  </simulation.pcbtransientchannelsimulation>
+  <simulation.pcbtransientchannelsimulation name="QUIET" bitRate="20Mbps" corner="maximum" unrouted="ideal" pdn="ideal">
+    <simulation.pcbchannel name="DATA" driverRef=".TX > .Y" receiverRef={[".RX > .A", ".RX2 > .A"]} quiet="low" />
+  </simulation.pcbtransientchannelsimulation>
 </SignalIntegrityBoard>`,
   )
   const result = await runCommand(
     "tsci simulate multi.circuit.tsx --disable-parts-engine --output report",
   )
   expect(result.exitCode).toBe(0)
-  const [write, quiet] = result.stdout.split("Signal integrity: QUIET")
-  expect(write).toContain("Signal integrity: WRITE")
+  const [write, quiet] = result.stdout.split(
+    "PCB transient channel simulation: QUIET",
+  )
+  expect(write).toContain("PCB transient channel simulation: WRITE")
   expect(write).toContain("  DQS\n")
   expect(write).toContain("  DATA\n")
-  expect(write).toContain(
-    "worst setup margin -2.000e-11 s, worst hold margin 3.000e-11 s",
-  )
+  expect(write).toContain("far, 2 samples")
   expect(quiet).toContain("  DATA\n")
-  expect(quiet).toContain(
-    "NEXT, idle voltage 0.1000 V, positive peak 0.01200 V, negative peak -0.02500 V",
-  )
-  expect(quiet).toContain(
-    "FEXT, idle voltage 0.1000 V, positive peak 0.02400 V, negative peak -0.05000 V",
-  )
-  expect(quiet).toContain(
-    "FEXT, idle voltage 0.1000 V, positive peak 0.03600 V, negative peak -0.07500 V",
-  )
-  expect(quiet).not.toContain("eye height")
-  const input = JSON.parse(
-    await readFile(join(tmpDir, "pipeline-input.json"), "utf8"),
-  )
+  expect(quiet).toContain("near, 2 samples, idle voltage 0.1000 V")
+  expect(quiet.match(/far, 2 samples, idle voltage 0.1000 V/g)).toHaveLength(2)
+  const input = await Bun.file(join(tmpDir, "pipeline-input.json")).json()
   expect(
     input.filter(
       (record: any) => record.type === "simulation_signal_integrity",
@@ -209,21 +199,41 @@ export default () => <SignalIntegrityBoard clock>
         record.type === "simulation_signal_integrity" &&
         record.name === "WRITE",
     ).corner,
-  ).toBe("min")
+  ).toBe("minimum")
   expect(
     input.find(
       (record: any) =>
         record.type === "simulation_signal_integrity" &&
         record.name === "QUIET",
     ).corner,
-  ).toBe("max")
-  const quietSignal = input.find(
-    (record: any) => record.type === "simulation_signal" && record.quiet,
+  ).toBe("maximum")
+  const results = await Bun.file(
+    join(tmpDir, "report/results.circuit.json"),
+  ).json()
+  const quietBlock = input.find(
+    (record: any) =>
+      record.type === "simulation_signal_integrity" && record.name === "QUIET",
   )
+  const quietSignal = input.find(
+    (record: any) =>
+      record.type === "simulation_signal" &&
+      record.simulation_signal_integrity_id ===
+        quietBlock.simulation_signal_integrity_id,
+  )
+  const quietWaveforms = results.filter(
+    (record: any) =>
+      record.type === "simulation_signal_waveform" &&
+      record.simulation_signal_id === quietSignal.simulation_signal_id,
+  )
+  expect(quietWaveforms).toHaveLength(3)
+  expect(
+    quietWaveforms.map((waveform: any) => waveform.idle_voltage_v),
+  ).toEqual([0.1, 0.1, 0.1])
   for (const endpoint of [quietSignal.driver, ...quietSignal.receivers])
     expect(quiet).toContain(`${endpoint.source_port_id}:`)
 }, 60_000)
 
+// Requires ngspice; excluded from solver-free verification.
 for (const pipelinePreload of [preload, undefined])
   test(`simulate without SI runs ngspice (${pipelinePreload ? "mocked" : "real"} empty pipeline)`, async () => {
     const { tmpDir, runCommand } = await getCliTestFixture({
@@ -243,7 +253,7 @@ for (const pipelinePreload of [preload, undefined])
       "tsci simulate analog.tsx --disable-parts-engine --output unused-report",
     )
     expect(result.exitCode).toBe(0)
-    expect(result.stdout).not.toContain("Signal integrity:")
+    expect(result.stdout).not.toContain("PCB transient channel simulation:")
     expect(result.stdout).toContain("Index  time")
     expect(await Bun.file(join(tmpDir, ".tscircuit")).exists()).toBe(false)
     expect(await Bun.file(join(tmpDir, "unused-report")).exists()).toBe(false)
@@ -277,7 +287,7 @@ test("a failed report write leaves the previous report intact", async () => {
   expect(result.stderr).toContain(
     "Expected a safe project-relative file path: ../outside.txt",
   )
-  expect(result.stdout).not.toContain("Signal integrity:")
+  expect(result.stdout).not.toContain("PCB transient channel simulation:")
   expect(
     await readFile(join(tmpDir, "report/results.circuit.json"), "utf8"),
   ).toBe("previous results")

@@ -2,14 +2,14 @@ import { mock } from "bun:test"
 import { createHash } from "node:crypto"
 import { existsSync, writeFileSync } from "node:fs"
 import type {
-  BlockResult,
+  PipelineBlockResult,
   PipelineOptions,
   PipelineResult,
 } from "@tscircuit/signal-integrity-pipeline"
 import { any_circuit_element, type SimulationSignal } from "circuit-json"
 
 // Only the true public pipeline boundary is mocked, in an isolated CLI process.
-// Metrics are synthetic formatting fixtures, not electrical measurements.
+// Waveforms are synthetic IO fixtures, not electrical simulation results.
 mock.module("@tscircuit/signal-integrity-pipeline", () => ({
   async runPipeline({
     circuitJson,
@@ -41,7 +41,7 @@ mock.module("@tscircuit/signal-integrity-pipeline", () => ({
     }
     if (process.env.TSCI_TEST_PIPELINE_ERROR)
       throw new Error("Signal integrity solver failed")
-    const blocks: BlockResult[] = circuitJson.flatMap((block) => {
+    const blocks: PipelineBlockResult[] = circuitJson.flatMap((block) => {
       if (block.type !== "simulation_signal_integrity") return []
       const signals = circuitJson.filter(
         (signal): signal is SimulationSignal =>
@@ -50,7 +50,7 @@ mock.module("@tscircuit/signal-integrity-pipeline", () => ({
             block.simulation_signal_integrity_id,
       )
       const matrix = signals.map(() => signals.map(() => 0))
-      const results: BlockResult["results"] = [
+      const results: PipelineBlockResult["results"] = [
         {
           type: "simulation_signal_integrity_rlgc",
           simulation_signal_integrity_rlgc_id: `${block.simulation_signal_integrity_id}_rlgc`,
@@ -84,7 +84,7 @@ mock.module("@tscircuit/signal-integrity-pipeline", () => ({
               endpoint,
               end: "far" as const,
             }))
-        for (const [index, { endpoint, end }] of endpoints.entries()) {
+        for (const { endpoint, end } of endpoints) {
           const source_port_id =
             endpoint.kind === "single"
               ? endpoint.source_port_id
@@ -98,82 +98,17 @@ mock.module("@tscircuit/signal-integrity-pipeline", () => ({
             end,
             timestamps_s: [0, 1e-6],
             voltage_levels: [0, 3.3],
+            ...(signal.quiet ? { idle_voltage_v: 0.1 } : {}),
           })
-          if (signal.quiet) {
-            results.push({
-              type: "simulation_signal_crosstalk",
-              simulation_signal_crosstalk_id: id,
-              simulation_signal_id,
-              source_port_id,
-              end,
-              idle_voltage_v: 0.1,
-              peak_positive_v: (index + 1) * 0.012,
-              peak_negative_v: -(index + 1) * 0.025,
-            })
-            continue
-          }
-          results.push({
-            type: "simulation_signal_eye",
-            simulation_signal_eye_id: id,
-            simulation_signal_id,
-            source_port_id,
-            folded_traces: [
-              { timestamps_s: [0, 100e-9], voltage_levels: [0, 3.3] },
-            ],
-            eye_height_v: 2.5,
-            eye_width_s: 40e-9,
-            mask_margin_v: -0.1,
-          })
-          if (signal.strobe_simulation_signal_id)
-            results.push({
-              type: "simulation_signal_strobe_margin",
-              simulation_signal_strobe_margin_id: id,
-              simulation_signal_id,
-              source_port_id,
-              edges: [
-                {
-                  time_s: 50e-9,
-                  setup_margin_s: -20e-12,
-                  hold_margin_s: 30e-12,
-                },
-              ],
-              worst_setup_margin_s: -20e-12,
-              worst_hold_margin_s: 30e-12,
-            })
         }
       }
       return [
         {
-          simulationSignalIntegrityId: block.simulation_signal_integrity_id,
-          name: block.name ?? block.simulation_signal_integrity_id,
+          simulation_signal_integrity_id: block.simulation_signal_integrity_id,
+          name: block.name,
           duration_s: 1e-6,
-          geometry: {
-            cells: [],
-            mappings: [],
-            units: { circuitJson: "mm", geometry: "m", conductivity: "S/m" },
-            approximations: [],
-          },
-          matrices: [],
-          experiments: [],
           results,
           limitations: [],
-          numericalSettings: {
-            reduction: "routed-copper",
-            sections: 1,
-            lanes: [],
-            extraction: {
-              minimumHz: 1e3,
-              maximumHz: 1e9,
-              modelHz: 1e6,
-              filaments: 1,
-              refinementFilaments: 2,
-              convergenceTolerance: 0.1,
-              capTolerance: 0.1,
-              maxPanelLengthMm: 1,
-              reciprocityTolerance: 0.1,
-              dcResistanceTolerance: 0.1,
-            },
-          },
         },
       ]
     })
@@ -186,12 +121,28 @@ mock.module("@tscircuit/signal-integrity-pipeline", () => ({
         ...blocks.flatMap((block) => block.results),
       ],
       blocks,
-      geometry: blocks[0]?.geometry,
-      matrices: blocks[0]?.matrices ?? [],
-      experiments: [],
-      limitations: [],
       files: blocks.length
         ? {
+            "waveforms.csv":
+              "simulation_signal_id,end,source_port_id,time_s,voltage_v,idle_voltage_v\n" +
+              blocks
+                .flatMap((block) =>
+                  block.results.flatMap((record) =>
+                    record.type === "simulation_signal_waveform"
+                      ? record.timestamps_s.map((time, i) =>
+                          [
+                            record.simulation_signal_id,
+                            record.end,
+                            record.source_port_id,
+                            time,
+                            record.voltage_levels[i],
+                            record.idle_voltage_v ?? "",
+                          ].join(","),
+                        )
+                      : [],
+                  ),
+                )
+                .join("\n"),
             "blocks/summary.json": JSON.stringify(
               blocks.map((block) => block.name),
             ),
