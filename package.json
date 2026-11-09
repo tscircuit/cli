@@ -86,7 +86,7 @@
     "tsx": "^4.7.1",
     "typed-ky": "^0.0.4",
     "zod-to-json-schema": "^3.25.0",
-    "@tscircuit/reference-designs": "https://pkg.pr.new/@tscircuit/reference-designs@dd4e6ce"
+    "@tscircuit/reference-designs": "https://pkg.pr.new/tscircuit/runframe/@tscircuit/reference-designs@dd4e6ce"
   },
   "peerDependencies": {
     "tscircuit": "*"
