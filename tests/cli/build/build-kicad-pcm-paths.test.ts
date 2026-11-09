@@ -14,7 +14,7 @@ const STEP_FILE_PATH = path.resolve(
 /**
  * Tests that --kicad-pcm generates PCM-compatible output:
  * - Symbol footprint references are prefixed with "PCM_"
- * - 3D model paths use ${KICAD_3RD_PARTY} variable
+ * - 3D model paths use ${KICAD9_3RD_PARTY} variable
  */
 test("build --kicad-pcm generates PCM-compatible paths and references", async () => {
   const { tmpDir, runCommand } = await getCliTestFixture()
@@ -116,10 +116,10 @@ export const MySwitch = () => (
     "utf-8",
   )
 
-  // Verify 3D model path uses ${KICAD_3RD_PARTY} variable for PCM
-  // Format: ${KICAD_3RD_PARTY}/3dmodels/<kicadPcmPackageId>/<library>.3dshapes/<model>.step
+  // Verify 3D model path uses ${KICAD9_3RD_PARTY} variable for PCM
+  // Format: ${KICAD9_3RD_PARTY}/3dmodels/<kicadPcmPackageId>/<library>.3dshapes/<model>.step
   expect(userFootprintContent).toContain(
-    "${KICAD_3RD_PARTY}/3dmodels/com_tscircuit_testauthor_my-switch-lib/my-switch-lib.3dshapes/test_model.step",
+    "${KICAD9_3RD_PARTY}/3dmodels/com_tscircuit_testauthor_my-switch-lib/my-switch-lib.3dshapes/test_model.step",
   )
 
   // Verify the ZIP package contains correct content
@@ -138,7 +138,7 @@ export const MySwitch = () => (
     await zip.files["symbols/my-switch-lib.kicad_sym"].async("string")
   expect(zipSymbolContent).toContain("PCM_my-switch-lib:MySwitch")
 
-  // Verify ZIP contains the footprint with ${KICAD_3RD_PARTY} path
+  // Verify ZIP contains the footprint with ${KICAD9_3RD_PARTY} path
   const zipFootprintContent =
     await zip.files["footprints/my-switch-lib.pretty/MySwitch.kicad_mod"].async(
       "string",
@@ -225,7 +225,7 @@ export const MySwitch = () => (
         (layers F.Paste)
         (uuid 1a59d540-477d-9e9f-74a1-67fe5e3acea3)
       )
-      (model "\${KICAD_3RD_PARTY}/3dmodels/com_tscircuit_testauthor_my-switch-lib/my-switch-lib.3dshapes/test_model.step"
+      (model "\${KICAD9_3RD_PARTY}/3dmodels/com_tscircuit_testauthor_my-switch-lib/my-switch-lib.3dshapes/test_model.step"
         (offset
           (xyz 0 0 0)
         )
