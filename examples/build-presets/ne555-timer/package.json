@@ -11,6 +11,6 @@
     "zod": "3.25.76"
   },
   "devDependencies": {
-    "@tscircuit/cli": "latest"
+    "@tscircuit/cli": "https://pkg.pr.new/@tscircuit/cli@2a0a4e3e105d45d150c003cf92ee490d135c6be3"
   }
 }

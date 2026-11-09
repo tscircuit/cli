@@ -57,7 +57,8 @@ supplied props instead of expanding presets. Files without an explicit named
 
 Copy `examples/build-presets/ne555-timer` into its own package directory. It has
 one authored TSX file, a normal `package.json`, and `tscircuit.config.json`.
-Install a CLI version with preset support, then run:
+The example pins the CLI PR package with preset support. After the CLI release,
+replace that pin with the released version. Run:
 
 ```sh
 bun install
