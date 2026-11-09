@@ -2,7 +2,7 @@ import { z } from "zod"
 import {
   referenceDesignName,
   referenceDesignFilePath,
-} from "@tscircuit/runframe/reference-designs"
+} from "@tscircuit/runframe-reference-designs/reference-designs"
 
 export const referenceDesignDefinitionSchema = z.object({
   name: referenceDesignName,

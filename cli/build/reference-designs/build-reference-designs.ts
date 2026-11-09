@@ -7,7 +7,7 @@ import {
   referenceDesignPropsSchema,
   REFERENCE_DESIGN_MANIFEST_PATH,
   type ReferenceDesignManifest,
-} from "@tscircuit/runframe/reference-designs"
+} from "@tscircuit/runframe-reference-designs/reference-designs"
 import type { PlatformConfig } from "@tscircuit/props"
 import { buildFilesWithWorkerPool } from "../worker-pool"
 import { EMPTY_IMAGE_FORMAT_SELECTION } from "../image-format-selection"
