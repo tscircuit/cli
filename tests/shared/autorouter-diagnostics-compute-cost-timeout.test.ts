@@ -2,7 +2,7 @@ import { expect, test } from "bun:test"
 import { AutorouterPhaseTimeoutError } from "lib/shared/autorouter-diagnostics"
 import { getComputeCostTestFixture } from "tests/fixtures/get-compute-cost-test-fixture"
 
-test("timeout artifacts include the latest computeCostSummary using the computed ordinal fallback", async () => {
+test("timeout artifacts retain labeled progress cost when events omit stage order", async () => {
   const fixture = await getComputeCostTestFixture({ timeoutMs: 1 })
   const phase = { subcircuit_id: fixture.phase.subcircuit_id }
   fixture.root.emit("autorouting:start", phase)

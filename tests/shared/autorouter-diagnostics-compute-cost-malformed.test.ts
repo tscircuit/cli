@@ -1,7 +1,7 @@
 import { expect, test } from "bun:test"
 import { getComputeCostTestFixture } from "tests/fixtures/get-compute-cost-test-fixture"
 
-test("a malformed computeCostSummary warns without failing routing", async () => {
+test("malformed compute cost warns without throwing during error handling or finalization", async () => {
   const fixture = await getComputeCostTestFixture({ logOnError: true })
   const malformedCost = { ...fixture.computeCostSummary, topPairs: null }
 

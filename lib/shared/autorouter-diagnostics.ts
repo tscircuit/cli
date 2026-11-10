@@ -347,7 +347,7 @@ export class AutorouterDiagnostics {
     this.rememberComputeCost(event)
     if (!this.activePhase) return
     const now = performance.now()
-    // Store compute cost separately from progress.
+    // Timeout artifacts include labeled cost separately; omit the raw duplicate.
     const { computeCostSummary: _computeCostSummary, ...progress } = event
     this.activePhase.lastProgress = progress
     if (!this.shouldLogPhaseDetails(this.activePhase)) return
@@ -364,7 +364,7 @@ export class AutorouterDiagnostics {
   }
 
   private handleEnd(event: AutoroutingEventPayload) {
-    const computeCostSummary = this.takeComputeCost(event, "end")
+    const computeCostSummary = this.reportComputeCost(event, "end")
     const activePhase = this.matchActivePhase(event)
     if (!activePhase) {
       this.recordUntrackedStage(event, computeCostSummary)
@@ -446,7 +446,7 @@ export class AutorouterDiagnostics {
   }
 
   private handleError(event: AutoroutingEventPayload) {
-    const computeCostSummary = this.takeComputeCost(event, "error")
+    const computeCostSummary = this.reportComputeCost(event, "error")
     const activePhase = this.matchActivePhase(event)
     if (!activePhase) {
       this.recordUntrackedStage(event, computeCostSummary, event.error)
@@ -586,8 +586,9 @@ export class AutorouterDiagnostics {
     stage: AutoroutingEventPayload,
   ): LabeledComputeCostSummary | undefined {
     const key = this.getStageKey(stage)
-    const storedSummary = key ? this.computeCostByStage.get(key) : undefined
-    const summary = storedSummary ?? stage.computeCostSummary
+    const summary =
+      stage.computeCostSummary ??
+      (key ? this.computeCostByStage.get(key) : undefined)
     if (!summary) return undefined
 
     try {
@@ -615,13 +616,12 @@ export class AutorouterDiagnostics {
     return this.getPortSelectorById(pcbPort.source_port_id, circuitJson)
   }
 
-  /** Stores the stage's final compute cost and prints it when asked to. */
-  private takeComputeCost(
+  /** Labels the stage's final compute cost, logs it when enabled, and returns it. */
+  private reportComputeCost(
     event: AutoroutingEventPayload,
     outcome: "end" | "error",
   ) {
     if (this.targetPhaseReached) return undefined
-    this.rememberComputeCost(event)
     const computeCostSummary = this.getLabeledComputeCost(event)
     if (!computeCostSummary) return undefined
 
