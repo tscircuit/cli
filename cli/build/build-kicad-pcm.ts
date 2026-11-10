@@ -65,7 +65,7 @@ export async function buildKicadPcm({
   )
 
   // Generate kicad-library-pcm with PCM-specific paths
-  // (PCM requires PCM_ prefixes and ${KICAD_3RD_PARTY} 3D model paths)
+  // (PCM requires PCM_ prefixes and ${KICAD9_3RD_PARTY} 3D model paths)
   // This is separate from dist/kicad-library which has non-PCM paths
   console.log("Converting to KiCad library for PCM...")
   await convertToKicadLibrary({
