@@ -59,6 +59,8 @@ Commands:
   doctor                       Run diagnostic checks for your tscircuit setup
   report                       Report a tscircuit bug
   check [file]                 Partially build and validate circuit artifacts
+  quote                        Estimate or create a quote for manufacturing a
+                               board
   registry                     Manage tscircuit registry resources
   search [options] <query...>  Search for footprints, CAD models or packages in
                                the tscircuit ecosystem

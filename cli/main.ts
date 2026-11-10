@@ -36,6 +36,9 @@ import { registerImport } from "./import/register"
 import { registerInit } from "./init/register"
 import { registerInstall } from "./install/register"
 import { registerPush } from "./push/register"
+import { registerQuoteCreate } from "./quote/create/register"
+import { registerQuoteEstimate } from "./quote/estimate/register"
+import { registerQuote } from "./quote/register"
 import { registerReportAutorouter } from "./report/autorouter/register"
 import { registerReport } from "./report/register"
 import { registerRemove } from "./remove/register"
@@ -100,6 +103,10 @@ registerCheckSchematicPlacement(program)
 registerCheckShorts(program)
 registerCheckSource(program)
 registerCheckTraceLength(program)
+
+registerQuote(program)
+registerQuoteEstimate(program)
+registerQuoteCreate(program)
 
 registerRegistry(program)
 registerRegistryPackages(program)
