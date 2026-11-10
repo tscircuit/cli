@@ -28,10 +28,11 @@ export const labelComputeCostSummary = (
   ...summary,
   topPairs: summary.topPairs.map((pair) => ({
     ...pair,
-    // Synthetic endpoints (breakouts, escape vias) have no pcb port.
-    labels: pair.pcbPortIds.map(
-      (id) => (id && getPcbPortLabel(id)) || pair.connectionName,
-    ),
+    labels: pair.pcbPortIds.map((pcbPortId) => {
+      // Synthetic endpoints (breakouts, escape vias) have no pcb port.
+      if (pcbPortId === null) return pair.connectionName
+      return getPcbPortLabel(pcbPortId) ?? pair.connectionName
+    }),
   })),
 })
 
@@ -43,7 +44,9 @@ export const formatHardestConnections = (
   summary.topPairs
     .slice(0, count)
     .map((pair) => {
-      const endpoints = [...new Set(pair.labels)].join(" -> ")
+      const [from, to] = pair.labels
+      // Two synthetic endpoints both fall back to the connection name.
+      const endpoints = from === to ? from : `${from} -> ${to}`
       return `${endpoints} (${pair.iterations} iters)`
     })
     .join(", ")

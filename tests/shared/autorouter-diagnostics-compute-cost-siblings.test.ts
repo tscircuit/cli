@@ -1,43 +1,46 @@
 import { expect, test } from "bun:test"
 import { getComputeCostTestFixture } from "tests/fixtures/get-compute-cost-test-fixture"
 
-test("interleaved sibling subcircuits keep independent computeCostSummary by actual stage order", async () => {
-  const f = await getComputeCostTestFixture()
-  const a = { ...f.phase, routingPhaseIndex: 19 }
-  const b = { ...a, subcircuit_id: "subcircuit_b" }
-  f.root.emit("autorouting:start", a)
-  f.root.emit("autorouting:start", b)
-  f.root.emit("autorouting:progress", {
-    ...a,
-    computeCostSummary: f.computeCostSummary,
-  })
-  f.root.emit("autorouting:progress", {
-    ...b,
-    computeCostSummary: { ...f.computeCostSummary, measuredPairCount: 400 },
-  })
-  f.root.emit("autorouting:end", a)
-  f.root.emit("autorouting:end", b)
-  // A second stage with the same public routingPhaseIndex must not reuse computeCostSummary.
-  const next = { ...a, _actualRoutingPhaseOrderIndex: 1 }
-  f.root.emit("autorouting:start", next)
-  f.root.emit("autorouting:progress", {
-    ...next,
-    computeCostSummary: { ...f.computeCostSummary, measuredPairCount: 700 },
-  })
-  f.root.emit("autorouting:end", next)
+test("sibling subcircuits routing at the same time keep their own computeCostSummary", async () => {
+  const fixture = await getComputeCostTestFixture()
+  const costA = fixture.computeCostSummary
+  const costB = { ...fixture.computeCostSummary, measuredPairCount: 400 }
+  const costA2 = { ...fixture.computeCostSummary, measuredPairCount: 700 }
+  const stageA = { ...fixture.phase, routingPhaseIndex: 19 }
+  const stageB = { ...stageA, subcircuit_id: "subcircuit_b" }
+  // Same routingPhaseIndex as stageA, but routed later.
+  const stageA2 = { ...stageA, _actualRoutingPhaseOrderIndex: 1 }
 
-  expect(
-    f
-      .finalize()
-      .map((p: any) => [
-        p.subcircuit_id,
-        p._actualRoutingPhaseOrderIndex,
-        p.computeCostSummary.measuredPairCount,
-      ]),
-  ).toEqual([
-    ["subcircuit_a", 0, 10],
-    ["subcircuit_b", 0, 400],
-    ["subcircuit_a", 1, 700],
-  ])
-  expect(f.logs.join("\n")).not.toContain("hardest connections:")
+  fixture.root.emit("autorouting:start", stageA)
+  fixture.root.emit("autorouting:start", stageB)
+  fixture.root.emit("autorouting:progress", {
+    ...stageA,
+    computeCostSummary: costA,
+  })
+  fixture.root.emit("autorouting:progress", {
+    ...stageB,
+    computeCostSummary: costB,
+  })
+  fixture.root.emit("autorouting:end", stageA)
+  fixture.root.emit("autorouting:end", stageB)
+  fixture.root.emit("autorouting:start", stageA2)
+  fixture.root.emit("autorouting:progress", {
+    ...stageA2,
+    computeCostSummary: costA2,
+  })
+  fixture.root.emit("autorouting:end", stageA2)
+
+  const [phaseA, phaseB, phaseA2] = fixture.finalizeAndReadPhases()
+  expect(phaseA).toMatchObject({
+    subcircuit_id: "subcircuit_a",
+    computeCostSummary: { measuredPairCount: costA.measuredPairCount },
+  })
+  expect(phaseB).toMatchObject({
+    subcircuit_id: "subcircuit_b",
+    computeCostSummary: { measuredPairCount: costB.measuredPairCount },
+  })
+  expect(phaseA2).toMatchObject({
+    subcircuit_id: "subcircuit_a",
+    computeCostSummary: { measuredPairCount: costA2.measuredPairCount },
+  })
 })

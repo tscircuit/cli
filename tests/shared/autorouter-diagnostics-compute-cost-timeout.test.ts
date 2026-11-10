@@ -3,19 +3,19 @@ import { AutorouterPhaseTimeoutError } from "lib/shared/autorouter-diagnostics"
 import { getComputeCostTestFixture } from "tests/fixtures/get-compute-cost-test-fixture"
 
 test("timeout artifacts include the latest computeCostSummary using the computed ordinal fallback", async () => {
-  const f = await getComputeCostTestFixture({ timeoutMs: 1 })
-  const phase = { subcircuit_id: f.phase.subcircuit_id }
-  f.root.emit("autorouting:start", phase)
-  f.root.emit("autorouting:progress", {
+  const fixture = await getComputeCostTestFixture({ timeoutMs: 1 })
+  const phase = { subcircuit_id: fixture.phase.subcircuit_id }
+  fixture.root.emit("autorouting:start", phase)
+  fixture.root.emit("autorouting:progress", {
     ...phase,
-    computeCostSummary: f.computeCostSummary,
+    computeCostSummary: fixture.computeCostSummary,
   })
   await new Promise((resolve) => setTimeout(resolve, 5))
 
-  expect(() => f.diagnostics.checkTimeout()).toThrow(
+  expect(() => fixture.diagnostics.checkTimeout()).toThrow(
     AutorouterPhaseTimeoutError,
   )
-  const artifact = f.readJson("phase-0.timeout.json")
+  const artifact = fixture.readJson("phase-0.timeout.json")
   expect(artifact.computeCostSummary.measuredPairCount).toBe(10)
   expect(artifact.computeCostSummary.topPairs[0].labels).toEqual([
     "R2.pin2",

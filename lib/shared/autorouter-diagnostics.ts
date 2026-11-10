@@ -13,6 +13,7 @@ import { convertCircuitJsonToPcbSvg } from "circuit-to-svg"
 import kleur from "kleur"
 import {
   type ComputeCostSummary,
+  type LabeledComputeCostSummary,
   formatHardestConnections,
   labelComputeCostSummary,
 } from "./compute-cost-summary"
@@ -346,8 +347,9 @@ export class AutorouterDiagnostics {
     this.rememberComputeCost(event)
     if (!this.activePhase) return
     const now = performance.now()
-    // The summary is kept per stage instead; don't copy it into every artifact.
-    this.activePhase.lastProgress = { ...event, computeCostSummary: undefined }
+    // Store compute cost separately from progress.
+    const { computeCostSummary: _computeCostSummary, ...progress } = event
+    this.activePhase.lastProgress = progress
     if (!this.shouldLogPhaseDetails(this.activePhase)) return
 
     if (
@@ -362,9 +364,12 @@ export class AutorouterDiagnostics {
   }
 
   private handleEnd(event: AutoroutingEventPayload) {
-    const computeCost = this.finishComputeCost(event, { failed: false })
+    const computeCostSummary = this.takeComputeCost(event, "end")
     const activePhase = this.matchActivePhase(event)
-    if (!activePhase) return
+    if (!activePhase) {
+      this.recordUntrackedStage(event, computeCostSummary)
+      return
+    }
 
     const elapsedMs = performance.now() - activePhase.startedAt
     const outputSrj = event.simpleRouteJson
@@ -388,7 +393,7 @@ export class AutorouterDiagnostics {
       routingPhaseIndex: activePhase.routingPhaseIndex,
       phaseOrdinal: activePhase.phaseOrdinal,
       _actualRoutingPhaseOrderIndex: activePhase._actualRoutingPhaseOrderIndex,
-      ...computeCost,
+      computeCostSummary,
       phaseCount: activePhase.phaseCount,
       connectionCount: activePhase.connectionCount,
       obstacleCount: activePhase.obstacleCount,
@@ -441,9 +446,12 @@ export class AutorouterDiagnostics {
   }
 
   private handleError(event: AutoroutingEventPayload) {
-    const computeCost = this.finishComputeCost(event, { failed: true })
+    const computeCostSummary = this.takeComputeCost(event, "error")
     const activePhase = this.matchActivePhase(event)
-    if (!activePhase) return
+    if (!activePhase) {
+      this.recordUntrackedStage(event, computeCostSummary, event.error)
+      return
+    }
 
     const elapsedMs = performance.now() - activePhase.startedAt
     const error = this.serializeError(event.error)
@@ -456,7 +464,7 @@ export class AutorouterDiagnostics {
       routingPhaseIndex: activePhase.routingPhaseIndex,
       phaseOrdinal: activePhase.phaseOrdinal,
       _actualRoutingPhaseOrderIndex: activePhase._actualRoutingPhaseOrderIndex,
-      ...computeCost,
+      computeCostSummary,
       phaseCount: activePhase.phaseCount,
       connectionCount: activePhase.connectionCount,
       obstacleCount: activePhase.obstacleCount,
@@ -541,7 +549,7 @@ export class AutorouterDiagnostics {
       obstacleCount: activePhase.obstacleCount,
       previousTraceCount: activePhase.previousTraceCount,
       ...this.getExecutionMetadata(activePhase),
-      ...this.getLabeledComputeCost(activePhase),
+      computeCostSummary: this.getLabeledComputeCost(activePhase),
       files: {
         inputSimpleRouteJson: inputFile,
         previousOutputTraces: previousTracesFile,
@@ -552,17 +560,19 @@ export class AutorouterDiagnostics {
   }
 
   /** Sibling subcircuits can route at the same time, so cost is kept per stage. */
-  private getStageKey(stage: AutoroutingEventPayload | ActivePhase) {
-    const subcircuitId =
-      ("subcircuit_id" in stage ? stage.subcircuit_id : undefined) ??
-      stage.subcircuitId
+  private getStageKey(stage: AutoroutingEventPayload) {
+    const subcircuitId = stage.subcircuit_id ?? stage.subcircuitId
     if (!subcircuitId) return undefined
-    const stageIndex =
+
+    // routingPhaseIndex can repeat across stages. Prefer core's actual
+    // order; otherwise use the supplied or locally counted ordinal.
+    const stageOrder =
       stage._actualRoutingPhaseOrderIndex ??
       stage.phaseOrdinal ??
       this.phaseOrdinalBySubcircuit.get(subcircuitId)
-    if (stageIndex === undefined) return undefined
-    return `${subcircuitId}|${stageIndex}`
+    if (stageOrder === undefined) return undefined
+
+    return `${subcircuitId}|${stageOrder}`
   }
 
   private rememberComputeCost(event: AutoroutingEventPayload) {
@@ -571,20 +581,20 @@ export class AutorouterDiagnostics {
     if (key) this.computeCostByStage.set(key, event.computeCostSummary)
   }
 
-  /** The stage's latest compute cost with readable endpoint labels, or {}. */
-  private getLabeledComputeCost(stage: AutoroutingEventPayload | ActivePhase) {
+  /** The stage's latest compute cost, with readable endpoint labels. */
+  private getLabeledComputeCost(
+    stage: AutoroutingEventPayload,
+  ): LabeledComputeCostSummary | undefined {
     const key = this.getStageKey(stage)
-    const summary =
-      (key && this.computeCostByStage.get(key)) ||
-      ("computeCostSummary" in stage ? stage.computeCostSummary : undefined)
-    if (!summary) return {}
+    const storedSummary = key ? this.computeCostByStage.get(key) : undefined
+    const summary = storedSummary ?? stage.computeCostSummary
+    if (!summary) return undefined
 
     try {
       const circuitJson = this.getCurrentCircuitJson()
-      const computeCostSummary = labelComputeCostSummary(summary, (pcbPortId) =>
+      return labelComputeCostSummary(summary, (pcbPortId) =>
         this.getPcbPortLabel(pcbPortId, circuitJson),
       )
-      return { computeCostSummary }
     } catch (error) {
       // A malformed summary must never fail routing or the build.
       this.log(
@@ -592,7 +602,7 @@ export class AutorouterDiagnostics {
           `Warning: Could not format autorouter compute cost: ${error}`,
         ),
       )
-      return {}
+      return undefined
     }
   }
 
@@ -605,43 +615,50 @@ export class AutorouterDiagnostics {
     return this.getPortSelectorById(pcbPort.source_port_id, circuitJson)
   }
 
-  /** On end/error: returns the fields to add to the stage's summary entry. */
-  private finishComputeCost(
+  /** Stores the stage's final compute cost and prints it when asked to. */
+  private takeComputeCost(
     event: AutoroutingEventPayload,
-    { failed }: { failed: boolean },
+    outcome: "end" | "error",
   ) {
-    if (this.targetPhaseReached) return {}
+    if (this.targetPhaseReached) return undefined
     this.rememberComputeCost(event)
-    const computeCost = this.getLabeledComputeCost(event)
-    if (!computeCost.computeCostSummary) return {}
-
-    // handleEnd/handleError only record the active phase. A sibling that is
-    // routing at the same time may have replaced it, so record this one here.
-    if (!this.matchActivePhase(event)) {
-      const subcircuitId = event.subcircuit_id ?? event.subcircuitId
-      this.summary.push({
-        subcircuit_id: subcircuitId,
-        _actualRoutingPhaseOrderIndex: event._actualRoutingPhaseOrderIndex,
-        phaseOrdinal:
-          event.phaseOrdinal ??
-          this.phaseOrdinalBySubcircuit.get(subcircuitId ?? ""),
-        phaseName: event.phaseName,
-        componentDisplayName: event.componentDisplayName,
-        routingPhaseIndex: event.routingPhaseIndex,
-        phaseStageIndex: event.phaseStageIndex,
-        phaseStageCount: event.phaseStageCount,
-        ...(failed ? { error: this.serializeError(event.error) } : {}),
-        ...computeCost,
-      })
-    }
+    const computeCostSummary = this.getLabeledComputeCost(event)
+    if (!computeCostSummary) return undefined
 
     const shouldPrint =
-      this.options.enabled || (failed && this.options.logOnError)
+      this.options.enabled || (outcome === "error" && this.options.logOnError)
     if (shouldPrint) {
-      const hardest = formatHardestConnections(computeCost.computeCostSummary)
+      const hardest = formatHardestConnections(computeCostSummary)
       if (hardest) this.log(`  hardest connections: ${hardest}`)
     }
-    return computeCost
+    return computeCostSummary
+  }
+
+  /**
+   * Keeps compute cost for a stage that is not the active phase: a sibling
+   * subcircuit that routed at the same time, or an error before any start.
+   */
+  private recordUntrackedStage(
+    event: AutoroutingEventPayload,
+    computeCostSummary: LabeledComputeCostSummary | undefined,
+    error?: AutoroutingEventPayload["error"],
+  ) {
+    if (!computeCostSummary) return
+    const subcircuitId = event.subcircuit_id ?? event.subcircuitId
+    this.summary.push({
+      subcircuit_id: subcircuitId,
+      _actualRoutingPhaseOrderIndex: event._actualRoutingPhaseOrderIndex,
+      phaseOrdinal:
+        event.phaseOrdinal ??
+        this.phaseOrdinalBySubcircuit.get(subcircuitId ?? ""),
+      phaseName: event.phaseName,
+      componentDisplayName: event.componentDisplayName,
+      routingPhaseIndex: event.routingPhaseIndex,
+      phaseStageIndex: event.phaseStageIndex,
+      phaseStageCount: event.phaseStageCount,
+      ...(error !== undefined ? { error: this.serializeError(error) } : {}),
+      computeCostSummary,
+    })
   }
 
   private checkLongRunning() {
@@ -774,20 +791,12 @@ export class AutorouterDiagnostics {
   }
 
   private writeJson(fileName: string, value: unknown) {
-    try {
-      const debugDir = path.resolve(this.options.debugDir ?? DEFAULT_DEBUG_DIR)
-      fs.mkdirSync(debugDir, { recursive: true })
-      const filePath = path.join(debugDir, fileName)
-      fs.writeFileSync(filePath, JSON.stringify(value, null, 2))
-      this.logArtifact(filePath)
-      return filePath
-    } catch (error) {
-      this.log(
-        kleur.yellow(
-          `Warning: Could not write autorouter debug artifact ${fileName}: ${error}`,
-        ),
-      )
-    }
+    const debugDir = path.resolve(this.options.debugDir ?? DEFAULT_DEBUG_DIR)
+    fs.mkdirSync(debugDir, { recursive: true })
+    const filePath = path.join(debugDir, fileName)
+    fs.writeFileSync(filePath, JSON.stringify(value, null, 2))
+    this.logArtifact(filePath)
+    return filePath
   }
 
   private writePngSnapshot(

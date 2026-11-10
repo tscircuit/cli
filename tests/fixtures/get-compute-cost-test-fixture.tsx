@@ -8,6 +8,10 @@ import {
 } from "lib/shared/autorouter-diagnostics"
 import { RootCircuit } from "tscircuit"
 
+/**
+ * An AutorouterDiagnostics attached to a fake root circuit, plus a sample
+ * computeCostSummary whose one pair runs from R2.pin2 to U1.pin2 (71 iters).
+ */
 export const getComputeCostTestFixture = async (
   options: AutorouterDiagnosticsOptions = {},
 ) => {
@@ -69,7 +73,7 @@ export const getComputeCostTestFixture = async (
   }
   const readJson = (name: string) =>
     JSON.parse(fs.readFileSync(path.join(debugDir, name), "utf8"))
-  const finalize = () => {
+  const finalizeAndReadPhases = () => {
     diagnostics.finalize(circuitJson)
     return readJson("board.meta.json").phases
   }
@@ -81,6 +85,6 @@ export const getComputeCostTestFixture = async (
     phase,
     computeCostSummary,
     readJson,
-    finalize,
+    finalizeAndReadPhases,
   }
 }
