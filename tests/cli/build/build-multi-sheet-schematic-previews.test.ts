@@ -2,7 +2,10 @@ import "bun-match-svg"
 import { expect, test } from "bun:test"
 import { readFile, symlink, writeFile } from "node:fs/promises"
 import path from "node:path"
-import { convertCircuitJsonToSchematicSvg } from "circuit-to-svg"
+import {
+  convertCircuitJsonToSchematicSvg,
+  convertCircuitJsonToStackedSchematicSheetsSvg,
+} from "circuit-to-svg"
 import { EMPTY_IMAGE_FORMAT_SELECTION } from "cli/build/image-format-selection"
 import { writeImageAssetsFromCircuitJson } from "cli/build/worker-output-generators"
 import { convertSvgToPngBuffer } from "lib/shared/convert-svg-to-png"
@@ -25,7 +28,7 @@ const imageFormats = {
 }
 
 for (const concurrency of [1, 2]) {
-  test(`build previews omit the second schematic sheet (concurrency ${concurrency})`, async () => {
+  test(`build previews render every schematic sheet (concurrency ${concurrency})`, async () => {
     const { tmpDir, runCommand } = await getCliTestFixture()
     await writeFile(path.join(tmpDir, "package.json"), "{}")
     await symlink(
@@ -56,19 +59,26 @@ for (const concurrency of [1, 2]) {
       outputDir: workerDir,
       imageFormats,
     })
-    const expectedSvg = convertCircuitJsonToSchematicSvg(circuitJson)
+    const expectedSvg =
+      convertCircuitJsonToStackedSchematicSheetsSvg(circuitJson)
     const expectedPng = Buffer.from(convertSvgToPngBuffer(expectedSvg))
     for (const directory of [outputDir, workerDir]) {
       const svg = await readFile(path.join(directory, "schematic.svg"), "utf8")
       const png = await readFile(path.join(directory, "schematic.png"))
       expect(svg).toContain(">R1<")
-      expect(svg).not.toContain(">C1<")
-      expect(svg).not.toContain('class="tscircuit-stacked-schematic"')
+      expect(svg).toContain(">C1<")
+      expect(svg).toContain("Power Sheet")
+      expect(svg).toContain("Control Sheet")
+      expect(svg.indexOf("Power Sheet")).toBeLessThan(
+        svg.indexOf("Control Sheet"),
+      )
+      expect(svg.match(/class="stacked-sheet-label"/g)).toHaveLength(2)
+      expect(svg).toContain('class="tscircuit-stacked-schematic"')
       expect(svg).toBe(expectedSvg)
       expect(png.equals(expectedPng)).toBe(true)
       // PNG IHDR dimensions ensure the saved raster covers the whole SVG.
-      expect(png.readUInt32BE(16)).toBe(1200)
-      expect(png.readUInt32BE(20)).toBe(600)
+      expect(png.readUInt32BE(16)).toBe(1000)
+      expect(png.readUInt32BE(20)).toBe(1406)
       await expect(svg).toMatchSvgSnapshot(
         import.meta.path,
         "build-multiple-sheets",

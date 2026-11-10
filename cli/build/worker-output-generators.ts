@@ -7,7 +7,7 @@ import { convertCircuitJsonToGltf } from "circuit-json-to-gltf"
 import { circuitJsonToStep } from "circuit-json-to-step"
 import {
   convertCircuitJsonToAssemblySvg,
-  convertCircuitJsonToSchematicSvg,
+  convertCircuitJsonToStackedSchematicSheetsSvg,
 } from "circuit-to-svg"
 import { getSystemSvgAssets } from "lib/shared/system-svg-assets"
 import { loadLocalStepModelFsMap } from "lib/shared/load-local-step-model-fs-map"
@@ -158,7 +158,8 @@ export const writeImageAssetsFromCircuitJson = async (
   }
 
   if (imageFormats.schematicSvgs && hasSchematic) {
-    const schematicSvg = convertCircuitJsonToSchematicSvg(circuitJson)
+    const schematicSvg =
+      convertCircuitJsonToStackedSchematicSheetsSvg(circuitJson)
     fs.writeFileSync(
       path.join(outputDir, "schematic.svg"),
       schematicSvg,
@@ -167,7 +168,8 @@ export const writeImageAssetsFromCircuitJson = async (
   }
 
   if (imageFormats.schematicPngs && hasSchematic) {
-    const schematicSvg = convertCircuitJsonToSchematicSvg(circuitJson)
+    const schematicSvg =
+      convertCircuitJsonToStackedSchematicSheetsSvg(circuitJson)
     fs.writeFileSync(
       path.join(outputDir, "schematic.png"),
       await convertSvgToPngBuffer(schematicSvg),
