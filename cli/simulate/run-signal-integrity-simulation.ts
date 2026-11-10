@@ -1,5 +1,6 @@
 import { mkdir, mkdtemp, rename, rm, writeFile } from "node:fs/promises"
 import { basename, dirname, join, relative, resolve } from "node:path"
+import { gzipSync } from "node:zlib"
 import type { AnyCircuitElement } from "circuit-json"
 
 export const runSignalIntegritySimulation = async ({
@@ -54,12 +55,13 @@ export const runSignalIntegritySimulation = async ({
         throw new Error(`Expected a safe project-relative file path: ${path}`)
       const target = join(stagedDir, path)
       await mkdir(dirname(target), { recursive: true })
-      await writeFile(target, contents)
+      await writeFile(
+        contents.length > 2_000_000 ? `${target}.gz` : target,
+        contents.length > 2_000_000
+          ? gzipSync(contents, { level: 1 })
+          : contents,
+      )
     }
-    await writeFile(
-      join(stagedDir, "results.circuit.json"),
-      JSON.stringify(result.simulationResultCircuitJson, null, 2),
-    )
     try {
       await rename(outputDir, previousDir)
       replaced = true
@@ -97,8 +99,12 @@ export const runSignalIntegritySimulation = async ({
           result.idle_voltage_v === undefined
             ? ""
             : `, idle voltage ${result.idle_voltage_v.toPrecision(4)} V`
+        const driverPort =
+          "source_port_id" in signal.driver
+            ? signal.driver.source_port_id
+            : signal.driver.p_source_port_id
         console.log(
-          `    ${result.source_port_id}: ${result.end}, ${result.timestamps_s.length} samples${idle}`,
+          `    ${result.source_port_id}: ${result.source_port_id === driverPort ? "near" : "far"}, ${result.timestamps_s.length} samples${idle}`,
         )
       }
     }

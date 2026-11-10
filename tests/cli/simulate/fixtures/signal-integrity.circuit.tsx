@@ -1,6 +1,13 @@
 import { simulation } from "@tscircuit/core"
 import type { ReactNode } from "react"
 
+const references = {
+  pullup: "VCC",
+  pulldown: "GND",
+  powerClamp: "VCC",
+  groundClamp: "GND",
+}
+
 // TI SN74LVC1G04, SOT23-5 (DBV), 3.3 V models. See README.md for the vendor file.
 const Inverter = ({ name, x, y }: { name: string; x: number; y: number }) => (
   <>
@@ -23,18 +30,8 @@ const Inverter = ({ name, x, y }: { name: string; x: number; y: number }) => (
       ibisPinNameToPortLabel={{ "2": "A", "3": "GND", "4": "Y", "5": "VCC" }}
       ibisPinNameToModelName={{ "2": "LVC1G04_IN_33", "4": "LVC1G04_OUT_33" }}
       ibisPinNameToReferencePortLabels={{
-        "2": {
-          pullup: "VCC",
-          pulldown: "GND",
-          powerClamp: "VCC",
-          groundClamp: "GND",
-        },
-        "4": {
-          pullup: "VCC",
-          pulldown: "GND",
-          powerClamp: "VCC",
-          groundClamp: "GND",
-        },
+        "2": references,
+        "4": references,
       }}
     />
     <trace from={`.${name} > .GND`} to="net.GND" />
@@ -42,14 +39,14 @@ const Inverter = ({ name, x, y }: { name: string; x: number; y: number }) => (
   </>
 )
 
-// The D and /RE inputs receive two channels on the same physical chip.
-const ClockReceiver = () => (
+// D and /RE receive independent channels; P/N can drive a disabled pair.
+const Transceiver = ({ name, x }: { name: string; x: number }) => (
   <>
     <chip
-      name="RX"
+      name={name}
       manufacturerPartNumber="SN65HVD72D"
       footprint="soic8"
-      pcbX={12}
+      pcbX={x}
       pinLabels={{
         pin1: "R",
         pin2: "CLK",
@@ -62,7 +59,7 @@ const ClockReceiver = () => (
       }}
     />
     <simulation.ibismodel
-      componentRef=".RX"
+      componentRef={`.${name}`}
       ibisModelAsset={{
         url: "./models/sn65hvd72.ibs",
         project_relative_path: "models/sn65hvd72.ibs",
@@ -80,29 +77,22 @@ const ClockReceiver = () => (
         "8": "VCC",
       }}
       ibisPinNameToReferencePortLabels={{
-        "2": {
-          pullup: "VCC",
-          pulldown: "GND",
-          powerClamp: "VCC",
-          groundClamp: "GND",
-        },
-        "4": {
-          pullup: "VCC",
-          pulldown: "GND",
-          powerClamp: "VCC",
-          groundClamp: "GND",
-        },
+        "2": references,
+        "4": references,
+        "6": references,
+        "7": references,
       }}
     />
-    <trace from=".RX > .GND" to="net.GND" />
-    <trace from=".RX > .VCC" to="net.VCC" />
+    <trace from={`.${name} > .GND`} to="net.GND" />
+    <trace from={`.${name} > .VCC`} to="net.VCC" />
   </>
 )
 
 export const SignalIntegrityBoard = ({
   children,
   clock = false,
-}: { children: ReactNode; clock?: boolean }) => (
+  differential = false,
+}: { children: ReactNode; clock?: boolean; differential?: boolean }) => (
   <board
     width="40mm"
     height="20mm"
@@ -110,9 +100,24 @@ export const SignalIntegrityBoard = ({
     routingDisabled
     schematicDisabled
   >
-    <Inverter name="TX" x={-12} y={0} />
-    {clock ? <ClockReceiver /> : <Inverter name="RX" x={12} y={0} />}
-    <trace from=".TX > .Y" to=".RX > .A" />
+    {differential ? (
+      <Transceiver name="TX" x={-12} />
+    ) : (
+      <Inverter name="TX" x={-12} y={0} />
+    )}
+    {clock || differential ? (
+      <Transceiver name="RX" x={12} />
+    ) : (
+      <Inverter name="RX" x={12} y={0} />
+    )}
+    {differential ? (
+      <>
+        <trace from=".TX > .P" to=".RX > .P" />
+        <trace from=".TX > .N" to=".RX > .N" />
+      </>
+    ) : (
+      <trace from=".TX > .Y" to=".RX > .A" />
+    )}
     {clock && (
       <>
         <Inverter name="CLK_TX" x={-12} y={5} />
@@ -129,8 +134,7 @@ export default () => (
   <SignalIntegrityBoard>
     <simulation.pcbtransientchannelsimulation
       bitRate="20Mbps"
-      unrouted="ideal"
-      pdn="ideal"
+      allowUnroutedTraces
     >
       <simulation.pcbchannel
         name="DATA"

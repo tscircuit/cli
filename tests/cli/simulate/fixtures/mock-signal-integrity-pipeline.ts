@@ -4,18 +4,22 @@ import { existsSync, writeFileSync } from "node:fs"
 import type {
   PipelineBlockResult,
   PipelineOptions,
-  PipelineResult,
 } from "@tscircuit/signal-integrity-pipeline"
-import { any_circuit_element, type SimulationSignal } from "circuit-json"
+import {
+  any_circuit_element,
+  type SignalEndpoint,
+  type SimulationSignal,
+} from "circuit-json"
+
+const ports = (endpoint: SignalEndpoint) =>
+  "source_port_id" in endpoint
+    ? [endpoint.source_port_id]
+    : [endpoint.p_source_port_id, endpoint.n_source_port_id]
 
 // Only the true public pipeline boundary is mocked, in an isolated CLI process.
 // Waveforms are synthetic IO fixtures, not electrical simulation results.
 mock.module("@tscircuit/signal-integrity-pipeline", () => ({
-  async runPipeline({
-    circuitJson,
-    ibisSources,
-    runSolver,
-  }: PipelineOptions): Promise<PipelineResult> {
+  async runPipeline({ circuitJson, ibisSources, runSolver }: PipelineOptions) {
     if (!Array.isArray(circuitJson) || typeof runSolver !== "function")
       throw new Error(
         "Expected runPipeline({ circuitJson, ibisSources, runSolver })",
@@ -41,7 +45,7 @@ mock.module("@tscircuit/signal-integrity-pipeline", () => ({
     }
     if (process.env.TSCI_TEST_PIPELINE_ERROR)
       throw new Error("Signal integrity solver failed")
-    const blocks: PipelineBlockResult[] = circuitJson.flatMap((block) => {
+    const blocks = circuitJson.flatMap((block) => {
       if (block.type !== "simulation_signal_integrity") return []
       const signals = circuitJson.filter(
         (signal): signal is SimulationSignal =>
@@ -49,16 +53,19 @@ mock.module("@tscircuit/signal-integrity-pipeline", () => ({
           signal.simulation_signal_integrity_id ===
             block.simulation_signal_integrity_id,
       )
-      const matrix = signals.map(() => signals.map(() => 0))
+      const conductors = signals.flatMap((signal) =>
+        ports(signal.driver).map((source_port_id) => ({
+          simulation_signal_id: signal.simulation_signal_id,
+          source_port_id,
+        })),
+      )
+      const matrix = conductors.map(() => conductors.map(() => 0))
       const results: PipelineBlockResult["results"] = [
         {
           type: "simulation_signal_integrity_rlgc",
           simulation_signal_integrity_rlgc_id: `${block.simulation_signal_integrity_id}_rlgc`,
           simulation_signal_integrity_id: block.simulation_signal_integrity_id,
-          conductors: signals.map((signal) => ({
-            simulation_signal_id: signal.simulation_signal_id,
-            leg: "single",
-          })),
+          conductors,
           matrices: [
             {
               frequency_hz: 1e6,
@@ -72,33 +79,25 @@ mock.module("@tscircuit/signal-integrity-pipeline", () => ({
       ]
       for (const signal of signals) {
         const { simulation_signal_id } = signal
-        const endpoints = signal.quiet
-          ? [
-              { endpoint: signal.driver, end: "near" as const },
-              ...signal.receivers.map((endpoint) => ({
-                endpoint,
-                end: "far" as const,
-              })),
-            ]
-          : signal.receivers.map((endpoint) => ({
-              endpoint,
-              end: "far" as const,
-            }))
-        for (const { endpoint, end } of endpoints) {
-          const source_port_id =
-            endpoint.kind === "single"
-              ? endpoint.source_port_id
-              : endpoint.p_source_port_id
-          const id = `${simulation_signal_id}_${source_port_id}_${end}`
+        const isQuiet =
+          signal.driver_disabled || /^(0+|1+)$/.test(signal.pattern)
+        const endpoints = isQuiet
+          ? [signal.driver, ...signal.receivers]
+          : signal.receivers
+        for (const endpoint of endpoints) {
+          const source_port_id = ports(endpoint)[0]
+          const id = `${simulation_signal_id}_${source_port_id}`
+          const timestamps = process.env.TSCI_TEST_OVERSIZED_RESULT
+            ? Array.from({ length: 150_001 }, (_, i) => (i / 150_000) * 1e-6)
+            : [0, 1e-6]
           results.push({
             type: "simulation_signal_waveform",
             simulation_signal_waveform_id: id,
             simulation_signal_id,
             source_port_id,
-            end,
-            timestamps_s: [0, 1e-6],
-            voltage_levels: [0, 3.3],
-            ...(signal.quiet ? { idle_voltage_v: 0.1 } : {}),
+            timestamps_s: timestamps,
+            voltage_levels: timestamps.map((_, i) => (i % 2 ? 3.3 : 0)),
+            ...(isQuiet ? { idle_voltage_v: 0.1 } : {}),
           })
         }
       }
@@ -114,17 +113,53 @@ mock.module("@tscircuit/signal-integrity-pipeline", () => ({
     })
     for (const block of blocks)
       for (const record of block.results) any_circuit_element.parse(record)
+    const simulationResultCircuitJson = [
+      ...circuitJson,
+      ...blocks.flatMap((block) => block.results),
+    ]
+    const resultFiles: Record<string, string> = {}
+    if (process.env.TSCI_TEST_OVERSIZED_RESULT) {
+      const retained = simulationResultCircuitJson.flatMap((record, index) =>
+        record.type === "simulation_signal_waveform" ? [] : [index],
+      )
+      const parts = [
+        { file: "circuit-results.json", indices: retained },
+        ...simulationResultCircuitJson.flatMap((record, index) =>
+          record.type === "simulation_signal_waveform"
+            ? [
+                {
+                  file: `circuit-results/waveform-${index}.json`,
+                  indices: [index],
+                },
+              ]
+            : [],
+        ),
+      ]
+      for (const part of parts)
+        resultFiles[part.file] = JSON.stringify(
+          part.indices.map((index) => simulationResultCircuitJson[index]),
+        )
+      resultFiles["circuit-results.index.json"] = JSON.stringify({ parts })
+      // Emulate the string limit without allocating half a gigabyte.
+      Object.defineProperty(simulationResultCircuitJson, "toJSON", {
+        value() {
+          throw new RangeError("Invalid string length")
+        },
+      })
+    } else {
+      resultFiles["circuit-results.json"] = JSON.stringify(
+        simulationResultCircuitJson,
+      )
+    }
     return {
       circuitJson,
-      simulationResultCircuitJson: [
-        ...circuitJson,
-        ...blocks.flatMap((block) => block.results),
-      ],
+      simulationResultCircuitJson,
       blocks,
       files: blocks.length
         ? {
+            ...resultFiles,
             "waveforms.csv":
-              "simulation_signal_id,end,source_port_id,time_s,voltage_v,idle_voltage_v\n" +
+              "simulation_signal_id,source_port_id,time_s,voltage_v,idle_voltage_v\n" +
               blocks
                 .flatMap((block) =>
                   block.results.flatMap((record) =>
@@ -132,7 +167,6 @@ mock.module("@tscircuit/signal-integrity-pipeline", () => ({
                       ? record.timestamps_s.map((time, i) =>
                           [
                             record.simulation_signal_id,
-                            record.end,
                             record.source_port_id,
                             time,
                             record.voltage_levels[i],

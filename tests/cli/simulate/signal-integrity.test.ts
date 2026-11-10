@@ -10,7 +10,7 @@ import {
   writeFile,
 } from "node:fs/promises"
 import { join, resolve } from "node:path"
-import { gzipSync } from "node:zlib"
+import { gunzipSync, gzipSync } from "node:zlib"
 import JSZip from "jszip"
 import { getCliTestFixture } from "../../fixtures/get-cli-test-fixture"
 
@@ -76,20 +76,23 @@ test("simulate discovers a Level 1 TSX block, prints waveform samples, and write
     (record: any) => record.type === "simulation_signal",
   )
   expect(signal.driver).toEqual({
-    kind: "single",
     source_port_id: expect.any(String),
   })
   expect(
-    input.find((record: any) => record.type === "simulation_signal_integrity")
-      .corner,
-  ).toBe("typical")
+    input.find((record: any) => record.type === "simulation_signal_integrity"),
+  ).toEqual({
+    type: "simulation_signal_integrity",
+    simulation_signal_integrity_id: expect.any(String),
+    bit_rate_bps: 20e6,
+    allow_unrouted_traces: true,
+  })
   expect(input.some((record: any) => record.type === "source_component")).toBe(
     true,
   )
   const [report] = await readdir(join(tmpDir, ".tscircuit"))
   expect(report).toStartWith("simulation-board-")
   const records = await Bun.file(
-    join(tmpDir, ".tscircuit", report, "results.circuit.json"),
+    join(tmpDir, ".tscircuit", report, "circuit-results.json"),
   ).json()
   expect(records.slice(0, input.length)).toEqual(input)
   expect(signal).not.toHaveProperty("mask")
@@ -103,10 +106,10 @@ test("simulate discovers a Level 1 TSX block, prints waveform samples, and write
     "utf8",
   )
   expect(csv).toContain(
-    "simulation_signal_id,end,source_port_id,time_s,voltage_v,idle_voltage_v",
+    "simulation_signal_id,source_port_id,time_s,voltage_v,idle_voltage_v",
   )
   expect(csv).toContain(
-    `${signal.simulation_signal_id},far,${waveform.source_port_id},0,0,`,
+    `${signal.simulation_signal_id},${waveform.source_port_id},0,0,`,
   )
 
   expect(
@@ -132,7 +135,7 @@ test("simulate discovers a Level 1 TSX block, prints waveform samples, and write
     )
     await mkdir(join(tmpDir, `report-${suffix}`, "blocks"), { recursive: true })
     await writeFile(
-      join(tmpDir, `report-${suffix}`, "results.circuit.json"),
+      join(tmpDir, `report-${suffix}`, "circuit-results.json"),
       "old results",
     )
     await writeFile(
@@ -146,7 +149,7 @@ test("simulate discovers a Level 1 TSX block, prints waveform samples, and write
     expect(result.stdout).toContain("far, 2 samples")
     expect(
       await Bun.file(
-        join(tmpDir, `report-${suffix}`, "results.circuit.json"),
+        join(tmpDir, `report-${suffix}`, "circuit-results.json"),
       ).json(),
     ).toEqual(records)
     expect(
@@ -164,12 +167,12 @@ test("simulate runs all blocks in one pipeline call and groups quiet and switchi
     `import { simulation } from "@tscircuit/core"
 import { SignalIntegrityBoard } from "./board.circuit"
 export default () => <SignalIntegrityBoard clock>
-  <simulation.pcbtransientchannelsimulation name="WRITE" bitRate="20Mbps" corner="minimum" unrouted="ideal" pdn="ideal">
+  <simulation.pcbtransientchannelsimulation name="WRITE" bitRate="20Mbps" allowUnroutedTraces>
     <simulation.pcbchannel name="DQS" driverRef=".CLK_TX > .Y" receiverRef=".RX > .CLK" pattern="clock" />
     <simulation.pcbchannel name="DATA" driverRef=".TX > .Y" receiverRef=".RX > .A" />
   </simulation.pcbtransientchannelsimulation>
-  <simulation.pcbtransientchannelsimulation name="QUIET" bitRate="20Mbps" corner="maximum" unrouted="ideal" pdn="ideal">
-    <simulation.pcbchannel name="DATA" driverRef=".TX > .Y" receiverRef={[".RX > .A", ".RX2 > .A"]} quiet="low" />
+  <simulation.pcbtransientchannelsimulation name="QUIET" bitRate="20Mbps" allowUnroutedTraces>
+    <simulation.pcbchannel name="DATA" driverRef=".TX > .Y" receiverRef={[".RX > .A", ".RX2 > .A"]} pattern="0" />
   </simulation.pcbtransientchannelsimulation>
 </SignalIntegrityBoard>`,
   )
@@ -193,22 +196,8 @@ export default () => <SignalIntegrityBoard clock>
       (record: any) => record.type === "simulation_signal_integrity",
     ),
   ).toHaveLength(2)
-  expect(
-    input.find(
-      (record: any) =>
-        record.type === "simulation_signal_integrity" &&
-        record.name === "WRITE",
-    ).corner,
-  ).toBe("minimum")
-  expect(
-    input.find(
-      (record: any) =>
-        record.type === "simulation_signal_integrity" &&
-        record.name === "QUIET",
-    ).corner,
-  ).toBe("maximum")
   const results = await Bun.file(
-    join(tmpDir, "report/results.circuit.json"),
+    join(tmpDir, "report/circuit-results.json"),
   ).json()
   const quietBlock = input.find(
     (record: any) =>
@@ -220,6 +209,7 @@ export default () => <SignalIntegrityBoard clock>
       record.simulation_signal_integrity_id ===
         quietBlock.simulation_signal_integrity_id,
   )
+  expect(quietSignal.pattern).toBe("0")
   const quietWaveforms = results.filter(
     (record: any) =>
       record.type === "simulation_signal_waveform" &&
@@ -231,6 +221,112 @@ export default () => <SignalIntegrityBoard clock>
   ).toEqual([0.1, 0.1, 0.1])
   for (const endpoint of [quietSignal.driver, ...quietSignal.receivers])
     expect(quiet).toContain(`${endpoint.source_port_id}:`)
+}, 60_000)
+
+test("simulate derives differential disabled-driver waveforms and conductor ports", async () => {
+  const { tmpDir, runCommand } = await setup()
+  await writeFile(
+    join(tmpDir, "differential.circuit.tsx"),
+    `import { simulation } from "@tscircuit/core"
+import { SignalIntegrityBoard } from "./board.circuit"
+export default () => <SignalIntegrityBoard differential>
+  <simulation.pcbtransientchannelsimulation bitRate="250kbps" allowUnroutedTraces>
+    <simulation.pcbchannel name="BUS" driverRef={{p: ".TX > .P", n: ".TX > .N"}} receiverRef={{p: ".RX > .P", n: ".RX > .N"}} pattern="01" driverDisabled />
+  </simulation.pcbtransientchannelsimulation>
+</SignalIntegrityBoard>`,
+  )
+  const result = await runCommand(
+    "tsci simulate differential.circuit.tsx --disable-parts-engine --output report",
+  )
+  expect(result.exitCode).toBe(0)
+  const records = await Bun.file(
+    join(tmpDir, "report/circuit-results.json"),
+  ).json()
+  const signal = records.find(
+    (record: any) => record.type === "simulation_signal",
+  )
+  expect(signal.driver_disabled).toBe(true)
+  expect(signal.pattern).toBe("01")
+  expect(signal.driver).toEqual({
+    p_source_port_id: expect.any(String),
+    n_source_port_id: expect.any(String),
+  })
+  for (const [i, endpoint] of [signal.driver, ...signal.receivers].entries())
+    expect(result.stdout).toContain(
+      `${endpoint.p_source_port_id}: ${i === 0 ? "near" : "far"}, 2 samples, idle voltage 0.1000 V`,
+    )
+  const waveforms = records.filter(
+    (record: any) => record.type === "simulation_signal_waveform",
+  )
+  expect(waveforms.map((record: any) => record.source_port_id)).toEqual([
+    signal.driver.p_source_port_id,
+    signal.receivers[0].p_source_port_id,
+  ])
+  expect(
+    records.find(
+      (record: any) => record.type === "simulation_signal_integrity_rlgc",
+    ).conductors,
+  ).toEqual(
+    [signal.driver.p_source_port_id, signal.driver.n_source_port_id].map(
+      (source_port_id) => ({
+        simulation_signal_id: signal.simulation_signal_id,
+        source_port_id,
+      }),
+    ),
+  )
+}, 60_000)
+
+test("simulate archives oversized indexed result parts without serializing the aggregate", async () => {
+  const { tmpDir, runCommand } = await setup({
+    TSCI_TEST_OVERSIZED_RESULT: "1",
+  })
+  const result = await runCommand(
+    "tsci simulate board.circuit.tsx --disable-parts-engine --output report",
+  )
+  expect(result.exitCode).toBe(0)
+  expect(result.stdout).toContain("far, 150001 samples")
+  const report = join(tmpDir, "report")
+  const input = await Bun.file(join(tmpDir, "pipeline-input.json")).json()
+  const index = await Bun.file(
+    join(report, "circuit-results.index.json"),
+  ).json()
+  const records: any[] = []
+  expect(index.parts).toHaveLength(2)
+  for (const part of index.parts) {
+    const file = Bun.file(join(report, part.file))
+    const body = (await file.exists())
+      ? await file.text()
+      : gunzipSync(await readFile(`${file.name}.gz`)).toString()
+    const values = JSON.parse(body)
+    expect(values).toHaveLength(part.indices.length)
+    values.forEach((record: any, i: number) => {
+      records[part.indices[i]] = record
+    })
+    if (part.file.startsWith("circuit-results/")) {
+      expect(await file.exists()).toBe(false)
+      expect(body.length).toBeGreaterThan(2_000_000)
+    }
+  }
+  expect(records.slice(0, input.length)).toEqual(input)
+  expect(records[input.length].type).toBe("simulation_signal_integrity_rlgc")
+  expect(records).toHaveLength(input.length + 2)
+  const waveform = records.at(-1)
+  expect(waveform.source_port_id).toBe(
+    input.find((record: any) => record.type === "simulation_signal")
+      .receivers[0].source_port_id,
+  )
+  expect(waveform.timestamps_s).toEqual(
+    Array.from({ length: 150_001 }, (_, i) => (i / 150_000) * 1e-6),
+  )
+  expect(waveform.voltage_levels).toEqual(
+    Array.from({ length: 150_001 }, (_, i) => (i % 2 ? 3.3 : 0)),
+  )
+  expect(await Bun.file(join(report, "waveforms.csv")).exists()).toBe(false)
+  const csv = gunzipSync(await readFile(join(report, "waveforms.csv.gz")))
+    .toString()
+    .split("\n")
+  expect(csv).toHaveLength(150_002)
+  expect(csv.at(-1)).toContain(`${waveform.source_port_id},0.000001,0,`)
 }, 60_000)
 
 // Requires ngspice; excluded from solver-free verification.
@@ -276,7 +372,7 @@ test("a failed report write leaves the previous report intact", async () => {
   })
   await mkdir(join(tmpDir, "report"))
   await writeFile(
-    join(tmpDir, "report/results.circuit.json"),
+    join(tmpDir, "report/circuit-results.json"),
     "previous results",
   )
   await writeFile(join(tmpDir, "report/previous.csv"), "previous waveform")
@@ -289,11 +385,11 @@ test("a failed report write leaves the previous report intact", async () => {
   )
   expect(result.stdout).not.toContain("PCB transient channel simulation:")
   expect(
-    await readFile(join(tmpDir, "report/results.circuit.json"), "utf8"),
+    await readFile(join(tmpDir, "report/circuit-results.json"), "utf8"),
   ).toBe("previous results")
   expect(await readdir(join(tmpDir, "report"))).toEqual([
+    "circuit-results.json",
     "previous.csv",
-    "results.circuit.json",
   ])
   expect(
     (await readdir(tmpDir)).some((name) => name.startsWith(".report-")),
