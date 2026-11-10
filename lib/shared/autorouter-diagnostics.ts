@@ -3,6 +3,7 @@ import path from "node:path"
 import type {
   AnyCircuitElement,
   CircuitJson,
+  PcbPort,
   PcbTrace,
   PcbTraceRoutePointThroughPad,
   SourcePort,
@@ -10,6 +11,11 @@ import type {
 } from "circuit-json"
 import { convertCircuitJsonToPcbSvg } from "circuit-to-svg"
 import kleur from "kleur"
+import {
+  type ComputeCostSummary,
+  formatHardestConnections,
+  labelComputeCostSummary,
+} from "./compute-cost-summary"
 import { convertSvgToPngBuffer } from "./convert-svg-to-png"
 
 export type AutorouterDumpSrjMode = "all" | "failed" | `phase:${number}`
@@ -52,20 +58,6 @@ type CircuitJsonLookup = {
   elementById: Map<string, AnyCircuitElement>
 }
 
-type Iterations = number
-
-/** Which connections were hardest to route in one stage, as emitted by core. */
-type AutorouterComputeCostSummary = {
-  readonly metric: "hypergraph_route_search_iterations"
-  readonly measuredPairCount: number
-  readonly topPairs: readonly {
-    readonly connectionName: string
-    readonly rootConnectionNames: readonly string[]
-    readonly pcbPortIds: readonly [string | null, string | null]
-    readonly iterations: Iterations
-  }[]
-}
-
 type AutoroutingEventPayload = {
   subcircuit_id?: string
   subcircuitId?: string
@@ -76,7 +68,7 @@ type AutoroutingEventPayload = {
   routingPhaseIndex?: number | null
   phaseOrdinal?: number
   _actualRoutingPhaseOrderIndex?: number
-  computeCostSummary?: AutorouterComputeCostSummary
+  computeCostSummary?: ComputeCostSummary
   phaseCount?: number
   connectionCount?: number
   obstacleCount?: number
@@ -197,7 +189,7 @@ export class AutorouterDiagnostics {
     Omit<AutorouterDiagnosticsOptions, "log">
   private phaseOrdinalBySubcircuit = new Map<string, number>()
   private traceCountBySubcircuit = new Map<string, number>()
-  private computeCostByStage = new Map<string, AutorouterComputeCostSummary>()
+  private computeCostByStage = new Map<string, ComputeCostSummary>()
   private activePhase: ActivePhase | null = null
   private completedPhaseTraces: AutorouterTrace[] = []
   private hasWrittenPlacementSnapshot = false
@@ -351,9 +343,10 @@ export class AutorouterDiagnostics {
   }
 
   private handleProgress(event: AutoroutingEventPayload) {
-    this.captureComputeCost(event)
+    this.rememberComputeCost(event)
     if (!this.activePhase) return
     const now = performance.now()
+    // The summary is kept per stage instead; don't copy it into every artifact.
     this.activePhase.lastProgress = { ...event, computeCostSummary: undefined }
     if (!this.shouldLogPhaseDetails(this.activePhase)) return
 
@@ -369,7 +362,7 @@ export class AutorouterDiagnostics {
   }
 
   private handleEnd(event: AutoroutingEventPayload) {
-    const computeCostSummary = this.finishComputeCost(event)
+    const computeCost = this.finishComputeCost(event, { failed: false })
     const activePhase = this.matchActivePhase(event)
     if (!activePhase) return
 
@@ -395,7 +388,7 @@ export class AutorouterDiagnostics {
       routingPhaseIndex: activePhase.routingPhaseIndex,
       phaseOrdinal: activePhase.phaseOrdinal,
       _actualRoutingPhaseOrderIndex: activePhase._actualRoutingPhaseOrderIndex,
-      ...computeCostSummary,
+      ...computeCost,
       phaseCount: activePhase.phaseCount,
       connectionCount: activePhase.connectionCount,
       obstacleCount: activePhase.obstacleCount,
@@ -448,7 +441,7 @@ export class AutorouterDiagnostics {
   }
 
   private handleError(event: AutoroutingEventPayload) {
-    const computeCostSummary = this.finishComputeCost(event, true)
+    const computeCost = this.finishComputeCost(event, { failed: true })
     const activePhase = this.matchActivePhase(event)
     if (!activePhase) return
 
@@ -463,7 +456,7 @@ export class AutorouterDiagnostics {
       routingPhaseIndex: activePhase.routingPhaseIndex,
       phaseOrdinal: activePhase.phaseOrdinal,
       _actualRoutingPhaseOrderIndex: activePhase._actualRoutingPhaseOrderIndex,
-      ...computeCostSummary,
+      ...computeCost,
       phaseCount: activePhase.phaseCount,
       connectionCount: activePhase.connectionCount,
       obstacleCount: activePhase.obstacleCount,
@@ -548,7 +541,7 @@ export class AutorouterDiagnostics {
       obstacleCount: activePhase.obstacleCount,
       previousTraceCount: activePhase.previousTraceCount,
       ...this.getExecutionMetadata(activePhase),
-      ...this.getComputeCostMetadata(activePhase),
+      ...this.getLabeledComputeCost(activePhase),
       files: {
         inputSimpleRouteJson: inputFile,
         previousOutputTraces: previousTracesFile,
@@ -558,73 +551,42 @@ export class AutorouterDiagnostics {
     })
   }
 
-  private getComputeCostKey(event: AutoroutingEventPayload | ActivePhase) {
+  /** Sibling subcircuits can route at the same time, so cost is kept per stage. */
+  private getStageKey(stage: AutoroutingEventPayload | ActivePhase) {
     const subcircuitId =
-      ("subcircuit_id" in event ? event.subcircuit_id : undefined) ??
-      event.subcircuitId
-    if (!subcircuitId) return
-    const stage =
-      event._actualRoutingPhaseOrderIndex ??
-      event.phaseOrdinal ??
+      ("subcircuit_id" in stage ? stage.subcircuit_id : undefined) ??
+      stage.subcircuitId
+    if (!subcircuitId) return undefined
+    const stageIndex =
+      stage._actualRoutingPhaseOrderIndex ??
+      stage.phaseOrdinal ??
       this.phaseOrdinalBySubcircuit.get(subcircuitId)
-    if (stage !== undefined) return `${subcircuitId}|${stage}`
+    if (stageIndex === undefined) return undefined
+    return `${subcircuitId}|${stageIndex}`
   }
 
-  private captureComputeCost(event: AutoroutingEventPayload) {
+  private rememberComputeCost(event: AutoroutingEventPayload) {
     if (this.targetPhaseReached || !event.computeCostSummary) return
-    const key = this.getComputeCostKey(event)
+    const key = this.getStageKey(event)
     if (key) this.computeCostByStage.set(key, event.computeCostSummary)
   }
 
-  private getComputeCostMetadata(event: AutoroutingEventPayload | ActivePhase) {
+  /** The stage's latest compute cost with readable endpoint labels, or {}. */
+  private getLabeledComputeCost(stage: AutoroutingEventPayload | ActivePhase) {
+    const key = this.getStageKey(stage)
+    const summary =
+      (key && this.computeCostByStage.get(key)) ||
+      ("computeCostSummary" in stage ? stage.computeCostSummary : undefined)
+    if (!summary) return {}
+
     try {
-      const key = this.getComputeCostKey(event)
-      const cost =
-        (key ? this.computeCostByStage.get(key) : undefined) ??
-        ("computeCostSummary" in event ? event.computeCostSummary : undefined)
-      if (!cost) return {}
-      const lookup = this.createCircuitJsonLookup()
-      const computeCostSummary = {
-        ...cost,
-        topPairs: cost.topPairs.map((pair) => ({
-          ...pair,
-          labels: pair.pcbPortIds.map((id) => {
-            const port = id
-              ? lookup.circuitJson.find(
-                  (element) =>
-                    element.type === "pcb_port" && element.pcb_port_id === id,
-                )
-              : undefined
-            const sourcePort =
-              port?.type === "pcb_port"
-                ? lookup.circuitJson.find(
-                    (element): element is SourcePort =>
-                      element.type === "source_port" &&
-                      element.source_port_id === port.source_port_id,
-                  )
-                : undefined
-            const component = sourcePort
-              ? lookup.circuitJson.find(
-                  (element) =>
-                    element.type === "source_component" &&
-                    element.source_component_id ===
-                      sourcePort.source_component_id,
-                )
-              : undefined
-            return (
-              (sourcePort &&
-              component?.type === "source_component" &&
-              component.name
-                ? this.getPortSelector(sourcePort, lookup.circuitJson)
-                : null) ?? pair.connectionName
-            )
-          }),
-        })),
-      }
-      // Catch malformed payloads here, before they reach any artifact writer.
-      JSON.stringify(computeCostSummary)
+      const circuitJson = this.getCurrentCircuitJson()
+      const computeCostSummary = labelComputeCostSummary(summary, (pcbPortId) =>
+        this.getPcbPortLabel(pcbPortId, circuitJson),
+      )
       return { computeCostSummary }
     } catch (error) {
+      // A malformed summary must never fail routing or the build.
       this.log(
         kleur.yellow(
           `Warning: Could not format autorouter compute cost: ${error}`,
@@ -634,48 +596,52 @@ export class AutorouterDiagnostics {
     }
   }
 
-  private finishComputeCost(event: AutoroutingEventPayload, failed = false) {
+  private getPcbPortLabel(pcbPortId: string, circuitJson: CircuitJson) {
+    const pcbPort = circuitJson.find(
+      (element): element is PcbPort =>
+        element.type === "pcb_port" && element.pcb_port_id === pcbPortId,
+    )
+    if (!pcbPort) return null
+    return this.getPortSelectorById(pcbPort.source_port_id, circuitJson)
+  }
+
+  /** On end/error: returns the fields to add to the stage's summary entry. */
+  private finishComputeCost(
+    event: AutoroutingEventPayload,
+    { failed }: { failed: boolean },
+  ) {
     if (this.targetPhaseReached) return {}
-    this.captureComputeCost(event)
-    const metadata = this.getComputeCostMetadata(event)
-    if (!metadata.computeCostSummary) return metadata
-    // A sibling may have replaced activePhase; retain its computeCostSummary independently.
+    this.rememberComputeCost(event)
+    const computeCost = this.getLabeledComputeCost(event)
+    if (!computeCost.computeCostSummary) return {}
+
+    // handleEnd/handleError only record the active phase. A sibling that is
+    // routing at the same time may have replaced it, so record this one here.
     if (!this.matchActivePhase(event)) {
+      const subcircuitId = event.subcircuit_id ?? event.subcircuitId
       this.summary.push({
-        subcircuit_id: event.subcircuit_id ?? event.subcircuitId,
+        subcircuit_id: subcircuitId,
         _actualRoutingPhaseOrderIndex: event._actualRoutingPhaseOrderIndex,
         phaseOrdinal:
           event.phaseOrdinal ??
-          this.phaseOrdinalBySubcircuit.get(
-            event.subcircuit_id ?? event.subcircuitId ?? "",
-          ),
+          this.phaseOrdinalBySubcircuit.get(subcircuitId ?? ""),
         phaseName: event.phaseName,
         componentDisplayName: event.componentDisplayName,
         routingPhaseIndex: event.routingPhaseIndex,
         phaseStageIndex: event.phaseStageIndex,
         phaseStageCount: event.phaseStageCount,
         ...(failed ? { error: this.serializeError(event.error) } : {}),
-        ...metadata,
+        ...computeCost,
       })
     }
-    if (this.options.enabled || (failed && this.options.logOnError)) {
-      try {
-        const pairs = metadata.computeCostSummary.topPairs
-          .slice(0, 5)
-          .map(
-            (pair) =>
-              `${[...new Set(pair.labels)].join(" -> ")} (${pair.iterations} iters)`,
-          )
-        if (pairs.length) this.log(`  hardest connections: ${pairs.join(", ")}`)
-      } catch (error) {
-        this.log(
-          kleur.yellow(
-            `Warning: Could not log autorouter compute cost: ${error}`,
-          ),
-        )
-      }
+
+    const shouldPrint =
+      this.options.enabled || (failed && this.options.logOnError)
+    if (shouldPrint) {
+      const hardest = formatHardestConnections(computeCost.computeCostSummary)
+      if (hardest) this.log(`  hardest connections: ${hardest}`)
     }
-    return metadata
+    return computeCost
   }
 
   private checkLongRunning() {
