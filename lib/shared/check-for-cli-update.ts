@@ -46,7 +46,10 @@ export const updateTsciIfNewVersionIsAvailable = async () => {
   if (!latestCliVersion) return false
 
   if (semver.gt(latestCliVersion, currentCliVersion())) {
-    return await updateTsci()
+    if (!(await updateTsci())) {
+      throw new Error("Failed to upgrade tsci")
+    }
+    return true
   }
   return false
 }
@@ -65,6 +68,7 @@ export const updateTsci = async () => {
   } catch {
     console.warn("Update failed. You can try updating manually by running:")
     console.warn(`  ${installCommand}`)
+    return false
   }
   return true
 }
