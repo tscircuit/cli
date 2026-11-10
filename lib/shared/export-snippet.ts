@@ -182,6 +182,7 @@ export const exportSnippet = async ({
   }
 
   let circuitJson: AnyCircuitElement[]
+  let routingBoard: import("tscircuit").RootCircuit["firstChild"] | undefined
 
   if (isCircuitJsonFile(filePath)) {
     const rawCircuitJson = await fs.promises
@@ -213,13 +214,17 @@ export const exportSnippet = async ({
           }),
         )
       : platformConfig
-    const generateCircuitData = isJlcpcbFabricationExport
-      ? generateCircuitJson
-      : getOrGenerateCircuitJson
+    // SRJ describes the input to the router. A full build may already have routed these connections.
+    const exportUnrouted = format === "srj"
+    const generateCircuitData =
+      isJlcpcbFabricationExport || exportUnrouted
+        ? generateCircuitJson
+        : getOrGenerateCircuitJson
     const circuitData = await generateCircuitData({
       filePath,
       saveToFile: format === "circuit-json",
       platformConfig: fabricationPlatformConfig,
+      forRoutingInput: exportUnrouted,
     }).catch((err) => {
       onError(`Error generating circuit JSON: ${err}`)
       return null
@@ -227,6 +232,7 @@ export const exportSnippet = async ({
 
     if (!circuitData) return onExit(1)
     circuitJson = circuitData.circuitJson
+    if (exportUnrouted) routingBoard = circuitData.rootCircuit?._getBoard()
   }
 
   let outputContent: string | Buffer
@@ -349,9 +355,21 @@ export const exportSnippet = async ({
     case "srj":
       {
         const userLandTscircuit = await importFromUserLand("tscircuit")
+        // Core's board routing pass defaults to a 0.15 mm minimum when the board does not specify one.
+        const minTraceWidth =
+          routingBoard?.getInheritedProperty("minTraceWidth") ?? 0.15
         const simpleRouteJson = unwrapSimpleRouteJson(
           userLandTscircuit.getSimpleRouteJsonFromCircuitJson({
             circuitJson,
+            ...(routingBoard && {
+              subcircuit_id: routingBoard.getSubcircuit().subcircuit_id,
+              subcircuitComponent: routingBoard.getSubcircuit(),
+              minTraceWidth,
+              nominalTraceWidth:
+                routingBoard.getInheritedProperty("defaultTraceWidth") ??
+                routingBoard.getInheritedProperty("nominalTraceWidth") ??
+                minTraceWidth,
+            }),
           }),
         )
         outputContent = JSON.stringify(simpleRouteJson, null, 2)

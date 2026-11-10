@@ -48,6 +48,7 @@ type GenerateCircuitJsonOptions = {
   outputFileName?: string
   saveToFile?: boolean
   platformConfig?: PlatformConfig
+  forRoutingInput?: boolean
   injectedProps?: Record<string, unknown>
   onAsyncEffectStatus?: (asyncEffectName: string) => void
   autorouterDiagnostics?: AutorouterDiagnosticsOptions
@@ -69,6 +70,7 @@ export async function generateCircuitJson({
   saveToFile = false,
   platformConfig,
   injectedProps,
+  forRoutingInput = false,
   onAsyncEffectStatus,
   autorouterDiagnostics: autorouterDiagnosticsOptions,
   solverDiagnostics: solverDiagnosticsOptions,
@@ -100,7 +102,8 @@ export async function generateCircuitJson({
     ? new SolverDiagnostics(solverDiagnosticsOptions)
     : null
   solverDiagnostics?.attachToRootCircuit(runner)
-  attachAutoroutingArtifacts(runner, filePath, projectRootDir)
+  if (!forRoutingInput)
+    attachAutoroutingArtifacts(runner, filePath, projectRootDir)
   const absoluteFilePath = path.isAbsolute(filePath)
     ? filePath
     : path.resolve(projectRootDir, filePath)
@@ -173,6 +176,25 @@ export async function generateCircuitJson({
 
     runner.add(<Component {...(injectedProps ?? {})} />)
 
+    if (forRoutingInput) {
+      const board = runner._getBoard()
+      if (board) {
+        // Child subcircuits must finish routing before the board's input is
+        // assembled. Preserve their authored/inherited policy before disabling the board.
+        for (const child of board.getDescendants()) {
+          if (child.isSubcircuit && child.props.routingDisabled === undefined) {
+            child.setProps({
+              ...child.props,
+              routingDisabled:
+                child.getInheritedProperty("routingDisabled") ?? false,
+            })
+          }
+        }
+        board.setProps({ ...board.props, routingDisabled: true })
+      } else {
+        runner.setPlatform({ routingDisabled: true })
+      }
+    }
     runner.render()
 
     const loggedAsyncEffectNames = new Set<string>()
