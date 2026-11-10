@@ -2,8 +2,11 @@
 
 exports[`TSX SRJ export preserves input connections before routing 1`] = `
 {
-  "endpointsPerConnection": [],
+  "endpointsPerConnection": [
+    2,
+    2,
+  ],
   "minimum": 0.1,
-  "savedRoutedPaths": true,
+  "savedRoutedPaths": false,
 }
 `;

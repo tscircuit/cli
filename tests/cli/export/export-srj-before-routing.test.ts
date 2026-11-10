@@ -24,6 +24,18 @@ test("TSX SRJ export preserves input connections before routing", async () => {
   const srj = JSON.parse(
     await readFile(path.join(tmpDir, "input.json"), "utf8"),
   )
+  expect(
+    srj.connections.map(
+      (c: { pointsToConnect: unknown[] }) => c.pointsToConnect.length,
+    ),
+  ).toEqual([2, 2])
+  const built = await runCommand(`tsci build ${file} --ignore-errors`)
+  expect(built.exitCode).toBe(0)
+  const warm = await runCommand(`tsci export ${file} -f srj -o warm.json`)
+  expect(warm.exitCode).toBe(0)
+  expect(
+    JSON.parse(await readFile(path.join(tmpDir, "warm.json"), "utf8")),
+  ).toEqual(srj)
   expect({
     savedRoutedPaths: result.stdout.includes("Saved autorouting paths"),
     minimum: srj.minTraceWidth,
@@ -32,4 +44,4 @@ test("TSX SRJ export preserves input connections before routing", async () => {
         connection.pointsToConnect.length,
     ),
   }).toMatchSnapshot()
-}, 60_000)
+}, 120_000)

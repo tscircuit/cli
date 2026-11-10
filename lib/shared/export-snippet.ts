@@ -213,13 +213,18 @@ export const exportSnippet = async ({
           }),
         )
       : platformConfig
-    const generateCircuitData = isJlcpcbFabricationExport
-      ? generateCircuitJson
-      : getOrGenerateCircuitJson
+    // SRJ describes the input to the router. A full build may already have routed these connections.
+    const exportUnrouted = format === "srj"
+    const generateCircuitData =
+      isJlcpcbFabricationExport || exportUnrouted
+        ? generateCircuitJson
+        : getOrGenerateCircuitJson
     const circuitData = await generateCircuitData({
       filePath,
       saveToFile: format === "circuit-json",
-      platformConfig: fabricationPlatformConfig,
+      platformConfig: exportUnrouted
+        ? mergePlatformConfigs(platformConfig, { routingDisabled: true })
+        : fabricationPlatformConfig,
     }).catch((err) => {
       onError(`Error generating circuit JSON: ${err}`)
       return null
