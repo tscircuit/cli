@@ -25,3 +25,20 @@ test("build accepts a solver worker count independently of file concurrency", as
   expect(errorCode).toBeUndefined()
   expect({ concurrency, autorouterThreads, errorCode }).toMatchSnapshot()
 })
+
+test.each(["0", "-1", "1.5", "two"])(
+  "build rejects invalid solver worker count %s",
+  async (value) => {
+    const program = new Command()
+    registerBuild(program)
+    const build = program.commands.find(
+      (command) => command.name() === "build",
+    )!
+    build.exitOverride().configureOutput({ writeErr: () => {} })
+    await expect(
+      program.parseAsync(["build", "--autorouter-threads", value], {
+        from: "user",
+      }),
+    ).rejects.toMatchObject({ code: "commander.invalidArgument" })
+  },
+)
