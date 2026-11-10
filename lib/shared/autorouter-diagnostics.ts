@@ -52,6 +52,19 @@ type CircuitJsonLookup = {
   elementById: Map<string, AnyCircuitElement>
 }
 
+type AutorouterRouteEffort = {
+  metric: "solo_search_iterations"
+  totalIterations: number
+  measuredPairCount: number
+  pairs: Array<{
+    connectionName: string
+    rootConnectionNames: string[]
+    pcbPortIds: [string | null, string | null]
+    iterations: number
+    share: number
+  }>
+}
+
 type AutoroutingEventPayload = {
   subcircuit_id?: string
   subcircuitId?: string
@@ -61,6 +74,8 @@ type AutoroutingEventPayload = {
   phaseStageCount?: number
   routingPhaseIndex?: number | null
   phaseOrdinal?: number
+  _actualRoutingPhaseOrderIndex?: number
+  routeEffort?: AutorouterRouteEffort
   phaseCount?: number
   connectionCount?: number
   obstacleCount?: number
@@ -94,6 +109,7 @@ type ActivePhase = {
   phaseStageCount?: number
   routingPhaseIndex: number
   phaseOrdinal: number
+  _actualRoutingPhaseOrderIndex?: number
   phaseCount?: number
   connectionCount: number
   obstacleCount: number
@@ -180,6 +196,7 @@ export class AutorouterDiagnostics {
     Omit<AutorouterDiagnosticsOptions, "log">
   private phaseOrdinalBySubcircuit = new Map<string, number>()
   private traceCountBySubcircuit = new Map<string, number>()
+  private routeEffortByStage = new Map<string, AutorouterRouteEffort>()
   private activePhase: ActivePhase | null = null
   private completedPhaseTraces: AutorouterTrace[] = []
   private hasWrittenPlacementSnapshot = false
@@ -289,6 +306,7 @@ export class AutorouterDiagnostics {
       phaseStageCount: event.phaseStageCount,
       routingPhaseIndex,
       phaseOrdinal,
+      _actualRoutingPhaseOrderIndex: event._actualRoutingPhaseOrderIndex,
       phaseCount: event.phaseCount,
       connectionCount,
       obstacleCount,
@@ -332,9 +350,10 @@ export class AutorouterDiagnostics {
   }
 
   private handleProgress(event: AutoroutingEventPayload) {
+    this.captureRouteEffort(event)
     if (!this.activePhase) return
     const now = performance.now()
-    this.activePhase.lastProgress = event
+    this.activePhase.lastProgress = { ...event, routeEffort: undefined }
     if (!this.shouldLogPhaseDetails(this.activePhase)) return
 
     if (
@@ -349,6 +368,7 @@ export class AutorouterDiagnostics {
   }
 
   private handleEnd(event: AutoroutingEventPayload) {
+    const routeEffort = this.finishRouteEffort(event)
     const activePhase = this.matchActivePhase(event)
     if (!activePhase) return
 
@@ -373,6 +393,8 @@ export class AutorouterDiagnostics {
       phaseStageCount: activePhase.phaseStageCount,
       routingPhaseIndex: activePhase.routingPhaseIndex,
       phaseOrdinal: activePhase.phaseOrdinal,
+      _actualRoutingPhaseOrderIndex: activePhase._actualRoutingPhaseOrderIndex,
+      ...routeEffort,
       phaseCount: activePhase.phaseCount,
       connectionCount: activePhase.connectionCount,
       obstacleCount: activePhase.obstacleCount,
@@ -425,6 +447,7 @@ export class AutorouterDiagnostics {
   }
 
   private handleError(event: AutoroutingEventPayload) {
+    const routeEffort = this.finishRouteEffort(event, true)
     const activePhase = this.matchActivePhase(event)
     if (!activePhase) return
 
@@ -438,6 +461,8 @@ export class AutorouterDiagnostics {
       phaseStageCount: activePhase.phaseStageCount,
       routingPhaseIndex: activePhase.routingPhaseIndex,
       phaseOrdinal: activePhase.phaseOrdinal,
+      _actualRoutingPhaseOrderIndex: activePhase._actualRoutingPhaseOrderIndex,
+      ...routeEffort,
       phaseCount: activePhase.phaseCount,
       connectionCount: activePhase.connectionCount,
       obstacleCount: activePhase.obstacleCount,
@@ -509,6 +534,7 @@ export class AutorouterDiagnostics {
     return this.writeJson(timeoutFile, {
       type: "autorouter_phase_timeout",
       subcircuit_id: activePhase.subcircuitId,
+      _actualRoutingPhaseOrderIndex: activePhase._actualRoutingPhaseOrderIndex,
       componentDisplayName: activePhase.componentDisplayName,
       routingPhaseIndex: activePhase.routingPhaseIndex,
       phaseName: activePhase.phaseName,
@@ -521,6 +547,7 @@ export class AutorouterDiagnostics {
       obstacleCount: activePhase.obstacleCount,
       previousTraceCount: activePhase.previousTraceCount,
       ...this.getExecutionMetadata(activePhase),
+      ...this.getRouteEffortMetadata(activePhase),
       files: {
         inputSimpleRouteJson: inputFile,
         previousOutputTraces: previousTracesFile,
@@ -528,6 +555,128 @@ export class AutorouterDiagnostics {
       },
       lastProgress: activePhase.lastProgress,
     })
+  }
+
+  private getRouteEffortKey(event: AutoroutingEventPayload | ActivePhase) {
+    const subcircuitId =
+      ("subcircuit_id" in event ? event.subcircuit_id : undefined) ??
+      event.subcircuitId
+    if (!subcircuitId) return
+    const stage =
+      event._actualRoutingPhaseOrderIndex ??
+      event.phaseOrdinal ??
+      this.phaseOrdinalBySubcircuit.get(subcircuitId)
+    if (stage !== undefined) return `${subcircuitId}|${stage}`
+  }
+
+  private captureRouteEffort(event: AutoroutingEventPayload) {
+    if (this.targetPhaseReached || !event.routeEffort) return
+    const key = this.getRouteEffortKey(event)
+    if (key) this.routeEffortByStage.set(key, event.routeEffort)
+  }
+
+  private getRouteEffortMetadata(event: AutoroutingEventPayload | ActivePhase) {
+    try {
+      const key = this.getRouteEffortKey(event)
+      const effort =
+        (key ? this.routeEffortByStage.get(key) : undefined) ??
+        ("routeEffort" in event ? event.routeEffort : undefined)
+      if (!effort) return {}
+      const lookup = this.createCircuitJsonLookup()
+      const routeEffort = {
+        metric: effort.metric,
+        totalIterations: effort.totalIterations,
+        measuredPairCount: effort.measuredPairCount,
+        pairs: effort.pairs.map((pair) => ({
+          ...pair,
+          labels: pair.pcbPortIds.map((id) => {
+            const port = id
+              ? lookup.circuitJson.find(
+                  (element) =>
+                    element.type === "pcb_port" && element.pcb_port_id === id,
+                )
+              : undefined
+            const sourcePort =
+              port?.type === "pcb_port"
+                ? lookup.circuitJson.find(
+                    (element): element is SourcePort =>
+                      element.type === "source_port" &&
+                      element.source_port_id === port.source_port_id,
+                  )
+                : undefined
+            const component = sourcePort
+              ? lookup.circuitJson.find(
+                  (element) =>
+                    element.type === "source_component" &&
+                    element.source_component_id ===
+                      sourcePort.source_component_id,
+                )
+              : undefined
+            return (
+              (sourcePort &&
+              component?.type === "source_component" &&
+              component.name
+                ? this.getPortSelector(sourcePort, lookup.circuitJson)
+                : null) ?? pair.connectionName
+            )
+          }),
+        })),
+      }
+      // Catch malformed payloads here, before they reach any artifact writer.
+      JSON.stringify(routeEffort)
+      return { routeEffort }
+    } catch (error) {
+      this.log(
+        kleur.yellow(
+          `Warning: Could not format autorouter route effort: ${error}`,
+        ),
+      )
+      return {}
+    }
+  }
+
+  private finishRouteEffort(event: AutoroutingEventPayload, failed = false) {
+    if (this.targetPhaseReached) return {}
+    this.captureRouteEffort(event)
+    const metadata = this.getRouteEffortMetadata(event)
+    if (!metadata.routeEffort) return metadata
+    // A sibling may have replaced activePhase; retain its effort independently.
+    if (!this.matchActivePhase(event)) {
+      this.summary.push({
+        subcircuit_id: event.subcircuit_id ?? event.subcircuitId,
+        _actualRoutingPhaseOrderIndex: event._actualRoutingPhaseOrderIndex,
+        phaseOrdinal:
+          event.phaseOrdinal ??
+          this.phaseOrdinalBySubcircuit.get(
+            event.subcircuit_id ?? event.subcircuitId ?? "",
+          ),
+        phaseName: event.phaseName,
+        componentDisplayName: event.componentDisplayName,
+        routingPhaseIndex: event.routingPhaseIndex,
+        phaseStageIndex: event.phaseStageIndex,
+        phaseStageCount: event.phaseStageCount,
+        ...(failed ? { error: this.serializeError(event.error) } : {}),
+        ...metadata,
+      })
+    }
+    if (this.options.enabled || (failed && this.options.logOnError)) {
+      try {
+        const pairs = metadata.routeEffort.pairs
+          .slice(0, 5)
+          .map(
+            (pair) =>
+              `${pair.labels.join(" -> ")} ${(pair.share * 100).toFixed(1)}% (${pair.iterations} iters)`,
+          )
+        if (pairs.length) this.log(`  hardest connections: ${pairs.join(", ")}`)
+      } catch (error) {
+        this.log(
+          kleur.yellow(
+            `Warning: Could not log autorouter route effort: ${error}`,
+          ),
+        )
+      }
+    }
+    return metadata
   }
 
   private checkLongRunning() {
@@ -660,12 +809,20 @@ export class AutorouterDiagnostics {
   }
 
   private writeJson(fileName: string, value: unknown) {
-    const debugDir = path.resolve(this.options.debugDir ?? DEFAULT_DEBUG_DIR)
-    fs.mkdirSync(debugDir, { recursive: true })
-    const filePath = path.join(debugDir, fileName)
-    fs.writeFileSync(filePath, JSON.stringify(value, null, 2))
-    this.logArtifact(filePath)
-    return filePath
+    try {
+      const debugDir = path.resolve(this.options.debugDir ?? DEFAULT_DEBUG_DIR)
+      fs.mkdirSync(debugDir, { recursive: true })
+      const filePath = path.join(debugDir, fileName)
+      fs.writeFileSync(filePath, JSON.stringify(value, null, 2))
+      this.logArtifact(filePath)
+      return filePath
+    } catch (error) {
+      this.log(
+        kleur.yellow(
+          `Warning: Could not write autorouter debug artifact ${fileName}: ${error}`,
+        ),
+      )
+    }
   }
 
   private writePngSnapshot(
