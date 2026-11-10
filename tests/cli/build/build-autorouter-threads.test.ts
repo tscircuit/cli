@@ -21,5 +21,7 @@ test("build accepts a solver worker count independently of file concurrency", as
     errorCode = error.code
   }
   const { concurrency, autorouterThreads } = build.opts()
+  expect(autorouterThreads).toBe(2)
+  expect(errorCode).toBeUndefined()
   expect({ concurrency, autorouterThreads, errorCode }).toMatchSnapshot()
 })

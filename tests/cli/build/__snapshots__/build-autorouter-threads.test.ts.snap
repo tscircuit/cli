@@ -2,8 +2,8 @@
 
 exports[`build accepts a solver worker count independently of file concurrency 1`] = `
 {
-  "autorouterThreads": undefined,
+  "autorouterThreads": 2,
   "concurrency": "3",
-  "errorCode": "commander.unknownOption",
+  "errorCode": undefined,
 }
 `;
