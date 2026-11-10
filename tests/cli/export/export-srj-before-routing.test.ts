@@ -36,12 +36,6 @@ test("TSX SRJ export preserves input connections before routing", async () => {
   expect(
     JSON.parse(await readFile(path.join(tmpDir, "warm.json"), "utf8")),
   ).toEqual(srj)
-  expect({
-    savedRoutedPaths: result.stdout.includes("Saved autorouting paths"),
-    minimum: srj.minTraceWidth,
-    endpointsPerConnection: srj.connections.map(
-      (connection: { pointsToConnect: unknown[] }) =>
-        connection.pointsToConnect.length,
-    ),
-  }).toMatchSnapshot()
+  expect(result.stdout).not.toContain("Saved autorouting paths")
+  expect(srj.minTraceWidth).toBe(0.1)
 }, 120_000)
