@@ -1,26 +1,26 @@
 import { expect, test } from "bun:test"
 import fs from "node:fs"
 import { AutorouterPhaseTimeoutError } from "lib/shared/autorouter-diagnostics"
-import { getRouteEffortTestFixture } from "tests/fixtures/get-route-effort-test-fixture"
+import { getComputeCostTestFixture } from "tests/fixtures/get-compute-cost-test-fixture"
 
-test("effort formatting and artifact write failures warn without aborting routing", async () => {
-  const f = await getRouteEffortTestFixture({ logOnError: true, timeoutMs: 1 })
+test("computeCost formatting and artifact write failures warn without aborting routing", async () => {
+  const f = await getComputeCostTestFixture({ logOnError: true, timeoutMs: 1 })
   f.root.emit("autorouting:start", f.phase)
   expect(() =>
     f.root.emit("autorouting:error", {
       ...f.phase,
-      routeEffort: { ...f.routeEffort, pairs: null },
+      computeCost: { ...f.computeCost, pairs: null },
     }),
   ).not.toThrow()
   expect(() => f.finalize()).not.toThrow()
   expect(f.logs.join("\n")).toContain(
-    "Warning: Could not format autorouter route effort",
+    "Warning: Could not format autorouter compute cost",
   )
 
   f.root.emit("autorouting:start", f.phase)
   f.root.emit("autorouting:progress", {
     ...f.phase,
-    routeEffort: f.routeEffort,
+    computeCost: f.computeCost,
   })
   expect(() => f.root.emit("autorouting:end", f.phase)).not.toThrow()
   fs.rmSync(f.debugDir, { recursive: true })
@@ -29,7 +29,7 @@ test("effort formatting and artifact write failures warn without aborting routin
   f.root.emit("autorouting:start", f.phase)
   f.root.emit("autorouting:progress", {
     ...f.phase,
-    routeEffort: f.routeEffort,
+    computeCost: f.computeCost,
   })
   await new Promise((resolve) => setTimeout(resolve, 5))
   expect(() => f.diagnostics.checkTimeout()).toThrow(

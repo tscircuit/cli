@@ -1,19 +1,19 @@
 import { expect, test } from "bun:test"
-import { getRouteEffortTestFixture } from "tests/fixtures/get-route-effort-test-fixture"
+import { getComputeCostTestFixture } from "tests/fixtures/get-compute-cost-test-fixture"
 
-test("error effort overrides progress and logs only the top five pairs", async () => {
-  const f = await getRouteEffortTestFixture({ logOnError: true })
+test("error computeCost overrides progress and logs only the top five pairs", async () => {
+  const f = await getComputeCostTestFixture({ logOnError: true })
   f.root.emit("autorouting:start", f.phase)
   f.root.emit("autorouting:progress", {
     ...f.phase,
-    routeEffort: { ...f.routeEffort, totalIterations: 1, pairs: [] },
+    computeCost: { ...f.computeCost, totalIterations: 1, pairs: [] },
   })
-  const routeEffort = {
-    ...f.routeEffort,
+  const computeCost = {
+    ...f.computeCost,
     pairs: [
-      f.routeEffort.pairs[0],
+      f.computeCost.pairs[0],
       ...Array.from({ length: 5 }, (_, i) => ({
-        ...f.routeEffort.pairs[0],
+        ...f.computeCost.pairs[0],
         connectionName: `fallback-${i}`,
         pcbPortIds: [null, null],
         iterations: 5 - i,
@@ -23,7 +23,7 @@ test("error effort overrides progress and logs only the top five pairs", async (
   }
   f.root.emit("autorouting:error", {
     ...f.phase,
-    routeEffort,
+    computeCost,
     error: { message: "router failed" },
   })
 
@@ -32,5 +32,5 @@ test("error effort overrides progress and logs only the top five pairs", async (
   expect(output).toContain("R2.pin2 -> U1.pin2 43.0% (71 iters)")
   expect(output).toContain("fallback-3 -> fallback-3")
   expect(output).not.toContain("fallback-4 -> fallback-4")
-  expect(f.finalize()[0].routeEffort.totalIterations).toBe(165)
+  expect(f.finalize()[0].computeCost.totalIterations).toBe(165)
 })

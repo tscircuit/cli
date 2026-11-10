@@ -1,8 +1,8 @@
 import { expect, test } from "bun:test"
-import { getRouteEffortTestFixture } from "tests/fixtures/get-route-effort-test-fixture"
+import { getComputeCostTestFixture } from "tests/fixtures/get-compute-cost-test-fixture"
 
-test("old core events without routeEffort produce no effort output or warnings", async () => {
-  const f = await getRouteEffortTestFixture({ logOnError: true, timeoutMs: 1 })
+test("old core events without computeCost produce no computeCost output or warnings", async () => {
+  const f = await getComputeCostTestFixture({ logOnError: true, timeoutMs: 1 })
   const phase = { subcircuit_id: f.phase.subcircuit_id }
   f.root.emit("autorouting:start", phase)
   f.root.emit("autorouting:progress", { ...phase, steps: 3 })
@@ -20,9 +20,9 @@ test("old core events without routeEffort produce no effort output or warnings",
 
   const phases = f.finalize()
   expect(phases).toHaveLength(2)
-  expect(JSON.stringify(phases)).not.toContain("routeEffort")
+  expect(JSON.stringify(phases)).not.toContain("computeCost")
   expect(JSON.stringify(f.readJson("phase-2.timeout.json"))).not.toContain(
-    "routeEffort",
+    "computeCost",
   )
   expect(f.logs.join("\n")).not.toMatch(/hardest connections|Warning:/)
 })

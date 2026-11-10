@@ -1,25 +1,25 @@
 import { expect, test } from "bun:test"
-import { getRouteEffortTestFixture } from "tests/fixtures/get-route-effort-test-fixture"
+import { getComputeCostTestFixture } from "tests/fixtures/get-compute-cost-test-fixture"
 
-test("interleaved sibling subcircuits keep independent effort by actual stage order", async () => {
-  const f = await getRouteEffortTestFixture()
+test("interleaved sibling subcircuits keep independent computeCost by actual stage order", async () => {
+  const f = await getComputeCostTestFixture()
   const a = { ...f.phase, routingPhaseIndex: 19 }
   const b = { ...a, subcircuit_id: "subcircuit_b" }
   f.root.emit("autorouting:start", a)
   f.root.emit("autorouting:start", b)
-  f.root.emit("autorouting:progress", { ...a, routeEffort: f.routeEffort })
+  f.root.emit("autorouting:progress", { ...a, computeCost: f.computeCost })
   f.root.emit("autorouting:progress", {
     ...b,
-    routeEffort: { ...f.routeEffort, totalIterations: 400 },
+    computeCost: { ...f.computeCost, totalIterations: 400 },
   })
   f.root.emit("autorouting:end", a)
   f.root.emit("autorouting:end", b)
-  // A second stage with the same public routingPhaseIndex must not reuse effort.
+  // A second stage with the same public routingPhaseIndex must not reuse computeCost.
   const next = { ...a, _actualRoutingPhaseOrderIndex: 1 }
   f.root.emit("autorouting:start", next)
   f.root.emit("autorouting:progress", {
     ...next,
-    routeEffort: { ...f.routeEffort, totalIterations: 700 },
+    computeCost: { ...f.computeCost, totalIterations: 700 },
   })
   f.root.emit("autorouting:end", next)
 
@@ -29,7 +29,7 @@ test("interleaved sibling subcircuits keep independent effort by actual stage or
       .map((p: any) => [
         p.subcircuit_id,
         p._actualRoutingPhaseOrderIndex,
-        p.routeEffort.totalIterations,
+        p.computeCost.totalIterations,
       ]),
   ).toEqual([
     ["subcircuit_a", 0, 165],

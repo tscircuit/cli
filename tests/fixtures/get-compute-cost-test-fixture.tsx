@@ -8,7 +8,7 @@ import {
 } from "lib/shared/autorouter-diagnostics"
 import { RootCircuit } from "tscircuit"
 
-export const getRouteEffortTestFixture = async (
+export const getComputeCostTestFixture = async (
   options: AutorouterDiagnosticsOptions = {},
 ) => {
   const circuit = new RootCircuit()
@@ -38,7 +38,7 @@ export const getRouteEffortTestFixture = async (
     if (pcbPort?.type !== "pcb_port") throw new Error(`${name} PCB port`)
     return pcbPort.pcb_port_id
   }
-  const debugDir = fs.mkdtempSync(path.join(os.tmpdir(), "tsci-route-effort-"))
+  const debugDir = fs.mkdtempSync(path.join(os.tmpdir(), "tsci-compute-cost-"))
   globalThis.deferredCleanupFns.push(async () => {
     fs.rmSync(debugDir, { recursive: true, force: true })
   })
@@ -55,7 +55,7 @@ export const getRouteEffortTestFixture = async (
     subcircuit_id: "subcircuit_a",
     _actualRoutingPhaseOrderIndex: 0,
   }
-  const routeEffort = {
+  const computeCost = {
     metric: "solo_search_iterations" as const,
     totalIterations: 165,
     measuredPairCount: 10,
@@ -81,7 +81,7 @@ export const getRouteEffortTestFixture = async (
     debugDir,
     logs,
     phase,
-    routeEffort,
+    computeCost,
     readJson,
     finalize,
   }

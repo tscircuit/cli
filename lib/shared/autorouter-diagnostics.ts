@@ -52,7 +52,7 @@ type CircuitJsonLookup = {
   elementById: Map<string, AnyCircuitElement>
 }
 
-type AutorouterRouteEffort = {
+type AutorouterComputeCost = {
   metric: "solo_search_iterations"
   totalIterations: number
   measuredPairCount: number
@@ -75,7 +75,7 @@ type AutoroutingEventPayload = {
   routingPhaseIndex?: number | null
   phaseOrdinal?: number
   _actualRoutingPhaseOrderIndex?: number
-  routeEffort?: AutorouterRouteEffort
+  computeCost?: AutorouterComputeCost
   phaseCount?: number
   connectionCount?: number
   obstacleCount?: number
@@ -196,7 +196,7 @@ export class AutorouterDiagnostics {
     Omit<AutorouterDiagnosticsOptions, "log">
   private phaseOrdinalBySubcircuit = new Map<string, number>()
   private traceCountBySubcircuit = new Map<string, number>()
-  private routeEffortByStage = new Map<string, AutorouterRouteEffort>()
+  private computeCostByStage = new Map<string, AutorouterComputeCost>()
   private activePhase: ActivePhase | null = null
   private completedPhaseTraces: AutorouterTrace[] = []
   private hasWrittenPlacementSnapshot = false
@@ -350,10 +350,10 @@ export class AutorouterDiagnostics {
   }
 
   private handleProgress(event: AutoroutingEventPayload) {
-    this.captureRouteEffort(event)
+    this.captureComputeCost(event)
     if (!this.activePhase) return
     const now = performance.now()
-    this.activePhase.lastProgress = { ...event, routeEffort: undefined }
+    this.activePhase.lastProgress = { ...event, computeCost: undefined }
     if (!this.shouldLogPhaseDetails(this.activePhase)) return
 
     if (
@@ -368,7 +368,7 @@ export class AutorouterDiagnostics {
   }
 
   private handleEnd(event: AutoroutingEventPayload) {
-    const routeEffort = this.finishRouteEffort(event)
+    const computeCost = this.finishComputeCost(event)
     const activePhase = this.matchActivePhase(event)
     if (!activePhase) return
 
@@ -394,7 +394,7 @@ export class AutorouterDiagnostics {
       routingPhaseIndex: activePhase.routingPhaseIndex,
       phaseOrdinal: activePhase.phaseOrdinal,
       _actualRoutingPhaseOrderIndex: activePhase._actualRoutingPhaseOrderIndex,
-      ...routeEffort,
+      ...computeCost,
       phaseCount: activePhase.phaseCount,
       connectionCount: activePhase.connectionCount,
       obstacleCount: activePhase.obstacleCount,
@@ -447,7 +447,7 @@ export class AutorouterDiagnostics {
   }
 
   private handleError(event: AutoroutingEventPayload) {
-    const routeEffort = this.finishRouteEffort(event, true)
+    const computeCost = this.finishComputeCost(event, true)
     const activePhase = this.matchActivePhase(event)
     if (!activePhase) return
 
@@ -462,7 +462,7 @@ export class AutorouterDiagnostics {
       routingPhaseIndex: activePhase.routingPhaseIndex,
       phaseOrdinal: activePhase.phaseOrdinal,
       _actualRoutingPhaseOrderIndex: activePhase._actualRoutingPhaseOrderIndex,
-      ...routeEffort,
+      ...computeCost,
       phaseCount: activePhase.phaseCount,
       connectionCount: activePhase.connectionCount,
       obstacleCount: activePhase.obstacleCount,
@@ -547,7 +547,7 @@ export class AutorouterDiagnostics {
       obstacleCount: activePhase.obstacleCount,
       previousTraceCount: activePhase.previousTraceCount,
       ...this.getExecutionMetadata(activePhase),
-      ...this.getRouteEffortMetadata(activePhase),
+      ...this.getComputeCostMetadata(activePhase),
       files: {
         inputSimpleRouteJson: inputFile,
         previousOutputTraces: previousTracesFile,
@@ -557,7 +557,7 @@ export class AutorouterDiagnostics {
     })
   }
 
-  private getRouteEffortKey(event: AutoroutingEventPayload | ActivePhase) {
+  private getComputeCostKey(event: AutoroutingEventPayload | ActivePhase) {
     const subcircuitId =
       ("subcircuit_id" in event ? event.subcircuit_id : undefined) ??
       event.subcircuitId
@@ -569,25 +569,25 @@ export class AutorouterDiagnostics {
     if (stage !== undefined) return `${subcircuitId}|${stage}`
   }
 
-  private captureRouteEffort(event: AutoroutingEventPayload) {
-    if (this.targetPhaseReached || !event.routeEffort) return
-    const key = this.getRouteEffortKey(event)
-    if (key) this.routeEffortByStage.set(key, event.routeEffort)
+  private captureComputeCost(event: AutoroutingEventPayload) {
+    if (this.targetPhaseReached || !event.computeCost) return
+    const key = this.getComputeCostKey(event)
+    if (key) this.computeCostByStage.set(key, event.computeCost)
   }
 
-  private getRouteEffortMetadata(event: AutoroutingEventPayload | ActivePhase) {
+  private getComputeCostMetadata(event: AutoroutingEventPayload | ActivePhase) {
     try {
-      const key = this.getRouteEffortKey(event)
-      const effort =
-        (key ? this.routeEffortByStage.get(key) : undefined) ??
-        ("routeEffort" in event ? event.routeEffort : undefined)
-      if (!effort) return {}
+      const key = this.getComputeCostKey(event)
+      const cost =
+        (key ? this.computeCostByStage.get(key) : undefined) ??
+        ("computeCost" in event ? event.computeCost : undefined)
+      if (!cost) return {}
       const lookup = this.createCircuitJsonLookup()
-      const routeEffort = {
-        metric: effort.metric,
-        totalIterations: effort.totalIterations,
-        measuredPairCount: effort.measuredPairCount,
-        pairs: effort.pairs.map((pair) => ({
+      const computeCost = {
+        metric: cost.metric,
+        totalIterations: cost.totalIterations,
+        measuredPairCount: cost.measuredPairCount,
+        pairs: cost.pairs.map((pair) => ({
           ...pair,
           labels: pair.pcbPortIds.map((id) => {
             const port = id
@@ -623,24 +623,24 @@ export class AutorouterDiagnostics {
         })),
       }
       // Catch malformed payloads here, before they reach any artifact writer.
-      JSON.stringify(routeEffort)
-      return { routeEffort }
+      JSON.stringify(computeCost)
+      return { computeCost }
     } catch (error) {
       this.log(
         kleur.yellow(
-          `Warning: Could not format autorouter route effort: ${error}`,
+          `Warning: Could not format autorouter compute cost: ${error}`,
         ),
       )
       return {}
     }
   }
 
-  private finishRouteEffort(event: AutoroutingEventPayload, failed = false) {
+  private finishComputeCost(event: AutoroutingEventPayload, failed = false) {
     if (this.targetPhaseReached) return {}
-    this.captureRouteEffort(event)
-    const metadata = this.getRouteEffortMetadata(event)
-    if (!metadata.routeEffort) return metadata
-    // A sibling may have replaced activePhase; retain its effort independently.
+    this.captureComputeCost(event)
+    const metadata = this.getComputeCostMetadata(event)
+    if (!metadata.computeCost) return metadata
+    // A sibling may have replaced activePhase; retain its computeCost independently.
     if (!this.matchActivePhase(event)) {
       this.summary.push({
         subcircuit_id: event.subcircuit_id ?? event.subcircuitId,
@@ -661,7 +661,7 @@ export class AutorouterDiagnostics {
     }
     if (this.options.enabled || (failed && this.options.logOnError)) {
       try {
-        const pairs = metadata.routeEffort.pairs
+        const pairs = metadata.computeCost.pairs
           .slice(0, 5)
           .map(
             (pair) =>
@@ -671,7 +671,7 @@ export class AutorouterDiagnostics {
       } catch (error) {
         this.log(
           kleur.yellow(
-            `Warning: Could not log autorouter route effort: ${error}`,
+            `Warning: Could not log autorouter compute cost: ${error}`,
           ),
         )
       }
