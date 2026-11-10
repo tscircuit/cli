@@ -4,13 +4,16 @@ import { getComputeCostTestFixture } from "tests/fixtures/get-compute-cost-test-
 test("progress computeCost is retained with PCB endpoint labels in the summary", async () => {
   const f = await getComputeCostTestFixture({ enabled: true })
   const unresolved = {
-    ...f.computeCost.pairs[0]!,
+    ...f.computeCost.summary.topPairs[0]!,
     connectionName: "synthetic-connection",
     pcbPortIds: [null, "missing-port"],
   }
   const computeCost = {
     ...f.computeCost,
-    pairs: [...f.computeCost.pairs, unresolved],
+    summary: {
+      ...f.computeCost.summary,
+      topPairs: [...f.computeCost.summary.topPairs, unresolved],
+    },
   }
   f.root.emit("autorouting:start", f.phase)
   f.root.emit("autorouting:progress", { ...f.phase, computeCost })
@@ -19,13 +22,16 @@ test("progress computeCost is retained with PCB endpoint labels in the summary",
   const [phase] = f.finalize()
   expect(phase.computeCost).toEqual({
     ...computeCost,
-    pairs: [
-      { ...computeCost.pairs[0], labels: ["R2.pin2", "U1.pin2"] },
-      {
-        ...unresolved,
-        labels: ["synthetic-connection", "synthetic-connection"],
-      },
-    ],
+    summary: {
+      ...computeCost.summary,
+      topPairs: [
+        { ...computeCost.summary.topPairs[0], labels: ["R2.pin2", "U1.pin2"] },
+        {
+          ...unresolved,
+          labels: ["synthetic-connection", "synthetic-connection"],
+        },
+      ],
+    },
   })
   expect(f.logs.join("\n")).toContain(
     "hardest connections: R2.pin2 -> U1.pin2 43.0% (71 iters)",

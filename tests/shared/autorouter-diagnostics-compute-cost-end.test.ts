@@ -8,13 +8,11 @@ test("end computeCost overrides progress with the computed ordinal fallback", as
   f.root.emit("autorouting:progress", { ...phase, computeCost: f.computeCost })
   f.root.emit("autorouting:end", {
     ...phase,
-    computeCost: { ...f.computeCost, totalIterations: 200 },
+    computeCost: { ...f.computeCost, value: 200 },
   })
   f.root.emit("autorouting:start", phase)
   f.root.emit("autorouting:end", { ...phase, computeCost: f.computeCost })
 
-  expect(f.finalize().map((p: any) => p.computeCost.totalIterations)).toEqual([
-    200, 165,
-  ])
+  expect(f.finalize().map((p: any) => p.computeCost.value)).toEqual([200, 165])
   expect(f.logs.join("\n")).not.toContain("hardest connections:")
 })

@@ -52,17 +52,21 @@ type CircuitJsonLookup = {
   elementById: Map<string, AnyCircuitElement>
 }
 
+type Iterations = number
+
+/** Routing compute cost of one stage, as emitted by core. */
 type AutorouterComputeCost = {
-  metric: "solo_search_iterations"
-  totalIterations: number
-  measuredPairCount: number
-  pairs: Array<{
-    connectionName: string
-    rootConnectionNames: string[]
-    pcbPortIds: [string | null, string | null]
-    iterations: number
-    share: number
-  }>
+  readonly value: Iterations
+  readonly summary: {
+    readonly metric: "hypergraph_route_search_iterations"
+    readonly measuredPairCount: number
+    readonly topPairs: readonly {
+      readonly connectionName: string
+      readonly rootConnectionNames: readonly string[]
+      readonly pcbPortIds: readonly [string | null, string | null]
+      readonly iterations: Iterations
+    }[]
+  }
 }
 
 type AutoroutingEventPayload = {
@@ -584,43 +588,44 @@ export class AutorouterDiagnostics {
       if (!cost) return {}
       const lookup = this.createCircuitJsonLookup()
       const computeCost = {
-        metric: cost.metric,
-        totalIterations: cost.totalIterations,
-        measuredPairCount: cost.measuredPairCount,
-        pairs: cost.pairs.map((pair) => ({
-          ...pair,
-          labels: pair.pcbPortIds.map((id) => {
-            const port = id
-              ? lookup.circuitJson.find(
-                  (element) =>
-                    element.type === "pcb_port" && element.pcb_port_id === id,
-                )
-              : undefined
-            const sourcePort =
-              port?.type === "pcb_port"
+        value: cost.value,
+        summary: {
+          ...cost.summary,
+          topPairs: cost.summary.topPairs.map((pair) => ({
+            ...pair,
+            labels: pair.pcbPortIds.map((id) => {
+              const port = id
                 ? lookup.circuitJson.find(
-                    (element): element is SourcePort =>
-                      element.type === "source_port" &&
-                      element.source_port_id === port.source_port_id,
+                    (element) =>
+                      element.type === "pcb_port" && element.pcb_port_id === id,
                   )
                 : undefined
-            const component = sourcePort
-              ? lookup.circuitJson.find(
-                  (element) =>
-                    element.type === "source_component" &&
-                    element.source_component_id ===
-                      sourcePort.source_component_id,
-                )
-              : undefined
-            return (
-              (sourcePort &&
-              component?.type === "source_component" &&
-              component.name
-                ? this.getPortSelector(sourcePort, lookup.circuitJson)
-                : null) ?? pair.connectionName
-            )
-          }),
-        })),
+              const sourcePort =
+                port?.type === "pcb_port"
+                  ? lookup.circuitJson.find(
+                      (element): element is SourcePort =>
+                        element.type === "source_port" &&
+                        element.source_port_id === port.source_port_id,
+                    )
+                  : undefined
+              const component = sourcePort
+                ? lookup.circuitJson.find(
+                    (element) =>
+                      element.type === "source_component" &&
+                      element.source_component_id ===
+                        sourcePort.source_component_id,
+                  )
+                : undefined
+              return (
+                (sourcePort &&
+                component?.type === "source_component" &&
+                component.name
+                  ? this.getPortSelector(sourcePort, lookup.circuitJson)
+                  : null) ?? pair.connectionName
+              )
+            }),
+          })),
+        },
       }
       // Catch malformed payloads here, before they reach any artifact writer.
       JSON.stringify(computeCost)
@@ -661,11 +666,12 @@ export class AutorouterDiagnostics {
     }
     if (this.options.enabled || (failed && this.options.logOnError)) {
       try {
-        const pairs = metadata.computeCost.pairs
+        const { value } = metadata.computeCost
+        const pairs = metadata.computeCost.summary.topPairs
           .slice(0, 5)
           .map(
             (pair) =>
-              `${pair.labels.join(" -> ")} ${(pair.share * 100).toFixed(1)}% (${pair.iterations} iters)`,
+              `${pair.labels.join(" -> ")} ${((pair.iterations / value) * 100).toFixed(1)}% (${pair.iterations} iters)`,
           )
         if (pairs.length) this.log(`  hardest connections: ${pairs.join(", ")}`)
       } catch (error) {

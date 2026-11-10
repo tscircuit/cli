@@ -10,7 +10,7 @@ test("interleaved sibling subcircuits keep independent computeCost by actual sta
   f.root.emit("autorouting:progress", { ...a, computeCost: f.computeCost })
   f.root.emit("autorouting:progress", {
     ...b,
-    computeCost: { ...f.computeCost, totalIterations: 400 },
+    computeCost: { ...f.computeCost, value: 400 },
   })
   f.root.emit("autorouting:end", a)
   f.root.emit("autorouting:end", b)
@@ -19,7 +19,7 @@ test("interleaved sibling subcircuits keep independent computeCost by actual sta
   f.root.emit("autorouting:start", next)
   f.root.emit("autorouting:progress", {
     ...next,
-    computeCost: { ...f.computeCost, totalIterations: 700 },
+    computeCost: { ...f.computeCost, value: 700 },
   })
   f.root.emit("autorouting:end", next)
 
@@ -29,7 +29,7 @@ test("interleaved sibling subcircuits keep independent computeCost by actual sta
       .map((p: any) => [
         p.subcircuit_id,
         p._actualRoutingPhaseOrderIndex,
-        p.computeCost.totalIterations,
+        p.computeCost.value,
       ]),
   ).toEqual([
     ["subcircuit_a", 0, 165],

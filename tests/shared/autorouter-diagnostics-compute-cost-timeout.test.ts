@@ -13,7 +13,10 @@ test("timeout artifacts include the latest computeCost using the computed ordina
     AutorouterPhaseTimeoutError,
   )
   const artifact = f.readJson("phase-0.timeout.json")
-  expect(artifact.computeCost.totalIterations).toBe(165)
-  expect(artifact.computeCost.pairs[0].labels).toEqual(["R2.pin2", "U1.pin2"])
+  expect(artifact.computeCost.value).toBe(165)
+  expect(artifact.computeCost.summary.topPairs[0].labels).toEqual([
+    "R2.pin2",
+    "U1.pin2",
+  ])
   expect(artifact.lastProgress).not.toHaveProperty("computeCost")
 })

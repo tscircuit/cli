@@ -9,7 +9,7 @@ test("computeCost formatting and artifact write failures warn without aborting r
   expect(() =>
     f.root.emit("autorouting:error", {
       ...f.phase,
-      computeCost: { ...f.computeCost, pairs: null },
+      computeCost: { ...f.computeCost, summary: null },
     }),
   ).not.toThrow()
   expect(() => f.finalize()).not.toThrow()

@@ -6,20 +6,26 @@ test("error computeCost overrides progress and logs only the top five pairs", as
   f.root.emit("autorouting:start", f.phase)
   f.root.emit("autorouting:progress", {
     ...f.phase,
-    computeCost: { ...f.computeCost, totalIterations: 1, pairs: [] },
+    computeCost: {
+      value: 1,
+      summary: { ...f.computeCost.summary, topPairs: [] },
+    },
   })
+  const [top] = f.computeCost.summary.topPairs
   const computeCost = {
     ...f.computeCost,
-    pairs: [
-      f.computeCost.pairs[0],
-      ...Array.from({ length: 5 }, (_, i) => ({
-        ...f.computeCost.pairs[0],
-        connectionName: `fallback-${i}`,
-        pcbPortIds: [null, null],
-        iterations: 5 - i,
-        share: (5 - i) / 165,
-      })),
-    ],
+    summary: {
+      ...f.computeCost.summary,
+      topPairs: [
+        top,
+        ...Array.from({ length: 5 }, (_, i) => ({
+          ...top,
+          connectionName: `fallback-${i}`,
+          pcbPortIds: [null, null],
+          iterations: 5 - i,
+        })),
+      ],
+    },
   }
   f.root.emit("autorouting:error", {
     ...f.phase,
@@ -32,5 +38,5 @@ test("error computeCost overrides progress and logs only the top five pairs", as
   expect(output).toContain("R2.pin2 -> U1.pin2 43.0% (71 iters)")
   expect(output).toContain("fallback-3 -> fallback-3")
   expect(output).not.toContain("fallback-4 -> fallback-4")
-  expect(f.finalize()[0].computeCost.totalIterations).toBe(165)
+  expect(f.finalize()[0].computeCost.value).toBe(165)
 })

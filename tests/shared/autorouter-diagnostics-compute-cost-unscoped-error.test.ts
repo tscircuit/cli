@@ -10,7 +10,7 @@ test("preparation errors without a start or stage index report unscoped computeC
   })
 
   const [phase] = f.finalize()
-  expect(phase.computeCost.totalIterations).toBe(165)
+  expect(phase.computeCost.value).toBe(165)
   expect(phase.error.message).toBe("preparation failed")
   expect(phase).not.toHaveProperty("_actualRoutingPhaseOrderIndex")
   expect(phase).not.toHaveProperty("phaseOrdinal")
