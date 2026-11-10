@@ -671,7 +671,7 @@ export class AutorouterDiagnostics {
           .slice(0, 5)
           .map(
             (pair) =>
-              `${pair.labels.join(" -> ")} ${((pair.iterations / value) * 100).toFixed(1)}% (${pair.iterations} iters)`,
+              `${[...new Set(pair.labels)].join(" -> ")} ${((pair.iterations / value) * 100).toFixed(1)}% (${pair.iterations} iters)`,
           )
         if (pairs.length) this.log(`  hardest connections: ${pairs.join(", ")}`)
       } catch (error) {
