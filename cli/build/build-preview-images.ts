@@ -3,7 +3,7 @@ import fs from "node:fs"
 import path from "node:path"
 import type { AnyCircuitElement } from "circuit-json"
 import { render3dThumbnail } from "lib/shared/render-3d-thumbnail"
-import { convertCircuitJsonToSchematicSvg } from "circuit-to-svg"
+import { convertCircuitJsonToStackedSchematicSheetsSvg } from "circuit-to-svg"
 import type { PcbSnapshotSettings } from "lib/project-config/project-config-schema"
 import { convertSvgToPngBuffer } from "lib/shared/convert-svg-to-png"
 import type { BuildImageFormatSelection } from "./image-format-selection"
@@ -88,7 +88,8 @@ const generatePreviewAssets = async ({
   if (imageFormats.schematicSvgs && hasSchematic) {
     try {
       console.log(`${prefix}Generating schematic SVG...`)
-      const schematicSvg = convertCircuitJsonToSchematicSvg(circuitJson)
+      const schematicSvg =
+        convertCircuitJsonToStackedSchematicSheetsSvg(circuitJson)
       fs.writeFileSync(
         path.join(outputDir, "schematic.svg"),
         schematicSvg,
@@ -103,7 +104,8 @@ const generatePreviewAssets = async ({
   if (imageFormats.schematicPngs && hasSchematic) {
     try {
       console.log(`${prefix}Generating schematic PNG...`)
-      const schematicSvg = convertCircuitJsonToSchematicSvg(circuitJson)
+      const schematicSvg =
+        convertCircuitJsonToStackedSchematicSheetsSvg(circuitJson)
       fs.writeFileSync(
         path.join(outputDir, "schematic.png"),
         await convertSvgToPngBuffer(schematicSvg),
