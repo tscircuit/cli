@@ -55,20 +55,17 @@ export const getComputeCostTestFixture = async (
     subcircuit_id: "subcircuit_a",
     _actualRoutingPhaseOrderIndex: 0,
   }
-  const computeCost = {
-    value: 165,
-    summary: {
-      metric: "hypergraph_route_search_iterations" as const,
-      measuredPairCount: 10,
-      topPairs: [
-        {
-          connectionName: "merged-connection",
-          rootConnectionNames: ["original-connection"],
-          pcbPortIds: [portId("R2"), portId("U1")] as [string, string],
-          iterations: 71,
-        },
-      ],
-    },
+  const computeCostSummary = {
+    metric: "hypergraph_route_search_iterations" as const,
+    measuredPairCount: 10,
+    topPairs: [
+      {
+        connectionName: "merged-connection",
+        rootConnectionNames: ["original-connection"],
+        pcbPortIds: [portId("R2"), portId("U1")] as [string, string],
+        iterations: 71,
+      },
+    ],
   }
   const readJson = (name: string) =>
     JSON.parse(fs.readFileSync(path.join(debugDir, name), "utf8"))
@@ -82,7 +79,7 @@ export const getComputeCostTestFixture = async (
     debugDir,
     logs,
     phase,
-    computeCost,
+    computeCostSummary,
     readJson,
     finalize,
   }

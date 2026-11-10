@@ -54,19 +54,16 @@ type CircuitJsonLookup = {
 
 type Iterations = number
 
-/** Routing compute cost of one stage, as emitted by core. */
-type AutorouterComputeCost = {
-  readonly value: Iterations
-  readonly summary: {
-    readonly metric: "hypergraph_route_search_iterations"
-    readonly measuredPairCount: number
-    readonly topPairs: readonly {
-      readonly connectionName: string
-      readonly rootConnectionNames: readonly string[]
-      readonly pcbPortIds: readonly [string | null, string | null]
-      readonly iterations: Iterations
-    }[]
-  }
+/** Which connections were hardest to route in one stage, as emitted by core. */
+type AutorouterComputeCostSummary = {
+  readonly metric: "hypergraph_route_search_iterations"
+  readonly measuredPairCount: number
+  readonly topPairs: readonly {
+    readonly connectionName: string
+    readonly rootConnectionNames: readonly string[]
+    readonly pcbPortIds: readonly [string | null, string | null]
+    readonly iterations: Iterations
+  }[]
 }
 
 type AutoroutingEventPayload = {
@@ -79,7 +76,7 @@ type AutoroutingEventPayload = {
   routingPhaseIndex?: number | null
   phaseOrdinal?: number
   _actualRoutingPhaseOrderIndex?: number
-  computeCost?: AutorouterComputeCost
+  computeCostSummary?: AutorouterComputeCostSummary
   phaseCount?: number
   connectionCount?: number
   obstacleCount?: number
@@ -200,7 +197,7 @@ export class AutorouterDiagnostics {
     Omit<AutorouterDiagnosticsOptions, "log">
   private phaseOrdinalBySubcircuit = new Map<string, number>()
   private traceCountBySubcircuit = new Map<string, number>()
-  private computeCostByStage = new Map<string, AutorouterComputeCost>()
+  private computeCostByStage = new Map<string, AutorouterComputeCostSummary>()
   private activePhase: ActivePhase | null = null
   private completedPhaseTraces: AutorouterTrace[] = []
   private hasWrittenPlacementSnapshot = false
@@ -357,7 +354,7 @@ export class AutorouterDiagnostics {
     this.captureComputeCost(event)
     if (!this.activePhase) return
     const now = performance.now()
-    this.activePhase.lastProgress = { ...event, computeCost: undefined }
+    this.activePhase.lastProgress = { ...event, computeCostSummary: undefined }
     if (!this.shouldLogPhaseDetails(this.activePhase)) return
 
     if (
@@ -372,7 +369,7 @@ export class AutorouterDiagnostics {
   }
 
   private handleEnd(event: AutoroutingEventPayload) {
-    const computeCost = this.finishComputeCost(event)
+    const computeCostSummary = this.finishComputeCost(event)
     const activePhase = this.matchActivePhase(event)
     if (!activePhase) return
 
@@ -398,7 +395,7 @@ export class AutorouterDiagnostics {
       routingPhaseIndex: activePhase.routingPhaseIndex,
       phaseOrdinal: activePhase.phaseOrdinal,
       _actualRoutingPhaseOrderIndex: activePhase._actualRoutingPhaseOrderIndex,
-      ...computeCost,
+      ...computeCostSummary,
       phaseCount: activePhase.phaseCount,
       connectionCount: activePhase.connectionCount,
       obstacleCount: activePhase.obstacleCount,
@@ -451,7 +448,7 @@ export class AutorouterDiagnostics {
   }
 
   private handleError(event: AutoroutingEventPayload) {
-    const computeCost = this.finishComputeCost(event, true)
+    const computeCostSummary = this.finishComputeCost(event, true)
     const activePhase = this.matchActivePhase(event)
     if (!activePhase) return
 
@@ -466,7 +463,7 @@ export class AutorouterDiagnostics {
       routingPhaseIndex: activePhase.routingPhaseIndex,
       phaseOrdinal: activePhase.phaseOrdinal,
       _actualRoutingPhaseOrderIndex: activePhase._actualRoutingPhaseOrderIndex,
-      ...computeCost,
+      ...computeCostSummary,
       phaseCount: activePhase.phaseCount,
       connectionCount: activePhase.connectionCount,
       obstacleCount: activePhase.obstacleCount,
@@ -574,9 +571,9 @@ export class AutorouterDiagnostics {
   }
 
   private captureComputeCost(event: AutoroutingEventPayload) {
-    if (this.targetPhaseReached || !event.computeCost) return
+    if (this.targetPhaseReached || !event.computeCostSummary) return
     const key = this.getComputeCostKey(event)
-    if (key) this.computeCostByStage.set(key, event.computeCost)
+    if (key) this.computeCostByStage.set(key, event.computeCostSummary)
   }
 
   private getComputeCostMetadata(event: AutoroutingEventPayload | ActivePhase) {
@@ -584,52 +581,49 @@ export class AutorouterDiagnostics {
       const key = this.getComputeCostKey(event)
       const cost =
         (key ? this.computeCostByStage.get(key) : undefined) ??
-        ("computeCost" in event ? event.computeCost : undefined)
+        ("computeCostSummary" in event ? event.computeCostSummary : undefined)
       if (!cost) return {}
       const lookup = this.createCircuitJsonLookup()
-      const computeCost = {
-        value: cost.value,
-        summary: {
-          ...cost.summary,
-          topPairs: cost.summary.topPairs.map((pair) => ({
-            ...pair,
-            labels: pair.pcbPortIds.map((id) => {
-              const port = id
+      const computeCostSummary = {
+        ...cost,
+        topPairs: cost.topPairs.map((pair) => ({
+          ...pair,
+          labels: pair.pcbPortIds.map((id) => {
+            const port = id
+              ? lookup.circuitJson.find(
+                  (element) =>
+                    element.type === "pcb_port" && element.pcb_port_id === id,
+                )
+              : undefined
+            const sourcePort =
+              port?.type === "pcb_port"
                 ? lookup.circuitJson.find(
-                    (element) =>
-                      element.type === "pcb_port" && element.pcb_port_id === id,
+                    (element): element is SourcePort =>
+                      element.type === "source_port" &&
+                      element.source_port_id === port.source_port_id,
                   )
                 : undefined
-              const sourcePort =
-                port?.type === "pcb_port"
-                  ? lookup.circuitJson.find(
-                      (element): element is SourcePort =>
-                        element.type === "source_port" &&
-                        element.source_port_id === port.source_port_id,
-                    )
-                  : undefined
-              const component = sourcePort
-                ? lookup.circuitJson.find(
-                    (element) =>
-                      element.type === "source_component" &&
-                      element.source_component_id ===
-                        sourcePort.source_component_id,
-                  )
-                : undefined
-              return (
-                (sourcePort &&
-                component?.type === "source_component" &&
-                component.name
-                  ? this.getPortSelector(sourcePort, lookup.circuitJson)
-                  : null) ?? pair.connectionName
-              )
-            }),
-          })),
-        },
+            const component = sourcePort
+              ? lookup.circuitJson.find(
+                  (element) =>
+                    element.type === "source_component" &&
+                    element.source_component_id ===
+                      sourcePort.source_component_id,
+                )
+              : undefined
+            return (
+              (sourcePort &&
+              component?.type === "source_component" &&
+              component.name
+                ? this.getPortSelector(sourcePort, lookup.circuitJson)
+                : null) ?? pair.connectionName
+            )
+          }),
+        })),
       }
       // Catch malformed payloads here, before they reach any artifact writer.
-      JSON.stringify(computeCost)
-      return { computeCost }
+      JSON.stringify(computeCostSummary)
+      return { computeCostSummary }
     } catch (error) {
       this.log(
         kleur.yellow(
@@ -644,8 +638,8 @@ export class AutorouterDiagnostics {
     if (this.targetPhaseReached) return {}
     this.captureComputeCost(event)
     const metadata = this.getComputeCostMetadata(event)
-    if (!metadata.computeCost) return metadata
-    // A sibling may have replaced activePhase; retain its computeCost independently.
+    if (!metadata.computeCostSummary) return metadata
+    // A sibling may have replaced activePhase; retain its computeCostSummary independently.
     if (!this.matchActivePhase(event)) {
       this.summary.push({
         subcircuit_id: event.subcircuit_id ?? event.subcircuitId,
@@ -666,12 +660,11 @@ export class AutorouterDiagnostics {
     }
     if (this.options.enabled || (failed && this.options.logOnError)) {
       try {
-        const { value } = metadata.computeCost
-        const pairs = metadata.computeCost.summary.topPairs
+        const pairs = metadata.computeCostSummary.topPairs
           .slice(0, 5)
           .map(
             (pair) =>
-              `${[...new Set(pair.labels)].join(" -> ")} ${((pair.iterations / value) * 100).toFixed(1)}% (${pair.iterations} iters)`,
+              `${[...new Set(pair.labels)].join(" -> ")} (${pair.iterations} iters)`,
           )
         if (pairs.length) this.log(`  hardest connections: ${pairs.join(", ")}`)
       } catch (error) {

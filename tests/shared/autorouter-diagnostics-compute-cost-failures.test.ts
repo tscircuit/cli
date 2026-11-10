@@ -3,13 +3,13 @@ import fs from "node:fs"
 import { AutorouterPhaseTimeoutError } from "lib/shared/autorouter-diagnostics"
 import { getComputeCostTestFixture } from "tests/fixtures/get-compute-cost-test-fixture"
 
-test("computeCost formatting and artifact write failures warn without aborting routing", async () => {
+test("computeCostSummary formatting and artifact write failures warn without aborting routing", async () => {
   const f = await getComputeCostTestFixture({ logOnError: true, timeoutMs: 1 })
   f.root.emit("autorouting:start", f.phase)
   expect(() =>
     f.root.emit("autorouting:error", {
       ...f.phase,
-      computeCost: { ...f.computeCost, summary: null },
+      computeCostSummary: { ...f.computeCostSummary, topPairs: null },
     }),
   ).not.toThrow()
   expect(() => f.finalize()).not.toThrow()
@@ -20,7 +20,7 @@ test("computeCost formatting and artifact write failures warn without aborting r
   f.root.emit("autorouting:start", f.phase)
   f.root.emit("autorouting:progress", {
     ...f.phase,
-    computeCost: f.computeCost,
+    computeCostSummary: f.computeCostSummary,
   })
   expect(() => f.root.emit("autorouting:end", f.phase)).not.toThrow()
   fs.rmSync(f.debugDir, { recursive: true })
@@ -29,7 +29,7 @@ test("computeCost formatting and artifact write failures warn without aborting r
   f.root.emit("autorouting:start", f.phase)
   f.root.emit("autorouting:progress", {
     ...f.phase,
-    computeCost: f.computeCost,
+    computeCostSummary: f.computeCostSummary,
   })
   await new Promise((resolve) => setTimeout(resolve, 5))
   expect(() => f.diagnostics.checkTimeout()).toThrow(
