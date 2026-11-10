@@ -32,6 +32,7 @@ export interface BuildCommandOptions {
   glbs?: boolean
   step?: boolean
   profile?: boolean
+  autorouterThreads?: number
   autorouterDebug?: boolean
   autorouterPhase?: string
   autorouterTimeout?: string

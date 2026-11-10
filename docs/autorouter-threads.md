@@ -5,6 +5,18 @@ on Node and Bun 1.4.2 or newer. On older Bun releases, the CLI defaults to one
 thread (inline routing). This setting is `autorouterThreads` in the platform
 configuration; `threads` is not a supported platform-config field.
 
+For a single build, use `--autorouter-threads`:
+
+```sh
+tsci build index.circuit.tsx --autorouter-threads 2
+tsci build --autorouter-threads 2 --concurrency 3
+```
+
+The flag accepts a positive safe integer and overrides the project's
+`platformConfig.autorouterThreads` for both sequential and parallel builds.
+Use `--autorouter-threads 1` to run inline. When the flag is omitted, the
+project setting or the runtime-dependent default above applies.
+
 ## Configure a project
 
 Create `tscircuit.config.ts` in the project directory:
@@ -20,8 +32,10 @@ export default {
 Then run `tsci build index.circuit.tsx`. Set `autorouterThreads: 1` to use inline
 routing, including when diagnosing a problem or running on an older Bun release.
 The count must be a positive safe integer. The CLI merges this configuration
-after its defaults, so an explicit project setting takes precedence. Use the
-TypeScript or JavaScript config module for `platformConfig`; it is a runtime
+after its defaults, so an explicit project setting takes precedence over the
+defaults; an explicit `build --autorouter-threads` flag takes precedence over
+the project setting. Use the TypeScript or JavaScript config module for
+`platformConfig`; it is a runtime
 configuration field, not a field in the JSON project-config schema.
 
 Counts greater than one enable worker-backed `solveAsync` for the default local
@@ -40,8 +54,9 @@ creation and hide an unsupported runtime. In an isolated test checkout, remove
 `.tscircuit/cache` and previous `dist` outputs before comparing configurations.
 
 `--concurrency` controls how many board files the CLI builds at once. It is
-independent of `autorouterThreads`: four concurrent board builds can request four
-separate pools of four routing workers, in addition to the build workers and main
+independent of `--autorouter-threads` and `autorouterThreads`: four concurrent
+board builds can request four separate pools of four routing workers, in addition
+to the build workers and main
 process. Measure CPU and memory limits in CI before raising both settings.
 
 ## Create workers from library code

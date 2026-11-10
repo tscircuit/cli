@@ -2,7 +2,7 @@ import fs from "node:fs"
 import path from "node:path"
 import JSZip from "jszip"
 import type { PlatformConfig } from "@tscircuit/props"
-import type { Command } from "commander"
+import { type Command, InvalidArgumentError } from "commander"
 import kleur from "kleur"
 import { getCircuitJsonOutputDirName } from "lib/shared/circuit-json-build-cache"
 import { loadRuntimeProjectConfig } from "lib/project-config"
@@ -128,6 +128,19 @@ export const registerBuild = (program: Command) => {
     .option("--ignore-config", "Ignore options from tscircuit.config.json")
     .option("--disable-pcb", "Disable PCB outputs")
     .option("--routing-disabled", "Disable routing during circuit generation")
+    .option(
+      "--autorouter-threads <count>",
+      "Number of workers per local autorouter (positive integer; 1 runs inline)",
+      (value) => {
+        const count = Number(value)
+        if (!Number.isSafeInteger(count) || count < 1) {
+          throw new InvalidArgumentError(
+            "Thread count must be a positive safe integer",
+          )
+        }
+        return count
+      },
+    )
     .option("--disable-parts-engine", "Disable the parts engine")
     .option("--site", "Generate a static site in the dist directory")
     .option(
@@ -344,6 +357,7 @@ export const registerBuild = (program: Command) => {
           if (
             !resolvedOptions?.disablePcb &&
             !resolvedOptions?.routingDisabled &&
+            resolvedOptions?.autorouterThreads === undefined &&
             !resolvedOptions?.disablePartsEngine &&
             !resolvedOptions?.ignorePlacementDrc
           ) {
@@ -358,6 +372,10 @@ export const registerBuild = (program: Command) => {
 
           if (resolvedOptions?.routingDisabled) {
             config.routingDisabled = true
+          }
+
+          if (resolvedOptions?.autorouterThreads !== undefined) {
+            config.autorouterThreads = resolvedOptions.autorouterThreads
           }
 
           if (resolvedOptions?.disablePartsEngine) {
