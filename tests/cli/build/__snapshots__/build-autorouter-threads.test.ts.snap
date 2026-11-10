@@ -1,9 +1,0 @@
-// Bun Snapshot v1, https://bun.sh/docs/test/snapshots
-
-exports[`build accepts a solver worker count independently of file concurrency 1`] = `
-{
-  "autorouterThreads": 2,
-  "concurrency": "3",
-  "errorCode": undefined,
-}
-`;
