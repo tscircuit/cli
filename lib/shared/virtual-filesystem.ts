@@ -165,10 +165,7 @@ export const getVirtualFileSystemFromDirPath = async (
     if (contentFormat === "buffer") {
       vfs[normalizedPath] = content
     } else if (contentFormat === "arraybuffer") {
-      vfs[normalizedPath] = content.buffer.slice(
-        content.byteOffset,
-        content.byteOffset + content.byteLength,
-      )
+      vfs[normalizedPath] = new Uint8Array(content).buffer
     } else {
       vfs[normalizedPath] = content.toString("utf8")
     }
