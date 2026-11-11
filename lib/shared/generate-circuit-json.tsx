@@ -6,7 +6,7 @@ import type { AnyCircuitElement } from "circuit-json"
 import type { PipelineModeling } from "@tscircuit/pcb-spice-pipeline"
 import Debug from "debug"
 import { abbreviateStringifyObject } from "lib/utils/abbreviate-stringify-object"
-import { getVirtualFileSystemFromDirPath } from "make-vfs"
+import { getVirtualFileSystemFromDirPath } from "lib/utils/make-vfs"
 import {
   AutorouterDiagnostics,
   type AutorouterDiagnosticsOptions,

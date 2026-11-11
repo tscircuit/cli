@@ -17,6 +17,10 @@ const ALLOW_BUNDLING = [
   "circuit-json-to-pnp-csv",
 ]
 
+const makeVfsShimPath = fileURLToPath(
+  new URL("../lib/utils/make-vfs.ts", import.meta.url),
+)
+
 const result = await Bun.build({
   entrypoints: [
     "./cli/main.ts",
@@ -26,6 +30,19 @@ const result = await Bun.build({
   ],
   target: "node",
   outdir: "./dist",
+  plugins: [
+    {
+      name: "replace-bundled-make-vfs",
+      setup(build) {
+        // Redirect direct and transitive `make-vfs` imports (e.g. via winterspec)
+        // to the native fs/promises implementation so pre-bundled glob/minimatch/
+        // brace-expansion copies with advisories are not shipped in dist/*.
+        build.onResolve({ filter: /^make-vfs$/ }, () => ({
+          path: makeVfsShimPath,
+        }))
+      },
+    },
+  ],
   external: [
     ...tscircuitPackageJsonDeps.filter((dep) => !ALLOW_BUNDLING.includes(dep)),
     "zod",
