@@ -5,6 +5,9 @@ export type CircuitJsonIssue = {
   message?: string
 } & Record<string, any>
 
+export const getIssueType = (issue: CircuitJsonIssue): string =>
+  issue.warning_type ?? issue.error_type ?? issue.type ?? "unknown_issue"
+
 export function analyzeCircuitJson(circuitJson: any[]): {
   errors: CircuitJsonIssue[]
   warnings: CircuitJsonIssue[]
@@ -44,9 +47,7 @@ export function formatCircuitJsonDiagnostics({
   const lines = [`Errors: ${errors.length}`, `Warnings: ${warnings.length}`]
 
   for (const issue of [...errors, ...warnings]) {
-    const issueType =
-      issue.warning_type ?? issue.error_type ?? issue.type ?? "unknown_issue"
-    lines.push(`- ${issueType}: ${issue.message ?? ""}`)
+    lines.push(`- ${getIssueType(issue)}: ${issue.message ?? ""}`)
   }
 
   return lines.join("\n")
