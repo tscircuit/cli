@@ -3,7 +3,7 @@
 // - @author/package-name
 export const getUnscopedPackageName = (packageName: string) => {
   return packageName
-    .replace(/^@[^\.]+\./, "")
+    .replace(/^@tsci\/[^.]+\./, "")
     .split("/")
     .pop()
 }
