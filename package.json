@@ -104,7 +104,8 @@
     }
   },
   "overrides": {
-    "altiumts": "0.0.59"
+    "altiumts": "0.0.59",
+    "kicadts": "0.0.65"
   },
   "scripts": {
     "start": "bun run dev",
