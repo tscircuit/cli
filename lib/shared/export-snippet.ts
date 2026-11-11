@@ -31,6 +31,7 @@ import { convertCircuitJsonToDsnString } from "dsn-converter"
 import JSZip from "jszip"
 import type { PcbSnapshotSettings } from "lib/project-config/project-config-schema"
 import { generateCircuitJson } from "lib/shared/generate-circuit-json"
+import { convertModelUrlsToFileUrls } from "cli/build/convert-model-urls-to-file-urls"
 import { getCircuitJsonToGltfOptions } from "lib/shared/get-circuit-json-to-gltf-options"
 import { getOrGenerateCircuitJson } from "lib/shared/get-or-generate-circuit-json"
 import { getPlatformConfigWithCliDefaults } from "lib/shared/get-platform-config-with-cli-defaults"
@@ -156,6 +157,7 @@ export const exportSnippet = async ({
   }
 
   const projectDir = path.dirname(filePath)
+  const resolvedProjectDir = path.resolve(projectDir)
   const outputBaseName = path.basename(filePath).replace(/\.[^.]+$/, "")
   const outputFileName = `${outputBaseName}${OUTPUT_EXTENSIONS[format]}`
   let outputDestination =
@@ -240,6 +242,7 @@ export const exportSnippet = async ({
         outputContent = await renderExplosionVideo(
           circuitJson,
           explosionVideoOptions,
+          resolvedProjectDir,
         )
       } catch (error) {
         onError(
@@ -294,7 +297,9 @@ export const exportSnippet = async ({
         }
         if (!outputPath)
           outputDestination = path.join(projectDir, pages[0]!.fileName)
-        outputContent = (await renderDrawingPages(circuitJson, drawing))[0]!.svg
+        outputContent = (
+          await renderDrawingPages(circuitJson, drawing, resolvedProjectDir)
+        )[0]!.svg
       } catch (error) {
         onError(
           `Error exporting drawing: ${error instanceof Error ? error.message : String(error)}`,
@@ -331,7 +336,7 @@ export const exportSnippet = async ({
     case "gltf":
       outputContent = JSON.stringify(
         await convertCircuitJsonToGltf(
-          circuitJson,
+          convertModelUrlsToFileUrls(circuitJson, resolvedProjectDir),
           getCircuitJsonToGltfOptions({ format: "gltf" }),
         ),
         null,
@@ -341,7 +346,7 @@ export const exportSnippet = async ({
     case "glb":
       outputContent = Buffer.from(
         (await convertCircuitJsonToGltf(
-          circuitJson,
+          convertModelUrlsToFileUrls(circuitJson, resolvedProjectDir),
           getCircuitJsonToGltfOptions({ format: "glb" }),
         )) as ArrayBuffer,
       )
@@ -448,7 +453,7 @@ export const exportSnippet = async ({
         exportMode: "pcb",
         includeComponents: true,
         includeExternalMeshes: true,
-        fsMap: await loadLocalStepModelFsMap(circuitJson),
+        fsMap: await loadLocalStepModelFsMap(circuitJson, resolvedProjectDir),
       })
       break
     case "assembly-svg":

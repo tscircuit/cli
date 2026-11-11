@@ -60,7 +60,10 @@ export const buildGlbs = async ({
 
     try {
       console.log(`${prefix}Converting circuit to GLB...`)
-      const circuitJsonWithFileUrls = convertModelUrlsToFileUrls(circuitJson)
+      const circuitJsonWithFileUrls = convertModelUrlsToFileUrls(
+        circuitJson,
+        path.dirname(build.sourcePath),
+      )
       const glbBuffer = await convertCircuitJsonToGltf(
         circuitJsonWithFileUrls,
         getCircuitJsonToGltfOptions({ format: "glb" }),

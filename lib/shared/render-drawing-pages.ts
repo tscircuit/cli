@@ -47,6 +47,7 @@ export const selectDrawingPages = (
 export const renderDrawingPages = async (
   circuitJson: AnyCircuitElement[],
   selector?: string,
+  baseDir?: string,
 ) => {
   const pages = selectDrawingPages(circuitJson, selector)
   if (!pages.length) return []
@@ -59,6 +60,7 @@ export const renderDrawingPages = async (
   )
   const geometry = convertModelUrlsToFileUrls(
     circuitJson.filter((e) => !e.type.startsWith("drawing_")),
+    baseDir,
   ) as AnyCircuitElement[]
   const scenes = new Map<string, ReturnType<typeof createSceneFromGLTF>>()
   const rendered = []
