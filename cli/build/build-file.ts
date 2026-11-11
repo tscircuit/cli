@@ -4,6 +4,11 @@ import type { PlatformConfig } from "@tscircuit/props"
 import type { AnyCircuitElement } from "circuit-json"
 import kleur from "kleur"
 import { analyzeCircuitJson } from "lib/shared/circuit-json-diagnostics"
+import {
+  collapseRepeatedIssues,
+  getIssueTypeCountLines,
+} from "lib/shared/collapse-repeated-issues"
+import { writeBuildErrorsFile } from "lib/shared/write-build-errors-file"
 import { generateCircuitJson } from "lib/shared/generate-circuit-json"
 import { getPlatformConfigWithCliDefaults } from "lib/shared/get-platform-config-with-cli-defaults"
 import type { AutorouterDiagnosticsOptions } from "lib/shared/autorouter-diagnostics"
@@ -80,21 +85,43 @@ export const buildFile = async (
       warnings: diagnostics.warnings,
       ignoreOptions: options,
     })
+    const errorsFilePath = writeBuildErrorsFile(
+      output,
+      filteredDiagnostics.errors,
+    )
 
     if (!options?.ignoreWarnings) {
-      for (const warn of filteredDiagnostics.warnings) {
+      const { issuesToLog, omittedLines } = collapseRepeatedIssues(
+        filteredDiagnostics.warnings,
+      )
+      for (const warn of issuesToLog) {
         const msg = warn.message || JSON.stringify(warn)
         console.log(kleur.yellow(msg))
       }
+      for (const line of omittedLines) console.log(kleur.yellow(line))
     }
 
     if (!options?.ignoreErrors) {
-      for (const err of filteredDiagnostics.errors) {
+      const { issuesToLog, omittedLines } = collapseRepeatedIssues(
+        filteredDiagnostics.errors,
+      )
+      for (const err of issuesToLog) {
         const msg = err.message || JSON.stringify(err)
         console.error(kleur.red(msg))
         if (err.stack) {
           console.log(err.stack)
         }
+      }
+      for (const line of omittedLines) console.error(kleur.red(line))
+      if (errorsFilePath) {
+        console.error(
+          kleur.red(
+            [
+              `${filteredDiagnostics.errors.length} error(s), all written to ${path.relative(projectDir, errorsFilePath)}:`,
+              ...getIssueTypeCountLines(filteredDiagnostics.errors),
+            ].join("\n"),
+          ),
+        )
       }
     }
 
