@@ -8,6 +8,7 @@ import {
   collapseRepeatedIssues,
   getIssueTypeCountLines,
 } from "../../lib/shared/collapse-repeated-issues"
+import { writeBuildErrorsFile } from "../../lib/shared/write-build-errors-file"
 import { generateCircuitJson } from "../../lib/shared/generate-circuit-json"
 import { getPlatformConfigWithCliDefaults } from "../../lib/shared/get-platform-config-with-cli-defaults"
 import { mergePlatformConfigs } from "../../lib/shared/platform-config-utils"
@@ -107,6 +108,10 @@ export const handleBuildFile = async (
       warnings: diagnostics.warnings,
       ignoreOptions: options,
     })
+    const errorsFilePath = writeBuildErrorsFile(
+      outputPath,
+      filteredDiagnostics.errors,
+    )
 
     // The result keeps every message; only the log is collapsed.
     if (!options?.ignoreWarnings) {
@@ -133,9 +138,9 @@ export const handleBuildFile = async (
         if (loggedErrors.has(err)) workerLog(`Error: ${msg}`)
       }
       for (const line of omittedLines) workerLog(`Error: ${line}`)
-      if (filteredDiagnostics.errors.length > 0) {
+      if (errorsFilePath) {
         workerLog(
-          `${filteredDiagnostics.errors.length} error(s) in ${path.relative(projectDir, outputPath)}:`,
+          `${filteredDiagnostics.errors.length} error(s), all written to ${path.relative(projectDir, errorsFilePath)}:`,
         )
         for (const line of getIssueTypeCountLines(filteredDiagnostics.errors)) {
           workerLog(line)

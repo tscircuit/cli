@@ -8,6 +8,7 @@ import {
   collapseRepeatedIssues,
   getIssueTypeCountLines,
 } from "lib/shared/collapse-repeated-issues"
+import { writeBuildErrorsFile } from "lib/shared/write-build-errors-file"
 import { generateCircuitJson } from "lib/shared/generate-circuit-json"
 import { getPlatformConfigWithCliDefaults } from "lib/shared/get-platform-config-with-cli-defaults"
 import type { AutorouterDiagnosticsOptions } from "lib/shared/autorouter-diagnostics"
@@ -84,6 +85,10 @@ export const buildFile = async (
       warnings: diagnostics.warnings,
       ignoreOptions: options,
     })
+    const errorsFilePath = writeBuildErrorsFile(
+      output,
+      filteredDiagnostics.errors,
+    )
 
     if (!options?.ignoreWarnings) {
       const { issuesToLog, omittedLines } = collapseRepeatedIssues(
@@ -108,11 +113,11 @@ export const buildFile = async (
         }
       }
       for (const line of omittedLines) console.error(kleur.red(line))
-      if (filteredDiagnostics.errors.length > 0) {
+      if (errorsFilePath) {
         console.error(
           kleur.red(
             [
-              `${filteredDiagnostics.errors.length} error(s) in ${path.relative(projectDir, output)}:`,
+              `${filteredDiagnostics.errors.length} error(s), all written to ${path.relative(projectDir, errorsFilePath)}:`,
               ...getIssueTypeCountLines(filteredDiagnostics.errors),
             ].join("\n"),
           ),

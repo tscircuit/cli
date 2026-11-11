@@ -1,5 +1,5 @@
 import { expect, test } from "bun:test"
-import { writeFile } from "node:fs/promises"
+import { readFile, stat, writeFile } from "node:fs/promises"
 import path from "node:path"
 import { getCliTestFixture } from "../../fixtures/get-cli-test-fixture"
 
@@ -33,6 +33,14 @@ test("build collapses repeated errors and prints a count per error type", async 
   const { exitCode, stderr } = await runCommand("tsci build board.circuit.json")
 
   expect(exitCode).toBe(1)
+
+  const errorsFilePath = path.join(tmpDir, "dist", "board", "errors.json")
+  const writtenErrors = JSON.parse(await readFile(errorsFilePath, "utf-8"))
+  expect(writtenErrors).toHaveLength(circuitJson.length)
+  expect(writtenErrors.at(-1).message).toBe(
+    "Port [U1.pin25] is not connected to net [N25] by a PCB trace.",
+  )
+
   const errorLines = stderr
     .split("\n")
     .filter((line) => !line.startsWith("Build exiting"))
@@ -52,9 +60,25 @@ test("build collapses repeated errors and prints a count per error type", async 
     Port [U1.pin9] is not connected to net [N9] by a PCB trace.
     Port [U1.pin10] is not connected to net [N10] by a PCB trace.
     … 15 more pcb_port_not_connected_error not shown
-    27 error(s) in dist/board/circuit.json:
+    27 error(s), all written to dist/board/errors.json:
       25  pcb_port_not_connected_error
        1  pcb_autorouting_error
        1  source_trace_not_connected_error"
   `)
+}, 30_000)
+
+test("a build without errors removes errors.json from an earlier build", async () => {
+  const { tmpDir, runCommand } = await getCliTestFixture()
+  const circuitJsonPath = path.join(tmpDir, "board.circuit.json")
+  const errorsFilePath = path.join(tmpDir, "dist", "board", "errors.json")
+  await writeFile(path.join(tmpDir, "package.json"), "{}")
+
+  await writeFile(circuitJsonPath, JSON.stringify(circuitJson))
+  await runCommand("tsci build board.circuit.json")
+  expect((await stat(errorsFilePath)).isFile()).toBe(true)
+
+  await writeFile(circuitJsonPath, JSON.stringify([]))
+  const { exitCode } = await runCommand("tsci build board.circuit.json")
+  expect(exitCode).toBe(0)
+  expect(stat(errorsFilePath)).rejects.toThrow()
 }, 30_000)
