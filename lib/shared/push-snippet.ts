@@ -179,9 +179,19 @@ export const pushSnippet = async ({
   }
 
   const ky = getRegistryApiKy({ sessionToken })
-  const currentUsername = process.env.TSCIRCUIT_TOKEN
-    ? (await fetchAccount())?.tscircuit_handle
-    : cliConfig.get("tscircuitHandle")
+  let currentUsername: string | undefined
+  if (process.env.TSCIRCUIT_TOKEN) {
+    try {
+      const account = await fetchAccount({ throwOnError: true })
+      currentUsername = account?.tscircuit_handle ?? undefined
+    } catch (error) {
+      const message = error instanceof Error ? error.message : String(error)
+      onError(`Could not verify your account for publishing: ${message}`)
+      return onExit(1)
+    }
+  } else {
+    currentUsername = cliConfig.get("tscircuitHandle")
+  }
   if (!currentUsername) {
     onError("You need to set your tscircuit handle to publish packages")
     return onExit(1)
