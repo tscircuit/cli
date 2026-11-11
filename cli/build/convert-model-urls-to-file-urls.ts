@@ -1,41 +1,54 @@
 import path from "node:path"
 import { pathToFileURL } from "node:url"
+import type { AnyCircuitElement } from "circuit-json"
+
+const modelUrlKeys = [
+  "model_glb_url",
+  "glb_model_url",
+  "model_stl_url",
+  "stl_model_url",
+  "model_obj_url",
+  "obj_model_url",
+  "model_gltf_url",
+  "gltf_model_url",
+  "model_step_url",
+  "step_model_url",
+] as const
+
+type CircuitElementWithModelUrls = AnyCircuitElement &
+  Partial<Record<(typeof modelUrlKeys)[number], string>>
 
 /**
  * Convert local file paths in model URLs to file:// URLs for fetch() compatibility.
- * The circuit-json-to-gltf library uses fetch() to load GLB/STL/OBJ/GLTF files,
+ * The circuit-json-to-gltf library uses fetch() to load GLB/STL/OBJ/GLTF/STEP files,
  * which requires proper URLs rather than local file paths.
  */
-export const convertModelUrlsToFileUrls = (circuitJson: any[]): any[] => {
-  const modelUrlKeys = [
-    "model_glb_url",
-    "glb_model_url",
-    "model_stl_url",
-    "stl_model_url",
-    "model_obj_url",
-    "obj_model_url",
-    "model_gltf_url",
-    "gltf_model_url",
-    "model_step_url",
-    "step_model_url",
-  ]
-
+export const convertModelUrlsToFileUrls = (
+  circuitJson: AnyCircuitElement[],
+  baseDirectory = process.cwd(),
+): AnyCircuitElement[] => {
   return circuitJson.map((element) => {
     if (!element || typeof element !== "object") return element
 
-    const updated = { ...element }
+    const updated: CircuitElementWithModelUrls = { ...element }
     for (const key of modelUrlKeys) {
-      const value = updated[key]
-      if (typeof value === "string" && value.length > 0) {
-        // Skip values that are already URLs (http://, https://, file://, etc.)
-        if (value.match(/^[a-zA-Z]+:\/\//)) continue
+      const modelUrl = updated[key]
+      if (typeof modelUrl === "string" && modelUrl.length > 0) {
+        // Skip values that already carry a URI scheme (http://, https://, file://, data:, etc.),
+        // while excluding single-letter Windows drive paths such as C:\model.step.
+        if (
+          /^[a-zA-Z][a-zA-Z0-9+.-]*:/.test(modelUrl) &&
+          !/^[a-zA-Z]:[\\/]/.test(modelUrl)
+        ) {
+          continue
+        }
 
-        if (value.startsWith("/") || value.match(/^[a-zA-Z]:\\/)) {
-          // Absolute path (Unix or Windows)
-          updated[key] = pathToFileURL(value).href
-        } else if (value.startsWith(".")) {
-          // Relative path (e.g. ./chip.glb) — resolve against cwd
-          updated[key] = pathToFileURL(path.resolve(process.cwd(), value)).href
+        if (modelUrl.startsWith("/") || /^[a-zA-Z]:[\\/]/.test(modelUrl)) {
+          updated[key] = pathToFileURL(modelUrl).href
+        } else {
+          updated[key] = pathToFileURL(
+            path.resolve(baseDirectory, modelUrl),
+          ).href
         }
       }
     }
