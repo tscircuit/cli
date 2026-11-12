@@ -25,6 +25,7 @@ export const importJlcpcbPart = async ({
       process.cwd(),
       {
         download,
+        includeReferenceDesigns: true,
         useExactFootprint,
         excludePinAttributes,
       },

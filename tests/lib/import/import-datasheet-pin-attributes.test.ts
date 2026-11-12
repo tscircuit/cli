@@ -523,7 +523,7 @@ for (const hasSearchResult of [true, false]) {
     const previousCwd = process.cwd()
     let datasheetRequests = 0
     const fetchMock = mockFetch(async (input) => {
-      const url = new URL(String(input))
+      const url = new URL(input instanceof Request ? input.url : input)
       if (url.hostname === "jlcsearch.tscircuit.com") {
         return Response.json({
           components: hasSearchResult

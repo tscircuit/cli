@@ -3,6 +3,11 @@ import type { Command } from "commander"
 import { normalizeManufacturerPartNumber } from "easyeda"
 import kleur from "kleur"
 import { fetchDatasheet } from "lib/import/fetch-datasheet"
+import {
+  getReferenceDesigns,
+  saveReferenceDesigns,
+  type ReferenceDesign,
+} from "lib/import/import-reference-designs"
 import { getRegistryApiKy } from "lib/registry-api/get-ky"
 import { addPackage } from "lib/shared/add-package"
 import { prompts } from "lib/utils/prompts"
@@ -20,9 +25,7 @@ import {
 export const registerImport = (program: Command) => {
   program
     .command("import")
-    .description(
-      "Search JLCPCB or the tscircuit registry and import a component",
-    )
+    .description("Import a component and matching reference designs")
     .argument("<query...>", "Chip name, part number, or package name")
     .option("--jlcpcb", "Search JLCPCB components")
     .option("--lcsc", "Alias for --jlcpcb")
@@ -58,35 +61,49 @@ export const registerImport = (program: Command) => {
           stream: process.stdout,
         }).start()
 
-        if (
-          process.env.TSCIRCUIT_STANDALONE === "1" &&
+        const canImportDatasheet =
           !hasFilters &&
           !opts.download &&
           !opts.useExactFootprint &&
           !opts.excludePinAttributes
-        ) {
+        const importDatasheetComponent = async (
+          matchedDesigns?: ReferenceDesign[],
+        ) => {
           const datasheet = await fetchDatasheet(query).catch(() => undefined)
           if (
-            typeof datasheet?.generated_tsx === "string" &&
-            datasheet.generated_tsx.trim()
+            typeof datasheet?.generated_tsx !== "string" ||
+            !datasheet.generated_tsx.trim()
           ) {
-            try {
-              const componentName = normalizeManufacturerPartNumber(
-                datasheet.chip_name,
-              )
-              const componentDir = path.join(process.cwd(), "imports")
-              const filePath = path.join(componentDir, `${componentName}.tsx`)
-              await mkdir(componentDir, { recursive: true })
-              await writeFile(filePath, datasheet.generated_tsx)
-              spinner.succeed(kleur.green(`Imported ${filePath}`))
-            } catch (error) {
-              spinner.fail(kleur.red("Failed to import part"))
-              console.error(error instanceof Error ? error.message : error)
-              process.exitCode = 1
-            }
-            return
+            return false
           }
+          try {
+            const componentName = normalizeManufacturerPartNumber(
+              datasheet.chip_name,
+            )
+            const referenceDesigns =
+              matchedDesigns ?? (await getReferenceDesigns(datasheet.chip_name))
+            const importsDir = path.join(process.cwd(), "imports")
+            const componentDir = referenceDesigns.length
+              ? path.join(importsDir, componentName)
+              : importsDir
+            const filePath = path.join(componentDir, `${componentName}.tsx`)
+            await mkdir(componentDir, { recursive: true })
+            await writeFile(filePath, datasheet.generated_tsx)
+            spinner.succeed(kleur.green(`Imported ${filePath}`))
+            await saveReferenceDesigns(referenceDesigns, componentDir)
+          } catch (error) {
+            spinner.fail(kleur.red("Failed to import part"))
+            console.error(error instanceof Error ? error.message : error)
+            process.exitCode = 1
+          }
+          return true
         }
+        if (
+          process.env.TSCIRCUIT_STANDALONE === "1" &&
+          canImportDatasheet &&
+          (await importDatasheetComponent())
+        )
+          return
 
         let registryResults: Array<{
           name: string
@@ -164,6 +181,15 @@ export const registerImport = (program: Command) => {
             return
           }
 
+          if (canImportDatasheet) {
+            const referenceDesigns = await getReferenceDesigns(query)
+            if (
+              referenceDesigns.length &&
+              (await importDatasheetComponent(referenceDesigns))
+            )
+              return
+          }
+
           console.log(
             kleur.yellow(
               `No results found for "${query}" in the tscircuit registry or JLCPCB.`,
@@ -223,6 +249,16 @@ export const registerImport = (program: Command) => {
           try {
             await addPackage(choice.name)
             installSpinner.succeed(kleur.green(`Installed ${choice.name}`))
+            const partName = choice.name.split("/").at(-1)!
+            const referenceDesigns = await getReferenceDesigns(partName)
+            await saveReferenceDesigns(
+              referenceDesigns,
+              path.join(
+                process.cwd(),
+                "imports",
+                normalizeManufacturerPartNumber(partName),
+              ),
+            )
           } catch (error) {
             installSpinner.fail(kleur.red("Failed to add package"))
             console.error(error instanceof Error ? error.message : error)
