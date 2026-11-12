@@ -3,6 +3,7 @@ export const partsEngineBaseUrlEnvVars = {
   digikey: "TSCIRCUIT_DIGIKEY_BASE_URL",
   mouser: "TSCIRCUIT_MOUSER_BASE_URL",
   "datasheet-api": "TSCIRCUIT_DATASHEET_API_BASE_URL",
+  "reference-design-catalog": "TSCIRCUIT_REFERENCE_DESIGN_CATALOG_BASE_URL",
 } as const
 
 export const getPartsEngineBaseUrl = (

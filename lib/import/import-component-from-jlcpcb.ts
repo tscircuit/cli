@@ -27,6 +27,7 @@ export interface ImportComponentFromJlcpcbOptions {
 
 export interface ImportComponentFromJlcpcbResult {
   filePath: string
+  manufacturerPartNumber?: string
   footprintConversion:
     | ImportedFootprintConversion
     | {
@@ -107,5 +108,9 @@ export const importComponentFromJlcpcb = async (
 
   const filePath = path.join(componentDir, `${componentName}.tsx`)
   await fs.writeFile(filePath, tsx)
-  return { filePath, footprintConversion }
+  return {
+    filePath,
+    footprintConversion,
+    manufacturerPartNumber: rawPn || undefined,
+  }
 }

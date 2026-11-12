@@ -6,6 +6,10 @@ import {
   getBoardFilePatterns,
   loadRuntimeProjectConfig,
 } from "lib/project-config"
+import {
+  REFERENCE_DESIGNS_DIRECTORY,
+  REFERENCE_DESIGN_METADATA_FILENAME,
+} from "./reference-design-paths"
 import { DEFAULT_IGNORED_PATTERNS } from "./should-ignore-path"
 
 type FindBoardFilesOptions = {
@@ -84,6 +88,24 @@ const findBoardFilesFromPatterns = ({
   const relativeBoardFiles = globbySync(boardFilePatterns, {
     cwd: projectDir,
     ignore,
+  }).filter((file) => {
+    // Only skip downloaded designs in implicit board discovery.
+    if (boardFilePatterns !== DEFAULT_BOARD_FILE_PATTERNS || filePaths.length)
+      return true
+    const [directory, author, packageName] = file.split("/")
+    return (
+      directory !== REFERENCE_DESIGNS_DIRECTORY ||
+      !packageName ||
+      !fs.existsSync(
+        path.join(
+          projectDir,
+          directory,
+          author,
+          packageName,
+          REFERENCE_DESIGN_METADATA_FILENAME,
+        ),
+      )
+    )
   })
 
   const absoluteBoardFiles = relativeBoardFiles.map((f) =>
