@@ -9,51 +9,43 @@ import rawRegulator from "tests/fixtures/assets/datasheets/C460327.raweasy.json"
 
 const partNumber = "AP2127K-2.8TRG1"
 const packageName = "author/reference-regulator"
-const releaseId = "successful-build"
+const releaseId = "88ae1129-961b-43dc-8e68-d66c8d5a6b27"
 const designSource = "export default () => <board />\n"
 const componentSource = "export const AP2127K_2_8TRG1 = () => <chip />\n"
 
-for (const scenario of ["supplier", "datasheet", "failed-download"] as const) {
+for (const scenario of [
+  "supplier",
+  "datasheet",
+  "failed-download",
+  "no-reference",
+] as const) {
   test(`tsci import handles reference design source (${scenario})`, async () => {
     const projectDir = temporaryDirectory()
     const previousCwd = process.cwd()
-    const destination = path.join(projectDir, "reference-designs", packageName)
+    const importsDir = path.join(projectDir, "imports")
+    const componentDir = path.join(importsDir, "AP2127K_2_8TRG1")
+    const destination = path.join(
+      componentDir,
+      "references",
+      "author.reference-regulator",
+    )
     const boardFile = path.join(destination, "index.circuit.tsx")
-    const componentFile = path.join(projectDir, "imports/AP2127K_2_8TRG1.tsx")
+    const componentFile = path.join(
+      scenario === "no-reference" ? importsDir : componentDir,
+      "AP2127K_2_8TRG1.tsx",
+    )
     const requestedFiles: string[] = []
     const mock = spyOn(globalThis, "fetch").mockImplementation(
       Object.assign(
         async (input: Parameters<typeof fetch>[0]) => {
           const url = new URL(input instanceof Request ? input.url : input)
-          if (url.pathname.endsWith("/reference-design-packages.json")) {
+          if (url.pathname.endsWith("/datasheets/list_reference_designs")) {
+            expect(url.searchParams.get("chip_name")).toBe(partNumber)
             return Response.json({
-              packages: [packageName, "author/other-design"],
-            })
-          }
-          if (url.pathname.endsWith("/packages/get")) {
-            return Response.json({
-              package: {
-                is_private: false,
-                last_built_release_id:
-                  url.searchParams.get("name") === packageName
-                    ? releaseId
-                    : "other-build",
-              },
-            })
-          }
-          if (url.pathname.endsWith("/package_files/get")) {
-            expect(url.searchParams.get("file_path")).toBe("dist/preview.json")
-            const part =
-              url.searchParams.get("package_release_id") === releaseId
-                ? ` ${partNumber.toLowerCase()} `
-                : "AP2127K-3.3TRG1"
-            return Response.json({
-              package_file: {
-                content_text: JSON.stringify({
-                  version: 2,
-                  componentPartNumbers: [part],
-                }),
-              },
+              reference_designs:
+                scenario === "no-reference"
+                  ? []
+                  : [{ name: packageName, package_release_id: releaseId }],
             })
           }
           if (url.pathname.endsWith("/package_files/list")) {
@@ -120,6 +112,10 @@ for (const scenario of ["supplier", "datasheet", "failed-download"] as const) {
       process.chdir(projectDir)
       await runImport()
       expect(await Bun.file(componentFile).exists()).toBe(true)
+      if (scenario === "no-reference") {
+        expect(requestedFiles).toEqual([])
+        return
+      }
       expect(requestedFiles).toEqual(["source", "component"])
       if (scenario === "failed-download") {
         expect(await Bun.file(boardFile).exists()).toBe(false)
@@ -130,6 +126,7 @@ for (const scenario of ["supplier", "datasheet", "failed-download"] as const) {
         await readFile(path.join(destination, "imports/regulator.tsx"), "utf8"),
       ).toBe(componentSource)
       expect(findBoardFiles({ projectDir })).toEqual([])
+      expect(findBoardFiles({ projectDir: destination })).toEqual([boardFile])
       await writeFile(boardFile, "// local edit\n")
       await runImport()
       expect(await readFile(boardFile, "utf8")).toBe("// local edit\n")

@@ -94,7 +94,6 @@ export async function getCliTestFixture(
 
     // Set test mode environment variable
     const env = {
-      TSCIRCUIT_REFERENCE_DESIGN_CATALOG_BASE_URL: apiUrl,
       ...process.env,
       ...opts.env,
       TSCI_TEST_MODE: "true",

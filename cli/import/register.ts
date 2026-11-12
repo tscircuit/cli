@@ -3,7 +3,11 @@ import type { Command } from "commander"
 import { normalizeManufacturerPartNumber } from "easyeda"
 import kleur from "kleur"
 import { fetchDatasheet } from "lib/import/fetch-datasheet"
-import { importReferenceDesigns } from "lib/import/import-reference-designs"
+import {
+  getReferenceDesigns,
+  saveReferenceDesigns,
+  type ReferenceDesign,
+} from "lib/import/import-reference-designs"
 import { getRegistryApiKy } from "lib/registry-api/get-ky"
 import { addPackage } from "lib/shared/add-package"
 import { prompts } from "lib/utils/prompts"
@@ -63,7 +67,7 @@ export const registerImport = (program: Command) => {
           !opts.useExactFootprint &&
           !opts.excludePinAttributes
         const importDatasheetComponent = async (
-          includeReferenceDesigns: boolean,
+          matchedDesigns?: ReferenceDesign[],
         ) => {
           const datasheet = await fetchDatasheet(query).catch(() => undefined)
           if (
@@ -76,13 +80,17 @@ export const registerImport = (program: Command) => {
             const componentName = normalizeManufacturerPartNumber(
               datasheet.chip_name,
             )
-            const componentDir = path.join(process.cwd(), "imports")
+            const referenceDesigns =
+              matchedDesigns ?? (await getReferenceDesigns(datasheet.chip_name))
+            const importsDir = path.join(process.cwd(), "imports")
+            const componentDir = referenceDesigns.length
+              ? path.join(importsDir, componentName)
+              : importsDir
             const filePath = path.join(componentDir, `${componentName}.tsx`)
             await mkdir(componentDir, { recursive: true })
             await writeFile(filePath, datasheet.generated_tsx)
             spinner.succeed(kleur.green(`Imported ${filePath}`))
-            if (includeReferenceDesigns)
-              await importReferenceDesigns(datasheet.chip_name)
+            await saveReferenceDesigns(referenceDesigns, componentDir)
           } catch (error) {
             spinner.fail(kleur.red("Failed to import part"))
             console.error(error instanceof Error ? error.message : error)
@@ -93,7 +101,7 @@ export const registerImport = (program: Command) => {
         if (
           process.env.TSCIRCUIT_STANDALONE === "1" &&
           canImportDatasheet &&
-          (await importDatasheetComponent(true))
+          (await importDatasheetComponent())
         )
           return
 
@@ -173,12 +181,14 @@ export const registerImport = (program: Command) => {
             return
           }
 
-          if (
-            canImportDatasheet &&
-            (await importReferenceDesigns(query)) &&
-            (await importDatasheetComponent(false))
-          )
-            return
+          if (canImportDatasheet) {
+            const referenceDesigns = await getReferenceDesigns(query)
+            if (
+              referenceDesigns.length &&
+              (await importDatasheetComponent(referenceDesigns))
+            )
+              return
+          }
 
           console.log(
             kleur.yellow(
@@ -239,7 +249,16 @@ export const registerImport = (program: Command) => {
           try {
             await addPackage(choice.name)
             installSpinner.succeed(kleur.green(`Installed ${choice.name}`))
-            await importReferenceDesigns(choice.name.split("/").at(-1))
+            const partName = choice.name.split("/").at(-1)!
+            const referenceDesigns = await getReferenceDesigns(partName)
+            await saveReferenceDesigns(
+              referenceDesigns,
+              path.join(
+                process.cwd(),
+                "imports",
+                normalizeManufacturerPartNumber(partName),
+              ),
+            )
           } catch (error) {
             installSpinner.fail(kleur.red("Failed to add package"))
             console.error(error instanceof Error ? error.message : error)

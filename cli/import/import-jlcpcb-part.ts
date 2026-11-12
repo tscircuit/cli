@@ -1,6 +1,5 @@
 import kleur from "kleur"
 import { importComponentFromJlcpcb } from "lib/import/import-component-from-jlcpcb"
-import { importReferenceDesigns } from "lib/import/import-reference-designs"
 import ora from "ora"
 import { logFootprintConversion } from "./log-footprint-conversion"
 
@@ -21,15 +20,18 @@ export const importJlcpcbPart = async ({
   }).start()
 
   try {
-    const { filePath, footprintConversion, manufacturerPartNumber } =
-      await importComponentFromJlcpcb(partNumber, process.cwd(), {
+    const { filePath, footprintConversion } = await importComponentFromJlcpcb(
+      partNumber,
+      process.cwd(),
+      {
         download,
+        includeReferenceDesigns: true,
         useExactFootprint,
         excludePinAttributes,
-      })
+      },
+    )
     spinner.succeed(kleur.green(`Imported ${filePath}`))
     logFootprintConversion(footprintConversion)
-    await importReferenceDesigns(manufacturerPartNumber)
   } catch (error) {
     spinner.fail(kleur.red("Failed to import part"))
     console.error(error instanceof Error ? error.message : error)

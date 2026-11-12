@@ -18,16 +18,20 @@ import {
 } from "./footprinter/convert-imported-footprint-to-footprinter"
 import { getEasyEdaFootprinterSourceHints } from "./footprinter/get-easyeda-footprinter-source-hints"
 import { getPlatformFetch } from "lib/shared/get-platform-fetch"
+import {
+  getReferenceDesigns,
+  saveReferenceDesigns,
+} from "./import-reference-designs"
 
 export interface ImportComponentFromJlcpcbOptions {
   download?: boolean
+  includeReferenceDesigns?: boolean
   useExactFootprint?: boolean
   excludePinAttributes?: boolean
 }
 
 export interface ImportComponentFromJlcpcbResult {
   filePath: string
-  manufacturerPartNumber?: string
   footprintConversion:
     | ImportedFootprintConversion
     | {
@@ -92,9 +96,13 @@ export const importComponentFromJlcpcb = async (
     )
   }
 
-  const componentDir = options.download
-    ? path.join(projectDir, "imports", componentName)
-    : path.join(projectDir, "imports")
+  const referenceDesigns = options.includeReferenceDesigns
+    ? await getReferenceDesigns(rawPn)
+    : []
+  const componentDir =
+    options.download || referenceDesigns.length > 0
+      ? path.join(projectDir, "imports", componentName)
+      : path.join(projectDir, "imports")
   await fs.mkdir(componentDir, { recursive: true })
 
   if (options.download) {
@@ -108,9 +116,6 @@ export const importComponentFromJlcpcb = async (
 
   const filePath = path.join(componentDir, `${componentName}.tsx`)
   await fs.writeFile(filePath, tsx)
-  return {
-    filePath,
-    footprintConversion,
-    manufacturerPartNumber: rawPn || undefined,
-  }
+  await saveReferenceDesigns(referenceDesigns, componentDir)
+  return { filePath, footprintConversion }
 }

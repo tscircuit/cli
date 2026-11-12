@@ -92,16 +92,18 @@ const findBoardFilesFromPatterns = ({
     // Only skip downloaded designs in implicit board discovery.
     if (boardFilePatterns !== DEFAULT_BOARD_FILE_PATTERNS || filePaths.length)
       return true
-    const [directory, author, packageName] = file.split("/")
+    const [directory, component, references, design] = file.split("/")
     return (
-      directory !== REFERENCE_DESIGNS_DIRECTORY ||
-      !packageName ||
+      directory !== "imports" ||
+      references !== REFERENCE_DESIGNS_DIRECTORY ||
+      !design ||
       !fs.existsSync(
         path.join(
           projectDir,
           directory,
-          author,
-          packageName,
+          component,
+          references,
+          design,
           REFERENCE_DESIGN_METADATA_FILENAME,
         ),
       )
