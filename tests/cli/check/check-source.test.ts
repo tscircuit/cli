@@ -40,3 +40,28 @@ test("check source prints only source diagnostics", async () => {
   expect(stdout).not.toContain("source_pin_must_be_connected_error")
   expect(stdout).not.toContain("pcb_trace_error")
 })
+
+test("check source exits nonzero when source errors are reported", async () => {
+  const { tmpDir, runCommand } = await getCliTestFixture()
+  const circuitJsonPath = path.join(tmpDir, "source-error.circuit.json")
+
+  await writeFile(
+    circuitJsonPath,
+    JSON.stringify([
+      {
+        type: "source_error",
+        error_type: "source_property_ignored_warning",
+        message: "Source error categorized as source",
+      },
+    ]),
+  )
+
+  const { stdout, stderr, exitCode } = await runCommand(
+    `tsci check source ${circuitJsonPath}`,
+  )
+
+  expect(exitCode).toBe(1)
+  expect(stderr).toBe("")
+  expect(stdout).toContain("Errors: 1")
+  expect(stdout).toContain("Warnings: 0")
+})
