@@ -67,6 +67,12 @@ test(
       stdout.indexOf("Total"),
       stdout.indexOf("\n\n", stdout.indexOf("Grand total")),
     )
+    const destinationNote = stdout
+      .split("\n")
+      .find((line) => line.includes("Shipping and taxes assume"))
+    expect(destinationNote?.trim()).toMatchInlineSnapshot(
+      `"Shipping and taxes assume delivery to the United States with duties paid: 35% import duties and 8.625% sales tax (the rate on tscircuit's orders; it depends on the delivery address). Other destinations are not modelled."`,
+    )
     expect(summary).toMatchInlineSnapshot(`
       "Total                   Per board
         PCB fabrication, 10 boards                               $7.05                 $0.71 / PCB
