@@ -27,6 +27,14 @@ const tsx = `export const AP2127K_28TRG1 = () => <chip
 
 for (const [name, standalone, generatedTsx] of [
   ["standalone imports generated TSX without JLCSearch", "1", tsx],
+  [
+    "standalone preserves an included 3D model",
+    "1",
+    tsx.replace(
+      'footprint="sot25"',
+      'footprint="sot25" cadModel={{ stepUrl: "./regulator.step" }}',
+    ),
+  ],
   ["normal CLI skips the datasheet import lookup", undefined, tsx],
   ["disabled standalone skips the datasheet import lookup", "0", tsx],
 ] as const) {
@@ -59,7 +67,11 @@ for (const [name, standalone, generatedTsx] of [
       "tsci import AP2127K-2.8TRG1",
     )
     expect(exitCode).toBe(0)
-    expect(stderr).toBe("")
+    if (standalone === "1" && !generatedTsx.includes("cadModel")) {
+      expect(stderr).toContain("Warning: No 3D model found for AP2127K-28TRG1.")
+    } else {
+      expect(stderr).toBe("")
+    }
     const expectedRequests =
       standalone === "1"
         ? ["/datasheet-api/datasheets/get?chip_name=ap2127k-28trg1"]
@@ -71,7 +83,7 @@ for (const [name, standalone, generatedTsx] of [
     const file = Bun.file(path.join(tmpDir, "imports/AP2127K_28TRG1.tsx"))
     expect(await file.exists()).toBe(imported)
     if (imported) {
-      expect(await file.text()).toBe(tsx)
+      expect(await file.text()).toBe(generatedTsx)
       expect(stdout).toContain("Imported")
     }
   }, 20_000)

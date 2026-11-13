@@ -27,6 +27,7 @@ export interface ImportComponentFromJlcpcbOptions {
 
 export interface ImportComponentFromJlcpcbResult {
   filePath: string
+  hasCadModel: boolean
   footprintConversion:
     | ImportedFootprintConversion
     | {
@@ -107,5 +108,11 @@ export const importComponentFromJlcpcb = async (
 
   const filePath = path.join(componentDir, `${componentName}.tsx`)
   await fs.writeFile(filePath, tsx)
-  return { filePath, footprintConversion }
+  return {
+    filePath,
+    footprintConversion,
+    hasCadModel: Boolean(
+      cadComponent?.model_obj_url || cadComponent?.model_step_url,
+    ),
+  }
 }
