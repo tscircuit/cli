@@ -18,6 +18,11 @@ import {
 } from "./footprinter/convert-imported-footprint-to-footprinter"
 import { getEasyEdaFootprinterSourceHints } from "./footprinter/get-easyeda-footprinter-source-hints"
 import { getPlatformFetch } from "lib/shared/get-platform-fetch"
+import {
+  circuitJsonToFootprinter,
+  type FootprinterDiscoveryCandidate,
+} from "lib/shared/circuit-json-to-footprinter"
+import { tsxHas3dModel } from "./tsx-has-3d-model"
 
 export interface ImportComponentFromJlcpcbOptions {
   download?: boolean
@@ -33,6 +38,10 @@ export interface ImportComponentFromJlcpcbResult {
         mode: "exact-requested"
         tsx: string
       }
+  /** False when the imported component has neither a cadModel nor a footprinter footprint */
+  has3dModel: boolean
+  /** Closest footprinter match, usable as a `cadModel` string when `has3dModel` is false */
+  closestFootprinter?: FootprinterDiscoveryCandidate
 }
 
 export const importComponentFromJlcpcb = async (
@@ -64,11 +73,12 @@ export const importComponentFromJlcpcb = async (
     pinAttributes: datasheetAttributes,
     internallyConnectedPins: datasheetMetadata?.internallyConnectedPins,
   })
+  const sourceHints = getEasyEdaFootprinterSourceHints(rawEasy)
   const footprintConversion = options.useExactFootprint
     ? ({ mode: "exact-requested", tsx } as const)
     : convertImportedFootprintToFootprinter({
         circuitJson,
-        sourceHints: getEasyEdaFootprinterSourceHints(rawEasy),
+        sourceHints,
         tsx,
       })
   tsx = footprintConversion.tsx
@@ -107,5 +117,22 @@ export const importComponentFromJlcpcb = async (
 
   const filePath = path.join(componentDir, `${componentName}.tsx`)
   await fs.writeFile(filePath, tsx)
-  return { filePath, footprintConversion }
+
+  const has3dModel = tsxHas3dModel(tsx)
+  let closestFootprinter: FootprinterDiscoveryCandidate | undefined
+  if (!has3dModel) {
+    if (footprintConversion.mode === "exact-requested") {
+      try {
+        closestFootprinter =
+          circuitJsonToFootprinter(circuitJson, {
+            maxCandidates: 5,
+            sourceHints,
+          }).best ?? undefined
+      } catch {}
+    } else {
+      closestFootprinter = footprintConversion.candidate
+    }
+  }
+
+  return { filePath, footprintConversion, has3dModel, closestFootprinter }
 }
