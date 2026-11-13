@@ -49,7 +49,7 @@ for (const withModel of [false, true]) {
       expect(warning).toHaveBeenCalledTimes(withModel ? 0 : 1)
       if (!withModel)
         expect(warning.mock.calls[0][0]).toContain(
-          "CC2564CRVMR was imported without an explicit 3D model",
+          "Warning: No 3D model found for CC2564CRVMR.",
         )
     } finally {
       process.chdir(previousDirectory)

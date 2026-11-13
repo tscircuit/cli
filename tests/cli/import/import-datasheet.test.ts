@@ -68,9 +68,7 @@ for (const [name, standalone, generatedTsx] of [
     )
     expect(exitCode).toBe(0)
     if (standalone === "1" && !generatedTsx.includes("cadModel")) {
-      expect(stderr).toContain(
-        "AP2127K-28TRG1 was imported without an explicit 3D model",
-      )
+      expect(stderr).toContain("Warning: No 3D model found for AP2127K-28TRG1.")
     } else {
       expect(stderr).toBe("")
     }
