@@ -4,6 +4,8 @@ import {
   type PcbXRayCliOptions,
 } from "lib/shared/pcb-x-ray-options"
 import type { Command } from "commander"
+import { pcb_pin1_location } from "circuit-json"
+import { z } from "zod"
 import { exportSnippet } from "lib/shared/export-snippet"
 import type { ExportFormat } from "lib/shared/export-snippet"
 import { ALLOWED_EXPORT_FORMATS } from "lib/shared/export-snippet"
@@ -58,6 +60,10 @@ export const registerExport = (program: Command) => {
       "Select a drawing page by name or SVG filename",
     )
     .option("--layer <layer>", "PCB front layer: top or bottom")
+    .option(
+      "--assembly-pin1-locations <path>",
+      "JSON map of designators to verified JLCPCB assembly pin-1 locations (Gerber export)",
+    )
     .option("--disable-parts-engine", "Disable the parts engine")
     .option("--show-courtyards", "Show courtyard outlines in PCB SVG output")
     .action(
@@ -69,6 +75,7 @@ export const registerExport = (program: Command) => {
           systemPage?: string
           format?: string
           output?: string
+          assemblyPin1Locations?: string
           disablePartsEngine?: boolean
           showCourtyards?: boolean
         } & PcbXRayCliOptions &
@@ -104,6 +111,24 @@ export const registerExport = (program: Command) => {
         ) {
           console.error("X-Ray options require --format pcb-svg or pcb-png.")
           process.exit(1)
+        }
+        if (options.assemblyPin1Locations && formatOption !== "gerbers")
+          throw new Error("--assembly-pin1-locations requires --format gerbers")
+        let assemblyPin1Locations
+        if (options.assemblyPin1Locations) {
+          try {
+            const contents = await fs.readFile(
+              options.assemblyPin1Locations,
+              "utf8",
+            )
+            assemblyPin1Locations = z
+              .record(pcb_pin1_location)
+              .parse(JSON.parse(contents))
+          } catch (error) {
+            throw new Error(
+              `Could not read assembly pin-1 locations from ${options.assemblyPin1Locations}: ${error instanceof Error ? error.message : String(error)}`,
+            )
+          }
         }
         const projectConfig = await loadRuntimeProjectConfig(process.cwd())
 
@@ -165,6 +190,7 @@ export const registerExport = (program: Command) => {
           systemPage: options.systemPage,
           outputPath: options.output,
           explosionVideoOptions,
+          assemblyPin1Locations,
           platformConfig: platformConfigWithCliDefaults,
           pcbSnapshotSettings: {
             ...projectConfig?.pcbSnapshotSettings,

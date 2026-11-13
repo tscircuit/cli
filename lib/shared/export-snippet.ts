@@ -5,7 +5,7 @@ import fs from "node:fs"
 import path from "node:path"
 import { promisify } from "node:util"
 import type { PlatformConfig } from "@tscircuit/props"
-import type { AnyCircuitElement } from "circuit-json"
+import type { AnyCircuitElement, PcbPin1Location } from "circuit-json"
 import {
   convertBomRowsToCsv,
   convertCircuitJsonToBomRows,
@@ -128,6 +128,7 @@ type ExportOptions = {
   platformConfig?: PlatformConfig
   pcbSnapshotSettings?: PcbSnapshotSettings
   explosionVideoOptions?: Partial<ExplosionVideoOptions>
+  assemblyPin1Locations?: Readonly<Partial<Record<string, PcbPin1Location>>>
   onExit?: (code: number) => void
   onError?: (message: string) => void
   onSuccess: (data: {
@@ -145,6 +146,7 @@ export const exportSnippet = async ({
   platformConfig,
   pcbSnapshotSettings,
   explosionVideoOptions,
+  assemblyPin1Locations,
   writeFile = true,
   onExit = (code) => process.exit(code),
   onError = (message) => console.error(message),
@@ -434,9 +436,50 @@ export const exportSnippet = async ({
       const bomCsv = await convertBomRowsToCsv(bomRows)
       zip.file("bom.csv", bomCsv)
 
-      const pnpCsv = await convertCircuitJsonToPickAndPlaceCsv(circuitJson, {
-        supplier: "jlcpcb",
-      })
+      let placementCircuitJson = circuitJson
+      if (assemblyPin1Locations) {
+        const designatorsBySourceId = new Map<string, string>()
+        for (const element of circuitJson) {
+          if (element.type === "source_component" && element.name)
+            designatorsBySourceId.set(element.source_component_id, element.name)
+        }
+        const unusedDesignators = new Set(Object.keys(assemblyPin1Locations))
+        placementCircuitJson = circuitJson.map((element) => {
+          if (element.type !== "pcb_component" || element.do_not_place)
+            return element
+          const designator = designatorsBySourceId.get(
+            element.source_component_id,
+          )
+          if (!designator || !Object.hasOwn(assemblyPin1Locations, designator))
+            return element
+          const location = assemblyPin1Locations[designator]
+          if (!location) return element
+          unusedDesignators.delete(designator)
+          // Feed the existing converter the assembly reference for this export only.
+          return {
+            ...element,
+            supplier_pin1_location_map: {
+              ...element.supplier_pin1_location_map,
+              jlcpcb: location,
+            },
+          }
+        })
+        if (unusedDesignators.size > 0)
+          throw new Error(
+            `No placed PCB component for assembly pin-1 location: ${[...unusedDesignators].join(", ")}`,
+          )
+      }
+      const pnpCsv = await convertCircuitJsonToPickAndPlaceCsv(
+        placementCircuitJson,
+        {
+          supplier: "jlcpcb",
+          onRotationWarning: (warning) => {
+            if (Object.hasOwn(assemblyPin1Locations ?? {}, warning.designator))
+              throw new Error(warning.message)
+            console.warn(warning.message)
+          },
+        },
+      )
       zip.file("pick_and_place.csv", pnpCsv)
 
       outputContent = await zip.generateAsync({ type: "nodebuffer" })
