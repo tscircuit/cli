@@ -1,27 +1,27 @@
 import fs from "node:fs"
 import path from "node:path"
 import { pathToFileURL } from "node:url"
+import type { PipelineModeling } from "@tscircuit/pcb-spice-pipeline"
 import type { PlatformConfig } from "@tscircuit/props"
 import type { AnyCircuitElement } from "circuit-json"
-import type { PipelineModeling } from "@tscircuit/pcb-spice-pipeline"
 import Debug from "debug"
 import { abbreviateStringifyObject } from "lib/utils/abbreviate-stringify-object"
-import { getVirtualFileSystemFromDirPath } from "make-vfs"
 import {
   AutorouterDiagnostics,
   type AutorouterDiagnosticsOptions,
 } from "./autorouter-diagnostics"
 import { attachAutoroutingArtifacts } from "./autorouting-artifacts"
-import { importFromUserLand } from "./importFromUserLand"
-import { registerStaticAssetLoaders } from "./register-static-asset-loaders"
 import {
   addSourceFilesystemHash,
   getSourceFilesystemMd5Hash,
 } from "./circuit-json-build-cache"
+import { importFromUserLand } from "./importFromUserLand"
+import { registerStaticAssetLoaders } from "./register-static-asset-loaders"
 import {
   SolverDiagnostics,
   type SolverDiagnosticsOptions,
 } from "./solver-diagnostics"
+import { getVirtualFileSystemFromDirPath } from "./virtual-filesystem"
 
 const debug = Debug("tsci:generate-circuit-json")
 
