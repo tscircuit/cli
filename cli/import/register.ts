@@ -9,6 +9,8 @@ import { prompts } from "lib/utils/prompts"
 import ora from "ora"
 import { mkdir, writeFile } from "node:fs/promises"
 import path from "node:path"
+import { warnMissingCadModel } from "./warn-missing-cad-model"
+import { hasChipWithoutCadModel } from "lib/import/has-chip-without-cad-model"
 import { importJlcpcbPart } from "./import-jlcpcb-part"
 import { parseDirectLcscPartNumber } from "./parse-direct-lcsc-part-number"
 import { getPartsEngineBaseUrl } from "lib/shared/parts-engine-base-urls"
@@ -79,6 +81,9 @@ export const registerImport = (program: Command) => {
               await mkdir(componentDir, { recursive: true })
               await writeFile(filePath, datasheet.generated_tsx)
               spinner.succeed(kleur.green(`Imported ${filePath}`))
+              if (hasChipWithoutCadModel(datasheet.generated_tsx)) {
+                warnMissingCadModel(datasheet.chip_name)
+              }
             } catch (error) {
               spinner.fail(kleur.red("Failed to import part"))
               console.error(error instanceof Error ? error.message : error)
