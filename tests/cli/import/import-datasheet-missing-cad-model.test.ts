@@ -4,10 +4,20 @@ import path from "node:path"
 import { temporaryDirectory } from "tempy"
 import { Command } from "commander"
 import { registerImport } from "cli/import/register"
+import cc2564crvmr from "tests/fixtures/assets/datasheets/CC2564CRVMR.generated.tsx.txt" with {
+  type: "text",
+}
 
+// Captured generated TSX from /datasheets/get?chip_name=cc2564crvmr.
+// Exercise the real props-spread shape without relying on a live API in CI.
 for (const withModel of [false, true]) {
   test(`standalone CC2564CRVMR import ${withModel ? "with" : "without"} a model`, async () => {
-    const generatedTsx = `export const CC2564CRVMR = () => <chip footprint="qfn76" ${withModel ? 'cadModel={{ stepUrl: "./chip.step" }}' : ""} />`
+    const generatedTsx = withModel
+      ? cc2564crvmr.replace(
+          "<chip",
+          '<chip cadModel={{ stepUrl: "./chip.step" }}',
+        )
+      : cc2564crvmr
     const fetchMock = spyOn(globalThis, "fetch").mockImplementation(
       Object.assign(
         async (input: Parameters<typeof fetch>[0]) => {

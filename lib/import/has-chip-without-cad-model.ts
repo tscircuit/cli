@@ -2,6 +2,25 @@ import ts from "typescript"
 
 // Inspect generated source without executing API-provided code. Props supplied
 // through spreads or expressions cannot be determined statically.
+// Generated imports often forward their component props. An expression-bodied
+// arrow parameter without a default does not provide an included model. Other
+// spreads remain unknown (they could refer to an imported/default model).
+const isForwardedProps = (spread: ts.JsxSpreadAttribute): boolean => {
+  if (!ts.isIdentifier(spread.expression)) return false
+  const name = spread.expression.text
+  let ancestor: ts.Node | undefined = spread.parent
+  while (ancestor && !ts.isArrowFunction(ancestor)) ancestor = ancestor.parent
+  if (!ancestor || !ts.isArrowFunction(ancestor) || ts.isBlock(ancestor.body)) {
+    return false
+  }
+  return ancestor.parameters.some(
+    (parameter) =>
+      ts.isIdentifier(parameter.name) &&
+      parameter.name.text === name &&
+      !parameter.initializer,
+  )
+}
+
 export const hasChipWithoutCadModel = (source: string): boolean => {
   const file = ts.createSourceFile(
     "import.tsx",
@@ -39,7 +58,9 @@ export const hasChipWithoutCadModel = (source: string): boolean => {
           (ts.isIdentifier(expression) && expression.text === "undefined") ||
           (ts.isObjectLiteralExpression(expression) &&
             expression.properties.length === 0))
-      const hasSpread = node.attributes.properties.some(ts.isJsxSpreadAttribute)
+      const hasSpread = node.attributes.properties.some(
+        (prop) => ts.isJsxSpreadAttribute(prop) && !isForwardedProps(prop),
+      )
       if (!hasSpread && (!initializer || explicitlyEmpty || emptyString))
         missing = true
     }

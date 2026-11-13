@@ -4,7 +4,7 @@ import { hasChipWithoutCadModel } from "lib/import/has-chip-without-cad-model"
 test("CC2564CRVMR-style imported chip without a model is detected", () => {
   expect(
     hasChipWithoutCadModel(
-      `export const CC2564CRVMR = () => <chip footprint="qfn76" />`,
+      `export const CC2564CRVMR = (props) => <chip footprint="qfn76" {...props} />`,
     ),
   ).toBe(true)
 })
@@ -52,6 +52,14 @@ test("does not assume a spread is missing its model", () => {
   expect(
     hasChipWithoutCadModel(
       `const defaults = { cadModel: { stepUrl: "./chip.step" } }; export const C = () => <chip {...defaults} />`,
+    ),
+  ).toBe(false)
+})
+
+test("does not ignore a default model in a component parameter", () => {
+  expect(
+    hasChipWithoutCadModel(
+      `export const C = (props = { cadModel: { stepUrl: "./chip.step" } }) => <chip {...props} />`,
     ),
   ).toBe(false)
 })
