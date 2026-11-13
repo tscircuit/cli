@@ -4,6 +4,11 @@ import type { PlatformConfig } from "@tscircuit/props"
 import type { AnyCircuitElement } from "circuit-json"
 import { loadRuntimeProjectConfig } from "lib/project-config"
 import { analyzeCircuitJson } from "../../lib/shared/circuit-json-diagnostics"
+import {
+  collapseRepeatedIssues,
+  getIssueTypeCountLines,
+} from "../../lib/shared/collapse-repeated-issues"
+import { writeBuildErrorsFile } from "../../lib/shared/write-build-errors-file"
 import { generateCircuitJson } from "../../lib/shared/generate-circuit-json"
 import { getPlatformConfigWithCliDefaults } from "../../lib/shared/get-platform-config-with-cli-defaults"
 import { mergePlatformConfigs } from "../../lib/shared/platform-config-utils"
@@ -103,20 +108,43 @@ export const handleBuildFile = async (
       warnings: diagnostics.warnings,
       ignoreOptions: options,
     })
+    const errorsFilePath = writeBuildErrorsFile(
+      outputPath,
+      filteredDiagnostics.errors,
+    )
 
+    // The result keeps every message; only the log is collapsed.
     if (!options?.ignoreWarnings) {
+      const { issuesToLog, omittedLines } = collapseRepeatedIssues(
+        filteredDiagnostics.warnings,
+      )
+      const loggedWarnings = new Set(issuesToLog)
       for (const warn of filteredDiagnostics.warnings) {
         const msg = warn.message || JSON.stringify(warn)
         warnings.push(msg)
-        workerLog(`Warning: ${msg}`)
+        if (loggedWarnings.has(warn)) workerLog(`Warning: ${msg}`)
       }
+      for (const line of omittedLines) workerLog(`Warning: ${line}`)
     }
 
     if (!options?.ignoreErrors) {
+      const { issuesToLog, omittedLines } = collapseRepeatedIssues(
+        filteredDiagnostics.errors,
+      )
+      const loggedErrors = new Set(issuesToLog)
       for (const err of filteredDiagnostics.errors) {
         const msg = err.message || JSON.stringify(err)
         errors.push(msg)
-        workerLog(`Error: ${msg}`)
+        if (loggedErrors.has(err)) workerLog(`Error: ${msg}`)
+      }
+      for (const line of omittedLines) workerLog(`Error: ${line}`)
+      if (errorsFilePath) {
+        workerLog(
+          `${filteredDiagnostics.errors.length} error(s), all written to ${path.relative(projectDir, errorsFilePath)}:`,
+        )
+        for (const line of getIssueTypeCountLines(filteredDiagnostics.errors)) {
+          workerLog(line)
+        }
       }
     }
 
