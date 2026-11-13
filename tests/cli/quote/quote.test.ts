@@ -62,10 +62,23 @@ test(
 
     expect(exitCode).toBe(0)
     expect(stdout).toContain("Quote for board.circuit.tsx")
-    expect(stdout).toContain("PCB fabrication, 10 boards")
-    expect(stdout).toContain("Shipping, UPS Express Saver (DDP)")
-    expect(stdout).toContain("$20.00")
-    expect(stdout).toContain("Grand total")
+    // The summary table, from its header to the grand total's range.
+    const summary = stdout.slice(
+      stdout.indexOf("Total"),
+      stdout.indexOf("\n\n", stdout.indexOf("Grand total")),
+    )
+    expect(summary).toMatchInlineSnapshot(`
+      "Total                   Per board
+        PCB fabrication, 10 boards                               $7.05                 $0.71 / PCB
+        Additional fees (1)                                      $0.20                 $0.02 / PCB
+        Shipping, UPS Express Saver (DDP) (0.022kg)             $20.00                 $2.00 / PCB
+        Import duties and taxes (35% of merchandise)             $2.54                 $0.25 / PCB
+        Duty and tax disbursement fee                            $4.44                 $0.44 / PCB
+        Sales tax (8.625% of merchandise)                        $0.63                 $0.06 / PCB
+        ------------------------------------------------------------------------------------------
+        Grand total                                             $34.86                 $3.49 / PCB
+                                              (range $34.86 to $34.86)"
+    `)
   },
   { timeout: 60_000 },
 )
@@ -80,8 +93,8 @@ test(
     )
 
     expect(exitCode).toBe(1)
-    expect(stderr).toContain(
-      "Cannot assemble 6 boards from 5 PCBs; --assembled must not exceed --quantity",
+    expect(stderr.trim()).toMatchInlineSnapshot(
+      `"Cannot assemble 6 boards from 5 PCBs; --assembled must not exceed --quantity"`,
     )
   },
   { timeout: 30_000 },
@@ -92,27 +105,31 @@ test(
   async () => {
     const { runCommand } = await getCliTestFixture()
 
-    const invalidRuns = [
-      ["--quantity 0", "Quantity must be a positive integer."],
-      ["--assembled 1.5", "Assembled boards must be a positive integer."],
-      [
-        "--pcba cheapest",
-        "PCBA type must be one of: auto, economic, standard.",
-      ],
-      [
-        "--finish gold",
-        "Surface finish must be one of: hasl_lead_free, hasl_leaded, enig.",
-      ],
-      ["--carrier fedex", "Carrier must be one of: dhl, ups."],
-      ["--shipping-cost -1", "Shipping cost must be a number of at least 0."],
-    ]
-    for (const [flags, message] of invalidRuns) {
+    const errorsByFlags: Record<string, string> = {}
+    for (const flags of [
+      "--quantity 0",
+      "--assembled 1.5",
+      "--pcba cheapest",
+      "--finish gold",
+      "--carrier fedex",
+      "--shipping-cost -1",
+    ]) {
       const { stderr, exitCode } = await runCommand(
         `tsci quote estimate ${flags}`,
       )
       expect(exitCode).toBe(1)
-      expect(stderr).toContain(message)
+      errorsByFlags[flags] = stderr.trim()
     }
+    expect(errorsByFlags).toMatchInlineSnapshot(`
+      {
+        "--assembled 1.5": "error: option '--assembled <count>' argument '1.5' is invalid. Assembled boards must be a positive integer.",
+        "--carrier fedex": "error: option '--carrier <carrier>' argument 'fedex' is invalid. Carrier must be one of: dhl, ups.",
+        "--finish gold": "error: option '--finish <finish>' argument 'gold' is invalid. Surface finish must be one of: hasl_lead_free, hasl_leaded, enig.",
+        "--pcba cheapest": "error: option '--pcba <type>' argument 'cheapest' is invalid. PCBA type must be one of: auto, economic, standard.",
+        "--quantity 0": "error: option '--quantity <count>' argument '0' is invalid. Quantity must be a positive integer.",
+        "--shipping-cost -1": "error: option '--shipping-cost <usd>' argument '-1' is invalid. Shipping cost must be a number of at least 0.",
+      }
+    `)
   },
   { timeout: 60_000 },
 )
@@ -126,10 +143,10 @@ test(
 
     expect(exitCode).toBe(1)
     expect(stdout).toBe("")
-    expect(stderr).toContain("`tsci quote create` is not implemented yet.")
-    expect(stderr).toContain(
-      '{"file":null,"assembly":true,"quantity":5,"json":false}',
-    )
+    expect(stderr.trim()).toMatchInlineSnapshot(`
+      "\`tsci quote create\` is not implemented yet.
+      Received: {"file":null,"assembly":true,"quantity":5,"json":false}"
+    `)
   },
   { timeout: 30_000 },
 )
@@ -144,9 +161,10 @@ test(
     )
 
     expect(exitCode).toBe(1)
-    expect(stderr).toContain(
-      '{"file":"board.circuit.tsx","assembly":false,"quantity":20,"json":true}',
-    )
+    expect(stderr.trim()).toMatchInlineSnapshot(`
+      "\`tsci quote create\` is not implemented yet.
+      Received: {"file":"board.circuit.tsx","assembly":false,"quantity":20,"json":true}"
+    `)
   },
   { timeout: 30_000 },
 )
