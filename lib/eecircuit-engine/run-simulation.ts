@@ -1,5 +1,6 @@
 import type * as EecircuitEngine from "lib/types/eecircuit-engine"
 import { runSimulationWithWatchdog } from "./run-simulation-with-watchdog"
+import { isFatalSimulationDiagnostic } from "./is-fatal-simulation-diagnostic"
 
 export interface SimulationOutput {
   result: EecircuitEngine.ResultType | null
@@ -108,13 +109,19 @@ export const runSimulation = async (
       spiceString: engineSpiceString,
     }
   } catch (error) {
+    const engineErrors = sim.getError()
+    const message = error instanceof Error ? error.message : String(error)
+    const fatalErrors = engineErrors.filter(isFatalSimulationDiagnostic)
+    // Runtime exceptions may repeat all diagnostics already returned by ngspice.
+    const repeatsFatalErrors =
+      fatalErrors.length > 0 &&
+      fatalErrors.every((diagnostic) => message.includes(diagnostic))
     return {
       result: null,
       info: sim.getInfo(),
-      errors: [
-        ...sim.getError(),
-        `Error: ${error instanceof Error ? error.message : String(error)}`,
-      ],
+      errors: repeatsFatalErrors
+        ? engineErrors
+        : [...engineErrors, `Error: ${message}`],
       engine: SIMULATION_ENGINE,
       spiceString: engineSpiceString,
     }

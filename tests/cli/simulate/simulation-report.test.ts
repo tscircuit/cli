@@ -72,11 +72,6 @@ test("a fatal ngspice error returns a nonzero CLI status", async () => {
           "doAnalyses: TRAN:  Timestep too small; initial timepoint: cause unrecorded.",
           "run simulation(s) aborted",
           "Error during 'write': no writable vector found.",
-          
-    "Error: doAnalyses: TRAN:  Timestep too small; initial timepoint: cause unrecorded.
-    run simulation(s) aborted
-    Error during 'write': no writable vector found."
-    ,
           "Simulation produced no usable finite samples",
         ],
         "warnings": [
