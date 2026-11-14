@@ -6,6 +6,7 @@ import { perfectCli } from "perfect-cli"
 import { getVersion } from "./../lib/getVersion"
 import { registerAdd } from "./add/register"
 import { registerAgent } from "./agent/register"
+import { registerAuthCircuithub } from "./auth/circuithub/register"
 import { registerAuthLogin } from "./auth/login/register"
 import { registerAuthLogout } from "./auth/logout/register"
 import { registerAuthPrintToken } from "./auth/print-token/register"
@@ -74,6 +75,7 @@ registerAuthPrintToken(program)
 registerAuthSetToken(program)
 registerAuthWhoami(program)
 registerAuthSetupNpmrc(program)
+registerAuthCircuithub(program)
 
 registerConfig(program)
 registerConfigPrint(program)

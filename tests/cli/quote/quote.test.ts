@@ -141,36 +141,46 @@ test(
 )
 
 test(
-  "tsci quote create is still a placeholder that defaults to assembly",
+  "tsci quote create explains what it needs before uploading anything",
   async () => {
-    const { runCommand } = await getCliTestFixture()
+    const { tmpDir, runCommand } = await getCliTestFixture({
+      env: { CIRCUITHUB_TOKEN: undefined, CIRCUITHUB_API_KEY: undefined },
+    })
+    await writeFile(path.join(tmpDir, "board.circuit.tsx"), BOARD_SOURCE)
 
-    const { stdout, stderr, exitCode } = await runCommand("tsci quote create")
+    const notLoggedIn = await runCommand(
+      "tsci quote create board.circuit.tsx --workspace acme --export-classification EAR99",
+    )
+    expect(notLoggedIn.exitCode).toBe(1)
+    expect(notLoggedIn.stderr).toContain(
+      "Not logged in to CircuitHub (or the session expired). Run `tsci auth circuithub login`, or set CIRCUITHUB_TOKEN.",
+    )
 
-    expect(exitCode).toBe(1)
-    expect(stdout).toBe("")
-    expect(stderr.trim()).toMatchInlineSnapshot(`
-      "\`tsci quote create\` is not implemented yet.
-      Received: {"file":null,"assembly":true,"quantity":5,"json":false}"
-    `)
+    const invalidQuantity = await runCommand("tsci quote create --quantity 5,0")
+    expect(invalidQuantity.exitCode).toBe(1)
+    expect(invalidQuantity.stderr.trim()).toMatchInlineSnapshot(
+      `"error: option '--quantity <counts>' argument '5,0' is invalid. Quantity must be a positive integer or a comma-separated list of them."`,
+    )
   },
-  { timeout: 30_000 },
+  { timeout: 60_000 },
 )
 
 test(
-  "tsci quote create parses its flags",
+  "tsci quote create requires an export classification for new CircuitHub projects",
   async () => {
-    const { runCommand } = await getCliTestFixture()
+    const { tmpDir, runCommand } = await getCliTestFixture({
+      env: { CIRCUITHUB_TOKEN: "test-circuithub-token" },
+    })
+    await writeFile(path.join(tmpDir, "board.circuit.tsx"), BOARD_SOURCE)
 
     const { stderr, exitCode } = await runCommand(
-      "tsci quote create board.circuit.tsx --no-assembly --quantity 20 --json",
+      "tsci quote create board.circuit.tsx --workspace acme",
     )
 
     expect(exitCode).toBe(1)
-    expect(stderr.trim()).toMatchInlineSnapshot(`
-      "\`tsci quote create\` is not implemented yet.
-      Received: {"file":"board.circuit.tsx","assembly":false,"quantity":20,"json":true}"
-    `)
+    expect(stderr).toContain(
+      "CircuitHub needs the board's export classification to create a project. Pass --export-classification (for example EAR99), or --project <id> to add a revision to an existing project.",
+    )
   },
-  { timeout: 30_000 },
+  { timeout: 60_000 },
 )
