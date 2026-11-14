@@ -196,7 +196,10 @@ export default () => (
 }, 60_000)
 
 test("reject video options on other formats and invalid dimensions before compiling", async () => {
-  const { runCommand } = await getCliTestFixture()
+  const { runCommand } = await getCliTestFixture({
+    env: { GITHUB_ACTIONS: "true" },
+  })
+  const diagnostics = []
   for (const [args, message] of [
     ["-f glb --fps 12", "Video options require --format explosion-mp4"],
     ["-f explosion-mp4 --width 481", "--width must be an even integer"],
@@ -207,7 +210,44 @@ test("reject video options on other formats and invalid dimensions before compil
     const result = await runCommand(`tsci export missing.tsx ${args}`)
     expect(result.exitCode).not.toBe(0)
     expect(result.stderr).toContain(message)
+    expect(result.stderr).not.toContain("::error ")
+    diagnostics.push({
+      args,
+      exitCode: result.exitCode,
+      error: result.stderr
+        .split("\n")
+        .find((line) => line.startsWith("error: ")),
+    })
   }
+  expect(diagnostics).toMatchInlineSnapshot(`
+    [
+      {
+        "args": "-f glb --fps 12",
+        "error": "error: Video options require --format explosion-mp4",
+        "exitCode": 1,
+      },
+      {
+        "args": "-f explosion-mp4 --width 481",
+        "error": "error: --width must be an even integer from 128 to 3840",
+        "exitCode": 1,
+      },
+      {
+        "args": "-f explosion-mp4 --fps NaN",
+        "error": "error: --fps must be an integer from 1 to 60",
+        "exitCode": 1,
+      },
+      {
+        "args": "-f explosion-mp4 --stage-duration 0",
+        "error": "error: --stage-duration must be greater than 0 and at most 60 seconds",
+        "exitCode": 1,
+      },
+      {
+        "args": "-f explosion-mp4 --hold-duration -1",
+        "error": "error: --hold-duration must be between 0 and 60 seconds",
+        "exitCode": 1,
+      },
+    ]
+  `)
 })
 
 test("a circuit without an explosion reports an actionable error and writes no video", async () => {

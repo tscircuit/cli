@@ -96,6 +96,10 @@ export async function getCliTestFixture(
     const env = {
       ...process.env,
       ...opts.env,
+      // The parent test runner annotates assertion failures. Child CLI errors
+      // can be expected test output, so keep their diagnostics without emitting
+      // independent GitHub failure annotations.
+      GITHUB_ACTIONS: undefined,
       TSCI_TEST_MODE: "true",
       ...(opts.skipSkillSetup ? { TSCI_SKIP_SKILL_SETUP: "true" } : {}),
       FORCE_COLOR: "0",
