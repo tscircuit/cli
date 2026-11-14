@@ -36,6 +36,7 @@ import {
 export async function renderExplosionVideo(
   circuitJson: AnyCircuitElement[],
   input: Partial<ExplosionVideoOptions> = {},
+  baseDir?: string,
 ): Promise<Buffer> {
   const options = resolveExplosionVideoOptions(input)
   const stages = getAssemblyExplosionFrames(circuitJson)
@@ -54,6 +55,7 @@ export async function renderExplosionVideo(
   }
   const geometry = convertModelUrlsToFileUrls(
     circuitJson,
+    baseDir,
   ) as AnyCircuitElement[]
   const loadScene = async (explosion?: AssemblyExplosionOptions) => {
     const glb = await convertCircuitJsonToGltf(geometry, {

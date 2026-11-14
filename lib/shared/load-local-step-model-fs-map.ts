@@ -5,8 +5,22 @@ import type { AnyCircuitElement } from "circuit-json"
 
 const isRemoteUrl = (value: string) => /^https?:\/\//i.test(value)
 
+const resolveStepFilePath = (modelUrl: string, baseDir: string) => {
+  const inBaseDir = path.resolve(baseDir, modelUrl)
+  if (existsSync(inBaseDir)) return inBaseDir
+
+  const cwd = process.cwd()
+  if (path.resolve(baseDir) !== path.resolve(cwd)) {
+    const inCwd = path.resolve(cwd, modelUrl)
+    if (existsSync(inCwd)) return inCwd
+  }
+
+  return inBaseDir
+}
+
 export async function loadLocalStepModelFsMap(
   circuitJson: AnyCircuitElement[],
+  baseDir = process.cwd(),
 ) {
   const fsMap: Record<string, string> = {}
 
@@ -17,7 +31,7 @@ export async function loadLocalStepModelFsMap(
     if (typeof modelUrl !== "string" || modelUrl.length === 0) continue
     if (isRemoteUrl(modelUrl) || fsMap[modelUrl]) continue
 
-    const localPath = path.resolve(process.cwd(), modelUrl)
+    const localPath = resolveStepFilePath(modelUrl, baseDir)
     if (!existsSync(localPath)) continue
 
     fsMap[modelUrl] = await readFile(localPath, "utf-8")

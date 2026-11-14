@@ -62,7 +62,10 @@ export const buildPreviewGltf = async ({
 
   try {
     console.log("Converting circuit to GLTF...")
-    const circuitJsonWithFileUrls = convertModelUrlsToFileUrls(circuitJson)
+    const circuitJsonWithFileUrls = convertModelUrlsToFileUrls(
+      circuitJson,
+      path.dirname(sourcePath),
+    )
     const gltfData = await convertCircuitJsonToGltf(
       circuitJsonWithFileUrls,
       getCircuitJsonToGltfOptions({ format: "gltf" }),
