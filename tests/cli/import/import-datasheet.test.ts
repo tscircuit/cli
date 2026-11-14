@@ -58,13 +58,13 @@ for (const [name, standalone, generatedTsx] of [
     const { stdout, stderr, exitCode } = await runCommand(
       "tsci import AP2127K-2.8TRG1",
     )
-    expect(exitCode).toBe(0)
+    const imported = standalone === "1" && Boolean(generatedTsx)
+    expect(exitCode).toBe(imported ? 0 : 1)
     expect(stderr).toBe("")
     const expectedRequests =
       standalone === "1"
         ? ["/datasheet-api/datasheets/get?chip_name=ap2127k-28trg1"]
         : []
-    const imported = standalone === "1" && Boolean(generatedTsx)
     if (!imported)
       expectedRequests.push("/jlcsearch/api/search?limit=10&q=AP2127K-2.8TRG1")
     expect(requests).toEqual(expectedRequests)
@@ -73,6 +73,8 @@ for (const [name, standalone, generatedTsx] of [
     if (imported) {
       expect(await file.text()).toBe(tsx)
       expect(stdout).toContain("Imported")
+    } else {
+      expect(stdout).toContain('No results found for "AP2127K-2.8TRG1"')
     }
   }, 20_000)
 }
