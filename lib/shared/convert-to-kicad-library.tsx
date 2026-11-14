@@ -119,7 +119,14 @@ export async function convertToKicadLibrary({
     fs.mkdirSync(dir, { recursive: true })
 
     if (typeof content === "string") {
-      fs.writeFileSync(fullPath, content)
+      // KiCad only defines ${KICAD9_3RD_PARTY} (not ${KICAD_3RD_PARTY}), so
+      // normalize PCM 3D model paths regardless of the converter version used.
+      fs.writeFileSync(
+        fullPath,
+        isPcm
+          ? content.replaceAll("${KICAD_3RD_PARTY}", "${KICAD9_3RD_PARTY}")
+          : content,
+      )
     } else {
       fs.writeFileSync(fullPath, content as Buffer)
     }
