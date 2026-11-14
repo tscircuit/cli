@@ -37,6 +37,7 @@ import { registerImport } from "./import/register"
 import { registerInit } from "./init/register"
 import { registerInstall } from "./install/register"
 import { registerPush } from "./push/register"
+import { registerQuoteCreateCircuithub } from "./quote/create/circuithub/register"
 import { registerQuoteCreate } from "./quote/create/register"
 import { registerQuoteEstimate } from "./quote/estimate/register"
 import { registerQuote } from "./quote/register"
@@ -109,6 +110,7 @@ registerCheckTraceLength(program)
 registerQuote(program)
 registerQuoteEstimate(program)
 registerQuoteCreate(program)
+registerQuoteCreateCircuithub(program)
 
 registerRegistry(program)
 registerRegistryPackages(program)

@@ -141,7 +141,7 @@ test(
 )
 
 test(
-  "tsci quote create explains what it needs before uploading anything",
+  "tsci quote create circuithub explains what it needs before uploading anything",
   async () => {
     const { tmpDir, runCommand } = await getCliTestFixture({
       env: { CIRCUITHUB_TOKEN: undefined, CIRCUITHUB_API_KEY: undefined },
@@ -149,14 +149,16 @@ test(
     await writeFile(path.join(tmpDir, "board.circuit.tsx"), BOARD_SOURCE)
 
     const notLoggedIn = await runCommand(
-      "tsci quote create board.circuit.tsx --workspace acme --export-classification EAR99",
+      "tsci quote create circuithub board.circuit.tsx --workspace acme --export-classification EAR99",
     )
     expect(notLoggedIn.exitCode).toBe(1)
     expect(notLoggedIn.stderr).toContain(
       "Not logged in to CircuitHub (or the session expired). Run `tsci auth circuithub login`, or set CIRCUITHUB_TOKEN.",
     )
 
-    const invalidQuantity = await runCommand("tsci quote create --quantity 5,0")
+    const invalidQuantity = await runCommand(
+      "tsci quote create circuithub --quantity 5,0",
+    )
     expect(invalidQuantity.exitCode).toBe(1)
     expect(invalidQuantity.stderr.trim()).toMatchInlineSnapshot(
       `"error: option '--quantity <counts>' argument '5,0' is invalid. Quantity must be a positive integer or a comma-separated list of them."`,
@@ -166,7 +168,7 @@ test(
 )
 
 test(
-  "tsci quote create requires an export classification for new CircuitHub projects",
+  "tsci quote create circuithub requires an export classification for new CircuitHub projects",
   async () => {
     const { tmpDir, runCommand } = await getCliTestFixture({
       env: { CIRCUITHUB_TOKEN: "test-circuithub-token" },
@@ -174,7 +176,7 @@ test(
     await writeFile(path.join(tmpDir, "board.circuit.tsx"), BOARD_SOURCE)
 
     const { stderr, exitCode } = await runCommand(
-      "tsci quote create board.circuit.tsx --workspace acme",
+      "tsci quote create circuithub board.circuit.tsx --workspace acme",
     )
 
     expect(exitCode).toBe(1)
@@ -183,4 +185,19 @@ test(
     )
   },
   { timeout: 60_000 },
+)
+
+test(
+  "tsci quote create lists the manufacturers it can quote with",
+  async () => {
+    const { runCommand } = await getCliTestFixture()
+
+    const { stdout, stderr, exitCode } = await runCommand("tsci quote create")
+
+    expect(exitCode).toBe(1)
+    const help = stdout + stderr
+    expect(help).toContain("circuithub [options] [file]")
+    expect(help).toContain("tsci quote create circuithub board.circuit.tsx")
+  },
+  { timeout: 30_000 },
 )
