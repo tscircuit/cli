@@ -1,4 +1,5 @@
 import { circuitJsonToSpice } from "circuit-json-to-spice"
+import { getTopLevelSpiceLines } from "./get-top-level-spice-lines"
 
 export interface SpiceSimOptions {
   showVoltage: boolean
@@ -32,10 +33,11 @@ export const getSpiceWithPaddedSim = (
 
   // These checks are for if the circuit builder already added simulation
   // parameters, we will respect them and not add our own.
-  const hasAnalysis = /\.tran|\.ac|\.dc|\.op/i.test(baseSpiceString)
-  const hasOutput = /\.probe|\.plot|wrdata/i.test(baseSpiceString)
-
-  const lines = baseSpiceString.split("\n").filter((l) => l.trim() !== "")
+  const lines = getTopLevelSpiceLines(baseSpiceString)
+  const hasAnalysis = lines.some((line) => /^\.(tran|ac|dc|op)\b/i.test(line))
+  const hasOutput = lines.some((line) =>
+    /^(\.(probe|plot)|wrdata)\b/i.test(line),
+  )
   const componentLines = lines.filter(
     (l) => !l.startsWith("*") && !l.startsWith(".") && l.trim() !== "",
   )
@@ -109,14 +111,16 @@ export const getSpiceWithPaddedSim = (
   const originalLines = baseSpiceString.split("\n")
   let endIndex = -1
   for (let i = originalLines.length - 1; i >= 0; i--) {
-    if (originalLines[i].trim().toLowerCase().startsWith(endStatement)) {
+    if (/^\.end\s*$/i.test(originalLines[i].trim())) {
       endIndex = i
       break
     }
   }
 
   const injectionLines = [
-    ...(icLines.length > 0 && !/\.ic/i.test(baseSpiceString) ? icLines : []),
+    ...(icLines.length > 0 && !lines.some((line) => /^\.ic\b/i.test(line))
+      ? icLines
+      : []),
     probeLine,
     tranLine,
   ].filter(Boolean)
