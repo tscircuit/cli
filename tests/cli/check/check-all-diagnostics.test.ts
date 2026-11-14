@@ -29,7 +29,7 @@ test("check prints diagnostics from every category including unknown", async () 
     `tsci check ${circuitJsonPath}`,
   )
 
-  expect(exitCode).toBe(0)
+  expect(exitCode).toBe(1)
   expect(stderr).toBe("")
   expect(stdout).toContain("Errors: 3")
   expect(stdout).toContain("Warnings: 3")
