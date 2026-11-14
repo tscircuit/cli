@@ -9,7 +9,7 @@ import type { ExportFormat } from "lib/shared/export-snippet"
 import { ALLOWED_EXPORT_FORMATS } from "lib/shared/export-snippet"
 import { getOrGenerateCircuitJson } from "lib/shared/get-or-generate-circuit-json"
 import { getSpiceWithPaddedSim } from "lib/shared/get-spice-with-sim"
-import { runSimulation } from "lib/eecircuit-engine/run-simulation"
+import { runSimulationReport } from "lib/shared/run-simulation-report"
 import { resultToCsv } from "lib/shared/result-to-csv"
 import path from "node:path"
 import { promises as fs } from "node:fs"
@@ -139,9 +139,14 @@ export const registerExport = (program: Command) => {
 
             await fs.writeFile(outputSpicePath, spiceString)
 
-            const { result } = await runSimulation(spiceString)
+            const report = await runSimulationReport(spiceString)
+            if (report.status === "failed" || !report.result) {
+              throw new Error(
+                `SPICE simulation failed: ${report.diagnostics.errors.join("\n")}`,
+              )
+            }
 
-            const csvContent = resultToCsv(result)
+            const csvContent = resultToCsv(report.result)
 
             const outputCsvPath = outputSpicePath.replace(
               /\.spice\.cir$/,

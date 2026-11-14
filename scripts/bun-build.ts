@@ -22,6 +22,7 @@ const result = await Bun.build({
     "./cli/main.ts",
     "./cli/build/build.worker.ts",
     "./cli/snapshot/snapshot.worker.ts",
+    "./lib/eecircuit-engine/simulation.worker.ts",
     "./lib/index.ts",
   ],
   target: "node",
