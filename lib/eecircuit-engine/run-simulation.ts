@@ -1,9 +1,19 @@
 import type * as EecircuitEngine from "lib/types/eecircuit-engine"
+import { rewritePspiceCompatibilitySyntax } from "@tscircuit/ngspice-spice-engine"
+
+export const SIMULATION_ENGINE = {
+  name: "ngspice",
+  package: "@tscircuit/eecircuit-engine",
+  version: "1.7.6",
+  compatibility: "psa",
+} as const
 
 export interface SimulationOutput {
   result: EecircuitEngine.ResultType
   info: string
   errors: string[]
+  engine: typeof SIMULATION_ENGINE
+  spiceString: string
 }
 import { promises as fs, existsSync } from "node:fs"
 import path from "node:path"
@@ -18,11 +28,11 @@ const fetchSimulation = async (): Promise<
   // This is a workaround for Bun's test environment not handling URL imports.
   const tempFilePath = path.join(
     os.tmpdir(),
-    `tscircuit-eecircuit-engine-1.7.4.mjs`,
+    `tscircuit-eecircuit-engine-${SIMULATION_ENGINE.version}.mjs`,
   )
 
   if (!existsSync(tempFilePath)) {
-    const url = `https://jscdn.tscircuit.com/@tscircuit/eecircuit-engine/1.7.4/dist/eecircuit-engine.mjs`
+    const url = `https://jscdn.tscircuit.com/@tscircuit/eecircuit-engine/${SIMULATION_ENGINE.version}/+esm`
     const response = await fetch(url)
     if (!response.ok) {
       throw new Error(
@@ -40,7 +50,7 @@ const fetchSimulation = async (): Promise<
 const initializeSimulation = async () => {
   if (sim && sim.isInitialized()) return
   const Simulation = await fetchSimulation()
-  sim = new Simulation()
+  sim = new Simulation({ ngBehavior: SIMULATION_ENGINE.compatibility })
   sim.start() // This is async, but we won't wait for it to complete
 
   const startTime = Date.now()
@@ -69,7 +79,7 @@ export const runSimulation = async (
   await initializeSimulation()
   if (!sim) throw new Error("Simulation not initialized")
 
-  let engineSpiceString = spiceString
+  let engineSpiceString = rewritePspiceCompatibilitySyntax(spiceString)
   const wrdataMatch = engineSpiceString.match(/wrdata\s+(\S+)\s+(.*)/i)
   if (wrdataMatch) {
     const variables = wrdataMatch[2].trim().split(/\s+/)
@@ -93,5 +103,7 @@ export const runSimulation = async (
     result,
     info: sim.getInfo(),
     errors: sim.getError(),
+    engine: SIMULATION_ENGINE,
+    spiceString: engineSpiceString,
   }
 }

@@ -57,6 +57,8 @@ export declare type ResultType =
     }
 
 export declare class Simulation {
+  constructor(options?: { ngBehavior?: string })
+
   private pass
 
   private commandList
