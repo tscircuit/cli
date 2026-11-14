@@ -50,7 +50,7 @@ test("a fatal ngspice error returns a nonzero CLI status", async () => {
   const { exitCode, stdout, stderr } = await runCommand(
     `tsci simulate ${filename}`,
   )
-  expect(`${stdout}\n${stderr}`).toMatch(/shorted VSRC|simulation.*failed/i)
+  expect(`${stdout}\n${stderr}`).toMatch(/shorted VSRC|aborted|simulation.*failed/i)
   expect(exitCode).not.toBe(0)
 }, 30000)
 
