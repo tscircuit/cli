@@ -1,32 +1,11 @@
 import path from "node:path"
 import fs from "node:fs"
-import { rollup } from "rollup"
-import typescript from "@rollup/plugin-typescript"
-import resolve from "@rollup/plugin-node-resolve"
-import commonjs from "@rollup/plugin-commonjs"
-import json from "@rollup/plugin-json"
-import dts from "rollup-plugin-dts"
 import kleur from "kleur"
-import ts from "typescript"
 
 import {
   createStaticAssetPlugin,
   STATIC_ASSET_EXTENSIONS,
 } from "./static-asset-plugin"
-
-const [typescriptMajor, typescriptMinor] = ts.versionMajorMinor
-  .split(".")
-  .map(Number)
-// TypeScript 5.7+ can emit projects that import .ts/.tsx paths by rewriting
-// those specifiers, instead of reporting TS5097 or requiring noEmit.
-const supportsRewriteRelativeImportExtensions =
-  typescriptMajor > 5 || (typescriptMajor === 5 && typescriptMinor >= 7)
-const typescriptExtensionEmitOptions = supportsRewriteRelativeImportExtensions
-  ? {
-      allowImportingTsExtensions: true,
-      rewriteRelativeImportExtensions: true,
-    }
-  : { allowImportingTsExtensions: false }
 
 const createExternalFunction =
   (projectDir: string, tsconfigPath?: string) =>
@@ -61,7 +40,7 @@ const createExternalFunction =
     }
 
     // Check if this matches any path mapping pattern
-    for (const [pattern, targets] of Object.entries(pathMappings)) {
+    for (const [pattern] of Object.entries(pathMappings)) {
       const patternWithoutWildcard = pattern.replace("/*", "/")
       if (id.startsWith(patternWithoutWildcard)) {
         return false // Path-mapped import, don't externalize
@@ -100,6 +79,47 @@ export const transpileFile = async ({
   projectDir: string
 }): Promise<boolean> => {
   try {
+    const tsModule = await import("typescript")
+    const ts = (tsModule.default ?? tsModule) as Partial<
+      typeof import("typescript")
+    >
+    if (!ts?.ModuleKind || typeof ts.versionMajorMinor !== "string") {
+      throw new Error(
+        "TypeScript transpilation requires the TypeScript JavaScript compiler API (TypeScript 5.x/6.x). TypeScript 7+ does not expose the JS compiler API required by @rollup/plugin-typescript; please install typescript@^5.9.3 when using --transpile.",
+      )
+    }
+
+    const [typescriptMajor, typescriptMinor] = ts.versionMajorMinor
+      .split(".")
+      .map(Number)
+    // TypeScript 5.7+ can emit projects that import .ts/.tsx paths by rewriting
+    // those specifiers, instead of reporting TS5097 or requiring noEmit.
+    const supportsRewriteRelativeImportExtensions =
+      typescriptMajor > 5 || (typescriptMajor === 5 && typescriptMinor >= 7)
+    const typescriptExtensionEmitOptions =
+      supportsRewriteRelativeImportExtensions
+        ? {
+            allowImportingTsExtensions: true,
+            rewriteRelativeImportExtensions: true,
+          }
+        : { allowImportingTsExtensions: false }
+
+    const [
+      { rollup },
+      { default: typescript },
+      { default: resolve },
+      { default: commonjs },
+      { default: json },
+      { default: dts },
+    ] = await Promise.all([
+      import("rollup"),
+      import("@rollup/plugin-typescript"),
+      import("@rollup/plugin-node-resolve"),
+      import("@rollup/plugin-commonjs"),
+      import("@rollup/plugin-json"),
+      import("rollup-plugin-dts"),
+    ])
+
     fs.mkdirSync(outputDir, { recursive: true })
 
     // Check if user has a tsconfig.json
