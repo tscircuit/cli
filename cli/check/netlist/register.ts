@@ -1,4 +1,4 @@
-import { convertCircuitJsonToReadableNetlist } from "circuit-json-to-readable-netlist"
+import { convertCircuitJsonToReadableNetlist } from "lib/shared/convert-circuit-json-to-readable-netlist"
 import {
   categorizeErrorOrWarning,
   type DrcCategory,
