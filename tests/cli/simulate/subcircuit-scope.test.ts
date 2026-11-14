@@ -47,17 +47,25 @@ Cnested HIDDEN B 1p
   },
 ]
 
-test("automatic probes and initial conditions stay outside chip subcircuits", () => {
+// Repro snapshots intentionally record the broken main-branch output. The
+// paired fix PR asserts the corrected behavior instead.
+test("reproduces automatic directives leaking chip-local nodes", () => {
   const netlist = getSpiceWithPaddedSim(circuitJson)
-  const probe = netlist.split("\n").find((line) => /^\.probe\b/i.test(line))
-
-  expect(probe).toBe(".probe V(N1)")
-  expect(netlist).toContain(".ic V(N1)=0")
-  expect(netlist).not.toMatch(/^\.ic V\((SAMPLE|GND|BIAS|HIDDEN|B)\)/m)
-  expect(netlist).toContain("Csample SAMPLE GND 26p")
+  expect(
+    netlist.split("\n").filter((line) => /^\.(probe|ic)\b/i.test(line)),
+  ).toMatchInlineSnapshot(`
+    [
+      ".ic V(SAMPLE)=0",
+      ".ic V(GND)=0",
+      ".ic V(HIDDEN)=0",
+      ".ic V(B)=0",
+      ".ic V(N1)=0",
+      ".probe V(VIN) V(SAMPLE) V(GND) V(BIAS) V(HIDDEN) V(B) V(N1) I(Vbias)",
+    ]
+  `)
 })
 
-test("subcircuit-local initial conditions do not suppress top-level defaults", () => {
+test("reproduces a local initial condition suppressing top-level defaults", () => {
   const withLocalIc = circuitJson.map((record) =>
     record.type === "simulation_spice_subcircuit"
       ? {
@@ -69,5 +77,13 @@ test("subcircuit-local initial conditions do not suppress top-level defaults", (
         }
       : record,
   )
-  expect(getSpiceWithPaddedSim(withLocalIc)).toContain(".ic V(N1)=0")
+  expect(
+    getSpiceWithPaddedSim(withLocalIc)
+      .split("\n")
+      .filter((line) => /^\.ic\b/i.test(line)),
+  ).toMatchInlineSnapshot(`
+    [
+      ".ic V(SAMPLE)=0",
+    ]
+  `)
 })
