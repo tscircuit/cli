@@ -117,6 +117,7 @@ export const registerImport = (program: Command) => {
           description: string
           price: number
         }> = []
+        let jlcSearchError: string | undefined
 
         if (searchTscircuit) {
           try {
@@ -157,12 +158,16 @@ export const registerImport = (program: Command) => {
             const resp = await response.json()
             jlcResults = resp.components
           } catch (error) {
-            spinner.fail("Failed to search JLCPCB")
-            console.error(
-              kleur.red("Error:"),
-              error instanceof Error ? error.message : error,
-            )
-            if (error instanceof BakedAssetNotFoundError) {
+            const missingAsset = error instanceof BakedAssetNotFoundError
+            const message =
+              error instanceof Error ? error.message : String(error)
+            if (canImportDatasheet && !missingAsset) {
+              jlcSearchError = message
+            } else {
+              spinner.fail("Failed to search JLCPCB")
+              console.error(kleur.red("Error:"), message)
+            }
+            if (missingAsset) {
               process.exitCode = 1
               return
             }
@@ -192,6 +197,11 @@ export const registerImport = (program: Command) => {
               (await importDatasheetComponent(referenceDesigns))
             )
               return
+          }
+
+          if (jlcSearchError) {
+            spinner.fail("Failed to search JLCPCB")
+            console.error(kleur.red("Error:"), jlcSearchError)
           }
 
           console.log(

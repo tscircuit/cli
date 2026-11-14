@@ -16,6 +16,7 @@ const componentSource = "export const AP2127K_2_8TRG1 = () => <chip />\n"
 for (const scenario of [
   "supplier",
   "datasheet",
+  "supplier-unavailable",
   "failed-download",
   "no-reference",
 ] as const) {
@@ -45,7 +46,14 @@ for (const scenario of [
               reference_designs:
                 scenario === "no-reference"
                   ? []
-                  : [{ name: packageName, package_release_id: releaseId }],
+                  : [
+                      {
+                        name: packageName,
+                        package_release_id: releaseId,
+                        description: "Regulator reference design",
+                        version: "1.0.0",
+                      },
+                    ],
             })
           }
           if (url.pathname.endsWith("/package_files/list")) {
@@ -70,6 +78,8 @@ for (const scenario of [
             return new Response(componentSource)
           }
           if (url.hostname === "jlcsearch.tscircuit.com") {
+            if (scenario === "supplier-unavailable")
+              return new Response(null, { status: 503 })
             return Response.json({
               components:
                 scenario === "datasheet"
@@ -100,18 +110,25 @@ for (const scenario of [
         { preconnect: fetch.preconnect },
       ),
     )
+    const consoleError = spyOn(console, "error")
     const runImport = async () => {
       const program = new Command()
       registerImport(program)
+      const useDatasheet =
+        scenario === "datasheet" || scenario === "supplier-unavailable"
       await program.parseAsync(
-        ["import", scenario === "datasheet" ? partNumber : "C460327"],
-        { from: "user" },
+        ["import", useDatasheet ? partNumber : "C460327"],
+        {
+          from: "user",
+        },
       )
     }
     try {
       process.chdir(projectDir)
       await runImport()
       expect(await Bun.file(componentFile).exists()).toBe(true)
+      if (scenario === "supplier-unavailable")
+        expect(consoleError).not.toHaveBeenCalled()
       if (scenario === "no-reference") {
         expect(requestedFiles).toEqual([])
         return
@@ -133,6 +150,7 @@ for (const scenario of [
       expect(requestedFiles).toEqual(["source", "component"])
     } finally {
       process.chdir(previousCwd)
+      consoleError.mockRestore()
       mock.mockRestore()
       await rm(projectDir, { recursive: true, force: true })
     }

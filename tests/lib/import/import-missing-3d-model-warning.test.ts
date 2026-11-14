@@ -27,9 +27,11 @@ const mockEasyEda = (raw: typeof rawRegulator) =>
   spyOn(globalThis, "fetch").mockImplementation(
     Object.assign(
       async (input: Parameters<typeof fetch>[0]) => {
-        const url = new URL(String(input))
+        const url = new URL(input instanceof Request ? input.url : input)
         if (url.pathname === "/api/search")
           return Response.json({ components: [] })
+        if (url.pathname === "/datasheets/list_reference_designs")
+          return Response.json({ reference_designs: [] })
         if (url.pathname === "/api/components/search")
           return Response.json({
             success: true,
