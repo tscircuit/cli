@@ -1,75 +1,27 @@
+import {
+  getNgspiceSimulation,
+  NGSPICE_ENGINE,
+  rewritePspiceCompatibilitySyntax,
+} from "@tscircuit/ngspice-spice-engine"
 import type * as EecircuitEngine from "lib/types/eecircuit-engine"
+
+export const SIMULATION_ENGINE = NGSPICE_ENGINE
 
 export interface SimulationOutput {
   result: EecircuitEngine.ResultType
   info: string
   errors: string[]
-}
-import { promises as fs, existsSync } from "node:fs"
-import path from "node:path"
-import os from "node:os"
-
-let sim: EecircuitEngine.Simulation | null = null
-
-const fetchSimulation = async (): Promise<
-  typeof EecircuitEngine.Simulation
-> => {
-  // Using a predictable path in tmp to avoid re-downloading.
-  // This is a workaround for Bun's test environment not handling URL imports.
-  const tempFilePath = path.join(
-    os.tmpdir(),
-    `tscircuit-eecircuit-engine-1.7.4.mjs`,
-  )
-
-  if (!existsSync(tempFilePath)) {
-    const url = `https://jscdn.tscircuit.com/@tscircuit/eecircuit-engine/1.7.4/dist/eecircuit-engine.mjs`
-    const response = await fetch(url)
-    if (!response.ok) {
-      throw new Error(
-        `Failed to fetch @tscircuit/eecircuit-engine from ${url}: ${response.statusText}`,
-      )
-    }
-    const scriptContent = await response.text()
-    await fs.writeFile(tempFilePath, scriptContent)
-  }
-
-  const module = await import(tempFilePath)
-  return module.Simulation as typeof EecircuitEngine.Simulation
-}
-
-const initializeSimulation = async () => {
-  if (sim && sim.isInitialized()) return
-  const Simulation = await fetchSimulation()
-  sim = new Simulation()
-  sim.start() // This is async, but we won't wait for it to complete
-
-  const startTime = Date.now()
-  const timeout = 15000 // 15 seconds
-
-  while (!sim.isInitialized()) {
-    if (Date.now() - startTime > timeout) {
-      console.error("Error: Simulation engine initialization timed out.")
-      const initInfo = sim.getInitInfo()
-      if (initInfo) {
-        console.error("Initialization Info:", initInfo)
-      }
-      const errors = sim.getError()
-      if (errors && errors.length > 0) {
-        console.error("Errors:", errors.join("\n"))
-      }
-      throw new Error("Simulation engine initialization timed out.")
-    }
-    await new Promise((resolve) => setTimeout(resolve, 200)) // Poll every 200ms
-  }
+  engine: typeof NGSPICE_ENGINE
+  spiceString: string
 }
 
 export const runSimulation = async (
   spiceString: string,
 ): Promise<SimulationOutput> => {
-  await initializeSimulation()
-  if (!sim) throw new Error("Simulation not initialized")
+  // Match the runtime and compatibility mode used by ngspice build/SVG output.
+  const sim = await getNgspiceSimulation()
 
-  let engineSpiceString = spiceString
+  let engineSpiceString = rewritePspiceCompatibilitySyntax(spiceString)
   const wrdataMatch = engineSpiceString.match(/wrdata\s+(\S+)\s+(.*)/i)
   if (wrdataMatch) {
     const variables = wrdataMatch[2].trim().split(/\s+/)
@@ -93,5 +45,7 @@ export const runSimulation = async (
     result,
     info: sim.getInfo(),
     errors: sim.getError(),
+    engine: NGSPICE_ENGINE,
+    spiceString: engineSpiceString,
   }
 }
