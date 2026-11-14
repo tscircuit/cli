@@ -2,6 +2,7 @@ import kleur from "kleur"
 import { importComponentFromJlcpcb } from "lib/import/import-component-from-jlcpcb"
 import ora from "ora"
 import { logFootprintConversion } from "./log-footprint-conversion"
+import { logMissing3dModelWarning } from "./log-missing-3d-model-warning"
 
 export const importJlcpcbPart = async ({
   download,
@@ -20,17 +21,20 @@ export const importJlcpcbPart = async ({
   }).start()
 
   try {
-    const { filePath, footprintConversion } = await importComponentFromJlcpcb(
-      partNumber,
-      process.cwd(),
-      {
+    const { filePath, footprintConversion, model3d } =
+      await importComponentFromJlcpcb(partNumber, process.cwd(), {
         download,
         useExactFootprint,
         excludePinAttributes,
-      },
-    )
+      })
     spinner.succeed(kleur.green(`Imported ${filePath}`))
     logFootprintConversion(footprintConversion)
+    if (!model3d.isAvailable) {
+      logMissing3dModelWarning({
+        filePath,
+        closestFootprinter: model3d.closestFootprinter,
+      })
+    }
   } catch (error) {
     spinner.fail(kleur.red("Failed to import part"))
     console.error(error instanceof Error ? error.message : error)
