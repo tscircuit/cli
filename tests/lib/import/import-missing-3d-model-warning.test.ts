@@ -2,7 +2,7 @@ import { expect, spyOn, test } from "bun:test"
 import { rm } from "node:fs/promises"
 import { registerImport } from "cli/import/register"
 import { Command } from "commander"
-import { tsxHas3dModel } from "lib/import/tsx-has-3d-model"
+import { importComponentFromJlcpcb } from "lib/import/import-component-from-jlcpcb"
 import { temporaryDirectory } from "tempy"
 import rawRegulator from "../../fixtures/assets/datasheets/C460327.raweasy.json"
 
@@ -20,10 +20,8 @@ const rawWithout3dModel = {
   },
 }
 
-const runImport = async (raw: typeof rawRegulator, args: string[]) => {
-  const directory = temporaryDirectory()
-  const previousCwd = process.cwd()
-  const fetchMock = spyOn(globalThis, "fetch").mockImplementation(
+const mockEasyEda = (raw: typeof rawRegulator) =>
+  spyOn(globalThis, "fetch").mockImplementation(
     Object.assign(
       async (input: Parameters<typeof fetch>[0]) => {
         const url = new URL(String(input))
@@ -41,6 +39,29 @@ const runImport = async (raw: typeof rawRegulator, args: string[]) => {
       { preconnect: fetch.preconnect },
     ),
   )
+
+const getModel3d = async (
+  raw: typeof rawRegulator,
+  useExactFootprint: boolean,
+) => {
+  const directory = temporaryDirectory()
+  const fetchMock = mockEasyEda(raw)
+  try {
+    const { model3d } = await importComponentFromJlcpcb("C460327", directory, {
+      excludePinAttributes: true,
+      useExactFootprint,
+    })
+    return model3d
+  } finally {
+    fetchMock.mockRestore()
+    await rm(directory, { recursive: true, force: true })
+  }
+}
+
+const runImportCommand = async (raw: typeof rawRegulator, args: string[]) => {
+  const directory = temporaryDirectory()
+  const previousCwd = process.cwd()
+  const fetchMock = mockEasyEda(raw)
   const warnMock = spyOn(console, "warn").mockImplementation(() => {})
   try {
     process.chdir(directory)
@@ -50,10 +71,7 @@ const runImport = async (raw: typeof rawRegulator, args: string[]) => {
       ["import", "--jlcpcb", "--exclude-pin-attributes", ...args, "C460327"],
       { from: "user" },
     )
-    return {
-      source: await Bun.file(`${directory}/imports/AP2127K_2_8TRG1.tsx`).text(),
-      warnings: warnMock.mock.calls.map((call) => call.join(" ")).join("\n"),
-    }
+    return warnMock.mock.calls.map((call) => call.join(" ")).join("\n")
   } finally {
     process.chdir(previousCwd)
     warnMock.mockRestore()
@@ -62,13 +80,32 @@ const runImport = async (raw: typeof rawRegulator, args: string[]) => {
   }
 }
 
+test("import result reports a supplier cad model as an available 3D model", async () => {
+  expect(await getModel3d(rawRegulator, true)).toEqual({
+    isAvailable: true,
+    source: "cad-model",
+  })
+})
+
+test("import result reports a footprinter string as an available 3D model", async () => {
+  expect(await getModel3d(rawWithout3dModel, false)).toEqual({
+    isAvailable: true,
+    source: "footprinter-string",
+    footprinterString: expect.stringMatching(/^sot25/),
+  })
+})
+
+test("import result reports no 3D model for an exact footprint without a cad model", async () => {
+  const model3d = await getModel3d(rawWithout3dModel, true)
+  if (model3d.isAvailable) throw new Error("Expected no 3D model")
+  expect(model3d.closestFootprinter?.footprinterString).toMatch(/^sot25/)
+})
+
 test("tsci import warns and recommends a footprinter model when a chip has no 3D model", async () => {
-  const { source, warnings } = await runImport(rawWithout3dModel, [
+  const warnings = await runImportCommand(rawWithout3dModel, [
     "--use-exact-footprint",
   ])
 
-  expect(source).not.toContain("cadModel")
-  expect(source).toContain("footprint={<footprint>")
   expect(warnings).toContain("No 3D model is available")
   expect(warnings).toContain("AP2127K_2_8TRG1.tsx")
   expect(warnings).toMatch(/cadModel="sot25[^"]*"\n/)
@@ -77,74 +114,9 @@ test("tsci import warns and recommends a footprinter model when a chip has no 3D
   )
 })
 
-test("tsci import does not warn when the part has a 3D model", async () => {
-  const { source, warnings } = await runImport(rawRegulator, [
-    "--use-exact-footprint",
-  ])
-
-  expect(source).toContain("cadModel={{")
-  expect(warnings).toBe("")
-})
-
-test("tsci import does not warn when a footprinter footprint supplies the 3D model", async () => {
-  const { source, warnings } = await runImport(rawWithout3dModel, [])
-
-  expect(source).not.toContain("cadModel")
-  expect(source).toMatch(/footprint="sot25/)
-  expect(warnings).toBe("")
-})
-
-test("tsxHas3dModel", () => {
-  expect(tsxHas3dModel(`<chip footprint={<footprint></footprint>} />`)).toBe(
-    false,
+test("tsci import does not warn when a 3D model is available", async () => {
+  expect(await runImportCommand(rawRegulator, ["--use-exact-footprint"])).toBe(
+    "",
   )
-  expect(tsxHas3dModel(`<chip footprint="soic8" />`)).toBe(true)
-  expect(
-    tsxHas3dModel(`<chip footprint={<footprint />} cadModel="soic8" />`),
-  ).toBe(true)
-  expect(
-    tsxHas3dModel(`<chip footprint={<footprint />} cadModel={{ objUrl }} />`),
-  ).toBe(true)
-})
-
-test("tsci import warns when standalone generated TSX has no 3D model", async () => {
-  const directory = temporaryDirectory()
-  const previousCwd = process.cwd()
-  const previousStandalone = process.env.TSCIRCUIT_STANDALONE
-  const fetchMock = spyOn(globalThis, "fetch").mockImplementation(
-    Object.assign(
-      async () =>
-        Response.json({
-          datasheet: {
-            chip_name: "AP2127K-2.8TRG1",
-            pin_attributes: null,
-            generated_tsx:
-              "export const AP2127K_2_8TRG1 = () => <chip footprint={<footprint />} />\n",
-          },
-        }),
-      { preconnect: fetch.preconnect },
-    ),
-  )
-  const warnMock = spyOn(console, "warn").mockImplementation(() => {})
-  try {
-    process.env.TSCIRCUIT_STANDALONE = "1"
-    process.chdir(directory)
-    const program = new Command()
-    registerImport(program)
-    await program.parseAsync(["import", "AP2127K-2.8TRG1"], { from: "user" })
-    const warnings = warnMock.mock.calls
-      .map((call) => call.join(" "))
-      .join("\n")
-    expect(warnings).toContain("No 3D model is available")
-    expect(warnings).toContain('cadModel="soic8"\n')
-    expect(warnings).toContain("Replace")
-  } finally {
-    if (previousStandalone === undefined)
-      delete process.env.TSCIRCUIT_STANDALONE
-    else process.env.TSCIRCUIT_STANDALONE = previousStandalone
-    process.chdir(previousCwd)
-    warnMock.mockRestore()
-    fetchMock.mockRestore()
-    await rm(directory, { recursive: true, force: true })
-  }
+  expect(await runImportCommand(rawWithout3dModel, [])).toBe("")
 })

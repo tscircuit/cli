@@ -10,8 +10,6 @@ import ora from "ora"
 import { mkdir, writeFile } from "node:fs/promises"
 import path from "node:path"
 import { importJlcpcbPart } from "./import-jlcpcb-part"
-import { logMissing3dModelWarning } from "./log-missing-3d-model-warning"
-import { tsxHas3dModel } from "lib/import/tsx-has-3d-model"
 import { parseDirectLcscPartNumber } from "./parse-direct-lcsc-part-number"
 import { getPartsEngineBaseUrl } from "lib/shared/parts-engine-base-urls"
 import {
@@ -81,9 +79,6 @@ export const registerImport = (program: Command) => {
               await mkdir(componentDir, { recursive: true })
               await writeFile(filePath, datasheet.generated_tsx)
               spinner.succeed(kleur.green(`Imported ${filePath}`))
-              if (!tsxHas3dModel(datasheet.generated_tsx)) {
-                logMissing3dModelWarning({ filePath })
-              }
             } catch (error) {
               spinner.fail(kleur.red("Failed to import part"))
               console.error(error instanceof Error ? error.message : error)

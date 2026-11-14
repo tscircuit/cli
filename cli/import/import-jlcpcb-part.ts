@@ -21,7 +21,7 @@ export const importJlcpcbPart = async ({
   }).start()
 
   try {
-    const { filePath, footprintConversion, has3dModel, closestFootprinter } =
+    const { filePath, footprintConversion, model3d } =
       await importComponentFromJlcpcb(partNumber, process.cwd(), {
         download,
         useExactFootprint,
@@ -29,8 +29,11 @@ export const importJlcpcbPart = async ({
       })
     spinner.succeed(kleur.green(`Imported ${filePath}`))
     logFootprintConversion(footprintConversion)
-    if (!has3dModel) {
-      logMissing3dModelWarning({ filePath, closestFootprinter })
+    if (!model3d.isAvailable) {
+      logMissing3dModelWarning({
+        filePath,
+        closestFootprinter: model3d.closestFootprinter,
+      })
     }
   } catch (error) {
     spinner.fail(kleur.red("Failed to import part"))

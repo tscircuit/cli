@@ -19,10 +19,9 @@ import {
 import { getEasyEdaFootprinterSourceHints } from "./footprinter/get-easyeda-footprinter-source-hints"
 import { getPlatformFetch } from "lib/shared/get-platform-fetch"
 import {
-  circuitJsonToFootprinter,
-  type FootprinterDiscoveryCandidate,
-} from "lib/shared/circuit-json-to-footprinter"
-import { tsxHas3dModel } from "./tsx-has-3d-model"
+  getImported3dModelInfo,
+  type Imported3dModelInfo,
+} from "./get-imported-3d-model-info"
 
 export interface ImportComponentFromJlcpcbOptions {
   download?: boolean
@@ -38,10 +37,8 @@ export interface ImportComponentFromJlcpcbResult {
         mode: "exact-requested"
         tsx: string
       }
-  /** False when the imported component has neither a cadModel nor a footprinter footprint */
-  has3dModel: boolean
-  /** Closest footprinter match, usable as a `cadModel` string when `has3dModel` is false */
-  closestFootprinter?: FootprinterDiscoveryCandidate
+  /** Whether the imported component has a 3D model, and where it comes from */
+  model3d: Imported3dModelInfo
 }
 
 export const importComponentFromJlcpcb = async (
@@ -118,21 +115,12 @@ export const importComponentFromJlcpcb = async (
   const filePath = path.join(componentDir, `${componentName}.tsx`)
   await fs.writeFile(filePath, tsx)
 
-  const has3dModel = tsxHas3dModel(tsx)
-  let closestFootprinter: FootprinterDiscoveryCandidate | undefined
-  if (!has3dModel) {
-    if (footprintConversion.mode === "exact-requested") {
-      try {
-        closestFootprinter =
-          circuitJsonToFootprinter(circuitJson, {
-            maxCandidates: 5,
-            sourceHints,
-          }).best ?? undefined
-      } catch {}
-    } else {
-      closestFootprinter = footprintConversion.candidate
-    }
-  }
+  const model3d = getImported3dModelInfo({
+    cadComponent,
+    circuitJson,
+    footprintConversion,
+    sourceHints,
+  })
 
-  return { filePath, footprintConversion, has3dModel, closestFootprinter }
+  return { filePath, footprintConversion, model3d }
 }
