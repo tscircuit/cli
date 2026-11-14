@@ -131,9 +131,13 @@ export const registerImport = (program: Command) => {
               "https://jlcsearch.tscircuit.com",
             )
             const searchUrl = `${baseUrl}/api/search?limit=10&q=${encodeURIComponent(query)}`
-            const resp = await getPlatformFetch()(searchUrl).then((r) =>
-              r.json(),
-            )
+            const response = await getPlatformFetch()(searchUrl)
+            if (!response.ok) {
+              throw new Error(
+                `JLCPCB search failed: HTTP ${response.status} ${response.statusText}`,
+              )
+            }
+            const resp = await response.json()
             jlcResults = resp.components
           } catch (error) {
             spinner.fail("Failed to search JLCPCB")
@@ -169,6 +173,7 @@ export const registerImport = (program: Command) => {
               `No results found for "${query}" in the tscircuit registry or JLCPCB.`,
             ),
           )
+          process.exitCode = 1
           return
         }
 
