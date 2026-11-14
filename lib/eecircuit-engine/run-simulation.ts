@@ -1,9 +1,18 @@
 import type * as EecircuitEngine from "lib/types/eecircuit-engine"
+import { isFatalSimulationDiagnostic } from "./is-fatal-simulation-diagnostic"
 
 export interface SimulationOutput {
-  result: EecircuitEngine.ResultType
+  result: EecircuitEngine.ResultType | null
   info: string
   errors: string[]
+  engine: typeof SIMULATION_ENGINE
+  spiceString: string
+}
+export const SIMULATION_ENGINE = {
+  name: "ngspice",
+  package: "@tscircuit/eecircuit-engine",
+  version: "1.7.4",
+  compatibility: "none",
 }
 import { promises as fs, existsSync } from "node:fs"
 import path from "node:path"
@@ -18,11 +27,11 @@ const fetchSimulation = async (): Promise<
   // This is a workaround for Bun's test environment not handling URL imports.
   const tempFilePath = path.join(
     os.tmpdir(),
-    `tscircuit-eecircuit-engine-1.7.4.mjs`,
+    `tscircuit-eecircuit-engine-${SIMULATION_ENGINE.version}.mjs`,
   )
 
   if (!existsSync(tempFilePath)) {
-    const url = `https://jscdn.tscircuit.com/@tscircuit/eecircuit-engine/1.7.4/dist/eecircuit-engine.mjs`
+    const url = `https://jscdn.tscircuit.com/@tscircuit/eecircuit-engine/${SIMULATION_ENGINE.version}/dist/eecircuit-engine.mjs`
     const response = await fetch(url)
     if (!response.ok) {
       throw new Error(
@@ -88,10 +97,35 @@ export const runSimulation = async (
   }
 
   sim.setNetList(engineSpiceString)
-  const result = await sim.runSim()
-  return {
-    result,
-    info: sim.getInfo(),
-    errors: sim.getError(),
+  let timeout: ReturnType<typeof setTimeout> | undefined
+  let monitor: ReturnType<typeof setInterval> | undefined
+  try {
+    // Some ngspice aborts never resolve runSim(). Keep the process alive long
+    // enough to observe diagnostics instead of silently exiting successfully.
+    const result = await Promise.race([
+      sim.runSim(),
+      new Promise<never>((_, reject) => {
+        timeout = setTimeout(
+          () => reject(new Error("Simulation timed out after 30 seconds")),
+          30000,
+        )
+        monitor = setInterval(() => {
+          const fatalErrors = sim!
+            .getError()
+            .filter(isFatalSimulationDiagnostic)
+          if (fatalErrors.length) reject(new Error(fatalErrors.join("\n")))
+        }, 100)
+      }),
+    ])
+    return {
+      result,
+      info: sim.getInfo(),
+      errors: sim.getError(),
+      engine: SIMULATION_ENGINE,
+      spiceString: engineSpiceString,
+    }
+  } finally {
+    clearTimeout(timeout)
+    clearInterval(monitor)
   }
 }

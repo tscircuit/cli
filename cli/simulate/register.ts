@@ -1,5 +1,5 @@
-import { type Command, InvalidArgumentError } from "commander"
-import { runSimulation } from "lib/eecircuit-engine/run-simulation"
+import { type Command, InvalidArgumentError, Option } from "commander"
+import { runSimulationReport } from "lib/shared/run-simulation-report"
 import { resultToTable } from "lib/shared/result-to-table"
 import { getSpiceWithPaddedSim } from "lib/shared/get-spice-with-sim"
 import type { PlatformConfig } from "@tscircuit/props"
@@ -16,13 +16,16 @@ type AnalogOptions = {
   disablePartsEngine?: boolean
   output?: string
   solverTimeoutMs?: number
+  format: "table" | "json"
 }
 
 export const registerSimulate = (program: Command) => {
   const simulateCommand = program
     .enablePositionalOptions()
     .command("simulate")
-    .description("Run a simulation")
+    .description(
+      "Run a simulation. For a static SVG, use tsci build <file> --simulation-svgs.",
+    )
 
   registerReturnCurrentSimulation(simulateCommand)
 
@@ -30,6 +33,14 @@ export const registerSimulate = (program: Command) => {
     .argument("<file>", "Path to tscircuit tsx or circuit json file")
     .option("--disable-parts-engine", "Disable the parts engine")
     .option("--output <directory>", "Fresh pcb_spice report directory")
+    .addOption(
+      new Option(
+        "--format <format>",
+        "Analog result format; JSON preserves full precision and provenance",
+      )
+        .choices(["table", "json"])
+        .default("table"),
+    )
     .option(
       "--solver-timeout-ms <milliseconds>",
       "Per-process pcb_spice timeout (default: 900000 ms)",
@@ -71,6 +82,8 @@ export const registerSimulate = (program: Command) => {
         record.type === "simulation_experiment" ? [record.spice_engine] : [],
       )
       if (engines.includes("pcb_spice")) {
+        if (options.format !== "table")
+          throw new Error("--format requires an ngspice simulation")
         if (engines.some((engine) => engine !== "pcb_spice")) {
           throw new Error(
             "Mixed pcb_spice and other SPICE engines are unsupported; run separate entries for each engine",
@@ -98,19 +111,18 @@ export const registerSimulate = (program: Command) => {
       }
       const spiceString = getSpiceWithPaddedSim(circuitJson)
 
-      const { result, info, errors } = await runSimulation(spiceString)
-
-      if (errors?.length > 0) {
-        console.error(errors.join("\n"))
+      const report = await runSimulationReport(spiceString)
+      if (options.format === "json") {
+        console.log(JSON.stringify(report))
+      } else {
+        if (report.diagnostics.warnings.length)
+          console.error(report.diagnostics.warnings.join("\n"))
+        if (report.diagnostics.errors.length)
+          console.error(report.diagnostics.errors.join("\n"))
+        if (report.diagnostics.log) console.log(report.diagnostics.log)
+        if (report.status === "success" && report.result)
+          console.log(resultToTable(report.result))
       }
-
-      if (info) {
-        console.log(info)
-      }
-
-      const tableContent = resultToTable(result)
-
-      console.log(tableContent)
-      process.exit(0)
+      process.exit(report.status === "failed" ? 1 : 0)
     })
 }

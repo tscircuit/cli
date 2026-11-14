@@ -50,8 +50,13 @@ test("a fatal ngspice error returns a nonzero CLI status", async () => {
   const { exitCode, stdout, stderr } = await runCommand(
     `tsci simulate ${filename}`,
   )
-  expect(`${stdout}\n${stderr}`).toMatch(/shorted VSRC|simulation.*failed/i)
+  expect(`${stdout}\n${stderr}`).toMatch(
+    /shorted VSRC|aborted|simulation.*failed/i,
+  )
   expect(exitCode).not.toBe(0)
+  const jsonRun = await runCommand(`tsci simulate ${filename} --format json`)
+  expect(jsonRun.exitCode).not.toBe(0)
+  expect(JSON.parse(jsonRun.stdout).status).toBe("failed")
 }, 30000)
 
 test("JSON reports preserve samples, executed netlist and engine provenance", async () => {
