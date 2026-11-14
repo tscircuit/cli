@@ -6,7 +6,7 @@ import path from "node:path"
 const generatorPath = path.resolve("lib/shared/generate-circuit-json.tsx")
 
 for (const hasManifest of [false, true]) {
-  test(`repro: missing JSX runtime omits ${hasManifest ? "install" : "initialization"} guidance`, async () => {
+  test(`missing JSX runtime explains how to ${hasManifest ? "install" : "initialize"} the project`, async () => {
     const directory = await mkdtemp(path.join(os.tmpdir(), "tsci-setup-hint-"))
     try {
       if (hasManifest) {
@@ -44,11 +44,7 @@ try {
       expect(exitCode).toBe(1)
       expect(stdout).toBe("")
       expect(stderr).toContain("react")
-      // The command fails as expected; this repro records its missing hint.
-      // The stacked fix changes this to require the appropriate setup command.
-      expect(stderr).not.toContain(
-        hasManifest ? "tsci install" : "tsci init --yes",
-      )
+      expect(stderr).toContain(hasManifest ? "tsci install" : "tsci init --yes")
     } finally {
       await rm(directory, { recursive: true, force: true })
     }
