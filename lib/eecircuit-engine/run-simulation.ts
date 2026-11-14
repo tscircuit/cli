@@ -106,8 +106,8 @@ export const runSimulation = async (
       sim.runSim(),
       new Promise<never>((_, reject) => {
         timeout = setTimeout(
-          () => reject(new Error("Simulation timed out after 30 seconds")),
-          30000,
+          () => reject(new Error("Simulation timed out after 15 minutes")),
+          900000,
         )
         monitor = setInterval(() => {
           const fatalErrors = sim!
@@ -121,6 +121,17 @@ export const runSimulation = async (
       result,
       info: sim.getInfo(),
       errors: sim.getError(),
+      engine: SIMULATION_ENGINE,
+      spiceString: engineSpiceString,
+    }
+  } catch (error) {
+    return {
+      result: null,
+      info: sim.getInfo(),
+      errors: [
+        ...sim.getError(),
+        `Error: ${error instanceof Error ? error.message : String(error)}`,
+      ],
       engine: SIMULATION_ENGINE,
       spiceString: engineSpiceString,
     }
