@@ -83,6 +83,19 @@ The `build` command also accepts the following options:
 - `--ignore-placement-drc` - suppress placement DRC diagnostics
 - `--ignore-routing-drc` - suppress routing DRC diagnostics
 
+### Fabrication files export
+
+Export a TSX circuit or an existing Circuit JSON file as a fabrication files ZIP:
+
+```bash
+tsci export board.tsx --format gerbers
+tsci export board.circuit.json --format gerbers --output fabrication-files.zip
+```
+
+The ZIP contains the Gerber layers (`.gbr`), Excellon drill files (`.drl`, when
+the board has holes or vias), `bom.csv` and a JLCPCB-format `pick_and_place.csv`.
+Without `--output`, the archive is saved beside the input as `<input-basename>-gerbers.zip`.
+
 ### Altium export
 
 Export a TSX circuit or an existing Circuit JSON file as an Altium project:

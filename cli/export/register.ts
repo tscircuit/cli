@@ -60,6 +60,10 @@ export const registerExport = (program: Command) => {
     .option("--layer <layer>", "PCB front layer: top or bottom")
     .option("--disable-parts-engine", "Disable the parts engine")
     .option("--show-courtyards", "Show courtyard outlines in PCB SVG output")
+    .addHelpText(
+      "after",
+      `\nFabrication files:\n  tsci export board.tsx -f gerbers\n  Writes <input-basename>-gerbers.zip containing the Gerber layers (.gbr),\n  Excellon drill files (.drl), bom.csv and pick_and_place.csv (JLCPCB format).\n`,
+    )
     .action(
       async (
         file,
