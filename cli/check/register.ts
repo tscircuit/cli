@@ -6,7 +6,7 @@ import {
 } from "lib/shared/circuit-json-diagnostics"
 import { getCircuitJsonForCheck, resolveCheckInputFilePath } from "./shared"
 
-export const check = async (file?: string) => {
+export const getCheckResult = async (file?: string) => {
   const resolvedInputFilePath = await resolveCheckInputFilePath(file)
   const circuitJson = (await getCircuitJsonForCheck({
     filePath: resolvedInputFilePath,
@@ -14,8 +14,15 @@ export const check = async (file?: string) => {
     allowPrebuiltCircuitJson: true,
   })) as AnyCircuitElement[]
 
-  return formatCircuitJsonDiagnostics(analyzeCircuitJson(circuitJson))
+  const diagnostics = analyzeCircuitJson(circuitJson)
+  return {
+    output: formatCircuitJsonDiagnostics(diagnostics),
+    hasErrors: diagnostics.errors.length > 0,
+  }
 }
+
+export const check = async (file?: string) =>
+  (await getCheckResult(file)).output
 
 export const registerCheck = (program: Command) => {
   program
@@ -24,7 +31,9 @@ export const registerCheck = (program: Command) => {
     .argument("[file]", "Path to the entry file")
     .action(async (file?: string) => {
       try {
-        console.log(await check(file))
+        const { output, hasErrors } = await getCheckResult(file)
+        console.log(output)
+        if (hasErrors) process.exitCode = 1
       } catch (error) {
         console.error(error instanceof Error ? error.message : String(error))
         process.exit(1)
