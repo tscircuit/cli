@@ -2,7 +2,7 @@ import { expect, test } from "bun:test"
 import { mkdtemp, mkdir, rm, writeFile } from "node:fs/promises"
 import os from "node:os"
 import path from "node:path"
-import { rethrowProjectDependencyError } from "lib/shared/rethrow-project-dependency-error"
+import { rethrowWithProjectSetupHint } from "lib/shared/rethrow-with-project-setup-hint"
 
 for (const original of [
   new Error(
@@ -16,7 +16,7 @@ for (const original of [
 ]) {
   test(`does not replace an unrelated error: ${original.message}`, () => {
     try {
-      rethrowProjectDependencyError(original, os.tmpdir())
+      rethrowWithProjectSetupHint(original, os.tmpdir())
     } catch (error) {
       expect(error).toBe(original)
       return
@@ -40,7 +40,7 @@ test("a nested entry points to its existing project and preserves the cause", as
       "Cannot find module 'react/jsx-runtime' from circuit.tsx",
     )
     try {
-      rethrowProjectDependencyError(original, nested)
+      rethrowWithProjectSetupHint(original, nested)
     } catch (error) {
       expect(error).toBeInstanceOf(Error)
       expect((error as Error).cause).toBe(original)

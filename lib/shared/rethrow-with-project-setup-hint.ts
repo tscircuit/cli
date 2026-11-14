@@ -1,7 +1,7 @@
 import { existsSync } from "node:fs"
 import path from "node:path"
 
-export const rethrowProjectDependencyError = (
+export const rethrowWithProjectSetupHint = (
   error: unknown,
   projectDir: string,
 ): never => {

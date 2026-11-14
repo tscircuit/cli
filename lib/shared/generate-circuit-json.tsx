@@ -14,7 +14,7 @@ import {
 import { attachAutoroutingArtifacts } from "./autorouting-artifacts"
 import { importFromUserLand } from "./importFromUserLand"
 import { registerStaticAssetLoaders } from "./register-static-asset-loaders"
-import { rethrowProjectDependencyError } from "./rethrow-project-dependency-error"
+import { rethrowWithProjectSetupHint } from "./rethrow-with-project-setup-hint"
 import {
   addSourceFilesystemHash,
   getSourceFilesystemMd5Hash,
@@ -83,14 +83,14 @@ export async function generateCircuitJson({
   // Import React and make it globally available for packages referencing it
   const projectRootDir = path.resolve(projectDirOption ?? process.cwd())
   const React = await importFromUserLand("react", projectRootDir).catch(
-    (error) => rethrowProjectDependencyError(error, projectRootDir),
+    (error) => rethrowWithProjectSetupHint(error, projectRootDir),
   )
   ;(globalThis as any).React = React
   registerStaticAssetLoaders(platformConfig, projectRootDir)
   const userLandTscircuit = await importFromUserLand(
     "tscircuit",
     projectRootDir,
-  ).catch((error) => rethrowProjectDependencyError(error, projectRootDir))
+  ).catch((error) => rethrowWithProjectSetupHint(error, projectRootDir))
 
   const runner = new userLandTscircuit.RootCircuit({
     platform: platformConfig,
@@ -157,7 +157,7 @@ export async function generateCircuitJson({
   // Execute the circuit runner with the virtual file system
   const MainComponent = await import(
     pathToFileURL(absoluteFilePath).href
-  ).catch((error) => rethrowProjectDependencyError(error, projectRootDir))
+  ).catch((error) => rethrowWithProjectSetupHint(error, projectRootDir))
 
   let records: AnyCircuitElement[]
   if (Array.isArray(MainComponent.circuitJson)) {
