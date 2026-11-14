@@ -28,12 +28,30 @@ test("recoverable warnings stay distinct from fatal simulation errors", () => {
     errors: ["Warning: singular matrix; gmin stepping succeeded"],
   })
   expect(warning.status).toBe("success")
+  expect(warning.diagnostics).toMatchInlineSnapshot(`
+    {
+      "errors": [],
+      "log": "runtime log",
+      "warnings": [
+        "Warning: singular matrix; gmin stepping succeeded",
+      ],
+    }
+  `)
   expect(warning.diagnostics.warnings).toHaveLength(1)
   const fatal = createSimulationReport({
     ...output,
     errors: ["run simulation(s) aborted"],
   })
   expect(fatal.status).toBe("failed")
+  expect(fatal.diagnostics).toMatchInlineSnapshot(`
+    {
+      "errors": [
+        "run simulation(s) aborted",
+      ],
+      "log": "runtime log",
+      "warnings": [],
+    }
+  `)
   expect(fatal.diagnostics.errors).toHaveLength(1)
 })
 
@@ -48,6 +66,16 @@ const invalidResults: SimulationOutput["result"][] = [
 test.each(invalidResults)(
   "absent, empty or nonfinite waveforms cannot report success",
   (result) => {
-    expect(createSimulationReport({ ...output, result }).status).toBe("failed")
+    const report = createSimulationReport({ ...output, result })
+    expect(report.status).toBe("failed")
+    expect(report.diagnostics).toMatchInlineSnapshot(`
+      {
+        "errors": [
+          "Simulation produced no usable finite samples",
+        ],
+        "log": "runtime log",
+        "warnings": [],
+      }
+    `)
   },
 )

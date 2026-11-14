@@ -1,5 +1,5 @@
 import type * as EecircuitEngine from "lib/types/eecircuit-engine"
-import { isFatalSimulationDiagnostic } from "./is-fatal-simulation-diagnostic"
+import { runSimulationWithWatchdog } from "./run-simulation-with-watchdog"
 
 export interface SimulationOutput {
   result: EecircuitEngine.ResultType | null
@@ -97,26 +97,9 @@ export const runSimulation = async (
   }
 
   sim.setNetList(engineSpiceString)
-  let timeout: ReturnType<typeof setTimeout> | undefined
-  let monitor: ReturnType<typeof setInterval> | undefined
   try {
-    // Some ngspice aborts never resolve runSim(). Keep the process alive long
-    // enough to observe diagnostics instead of silently exiting successfully.
-    const result = await Promise.race([
-      sim.runSim(),
-      new Promise<never>((_, reject) => {
-        timeout = setTimeout(
-          () => reject(new Error("Simulation timed out after 15 minutes")),
-          900000,
-        )
-        monitor = setInterval(() => {
-          const fatalErrors = sim!
-            .getError()
-            .filter(isFatalSimulationDiagnostic)
-          if (fatalErrors.length) reject(new Error(fatalErrors.join("\n")))
-        }, 100)
-      }),
-    ])
+    // Keep unresolved ngspice aborts from silently ending the CLI process.
+    const result = await runSimulationWithWatchdog(sim)
     return {
       result,
       info: sim.getInfo(),
@@ -135,8 +118,5 @@ export const runSimulation = async (
       engine: SIMULATION_ENGINE,
       spiceString: engineSpiceString,
     }
-  } finally {
-    clearTimeout(timeout)
-    clearInterval(monitor)
   }
 }

@@ -56,7 +56,43 @@ test("a fatal ngspice error returns a nonzero CLI status", async () => {
   expect(exitCode).not.toBe(0)
   const jsonRun = await runCommand(`tsci simulate ${filename} --format json`)
   expect(jsonRun.exitCode).not.toBe(0)
-  expect(JSON.parse(jsonRun.stdout).status).toBe("failed")
+  const failedReport = JSON.parse(jsonRun.stdout)
+  expect(failedReport.status).toBe("failed")
+  expect({
+    exitCode: jsonRun.exitCode,
+    status: failedReport.status,
+    diagnostics: {
+      errors: failedReport.diagnostics.errors,
+      warnings: failedReport.diagnostics.warnings,
+    },
+  }).toMatchInlineSnapshot(`
+    {
+      "diagnostics": {
+        "errors": [
+          "doAnalyses: TRAN:  Timestep too small; initial timepoint: cause unrecorded.",
+          "run simulation(s) aborted",
+          "Error during 'write': no writable vector found.",
+          
+    "Error: doAnalyses: TRAN:  Timestep too small; initial timepoint: cause unrecorded.
+    run simulation(s) aborted
+    Error during 'write': no writable vector found."
+    ,
+          "Simulation produced no usable finite samples",
+        ],
+        "warnings": [
+          "Warning: singular matrix:  check node vsupply#branch",
+          "Warning: singular matrix:  check node vsupply#branch",
+          "Warning: singular matrix:  check node vsupply#branch",
+          "Warning: singular matrix:  check node vsupply#branch",
+          "Warning: singular matrix:  check node vsupply#branch",
+          "Warning: singular matrix:  check node vsupply#branch",
+          "Warning from checkvalid: vector time is not available or has zero length.",
+        ],
+      },
+      "exitCode": 1,
+      "status": "failed",
+    }
+  `)
 }, 30000)
 
 test("JSON reports preserve samples, executed netlist and engine provenance", async () => {
