@@ -4,6 +4,7 @@ import { globbySync } from "globby"
 import {
   DEFAULT_BOARD_FILE_PATTERNS,
   getBoardFilePatterns,
+  loadProjectConfigSync,
   loadRuntimeProjectConfig,
 } from "lib/project-config"
 import { DEFAULT_IGNORED_PATTERNS } from "./should-ignore-path"
@@ -42,10 +43,12 @@ export const findBoardFiles = ({
 }: FindBoardFilesOptions = {}): string[] => {
   const resolvedProjectDir = path.resolve(projectDir)
   const boardFilePatterns = getBoardFilePatterns(resolvedProjectDir)
+  const configuredIgnore =
+    loadProjectConfigSync(resolvedProjectDir)?.ignoreEntrypoints ?? []
   return findBoardFilesFromPatterns({
     boardFilePatterns,
     projectDir: resolvedProjectDir,
-    ignore,
+    ignore: [...ignore, ...configuredIgnore],
     filePaths,
   })
 }
@@ -65,7 +68,7 @@ export const findBoardFilesAsync = async ({
         ? boardFilePatterns
         : DEFAULT_BOARD_FILE_PATTERNS,
     projectDir: resolvedProjectDir,
-    ignore,
+    ignore: [...ignore, ...(projectConfig?.ignoreEntrypoints ?? [])],
     filePaths,
   })
 }

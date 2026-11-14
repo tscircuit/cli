@@ -50,6 +50,8 @@ export const projectConfigSchema = z.object({
   extraRunFrameTabs: z.array(extraRunFrameTabSchema).optional(),
   ignoredFiles: z.array(z.string()).optional(),
   includeBoardFiles: z.array(z.string()).optional(),
+  /** Globs for broken boards to omit from automatic build discovery. */
+  ignoreEntrypoints: z.array(z.string().trim().min(1)).optional(),
   snapshotsDir: z.string().optional(),
   pcbSnapshotSettings: pcbSnapshotSettingsSchema.optional(),
   prebuildCommand: z.string().optional(),

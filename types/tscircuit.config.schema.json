@@ -40,6 +40,14 @@
       },
       "description": "File globs to include as board files."
     },
+    "ignoreEntrypoints": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "minLength": 1
+      },
+      "description": "Project-relative globs for board entrypoints to exclude from automatic build discovery. Explicit file builds remain allowed."
+    },
     "snapshotsDir": {
       "type": "string",
       "description": "Directory path for storing snapshots."
