@@ -2,7 +2,10 @@ import { expect, spyOn, test } from "bun:test"
 import { rm } from "node:fs/promises"
 import { registerImport } from "cli/import/register"
 import { Command } from "commander"
+import { logMissing3dModelWarning } from "cli/import/log-missing-3d-model-warning"
+import { getImported3dModelInfo } from "lib/import/get-imported-3d-model-info"
 import { importComponentFromJlcpcb } from "lib/import/import-component-from-jlcpcb"
+import type { FootprinterDiscoveryCandidate } from "lib/shared/circuit-json-to-footprinter"
 import { temporaryDirectory } from "tempy"
 import rawRegulator from "../../fixtures/assets/datasheets/C460327.raweasy.json"
 
@@ -96,9 +99,22 @@ test("import result reports a footprinter string as an available 3D model", asyn
 })
 
 test("import result reports no 3D model for an exact footprint without a cad model", async () => {
-  const model3d = await getModel3d(rawWithout3dModel, true)
-  if (model3d.isAvailable) throw new Error("Expected no 3D model")
-  expect(model3d.closestFootprinter?.footprinterString).toMatch(/^sot25/)
+  expect(await getModel3d(rawWithout3dModel, true)).toEqual({
+    isAvailable: false,
+  })
+})
+
+test("a low-accuracy footprinter match is reported as the closest footprinter", () => {
+  const candidate = {
+    footprinterString: "sot25",
+    copperIntersectionOverUnion: 0.9,
+  } as FootprinterDiscoveryCandidate
+
+  expect(
+    getImported3dModelInfo({
+      footprintConversion: { mode: "exact-low-accuracy", candidate },
+    }),
+  ).toEqual({ isAvailable: false, closestFootprinter: candidate })
 })
 
 test("tsci import warns and recommends a footprinter model when a chip has no 3D model", async () => {
@@ -108,10 +124,27 @@ test("tsci import warns and recommends a footprinter model when a chip has no 3D
 
   expect(warnings).toContain("No 3D model is available")
   expect(warnings).toContain("AP2127K_2_8TRG1.tsx")
-  expect(warnings).toMatch(/cadModel="sot25[^"]*"\n/)
-  expect(warnings).toMatch(
-    /"sot25[^"]*" is the closest footprinter match \(99\.\d\d% copper IoU\)/,
-  )
+  expect(warnings).toContain('cadModel="soic8"\n')
+})
+
+test("the warning suggests the closest footprinter match when there is one", () => {
+  const warnMock = spyOn(console, "warn").mockImplementation(() => {})
+  try {
+    logMissing3dModelWarning({
+      filePath: "imports/Chip.tsx",
+      closestFootprinter: {
+        footprinterString: "sot25",
+        copperIntersectionOverUnion: 0.9,
+      } as FootprinterDiscoveryCandidate,
+    })
+    const warnings = warnMock.mock.calls.map((call) => call.join(" ")).join()
+    expect(warnings).toContain('cadModel="sot25"\n')
+    expect(warnings).toContain(
+      '"sot25" is the closest footprinter match (90.00% copper IoU)',
+    )
+  } finally {
+    warnMock.mockRestore()
+  }
 })
 
 test("tsci import does not warn when a 3D model is available", async () => {

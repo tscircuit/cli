@@ -70,12 +70,11 @@ export const importComponentFromJlcpcb = async (
     pinAttributes: datasheetAttributes,
     internallyConnectedPins: datasheetMetadata?.internallyConnectedPins,
   })
-  const sourceHints = getEasyEdaFootprinterSourceHints(rawEasy)
   const footprintConversion = options.useExactFootprint
     ? ({ mode: "exact-requested", tsx } as const)
     : convertImportedFootprintToFootprinter({
         circuitJson,
-        sourceHints,
+        sourceHints: getEasyEdaFootprinterSourceHints(rawEasy),
         tsx,
       })
   tsx = footprintConversion.tsx
@@ -115,12 +114,7 @@ export const importComponentFromJlcpcb = async (
   const filePath = path.join(componentDir, `${componentName}.tsx`)
   await fs.writeFile(filePath, tsx)
 
-  const model3d = getImported3dModelInfo({
-    cadComponent,
-    circuitJson,
-    footprintConversion,
-    sourceHints,
-  })
+  const model3d = getImported3dModelInfo({ cadComponent, footprintConversion })
 
   return { filePath, footprintConversion, model3d }
 }
