@@ -33,4 +33,24 @@ test("CLI simulation accepts the same PSpice model syntax as the build adapter",
     (series) => series.name === "v(out)",
   )
   expect(voltage?.values.at(-1)).toBeCloseTo(2.5, 8)
+  expect({
+    engine: simulated.engine,
+    outputVolts: voltage?.values.at(-1),
+    resistor: simulated.spiceString
+      .split("\n")
+      .find((line) => /^R1\b/.test(line)),
+    diagnostics: simulated.errors,
+  }).toMatchInlineSnapshot(`
+    {
+      "diagnostics": [],
+      "engine": {
+        "compatibility": "psa",
+        "name": "ngspice",
+        "package": "@tscircuit/eecircuit-engine",
+        "version": "1.7.6",
+      },
+      "outputVolts": 2.5,
+      "resistor": "R1 in out 1k TC1=0 TC2=0",
+    }
+  `)
 }, 30000)
