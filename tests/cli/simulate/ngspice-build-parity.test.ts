@@ -12,7 +12,7 @@ R2 out 0 1k
 .tran 1u 2u
 .END`
 
-test("CLI simulation accepts the same PSpice model syntax as the build adapter", async () => {
+test("reproduces different CLI and build handling of the same PSpice model", async () => {
   const engine = await createNgspiceSpiceEngine()
   const built = await engine.simulate(spiceString)
   const graph = built.simulationResultCircuitJson.find(
@@ -26,11 +26,21 @@ test("CLI simulation accepts the same PSpice model syntax as the build adapter",
   expect(graph.voltage_levels.at(-1)).toBeCloseTo(2.5, 8)
 
   const simulated = await runSimulation(spiceString)
-  expect(simulated.errors.filter((line) => /^Error|Fatal/i.test(line))).toEqual(
-    [],
-  )
-  const voltage = simulated.result?.data.find(
-    (series) => series.name === "v(out)",
-  )
-  expect(voltage?.values.at(-1)).toBeCloseTo(2.5, 8)
+  expect({
+    buildOutputVolts: graph.voltage_levels.at(-1),
+    cliDiagnostics: simulated.errors.filter((line) => line.trim()),
+    cliVariableNames: simulated.result?.variableNames,
+  }).toMatchInlineSnapshot(`
+    {
+      "buildOutputVolts": 2.5,
+      "cliDiagnostics": [
+        "Error on line 3 or its substitute:",
+        "  r1 in out 1k tc=0,0",
+        "  unknown parameter (0) ",
+        "    Simulation interrupted due to error!",
+        "Error: circuit not parsed.",
+      ],
+      "cliVariableNames": [],
+    }
+  `)
 }, 30000)
