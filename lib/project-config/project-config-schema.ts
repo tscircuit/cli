@@ -60,6 +60,7 @@ export const projectConfigSchema = z.object({
   kicadPcm: kicadPcmSettingsSchema.optional(),
   alwaysUseLatestTscircuitOnCloud: z.boolean().optional(),
   useCloudAutorouting: z.boolean().optional(),
+  schematicTraceRoutingDisabled: z.boolean().optional(),
   build: z
     .object({
       circuitJson: z.boolean().optional(),
@@ -73,6 +74,8 @@ export const projectConfigSchema = z.object({
       step: z.boolean().optional(),
       workerTimeoutMs: z.number().int().positive().optional(),
       routingDisabled: z.boolean().optional(),
+      disableSchematicRouting: z.boolean().optional(),
+      schematicTraceRoutingDisabled: z.boolean().optional(),
       typescriptLibrary: z.boolean().optional(),
     })
     .optional(),

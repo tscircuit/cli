@@ -49,6 +49,14 @@ export const resolveBuildOptions = ({
   ) {
     configAppliedOpts.push("routing-disabled")
   }
+  if (
+    cliOptions?.disableSchematicRouting === undefined &&
+    (configBuild?.disableSchematicRouting ||
+      configBuild?.schematicTraceRoutingDisabled ||
+      projectConfig?.schematicTraceRoutingDisabled)
+  ) {
+    configAppliedOpts.push("disable-schematic-routing")
+  }
   if (!cliOptions?.transpile && configBuild?.typescriptLibrary) {
     configAppliedOpts.push("transpile")
   }
@@ -67,6 +75,11 @@ export const resolveBuildOptions = ({
     step: cliOptions?.step ?? configBuild?.step,
     routingDisabled:
       cliOptions?.routingDisabled ?? configBuild?.routingDisabled,
+    disableSchematicRouting:
+      cliOptions?.disableSchematicRouting ??
+      configBuild?.disableSchematicRouting ??
+      configBuild?.schematicTraceRoutingDisabled ??
+      projectConfig?.schematicTraceRoutingDisabled,
     transpile: cliOptions?.transpile ?? configBuild?.typescriptLibrary,
   }
 

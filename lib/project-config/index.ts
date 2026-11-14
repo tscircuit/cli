@@ -179,6 +179,13 @@ export const loadRuntimeProjectConfig = async (
     }
   }
 
+  if (mergedConfig.schematicTraceRoutingDisabled !== undefined) {
+    mergedConfig.platformConfig = {
+      schematicTraceRoutingDisabled: mergedConfig.schematicTraceRoutingDisabled,
+      ...mergedConfig.platformConfig,
+    } as PlatformConfig
+  }
+
   return mergedConfig
 }
 

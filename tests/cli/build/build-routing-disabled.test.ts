@@ -24,3 +24,18 @@ test("build supports --routing-disabled flag", async () => {
   expect(exitCode).toBe(0)
   expect(stdout).toContain("Build complete")
 }, 30_000)
+
+test("build supports --disable-schematic-routing flag", async () => {
+  const { tmpDir, runCommand } = await getCliTestFixture()
+
+  const circuitPath = path.join(tmpDir, "disable-schematic-routing.circuit.tsx")
+  await writeFile(circuitPath, circuitCode)
+  await writeFile(path.join(tmpDir, "package.json"), "{}")
+
+  const { stdout, exitCode } = await runCommand(
+    `tsci build ${circuitPath} --disable-schematic-routing`,
+  )
+
+  expect(exitCode).toBe(0)
+  expect(stdout).toContain("Build complete")
+}, 30_000)
