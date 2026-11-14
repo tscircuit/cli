@@ -80,3 +80,7 @@ Test fixture provides:
 ## Runtime
 
 The CLI entrypoint (`cli/entrypoint.js`) selects between Bun and tsx as the TypeScript runner, preferring Bun when available. This allows hot-reload during development while maintaining Node.js compatibility.
+
+## Documentation
+
+Do not add README sections, or expand existing ones, to document individual features, commands, flags or export formats unless explicitly requested. The README is a short overview and its CLI usage block is generated from `tsci --help`; implementing or changing a feature is not a reason to edit it.
