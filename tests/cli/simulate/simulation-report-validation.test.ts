@@ -4,16 +4,18 @@ import {
   SIMULATION_ENGINE,
   type SimulationOutput,
 } from "lib/eecircuit-engine/run-simulation"
+import type { ResultType } from "lib/types/eecircuit-engine"
 
+const realResult: Extract<ResultType, { dataType: "real" }> = {
+  header: "transient",
+  numVariables: 1,
+  variableNames: ["v(out)"],
+  numPoints: 1,
+  dataType: "real",
+  data: [{ name: "v(out)", type: "voltage", values: [1.23456789012345] }],
+}
 const output: SimulationOutput = {
-  result: {
-    header: "transient",
-    numVariables: 1,
-    variableNames: ["v(out)"],
-    numPoints: 1,
-    dataType: "real",
-    data: [{ name: "v(out)", type: "voltage", values: [1.23456789012345] }],
-  },
+  result: realResult,
   errors: [],
   info: "runtime log",
   engine: SIMULATION_ENGINE,
@@ -37,9 +39,9 @@ test("recoverable warnings stay distinct from fatal simulation errors", () => {
 
 const invalidResults: SimulationOutput["result"][] = [
   null,
-  { ...output.result!, numPoints: 0 },
+  { ...realResult, numPoints: 0 },
   {
-    ...output.result!,
+    ...realResult,
     data: [{ name: "v(out)", type: "voltage", values: [Number.NaN] }],
   },
 ]
