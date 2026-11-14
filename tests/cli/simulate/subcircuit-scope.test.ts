@@ -51,6 +51,14 @@ test("automatic probes and initial conditions stay outside chip subcircuits", ()
   const netlist = getSpiceWithPaddedSim(circuitJson)
   const probe = netlist.split("\n").find((line) => /^\.probe\b/i.test(line))
 
+  expect(
+    netlist.split("\n").filter((line) => /^\.(probe|ic)\b/i.test(line)),
+  ).toMatchInlineSnapshot(`
+    [
+      ".ic V(N1)=0",
+      ".probe V(N1)",
+    ]
+  `)
   expect(probe).toBe(".probe V(N1)")
   expect(netlist).toContain(".ic V(N1)=0")
   expect(netlist).not.toMatch(/^\.ic V\((SAMPLE|GND|BIAS|HIDDEN|B)\)/m)
