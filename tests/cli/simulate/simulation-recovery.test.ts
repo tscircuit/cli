@@ -77,7 +77,7 @@ test("a timed-out worker cannot write a late result during the next run", async 
 test("real ngspice succeeds after an interrupted long simulation in the same process", async () => {
   const timedOut = createSimulationReport(
     await runSimulation(healthyNetlist.replace(".tran 1u 5u", ".tran 1p 1"), {
-      timeoutMs: 1,
+      timeoutMs: 100,
     }),
   )
   expect({
@@ -86,7 +86,7 @@ test("real ngspice succeeds after an interrupted long simulation in the same pro
   }).toMatchInlineSnapshot(`
     {
       "errors": [
-        "Error: Simulation timed out after 1 ms",
+        "Error: Simulation timed out after 100 ms",
         "Simulation produced no usable finite samples",
       ],
       "status": "failed",
@@ -113,18 +113,32 @@ test("real ngspice succeeds after a fatal solver error in the same process", asy
   expect(failed.diagnostics.errors.join("\n")).toMatch(/aborted|shorted VSRC/i)
   const recovered = createSimulationReport(await runSimulation(healthyNetlist))
   expect({
-    status: recovered.status,
-    errors: recovered.diagnostics.errors,
-    warnings: recovered.diagnostics.warnings,
-    firstVoltage: recovered.result?.data.find(
-      (series) => series.name === "v(out)",
-    )?.values[0],
+    first: { status: failed.status, errors: failed.diagnostics.errors },
+    second: {
+      status: recovered.status,
+      errors: recovered.diagnostics.errors,
+      warnings: recovered.diagnostics.warnings,
+      outputVoltage: recovered.result?.data.find(
+        (series) => series.name === "v(out)",
+      )?.values[0],
+    },
   }).toMatchInlineSnapshot(`
     {
-      "errors": [],
-      "firstVoltage": 2.5,
-      "status": "success",
-      "warnings": [],
+      "first": {
+        "errors": [
+          "Fatal error: instance v1 is a shorted VSRC",
+          "doAnalyses: operation not supported",
+          "run simulation(s) aborted",
+          "Simulation produced no usable finite samples",
+        ],
+        "status": "failed",
+      },
+      "second": {
+        "errors": [],
+        "outputVoltage": 2.5,
+        "status": "success",
+        "warnings": [],
+      },
     }
   `)
 }, 30000)
