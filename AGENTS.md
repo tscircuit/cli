@@ -79,7 +79,7 @@ Test fixture provides:
 
 ## Documentation
 
-Avoid adding new README sections for individual features unless explicitly requested.
+Do not add README sections, or expand existing ones, to document individual features, commands, flags or export formats unless explicitly requested. The README is a short overview and its CLI usage block is generated from `tsci --help`; implementing or changing a feature is not a reason to edit it.
 
 ## Runtime
 

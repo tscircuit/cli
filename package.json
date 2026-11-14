@@ -1,6 +1,6 @@
 {
   "name": "@tscircuit/cli",
-  "version": "0.1.2453",
+  "version": "0.1.2460",
   "repository": {
     "type": "git",
     "url": "https://github.com/tscircuit/cli"
@@ -22,6 +22,7 @@
     "@tscircuit/circuit-json-routing-analysis": "^0.0.8",
     "@tscircuit/circuit-json-schematic-placement-analysis": "https://jscdn.tscircuit.com/@tscircuit/circuit-json-schematic-placement-analysis/0.0.97.tgz",
     "@tscircuit/circuit-json-to-drawing": "https://jscdn.tscircuit.com/@tscircuit/circuit-json-to-drawing/0.0.3.tgz",
+    "@tscircuit/circuit-json-to-jlcpcb-quote": "https://jscdn.tscircuit.com/@tscircuit/circuit-json-to-jlcpcb-quote/0.0.4.tgz",
     "@tscircuit/fake-snippets": "^0.0.226",
     "@tscircuit/file-server": "^0.0.32",
     "@tscircuit/footprinter": "^0.0.450",
@@ -44,7 +45,7 @@
     "circuit-json-to-fdm-component-box": "^0.0.2",
     "circuit-json-to-footprinter": "^0.0.59",
     "circuit-json-to-gerber": "^0.0.122",
-    "circuit-json-to-kicad": "0.0.274",
+    "circuit-json-to-kicad": "0.0.275",
     "circuit-json-to-readable-netlist": "^0.0.15",
     "circuit-json-to-step": "^0.0.63",
     "circuit-json-to-tscircuit": "^0.0.50",

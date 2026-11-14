@@ -22,6 +22,10 @@ import {
   getReferenceDesigns,
   saveReferenceDesigns,
 } from "./import-reference-designs"
+import {
+  getImported3dModelInfo,
+  type Imported3dModelInfo,
+} from "./get-imported-3d-model-info"
 
 export interface ImportComponentFromJlcpcbOptions {
   download?: boolean
@@ -38,6 +42,8 @@ export interface ImportComponentFromJlcpcbResult {
         mode: "exact-requested"
         tsx: string
       }
+  /** Whether the imported component has a 3D model, and where it comes from */
+  model3d: Imported3dModelInfo
 }
 
 export const importComponentFromJlcpcb = async (
@@ -117,5 +123,8 @@ export const importComponentFromJlcpcb = async (
   const filePath = path.join(componentDir, `${componentName}.tsx`)
   await fs.writeFile(filePath, tsx)
   await saveReferenceDesigns(referenceDesigns, componentDir)
-  return { filePath, footprintConversion }
+
+  const model3d = getImported3dModelInfo({ cadComponent, footprintConversion })
+
+  return { filePath, footprintConversion, model3d }
 }

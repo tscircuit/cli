@@ -55,7 +55,7 @@ test("search uses baked responses for all three providers and exits normally", a
     JSON.stringify({ components: [] }),
   )
   const imported = await runCommand("tsci import missing")
-  expect(imported.exitCode).toBe(0)
+  expect(imported.exitCode).toBe(1)
   expect(imported.stdout).toContain('No results found for "missing"')
   expect((await runCommand("tsci version")).exitCode).toBe(0)
 }, 20_000)
