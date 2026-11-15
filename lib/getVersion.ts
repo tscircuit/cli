@@ -1,6 +1,9 @@
+import { readFileSync } from "node:fs"
 import { createRequire } from "node:module"
-import pkg from "../package.json"
+import { dirname, join } from "node:path"
+import { fileURLToPath } from "node:url"
 import semver from "semver"
+import pkg from "../package.json"
 
 const require = createRequire(import.meta.url)
 
@@ -17,7 +20,40 @@ const resolvePackageVersionFromNodeModules: VersionResolver = (packageName) => {
   }
 }
 
-const getCliVersion = () => semver.inc(pkg.version, "patch") ?? pkg.version
+export const getCliVersion = (moduleUrl: string = import.meta.url): string => {
+  try {
+    let dir = dirname(fileURLToPath(moduleUrl))
+    for (let depth = 0; depth < 6; depth++) {
+      try {
+        const manifest = JSON.parse(
+          readFileSync(join(dir, "package.json"), "utf8"),
+        ) as { name?: unknown; version?: unknown }
+        if (
+          manifest.name === "@tscircuit/cli" &&
+          typeof manifest.version === "string" &&
+          semver.valid(manifest.version) !== null
+        ) {
+          return manifest.version
+        }
+      } catch {}
+
+      const parent = dirname(dir)
+      if (parent === dir) break
+      dir = parent
+    }
+  } catch {}
+
+  const resolvedFromNodeModules =
+    resolvePackageVersionFromNodeModules("@tscircuit/cli")
+  if (
+    typeof resolvedFromNodeModules === "string" &&
+    semver.valid(resolvedFromNodeModules) !== null
+  ) {
+    return resolvedFromNodeModules
+  }
+
+  return pkg.version
+}
 
 type GlobalWithTscircuitVersion = typeof globalThis & {
   TSCIRCUIT_VERSION?: string
