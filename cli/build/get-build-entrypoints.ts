@@ -6,6 +6,7 @@ import {
 } from "lib/project-config"
 import { findBoardFilesAsync } from "lib/shared/find-board-files"
 import { getEntrypoint } from "lib/shared/get-entrypoint"
+import { DEFAULT_IGNORED_PATTERNS } from "lib/shared/should-ignore-path"
 
 export class BuildNoMatchingFilesError extends Error {
   readonly directoryPath: string
@@ -97,7 +98,12 @@ export async function getBuildEntrypoints({
         : undefined
 
     if (includeBoardFiles) {
-      const files = await findBoardFilesAsync({ projectDir: resolvedRoot })
+      const files = await findBoardFilesAsync({
+        projectDir: resolvedRoot,
+        ignore: hasConfiguredIncludeBoardFiles
+          ? DEFAULT_IGNORED_PATTERNS
+          : [...DEFAULT_IGNORED_PATTERNS, "**/work/**"],
+      })
 
       if (files.length > 0) {
         return {
