@@ -1,9 +1,3 @@
-# =============================================================================
-# Do not change anything in this file.
-# This workflow automatically updates @tscircuit packages when triggered by
-# the source repository's trigger-dependent-repo-update.yml workflow.
-# =============================================================================
-
 name: Update @tscircuit Package
 
 on:
@@ -13,10 +7,14 @@ on:
         description: 'Package names to update (comma-separated, e.g., @tscircuit/core,@tscircuit/props)'
         required: true
         type: string
-        default: 'circuit-json-to-kicad'
+        default: '@tscircuit/runframe'
 
 env:
   PACKAGE_NAMES: ${{ inputs.package_names }}
+
+concurrency:
+  group: dependency-updates
+  cancel-in-progress: false
 
 jobs:
   update-package:
@@ -29,17 +27,13 @@ jobs:
       - uses: oven-sh/setup-bun@v2
         with:
           bun-version-file: .bun-version
-      - name: Update packages
-        run: |
-          IFS=',' read -ra PACKAGES <<< "${{ env.PACKAGE_NAMES }}"
-          for package in "${PACKAGES[@]}"; do
-            if [[ -n "$package" ]]; then
-              bun update --latest "$package"
-            fi
-          done
+      - name: Install locked dependencies
+        run: bun install --frozen-lockfile
+      - name: Update runtime inputs, select exact core, and copy its specs
+        run: bun scripts/update-package.ts "$PACKAGE_NAMES"
       - name: Close existing PRs
         run: |
-          gh pr list --repo ${{ github.repository }} --state open --author "tscircuitbot" --json number,title --jq '.[] | select(.title | startswith("chore:")) | .number' | xargs -I{} gh pr close {} --comment "Closing in favor of a new update PR" 
+          gh pr list --repo ${{ github.repository }} --state open --author "tscircuitbot" --json number,title --jq '.[] | select(.title | startswith("chore: update packages ")) | .number' | xargs -r -I{} gh pr close {} --comment "Closing in favor of a new update PR" 
         env:
           GH_TOKEN: ${{ secrets.TSCIRCUIT_BOT_GITHUB_TOKEN }}
       - name: Create Pull Request
