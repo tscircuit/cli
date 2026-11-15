@@ -1,7 +1,7 @@
-import kleur from "kleur"
 import * as fs from "node:fs"
-import * as path from "node:path"
 import * as os from "node:os"
+import * as path from "node:path"
+import kleur from "kleur"
 
 const REGISTRY_URL = "npm.tscircuit.com"
 
@@ -80,12 +80,15 @@ export function setupNpmrc(sessionToken: string): boolean {
     // Check if the auth line already exists (with any token)
     const authLineRegex = new RegExp(
       `^//${REGISTRY_URL.replace(/\./g, "\\.")}/:_authToken=.+$`,
-      "m",
+      "gm",
     )
 
     if (authLineRegex.test(existingContent)) {
       // Update existing auth line
-      const updatedContent = existingContent.replace(authLineRegex, authLine)
+      const updatedContent = existingContent.replace(
+        authLineRegex,
+        () => authLine,
+      )
       fs.writeFileSync(npmrcPath, updatedContent, "utf-8")
       console.log(
         kleur.green(`Updated authentication token in ${npmrcPath}`) +
