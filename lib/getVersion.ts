@@ -1,6 +1,5 @@
 import { createRequire } from "node:module"
-import pkg from "../package.json"
-import semver from "semver"
+import { getCliVersion } from "./get-cli-version"
 
 const require = createRequire(import.meta.url)
 
@@ -17,8 +16,6 @@ const resolvePackageVersionFromNodeModules: VersionResolver = (packageName) => {
   }
 }
 
-const getCliVersion = () => semver.inc(pkg.version, "patch") ?? pkg.version
-
 type GlobalWithTscircuitVersion = typeof globalThis & {
   TSCIRCUIT_VERSION?: string
 }
@@ -26,7 +23,11 @@ type GlobalWithTscircuitVersion = typeof globalThis & {
 export const getVersionInfo = (
   resolvePackageVersion: VersionResolver = resolvePackageVersionFromNodeModules,
 ) => {
-  const cliVersion = getCliVersion()
+  const customCliVersion =
+    resolvePackageVersion === resolvePackageVersionFromNodeModules
+      ? undefined
+      : resolvePackageVersion("@tscircuit/cli")
+  const cliVersion = customCliVersion ?? getCliVersion()
   const tscircuitVersion =
     (globalThis as GlobalWithTscircuitVersion).TSCIRCUIT_VERSION ??
     resolvePackageVersion("tscircuit")

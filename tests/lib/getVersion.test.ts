@@ -1,4 +1,5 @@
 import { afterEach, expect, test } from "bun:test"
+import pkg from "../../package.json"
 import { getVersion, getVersionInfo } from "lib/getVersion"
 
 type GlobalWithTscircuitVersion = typeof globalThis & {
@@ -28,7 +29,7 @@ test("getVersionInfo falls back to package resolver when global version is absen
   expect(versions.tscircuitVersion).toBe("1.2.3")
   expect(versions.runframeVersion).toBe("4.5.6")
   expect(versions.coreVersion).toBe("7.8.9")
-  expect(versions.cliVersion).toBeString()
+  expect(versions.cliVersion).toBe(pkg.version)
 })
 
 test("getVersion verbose output prints all requested packages", () => {
