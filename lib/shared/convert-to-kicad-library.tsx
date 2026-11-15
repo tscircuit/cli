@@ -1,3 +1,4 @@
+import { importProjectCircuitLibrary } from "./import-project-circuit-library"
 import fs from "node:fs"
 import path from "node:path"
 import { pathToFileURL } from "node:url"
@@ -61,7 +62,7 @@ export async function convertToKicadLibrary({
   // Import React and tscircuit from userland for rendering components
   const React = await importFromUserLand("react")
   ;(globalThis as any).React = React
-  const userLandTscircuit = await importFromUserLand("tscircuit")
+  const userLandTscircuit = await importProjectCircuitLibrary()
 
   // Use provided module or default
   const { KicadLibraryConverter } =

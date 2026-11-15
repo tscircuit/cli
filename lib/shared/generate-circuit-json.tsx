@@ -1,3 +1,4 @@
+import { importProjectCircuitLibrary } from "./import-project-circuit-library"
 import fs from "node:fs"
 import path from "node:path"
 import { pathToFileURL } from "node:url"
@@ -87,8 +88,7 @@ export async function generateCircuitJson({
   )
   ;(globalThis as any).React = React
   registerStaticAssetLoaders(platformConfig, projectRootDir)
-  const userLandTscircuit = await importFromUserLand(
-    "tscircuit",
+  const userLandTscircuit = await importProjectCircuitLibrary(
     projectRootDir,
   ).catch((error) => rethrowWithProjectSetupHint(error, projectRootDir))
 

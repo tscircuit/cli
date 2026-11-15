@@ -2,9 +2,9 @@ import { basename } from "node:path"
 import { cp } from "node:fs/promises"
 import { fileURLToPath } from "node:url"
 // @ts-ignore
-import tscircuitPackageJson from "tscircuit/package.json"
+import cliPackageJson from "../package.json"
 
-const tscircuitPackageJsonDeps = Object.keys(tscircuitPackageJson.dependencies)
+const cliRuntimeDependencies = Object.keys(cliPackageJson.dependencies)
 
 const ALLOW_BUNDLING = [
   // Keep compiler consumers in the CLI bundle so their TypeScript imports
@@ -27,7 +27,7 @@ const result = await Bun.build({
   target: "node",
   outdir: "./dist",
   external: [
-    ...tscircuitPackageJsonDeps.filter((dep) => !ALLOW_BUNDLING.includes(dep)),
+    ...cliRuntimeDependencies.filter((dep) => !ALLOW_BUNDLING.includes(dep)),
     "zod",
     "tscircuit",
     "typescript",

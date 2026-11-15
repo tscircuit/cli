@@ -3,7 +3,7 @@ import { getCliTestFixture } from "../../fixtures/get-cli-test-fixture"
 import { writeFile, readFile, readdir } from "node:fs/promises"
 import path from "node:path"
 import { pathToFileURL } from "node:url"
-import { CircuitRunner } from "tscircuit"
+import { CircuitRunner } from "@tscircuit/eval"
 
 const glbCircuitCode = `
 import cadModelUrl from "./chip.glb"

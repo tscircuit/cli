@@ -1,7 +1,7 @@
 import fs from "node:fs"
 import path from "node:path"
 import { createHash } from "node:crypto"
-import type { RootCircuit } from "tscircuit"
+import type { RootCircuit } from "@tscircuit/core"
 
 /** One collector per render/entrypoint. Artifacts never change the circuit result. */
 export function attachAutoroutingArtifacts(

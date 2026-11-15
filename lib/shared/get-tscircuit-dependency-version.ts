@@ -3,10 +3,9 @@ import path from "node:path"
 import { fileURLToPath } from "node:url"
 import { resolve } from "import-meta-resolve"
 
-/** Resolve through tscircuit, including packages that do not export package.json. */
+/** Resolve the CLI-owned dependency, including packages without package.json exports. */
 export function getTscircuitDependencyVersion(packageName: string): string {
-  const tscircuitEntry = resolve("tscircuit", import.meta.url)
-  const dependencyEntry = resolve(packageName, tscircuitEntry)
+  const dependencyEntry = resolve(packageName, import.meta.url)
   let directory = path.dirname(fileURLToPath(dependencyEntry))
   while (directory !== path.dirname(directory)) {
     const manifestPath = path.join(directory, "package.json")
