@@ -493,16 +493,16 @@ export function getAllNodeModuleFilePaths(
 ): string[] {
   const allDependencyPackages = getAllDependencyPackages(projectDir)
 
-  // Early return if no dependencies are defined
-  if (allDependencyPackages.size === 0) {
-    return []
-  }
-
   // Collect all node_modules dependencies from the entry file
   const dependencies = collectAllNodeModuleDependencies(
     entryFilePath,
     projectDir,
   )
+
+  // Early return if no dependencies are defined or discovered from imports
+  if (allDependencyPackages.size === 0 && dependencies.size === 0) {
+    return []
+  }
 
   // Ensure all direct dependencies are included even if not imported
   for (const packageName of allDependencyPackages) {
@@ -593,6 +593,21 @@ export function getAllNodeModuleFilePaths(
           }
         }
       }
+    }
+  }
+
+  // tscircuit itself is provided by the runtime, but the evaluator reads its
+  // package.json to allow importing packages that come with it (e.g.
+  // @tscircuit/ngspice-spice-engine) without declaring them
+  if (allDependencyPackages.has("tscircuit")) {
+    const tscircuitPackageJsonPath = path.join(
+      projectDir,
+      "node_modules",
+      "tscircuit",
+      "package.json",
+    )
+    if (fs.existsSync(tscircuitPackageJsonPath)) {
+      allFiles.add(tscircuitPackageJsonPath)
     }
   }
 
