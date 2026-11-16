@@ -80,7 +80,7 @@
     "proper-lockfile": "^4.1.2",
     "redaxios": "^0.5.1",
     "semver": "^7.6.3",
-    "simulate-return-current": "https://pkg.pr.new/tscircuit/simulate-return-current@6a7c84cb4f9f66c2cb54199aee50d3c7453748e8",
+    "simulate-return-current": "https://pkg.pr.new/tscircuit/simulate-return-current@a3736c708149885c12f17a072b8a60ea4a7cd2b2",
     "stepts": "^0.0.3",
     "tempy": "^3.1.0",
     "tscircuit": "0.0.3087-libonly",
