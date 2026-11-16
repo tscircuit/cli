@@ -1,5 +1,4 @@
 import { type Command, InvalidArgumentError } from "commander"
-import kleur from "kleur"
 
 export type PcbaType = "auto" | "economic" | "standard"
 export type SurfaceFinish = "hasl_lead_free" | "hasl_leaded" | "enig"
@@ -97,31 +96,3 @@ export const addQuoteOptions = (command: Command) =>
       parseNonNegativeNumber("Weight"),
     )
     .option("--json", "Output the quote as JSON")
-
-/**
- * `tsci quote create` is a placeholder until ordering is available. It parses
- * and validates its flags, then exits non-zero so a script can't mistake a
- * placeholder run for a real quote.
- */
-export const reportQuoteNotImplemented = ({
-  commandName,
-  file,
-  options,
-}: {
-  commandName: string
-  file?: string
-  options: QuoteOptions
-}) => {
-  console.error(kleur.yellow(`\`tsci ${commandName}\` is not implemented yet.`))
-  console.error(
-    kleur.gray(
-      `Received: ${JSON.stringify({
-        file: file ?? null,
-        assembly: options.assembly,
-        quantity: options.quantity,
-        json: options.json ?? false,
-      })}`,
-    ),
-  )
-  process.exitCode = 1
-}

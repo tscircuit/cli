@@ -9,6 +9,8 @@ import { registerAgent } from "./agent/register"
 import { registerAuthLogin } from "./auth/login/register"
 import { registerAuthLogout } from "./auth/logout/register"
 import { registerAuthPrintToken } from "./auth/print-token/register"
+import { registerAddProvider } from "./add-provider/register"
+import { registerRemoveProvider } from "./remove-provider/register"
 import { registerAuth } from "./auth/register"
 import { registerAuthSetToken } from "./auth/set-token/register"
 import { registerAuthSetupNpmrc } from "./auth/setup-npmrc/register"
@@ -68,6 +70,8 @@ registerClone(program)
 registerPush(program)
 
 registerAuth(program)
+registerAddProvider(program)
+registerRemoveProvider(program)
 registerAuthLogin(program)
 registerAuthLogout(program)
 registerAuthPrintToken(program)
