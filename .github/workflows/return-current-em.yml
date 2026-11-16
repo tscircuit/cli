@@ -46,13 +46,31 @@ jobs:
           '
       - name: Pull pinned Palace solver
         run: docker pull benvial/palace@sha256:f0f3a3cbbdf1ee2d8f856ddbe1f5bf4628a92ee8ab87d1e27dc33402ad9c8dda
+      # Runs the same container as simulate-return-current, keeping the solver
+      # output outside the test's temporary directory so failures are visible.
+      - name: Keep Palace output for failures
+        run: |
+          cat > "$RUNNER_TEMP/palace" <<'SCRIPT'
+          #!/usr/bin/env bash
+          set -o pipefail
+          docker run --rm --network none --user "$(id -u):$(id -g)" \
+            --cap-drop ALL --security-opt no-new-privileges \
+            --mount "type=bind,src=$PWD,dst=/case" --workdir /case \
+            benvial/palace@sha256:f0f3a3cbbdf1ee2d8f856ddbe1f5bf4628a92ee8ab87d1e27dc33402ad9c8dda \
+            palace "$@" 2>&1 | tee -a "$RUNNER_TEMP/palace-output.log"
+          SCRIPT
+          chmod +x "$RUNNER_TEMP/palace"
+          echo "PALACE_BIN=$RUNNER_TEMP/palace" >> "$GITHUB_ENV"
       - name: Run fresh EM solve and compare SVG snapshot
         env:
           TSCIRCUIT_CONFIG_DIR: ${{ runner.temp }}/return-current-config
         run: bun test tests/cli/simulate/return-current.test.ts
-      - name: Print Palace logs
+      - name: Print Palace output
         if: failure()
-        run: find /tmp -name palace.log -exec sh -c 'echo "== $1"; tail -n 200 "$1"' _ {} \;
+        run: |
+          docker version --format 'docker {{.Server.Version}}'
+          uname -r
+          tail -n 200 "$RUNNER_TEMP/palace-output.log"
       - uses: actions/upload-artifact@v4
         if: failure()
         with:
