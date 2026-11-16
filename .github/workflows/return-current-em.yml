@@ -80,24 +80,27 @@ jobs:
         if: always()
         run: |
           IMAGE=benvial/palace@sha256:f0f3a3cbbdf1ee2d8f856ddbe1f5bf4628a92ee8ab87d1e27dc33402ad9c8dda
-          for variant in baseline ref_backend pc_shifted ref_backend+pc_shifted; do
+          docker run --rm "$IMAGE" sh -c 'ls /opt/palace/lib 2>/dev/null | grep -iE "blas|mkl|lapack|superlu|mumps|strumpack" | head -20' || true
+          for variant in baseline openblas_haswell mkl_avx2 type_ams type_mumps type_strumpack; do
             dir="$RUNNER_TEMP/variant-$variant"
             rm -rf "$dir" && cp -r "$RUNNER_TEMP/palace-case" "$dir"
             python3 - "$dir/palace.json" "$variant" <<'PY'
           import json, sys
           path, variant = sys.argv[1], sys.argv[2]
           config = json.load(open(path))
-          if "ref_backend" in variant:
-              config["Solver"]["Backend"] = "/cpu/self/ref/serial"
-          if "pc_shifted" in variant:
-              config["Solver"]["Linear"]["PCMatShifted"] = True
+          types = {"type_ams": "AMS", "type_mumps": "MUMPS", "type_strumpack": "STRUMPACK"}
+          if variant in types:
+              config["Solver"]["Linear"]["Type"] = types[variant]
           json.dump(config, open(path, "w"))
           PY
+            envs=""
+            [ "$variant" = openblas_haswell ] && envs="-e OPENBLAS_CORETYPE=Haswell"
+            [ "$variant" = mkl_avx2 ] && envs="-e MKL_ENABLE_INSTRUCTIONS=AVX2 -e MKL_CBWR=AVX2"
             status=0
-            docker run --rm --network none --user "$(id -u):$(id -g)" \
+            docker run --rm --network none --user "$(id -u):$(id -g)" $envs \
               --mount "type=bind,src=$dir,dst=/case" --workdir /case "$IMAGE" \
               palace -np 1 palace.json > "$dir/variant.log" 2>&1 || status=$?
-            echo "VARIANT $variant exit=$status $(grep -m1 -o 'singular matrix' "$dir/variant.log")"
+            echo "VARIANT $variant exit=$status $(grep -m1 -oE 'singular matrix|not built|not available|Unknown|unsupported|abort[^!]*' "$dir/variant.log")"
           done
       - uses: actions/upload-artifact@v4
         if: failure()
