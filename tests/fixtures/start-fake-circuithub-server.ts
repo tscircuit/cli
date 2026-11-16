@@ -15,7 +15,16 @@ export interface FakeCircuithubRequest {
  */
 export const startFakeCircuithubServer = async ({
   token = "test-circuithub-token",
-}: { token?: string } = {}) => {
+  rateLimitedPartSearches = 0,
+}: {
+  token?: string
+  /**
+   * Answer this many part searches with HTTP 429, like CircuitHub does after
+   * about 20 requests in 30 seconds (with no Retry-After header).
+   */
+  rateLimitedPartSearches?: number
+} = {}) => {
+  let partSearchesToRateLimit = rateLimitedPartSearches
   const port = await getPort()
   const baseUrl = `http://localhost:${port}`
   const requests: FakeCircuithubRequest[] = []
@@ -57,6 +66,10 @@ export const startFakeCircuithubServer = async ({
           })
         }
         case "GET /v1/parts": {
+          if (partSearchesToRateLimit > 0) {
+            partSearchesToRateLimit--
+            return json({ error: "Rate limit exceeded" }, 429)
+          }
           const query = url.searchParams.get("q")
           if (query === "RC0402FR-071KL") {
             return json({
