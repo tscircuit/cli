@@ -50,6 +50,9 @@ jobs:
         env:
           TSCIRCUIT_CONFIG_DIR: ${{ runner.temp }}/return-current-config
         run: bun test tests/cli/simulate/return-current.test.ts
+      - name: Print Palace logs
+        if: failure()
+        run: find /tmp -name palace.log -exec sh -c 'echo "== $1"; tail -n 200 "$1"' _ {} \;
       - uses: actions/upload-artifact@v4
         if: failure()
         with:
