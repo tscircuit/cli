@@ -4,7 +4,7 @@ import os from "node:os"
 import path from "node:path"
 import { EventEmitter } from "node:events"
 import type { AutoroutingPhaseProps } from "@tscircuit/props"
-import { RootCircuit } from "tscircuit"
+import { RootCircuit } from "@tscircuit/core"
 import { attachAutoroutingArtifacts } from "lib/shared/autorouting-artifacts"
 
 const savedPaths = [

@@ -1,3 +1,4 @@
+import { importProjectCircuitLibrary } from "./import-project-circuit-library"
 import { renderDrawingPages, selectDrawingPages } from "./render-drawing-pages"
 import { convertSvgToPngBuffer } from "./convert-svg-to-png"
 import { convertCircuitJsonToPcbSvg } from "lib/shared/render-pcb-svg"
@@ -38,7 +39,6 @@ import { loadLocalStepModelFsMap } from "lib/shared/load-local-step-model-fs-map
 import { mergePlatformConfigs } from "lib/shared/platform-config-utils"
 import { convertCircuitJsonToSchematicPdf } from "./convert-circuit-json-to-schematic-pdf"
 import { convertToKicadLibrary } from "./convert-to-kicad-library"
-import { importFromUserLand } from "./importFromUserLand"
 import { isCircuitJsonFile } from "./is-circuit-json-file"
 import { renderSystemSvg } from "./system-svg-assets"
 import type { ExplosionVideoOptions } from "./explosion-video-options"
@@ -348,7 +348,7 @@ export const exportSnippet = async ({
       break
     case "srj":
       {
-        const userLandTscircuit = await importFromUserLand("tscircuit")
+        const userLandTscircuit = await importProjectCircuitLibrary()
         const simpleRouteJson = unwrapSimpleRouteJson(
           userLandTscircuit.getSimpleRouteJsonFromCircuitJson({
             circuitJson,

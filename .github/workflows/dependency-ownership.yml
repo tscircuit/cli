@@ -16,8 +16,8 @@ jobs:
       - uses: oven-sh/setup-bun@v2
         with:
           bun-version-file: .bun-version
-      # Use a fresh install to verify the published libonly dependency graph,
+      # Use a fresh install to verify the CLI-owned runtime dependency graph,
       # without an old node_modules cache hiding hoisting or cycle problems.
       - run: bun install --frozen-lockfile
-      - name: Verify tscircuit dependency ownership and project resolution
-        run: bun test tests/lib/tscircuit-routing-dependencies.test.ts tests/shared/import-from-user-land-tscircuit.test.ts
+      - name: Verify CLI dependency ownership and project resolution
+        run: bun test tests/lib/tscircuit-routing-dependencies.test.ts tests/lib/no-aggregate-dependency.test.ts tests/shared/import-from-user-land-tscircuit.test.ts tests/scripts/copy-core-versions.test.ts

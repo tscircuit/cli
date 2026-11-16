@@ -6,7 +6,7 @@ import {
   AutorouterDiagnostics,
   type AutorouterDiagnosticsOptions,
 } from "lib/shared/autorouter-diagnostics"
-import { RootCircuit } from "tscircuit"
+import { RootCircuit } from "@tscircuit/core"
 
 /**
  * An AutorouterDiagnostics attached to a fake root circuit, plus a sample

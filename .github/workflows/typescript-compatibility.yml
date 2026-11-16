@@ -27,11 +27,10 @@ jobs:
           TYPESCRIPT_VERSION: ${{ matrix.typescript }}
         run: |
           PACKAGE_FILE="$GITHUB_WORKSPACE/tscircuit-cli-$(bun -p 'require("./package.json").version').tgz"
-          TSCIRCUIT_VERSION=$(bun -p 'require("./package.json").devDependencies.tscircuit')
           mkdir -p "$RUNNER_TEMP/tsci-typescript"
           cd "$RUNNER_TEMP/tsci-typescript"
           echo '{"private":true,"type":"module"}' > package.json
-          bun add --exact "$PACKAGE_FILE" "tscircuit@$TSCIRCUIT_VERSION" "typescript@$TYPESCRIPT_VERSION"
+          bun add --exact "$PACKAGE_FILE" "typescript@$TYPESCRIPT_VERSION"
 
       - name: Verify startup, circuit build, export, and transpilation
         env:
