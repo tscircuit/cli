@@ -122,7 +122,10 @@ export const validateCircuithubQuoteOptions = (
   }
 }
 
-const getAuthenticatedApi = (fetchFn?: typeof fetch): CircuithubApi | null => {
+const getAuthenticatedApi = (
+  fetchFn: typeof fetch | undefined,
+  log: (message: string) => void,
+): CircuithubApi | null => {
   const current = getCircuithubToken()
   if (!current) return null
   if (
@@ -135,6 +138,10 @@ const getAuthenticatedApi = (fetchFn?: typeof fetch): CircuithubApi | null => {
     apiUrl: getCircuithubApiUrl(),
     token: current.token,
     fetch: fetchFn,
+    onRateLimited: ({ waitMs }) =>
+      log(
+        `CircuitHub is rate-limiting requests; retrying in ${Math.round(waitMs / 1000)}s...`,
+      ),
   })
 }
 
@@ -155,7 +162,7 @@ export const createCircuithubQuote = async (
 ): Promise<CircuithubQuoteResult> => {
   const log = options.log ?? (() => {})
   const pollIntervalMs = options.pollIntervalMs ?? 3000
-  const api = getAuthenticatedApi(options.fetch)
+  const api = getAuthenticatedApi(options.fetch, log)
   if (!api && !options.dryRun) {
     throw new Error(
       "Not logged in to CircuitHub (or the session expired). Run `tsci add-provider circuithub`, or set CIRCUITHUB_TOKEN.",

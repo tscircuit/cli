@@ -133,31 +133,53 @@ export class CircuithubApiError extends Error {
   }
 }
 
+/**
+ * How long to wait before each retry of a rate-limited request. CircuitHub
+ * allows about 20 requests per 30 seconds and its 429 responses carry no
+ * Retry-After header, so back off past one window (95s in total).
+ */
+export const DEFAULT_RATE_LIMIT_RETRY_DELAYS_MS = [
+  5_000, 10_000, 20_000, 30_000, 30_000,
+]
+
 export interface CircuithubApiOptions {
   apiUrl: string
   token: string
   fetch?: typeof fetch
+  rateLimitRetryDelaysMs?: number[]
+  /** Called before waiting out a rate limit, e.g. to tell the user. */
+  onRateLimited?: (info: { waitMs: number; attempt: number }) => void
 }
 
 export const createCircuithubApi = ({
   apiUrl,
   token,
   fetch: fetchFn = globalThis.fetch,
+  rateLimitRetryDelaysMs = DEFAULT_RATE_LIMIT_RETRY_DELAYS_MS,
+  onRateLimited,
 }: CircuithubApiOptions) => {
   const call = async <T>(
     method: string,
     path: string,
     body?: unknown,
   ): Promise<T> => {
-    const response = await fetchFn(`${apiUrl}${path}`, {
-      method,
-      headers: {
-        Authorization: `Bearer ${token}`,
-        Accept: "application/json",
-        ...(body === undefined ? {} : { "Content-Type": "application/json" }),
-      },
-      body: body === undefined ? undefined : JSON.stringify(body),
-    })
+    const send = () =>
+      fetchFn(`${apiUrl}${path}`, {
+        method,
+        headers: {
+          Authorization: `Bearer ${token}`,
+          Accept: "application/json",
+          ...(body === undefined ? {} : { "Content-Type": "application/json" }),
+        },
+        body: body === undefined ? undefined : JSON.stringify(body),
+      })
+    let response = await send()
+    for (const [index, waitMs] of rateLimitRetryDelaysMs.entries()) {
+      if (response.status !== 429) break
+      onRateLimited?.({ waitMs, attempt: index + 1 })
+      await new Promise((resolve) => setTimeout(resolve, waitMs))
+      response = await send()
+    }
     const text = await response.text()
     if (!response.ok) {
       let detail = text.slice(0, 500)

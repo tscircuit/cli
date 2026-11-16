@@ -1,3 +1,7 @@
 // Bun Snapshot v1, https://bun.sh/docs/test/snapshots
 
-exports[`tsci quote create --circuithub waits out CircuitHub's rate limit 1`] = `"CircuitHub GET /parts?q=RC0402FR-071KL failed with HTTP 429: Rate limit exceeded"`;
+exports[`tsci quote create --circuithub waits out CircuitHub's rate limit 1`] = `
+"CircuitHub is rate-limiting requests; retrying in 5s...
+Matched 1/1 part numbers in CircuitHub's catalog
+Uploading 4 files to CircuitHub..."
+`;
