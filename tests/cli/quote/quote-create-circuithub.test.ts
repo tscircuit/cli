@@ -96,7 +96,7 @@ test(
     expect(stdout.trim()).toMatchInlineSnapshot(`
       "CircuitHub project 9001, revision 77 (workspace acme)
       No manufacturer part number in the design: C1
-      BOM: 1/2 lines matched to a part by CircuitHub; unmatched: C1
+      BOM: 1/2 lines matched to a part by CircuitHub (1 do-not-place line skipped); unmatched: C1
       Board as measured by CircuitHub: 20 x 20 mm, 2 layers, min trace 0.15mm, min gap 0.15mm, min drill 0.3mm
 
       5 boards (quote 3005, expires 2026-11-14 13:00 UTC)

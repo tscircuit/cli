@@ -114,19 +114,36 @@ export const startFakeCircuithubServer = async () => {
         case "GET /v1/projects/9001/bom":
           return json({
             revisionId: 77,
-            summary: { total: 2, resolved: 1, unresolved: 1, errored: 0 },
+            summary: {
+              total: 3,
+              resolved: 1,
+              unresolved: 1,
+              errored: 0,
+              notFitted: 1,
+            },
+            // Current response shape: references live in `placements`,
+            // and do-not-place lines are `not_fitted`.
             bomLines: [
               {
                 id: 501,
-                referenceDesignators: ["R1", "R2"],
                 status: "resolved",
-                resolvedManufacturer: "YAGEO",
-                resolvedPartMpn: "RC0402FR-071KL",
+                quantity: 2,
+                placements: [
+                  { ref: "R1", dnp: false, side: "top" },
+                  { ref: "R2", dnp: false, side: "top" },
+                ],
               },
               {
                 id: 502,
-                referenceDesignators: ["C1"],
                 status: "unresolved",
+                quantity: 1,
+                placements: [{ ref: "C1", dnp: false, side: "top" }],
+              },
+              {
+                id: 503,
+                status: "not_fitted",
+                quantity: 0,
+                placements: [{ ref: "H1", dnp: true, side: "top" }],
               },
             ],
           })

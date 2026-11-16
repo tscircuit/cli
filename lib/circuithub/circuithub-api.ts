@@ -51,12 +51,19 @@ export interface CircuithubPartSearch {
 
 export interface CircuithubBomLine {
   id: number
-  referenceDesignators: string[]
+  /** "resolved", "unresolved", "errored", or "not_fitted" (do-not-place). */
   status: string
-  resolvedManufacturer?: string | null
-  resolvedPartMpn?: string | null
-  value?: string | null
+  placements?: { ref: string; dnp?: boolean; side?: string }[]
+  /** Older response shape; current responses list `placements`. */
+  referenceDesignators?: string[]
+  quantity?: number
+  [key: string]: unknown
 }
+
+export const getBomLineRefs = (line: CircuithubBomLine): string[] =>
+  line.placements?.map((placement) => placement.ref) ??
+  line.referenceDesignators ??
+  []
 
 export interface CircuithubBom {
   revisionId: number
@@ -66,6 +73,7 @@ export interface CircuithubBom {
     resolved: number
     unresolved: number
     errored: number
+    notFitted?: number
   }
 }
 

@@ -1,4 +1,9 @@
-import type { CircuithubOffer, CircuithubQuote } from "./circuithub-api"
+import {
+  type CircuithubBomLine,
+  type CircuithubOffer,
+  type CircuithubQuote,
+  getBomLineRefs,
+} from "./circuithub-api"
 import type { CircuithubQuoteResult } from "./create-circuithub-quote"
 
 const money = (amount: number) =>
@@ -149,6 +154,15 @@ const formatQuote = (
   return lines
 }
 
+/**
+ * Do-not-place lines (holes, bare test pads) need no part. CircuitHub marks
+ * them `not_fitted`, and each placement has `dnp: true`.
+ */
+const isNotFitted = (line: CircuithubBomLine) =>
+  line.status === "not_fitted" ||
+  ((line.placements?.length ?? 0) > 0 &&
+    line.placements!.every((placement) => placement.dnp))
+
 export const formatCircuithubQuoteResult = (result: CircuithubQuoteResult) => {
   const lines: string[] = []
   const { bom } = result
@@ -170,18 +184,20 @@ export const formatCircuithubQuoteResult = (result: CircuithubQuoteResult) => {
 
   const bomRefsById = new Map<number, string[]>()
   if (result.circuithubBom) {
-    const unresolved = result.circuithubBom.bomLines.filter(
-      (line) => line.status !== "resolved",
-    )
-    for (const line of result.circuithubBom.bomLines) {
-      bomRefsById.set(line.id, line.referenceDesignators)
-    }
-    const resolvedCount =
-      result.circuithubBom.bomLines.length - unresolved.length
+    const bomLines = result.circuithubBom.bomLines
+    for (const line of bomLines) bomRefsById.set(line.id, getBomLineRefs(line))
+    // Do-not-place lines (holes, bare test pads) need no part.
+    const fitted = bomLines.filter((line) => !isNotFitted(line))
+    const unmatched = fitted.filter((line) => line.status !== "resolved")
+    const notFittedCount = bomLines.length - fitted.length
     lines.push(
-      `BOM: ${resolvedCount}/${result.circuithubBom.bomLines.length} lines matched to a part by CircuitHub${
-        unresolved.length > 0
-          ? `; unmatched: ${unresolved.map((line) => line.referenceDesignators.join(",")).join("; ")}`
+      `BOM: ${fitted.length - unmatched.length}/${fitted.length} lines matched to a part by CircuitHub${
+        notFittedCount > 0
+          ? ` (${notFittedCount} do-not-place line${notFittedCount === 1 ? "" : "s"} skipped)`
+          : ""
+      }${
+        unmatched.length > 0
+          ? `; unmatched: ${unmatched.map((line) => getBomLineRefs(line).join(",")).join("; ")}`
           : ""
       }`,
     )
