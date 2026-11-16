@@ -97,17 +97,28 @@ export const startFakeCircuithubServer = async () => {
         case "GET /v1/revisions/77/board":
         case "GET /v1/revisions/78/board": {
           boardReads++
+          // Like CircuitHub: the CAM report flag turns true before the
+          // board is measured; the real values arrive in a later version.
+          const measured = boardReads >= 2
           return json({
             boardId: 1,
-            hasCamReport: boardReads >= 2,
-            messages: [],
+            version: measured ? 4 : 3,
+            hasCamReport: true,
+            messages: measured
+              ? []
+              : [
+                  {
+                    level: "Error",
+                    message: "Minimum trace gap cannot be less than 0.0899mm",
+                  },
+                ],
             spec: {
-              widthMM: 20,
-              lengthMM: 20,
+              widthMM: measured ? 20 : 20.1,
+              lengthMM: measured ? 20 : 20.1,
               numLayers: 2,
               minTraceWidthMM: 0.15,
-              minPitchMM: 0.15,
-              minHoleSizeMM: 0.3,
+              minPitchMM: measured ? 0.15 : 0,
+              minHoleSizeMM: measured ? 0.3 : null,
             },
           })
         }

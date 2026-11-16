@@ -44,7 +44,9 @@ test(
     )
 
     expect(exitCode).toBe(0)
-    expect(stderr).toContain("Waiting for CircuitHub's CAM analysis...")
+    expect(stderr).toContain(
+      "Waiting for CircuitHub to measure the board (CAM analysis)...",
+    )
     expect(stdout).not.toContain("test-circuithub-token")
 
     // The whole KiCad project goes up, plus a BOM whose manufacturer is the

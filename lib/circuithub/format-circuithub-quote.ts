@@ -215,7 +215,7 @@ export const formatCircuithubQuoteResult = (result: CircuithubQuoteResult) => {
       spec.minHoleSizeMM ? `min drill ${spec.minHoleSizeMM}mm` : null,
     ].filter(Boolean)
     lines.push(
-      `Board as measured by CircuitHub${result.camReady ? "" : " (preliminary, CAM not finished)"}: ${parts.join(", ")}`,
+      `Board as measured by CircuitHub${result.camReady ? "" : " (PRELIMINARY: CircuitHub hasn't finished measuring the board, so these prices may be wrong and miss Grid Proto)"}: ${parts.join(", ")}`,
     )
   }
   for (const message of result.board?.messages ?? []) {

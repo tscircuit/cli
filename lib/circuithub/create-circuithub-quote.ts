@@ -80,6 +80,25 @@ const pollUntil = async <T>(
   }
 }
 
+/**
+ * Whether CircuitHub has measured the board. `hasCamReport` alone isn't
+ * enough: it turns true while the spec still holds the import's preliminary
+ * values (outline + 0.1mm, trace gap 0, no drill size). The real values
+ * arrive in a later board version, so wait for a measured gap and drill.
+ * A board with no holes never gets a drill size and waits out the timeout.
+ */
+export const isBoardMeasured = (board: CircuithubBoard) => {
+  const spec = (board.spec ?? {}) as {
+    minPitchMM?: number | null
+    minHoleSizeMM?: number | null
+  }
+  return Boolean(
+    board.hasCamReport &&
+      (spec.minPitchMM ?? 0) > 0 &&
+      spec.minHoleSizeMM != null,
+  )
+}
+
 const getAuthenticatedApi = (fetchFn?: typeof fetch): CircuithubApi | null => {
   const current = getCircuithubToken()
   if (!current) return null
@@ -103,9 +122,9 @@ const getAuthenticatedApi = (fetchFn?: typeof fetch): CircuithubApi | null => {
  *    Manufacturer + MPN + supplier part number per line (manufacturers come
  *    from CircuitHub's part search, so same-MPN listings resolve).
  * 2. Upload the files and create a project, or a revision of `projectId`.
- * 3. Wait for the import, then for CAM analysis: until CircuitHub has a CAM
- *    report, its board measurements (size, trace gap, drill) are
- *    preliminary and the quote can miss Grid Proto pricing.
+ * 3. Wait for the import, then for CircuitHub to measure the board (see
+ *    `isBoardMeasured`). Quotes priced on the preliminary measurements are
+ *    wrong: they can miss US fabrication and Grid Proto pricing.
  * 4. Request a quote for each quantity. Nothing is ordered.
  */
 export const createCircuithubQuote = async (
@@ -232,12 +251,12 @@ export const createCircuithubQuote = async (
     )
   }
 
-  log("Waiting for CircuitHub's CAM analysis...")
+  log("Waiting for CircuitHub to measure the board (CAM analysis)...")
   let lastBoard: CircuithubBoard | undefined
   const camBoard = await pollUntil(
     async () => {
       lastBoard = await api.getBoard(created.revisionId)
-      return lastBoard.hasCamReport ? lastBoard : undefined
+      return isBoardMeasured(lastBoard) ? lastBoard : undefined
     },
     {
       timeoutMs: options.camTimeoutMs ?? 15 * 60_000,
@@ -248,7 +267,7 @@ export const createCircuithubQuote = async (
   result.board = camBoard ?? lastBoard
   if (!camBoard) {
     log(
-      "CAM analysis isn't finished; quoting with CircuitHub's preliminary board measurements.",
+      "CircuitHub hasn't finished measuring the board; quoting with its preliminary measurements, so prices may be wrong.",
     )
   }
 
