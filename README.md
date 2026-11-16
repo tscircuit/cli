@@ -36,6 +36,10 @@ Commands:
   clone [options] [package]    Clone a package from the registry
   push [options] [file]        Save package code to Registry API
   auth                         Login/logout
+  add-provider <provider>      Connect a manufacturing provider to the CLI by
+                               logging in to it (supported: circuithub)
+  remove-provider <provider>   Disconnect a manufacturing provider: forget its
+                               saved login (supported: circuithub)
   login                        Login to tscircuit registry
   logout                       Logout from tscircuit registry
   config                       Manage tscircuit CLI configuration
