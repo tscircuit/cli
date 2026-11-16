@@ -53,6 +53,8 @@ jobs:
           cat > "$RUNNER_TEMP/palace" <<'SCRIPT'
           #!/usr/bin/env bash
           set -o pipefail
+          mkdir -p "$RUNNER_TEMP/palace-case"
+          cp -r . "$RUNNER_TEMP/palace-case/"
           docker run --rm --network none --user "$(id -u):$(id -g)" \
             --cap-drop ALL --security-opt no-new-privileges \
             --mount "type=bind,src=$PWD,dst=/case" --workdir /case \
@@ -65,12 +67,15 @@ jobs:
         env:
           TSCIRCUIT_CONFIG_DIR: ${{ runner.temp }}/return-current-config
         run: bun test tests/cli/simulate/return-current.test.ts
-      - name: Print Palace output
-        if: failure()
+      - name: Print EM environment and Palace output
+        if: always()
         run: |
-          docker version --format 'docker {{.Server.Version}}'
+          lscpu | grep -E "Model name|^CPU\(s\)|Flags" | cut -c1-400
           uname -r
-          tail -n 200 "$RUNNER_TEMP/palace-output.log"
+          docker version --format 'docker {{.Server.Version}}'
+          cd "$RUNNER_TEMP/palace-case" && find . -type f ! -name '*.log' | sort | xargs sha256sum
+          grep -E "elements|vertices|libCEED backend|singular|Elapsed" "$RUNNER_TEMP/palace-output.log" || true
+          tail -n 20 "$RUNNER_TEMP/palace-output.log"
       - uses: actions/upload-artifact@v4
         if: failure()
         with:
