@@ -1,6 +1,7 @@
 import {
   type CircuithubTokenClaims,
   decodeCircuithubToken,
+  getCircuithubConfig,
   getCircuithubToken,
   isCircuithubTokenExpired,
   setCircuithubToken,
@@ -62,4 +63,29 @@ export const addCircuithubProvider = async ({
 
   setCircuithubToken(received.token)
   log(`Added CircuitHub (logged in as ${getAccountName(received.claims)})`)
+}
+
+/**
+ * `tsci remove-provider circuithub`: forget the saved CircuitHub session and
+ * remembered workspace. A `CIRCUITHUB_TOKEN` in the environment can't be
+ * removed from here, so say that it still applies.
+ */
+export const removeCircuithubProvider = async ({
+  log,
+}: {
+  log: (message: string) => void
+}) => {
+  const config = getCircuithubConfig()
+  const saved = config.get("token")
+  config.clear()
+  log(
+    saved
+      ? `Removed CircuitHub (was logged in as ${getAccountName(decodeCircuithubToken(saved))}).`
+      : "CircuitHub isn't added; nothing to remove.",
+  )
+  if (process.env.CIRCUITHUB_TOKEN || process.env.CIRCUITHUB_API_KEY) {
+    log(
+      "CIRCUITHUB_TOKEN is still set in the environment, so quotes keep using it until you unset it.",
+    )
+  }
 }

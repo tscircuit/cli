@@ -13,7 +13,7 @@ import {
   createCircuithubQuote,
   validateCircuithubQuoteOptions,
 } from "lib/circuithub/create-circuithub-quote"
-import { hasCircuithubSession } from "lib/circuithub/add-circuithub-provider"
+import { hasCircuithubSession } from "lib/circuithub/circuithub-provider"
 import {
   formatCircuithubBomTable,
   formatCircuithubQuoteResult,

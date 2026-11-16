@@ -1,12 +1,6 @@
 import type { Command } from "commander"
 import kleur from "kleur"
-import { addCircuithubProvider } from "lib/circuithub/add-circuithub-provider"
-
-const PROVIDERS = {
-  circuithub: addCircuithubProvider,
-} as const
-
-type Provider = keyof typeof PROVIDERS
+import { getProvider, unknownProviderMessage } from "lib/providers/providers"
 
 export const registerAddProvider = (program: Command) => {
   program
@@ -15,17 +9,15 @@ export const registerAddProvider = (program: Command) => {
       "Connect a manufacturing provider to the CLI by logging in to it (supported: circuithub)",
     )
     .argument("<provider>", "Provider to add: circuithub")
-    .action(async (provider: string) => {
-      const addProvider = PROVIDERS[provider.toLowerCase() as Provider]
-      if (!addProvider) {
-        console.error(
-          `Unknown provider "${provider}". Supported providers: ${Object.keys(PROVIDERS).join(", ")}.`,
-        )
+    .action(async (name: string) => {
+      const provider = getProvider(name)
+      if (!provider) {
+        console.error(unknownProviderMessage(name))
         process.exitCode = 1
         return
       }
       try {
-        await addProvider({ log: (message) => console.log(message) })
+        await provider.add({ log: (message) => console.log(message) })
         // Make sure nothing (like a readline on stdin) keeps the process alive.
         process.exit(0)
       } catch (error) {
