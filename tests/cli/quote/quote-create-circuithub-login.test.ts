@@ -86,13 +86,17 @@ test(
     const stdout = await new Response(quote.stdout).text()
     expect(await quote.exited).toBe(0)
     expect(stderr + stdout).not.toContain(token)
-    // What the user sees: the login prompt, then the quote carries on.
+    // What the user sees: the command they ran, the login prompt, then the
+    // quote carries on.
     const loginBlock = stderr.slice(
       stderr.indexOf("Log in to CircuitHub"),
       stderr.indexOf("\n", stderr.indexOf("Logged in to CircuitHub")),
     )
-    expect(loginBlock.replaceAll(port, "<port>")).toMatchInlineSnapshot(`
-      "Log in to CircuitHub to continue:
+    expect(
+      `$ ${command}\n${loginBlock.replaceAll(port, "<port>")}`,
+    ).toMatchInlineSnapshot(`
+      "$ tsci quote create --circuithub board.circuit.tsx --workspace acme --export-classification EAR99
+      Log in to CircuitHub to continue:
         https://app.circuithub.example/auth/cli?redirect_uri=http://localhost:<port>/cb
       If the browser is on another machine, paste the URL it ends up on here.
       Logged in to CircuitHub as Ada Lovelace"
