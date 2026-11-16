@@ -26,7 +26,7 @@ const readUntil = async (
 }
 
 test(
-  "tsci quote create --circuithub logs in to CircuitHub through the browser, then quotes",
+  "tsci add-provider circuithub logs in to CircuitHub through the browser",
   async () => {
     const token = jwt.sign(
       { sub: "44738", name: "Ada Lovelace" },
@@ -42,10 +42,9 @@ test(
     }
     const { tmpDir, runCommand } = await getCliTestFixture({ env })
     await writeFile(path.join(tmpDir, "board.circuit.tsx"), BOARD_SOURCE)
-    const command =
-      "tsci quote create --circuithub board.circuit.tsx --workspace acme --export-classification EAR99"
+    const command = "tsci add-provider circuithub"
 
-    const quote = Bun.spawn({
+    const addProvider = Bun.spawn({
       cmd: [
         "bun",
         "run",
@@ -65,10 +64,10 @@ test(
       stderr: "pipe",
     })
     globalThis.deferredCleanupFns.push(async () => {
-      quote.kill()
+      addProvider.kill()
     })
-    const stderrReader = quote.stderr.getReader()
-    const prompt = await readUntil(stderrReader, /ends up on here\.\n/)
+    const stdoutReader = addProvider.stdout.getReader()
+    const prompt = await readUntil(stdoutReader, /ends up on here\.\n/)
     const loginUrl = prompt.match(/https:\/\/\S+/)![0]
     const port = new URL(new URL(loginUrl).searchParams.get("redirect_uri")!)
       .port
@@ -82,32 +81,33 @@ test(
       (await fetch(`http://127.0.0.1:${port}/cb?token=${token}`)).status,
     ).toBe(200)
 
-    const stderr = prompt + (await readUntil(stderrReader, /a^/))
-    const stdout = await new Response(quote.stdout).text()
-    expect(await quote.exited).toBe(0)
-    expect(stderr + stdout).not.toContain(token)
-    // What the user sees: the command they ran, the login prompt, then the
-    // quote carries on.
-    const loginBlock = stderr.slice(
-      stderr.indexOf("Log in to CircuitHub"),
-      stderr.indexOf("\n", stderr.indexOf("Logged in to CircuitHub")),
-    )
+    const stdout = prompt + (await readUntil(stdoutReader, /a^/))
+    expect(await addProvider.exited).toBe(0)
+    expect(stdout).not.toContain(token)
+    // What the user sees, starting with the command they ran.
     expect(
-      `$ ${command}\n${loginBlock.replaceAll(port, "<port>")}`,
+      `$ ${command}\n${stdout.replaceAll(port, "<port>")}`.trim(),
     ).toMatchInlineSnapshot(`
-      "$ tsci quote create --circuithub board.circuit.tsx --workspace acme --export-classification EAR99
-      Log in to CircuitHub to continue:
+      "$ tsci add-provider circuithub
+      Log in to CircuitHub to add it as a provider:
         https://app.circuithub.example/auth/cli?redirect_uri=http://localhost:<port>/cb
       If the browser is on another machine, paste the URL it ends up on here.
-      Logged in to CircuitHub as Ada Lovelace"
+      Added CircuitHub (logged in as Ada Lovelace)"
     `)
-    expect(stdout).toContain("CircuitHub project 9001, revision 77")
 
-    // The session is saved, so the next quote doesn't ask again.
-    const second = await runCommand(command)
-    expect(second.exitCode).toBe(0)
-    expect(second.stderr).not.toContain("Log in to CircuitHub")
-    expect(second.stdout).toContain("CircuitHub project 9001, revision 77")
+    // Adding it again keeps the saved session.
+    const again = await runCommand(command)
+    expect(again.exitCode).toBe(0)
+    expect(again.stdout.trim()).toMatchInlineSnapshot(
+      `"CircuitHub is already added (logged in as Ada Lovelace)."`,
+    )
+
+    // Quotes use the saved session without asking to log in.
+    const quote = await runCommand(
+      "tsci quote create --circuithub board.circuit.tsx --workspace acme --export-classification EAR99",
+    )
+    expect(quote.exitCode).toBe(0)
+    expect(quote.stdout).toContain("CircuitHub project 9001, revision 77")
   },
   { timeout: 120_000 },
 )

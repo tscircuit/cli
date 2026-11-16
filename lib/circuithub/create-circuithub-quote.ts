@@ -158,7 +158,7 @@ export const createCircuithubQuote = async (
   const api = getAuthenticatedApi(options.fetch)
   if (!api && !options.dryRun) {
     throw new Error(
-      "Not logged in to CircuitHub (or the session expired). Run the command again to log in, or set CIRCUITHUB_TOKEN.",
+      "Not logged in to CircuitHub (or the session expired). Run `tsci add-provider circuithub`, or set CIRCUITHUB_TOKEN.",
     )
   }
   validateCircuithubQuoteOptions(options)

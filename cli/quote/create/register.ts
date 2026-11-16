@@ -13,7 +13,7 @@ import {
   createCircuithubQuote,
   validateCircuithubQuoteOptions,
 } from "lib/circuithub/create-circuithub-quote"
-import { ensureCircuithubLogin } from "lib/circuithub/ensure-circuithub-login"
+import { hasCircuithubSession } from "lib/circuithub/add-circuithub-provider"
 import {
   formatCircuithubBomTable,
   formatCircuithubQuoteResult,
@@ -91,7 +91,7 @@ export const registerQuoteCreate = (program: Command) => {
     .argument("[file]", "Path to the source file or circuit JSON to quote")
     .option(
       "--circuithub",
-      "Quote assembled boards with CircuitHub: uploads the KiCad project and BOM, waits for CircuitHub's analysis and prints its offers. Logs in to CircuitHub first if needed",
+      "Quote assembled boards with CircuitHub (add it first with `tsci add-provider circuithub`): uploads the KiCad project and BOM, waits for CircuitHub's analysis and prints its offers",
     )
     .option(
       "--workspace <slug>",
@@ -135,6 +135,13 @@ export const registerQuoteCreate = (program: Command) => {
         process.exitCode = 1
         return
       }
+      if (!options.dryRun && !hasCircuithubSession()) {
+        console.error(
+          "CircuitHub isn't added yet (or its session expired). Run `tsci add-provider circuithub` to log in, then try again.",
+        )
+        process.exitCode = 1
+        return
+      }
       const workspace = options.workspace ?? getSavedCircuithubWorkspace()
       try {
         validateCircuithubQuoteOptions({
@@ -158,9 +165,6 @@ export const registerQuoteCreate = (program: Command) => {
           : ((await getOrGenerateCircuitJson({ filePath }))
               .circuitJson as unknown[])
 
-        if (!options.dryRun) {
-          await ensureCircuithubLogin({ log: logToStderr })
-        }
         const result = await createCircuithubQuote({
           circuitJson,
           projectName: options.name ?? getDefaultProjectName(filePath),
@@ -192,8 +196,8 @@ export const registerQuoteCreate = (program: Command) => {
         }
         console.log(formatCircuithubQuoteResult(result))
       } catch (error) {
-        // A saved session CircuitHub rejects is useless; forget it so the
-        // next run logs in again.
+        // A saved session CircuitHub rejects is useless; forget it so
+        // `tsci add-provider circuithub` logs in again.
         if (
           error instanceof CircuithubApiError &&
           error.status === 401 &&

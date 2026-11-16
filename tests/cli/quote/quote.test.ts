@@ -178,8 +178,27 @@ test(
     expect(exitCode).toBe(1)
     expect(stderr).not.toContain("Log in to CircuitHub")
     expect(stderr.trim()).toMatchInlineSnapshot(
-      `"CircuitHub needs the board's export classification to create a project. Pass --export-classification (for example EAR99), or --project <id> to add a revision to an existing project."`,
+      `"CircuitHub isn't added yet (or its session expired). Run \`tsci add-provider circuithub\` to log in, then try again."`,
     )
   },
   { timeout: 60_000 },
+)
+
+test(
+  "tsci quote create --circuithub asks to add CircuitHub first",
+  async () => {
+    const { runCommand } = await getCliTestFixture({
+      env: { CIRCUITHUB_TOKEN: undefined, CIRCUITHUB_API_KEY: undefined },
+    })
+
+    const { stderr, exitCode } = await runCommand(
+      "tsci quote create --circuithub board.circuit.tsx --workspace acme --export-classification EAR99",
+    )
+
+    expect(exitCode).toBe(1)
+    expect(stderr.trim()).toMatchInlineSnapshot(
+      `"CircuitHub isn't added yet (or its session expired). Run \`tsci add-provider circuithub\` to log in, then try again."`,
+    )
+  },
+  { timeout: 30_000 },
 )
