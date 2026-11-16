@@ -76,6 +76,29 @@ jobs:
           cd "$RUNNER_TEMP/palace-case" && find . -type f ! -name '*.log' | sort | xargs sha256sum
           grep -E "elements|vertices|libCEED backend|singular|Elapsed" "$RUNNER_TEMP/palace-output.log" || true
           tail -n 20 "$RUNNER_TEMP/palace-output.log"
+      - name: Try Palace solver variants on the saved case
+        if: always()
+        run: |
+          IMAGE=benvial/palace@sha256:f0f3a3cbbdf1ee2d8f856ddbe1f5bf4628a92ee8ab87d1e27dc33402ad9c8dda
+          for variant in baseline ref_backend pc_shifted ref_backend+pc_shifted; do
+            dir="$RUNNER_TEMP/variant-$variant"
+            rm -rf "$dir" && cp -r "$RUNNER_TEMP/palace-case" "$dir"
+            python3 - "$dir/palace.json" "$variant" <<'PY'
+          import json, sys
+          path, variant = sys.argv[1], sys.argv[2]
+          config = json.load(open(path))
+          if "ref_backend" in variant:
+              config["Solver"]["Backend"] = "/cpu/self/ref/serial"
+          if "pc_shifted" in variant:
+              config["Solver"]["Linear"]["PCMatShifted"] = True
+          json.dump(config, open(path, "w"))
+          PY
+            status=0
+            docker run --rm --network none --user "$(id -u):$(id -g)" \
+              --mount "type=bind,src=$dir,dst=/case" --workdir /case "$IMAGE" \
+              palace -np 1 palace.json > "$dir/variant.log" 2>&1 || status=$?
+            echo "VARIANT $variant exit=$status $(grep -m1 -o 'singular matrix' "$dir/variant.log")"
+          done
       - uses: actions/upload-artifact@v4
         if: failure()
         with:
