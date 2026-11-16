@@ -17,7 +17,7 @@ test("embedded Circuit JSON safely round-trips through the standalone viewer's B
     files,
     embeddedCircuitJson,
     standaloneScriptSrc:
-      "https://cdn.jsdelivr.net/npm/@tscircuit/runframe@0.0.9999/dist/standalone.min.js",
+      "https://jscdn.tscircuit.com/@tscircuit/runframe/0.0.9999/dist/standalone.min.js",
     packageName: hostile,
     defaultMainComponentPath: hostile,
     extraRunFrameTabs,
@@ -25,7 +25,7 @@ test("embedded Circuit JSON safely round-trips through the standalone viewer's B
   const script = html.match(/<script>([\s\S]*?)<\/script>/)?.[1]
   expect(script).toBeDefined()
   expect(script).not.toContain("</script>")
-  expect(html.match(/<script\b/g)).toHaveLength(4)
+  expect(html.match(/<script\b/g)).toHaveLength(5)
   expect(html).toContain("<title>&lt;/script&gt;")
 
   const window: Record<string, any> = {}

@@ -7,10 +7,10 @@ test("CDN builds resolve the latest RunFrame release each time and pin its stand
     .mockResolvedValueOnce(Response.json({ version: "0.0.9999" }))
   try {
     expect(await getRunFrameCdnUrl()).toBe(
-      "https://cdn.jsdelivr.net/npm/@tscircuit/runframe@0.0.9998/dist/standalone.min.js",
+      "https://jscdn.tscircuit.com/@tscircuit/runframe/0.0.9998/dist/standalone.min.js",
     )
     expect(await getRunFrameCdnUrl()).toBe(
-      "https://cdn.jsdelivr.net/npm/@tscircuit/runframe@0.0.9999/dist/standalone.min.js",
+      "https://jscdn.tscircuit.com/@tscircuit/runframe/0.0.9999/dist/standalone.min.js",
     )
     expect(fetchSpy).toHaveBeenCalledTimes(2)
     for (const [url] of fetchSpy.mock.calls) {

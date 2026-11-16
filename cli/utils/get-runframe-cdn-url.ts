@@ -1,3 +1,5 @@
+import { getRunFrameStandaloneCdnUrl } from "lib/shared/get-runframe-standalone-cdn-url"
+
 const RUNFRAME_NPMJS_API_URL =
   "https://registry.npmjs.org/@tscircuit/runframe/latest"
 
@@ -13,5 +15,5 @@ export async function getRunFrameCdnUrl(): Promise<string> {
   if (typeof version !== "string" || !version) {
     throw new Error("npm returned an invalid RunFrame version")
   }
-  return `https://cdn.jsdelivr.net/npm/@tscircuit/runframe@${version}/dist/standalone.min.js`
+  return getRunFrameStandaloneCdnUrl(version)
 }

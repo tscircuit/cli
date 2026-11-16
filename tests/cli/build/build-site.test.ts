@@ -206,7 +206,7 @@ test("build with --site --use-cdn-javascript uses CDN URL and no standalone.min.
 
   // Should use CDN URL instead of local standalone.min.js
   expect(indexHtml).toContain(
-    "cdn.jsdelivr.net/npm/@tscircuit/runframe@0.0.9999/dist/standalone.min.js",
+    "jscdn.tscircuit.com/@tscircuit/runframe/0.0.9999/dist/standalone.min.js",
   )
   expect(indexHtml).not.toContain("/dist/browser.min.js")
   expect(indexHtml).not.toContain('src="./standalone.min.js"')
