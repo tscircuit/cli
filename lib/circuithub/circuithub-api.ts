@@ -172,7 +172,7 @@ export const createCircuithubApi = ({
       } catch {}
       const hint =
         response.status === 401
-          ? " Run `tsci auth circuithub login` to log in again."
+          ? " The CircuitHub login was rejected; run the command again to log in."
           : ""
       throw new CircuithubApiError(
         `CircuitHub ${method} ${path} failed with HTTP ${response.status}: ${detail}${hint}`,

@@ -99,6 +99,29 @@ export const isBoardMeasured = (board: CircuithubBoard) => {
   )
 }
 
+/**
+ * Check the options an upload needs, so the command can fail before asking
+ * the user to log in or generating anything.
+ */
+export const validateCircuithubQuoteOptions = (
+  options: Pick<
+    CreateCircuithubQuoteOptions,
+    "dryRun" | "workspace" | "projectId" | "exportClassification"
+  >,
+) => {
+  if (options.dryRun) return
+  if (!options.workspace) {
+    throw new Error(
+      "Pass --workspace <slug> (the workspace in your CircuitHub URL, app.circuithub.com/workspaces/<slug>), or set CIRCUITHUB_WORKSPACE.",
+    )
+  }
+  if (options.projectId === undefined && !options.exportClassification) {
+    throw new Error(
+      "CircuitHub needs the board's export classification to create a project. Pass --export-classification (for example EAR99), or --project <id> to add a revision to an existing project.",
+    )
+  }
+}
+
 const getAuthenticatedApi = (fetchFn?: typeof fetch): CircuithubApi | null => {
   const current = getCircuithubToken()
   if (!current) return null
@@ -135,21 +158,10 @@ export const createCircuithubQuote = async (
   const api = getAuthenticatedApi(options.fetch)
   if (!api && !options.dryRun) {
     throw new Error(
-      "Not logged in to CircuitHub (or the session expired). Run `tsci auth circuithub login`, or set CIRCUITHUB_TOKEN.",
+      "Not logged in to CircuitHub (or the session expired). Run the command again to log in, or set CIRCUITHUB_TOKEN.",
     )
   }
-  if (!options.dryRun) {
-    if (!options.workspace) {
-      throw new Error(
-        "Pass --workspace <slug> (the workspace in your CircuitHub URL, app.circuithub.com/workspaces/<slug>), or set CIRCUITHUB_WORKSPACE.",
-      )
-    }
-    if (options.projectId === undefined && !options.exportClassification) {
-      throw new Error(
-        "CircuitHub needs the board's export classification to create a project. Pass --export-classification (for example EAR99), or --project <id> to add a revision to an existing project.",
-      )
-    }
-  }
+  validateCircuithubQuoteOptions(options)
 
   const bomRows = getCircuithubBomRows(options.circuitJson)
   const missingMpns = bomRows

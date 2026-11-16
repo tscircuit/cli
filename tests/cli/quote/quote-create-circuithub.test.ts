@@ -28,7 +28,7 @@ const BOARD_SOURCE = `export default () => (
 `
 
 test(
-  "tsci quote create circuithub uploads the KiCad project and BOM to CircuitHub and prints its quotes",
+  "tsci quote create --circuithub uploads the KiCad project and BOM to CircuitHub and prints its quotes",
   async () => {
     const circuithub = await startFakeCircuithubServer()
     const { tmpDir, runCommand } = await getCliTestFixture({
@@ -40,7 +40,7 @@ test(
     await writeFile(path.join(tmpDir, "board.circuit.tsx"), BOARD_SOURCE)
 
     const { stdout, stderr, exitCode } = await runCommand(
-      "tsci quote create circuithub board.circuit.tsx --workspace acme --export-classification EAR99 --quantity 5,10",
+      "tsci quote create --circuithub board.circuit.tsx --workspace acme --export-classification EAR99 --quantity 5,10",
     )
 
     expect(exitCode).toBe(0)

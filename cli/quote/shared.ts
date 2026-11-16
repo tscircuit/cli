@@ -47,11 +47,6 @@ const parseChoice =
 export const getQuoteCommand = (program: Command) =>
   program.commands.find((command) => command.name() === "quote")!
 
-export const getQuoteCreateCommand = (program: Command) =>
-  getQuoteCommand(program).commands.find(
-    (command) => command.name() === "create",
-  )!
-
 export const addQuoteOptions = (command: Command) =>
   command
     .argument("[file]", "Path to the source file or circuit JSON to quote")

@@ -13,7 +13,9 @@ export interface FakeCircuithubRequest {
  * The CAM report is only "ready" on the second board read, so the CLI has
  * to wait for it.
  */
-export const startFakeCircuithubServer = async () => {
+export const startFakeCircuithubServer = async ({
+  token = "test-circuithub-token",
+}: { token?: string } = {}) => {
   const port = await getPort()
   const baseUrl = `http://localhost:${port}`
   const requests: FakeCircuithubRequest[] = []
@@ -37,7 +39,7 @@ export const startFakeCircuithubServer = async () => {
         authorization: req.headers.get("authorization"),
         body: text ? JSON.parse(text) : null,
       })
-      if (req.headers.get("authorization") !== "Bearer test-circuithub-token") {
+      if (req.headers.get("authorization") !== `Bearer ${token}`) {
         return json({ error: { message: "Invalid token" } }, 401)
       }
       const route = `${req.method} ${url.pathname}`

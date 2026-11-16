@@ -6,7 +6,6 @@ import { perfectCli } from "perfect-cli"
 import { getVersion } from "./../lib/getVersion"
 import { registerAdd } from "./add/register"
 import { registerAgent } from "./agent/register"
-import { registerAuthCircuithub } from "./auth/circuithub/register"
 import { registerAuthLogin } from "./auth/login/register"
 import { registerAuthLogout } from "./auth/logout/register"
 import { registerAuthPrintToken } from "./auth/print-token/register"
@@ -37,7 +36,6 @@ import { registerImport } from "./import/register"
 import { registerInit } from "./init/register"
 import { registerInstall } from "./install/register"
 import { registerPush } from "./push/register"
-import { registerQuoteCreateCircuithub } from "./quote/create/circuithub/register"
 import { registerQuoteCreate } from "./quote/create/register"
 import { registerQuoteEstimate } from "./quote/estimate/register"
 import { registerQuote } from "./quote/register"
@@ -76,7 +74,6 @@ registerAuthPrintToken(program)
 registerAuthSetToken(program)
 registerAuthWhoami(program)
 registerAuthSetupNpmrc(program)
-registerAuthCircuithub(program)
 
 registerConfig(program)
 registerConfigPrint(program)
@@ -110,7 +107,6 @@ registerCheckTraceLength(program)
 registerQuote(program)
 registerQuoteEstimate(program)
 registerQuoteCreate(program)
-registerQuoteCreateCircuithub(program)
 
 registerRegistry(program)
 registerRegistryPackages(program)

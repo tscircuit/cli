@@ -21,7 +21,7 @@ const FAILURE_PAGE = `<!doctype html>
 <html><head><meta charset="utf-8"><title>tscircuit</title></head>
 <body style="font-family: system-ui, sans-serif; padding: 48px; text-align: center">
 <h2>CircuitHub login failed</h2>
-<p>No valid token was received. Run <code>tsci auth circuithub login</code> again.</p>
+<p>No valid token was received. Open the login link from the terminal again.</p>
 </body></html>`
 
 /**
