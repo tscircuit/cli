@@ -12,7 +12,7 @@ import { jwtDecode } from "jwt-decode"
 import { saveProjectConfig } from "lib/project-config"
 import { checkForTsciUpdates } from "lib/shared/check-for-cli-update"
 import { prompts } from "lib/utils/prompts"
-import { fetchAccount } from "lib/registry-api/fetch-account"
+import { fetchAccountResult } from "lib/registry-api/fetch-account"
 import kleur from "kleur"
 import { captureTelemetryEvent } from "lib/telemetry"
 
@@ -97,9 +97,12 @@ export const registerInit = (program: Command) => {
 
         let authorName = cliConfig.get("tscircuitHandle")
         if (!authorName) {
-          const account = await fetchAccount()
-          if (account?.tscircuit_handle) {
-            authorName = account.tscircuit_handle
+          const accountResult = await fetchAccountResult()
+          if (
+            accountResult.status === "ok" &&
+            accountResult.account.tscircuit_handle
+          ) {
+            authorName = accountResult.account.tscircuit_handle
           }
         }
 

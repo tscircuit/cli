@@ -3,7 +3,7 @@ import { setSessionToken, getSessionToken, cliConfig } from "lib/cli-config"
 import delay from "delay"
 import { getRegistryApiKy } from "lib/registry-api/get-ky"
 import type { EndpointResponse } from "lib/registry-api/endpoint-types"
-import { fetchAccount } from "lib/registry-api/fetch-account"
+import { fetchAccountResult } from "lib/registry-api/fetch-account"
 import kleur from "kleur"
 import { setupNpmrc } from "../setup-npmrc/setup-npmrc"
 
@@ -13,10 +13,32 @@ export const registerAuthLogin = (program: Command) => {
     const sessionToken = getSessionToken()
     const tscircuitHandle = cliConfig.get("tscircuitHandle")
     if (sessionToken) {
-      const account = await fetchAccount()
+      const accountResult = await fetchAccountResult()
+      if (accountResult.status === "error") {
+        console.error(
+          kleur.red(
+            `Could not verify existing login session: ${accountResult.message}`,
+          ),
+        )
+        process.exit(1)
+      }
+
+      const account =
+        accountResult.status === "ok" ? accountResult.account : null
+      const savedHandle = process.env.TSCIRCUIT_TOKEN
+        ? undefined
+        : tscircuitHandle
+      const displayIdentity =
+        savedHandle ?? account?.tscircuit_handle ?? account?.account_id
+      const formattedIdentity = savedHandle
+        ? kleur.bold(`@${savedHandle}`)
+        : displayIdentity
+          ? kleur.underline(`@${displayIdentity}`)
+          : "an existing account (handle not set)"
+
       console.log(
         kleur.yellow(
-          `Already logged in as ${tscircuitHandle ? kleur.bold(`@${tscircuitHandle}`) : kleur.underline(`@${account?.tscircuit_handle ?? account?.account_id}`)}! Use ${kleur.cyan("tsci logout")} to switch accounts.`,
+          `Already logged in as ${formattedIdentity}! Use ${kleur.cyan("tsci logout")} to switch accounts.`,
         ),
       )
       return

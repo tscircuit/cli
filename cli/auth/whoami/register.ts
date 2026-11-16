@@ -1,6 +1,6 @@
 import type { Command } from "commander"
 import { cliConfig, getSessionToken } from "lib/cli-config"
-import { fetchAccount } from "lib/registry-api/fetch-account"
+import { fetchAccountResult } from "lib/registry-api/fetch-account"
 import kleur from "kleur"
 
 const formatDate = (date: string | undefined): string | null => {
@@ -25,7 +25,16 @@ export const registerAuthWhoami = (program: Command) => {
         return
       }
 
-      const account = await fetchAccount()
+      const accountResult = await fetchAccountResult()
+      if (accountResult.status === "error") {
+        console.error(
+          kleur.red(`Could not look up your account: ${accountResult.message}`),
+        )
+        process.exit(1)
+      }
+
+      const account =
+        accountResult.status === "ok" ? accountResult.account : null
 
       console.log(kleur.bold().green("\nLogged in user:\n"))
       console.log(
