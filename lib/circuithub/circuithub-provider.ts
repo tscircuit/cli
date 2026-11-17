@@ -6,6 +6,8 @@ import {
   isCircuithubTokenExpired,
   setCircuithubToken,
 } from "./circuithub-config"
+import { openInBrowser, terminalLink } from "lib/shared/open-in-browser"
+import { shouldBeInteractive } from "lib/utils/should-be-interactive"
 import { startCircuithubLogin } from "./login-to-circuithub"
 
 const LOGIN_TIMEOUT_MS = 10 * 60 * 1000
@@ -44,12 +46,20 @@ export const addCircuithubProvider = async ({
   }
 
   const session = await startCircuithubLogin()
+  // In a terminal, open the login page; tests and CI just get the link.
+  const opened = shouldBeInteractive() && openInBrowser(session.loginUrl)
   log(
     current
       ? "Your CircuitHub session expired. Log in to CircuitHub to add it again:"
       : "Log in to CircuitHub to add it as a provider:",
   )
-  log(`  ${session.loginUrl}`)
+  if (opened)
+    log(
+      "  Opened the login page in your browser. If it didn't open, use this link:",
+    )
+  log(
+    `  ${process.stdout.isTTY ? terminalLink(session.loginUrl) : session.loginUrl}`,
+  )
   log("If the browser is on another machine, paste the URL it ends up on here.")
 
   let timer: ReturnType<typeof setTimeout> | undefined
