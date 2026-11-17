@@ -4,10 +4,6 @@ import {
   CircuitJsonToKicadProConverter,
   CircuitJsonToKicadSchConverter,
 } from "circuit-json-to-kicad"
-import {
-  type CircuithubBomRow,
-  formatCircuithubBomCsv,
-} from "./generate-circuithub-bom"
 
 export interface CircuithubProjectFile {
   filename: string
@@ -15,18 +11,19 @@ export interface CircuithubProjectFile {
 }
 
 /**
- * The files CircuitHub imports a KiCad design from. It needs the whole
- * project, not just the board: with only a `.kicad_pcb` and a BOM, creating
- * a project or revision fails (HTTP 500). 3D models aren't uploaded.
+ * The KiCad project uploaded to CircuitHub, which reads part numbers from
+ * the design files. No BOM CSV: CircuitHub can't read tsci's BOM (no column
+ * it recognises as the MPN), and uploads that included one were never
+ * measured, which leaves quotes on preliminary values. CircuitHub needs the
+ * whole project, not just the board: with only a `.kicad_pcb`, creating a
+ * project or revision fails (HTTP 500). 3D models aren't uploaded.
  */
 export const generateCircuithubProjectFiles = ({
   circuitJson,
   projectName,
-  bomRows,
 }: {
   circuitJson: unknown[]
   projectName: string
-  bomRows: CircuithubBomRow[]
 }): CircuithubProjectFile[] => {
   const elements = circuitJson as AnyCircuitElement[]
   const schematicFilename = `${projectName}.kicad_sch`
@@ -52,6 +49,5 @@ export const generateCircuithubProjectFiles = ({
       filename: `${projectName}.kicad_pro`,
       content: proConverter.getOutputString(),
     },
-    { filename: "bom.csv", content: formatCircuithubBomCsv(bomRows) },
   ]
 }

@@ -1,4 +1,10 @@
 import { type Command, InvalidArgumentError } from "commander"
+import kleur from "kleur"
+import { CircuithubApiError } from "lib/circuithub/circuithub-api"
+import {
+  clearCircuithubToken,
+  getCircuithubToken,
+} from "lib/circuithub/circuithub-config"
 
 export type PcbaType = "auto" | "economic" | "standard"
 export type SurfaceFinish = "hasl_lead_free" | "hasl_leaded" | "enig"
@@ -96,3 +102,42 @@ export const addQuoteOptions = (command: Command) =>
       parseNonNegativeNumber("Weight"),
     )
     .option("--json", "Output the quote as JSON")
+
+/** `--quantity 5` or `--quantity 1,5,25`. */
+export const parseQuoteQuantities = (text: string) => {
+  const quantities = text.split(",").map((part) => Number(part.trim()))
+  if (
+    quantities.length === 0 ||
+    quantities.some((count) => !Number.isInteger(count) || count < 1)
+  ) {
+    throw new InvalidArgumentError(
+      "Quantity must be a positive integer or a comma-separated list of them.",
+    )
+  }
+  return quantities
+}
+
+export const parseCamTimeoutMinutes = (text: string) => {
+  const minutes = Number(text)
+  if (!Number.isFinite(minutes) || minutes < 0) {
+    throw new InvalidArgumentError("CAM timeout must be a number of minutes.")
+  }
+  return minutes
+}
+
+/** Print a CircuitHub command's error and set a failing exit code. */
+export const reportCircuithubError = (error: unknown) => {
+  // A saved session CircuitHub rejects is useless; forget it so
+  // `tsci add-provider circuithub` logs in again.
+  if (
+    error instanceof CircuithubApiError &&
+    error.status === 401 &&
+    getCircuithubToken()?.source === "login"
+  ) {
+    clearCircuithubToken()
+  }
+  console.error(
+    kleur.red(error instanceof Error ? error.message : String(error)),
+  )
+  process.exitCode = 1
+}
