@@ -234,7 +234,16 @@ export const exportSnippet = async ({
 
     if (!circuitData) return onExit(1)
     circuitJson = circuitData.circuitJson
-    if (isSrjExport) srjSourceBoard = circuitData.rootCircuit?._getBoard()
+    if (
+      isSrjExport &&
+      !circuitJson.some(
+        (element) =>
+          element.type === "pcb_board" &&
+          element.default_nominal_trace_width !== undefined,
+      )
+    ) {
+      srjSourceBoard = circuitData.rootCircuit?._getBoard()
+    }
   }
 
   let outputContent: string | Buffer
@@ -360,7 +369,7 @@ export const exportSnippet = async ({
         const simpleRouteJson = unwrapSimpleRouteJson(
           userLandTscircuit.getSimpleRouteJsonFromCircuitJson({
             circuitJson,
-            // Read the preferred width from the live board for older core versions.
+            // Fall back to the live board for older Core versions and nominalTraceWidth.
             nominalTraceWidth:
               srjSourceBoard?.getInheritedProperty("defaultTraceWidth") ??
               srjSourceBoard?.getInheritedProperty("nominalTraceWidth"),
