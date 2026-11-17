@@ -29,6 +29,7 @@ import {
 } from "circuit-to-svg"
 import { convertCircuitJsonToDsnString } from "dsn-converter"
 import JSZip from "jszip"
+import type { RootCircuit } from "tscircuit"
 import type { PcbSnapshotSettings } from "lib/project-config/project-config-schema"
 import { generateCircuitJson } from "lib/shared/generate-circuit-json"
 import { getCircuitJsonToGltfOptions } from "lib/shared/get-circuit-json-to-gltf-options"
@@ -182,6 +183,7 @@ export const exportSnippet = async ({
   }
 
   let circuitJson: AnyCircuitElement[]
+  let srjSourceBoard: ReturnType<RootCircuit["_getBoard"]>
 
   if (isCircuitJsonFile(filePath)) {
     const rawCircuitJson = await fs.promises
@@ -206,6 +208,7 @@ export const exportSnippet = async ({
     }
   } else {
     const isJlcpcbFabricationExport = format === "gerbers"
+    const isSrjExport = format === "srj"
     const fabricationPlatformConfig = isJlcpcbFabricationExport
       ? getPlatformConfigWithCliDefaults(
           mergePlatformConfigs(platformConfig, {
@@ -213,13 +216,17 @@ export const exportSnippet = async ({
           }),
         )
       : platformConfig
-    const generateCircuitData = isJlcpcbFabricationExport
-      ? generateCircuitJson
-      : getOrGenerateCircuitJson
+    // A cached full build may already have routed the connections SRJ needs.
+    const generateCircuitData =
+      isJlcpcbFabricationExport || isSrjExport
+        ? generateCircuitJson
+        : getOrGenerateCircuitJson
     const circuitData = await generateCircuitData({
       filePath,
       saveToFile: format === "circuit-json",
-      platformConfig: fabricationPlatformConfig,
+      platformConfig: isSrjExport
+        ? { ...platformConfig, routingDisabled: true }
+        : fabricationPlatformConfig,
     }).catch((err) => {
       onError(`Error generating circuit JSON: ${err}`)
       return null
@@ -227,6 +234,16 @@ export const exportSnippet = async ({
 
     if (!circuitData) return onExit(1)
     circuitJson = circuitData.circuitJson
+    if (
+      isSrjExport &&
+      !circuitJson.some(
+        (element) =>
+          element.type === "pcb_board" &&
+          element.default_nominal_trace_width !== undefined,
+      )
+    ) {
+      srjSourceBoard = circuitData.rootCircuit?._getBoard()
+    }
   }
 
   let outputContent: string | Buffer
@@ -352,6 +369,10 @@ export const exportSnippet = async ({
         const simpleRouteJson = unwrapSimpleRouteJson(
           userLandTscircuit.getSimpleRouteJsonFromCircuitJson({
             circuitJson,
+            // Fall back to the live board for older Core versions and nominalTraceWidth.
+            nominalTraceWidth:
+              srjSourceBoard?.getInheritedProperty("defaultTraceWidth") ??
+              srjSourceBoard?.getInheritedProperty("nominalTraceWidth"),
           }),
         )
         outputContent = JSON.stringify(simpleRouteJson, null, 2)
