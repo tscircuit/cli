@@ -74,7 +74,7 @@
         "proper-lockfile": "^4.1.2",
         "redaxios": "^0.5.1",
         "semver": "^7.6.3",
-        "simulate-return-current": "https://pkg.pr.new/tscircuit/simulate-return-current@6a7c84cb4f9f66c2cb54199aee50d3c7453748e8",
+        "simulate-return-current": "https://pkg.pr.new/tscircuit/simulate-return-current@a3736c708149885c12f17a072b8a60ea4a7cd2b2",
         "stepts": "^0.0.3",
         "tempy": "^3.1.0",
         "tscircuit": "0.0.3209-libonly",
@@ -1182,7 +1182,7 @@
 
     "simple-swizzle": ["simple-swizzle@0.2.4", "", { "dependencies": { "is-arrayish": "^0.3.1" } }, "sha512-nAu1WFPQSMNr2Zn9PGSZK9AGn4t/y97lEm+MXTtUDwfP0ksAIX4nO+6ruD9Jwut4C49SB1Ws+fbXsm/yScWOHw=="],
 
-    "simulate-return-current": ["simulate-return-current@https://pkg.pr.new/tscircuit/simulate-return-current@6a7c84cb4f9f66c2cb54199aee50d3c7453748e8", { "dependencies": { "@resvg/resvg-js": "2.6.2", "@tscircuit/solver-utils": "0.0.21", "circuit-json": "0.0.522", "graphics-debug": "0.0.76", "transformation-matrix": "2.16.1", "zod": "3.25.76" }, "bin": { "simulate-return-current": "dist/cli.js" } }, "sha512-MZuv1jLMAUsMuLAu1yXVEiEmTPLIZqPErBPVWKH/kzUmNShyKlyVQtAYNvGvkxfuVc9oUNwzjfnhoajDnXs+/w=="],
+    "simulate-return-current": ["simulate-return-current@https://pkg.pr.new/tscircuit/simulate-return-current@a3736c708149885c12f17a072b8a60ea4a7cd2b2", { "dependencies": { "@resvg/resvg-js": "2.6.2", "@tscircuit/solver-utils": "0.0.21", "circuit-json": "0.0.522", "graphics-debug": "0.0.76", "transformation-matrix": "2.16.1", "zod": "3.25.76" }, "bin": { "simulate-return-current": "dist/cli.js" } }, "sha512-JnvZPi29VbWPnRckBc92LnUch7SXGWGm4JdUA8nUhGlJwTAMA5/WK1CXSEiZHRtEtib2+bIuvG+5E5+eBTd3Eg=="],
 
     "sisteransi": ["sisteransi@1.0.5", "", {}, "sha512-bLGGlR1QxBcynn2d5YmDX4MGjlZvy2MRBDRNHLJ8VI6l6+9FUiyTFNJ0IveOSP0bcXgVDPRcfGqA0pjaqUpfVg=="],
 
