@@ -82,7 +82,7 @@ test(
     expect(created.stdout.trim()).toMatchInlineSnapshot(`
       "CircuitHub quote: project 9001, revision 77 (workspace acme)
 
-        Parts   1 of 2 matched by CircuitHub (1 do-not-place skipped); not matched: C1
+        Parts   1 of 2 matched by CircuitHub (1 do-not-place skipped)
         Board   20.1 × 20.1 mm, 2 layers, PRELIMINARY: CircuitHub is still measuring it
         Prices  exclude shipping and tax; valid until 2026-11-14 13:00 UTC
 
@@ -91,7 +91,7 @@ test(
         ────────  ───────  ─────────  ────────  ───────  ─────────
         flexible  CN       Nov 25–27         -  $103.00     $20.60
         priority  US       Nov 18            -  $153.00     $30.60
-        Blocked: part not chosen (C1); choose it on the order page
+        Blocked: 1 part not chosen; choose it on the order page
         Order (cheapest): https://app.circuithub.example/order?quantity=5&offer=2
 
       10 boards
@@ -99,7 +99,7 @@ test(
         ────────  ───────  ─────────  ────────  ───────  ─────────
         flexible  CN       Nov 25–27         -  $103.00     $10.30
         priority  US       Nov 18            -  $163.00     $16.30
-        Blocked: part not chosen (C1); choose it on the order page
+        Blocked: 1 part not chosen; choose it on the order page
         Order (cheapest): https://app.circuithub.example/order?quantity=10&offer=2
 
       PRELIMINARY: CircuitHub is still measuring the board (usually ~1.5 min after upload), so these prices may be wrong and miss Grid Proto.
@@ -124,7 +124,7 @@ test(
     expect(refreshed.stdout.trim()).toMatchInlineSnapshot(`
       "CircuitHub quote: project 9001, revision 77
 
-        Parts   1 of 2 matched by CircuitHub (1 do-not-place skipped); not matched: C1
+        Parts   1 of 2 matched by CircuitHub (1 do-not-place skipped)
         Board   20 × 20 mm, 2 layers, trace 0.15 mm, gap 0.15 mm, drill 0.3 mm
         Prices  exclude shipping and tax; valid until 2026-11-14 13:00 UTC
         Discount is CircuitHub's Grid Proto price
@@ -134,7 +134,7 @@ test(
         ────────  ───────  ─────────  ────────  ───────  ─────────
         flexible  CN       Nov 25–27         -  $103.00     $20.60
         priority  US       Nov 18      -$30.00  $123.00     $24.60
-        Blocked: part not chosen (C1); choose it on the order page
+        Blocked: 1 part not chosen; choose it on the order page
         Order (cheapest): https://app.circuithub.example/order?quantity=5&offer=2
 
       10 boards
@@ -142,7 +142,7 @@ test(
         ────────  ───────  ─────────  ────────  ───────  ─────────
         flexible  CN       Nov 25–27         -  $103.00     $10.30
         priority  US       Nov 18      -$30.00  $133.00     $13.30
-        Blocked: part not chosen (C1); choose it on the order page
+        Blocked: 1 part not chosen; choose it on the order page
         Order (cheapest): https://app.circuithub.example/order?quantity=10&offer=2"
     `)
   },

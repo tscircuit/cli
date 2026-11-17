@@ -1,8 +1,7 @@
-import {
-  type CircuithubBomLine,
-  type CircuithubOffer,
-  type CircuithubQuote,
-  getBomLineRefs,
+import type {
+  CircuithubBomLine,
+  CircuithubOffer,
+  CircuithubQuote,
 } from "./circuithub-api"
 import type { CircuithubQuoteResult } from "./create-circuithub-quote"
 
@@ -119,20 +118,15 @@ export const formatCircuithubQuoteResult = (result: CircuithubQuoteResult) => {
     )
   }
 
-  const bomRefsById = new Map<number, string[]>()
+  // Counts only: listing every part would bury the prices on a big board.
   if (result.circuithubBom) {
     const bomLines = result.circuithubBom.bomLines
-    for (const line of bomLines) bomRefsById.set(line.id, getBomLineRefs(line))
     const fitted = bomLines.filter((line) => !isNotFitted(line))
-    const unmatched = fitted.filter((line) => line.status !== "resolved")
+    const matched = fitted.filter((line) => line.status === "resolved").length
     const notFittedCount = bomLines.length - fitted.length
     lines.push(
-      `  Parts   ${fitted.length - unmatched.length} of ${fitted.length} matched by CircuitHub${
+      `  Parts   ${matched} of ${fitted.length} matched by CircuitHub${
         notFittedCount > 0 ? ` (${notFittedCount} do-not-place skipped)` : ""
-      }${
-        unmatched.length > 0
-          ? `; not matched: ${unmatched.map((line) => getBomLineRefs(line).join(",")).join(", ")}`
-          : ""
       }`,
     )
   }
@@ -188,11 +182,11 @@ export const formatCircuithubQuoteResult = (result: CircuithubQuoteResult) => {
         ),
       )
       for (const blocker of quote.blockers ?? []) {
-        const refs = (blocker.bomLineIds ?? []).flatMap(
-          (id) => bomRefsById.get(id) ?? [`BOM line ${id}`],
-        )
+        const count = blocker.bomLineIds?.length ?? 0
         lines.push(
-          `  Blocked: ${blocker.code.replaceAll("_", " ")}${refs.length > 0 ? ` (${refs.join(", ")})` : ""}; choose it on the order page`,
+          blocker.code === "part_not_chosen" && count > 0
+            ? `  Blocked: ${count} part${count === 1 ? "" : "s"} not chosen; choose ${count === 1 ? "it" : "them"} on the order page`
+            : `  Blocked: ${blocker.code.replaceAll("_", " ")}; see the order page`,
         )
       }
       if (!preliminary) {
