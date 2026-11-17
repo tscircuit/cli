@@ -35,20 +35,6 @@ export interface CircuithubBoard {
   [key: string]: unknown
 }
 
-export interface CircuithubPart {
-  id: number
-  mpn: string
-  manufacturer: string
-  description?: string | null
-  available?: number | null
-  moq?: number | null
-}
-
-export interface CircuithubPartSearch {
-  exactMatches: CircuithubPart[]
-  inexactMatches: CircuithubPart[]
-}
-
 export interface CircuithubBomLine {
   id: number
   /** "resolved", "unresolved", "errored", or "not_fitted" (do-not-place). */
@@ -232,12 +218,6 @@ export const createCircuithubApi = ({
 
     getBom: (projectId: number) =>
       call<CircuithubBom>("GET", `/projects/${projectId}/bom`),
-
-    searchParts: (query: string) =>
-      call<CircuithubPartSearch>(
-        "GET",
-        `/parts?${new URLSearchParams({ q: query })}`,
-      ),
 
     createQuote: (revisionId: number, quantity: number) =>
       call<CircuithubQuote>("POST", "/quotes", { revisionId, quantity }),

@@ -49,8 +49,7 @@ test(
     )
     expect(stdout).not.toContain("test-circuithub-token")
 
-    // The whole KiCad project goes up, plus a BOM whose manufacturer is the
-    // stocked listing from CircuitHub's part search.
+    // The whole KiCad project goes up, with the BOM tsci always exports.
     expect([...circuithub.uploads.keys()].sort()).toEqual([
       "board.kicad_pcb",
       "board.kicad_pro",
@@ -58,10 +57,10 @@ test(
       "bom.csv",
     ])
     expect(circuithub.uploads.get("bom.csv")).toMatchInlineSnapshot(`
-      "Reference Designators,Manufacturer,Manufacturer Part Number,Supplier,Supplier Part Number,Value
-      "R1,R2",YAGEO,RC0402FR-071KL,Digi-Key,311-1.00KLRCT-ND,1k
-      C1,,,,,100nF
-      "
+      ""Designator","Comment","Value","Footprint"
+      "R1","RC0402FR-071KL","1k","res0402"
+      "R2","RC0402FR-071KL","1k","res0402"
+      "C1","100n","100n","cap0402_nonpolarized""
     `)
     expect(
       circuithub.requests.find((request) => request.path === "/v1/projects")
@@ -82,9 +81,7 @@ test(
     })
     // Quoting waits for the CAM report (ready on the second board read).
     expect(
-      circuithub.requests
-        .map((request) => `${request.method} ${request.path}`)
-        .filter((route) => !route.includes("/parts")),
+      circuithub.requests.map((request) => `${request.method} ${request.path}`),
     ).toEqual([
       "POST /v1/projects/upload-urls",
       "POST /v1/projects",
@@ -97,7 +94,6 @@ test(
     ])
     expect(stdout.trim()).toMatchInlineSnapshot(`
       "CircuitHub project 9001, revision 77 (workspace acme)
-      No manufacturer part number in the design: C1
       BOM: 1/2 lines matched to a part by CircuitHub (1 do-not-place line skipped); unmatched: C1
       Board as measured by CircuitHub: 20 x 20 mm, 2 layers, min trace 0.15mm, min gap 0.15mm, min drill 0.3mm
 

@@ -56,32 +56,6 @@ export const startFakeCircuithubServer = async ({
             })),
           })
         }
-        case "GET /v1/parts": {
-          const query = url.searchParams.get("q")
-          if (query === "RC0402FR-071KL") {
-            return json({
-              query,
-              exactMatches: [
-                {
-                  id: 1,
-                  mpn: "RC0402FR-071KL",
-                  manufacturer: "Yageo Corp",
-                  available: 0,
-                  moq: null,
-                },
-                {
-                  id: 2,
-                  mpn: "RC0402FR-071KL",
-                  manufacturer: "YAGEO",
-                  available: 250000,
-                  moq: 1,
-                },
-              ],
-              inexactMatches: [],
-            })
-          }
-          return json({ query, exactMatches: [], inexactMatches: [] })
-        }
         case "POST /v1/projects":
           return json({
             projectId: 9001,

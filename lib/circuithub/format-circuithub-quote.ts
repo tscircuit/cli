@@ -165,20 +165,9 @@ const isNotFitted = (line: CircuithubBomLine) =>
 
 export const formatCircuithubQuoteResult = (result: CircuithubQuoteResult) => {
   const lines: string[] = []
-  const { bom } = result
   if (result.projectId !== undefined) {
     lines.push(
       `CircuitHub project ${result.projectId}, revision ${result.revisionId}${result.workspace ? ` (workspace ${result.workspace})` : ""}`,
-    )
-  }
-  if (bom.missingMpns.length > 0) {
-    lines.push(
-      `No manufacturer part number in the design: ${bom.missingMpns.join(", ")}`,
-    )
-  }
-  if (bom.unknownMpns.length > 0) {
-    lines.push(
-      `Not found in CircuitHub's catalog: ${bom.unknownMpns.join(", ")}`,
     )
   }
 
@@ -226,20 +215,4 @@ export const formatCircuithubQuoteResult = (result: CircuithubQuoteResult) => {
     lines.push("", ...formatQuote(quote, bomRefsById))
   }
   return lines.join("\n")
-}
-
-export const formatCircuithubBomTable = (result: CircuithubQuoteResult) => {
-  const rows = [
-    ["Refs", "Manufacturer", "MPN", "Supplier PN", "Value"],
-    ...result.bom.rows.map((row) => [
-      row.referenceDesignators.join(","),
-      row.manufacturer || "-",
-      row.mpn || "-",
-      row.supplierPartNumber
-        ? `${row.supplier} ${row.supplierPartNumber}`
-        : "-",
-      row.value || "-",
-    ]),
-  ]
-  return formatTable(rows, new Set()).join("\n")
 }

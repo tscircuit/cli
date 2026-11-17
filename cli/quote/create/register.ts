@@ -14,10 +14,7 @@ import {
   validateCircuithubQuoteOptions,
 } from "lib/circuithub/create-circuithub-quote"
 import { hasCircuithubSession } from "lib/circuithub/circuithub-provider"
-import {
-  formatCircuithubBomTable,
-  formatCircuithubQuoteResult,
-} from "lib/circuithub/format-circuithub-quote"
+import { formatCircuithubQuoteResult } from "lib/circuithub/format-circuithub-quote"
 import { getEntrypoint } from "lib/shared/get-entrypoint"
 import { getOrGenerateCircuitJson } from "lib/shared/get-or-generate-circuit-json"
 import { isCircuitJsonFile } from "lib/shared/is-circuit-json-file"
@@ -186,8 +183,6 @@ export const registerQuoteCreate = (program: Command) => {
           return
         }
         if (options.dryRun) {
-          console.log(formatCircuithubBomTable(result))
-          console.log()
           console.log(
             `Files for CircuitHub${result.outputDir ? ` in ${result.outputDir}` : ""}: ${result.files.map((f) => f.filename).join(", ")}`,
           )

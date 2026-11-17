@@ -14,11 +14,6 @@ import {
   isCircuithubTokenExpired,
 } from "./circuithub-config"
 import {
-  type CircuithubBomRow,
-  getCircuithubBomRows,
-  resolveCircuithubManufacturers,
-} from "./generate-circuithub-bom"
-import {
   type CircuithubProjectFile,
   generateCircuithubProjectFiles,
 } from "./generate-circuithub-project-files"
@@ -49,13 +44,6 @@ export interface CircuithubQuoteResult {
   workspace?: string
   files: { filename: string; size: number }[]
   outputDir?: string
-  bom: {
-    rows: CircuithubBomRow[]
-    /** MPNs CircuitHub's part search didn't find. */
-    unknownMpns: string[]
-    /** Parts with no MPN in the tscircuit design. */
-    missingMpns: string[]
-  }
   projectId?: number
   revisionId?: number
   camReady?: boolean
@@ -141,9 +129,8 @@ const getAuthenticatedApi = (fetchFn?: typeof fetch): CircuithubApi | null => {
 /**
  * Get CircuitHub quotes for a board:
  *
- * 1. Convert the circuit JSON to a KiCad project and a BOM CSV with
- *    Manufacturer + MPN + supplier part number per line (manufacturers come
- *    from CircuitHub's part search, so same-MPN listings resolve).
+ * 1. Export the KiCad project and the BOM CSV the way tsci always does.
+ *    CircuitHub matches the parts itself and reports what it can't.
  * 2. Upload the files and create a project, or a revision of `projectId`.
  * 3. Wait for the import, then for CircuitHub to measure the board (see
  *    `isBoardMeasured`). Quotes priced on the preliminary measurements are
@@ -163,26 +150,9 @@ export const createCircuithubQuote = async (
   }
   validateCircuithubQuoteOptions(options)
 
-  const bomRows = getCircuithubBomRows(options.circuitJson)
-  const missingMpns = bomRows
-    .filter((row) => !row.mpn)
-    .flatMap((row) => row.referenceDesignators)
-  let unknownMpns: string[] = []
-  if (api) {
-    const { unresolved } = await resolveCircuithubManufacturers(
-      bomRows,
-      api.searchParts,
-    )
-    unknownMpns = unresolved
-    log(
-      `Matched ${bomRows.filter((row) => row.manufacturer).length}/${bomRows.filter((row) => row.mpn).length} part numbers in CircuitHub's catalog`,
-    )
-  }
-
-  const files = generateCircuithubProjectFiles({
+  const files = await generateCircuithubProjectFiles({
     circuitJson: options.circuitJson,
     projectName: options.projectName,
-    bomRows,
   })
   const encoded = files.map((file: CircuithubProjectFile) => ({
     filename: file.filename,
@@ -206,7 +176,6 @@ export const createCircuithubQuote = async (
       size: file.content.byteLength,
     })),
     outputDir: options.outputDir,
-    bom: { rows: bomRows, unknownMpns, missingMpns },
     quotes: [],
   }
   if (options.dryRun || !api) return result
