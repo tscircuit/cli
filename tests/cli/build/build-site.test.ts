@@ -166,7 +166,7 @@ test("build with --site generates only 3D preview images for every circuit", asy
   const { stderr } = await runCommand("tsci build --site --use-cdn-javascript")
   expect(stderr).toBe("")
   const html = await readFile(path.join(tmpDir, "dist/index.html"), "utf8")
-  expect(html).toContain("@tscircuit/runframe@0.0.9999/dist/standalone.min.js")
+  expect(html).toContain("@tscircuit/runframe/0.0.9999/dist/standalone.min.js")
   expect(html).not.toContain("URL.createObjectURL")
   expect(html).toContain("./first/circuit.json")
   expect(html).toContain("./second/circuit.json")
