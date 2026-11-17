@@ -12,146 +12,76 @@ const money = (amount: number) =>
     maximumFractionDigits: 2,
   })}`
 
-const lineItem = (offer: CircuithubOffer, type: string) =>
-  offer.price.lineItems
-    .filter((item) => item.type === type)
-    .reduce((sum, item) => sum + Number(item.amount), 0)
-
 const discountTotal = (offer: CircuithubOffer) =>
   offer.price.discounts.reduce(
     (sum, discount) => sum + Number(discount.amount ?? 0),
     0,
   )
 
-const formatTable = (rows: string[][], rightAligned: Set<number>) => {
-  const widths = rows[0]!.map((_, column) =>
-    Math.max(...rows.map((row) => row[column]!.length)),
+const total = (offer: CircuithubOffer) => Number(offer.price.manufacturingTotal)
+
+const sortByTotal = (offers: CircuithubOffer[]) =>
+  [...offers].sort((a, b) => total(a) - total(b))
+
+const MONTHS = [
+  "Jan",
+  "Feb",
+  "Mar",
+  "Apr",
+  "May",
+  "Jun",
+  "Jul",
+  "Aug",
+  "Sep",
+  "Oct",
+  "Nov",
+  "Dec",
+]
+
+/** "2026-12-10".."2026-12-24" -> "Dec 10–24"; "2026-11-30" -> "Nov 30". */
+const formatShipDate = (offer: CircuithubOffer) => {
+  const { earliest, latest } = offer.shipDate ?? {}
+  if (!earliest) return "-"
+  const parse = (date: string) => {
+    const [, month, day] = date.split("-").map(Number)
+    return { month: MONTHS[(month ?? 1) - 1] ?? "", day: String(day) }
+  }
+  const start = parse(earliest)
+  if (!latest || latest === earliest) return `${start.month} ${start.day}`
+  const end = parse(latest)
+  return start.month === end.month
+    ? `${start.month} ${start.day}–${end.day}`
+    : `${start.month} ${start.day}–${end.month} ${end.day}`
+}
+
+/**
+ * Lay rows out as columns. A row of `null` is a separator line between
+ * quantities; columns in `rightAligned` (the prices) are right-aligned.
+ */
+const formatTable = (
+  header: string[],
+  rows: (string[] | null)[],
+  rightAligned: Set<number>,
+) => {
+  const cells = [header, ...rows.filter((row): row is string[] => !!row)]
+  const widths = header.map((_, column) =>
+    Math.max(...cells.map((row) => row[column]!.length)),
   )
-  return rows.map((row) =>
-    row
+  const formatRow = (row: string[]) =>
+    `  ${row
       .map((cell, column) =>
         rightAligned.has(column)
           ? cell.padStart(widths[column]!)
           : cell.padEnd(widths[column]!),
       )
       .join("  ")
-      .trimEnd(),
-  )
-}
-
-const formatShipDate = (offer: CircuithubOffer) => {
-  const { earliest, latest } = offer.shipDate ?? {}
-  if (!earliest) return "-"
-  return latest && latest !== earliest ? `${earliest}..${latest}` : earliest
-}
-
-const formatQuote = (
-  quote: CircuithubQuote,
-  bomRefsById: Map<number, string[]>,
-) => {
-  const lines: string[] = []
-  const expires = quote.expiresAt
-    ? `, expires ${quote.expiresAt.slice(0, 16).replace("T", " ")} UTC`
-    : ""
-  lines.push(
-    `${quote.quantity} board${quote.quantity === 1 ? "" : "s"} (quote ${quote.id}${expires})`,
-  )
-  const offers = [...quote.offers].sort(
-    (a, b) =>
-      Number(a.price.manufacturingTotal) - Number(b.price.manufacturingTotal),
-  )
-  if (offers.length === 0) {
-    lines.push("  No offers")
-  } else {
-    const otherTypes = new Set(
-      offers.flatMap((offer) =>
-        offer.price.lineItems
-          .map((item) => item.type)
-          .filter((type) => !["boards", "parts", "assembly"].includes(type)),
-      ),
-    )
-    const rows = [
-      [
-        "Service",
-        "Fab",
-        "Ships",
-        "Boards",
-        "Parts",
-        "Assembly",
-        ...(otherTypes.size > 0 ? ["Other"] : []),
-        "Discounts",
-        "Total",
-        "Per board",
-      ],
-      ...offers.map((offer) => {
-        const discounts = discountTotal(offer)
-        return [
-          offer.service,
-          offer.fabricationCountry ?? "-",
-          formatShipDate(offer),
-          money(lineItem(offer, "boards")),
-          money(lineItem(offer, "parts")),
-          money(lineItem(offer, "assembly")),
-          ...(otherTypes.size > 0
-            ? [
-                money(
-                  [...otherTypes].reduce(
-                    (sum, type) => sum + lineItem(offer, type),
-                    0,
-                  ),
-                ),
-              ]
-            : []),
-          discounts ? money(-discounts) : "-",
-          money(Number(offer.price.manufacturingTotal)),
-          offer.price.manufacturingUnitPrice
-            ? money(Number(offer.price.manufacturingUnitPrice))
-            : "-",
-        ]
-      }),
-    ]
-    const columnCount = rows[0]!.length
-    const rightAligned = new Set(
-      Array.from({ length: columnCount - 3 }, (_, index) => index + 3),
-    )
-    lines.push(...formatTable(rows, rightAligned).map((row) => `  ${row}`))
-    const discountLabels = [
-      ...new Set(
-        offers.flatMap((offer) =>
-          offer.price.discounts.map((discount) =>
-            String(discount.label ?? discount.type),
-          ),
-        ),
-      ),
-    ]
-    if (discountLabels.length > 0) {
-      lines.push(`  Discounts applied: ${discountLabels.join(", ")}`)
-    }
-    const excludes = offers[0]!.price.excludes
-    if (Array.isArray(excludes) && excludes.length > 0) {
-      lines.push(`  Prices exclude ${excludes.join(" and ")}`)
-    }
-  }
-  for (const blocker of quote.blockers ?? []) {
-    const refs = (blocker.bomLineIds ?? []).flatMap(
-      (id) => bomRefsById.get(id) ?? [`BOM line ${id}`],
-    )
-    lines.push(
-      `  Blocker: ${blocker.code}${refs.length > 0 ? ` (${refs.join(", ")})` : ""}`,
-    )
-  }
-  for (const feedback of quote.designFeedback ?? []) {
-    lines.push(
-      `  Design feedback (${feedback.type}): ${feedback.summary ?? ""}`,
-    )
-    for (const reason of feedback.reasons ?? []) {
-      lines.push(`    - ${reason}`)
-    }
-  }
-  if (offers[0]?.checkoutUrl) {
-    lines.push(`  Review and order (cheapest offer): ${offers[0].checkoutUrl}`)
-  }
-  return lines
+      .trimEnd()}`
+  const rule = `  ${widths.map((width) => "─".repeat(width)).join("  ")}`
+  return [
+    formatRow(header),
+    rule,
+    ...rows.map((row) => (row ? formatRow(row) : rule)),
+  ]
 }
 
 /**
@@ -163,11 +93,29 @@ const isNotFitted = (line: CircuithubBomLine) =>
   ((line.placements?.length ?? 0) > 0 &&
     line.placements!.every((placement) => placement.dnp))
 
+const formatQuoteRows = (quote: CircuithubQuote): string[][] =>
+  sortByTotal(quote.offers).map((offer) => {
+    const discount = discountTotal(offer)
+    return [
+      offer.service,
+      offer.fabricationCountry ?? "-",
+      formatShipDate(offer),
+      discount ? money(-discount) : "-",
+      money(total(offer)),
+      offer.price.manufacturingUnitPrice
+        ? money(Number(offer.price.manufacturingUnitPrice))
+        : "-",
+    ]
+  })
+
 export const formatCircuithubQuoteResult = (result: CircuithubQuoteResult) => {
   const lines: string[] = []
+  const preliminary = !result.camReady && result.quotes.length > 0
+
   if (result.projectId !== undefined) {
     lines.push(
-      `CircuitHub project ${result.projectId}, revision ${result.revisionId}${result.workspace ? ` (workspace ${result.workspace})` : ""}`,
+      `CircuitHub quote: project ${result.projectId}, revision ${result.revisionId}${result.workspace ? ` (workspace ${result.workspace})` : ""}`,
+      "",
     )
   }
 
@@ -175,18 +123,15 @@ export const formatCircuithubQuoteResult = (result: CircuithubQuoteResult) => {
   if (result.circuithubBom) {
     const bomLines = result.circuithubBom.bomLines
     for (const line of bomLines) bomRefsById.set(line.id, getBomLineRefs(line))
-    // Do-not-place lines (holes, bare test pads) need no part.
     const fitted = bomLines.filter((line) => !isNotFitted(line))
     const unmatched = fitted.filter((line) => line.status !== "resolved")
     const notFittedCount = bomLines.length - fitted.length
     lines.push(
-      `BOM: ${fitted.length - unmatched.length}/${fitted.length} lines matched to a part by CircuitHub${
-        notFittedCount > 0
-          ? ` (${notFittedCount} do-not-place line${notFittedCount === 1 ? "" : "s"} skipped)`
-          : ""
+      `  Parts   ${fitted.length - unmatched.length} of ${fitted.length} matched by CircuitHub${
+        notFittedCount > 0 ? ` (${notFittedCount} do-not-place skipped)` : ""
       }${
         unmatched.length > 0
-          ? `; unmatched: ${unmatched.map((line) => getBomLineRefs(line).join(",")).join("; ")}`
+          ? `; not matched: ${unmatched.map((line) => getBomLineRefs(line).join(",")).join(", ")}`
           : ""
       }`,
     )
@@ -194,27 +139,77 @@ export const formatCircuithubQuoteResult = (result: CircuithubQuoteResult) => {
 
   const spec = result.board?.spec as Record<string, any> | undefined
   if (spec) {
-    const parts = [
+    const size =
       spec.widthMM && spec.lengthMM
-        ? `${spec.widthMM} x ${spec.lengthMM} mm`
-        : null,
-      spec.numLayers ? `${spec.numLayers} layers` : null,
-      spec.minTraceWidthMM ? `min trace ${spec.minTraceWidthMM}mm` : null,
-      spec.minPitchMM ? `min gap ${spec.minPitchMM}mm` : null,
-      spec.minHoleSizeMM ? `min drill ${spec.minHoleSizeMM}mm` : null,
-    ].filter(Boolean)
+        ? `${spec.widthMM} × ${spec.lengthMM} mm`
+        : null
+    const measurements = preliminary
+      ? ["PRELIMINARY: CircuitHub is still measuring it"]
+      : [
+          spec.minTraceWidthMM ? `trace ${spec.minTraceWidthMM} mm` : null,
+          spec.minPitchMM ? `gap ${spec.minPitchMM} mm` : null,
+          spec.minHoleSizeMM ? `drill ${spec.minHoleSizeMM} mm` : null,
+        ]
     lines.push(
-      `Board as measured by CircuitHub${result.camReady ? "" : " (preliminary)"}: ${parts.join(", ")}`,
+      `  Board   ${[size, spec.numLayers ? `${spec.numLayers} layers` : null, ...measurements].filter(Boolean).join(", ")}`,
     )
   }
-  for (const message of result.board?.messages ?? []) {
-    lines.push(`  ${message.level}: ${message.message}`)
+  // Before the board is measured, CircuitHub's messages describe its
+  // placeholder values (gap 0, no drill), not the design.
+  if (!preliminary) {
+    for (const message of result.board?.messages ?? []) {
+      lines.push(`          ${message.level}: ${message.message}`)
+    }
   }
 
-  for (const quote of result.quotes) {
-    lines.push("", ...formatQuote(quote, bomRefsById))
+  if (result.quotes.length > 0) {
+    const expires = result.quotes[0]!.expiresAt
+    lines.push(
+      `  Prices  exclude shipping and tax${expires ? `; valid until ${expires.slice(0, 16).replace("T", " ")} UTC` : ""}`,
+    )
+    const hasGridProto = result.quotes.some((quote) =>
+      quote.offers.some((offer) =>
+        offer.price.discounts.some(
+          (discount) => discount.type === "grid_proto",
+        ),
+      ),
+    )
+    if (hasGridProto) lines.push("  Discount is CircuitHub's Grid Proto price")
+
+    // One table per quantity, with that quantity's notes and order link.
+    for (const quote of result.quotes) {
+      lines.push(
+        "",
+        `${quote.quantity} board${quote.quantity === 1 ? "" : "s"}`,
+        ...formatTable(
+          ["Service", "Made in", "Ships", "Discount", "Total", "Per board"],
+          formatQuoteRows(quote),
+          new Set([3, 4, 5]),
+        ),
+      )
+      for (const blocker of quote.blockers ?? []) {
+        const refs = (blocker.bomLineIds ?? []).flatMap(
+          (id) => bomRefsById.get(id) ?? [`BOM line ${id}`],
+        )
+        lines.push(
+          `  Blocked: ${blocker.code.replaceAll("_", " ")}${refs.length > 0 ? ` (${refs.join(", ")})` : ""}; choose it on the order page`,
+        )
+      }
+      if (!preliminary) {
+        for (const feedback of quote.designFeedback ?? []) {
+          if (feedback.type !== "grid_proto") continue
+          const reason = feedback.reasons?.[0]?.split(/(?<=\.) /)[0]
+          lines.push(`  No Grid Proto discount${reason ? `: ${reason}` : ""}`)
+        }
+      }
+      const cheapest = sortByTotal(quote.offers)[0]
+      if (cheapest?.checkoutUrl) {
+        lines.push(`  Order (cheapest): ${cheapest.checkoutUrl}`)
+      }
+    }
   }
-  if (!result.camReady && result.quotes.length > 0) {
+
+  if (preliminary) {
     lines.push(
       "",
       "PRELIMINARY: CircuitHub is still measuring the board (usually ~1.5 min after upload), so these prices may be wrong and miss Grid Proto.",
