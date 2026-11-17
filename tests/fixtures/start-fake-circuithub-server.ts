@@ -137,6 +137,9 @@ export const startFakeCircuithubServer = async ({
         case "POST /v1/quotes": {
           const { revisionId, quantity } = JSON.parse(text)
           const boards = 40 + quantity * 2
+          // Like CircuitHub: before the board is measured (trace gap 0),
+          // Grid Proto is refused and the quote says why.
+          const measured = boardReads >= 2
           return json({
             id: 3000 + quantity,
             status: "ready",
@@ -148,7 +151,17 @@ export const startFakeCircuithubServer = async ({
             projectId: 9001,
             revisionId,
             blockers: [{ code: "part_not_chosen", bomLineIds: [502] }],
-            designFeedback: [],
+            designFeedback: measured
+              ? []
+              : [
+                  {
+                    type: "grid_proto",
+                    summary: "This design doesn't qualify for Grid Proto.",
+                    reasons: [
+                      "Minimum trace gap cannot be less than 0.127mm; this board's minimum trace gap is 0mm.",
+                    ],
+                  },
+                ],
             offers: [
               {
                 id: 1,
@@ -167,17 +180,24 @@ export const startFakeCircuithubServer = async ({
                     { type: "parts", label: "Parts", amount: "3.00" },
                     { type: "assembly", label: "Assembly", amount: "100.00" },
                   ],
-                  discounts: [
-                    {
-                      type: "grid_proto",
-                      label: "Grid Proto",
-                      amount: "30.00",
-                    },
-                  ],
+                  discounts: measured
+                    ? [
+                        {
+                          type: "grid_proto",
+                          label: "Grid Proto",
+                          amount: "30.00",
+                        },
+                      ]
+                    : [],
                   excludes: ["shipping", "tax"],
                   manufacturingSubtotal: (boards + 103).toFixed(2),
-                  manufacturingTotal: (boards + 73).toFixed(2),
-                  manufacturingUnitPrice: ((boards + 73) / quantity).toFixed(2),
+                  manufacturingTotal: (boards + (measured ? 73 : 103)).toFixed(
+                    2,
+                  ),
+                  manufacturingUnitPrice: (
+                    (boards + (measured ? 73 : 103)) /
+                    quantity
+                  ).toFixed(2),
                 },
               },
               {

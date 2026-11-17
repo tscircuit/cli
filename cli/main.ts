@@ -40,6 +40,7 @@ import { registerInstall } from "./install/register"
 import { registerPush } from "./push/register"
 import { registerQuoteCreate } from "./quote/create/register"
 import { registerQuoteEstimate } from "./quote/estimate/register"
+import { registerQuoteRefresh } from "./quote/refresh/register"
 import { registerQuote } from "./quote/register"
 import { registerReportAutorouter } from "./report/autorouter/register"
 import { registerReport } from "./report/register"
@@ -111,6 +112,7 @@ registerCheckTraceLength(program)
 registerQuote(program)
 registerQuoteEstimate(program)
 registerQuoteCreate(program)
+registerQuoteRefresh(program)
 
 registerRegistry(program)
 registerRegistryPackages(program)

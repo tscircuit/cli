@@ -1,9 +1,5 @@
 import type { AnyCircuitElement } from "circuit-json"
 import {
-  convertBomRowsToCsv,
-  convertCircuitJsonToBomRows,
-} from "circuit-json-to-bom-csv"
-import {
   CircuitJsonToKicadPcbConverter,
   CircuitJsonToKicadProConverter,
   CircuitJsonToKicadSchConverter,
@@ -15,19 +11,20 @@ export interface CircuithubProjectFile {
 }
 
 /**
- * The files uploaded to CircuitHub: the KiCad project tsci exports and the
- * BOM CSV `tsci export -f gerbers` writes (parts marked do-not-place are
- * left out). CircuitHub needs the whole project, not just the board: with
- * only a `.kicad_pcb` and a BOM, creating a project or revision fails
- * (HTTP 500). 3D models aren't uploaded.
+ * The KiCad project uploaded to CircuitHub, which reads part numbers from
+ * the design files. No BOM CSV: CircuitHub can't read tsci's BOM (no column
+ * it recognises as the MPN), and uploads that included one were never
+ * measured, which leaves quotes on preliminary values. CircuitHub needs the
+ * whole project, not just the board: with only a `.kicad_pcb`, creating a
+ * project or revision fails (HTTP 500). 3D models aren't uploaded.
  */
-export const generateCircuithubProjectFiles = async ({
+export const generateCircuithubProjectFiles = ({
   circuitJson,
   projectName,
 }: {
   circuitJson: unknown[]
   projectName: string
-}): Promise<CircuithubProjectFile[]> => {
+}): CircuithubProjectFile[] => {
   const elements = circuitJson as AnyCircuitElement[]
   const schematicFilename = `${projectName}.kicad_sch`
   const pcbFilename = `${projectName}.kicad_pcb`
@@ -45,10 +42,6 @@ export const generateCircuithubProjectFiles = async ({
   })
   proConverter.runUntilFinished()
 
-  const bomCsv = await convertBomRowsToCsv(
-    await convertCircuitJsonToBomRows({ circuitJson: elements }),
-  )
-
   return [
     ...schConverter.getOutputFiles({ schematicFilename }),
     { filename: pcbFilename, content: pcbConverter.getOutputString() },
@@ -56,6 +49,5 @@ export const generateCircuithubProjectFiles = async ({
       filename: `${projectName}.kicad_pro`,
       content: proConverter.getOutputString(),
     },
-    { filename: "bom.csv", content: bomCsv },
   ]
 }

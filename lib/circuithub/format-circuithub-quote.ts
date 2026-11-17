@@ -204,7 +204,7 @@ export const formatCircuithubQuoteResult = (result: CircuithubQuoteResult) => {
       spec.minHoleSizeMM ? `min drill ${spec.minHoleSizeMM}mm` : null,
     ].filter(Boolean)
     lines.push(
-      `Board as measured by CircuitHub${result.camReady ? "" : " (PRELIMINARY: CircuitHub hasn't finished measuring the board, so these prices may be wrong and miss Grid Proto)"}: ${parts.join(", ")}`,
+      `Board as measured by CircuitHub${result.camReady ? "" : " (preliminary)"}: ${parts.join(", ")}`,
     )
   }
   for (const message of result.board?.messages ?? []) {
@@ -213,6 +213,13 @@ export const formatCircuithubQuoteResult = (result: CircuithubQuoteResult) => {
 
   for (const quote of result.quotes) {
     lines.push("", ...formatQuote(quote, bomRefsById))
+  }
+  if (!result.camReady && result.quotes.length > 0) {
+    lines.push(
+      "",
+      "PRELIMINARY: CircuitHub is still measuring the board (usually ~1.5 min after upload), so these prices may be wrong and miss Grid Proto.",
+      `For final prices run: tsci quote refresh --circuithub ${result.revisionId ?? ""}`.trimEnd(),
+    )
   }
   return lines.join("\n")
 }

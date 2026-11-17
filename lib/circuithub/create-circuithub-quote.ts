@@ -11,7 +11,9 @@ import {
   decodeCircuithubToken,
   getCircuithubApiUrl,
   getCircuithubToken,
+  getLastCircuithubRevision,
   isCircuithubTokenExpired,
+  saveLastCircuithubRevision,
 } from "./circuithub-config"
 import {
   type CircuithubProjectFile,
@@ -31,7 +33,12 @@ export interface CreateCircuithubQuoteOptions {
   outputDir?: string
   /** Generate the files but upload nothing and request no quote. */
   dryRun?: boolean
-  /** How long to wait for CircuitHub's CAM analysis before quoting. */
+  /**
+   * Wait for CircuitHub to measure the board before quoting (about 1.5
+   * minutes), instead of quoting right after the import.
+   */
+  wait?: boolean
+  /** With `wait`, the longest to wait for the measurement. */
   camTimeoutMs?: number
   importTimeoutMs?: number
   pollIntervalMs?: number
@@ -46,6 +53,7 @@ export interface CircuithubQuoteResult {
   outputDir?: string
   projectId?: number
   revisionId?: number
+  /** Whether CircuitHub had measured the board when it quoted. */
   camReady?: boolean
   board?: CircuithubBoard
   circuithubBom?: CircuithubBom
@@ -126,15 +134,75 @@ const getAuthenticatedApi = (fetchFn?: typeof fetch): CircuithubApi | null => {
   })
 }
 
+const requireAuthenticatedApi = (fetchFn?: typeof fetch): CircuithubApi => {
+  const api = getAuthenticatedApi(fetchFn)
+  if (!api) {
+    throw new Error(
+      "Not logged in to CircuitHub (or the session expired). Run `tsci add-provider circuithub`, or set CIRCUITHUB_TOKEN.",
+    )
+  }
+  return api
+}
+
+/**
+ * Quote an uploaded revision: read the board (or, with `wait`, poll until
+ * CircuitHub has measured it), request a quote per quantity, and read
+ * CircuitHub's BOM for the project.
+ */
+const quoteRevision = async ({
+  api,
+  revisionId,
+  quantities,
+  wait,
+  camTimeoutMs = 15 * 60_000,
+  pollIntervalMs,
+  log,
+}: {
+  api: CircuithubApi
+  revisionId: number
+  quantities: number[]
+  wait?: boolean
+  camTimeoutMs?: number
+  pollIntervalMs: number
+  log: (message: string) => void
+}) => {
+  let board = await api.getBoard(revisionId)
+  if (wait && !isBoardMeasured(board)) {
+    log("Waiting for CircuitHub to measure the board (usually ~1.5 min)...")
+    board =
+      (await pollUntil(
+        async () => {
+          board = await api.getBoard(revisionId)
+          return isBoardMeasured(board) ? board : undefined
+        },
+        { timeoutMs: camTimeoutMs, intervalMs: pollIntervalMs },
+      )) ?? board
+  }
+  const camReady = isBoardMeasured(board)
+
+  const quotes: CircuithubQuote[] = []
+  for (const quantity of quantities) {
+    log(
+      `Requesting a quote for ${quantity} board${quantity === 1 ? "" : "s"}...`,
+    )
+    quotes.push(await api.createQuote(revisionId, quantity))
+  }
+  const projectId = quotes[0]?.projectId
+  const circuithubBom =
+    projectId !== undefined ? await api.getBom(projectId) : undefined
+  return { board, camReady, quotes, projectId, circuithubBom }
+}
+
 /**
  * Get CircuitHub quotes for a board:
  *
- * 1. Export the KiCad project and the BOM CSV the way tsci always does.
- *    CircuitHub matches the parts itself and reports what it can't.
- * 2. Upload the files and create a project, or a revision of `projectId`.
- * 3. Wait for the import, then for CircuitHub to measure the board (see
- *    `isBoardMeasured`). Quotes priced on the preliminary measurements are
- *    wrong: they can miss US fabrication and Grid Proto pricing.
+ * 1. Export the KiCad project the way tsci always does. CircuitHub reads
+ *    the part numbers from it and reports what it can't match.
+ * 2. Upload it and create a project, or a revision of `projectId`.
+ * 3. Wait for the import, then quote. CircuitHub measures the board about
+ *    1.5 minutes after the upload; quotes before that use preliminary
+ *    values (see `isBoardMeasured`) and can miss Grid Proto pricing, so
+ *    either pass `wait`, or re-quote later with `refreshCircuithubQuote`.
  * 4. Request a quote for each quantity. Nothing is ordered.
  */
 export const createCircuithubQuote = async (
@@ -142,15 +210,10 @@ export const createCircuithubQuote = async (
 ): Promise<CircuithubQuoteResult> => {
   const log = options.log ?? (() => {})
   const pollIntervalMs = options.pollIntervalMs ?? 3000
-  const api = getAuthenticatedApi(options.fetch)
-  if (!api && !options.dryRun) {
-    throw new Error(
-      "Not logged in to CircuitHub (or the session expired). Run `tsci add-provider circuithub`, or set CIRCUITHUB_TOKEN.",
-    )
-  }
+  const api = options.dryRun ? null : requireAuthenticatedApi(options.fetch)
   validateCircuithubQuoteOptions(options)
 
-  const files = await generateCircuithubProjectFiles({
+  const files = generateCircuithubProjectFiles({
     circuitJson: options.circuitJson,
     projectName: options.projectName,
   })
@@ -232,33 +295,72 @@ export const createCircuithubQuote = async (
     )
   }
 
-  log("Waiting for CircuitHub to measure the board (CAM analysis)...")
-  let lastBoard: CircuithubBoard | undefined
-  const camBoard = await pollUntil(
-    async () => {
-      lastBoard = await api.getBoard(created.revisionId)
-      return isBoardMeasured(lastBoard) ? lastBoard : undefined
-    },
-    {
-      timeoutMs: options.camTimeoutMs ?? 15 * 60_000,
-      intervalMs: pollIntervalMs,
-    },
-  )
-  result.camReady = Boolean(camBoard)
-  result.board = camBoard ?? lastBoard
-  if (!camBoard) {
-    log(
-      "CircuitHub hasn't finished measuring the board; quoting with its preliminary measurements, so prices may be wrong.",
-    )
-  }
+  saveLastCircuithubRevision({
+    projectId: created.projectId,
+    revisionId: created.revisionId,
+  })
 
-  result.circuithubBom = await api.getBom(created.projectId)
-
-  for (const quantity of options.quantities) {
-    log(
-      `Requesting a quote for ${quantity} board${quantity === 1 ? "" : "s"}...`,
-    )
-    result.quotes.push(await api.createQuote(created.revisionId, quantity))
-  }
+  const quoted = await quoteRevision({
+    api,
+    revisionId: created.revisionId,
+    quantities: options.quantities,
+    wait: options.wait,
+    camTimeoutMs: options.camTimeoutMs,
+    pollIntervalMs: options.pollIntervalMs ?? 5000,
+    log,
+  })
+  result.camReady = quoted.camReady
+  result.board = quoted.board
+  result.quotes = quoted.quotes
+  result.circuithubBom = quoted.circuithubBom
   return result
+}
+
+export interface RefreshCircuithubQuoteOptions {
+  /** The revision to re-quote (default: the last one uploaded). */
+  revisionId?: number
+  quantities: number[]
+  wait?: boolean
+  camTimeoutMs?: number
+  pollIntervalMs?: number
+  log?: (message: string) => void
+  fetch?: typeof fetch
+}
+
+/**
+ * Re-quote a revision that was already uploaded, without uploading again.
+ * Use it after `tsci quote create --circuithub` returned preliminary prices,
+ * once CircuitHub has measured the board.
+ */
+export const refreshCircuithubQuote = async (
+  options: RefreshCircuithubQuoteOptions,
+): Promise<CircuithubQuoteResult> => {
+  const log = options.log ?? (() => {})
+  const api = requireAuthenticatedApi(options.fetch)
+  const revisionId =
+    options.revisionId ?? getLastCircuithubRevision()?.revisionId
+  if (revisionId === undefined) {
+    throw new Error(
+      "No CircuitHub revision to refresh. Pass its number (printed by `tsci quote create --circuithub`), or quote a board first.",
+    )
+  }
+  const quoted = await quoteRevision({
+    api,
+    revisionId,
+    quantities: options.quantities,
+    wait: options.wait,
+    camTimeoutMs: options.camTimeoutMs,
+    pollIntervalMs: options.pollIntervalMs ?? 5000,
+    log,
+  })
+  return {
+    projectName: "",
+    files: [],
+    projectId: quoted.projectId,
+    revisionId,
+    camReady: quoted.camReady,
+    board: quoted.board,
+    circuithubBom: quoted.circuithubBom,
+    quotes: quoted.quotes,
+  }
 }

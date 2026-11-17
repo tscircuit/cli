@@ -8,6 +8,8 @@ export const DEFAULT_CIRCUITHUB_LOGIN_URL =
 interface CircuithubConfig {
   token?: string
   workspace?: string
+  /** The revision `tsci quote create --circuithub` uploaded last. */
+  lastRevision?: { projectId: number; revisionId: number }
 }
 
 /**
@@ -77,3 +79,11 @@ export const getSavedCircuithubWorkspace = () =>
 
 export const saveCircuithubWorkspace = (workspace: string) =>
   getCircuithubConfig().set("workspace", workspace)
+
+export const getLastCircuithubRevision = () =>
+  getCircuithubConfig().get("lastRevision")
+
+export const saveLastCircuithubRevision = (revision: {
+  projectId: number
+  revisionId: number
+}) => getCircuithubConfig().set("lastRevision", revision)

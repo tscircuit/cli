@@ -2,10 +2,7 @@ import fs from "node:fs"
 import path from "node:path"
 import { type Command, InvalidArgumentError } from "commander"
 import kleur from "kleur"
-import { CircuithubApiError } from "lib/circuithub/circuithub-api"
 import {
-  clearCircuithubToken,
-  getCircuithubToken,
   getSavedCircuithubWorkspace,
   saveCircuithubWorkspace,
 } from "lib/circuithub/circuithub-config"
@@ -18,7 +15,12 @@ import { formatCircuithubQuoteResult } from "lib/circuithub/format-circuithub-qu
 import { getEntrypoint } from "lib/shared/get-entrypoint"
 import { getOrGenerateCircuitJson } from "lib/shared/get-or-generate-circuit-json"
 import { isCircuitJsonFile } from "lib/shared/is-circuit-json-file"
-import { getQuoteCommand } from "../shared"
+import {
+  getQuoteCommand,
+  parseCamTimeoutMinutes,
+  parseQuoteQuantities,
+  reportCircuithubError,
+} from "../shared"
 
 interface QuoteCreateOptions {
   circuithub?: boolean
@@ -29,21 +31,9 @@ interface QuoteCreateOptions {
   quantity?: number[]
   outputDir?: string
   dryRun?: boolean
+  wait?: boolean
   camTimeout: number
   json?: boolean
-}
-
-const parseQuantities = (text: string) => {
-  const quantities = text.split(",").map((part) => Number(part.trim()))
-  if (
-    quantities.length === 0 ||
-    quantities.some((count) => !Number.isInteger(count) || count < 1)
-  ) {
-    throw new InvalidArgumentError(
-      "Quantity must be a positive integer or a comma-separated list of them.",
-    )
-  }
-  return quantities
 }
 
 const parseProjectId = (text: string) => {
@@ -52,14 +42,6 @@ const parseProjectId = (text: string) => {
     throw new InvalidArgumentError("Project must be a CircuitHub project ID.")
   }
   return id
-}
-
-const parseMinutes = (text: string) => {
-  const minutes = Number(text)
-  if (!Number.isFinite(minutes) || minutes < 0) {
-    throw new InvalidArgumentError("CAM timeout must be a number of minutes.")
-  }
-  return minutes
 }
 
 /** `boards/nema8/index.circuit.tsx` -> `nema8`; `amp.circuit.tsx` -> `amp`. */
@@ -107,20 +89,21 @@ export const registerQuoteCreate = (program: Command) => {
     .option(
       "--quantity <counts>",
       "Boards to quote, or a comma-separated list like 1,5,25 (default: 5)",
-      parseQuantities,
+      parseQuoteQuantities,
     )
-    .option(
-      "--output-dir <dir>",
-      "Also write the uploaded KiCad project and bom.csv here",
-    )
+    .option("--output-dir <dir>", "Also write the uploaded KiCad project here")
     .option(
       "--dry-run",
-      "Generate the KiCad project and BOM without uploading anything",
+      "Generate the KiCad project without uploading anything",
+    )
+    .option(
+      "--wait",
+      "Wait for CircuitHub to measure the board (~1.5 min) and quote final prices, instead of quoting right after the upload",
     )
     .option(
       "--cam-timeout <minutes>",
-      "How long to wait for CircuitHub's CAM analysis before quoting",
-      parseMinutes,
+      "With --wait, the longest to wait for the measurement",
+      parseCamTimeoutMinutes,
       15,
     )
     .option("--json", "Output the result as JSON")
@@ -173,6 +156,7 @@ export const registerQuoteCreate = (program: Command) => {
             ? path.resolve(options.outputDir)
             : undefined,
           dryRun: options.dryRun,
+          wait: options.wait,
           camTimeoutMs: options.camTimeout * 60_000,
           log: (message) => logToStderr(kleur.gray(message)),
         })
@@ -191,18 +175,7 @@ export const registerQuoteCreate = (program: Command) => {
         }
         console.log(formatCircuithubQuoteResult(result))
       } catch (error) {
-        // A saved session CircuitHub rejects is useless; forget it so
-        // `tsci add-provider circuithub` logs in again.
-        if (
-          error instanceof CircuithubApiError &&
-          error.status === 401 &&
-          getCircuithubToken()?.source === "login"
-        ) {
-          clearCircuithubToken()
-        }
-        console.error(
-          kleur.red(error instanceof Error ? error.message : String(error)),
-        )
+        reportCircuithubError(error)
         process.exitCode = 1
       }
     })
