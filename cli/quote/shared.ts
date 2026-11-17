@@ -128,7 +128,7 @@ export const parseCamTimeoutMinutes = (text: string) => {
 /** Print a CircuitHub command's error and set a failing exit code. */
 export const reportCircuithubError = (error: unknown) => {
   // A saved session CircuitHub rejects is useless; forget it so
-  // `tsci add-provider circuithub` logs in again.
+  // `tsci auth add-provider circuithub` logs in again.
   if (
     error instanceof CircuithubApiError &&
     error.status === 401 &&

@@ -26,7 +26,7 @@ const readUntil = async (
 }
 
 test(
-  "tsci add-provider circuithub logs in to CircuitHub through the browser",
+  "tsci auth add-provider circuithub logs in to CircuitHub through the browser",
   async () => {
     const token = jwt.sign(
       { sub: "44738", name: "Ada Lovelace" },
@@ -42,7 +42,7 @@ test(
     }
     const { tmpDir, runCommand } = await getCliTestFixture({ env })
     await writeFile(path.join(tmpDir, "board.circuit.tsx"), BOARD_SOURCE)
-    const command = "tsci add-provider circuithub"
+    const command = "tsci auth add-provider circuithub"
 
     const addProvider = Bun.spawn({
       cmd: [
@@ -88,7 +88,7 @@ test(
     expect(
       `$ ${command}\n${stdout.replaceAll(port, "<port>")}`.trim(),
     ).toMatchInlineSnapshot(`
-      "$ tsci add-provider circuithub
+      "$ tsci auth add-provider circuithub
       Log in to CircuitHub to add it as a provider:
         https://app.circuithub.example/auth/cli?redirect_uri=http://localhost:<port>/cb
       If the browser is on another machine, paste the URL it ends up on here.

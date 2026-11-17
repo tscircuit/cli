@@ -24,7 +24,7 @@ export const hasCircuithubSession = () => {
 }
 
 /**
- * `tsci add-provider circuithub`: log in to CircuitHub and save the session.
+ * `tsci auth add-provider circuithub`: log in to CircuitHub and save the session.
  * CircuitHub's login page redirects the browser to a local callback with the
  * session token; when the browser is on another machine, the user pastes the
  * URL it lands on instead. An existing, unexpired session is kept.
@@ -76,7 +76,7 @@ export const addCircuithubProvider = async ({
 }
 
 /**
- * `tsci remove-provider circuithub`: forget the saved CircuitHub session and
+ * `tsci auth remove-provider circuithub`: forget the saved CircuitHub session and
  * remembered workspace. A `CIRCUITHUB_TOKEN` in the environment can't be
  * removed from here, so say that it still applies.
  */

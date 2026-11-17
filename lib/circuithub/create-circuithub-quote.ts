@@ -138,7 +138,7 @@ const requireAuthenticatedApi = (fetchFn?: typeof fetch): CircuithubApi => {
   const api = getAuthenticatedApi(fetchFn)
   if (!api) {
     throw new Error(
-      "Not logged in to CircuitHub (or the session expired). Run `tsci add-provider circuithub`, or set CIRCUITHUB_TOKEN.",
+      "Not logged in to CircuitHub (or the session expired). Run `tsci auth add-provider circuithub`, or set CIRCUITHUB_TOKEN.",
     )
   }
   return api
