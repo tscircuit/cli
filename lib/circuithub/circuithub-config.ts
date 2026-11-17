@@ -48,7 +48,7 @@ export type CircuithubTokenSource = "env" | "login"
 
 /**
  * The token to call CircuitHub with: `CIRCUITHUB_TOKEN` (an API key or a
- * session token) wins over the one saved by `tsci add-provider circuithub`.
+ * session token) wins over the one saved by `tsci auth add-provider circuithub`.
  */
 export const getCircuithubToken = ():
   | { token: string; source: CircuithubTokenSource }

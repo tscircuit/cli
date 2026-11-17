@@ -70,7 +70,7 @@ export const registerQuoteCreate = (program: Command) => {
     .argument("[file]", "Path to the source file or circuit JSON to quote")
     .option(
       "--circuithub",
-      "Quote assembled boards with CircuitHub (add it first with `tsci add-provider circuithub`): uploads the KiCad project and BOM, waits for CircuitHub's analysis and prints its offers",
+      "Quote assembled boards with CircuitHub (add it first with `tsci auth add-provider circuithub`): uploads the KiCad project and BOM, waits for CircuitHub's analysis and prints its offers",
     )
     .option(
       "--workspace <slug>",
@@ -117,7 +117,7 @@ export const registerQuoteCreate = (program: Command) => {
       }
       if (!options.dryRun && !hasCircuithubSession()) {
         console.error(
-          "CircuitHub isn't added yet (or its session expired). Run `tsci add-provider circuithub` to log in, then try again.",
+          "CircuitHub isn't added yet (or its session expired). Run `tsci auth add-provider circuithub` to log in, then try again.",
         )
         process.exitCode = 1
         return

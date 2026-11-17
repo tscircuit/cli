@@ -7,7 +7,7 @@ type ProviderAction = (options: {
   log: (message: string) => void
 }) => Promise<void>
 
-/** Manufacturing providers `tsci add-provider` / `remove-provider` manage. */
+/** Manufacturing providers `tsci auth add-provider` / `remove-provider` manage. */
 export const PROVIDERS: Record<
   string,
   { add: ProviderAction; remove: ProviderAction }
