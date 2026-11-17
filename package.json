@@ -1,6 +1,6 @@
 {
   "name": "@tscircuit/cli",
-  "version": "0.1.2461",
+  "version": "0.1.2465",
   "repository": {
     "type": "git",
     "url": "https://github.com/tscircuit/cli"
@@ -25,7 +25,7 @@
     "@tscircuit/circuit-json-to-jlcpcb-quote": "https://jscdn.tscircuit.com/@tscircuit/circuit-json-to-jlcpcb-quote/0.0.4.tgz",
     "@tscircuit/fake-snippets": "^0.0.226",
     "@tscircuit/file-server": "^0.0.32",
-    "@tscircuit/footprinter": "^0.0.450",
+    "@tscircuit/footprinter": "^0.0.451",
     "@tscircuit/pcb-spice-pipeline": "https://github.com/tscircuit/pcb-spice-pipeline/releases/download/v0.1.8/tscircuit-pcb-spice-pipeline-0.1.8.tgz",
     "@tscircuit/schematic-trace-solver": "^0.0.204",
     "@types/bun": "^1.2.2",
@@ -44,7 +44,7 @@
     "circuit-json-to-bom-csv": "^0.0.26",
     "circuit-json-to-fdm-component-box": "^0.0.2",
     "circuit-json-to-footprinter": "^0.0.59",
-    "circuit-json-to-gerber": "^0.0.122",
+    "circuit-json-to-gerber": "^0.0.124",
     "circuit-json-to-kicad": "0.0.276",
     "circuit-json-to-readable-netlist": "^0.0.15",
     "circuit-json-to-step": "^0.0.63",
@@ -80,10 +80,10 @@
     "proper-lockfile": "^4.1.2",
     "redaxios": "^0.5.1",
     "semver": "^7.6.3",
-    "simulate-return-current": "https://pkg.pr.new/tscircuit/simulate-return-current@6a7c84cb4f9f66c2cb54199aee50d3c7453748e8",
+    "simulate-return-current": "https://pkg.pr.new/tscircuit/simulate-return-current@a3736c708149885c12f17a072b8a60ea4a7cd2b2",
     "stepts": "^0.0.3",
     "tempy": "^3.1.0",
-    "tscircuit": "0.0.3087-libonly",
+    "tscircuit": "0.0.3209-libonly",
     "tsx": "^4.7.1",
     "typed-ky": "^0.0.4"
   },
