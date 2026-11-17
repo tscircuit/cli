@@ -166,7 +166,7 @@ test("build with --site generates only 3D preview images for every circuit", asy
   const { stderr } = await runCommand("tsci build --site --use-cdn-javascript")
   expect(stderr).toBe("")
   const html = await readFile(path.join(tmpDir, "dist/index.html"), "utf8")
-  expect(html).toContain("@tscircuit/runframe@0.0.9999/dist/standalone.min.js")
+  expect(html).toContain("@tscircuit/runframe/0.0.9999/dist/standalone.min.js")
   expect(html).not.toContain("URL.createObjectURL")
   expect(html).toContain("./first/circuit.json")
   expect(html).toContain("./second/circuit.json")
@@ -206,7 +206,7 @@ test("build with --site --use-cdn-javascript uses CDN URL and no standalone.min.
 
   // Should use CDN URL instead of local standalone.min.js
   expect(indexHtml).toContain(
-    "cdn.jsdelivr.net/npm/@tscircuit/runframe@0.0.9999/dist/standalone.min.js",
+    "jscdn.tscircuit.com/@tscircuit/runframe/0.0.9999/dist/standalone.min.js",
   )
   expect(indexHtml).not.toContain("/dist/browser.min.js")
   expect(indexHtml).not.toContain('src="./standalone.min.js"')

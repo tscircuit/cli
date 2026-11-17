@@ -8,6 +8,7 @@ import runFrameStandaloneBundleContent from "@tscircuit/runframe/standalone" wit
 }
 import { getNodeHandler } from "winterspec/adapters/node"
 import { getTscircuitDependencyVersion } from "lib/shared/get-tscircuit-dependency-version"
+import { getRunFrameStandaloneCdnUrl } from "lib/shared/get-runframe-standalone-cdn-url"
 import { readTscircuitBrowserBundle } from "lib/shared/read-tscircuit-browser-bundle"
 
 // @ts-ignore
@@ -330,7 +331,9 @@ export const createHttpServer = async ({
       }
 
       res.writeHead(302, {
-        Location: `https://cdn.jsdelivr.net/npm/@tscircuit/runframe@${getTscircuitDependencyVersion("@tscircuit/runframe")}/dist/standalone.min.js`,
+        Location: getRunFrameStandaloneCdnUrl(
+          getTscircuitDependencyVersion("@tscircuit/runframe"),
+        ),
       })
       res.end()
       return

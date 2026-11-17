@@ -73,8 +73,8 @@ export const getStaticIndexHtmlFile = ({
       <meta name="viewport" content="width=device-width, initial-scale=1.0">
     </head>
     <body>
-${scriptBlock}      <script src="https://cdn.tailwindcss.com"></script>
-      <div id="root">${loadingStateUi}</div>
+${scriptBlock}      <div id="root">${loadingStateUi}</div>
+      <script src="https://cdn.tailwindcss.com"></script>
       <script>
       globalThis.process = { env: { NODE_ENV: "production" } }
       </script>

@@ -87,7 +87,7 @@ for (const standalone of [false, true]) {
     const html = await readFile(path.join(tmpDir, "dist/index.html"), "utf8")
     expect(await readCircuitFromHtml(html)).toEqual(circuitJson)
     expect(html).toContain(
-      "@tscircuit/runframe@0.0.9999/dist/standalone.min.js",
+      "@tscircuit/runframe/0.0.9999/dist/standalone.min.js",
     )
     expect(html).toContain("URL.createObjectURL(new Blob(")
     expect(html).not.toContain('"./jscdn"')
