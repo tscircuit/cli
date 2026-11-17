@@ -107,7 +107,9 @@ test(
       "tsci quote create --circuithub board.circuit.tsx --workspace acme --export-classification EAR99",
     )
     expect(quote.exitCode).toBe(0)
-    expect(quote.stdout).toContain("CircuitHub project 9001, revision 77")
+    expect(quote.stdout).toContain(
+      "CircuitHub quote: project 9001, revision 77",
+    )
   },
   { timeout: 120_000 },
 )

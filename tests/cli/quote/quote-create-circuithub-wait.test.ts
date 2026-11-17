@@ -48,7 +48,7 @@ test(
       "POST /v1/quotes",
       "GET /v1/projects/9001/bom",
     ])
-    expect(stdout).toContain("Discounts applied: Grid Proto")
+    expect(stdout).toContain("Discount is CircuitHub's Grid Proto price")
     expect(stdout).not.toContain("PRELIMINARY")
   },
   { timeout: 120_000 },
