@@ -1,7 +1,7 @@
 import { readFile } from "node:fs/promises"
 import { dirname, resolve } from "node:path"
 import { gunzipSync } from "node:zlib"
-import type { PipelineModeling } from "@tscircuit/pcb-spice-pipeline"
+import type { PipelineModeling } from "@tscircuit/signal-integrity-pipeline"
 import type { PlatformConfig } from "@tscircuit/props"
 import type { AnyCircuitElement } from "circuit-json"
 import { generateCircuitJson } from "lib/shared/generate-circuit-json"

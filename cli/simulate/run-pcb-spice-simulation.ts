@@ -3,12 +3,12 @@ import { join, relative, resolve } from "node:path"
 import {
   runPipeline,
   type PipelineModeling,
-} from "@tscircuit/pcb-spice-pipeline"
+} from "@tscircuit/signal-integrity-pipeline"
 import {
   createNativeSolver,
   loadIbisSources,
   writePipelineOutput,
-} from "@tscircuit/pcb-spice-pipeline/node"
+} from "@tscircuit/signal-integrity-pipeline/node"
 import type { AnyCircuitElement } from "circuit-json"
 
 export const runPcbSpiceSimulation = async ({

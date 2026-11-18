@@ -20,8 +20,8 @@
         "@tscircuit/fake-snippets": "^0.0.226",
         "@tscircuit/file-server": "^0.0.32",
         "@tscircuit/footprinter": "^0.0.451",
-        "@tscircuit/pcb-spice-pipeline": "https://github.com/tscircuit/pcb-spice-pipeline/releases/download/v0.1.8/tscircuit-pcb-spice-pipeline-0.1.8.tgz",
         "@tscircuit/schematic-trace-solver": "^0.0.204",
+        "@tscircuit/signal-integrity-pipeline": "https://github.com/tscircuit/signal-integrity-pipeline/releases/download/v0.1.11/tscircuit-signal-integrity-pipeline-0.1.11.tgz",
         "@types/bun": "^1.2.2",
         "@types/configstore": "^6.0.2",
         "@types/debug": "^4.1.12",
@@ -452,8 +452,6 @@
 
     "@tscircuit/ngspice-spice-engine": ["@tscircuit/ngspice-spice-engine@0.0.20", "", { "peerDependencies": { "@tscircuit/props": "*", "circuit-json": "*", "spicets": "*", "typescript": "^5" } }, "sha512-dXjH51Wl95B6yEVkWCz65DpAHWTJRLHDyD/09eJUpGwLcYfd1F9m4E0XWbuiYZ8wKygYlACTozrSX9n3/LtfwA=="],
 
-    "@tscircuit/pcb-spice-pipeline": ["@tscircuit/pcb-spice-pipeline@https://github.com/tscircuit/pcb-spice-pipeline/releases/download/v0.1.8/tscircuit-pcb-spice-pipeline-0.1.8.tgz", { "dependencies": { "@noble/hashes": "1.8.0", "@tscircuit/ibis-to-spice": "https://api.github.com/repos/tscircuit/ibis-to-spice/tarball/ad1ec9e640a92a4d370fc76acbbd8db245563317", "clipper2-ts": "2.0.1-18", "earcut": "3.2.4", "format-si-unit": "0.0.12", "zod": "3.25.76" }, "peerDependencies": { "@tscircuit/core": ">=0.0.2188", "@tscircuit/props": ">=0.0.705", "circuit-json": "*", "react": "^19.0.0" }, "optionalPeers": ["@tscircuit/core", "@tscircuit/props", "react"] }, "sha512-Z3+lWN5pfQnNmO6b4NU0gkwB8B4veMv4FbVz49Qerblh8nsjt9nYK0SE0XMUAjspgy5hhIDJhHRMQsZMJLSCkg=="],
-
     "@tscircuit/props": ["@tscircuit/props@0.0.732", "", { "peerDependencies": { "circuit-json": "*", "react": "*", "zod": "*" } }, "sha512-PA+rCT8kvvf0HJZoNx5nuD4uySMT9UCeBxV5KD/uKeHVXeJUt0BxjH6EQdy+cXTvFjOcQpGU0W1QvUS0zIIQow=="],
 
     "@tscircuit/runframe": ["@tscircuit/runframe@0.0.3270", "", { "dependencies": { "@tscircuit/core": "^0.0.2293", "@tscircuit/eval": "0.0.1793", "@tscircuit/solver-utils": "^0.0.16", "debug": "^4.4.0", "format-si-unit": "^0.0.12", "schematic-symbols": "^0.0.251" } }, "sha512-rkiIqkIgJfgc9JGmfRLCVelTOZLXMtduRPZOsXM1smE3uV1QL4bS71p8O/Z9cpJ2HuAwqwlmEK+KFgN9jlRyaA=="],
@@ -463,6 +461,8 @@
     "@tscircuit/schematic-match-adapt": ["@tscircuit/schematic-match-adapt@0.0.18", "", { "peerDependencies": { "typescript": "^5" } }, "sha512-LpXF7aSmP4xUZN1gdrU/YdAnotJ+oKW2a4YzGB6wNTXnw5+Yn0w/bPnReT4A+nNUrVJ9kyjgnXQkSlkhiejQGg=="],
 
     "@tscircuit/schematic-trace-solver": ["@tscircuit/schematic-trace-solver@0.0.204", "", { "peerDependencies": { "typescript": "^5" } }, "sha512-mkKVQe5RA5DG+r8Hh4dHdRMY0gK8DWgTHcvy3KaZLj/dng//9ZreQkOtmQJJXDTAK/KOFGMGD9r2t2LNfscOxA=="],
+
+    "@tscircuit/signal-integrity-pipeline": ["@tscircuit/signal-integrity-pipeline@https://github.com/tscircuit/signal-integrity-pipeline/releases/download/v0.1.11/tscircuit-signal-integrity-pipeline-0.1.11.tgz", { "dependencies": { "@noble/hashes": "1.8.0", "@tscircuit/ibis-to-spice": "https://api.github.com/repos/tscircuit/ibis-to-spice/tarball/ad1ec9e640a92a4d370fc76acbbd8db245563317", "clipper2-ts": "2.0.1-18", "earcut": "3.2.4", "format-si-unit": "0.0.12", "zod": "3.25.76" }, "peerDependencies": { "@tscircuit/core": ">=0.0.2188", "@tscircuit/props": ">=0.0.705", "circuit-json": "*", "react": "^19.0.0" }, "optionalPeers": ["@tscircuit/core", "@tscircuit/props", "react"] }, "sha512-ndlGxCA6FSUquX5bgWO6eocBt+FGXHivel2BB+hmk4NzWXdftD4RDgWuwfgPl7kfYfrGn3AnuCA3g7s7oMiJrg=="],
 
     "@tscircuit/simple-3d-svg": ["@tscircuit/simple-3d-svg@0.0.41", "", { "dependencies": { "fast-xml-parser": "^5.2.5", "fflate": "^0.8.2" } }, "sha512-2iwhHhMLElq5t0fcC0Gr7cCpZhEOAKh+6NN0NIJ9YWUCcsB7UN8uYko7jqNTxDlYOe6E0ZYaDZWsQ3amOZ3dlw=="],
 

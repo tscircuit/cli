@@ -1,7 +1,7 @@
 import { mock } from "bun:test"
 import { writeFileSync } from "node:fs"
 
-const adapter = import.meta.resolve("@tscircuit/pcb-spice-pipeline/node")
+const adapter = import.meta.resolve("@tscircuit/signal-integrity-pipeline/node")
 const { loadIbisSources, writePipelineOutput } = await import(adapter)
 mock.module(adapter, () => ({
   loadIbisSources,
