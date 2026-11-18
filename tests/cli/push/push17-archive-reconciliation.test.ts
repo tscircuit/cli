@@ -203,6 +203,8 @@ test("push falls back to individual uploads after a definite archive rejection",
   expect(stdout).toContain(
     "Archive upload failed, falling back to file-by-file upload",
   )
+  expect(stdout.length).toBeLessThan(4096)
+  expect(stdout).not.toMatch(/"archive_base64"\s*:\s*"H4sI/)
 }, 30_000)
 
 test.each(["list", "download"])(
