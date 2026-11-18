@@ -200,7 +200,7 @@ export const createCircuithubApi = ({
       name: string
       workspace: string
       files: CircuithubFileRef[]
-      exportClassification: string
+      exportClassification: CircuithubExportClassification
     }) => call<CircuithubRevisionCreated>("POST", "/projects", body),
 
     createRevision: (projectId: number, files: CircuithubFileRef[]) =>
@@ -225,3 +225,29 @@ export const createCircuithubApi = ({
 }
 
 export type CircuithubApi = ReturnType<typeof createCircuithubApi>
+
+/** How CircuitHub records a project's export classification. */
+export type CircuithubExportClassification =
+  | { tag: "NotExportControlled" }
+  | { tag: "EAR99" }
+  | { tag: "ECCN"; contents: string }
+
+/**
+ * Read `--export-classification`: EAR99, NotExportControlled, or an ECCN
+ * such as 3A001.
+ */
+export const parseCircuithubExportClassification = (
+  value: string,
+): CircuithubExportClassification => {
+  const code = value.trim()
+  if (/^ear99$/i.test(code)) return { tag: "EAR99" }
+  if (/^not-?export-?controlled$/i.test(code)) {
+    return { tag: "NotExportControlled" }
+  }
+  if (!/^\d[A-E]\d{3}/i.test(code)) {
+    throw new Error(
+      `Unknown export classification "${value}". Use EAR99, NotExportControlled, or an ECCN such as 3A001.`,
+    )
+  }
+  return { tag: "ECCN", contents: code.toUpperCase() }
+}

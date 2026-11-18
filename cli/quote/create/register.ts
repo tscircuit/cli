@@ -84,7 +84,7 @@ export const registerQuoteCreate = (program: Command) => {
     .option("--name <name>", "CircuitHub project name (default: from the file)")
     .option(
       "--export-classification <code>",
-      "Export classification CircuitHub requires for new projects, e.g. EAR99",
+      "Export classification CircuitHub requires for new projects: EAR99, NotExportControlled, or an ECCN such as 3A001",
     )
     .option(
       "--quantity <counts>",
