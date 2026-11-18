@@ -4,10 +4,10 @@ import path from "node:path"
 import ky from "ky"
 import { getCliTestFixture } from "tests/fixtures/get-cli-test-fixture"
 
-const setup = async ({ inconsistentLockfile = false } = {}) => {
+const setup = async ({ invalidLockfile = false } = {}) => {
   const fixture = await getCliTestFixture({
     loggedIn: true,
-    env: { npm_config_user_agent: "bun/1.3.14" },
+    env: { npm_config_user_agent: `bun/${Bun.version}` },
   })
   const localDependency = path.join(fixture.tmpDir, "local-tscircuit")
   const source = path.join(fixture.tmpDir, "source")
@@ -35,12 +35,12 @@ const setup = async ({ inconsistentLockfile = false } = {}) => {
   })
   expect(install.exitCode, install.stderr.toString()).toBe(0)
   let lockfile = readFileSync(path.join(source, "bun.lock"), "utf8")
-  if (inconsistentLockfile) {
+  if (invalidLockfile) {
     lockfile = lockfile.replace(
-      `"tscircuit": "file:${localDependency}"`,
-      '"tscircuit": "0.0.0"',
+      /"lockfileVersion":\s*\d+/,
+      '"lockfileVersion": 999',
     )
-    expect(lockfile).toContain('"tscircuit": "0.0.0"')
+    expect(lockfile).toContain('"lockfileVersion": 999')
   }
   const files = {
     "package.json": manifest,
@@ -97,9 +97,9 @@ test("clone preserves published scripts, dependency versions, lockfile and confi
   ).toBe("0.0.1")
 }, 30_000)
 
-test("clone does not repair an inconsistent published lockfile by upgrading dependencies", async () => {
+test("clone does not repair an invalid published lockfile by upgrading dependencies", async () => {
   const { tmpDir, runCommand, files } = await setup({
-    inconsistentLockfile: true,
+    invalidLockfile: true,
   })
   const { stdout, stderr, exitCode } = await runCommand(
     "tsci clone test-user/preserved-board",
