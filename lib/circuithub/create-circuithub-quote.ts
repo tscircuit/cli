@@ -6,6 +6,7 @@ import {
   type CircuithubBoard,
   type CircuithubQuote,
   createCircuithubApi,
+  parseCircuithubExportClassification,
 } from "./circuithub-api"
 import {
   decodeCircuithubToken,
@@ -27,7 +28,10 @@ export interface CreateCircuithubQuoteOptions {
   workspace?: string
   /** Upload as a new revision of this project instead of a new project. */
   projectId?: number
-  /** Required by CircuitHub for new projects, e.g. EAR99. */
+  /**
+   * Required by CircuitHub for new projects: EAR99, NotExportControlled, or
+   * an ECCN such as 3A001.
+   */
   exportClassification?: string
   /** Write the uploaded files here. */
   outputDir?: string
@@ -115,6 +119,9 @@ export const validateCircuithubQuoteOptions = (
     throw new Error(
       "CircuitHub needs the board's export classification to create a project. Pass --export-classification (for example EAR99), or --project <id> to add a revision to an existing project.",
     )
+  }
+  if (options.projectId === undefined) {
+    parseCircuithubExportClassification(options.exportClassification!)
   }
 }
 
@@ -266,7 +273,9 @@ export const createCircuithubQuote = async (
           name: options.projectName,
           workspace: options.workspace!,
           files: fileRefs,
-          exportClassification: options.exportClassification!,
+          exportClassification: parseCircuithubExportClassification(
+            options.exportClassification!,
+          ),
         })
   result.projectId = created.projectId
   result.revisionId = created.revisionId
