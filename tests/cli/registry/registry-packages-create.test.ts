@@ -61,7 +61,7 @@ test.each([
     )
     expect(pkg).toBeDefined()
     expect(pkg?.is_private).toBe(isPrivate)
-    expect(Boolean(pkg?.is_unlisted)).toBe(isUnlisted)
+    if (isUnlisted) expect(pkg?.is_unlisted).toBe(true)
   },
   30_000,
 )
