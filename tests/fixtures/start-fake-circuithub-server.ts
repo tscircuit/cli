@@ -56,12 +56,25 @@ export const startFakeCircuithubServer = async ({
             })),
           })
         }
-        case "POST /v1/projects":
+        case "POST /v1/projects": {
+          // Like api.circuithub.com, which takes the classification as an
+          // object such as {"tag": "EAR99"} and refuses a bare string.
+          const { exportClassification } = JSON.parse(text)
+          if (
+            typeof exportClassification !== "object" ||
+            typeof exportClassification?.tag !== "string"
+          ) {
+            return new Response(
+              "Error in $.exportClassification: parsing ExportClassificationStatement failed, expected Object, but encountered String",
+              { status: 400 },
+            )
+          }
           return json({
             projectId: 9001,
             revisionId: 77,
             statusUrl: "/v1/projects/9001/status",
           })
+        }
         case "POST /v1/projects/9001/revisions":
           return json({
             projectId: 9001,
