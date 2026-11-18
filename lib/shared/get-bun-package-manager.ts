@@ -49,6 +49,10 @@ export function getBunPackageManager(): PackageManager {
     ...(dev ? ["-d"] : []),
     ...deps,
   ]
+  const installArgs = (frozenLockfile = false) => [
+    "install",
+    ...(frozenLockfile ? ["--frozen-lockfile"] : []),
+  ]
   return {
     name: "bun",
     uninstall: ({ name, cwd }) => sync(["remove", ...names(name)], cwd),
@@ -56,12 +60,14 @@ export function getBunPackageManager(): PackageManager {
     update: ({ name, cwd }) => sync(["update", ...names(name)], cwd),
     init: ({ cwd }) => sync(["init", "-y"], cwd),
     installDeps: ({ deps, cwd, dev }) => asyncRun(addArgs(deps, dev), cwd),
-    installAll: ({ cwd }) => sync(["install"], cwd),
+    installAll: ({ cwd, frozenLockfile }) =>
+      sync(installArgs(frozenLockfile), cwd),
     installGlobal: ({ name, cwd }) =>
       sync(["install", "-g", ...names(name)], cwd),
     getInitCommand: () => display(["init", "-y"]),
     getInstallDepsCommand: (deps, dev) => display(addArgs(deps, dev)),
-    getInstallAllCommand: () => display(["install"]),
+    getInstallAllCommand: ({ frozenLockfile } = {}) =>
+      display(installArgs(frozenLockfile)),
     getGlobalInstallCommand: (name) =>
       display(["install", "-g", ...names(name)]),
   }

@@ -1,7 +1,7 @@
-import fs from "fs"
-import kleur from "kleur"
 import { exec, execSync } from "node:child_process"
+import fs from "node:fs"
 import { promisify } from "node:util"
+import kleur from "kleur"
 import { getBunPackageManager } from "./get-bun-package-manager"
 import { getGlobalDepsInstallCommand } from "./get-dep-install-command"
 
@@ -12,6 +12,7 @@ function detectPackageManager(): "npm" | "yarn" | "pnpm" | "bun" {
   if (userAgent.startsWith("yarn")) return "yarn"
   if (userAgent.startsWith("pnpm")) return "pnpm"
   if (userAgent.startsWith("bun")) return "bun"
+  if (userAgent.startsWith("npm")) return "npm"
 
   if (fs.existsSync("bun.lockb")) return "bun"
   if (fs.existsSync("bun.lock")) return "bun"
@@ -48,8 +49,8 @@ export interface PackageManager {
   }) => Promise<void>
   getInitCommand: () => string
   getInstallDepsCommand: (deps: string[], dev?: boolean) => string
-  installAll: (opts: { cwd: string }) => void
-  getInstallAllCommand: () => string
+  installAll: (opts: { cwd: string; frozenLockfile?: boolean }) => void
+  getInstallAllCommand: (opts?: { frozenLockfile?: boolean }) => string
 }
 
 export function getPackageManager(): PackageManager {
@@ -128,8 +129,8 @@ export function getPackageManager(): PackageManager {
     },
     getInitCommand,
     getInstallDepsCommand,
-    installAll: ({ cwd }) => {
-      const installCommand = getInstallAllCommand()
+    installAll: ({ cwd, frozenLockfile }) => {
+      const installCommand = getInstallAllCommand({ frozenLockfile })
       console.log(kleur.gray(`> ${installCommand}`))
       const output = execSync(installCommand, {
         stdio: ["inherit", "pipe", "pipe"],
@@ -163,11 +164,9 @@ export function getPackageManager(): PackageManager {
     return "npm init -y"
   }
 
-  function getInstallAllCommand() {
-    if (pm === "yarn") return "yarn install"
-    if (pm === "pnpm") return "pnpm install"
-    if (pm === "bun") return "bun install"
-    return "npm install"
+  function getInstallAllCommand({ frozenLockfile = false } = {}) {
+    if (pm === "npm") return frozenLockfile ? "npm ci" : "npm install"
+    return `${pm} install${frozenLockfile ? " --frozen-lockfile" : ""}`
   }
 
   function getInstallDepsCommand(deps: string[], dev?: boolean) {

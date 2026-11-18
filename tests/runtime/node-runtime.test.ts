@@ -88,6 +88,7 @@ pm.init({cwd})
 await pm.install({name:['first','second'],cwd})
 await pm.installDeps({deps:['file:folder with spaces & symbols'],dev:true,cwd})
 pm.installAll({cwd})
+pm.installAll({cwd,frozenLockfile:true})
 pm.update({name:['first','second'],cwd})
 pm.uninstall({name:'first',cwd})
 pm.installGlobal({name:'tscircuit@latest',cwd})
@@ -103,6 +104,7 @@ if(process.env.PATH!=='' || process.env.BUN_BE_BUN!==undefined) throw Error('Par
     ["add", "first", "second"],
     ["add", "-d", "file:folder with spaces & symbols"],
     ["install"],
+    ["install", "--frozen-lockfile"],
     ["update", "first", "second"],
     ["remove", "first"],
     ["install", "-g", "tscircuit@latest"],
