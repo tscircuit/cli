@@ -16,26 +16,29 @@ const captureError = async (
       { status: 413 },
     ),
 ) => {
-  const error = await ky
-    .post(`https://registry.example${pathname}`, {
-      ...options,
-      retry: 0,
-      fetch: async (input) => {
-        const response = createResponse()
-        Object.defineProperty(response, "url", {
-          value: input instanceof Request ? input.url : String(input),
-        })
-        return response
-      },
-      hooks: { afterResponse: [prettyResponseErrorHook] },
-    })
-    .then(
-      () => undefined,
-      (error: unknown) => error,
-    )
+  const server = Bun.serve({
+    port: 0,
+    hostname: "127.0.0.1",
+    fetch: () => createResponse(),
+  })
 
-  expect(error).toBeInstanceOf(Error)
-  return error as Error
+  try {
+    const error = await ky
+      .post(new URL(pathname, server.url), {
+        ...options,
+        retry: 0,
+        hooks: { afterResponse: [prettyResponseErrorHook] },
+      })
+      .then(
+        () => undefined,
+        (error: unknown) => error,
+      )
+
+    expect(error).toBeInstanceOf(Error)
+    return error as Error
+  } finally {
+    server.stop(true)
+  }
 }
 
 test("rejected archive uploads do not dump the encoded project into the error", async () => {
@@ -59,7 +62,7 @@ test("rejected archive uploads do not dump the encoded project into the error", 
     status: 413,
     method: "POST",
     pathname: "/package_files/upload_archive",
-    url: "https://registry.example/package_files/upload_archive",
+    url: expect.stringMatching(/\/package_files\/upload_archive$/),
   })
 })
 

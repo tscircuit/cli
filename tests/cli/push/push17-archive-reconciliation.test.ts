@@ -1,8 +1,8 @@
 import { expect, test } from "bun:test"
-import { getCliConfig } from "lib/cli-config"
 import { writeFileSync } from "node:fs"
 import path from "node:path"
-import { gzipSync, gunzipSync } from "node:zlib"
+import { gunzipSync, gzipSync } from "node:zlib"
+import { getCliConfig } from "lib/cli-config"
 import { getCliTestFixture } from "tests/fixtures/get-cli-test-fixture"
 
 type ArchiveFile = {
