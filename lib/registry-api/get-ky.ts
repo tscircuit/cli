@@ -1,7 +1,36 @@
-import { getRegistryApiUrl, getSessionToken } from "lib/cli-config"
 import ky, { type AfterResponseHook, type KyResponse } from "ky"
+import { getRegistryApiUrl, getSessionToken } from "lib/cli-config"
 import { getSessionTokenFromNpmrc } from "lib/cli-config"
 import { getPlatformFetch } from "lib/shared/get-platform-fetch"
+
+const MAX_ERROR_BODY_LENGTH = 1024
+const uploadContentFields = new Set([
+  "archive_base64",
+  "content_base64",
+  "content_text",
+])
+
+const truncateErrorText = (text: string) =>
+  text.length > MAX_ERROR_BODY_LENGTH
+    ? `${text.slice(0, MAX_ERROR_BODY_LENGTH)}\n[truncated ${text.length - MAX_ERROR_BODY_LENGTH} characters]`
+    : text
+
+const formatErrorBody = (text: string) => {
+  try {
+    return truncateErrorText(
+      JSON.stringify(
+        JSON.parse(text),
+        (key, value) =>
+          uploadContentFields.has(key) && typeof value === "string"
+            ? `[omitted ${value.length} characters]`
+            : value,
+        2,
+      ),
+    )
+  } catch {
+    return truncateErrorText(text)
+  }
+}
 
 class PrettyHttpError extends Error {
   constructor(
@@ -44,12 +73,12 @@ export const prettyResponseErrorHook: AfterResponseHook = async (
 
     let requestBody = ""
     try {
-      requestBody = await request.clone().text()
+      requestBody = formatErrorBody(await request.clone().text())
     } catch {}
 
     const apiError = errorData?.error
     const errorString = apiError
-      ? `\n${apiError.error_code}: ${apiError.message}`
+      ? `\n${truncateErrorText(`${apiError.error_code}: ${apiError.message}`)}`
       : ""
     const sessionExpiredAdvice =
       request.headers.has("Authorization") &&
@@ -60,7 +89,7 @@ export const prettyResponseErrorHook: AfterResponseHook = async (
         : ""
 
     const bodyDisplay = errorData
-      ? JSON.stringify(errorData, null, 2)
+      ? formatErrorBody(responseText)
       : responseText.slice(0, 20)
 
     throw new PrettyHttpError(
