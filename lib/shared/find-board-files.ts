@@ -94,8 +94,9 @@ const findBoardFilesFromPatterns = ({
 
   if (filePaths.length > 0) {
     for (const inputPath of filePaths) {
-      // Check if the input path is a glob pattern
-      if (isGlobPattern(inputPath)) {
+      const targetPath = path.resolve(projectDir, inputPath)
+      const targetExists = fs.existsSync(targetPath)
+      if (!targetExists && isGlobPattern(inputPath)) {
         // Expand the glob pattern relative to the project directory
         const matches = globbySync(inputPath, {
           cwd: projectDir,
@@ -106,14 +107,7 @@ const findBoardFilesFromPatterns = ({
         for (const match of matches) {
           boardFileSet.add(match)
         }
-      } else {
-        // Handle as a regular file or directory path
-        const targetPath = path.resolve(projectDir, inputPath)
-
-        if (!fs.existsSync(targetPath)) {
-          continue
-        }
-
+      } else if (targetExists) {
         const stat = fs.statSync(targetPath)
         if (stat.isDirectory()) {
           const resolvedDir = path.resolve(targetPath)

@@ -875,6 +875,35 @@ test("snapshot command creates diff files when visuals change", async () => {
   expect(schDiff).toBe(true)
 }, 30_000)
 
+test("snapshot an existing filename containing square brackets", async () => {
+  const { tmpDir, runCommand } = await getCliTestFixture()
+  const board = JSON.stringify([
+    {
+      type: "pcb_board",
+      pcb_board_id: "board_1",
+      center: { x: 0, y: 0 },
+      width: 10,
+      height: 10,
+      num_layers: 2,
+    },
+  ])
+  await Bun.write(join(tmpDir, "board[1].circuit.json"), board)
+  await Bun.write(join(tmpDir, "board1.circuit.json"), board)
+
+  const { exitCode } = await runCommand(
+    "tsci snapshot board[1].circuit.json --pcb-only --update",
+  )
+
+  expect(exitCode).toBe(0)
+  const snapshotDir = join(tmpDir, "__snapshots__")
+  expect(
+    await Bun.file(join(snapshotDir, "board[1].circuit-pcb.snap.svg")).exists(),
+  ).toBe(true)
+  expect(
+    await Bun.file(join(snapshotDir, "board1.circuit-pcb.snap.svg")).exists(),
+  ).toBe(false)
+}, 30000)
+
 test("snapshot command with glob pattern", async () => {
   const { tmpDir, runCommand } = await getCliTestFixture()
 
