@@ -4,7 +4,7 @@ import { readFile, symlink, writeFile } from "node:fs/promises"
 import path from "node:path"
 import { getCliTestFixture } from "../../fixtures/get-cli-test-fixture"
 
-test("build drops the exploded view and note from the drawing SVG", async () => {
+test("build renders the exploded view and note in the drawing SVG", async () => {
   const { tmpDir, runCommand } = await getCliTestFixture()
   await writeFile(path.join(tmpDir, "package.json"), "{}")
   await symlink(
@@ -74,7 +74,10 @@ export default function CoverAssembly() {
     "utf8",
   )
   expect(svg).toContain("data-drawing-part-view-id=")
-  expect(svg).not.toContain("data-drawing-explosion-view-id=")
-  expect(svg).not.toContain("Lift cover 12 mm")
+  expect(svg).toContain("data-drawing-explosion-view-id=")
+  expect(svg).toContain("Lift cover 12 mm")
+  const images = svg.match(/data:image\/png;base64,[^"]+/g) ?? []
+  expect(images).toHaveLength(2)
+  expect(images[0]).not.toBe(images[1])
   await expect(svg).toMatchSvgSnapshot(import.meta.path, "exploded-drawing")
 }, 30_000)

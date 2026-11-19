@@ -1,6 +1,7 @@
 import { buildSubtree } from "@tscircuit/circuit-json-util"
 import type { AnyCircuitElement, DrawingPage } from "circuit-json"
 import { getCircuitJsonToGltfOptions } from "./get-circuit-json-to-gltf-options"
+import type { getDrawingSceneParts } from "./get-drawing-scene-parts"
 import { convertModelUrlsToFileUrls } from "../../cli/build/convert-model-urls-to-file-urls"
 
 export const getDrawingPages = (circuitJson: AnyCircuitElement[]) => {
@@ -60,11 +61,16 @@ export const renderDrawingPages = async (
   const geometry = convertModelUrlsToFileUrls(
     circuitJson.filter((e) => !e.type.startsWith("drawing_")),
   ) as AnyCircuitElement[]
+  let sceneParts: ReturnType<typeof getDrawingSceneParts> | undefined
   const scenes = new Map<string, ReturnType<typeof createSceneFromGLTF>>()
   const rendered = []
   for (const { page, fileName } of pages) {
     const outputs = await convertCircuitJsonToDrawingPages(circuitJson, {
       drawingPageId: page.drawing_page_id,
+      resolveSceneParts: () =>
+        (sceneParts ??= import("./get-drawing-scene-parts").then(
+          ({ getDrawingSceneParts }) => getDrawingSceneParts(geometry),
+        )),
       resolveScene: async (view) => {
         const key = JSON.stringify([
           view.source_group_id,
