@@ -4,9 +4,9 @@ import path from "node:path"
 import JSZip from "jszip"
 import { getCliTestFixture } from "../../fixtures/get-cli-test-fixture"
 
-test("Gerber ZIP includes registered stiffener drawings for a flex jumper", async () => {
+test("Gerber ZIP from circuit.json includes registered stiffener drawings for a flex jumper", async () => {
   const { tmpDir, runCommand } = await getCliTestFixture()
-  const circuitPath = path.join(tmpDir, "flex-jumper.circuit.json")
+  const circuitPath = path.join(tmpDir, "circuit.json")
   const outputPath = path.join(tmpDir, "flex-jumper-gerbers.zip")
   await copyFile(
     path.resolve(
@@ -17,7 +17,7 @@ test("Gerber ZIP includes registered stiffener drawings for a flex jumper", asyn
   )
 
   const { exitCode, stderr } = await runCommand(
-    `tsci export ${circuitPath} --format gerbers --output ${outputPath}`,
+    `tsci export circuit.json --format gerbers --output ${outputPath}`,
   )
   expect(exitCode).toBe(0)
   expect(stderr).toBe("")
