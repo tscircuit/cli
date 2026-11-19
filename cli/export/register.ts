@@ -143,10 +143,7 @@ export const registerExport = (program: Command) => {
 
             const csvContent = resultToCsv(result)
 
-            const outputCsvPath = outputSpicePath.replace(
-              /\.spice\.cir$/,
-              ".csv",
-            )
+            const outputCsvPath = `${outputSpicePath.replace(/(?:\.spice)?\.cir$/i, "")}.csv`
 
             await fs.writeFile(outputCsvPath, csvContent)
             console.log(

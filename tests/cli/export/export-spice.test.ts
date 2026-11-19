@@ -103,3 +103,23 @@ test(
   },
   { timeout: 30000 },
 )
+
+test(
+  "export spice keeps a custom netlist and simulation CSV in separate files",
+  async () => {
+    const { tmpDir, runCommand } = await getCliTestFixture()
+    const circuitPath = path.join(tmpDir, "test-circuit.tsx")
+    const netlistPath = path.join(tmpDir, "custom.cir")
+    await writeFile(circuitPath, circuitCode)
+
+    await runCommand(`tsci export ${circuitPath} -f spice -o ${netlistPath}`)
+
+    expect(await readFile(netlistPath, "utf-8")).toContain(
+      "* Circuit JSON to SPICE Netlist",
+    )
+    expect(await readFile(path.join(tmpDir, "custom.csv"), "utf-8")).toContain(
+      "time,",
+    )
+  },
+  { timeout: 30000 },
+)
