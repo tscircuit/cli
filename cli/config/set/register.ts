@@ -55,7 +55,15 @@ export const registerConfigSet = (program: Command) => {
           key === "prebuildCommand" ||
           key === "buildCommand"
         ) {
-          const projectConfig = loadProjectConfigSync(projectDir) ?? {}
+          let projectConfig: TscircuitProjectConfig
+          try {
+            projectConfig =
+              loadProjectConfigSync(projectDir, { throwOnError: true }) ?? {}
+          } catch (error) {
+            return configCommand.error(
+              `Cannot update ${CONFIG_FILENAME}: ${error}`,
+            )
+          }
           projectConfig[key] = value
           if (saveProjectConfig(projectConfig, projectDir)) {
             console.log(
