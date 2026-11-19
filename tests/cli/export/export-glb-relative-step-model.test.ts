@@ -37,11 +37,7 @@ test(
       [...stderr.matchAll(/Failed to load STEP from [^:]+/g)].map(
         ([message]) => message,
       ),
-    ).toMatchInlineSnapshot(`
-      [
-        "Failed to load STEP from ./libraries/cap.step",
-      ]
-    `)
+    ).toMatchInlineSnapshot(`[]`)
   },
   { timeout: 60000 },
 )
