@@ -1,6 +1,6 @@
 import type { Command } from "commander"
-import { getRegistryApiKy } from "lib/registry-api/get-ky"
 import kleur from "kleur"
+import { getRegistryApiKy } from "lib/registry-api/get-ky"
 
 interface RegistryPackagesCreateOptions {
   packageName: string
@@ -18,7 +18,7 @@ export const getRegistryPackageName = ({
   org?: string
 }) => {
   if (!org) return packageName
-  return `@tsci/${org}.${packageName}`
+  return `${org}/${packageName}`
 }
 
 export const getIsPrivateFromOptions = ({
