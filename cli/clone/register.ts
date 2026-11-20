@@ -1,11 +1,13 @@
-import type { Command } from "commander"
-import { getRegistryApiKy } from "lib/registry-api/get-ky"
 import * as fs from "node:fs"
 import * as path from "node:path"
-import { setupTsciProject } from "lib/shared/setup-tsci-packages"
-import { generateTsConfig } from "lib/shared/generate-ts-config"
+import type { Command } from "commander"
 import kleur from "kleur"
 import { cliConfig } from "lib/cli-config"
+import { getRegistryApiKy } from "lib/registry-api/get-ky"
+import { generateTsConfig } from "lib/shared/generate-ts-config"
+import { getPackageManager } from "lib/shared/get-package-manager"
+import { setupTsciProject } from "lib/shared/setup-tsci-packages"
+import { writeFileIfNotExists } from "lib/shared/write-file-if-not-exists"
 import { cloneBugReport } from "./clone-bug-report"
 import { handleExistingDirectory } from "./handle-existing-directory"
 
@@ -158,13 +160,37 @@ export const registerClone = (program: Command) => {
           }
         }
 
-        fs.writeFileSync(
+        writeFileIfNotExists(
           path.join(dirPath, ".npmrc"),
           "@tsci:registry=https://npm.tscircuit.com",
         )
 
         generateTsConfig(dirPath)
-        await setupTsciProject(dirPath)
+        if (fs.existsSync(path.join(dirPath, "package.json"))) {
+          const packageManager = getPackageManager(dirPath)
+          const lockfiles = {
+            bun: ["bun.lock", "bun.lockb"],
+            npm: ["package-lock.json", "npm-shrinkwrap.json"],
+            pnpm: ["pnpm-lock.yaml"],
+            yarn: ["yarn.lock"],
+          }
+          const frozenLockfile = lockfiles[packageManager.name].some((file) =>
+            fs.existsSync(path.join(dirPath, file)),
+          )
+          console.log("Installing dependencies...")
+          try {
+            packageManager.installAll({ cwd: dirPath, frozenLockfile })
+            console.log("Dependencies installed successfully.")
+          } catch (error) {
+            console.warn("Failed to automatically install dependencies.")
+            console.warn(error instanceof Error ? error.message : String(error))
+            console.warn(
+              `Please run \`${packageManager.getInstallAllCommand({ frozenLockfile })}\` manually.`,
+            )
+          }
+        } else {
+          await setupTsciProject(dirPath)
+        }
 
         const relativeDirPath = path.relative(originalCwd, dirPath)
 
