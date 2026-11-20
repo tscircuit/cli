@@ -1,5 +1,8 @@
 import { afterEach, expect, test } from "bun:test"
+import { writeFileSync } from "node:fs"
+import path from "node:path"
 import { getPackageManager } from "lib/shared/get-package-manager"
+import { temporaryDirectoryTask } from "tempy"
 
 const originalUserAgent = process.env.npm_config_user_agent
 
@@ -21,14 +24,17 @@ test("Bun preserves a published lockfile", () => {
   expect(packageManager.getInstallAllCommand()).toBe("bun install")
 })
 
-test("npm preserves a published lockfile", () => {
+test("npm preserves a published lockfile", async () => {
   process.env.npm_config_user_agent = "npm/1.0.0"
-  const packageManager = getPackageManager()
+  await temporaryDirectoryTask((projectDir) => {
+    writeFileSync(path.join(projectDir, "package-lock.json"), "{}")
+    const packageManager = getPackageManager(projectDir)
 
-  expect(packageManager.getInstallAllCommand({ frozenLockfile: true })).toBe(
-    "npm ci",
-  )
-  expect(packageManager.getInstallAllCommand()).toBe("npm install")
+    expect(packageManager.getInstallAllCommand({ frozenLockfile: true })).toBe(
+      "npm ci",
+    )
+    expect(packageManager.getInstallAllCommand()).toBe("npm install")
+  })
 })
 
 test("pnpm preserves a published lockfile", () => {

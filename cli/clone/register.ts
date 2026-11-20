@@ -167,8 +167,7 @@ export const registerClone = (program: Command) => {
 
         generateTsConfig(dirPath)
         if (fs.existsSync(path.join(dirPath, "package.json"))) {
-          process.chdir(dirPath)
-          const packageManager = getPackageManager()
+          const packageManager = getPackageManager(dirPath)
           const lockfiles = {
             bun: ["bun.lock", "bun.lockb"],
             npm: ["package-lock.json", "npm-shrinkwrap.json"],
