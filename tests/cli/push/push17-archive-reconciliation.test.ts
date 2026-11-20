@@ -1,8 +1,8 @@
 import { expect, test } from "bun:test"
-import { getCliConfig } from "lib/cli-config"
 import { writeFileSync } from "node:fs"
 import path from "node:path"
-import { gzipSync, gunzipSync } from "node:zlib"
+import { gunzipSync, gzipSync } from "node:zlib"
+import { getCliConfig } from "lib/cli-config"
 import { getCliTestFixture } from "tests/fixtures/get-cli-test-fixture"
 
 type ArchiveFile = {
@@ -48,6 +48,9 @@ const setup = async ({
       }
 
       if (url.pathname === "/api/package_files/upload_archive") {
+        if (archiveStatus === 413) {
+          return new Response(null, { status: 413 })
+        }
         if (archiveStatus === 400) {
           return Response.json(
             { error: { error_code: "invalid_archive" } },
@@ -203,6 +206,24 @@ test("push falls back to individual uploads after a definite archive rejection",
   expect(stdout).toContain(
     "Archive upload failed, falling back to file-by-file upload",
   )
+  expect(stdout.length).toBeLessThan(4096)
+  expect(stdout).not.toMatch(/"archive_base64"\s*:\s*"H4sI/)
+}, 30_000)
+
+test("push explains when the registry rejects an oversized archive and uploads files individually", async () => {
+  const { runCommand, uploads } = await setup({ archiveStatus: 413 })
+
+  const { stdout, stderr, exitCode } = await runCommand(
+    "tsci push --compress --version-tag test",
+  )
+
+  expect(stderr.trim()).toBe(
+    "tsci: warning: The registry rejected the archive as too large (HTTP 413). Uploading files individually.",
+  )
+  expect(stdout).not.toContain("archive_base64")
+  expect(exitCode).toBe(0)
+  expect(uploads).toHaveLength(4)
+  expect(stdout).toContain("published!")
 }, 30_000)
 
 test.each(["list", "download"])(
