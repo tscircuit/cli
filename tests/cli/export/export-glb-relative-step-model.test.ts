@@ -47,11 +47,7 @@ test(
       [...stderr.matchAll(/Failed to load STEP from [^:]+/g)].map(
         ([message]) => message,
       ),
-    ).toMatchInlineSnapshot(`
-      [
-        "Failed to load STEP from ./libraries/model.step",
-      ]
-    `)
+    ).toMatchInlineSnapshot(`[]`)
     const glb = await readFile(path.join(tmpDir, "export.glb"))
     await expect(
       renderGLTFToPNGFromGLB(glb, GLB_SNAPSHOT_CAMERA),
