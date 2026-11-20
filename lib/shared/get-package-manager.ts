@@ -1,23 +1,24 @@
-import fs from "fs"
-import kleur from "kleur"
 import { exec, execSync } from "node:child_process"
+import fs from "node:fs"
+import path from "node:path"
 import { promisify } from "node:util"
+import kleur from "kleur"
 import { getBunPackageManager } from "./get-bun-package-manager"
 import { getGlobalDepsInstallCommand } from "./get-dep-install-command"
 
 const execAsync = promisify(exec)
 
-function detectPackageManager(): "npm" | "yarn" | "pnpm" | "bun" {
+function detectPackageManager(cwd: string): "npm" | "yarn" | "pnpm" | "bun" {
   const userAgent = process.env.npm_config_user_agent || ""
   if (userAgent.startsWith("yarn")) return "yarn"
   if (userAgent.startsWith("pnpm")) return "pnpm"
   if (userAgent.startsWith("bun")) return "bun"
 
-  if (fs.existsSync("bun.lockb")) return "bun"
-  if (fs.existsSync("bun.lock")) return "bun"
-  if (fs.existsSync("yarn.lock")) return "yarn"
-  if (fs.existsSync("pnpm-lock.yaml")) return "pnpm"
-  if (fs.existsSync("package-lock.json")) return "npm"
+  if (fs.existsSync(path.join(cwd, "bun.lockb"))) return "bun"
+  if (fs.existsSync(path.join(cwd, "bun.lock"))) return "bun"
+  if (fs.existsSync(path.join(cwd, "yarn.lock"))) return "yarn"
+  if (fs.existsSync(path.join(cwd, "pnpm-lock.yaml"))) return "pnpm"
+  if (fs.existsSync(path.join(cwd, "package-lock.json"))) return "npm"
 
   // Check if bun is available in the shell
   try {
@@ -48,13 +49,13 @@ export interface PackageManager {
   }) => Promise<void>
   getInitCommand: () => string
   getInstallDepsCommand: (deps: string[], dev?: boolean) => string
-  installAll: (opts: { cwd: string }) => void
-  getInstallAllCommand: () => string
+  installAll: (opts: { cwd: string; frozenLockfile?: boolean }) => void
+  getInstallAllCommand: (opts?: { frozenLockfile?: boolean }) => string
 }
 
-export function getPackageManager(): PackageManager {
+export function getPackageManager(cwd = process.cwd()): PackageManager {
   if (process.env.TSCIRCUIT_NODE_RUNTIME) return getBunPackageManager()
-  const pm = detectPackageManager()
+  const pm = detectPackageManager(cwd)
   return {
     name: pm,
     uninstall: ({ name, cwd }) => {
@@ -128,8 +129,8 @@ export function getPackageManager(): PackageManager {
     },
     getInitCommand,
     getInstallDepsCommand,
-    installAll: ({ cwd }) => {
-      const installCommand = getInstallAllCommand()
+    installAll: ({ cwd, frozenLockfile }) => {
+      const installCommand = getInstallAllCommand({ frozenLockfile })
       console.log(kleur.gray(`> ${installCommand}`))
       const output = execSync(installCommand, {
         stdio: ["inherit", "pipe", "pipe"],
@@ -163,7 +164,10 @@ export function getPackageManager(): PackageManager {
     return "npm init -y"
   }
 
-  function getInstallAllCommand() {
+  function getInstallAllCommand({ frozenLockfile = false } = {}) {
+    if (frozenLockfile) {
+      return pm === "npm" ? "npm ci" : `${pm} install --frozen-lockfile`
+    }
     if (pm === "yarn") return "yarn install"
     if (pm === "pnpm") return "pnpm install"
     if (pm === "bun") return "bun install"
