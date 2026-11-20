@@ -14,7 +14,7 @@
         "@tscircuit/circuit-json-pcb-style-analysis": "https://jscdn.tscircuit.com/@tscircuit/circuit-json-pcb-style-analysis/0.0.5.tgz",
         "@tscircuit/circuit-json-placement-analysis": "^0.0.17",
         "@tscircuit/circuit-json-routing-analysis": "^0.0.8",
-        "@tscircuit/circuit-json-schematic-placement-analysis": "https://jscdn.tscircuit.com/@tscircuit/circuit-json-schematic-placement-analysis/0.0.97.tgz",
+        "@tscircuit/circuit-json-schematic-placement-analysis": "https://jscdn.tscircuit.com/@tscircuit/circuit-json-schematic-placement-analysis/0.0.102.tgz",
         "@tscircuit/circuit-json-to-drawing": "https://jscdn.tscircuit.com/@tscircuit/circuit-json-to-drawing/0.0.3.tgz",
         "@tscircuit/circuit-json-to-jlcpcb-quote": "https://jscdn.tscircuit.com/@tscircuit/circuit-json-to-jlcpcb-quote/0.0.6.tgz",
         "@tscircuit/fake-snippets": "^0.0.226",
@@ -400,7 +400,7 @@
 
     "@tscircuit/circuit-json-routing-analysis": ["@tscircuit/circuit-json-routing-analysis@0.0.8", "", { "peerDependencies": { "circuit-json": "*", "typescript": "^5" } }, "sha512-mZxRSUbqVb6iZ47ZhNL3mDL7BY9kUcbLg7o4f8Jn5amkDGvmTo52547JQ5ui/6WSJHXmaW7hmRVTEj6PlivskQ=="],
 
-    "@tscircuit/circuit-json-schematic-placement-analysis": ["@tscircuit/circuit-json-schematic-placement-analysis@https://jscdn.tscircuit.com/@tscircuit/circuit-json-schematic-placement-analysis/0.0.97.tgz", { "dependencies": { "@tscircuit/circuit-json-util": "^0.0.121", "@tscircuit/math-utils": "^0.0.36", "@tscircuit/solver-utils": "^0.0.19", "calculate-elbow": "^0.0.13", "circuit-json-to-connectivity-map": "^0.0.33", "circuit-to-svg": "^0.0.427", "graphics-debug": "^0.0.94", "schematic-symbols": "^0.0.251", "stack-svgs": "^0.0.1" }, "peerDependencies": { "circuit-json": "*", "typescript": "^5" } }, "sha512-igWC1uCMRjGYQPC13fb27R90YN6pK19Cu7kbPkS4r0K/91YF/kxJetpWeuOQXtf8HzrdTKJoOvQ6MCRN5IBDAQ=="],
+    "@tscircuit/circuit-json-schematic-placement-analysis": ["@tscircuit/circuit-json-schematic-placement-analysis@https://jscdn.tscircuit.com/@tscircuit/circuit-json-schematic-placement-analysis/0.0.102.tgz", { "dependencies": { "@tscircuit/circuit-json-util": "^0.0.121", "@tscircuit/math-utils": "^0.0.36", "@tscircuit/solver-utils": "^0.0.19", "calculate-elbow": "^0.0.13", "circuit-json-to-connectivity-map": "^0.0.33", "circuit-to-svg": "^0.0.427", "graphics-debug": "^0.0.94", "schematic-symbols": "^0.0.251", "stack-svgs": "^0.0.1" }, "peerDependencies": { "circuit-json": "*", "typescript": "^5" } }, "sha512-PWZJZmkolRhL+X4tM0tnV9anXUU9hbx/yM37FljLJQoAlsnow7EW3KTCpxVBDMA4FxN0ukJUy53q6Cp79eaR4g=="],
 
     "@tscircuit/circuit-json-to-drawing": ["@tscircuit/circuit-json-to-drawing@https://jscdn.tscircuit.com/@tscircuit/circuit-json-to-drawing/0.0.3.tgz", { "dependencies": { "@tscircuit/alphabet": "0.0.25", "circuit-json": "^0.0.534", "gl-matrix": "^3.4.4", "poppygl": "^0.0.37" } }, "sha512-V24n/ZFYDw7GNZLRaUBxQJAh6XXUnWGo+NV6jnP4UNaG5KkyNMbvoJa+j0iNS/INXNq/uKSC0dFlUOfvBHUsjA=="],
 
