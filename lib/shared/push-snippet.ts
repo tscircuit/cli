@@ -479,6 +479,12 @@ export const pushSnippet = async ({
           )
           return onExit(1)
         }
+      } else if (status === 413) {
+        console.warn(
+          kleur.yellow(
+            "tsci: warning: The registry rejected the archive as too large (HTTP 413). Uploading files individually.",
+          ),
+        )
       } else {
         log(
           kleur.yellow(
