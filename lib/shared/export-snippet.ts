@@ -38,6 +38,7 @@ import { getPlatformConfigWithCliDefaults } from "lib/shared/get-platform-config
 import { loadLocalStepModelFsMap } from "lib/shared/load-local-step-model-fs-map"
 import { mergePlatformConfigs } from "lib/shared/platform-config-utils"
 import { convertCircuitJsonToSchematicPdf } from "./convert-circuit-json-to-schematic-pdf"
+import { convertModelUrlsToFileUrls } from "../../cli/build/convert-model-urls-to-file-urls"
 import { convertToKicadLibrary } from "./convert-to-kicad-library"
 import { importFromUserLand } from "./importFromUserLand"
 import { isCircuitJsonFile } from "./is-circuit-json-file"
@@ -348,7 +349,7 @@ export const exportSnippet = async ({
     case "gltf":
       outputContent = JSON.stringify(
         await convertCircuitJsonToGltf(
-          circuitJson,
+          convertModelUrlsToFileUrls(circuitJson),
           getCircuitJsonToGltfOptions({ format: "gltf" }),
         ),
         null,
@@ -358,7 +359,7 @@ export const exportSnippet = async ({
     case "glb":
       outputContent = Buffer.from(
         (await convertCircuitJsonToGltf(
-          circuitJson,
+          convertModelUrlsToFileUrls(circuitJson),
           getCircuitJsonToGltfOptions({ format: "glb" }),
         )) as ArrayBuffer,
       )
