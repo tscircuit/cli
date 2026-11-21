@@ -1,6 +1,7 @@
 import { createHash } from "node:crypto"
 import fs from "node:fs"
 import path from "node:path"
+import { fileURLToPath, pathToFileURL } from "node:url"
 import { getPlatformConfig } from "@tscircuit/eval/platform-config"
 import type { PlatformConfig } from "@tscircuit/props"
 import semver from "semver"
@@ -72,28 +73,41 @@ export function getPlatformConfigWithCliDefaults(
       ...basePlatformConfig.footprintFileParserMap,
       kicad_mod: {
         loadFromUrl: async (url: string) => {
-          // Convert file paths to file:// URLs for Bun's fetch
+          // Convert file paths to file:// URLs (or data: URLs under Node where fetch(file://) is unsupported)
+          let localFilePath: string | null = null
           let fetchUrl = url
-          if (url.startsWith("./") || url.startsWith("../")) {
-            // Relative path - resolve to absolute first
-            const absolutePath = path.resolve(projectDir, url)
-            fetchUrl = `file://${absolutePath}`
-          } else if (url.startsWith("/")) {
-            // Absolute path - check if it exists, otherwise try resolving as relative
+          if (url.startsWith("file:")) {
+            localFilePath = fileURLToPath(url)
+          } else if (url.startsWith("./") || url.startsWith("../")) {
+            localFilePath = path.resolve(projectDir, url)
+            fetchUrl = pathToFileURL(localFilePath).href
+          } else if (path.isAbsolute(url) || url.startsWith("/")) {
             if (fs.existsSync(url)) {
-              fetchUrl = `file://${url}`
-            } else {
-              // Try treating it as a relative path (strip leading / and resolve from cwd)
+              localFilePath = url
+              fetchUrl = pathToFileURL(url).href
+            } else if (url.startsWith("/")) {
               const relativePath = `.${url}`
               const absolutePath = path.resolve(projectDir, relativePath)
               if (fs.existsSync(absolutePath)) {
-                fetchUrl = `file://${absolutePath}`
+                localFilePath = absolutePath
+                fetchUrl = pathToFileURL(absolutePath).href
               } else {
-                // Fall back to original path
-                fetchUrl = `file://${url}`
+                fetchUrl = pathToFileURL(url).href
               }
+            } else {
+              fetchUrl = pathToFileURL(url).href
             }
           }
+
+          if (
+            typeof Bun === "undefined" &&
+            localFilePath &&
+            fs.existsSync(localFilePath)
+          ) {
+            const content = fs.readFileSync(localFilePath, "utf-8")
+            fetchUrl = `data:text/plain;charset=utf-8,${encodeURIComponent(content)}`
+          }
+
           // Delegate to the original loadFromUrl from eval
           return basePlatformConfig.footprintFileParserMap!.kicad_mod.loadFromUrl(
             fetchUrl,

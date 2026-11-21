@@ -18,7 +18,13 @@ function commandExists(cmd) {
 const runtime = process.env.TSCIRCUIT_NODE_RUNTIME
   ? getNodeRuntime()
   : undefined
-const runner = runtime?.executable ?? (commandExists("bun") ? "bun" : "tsx")
+const runner =
+  runtime?.executable ??
+  (commandExists("bun")
+    ? "bun"
+    : commandExists("tsx")
+      ? "tsx"
+      : process.execPath)
 
 const __dirname = dirname(fileURLToPath(import.meta.url))
 const packageRoot = join(__dirname, "..")
