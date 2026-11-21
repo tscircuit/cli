@@ -10,7 +10,10 @@ export const registerPush = (program: Command) => {
       "--version-tag <tag>",
       "Publish as a non-latest version using the provided tag",
     )
-    .option("--include-dist", "Include the dist directory in the push")
+    .option(
+      "--include-dist",
+      "Include the dist directory in the push and use it as the build instead of building in the cloud",
+    )
     .option(
       "--compress",
       "Compress project files into a single archive upload for faster pushes (default)",
