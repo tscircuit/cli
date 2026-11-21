@@ -3,6 +3,7 @@ import path from "node:path"
 import type { PlatformConfig } from "@tscircuit/props"
 import type { AnyCircuitElement } from "circuit-json"
 import { loadRuntimeProjectConfig } from "lib/project-config"
+import { archiveCircuitJsonBuild } from "../../lib/shared/circuit-json-build-history"
 import { analyzeCircuitJson } from "../../lib/shared/circuit-json-diagnostics"
 import {
   collapseRepeatedIssues,
@@ -96,6 +97,11 @@ export const handleBuildFile = async (
         ).circuitJson
 
     fs.mkdirSync(path.dirname(outputPath), { recursive: true })
+    archiveCircuitJsonBuild({
+      projectDir,
+      outputPath,
+      warn: (message) => workerLog(message),
+    })
     fs.writeFileSync(outputPath, JSON.stringify(circuitJson, null, 2))
 
     workerLog(

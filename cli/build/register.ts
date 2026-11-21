@@ -31,6 +31,7 @@ import { buildGlbs } from "./build-glbs"
 import { buildKicadPcm } from "./build-kicad-pcm"
 import { buildStepFiles } from "./build-step-files"
 import { buildPreviewGltf } from "./build-preview-gltf"
+import { buildRoutingHistory } from "./build-routing-history"
 import type { BuildFileResult } from "./build-preview-images"
 import { buildPreviewImages } from "./build-preview-images"
 import {
@@ -220,6 +221,10 @@ export const registerBuild = (program: Command) => {
     )
     .option("--glbs", "Generate GLB 3D model files for every successful build")
     .option("--step", "Generate STEP 3D model files for every successful build")
+    .option(
+      "--routing-history",
+      "Generate a routing-history.mp4 replaying the PCB from every previous build",
+    )
     .option(
       "--profile",
       "Log per-circuit circuit.json generation time during build",
@@ -926,6 +931,20 @@ export const registerBuild = (program: Command) => {
           })
         }
 
+        if (resolvedOptions?.routingHistory) {
+          console.log("Generating routing history video...")
+          try {
+            await buildRoutingHistory({ builtFiles, projectDir })
+          } catch (err) {
+            console.error(
+              `Error generating routing history: ${err instanceof Error ? err.message : err}`,
+            )
+            if (!resolvedOptions?.ignoreErrors) {
+              exitBuild(1, "routing-history generation failed")
+            }
+          }
+        }
+
         if (resolvedOptions?.transpile) {
           const includeBoardPatterns =
             projectConfig?.includeBoardFiles?.filter((pattern) =>
@@ -1152,6 +1171,7 @@ export const registerBuild = (program: Command) => {
           resolvedOptions?.drawing && `drawing=${resolvedOptions.drawing}`,
           resolvedOptions?.glbs && "glbs",
           resolvedOptions?.step && "step",
+          resolvedOptions?.routingHistory && "routing-history",
           resolvedOptions?.kicadProject && "kicad-project",
           resolvedOptions?.kicadLibrary && "kicad-library",
           resolvedOptions?.kicadPcm && "kicad-pcm",

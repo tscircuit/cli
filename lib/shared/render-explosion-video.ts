@@ -1,10 +1,3 @@
-import { execFile, spawn } from "node:child_process"
-import { mkdtemp, readFile, rm } from "node:fs/promises"
-import { tmpdir } from "node:os"
-import path from "node:path"
-import { Readable } from "node:stream"
-import { pipeline } from "node:stream/promises"
-import { promisify } from "node:util"
 import type { AnyCircuitElement } from "circuit-json"
 import {
   convertCircuitJsonToGltf,
@@ -18,6 +11,10 @@ import {
   renderSceneFromGLTF,
 } from "poppygl"
 import { convertModelUrlsToFileUrls } from "../../cli/build/convert-model-urls-to-file-urls"
+import {
+  encodeRgbaFramesToMp4,
+  isFfmpegAvailable,
+} from "./encode-rgba-frames-to-mp4"
 import { getCircuitJsonToGltfOptions } from "./get-circuit-json-to-gltf-options"
 import {
   resolveExplosionVideoOptions,
@@ -45,9 +42,7 @@ export async function renderExplosionVideo(
     throw new Error(
       "No explosion stages found. Add <assembly.explosion.stage> and <assembly.explosion.move> before exporting a video.",
     )
-  try {
-    await promisify(execFile)("ffmpeg", ["-version"])
-  } catch {
+  if (!(await isFfmpegAvailable())) {
     throw new Error(
       "Explosion MP4 export requires FFmpeg. Install ffmpeg and make sure it is on PATH.",
     )
@@ -145,72 +140,11 @@ export async function renderExplosionVideo(
       for (let i = 0; i < holdFrames; i++) yield rgba
     }
   }
-  const directory = await mkdtemp(path.join(tmpdir(), "tsci-explosion-"))
-  const output = path.join(directory, "explosion.mp4")
-  const encoder = spawn(
-    "ffmpeg",
-    [
-      "-hide_banner",
-      "-loglevel",
-      "error",
-      "-y",
-      "-f",
-      "rawvideo",
-      "-pixel_format",
-      "rgba",
-      "-video_size",
-      `${options.width}x${options.height}`,
-      "-framerate",
-      String(options.fps),
-      "-i",
-      "pipe:0",
-      "-an",
-      // Use canonical color conversion and encoding across CPU architectures.
-      "-sws_flags",
-      "+accurate_rnd+bitexact",
-      "-c:v",
-      "libx264",
-      "-x264-params",
-      "cpu-independent=1",
-      "-threads",
-      "1",
-      "-preset",
-      "fast",
-      "-crf",
-      "18",
-      "-pix_fmt",
-      "yuv420p",
-      "-movflags",
-      "+faststart",
-      output,
-    ],
-    { stdio: ["pipe", "ignore", "pipe"] },
-  )
-  let stderr = ""
-  encoder.stderr.on("data", (chunk) => {
-    stderr = (stderr + chunk).slice(-16_384)
+  return encodeRgbaFramesToMp4({
+    frames: rgbaFrames(),
+    width: options.width,
+    height: options.height,
+    fps: options.fps,
+    videoName: "explosion video",
   })
-  const completed = new Promise<void>((resolve, reject) => {
-    encoder.once("error", reject)
-    encoder.once("close", (code) =>
-      code === 0
-        ? resolve()
-        : reject(new Error(`FFmpeg failed (${code}): ${stderr.trim()}`)),
-    )
-  })
-  try {
-    await Promise.all([
-      pipeline(Readable.from(rgbaFrames()), encoder.stdin),
-      completed,
-    ])
-    return await readFile(output)
-  } catch (error) {
-    encoder.kill()
-    await completed.catch(() => {})
-    throw new Error(
-      `Could not encode explosion video: ${stderr.trim() || String(error)}`,
-    )
-  } finally {
-    await rm(directory, { recursive: true, force: true })
-  }
 }
