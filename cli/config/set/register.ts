@@ -11,6 +11,7 @@ import kleur from "kleur"
 // Keys for global CLI config
 const availableGlobalConfigKeys = [
   "alwaysCloneWithAuthorName",
+  "saveBuildHistory",
 ] satisfies (keyof CliConfig)[]
 
 // Keys for project-specific tscircuit.config.json
@@ -31,12 +32,12 @@ export const registerConfigSet = (program: Command) => {
     .description("Set a configuration value (global or project-specific)")
     .argument(
       "<key>",
-      "Configuration key (e.g., alwaysCloneWithAuthorName, mainEntrypoint, kicadLibraryEntrypointPath, previewComponentPath, siteDefaultComponentPath, prebuildCommand, buildCommand)",
+      "Configuration key (e.g., alwaysCloneWithAuthorName, saveBuildHistory, mainEntrypoint, kicadLibraryEntrypointPath, previewComponentPath, siteDefaultComponentPath, prebuildCommand, buildCommand)",
     )
     .argument("<value>", "Value to set")
     .action((key: string, value: string) => {
       if (availableGlobalConfigKeys.some((k) => k === key)) {
-        if (key === "alwaysCloneWithAuthorName") {
+        if (key === "alwaysCloneWithAuthorName" || key === "saveBuildHistory") {
           const booleanValue = value.toLowerCase() === "true"
           cliConfig.set(key, booleanValue)
           console.log(

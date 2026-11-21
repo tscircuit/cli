@@ -1,5 +1,6 @@
 import fs from "node:fs"
 import path from "node:path"
+import { cliConfig } from "lib/cli-config"
 
 export const BUILD_HISTORY_DIR_NAME = ".tscircuit-build-history"
 
@@ -36,7 +37,8 @@ const getProjectRelativePath = (projectDir: string, filePath: string) => {
 /**
  * Keeps the circuit JSON a rebuild is about to replace, at
  * `.tscircuit-build-history/<time it was built>/<project-relative path>`.
- * History is best-effort and must never fail the build.
+ * History is best-effort and must never fail the build. Turn it off with
+ * `tsci config set saveBuildHistory false`.
  */
 export const archiveCircuitJsonBuild = ({
   projectDir,
@@ -48,6 +50,7 @@ export const archiveCircuitJsonBuild = ({
   warn?: (message: string) => void
 }) => {
   try {
+    if (cliConfig.get("saveBuildHistory") === false) return
     const relativePath = getProjectRelativePath(projectDir, outputPath)
     if (!relativePath || !fs.existsSync(outputPath)) return
     const stat = fs.statSync(outputPath)

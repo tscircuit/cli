@@ -77,3 +77,36 @@ test("rebuilding keeps the replaced circuit json in .tscircuit-build-history", a
     ),
   ).toBe(secondBuild)
 }, 120_000)
+
+test("tsci config set saveBuildHistory false turns build history off", async () => {
+  const { tmpDir, runCommand } = await getCliTestFixture()
+  const circuitPath = path.join(tmpDir, "my-board.circuit.tsx")
+  const historyDir = path.join(tmpDir, ".tscircuit-build-history")
+  await writeFile(path.join(tmpDir, "package.json"), "{}")
+  // Build workers resolve react from the project, not from the CLI.
+  await mkdir(path.join(tmpDir, "node_modules"))
+  await symlink(
+    path.resolve("node_modules/react"),
+    path.join(tmpDir, "node_modules/react"),
+  )
+
+  const { stdout } = await runCommand("tsci config set saveBuildHistory false")
+  expect(stdout).toContain("saveBuildHistory to false")
+
+  await writeFile(circuitPath, circuitCode("R_FIRST"))
+  await writeFile(
+    path.join(tmpDir, "other.circuit.tsx"),
+    circuitCode("R_OTHER"),
+  )
+  expect((await runCommand("tsci build")).exitCode).toBe(0)
+  await writeFile(circuitPath, circuitCode("R_SECOND"))
+  expect((await runCommand("tsci build")).exitCode).toBe(0)
+  await writeFile(circuitPath, circuitCode("R_THIRD"))
+  expect((await runCommand("tsci build --concurrency 2")).exitCode).toBe(0)
+  expect(await Bun.file(historyDir).exists()).toBe(false)
+
+  await runCommand("tsci config set saveBuildHistory true")
+  await writeFile(circuitPath, circuitCode("R_FOURTH"))
+  expect((await runCommand("tsci build my-board.circuit.tsx")).exitCode).toBe(0)
+  expect(await readdir(historyDir)).toHaveLength(1)
+}, 120_000)
