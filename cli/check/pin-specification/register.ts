@@ -1,5 +1,5 @@
-import type { PlatformConfig } from "@tscircuit/props"
 import { runAllPinSpecificationChecks } from "@tscircuit/checks"
+import type { PlatformConfig } from "@tscircuit/props"
 import type { AnyCircuitElement } from "circuit-json"
 import type { Command } from "commander"
 import { getCircuitJsonForCheck, resolveCheckInputFilePath } from "../shared"
@@ -11,7 +11,7 @@ type CircuitJsonIssue = {
   message?: string
 }
 
-export const checkPinSpecification = async (file?: string) => {
+export const getCheckPinSpecificationResult = async (file?: string) => {
   const resolvedInputFilePath = await resolveCheckInputFilePath(file)
   const typedCircuitJson = (await getCircuitJsonForCheck({
     filePath: resolvedInputFilePath,
@@ -45,8 +45,14 @@ export const checkPinSpecification = async (file?: string) => {
     )
   }
 
-  return diagnosticsLines.join("\n")
+  return {
+    output: diagnosticsLines.join("\n"),
+    hasErrors: errors.length > 0,
+  }
 }
+
+export const checkPinSpecification = async (file?: string) =>
+  (await getCheckPinSpecificationResult(file)).output
 
 export const registerCheckPinSpecification = (program: Command) => {
   program.commands
@@ -56,8 +62,9 @@ export const registerCheckPinSpecification = (program: Command) => {
     .argument("[file]", "Path to the entry file")
     .action(async (file?: string) => {
       try {
-        const output = await checkPinSpecification(file)
+        const { output, hasErrors } = await getCheckPinSpecificationResult(file)
         console.log(output)
+        if (hasErrors) process.exitCode = 1
       } catch (error) {
         console.error(error instanceof Error ? error.message : String(error))
         process.exit(1)
