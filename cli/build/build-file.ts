@@ -3,6 +3,7 @@ import path from "node:path"
 import type { PlatformConfig } from "@tscircuit/props"
 import type { AnyCircuitElement } from "circuit-json"
 import kleur from "kleur"
+import { archiveCircuitJsonBuild } from "lib/shared/circuit-json-build-history"
 import { analyzeCircuitJson } from "lib/shared/circuit-json-diagnostics"
 import {
   collapseRepeatedIssues,
@@ -76,6 +77,7 @@ export const buildFile = async (
     }
 
     fs.mkdirSync(path.dirname(output), { recursive: true })
+    archiveCircuitJsonBuild({ projectDir, outputPath: output })
     fs.writeFileSync(output, JSON.stringify(circuitJson, null, 2))
     console.log(`Circuit JSON written to ${path.relative(projectDir, output)}`)
 

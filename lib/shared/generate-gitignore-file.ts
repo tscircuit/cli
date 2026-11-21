@@ -32,6 +32,7 @@ yarn-error.log*
 
 # tscircuit cache
 .tscircuit/
+.tscircuit-build-history/
 `
 
   writeFileIfNotExists(gitignorePath, gitignoreContent)

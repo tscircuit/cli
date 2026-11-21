@@ -31,6 +31,7 @@ export interface BuildCommandOptions {
   drawing?: string
   glbs?: boolean
   step?: boolean
+  routingHistory?: boolean
   profile?: boolean
   autorouterThreads?: number
   autorouterDebug?: boolean
