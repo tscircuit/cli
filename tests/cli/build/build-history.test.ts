@@ -1,5 +1,5 @@
 import { expect, test } from "bun:test"
-import { readFile, readdir, writeFile } from "node:fs/promises"
+import { mkdir, readFile, readdir, symlink, writeFile } from "node:fs/promises"
 import path from "node:path"
 import { getCliTestFixture } from "../../fixtures/get-cli-test-fixture"
 
@@ -18,6 +18,12 @@ test("rebuilding keeps the replaced circuit json in .tscircuit-build-history", a
   const outputPath = path.join(tmpDir, "dist", "my-board", "circuit.json")
   const historyDir = path.join(tmpDir, ".tscircuit-build-history")
   await writeFile(path.join(tmpDir, "package.json"), "{}")
+  // Build workers resolve react from the project, not from the CLI.
+  await mkdir(path.join(tmpDir, "node_modules"))
+  await symlink(
+    path.resolve("node_modules/react"),
+    path.join(tmpDir, "node_modules/react"),
+  )
 
   await writeFile(circuitPath, circuitCode("R_FIRST"))
   expect((await runCommand("tsci build")).exitCode).toBe(0)
