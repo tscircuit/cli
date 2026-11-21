@@ -13,6 +13,8 @@ export interface CliConfig {
   tscircuitHandle?: string
   registryApiUrl?: string
   alwaysCloneWithAuthorName?: boolean
+  /** Set to false to stop builds from writing .tscircuit-build-history. */
+  saveBuildHistory?: boolean
 }
 
 export const getCliConfig = (
