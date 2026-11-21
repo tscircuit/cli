@@ -59,7 +59,7 @@ test(
     ).toEqual({
       name: "board",
       workspace: "acme",
-      exportClassification: "EAR99",
+      exportClassification: { tag: "EAR99" },
       files: ["board.kicad_sch", "board.kicad_pcb", "board.kicad_pro"].map(
         (filename) => ({
           filename,
