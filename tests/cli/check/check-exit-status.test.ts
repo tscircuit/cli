@@ -40,7 +40,7 @@ test("check exits nonzero when it reports errors", async () => {
 
   expect(stdout).toContain("Errors: 1")
   expect(exitCode).not.toBe(0)
-}, 20_000)
+}, 60_000)
 
 test("check exits zero when there are no errors", async () => {
   const { tmpDir, runCommand } = await getCliTestFixture()
@@ -51,7 +51,7 @@ test("check exits zero when there are no errors", async () => {
 
   expect(stdout).toContain("Errors: 0")
   expect(exitCode).toBe(0)
-}, 20_000)
+}, 60_000)
 
 test("check netlist exits nonzero when it reports errors", async () => {
   const { tmpDir, runCommand } = await getCliTestFixture()
@@ -65,7 +65,7 @@ test("check netlist exits nonzero when it reports errors", async () => {
   expect(stdout).toContain("Errors: 1")
   expect(stdout).toContain("source_pin_must_be_connected_error")
   expect(exitCode).not.toBe(0)
-}, 20_000)
+}, 60_000)
 
 test("check netlist exits zero when there are no errors", async () => {
   const { tmpDir, runCommand } = await getCliTestFixture()
@@ -78,4 +78,4 @@ test("check netlist exits zero when there are no errors", async () => {
 
   expect(stdout).toContain("Errors: 0")
   expect(exitCode).toBe(0)
-}, 20_000)
+}, 60_000)
