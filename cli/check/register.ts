@@ -14,7 +14,12 @@ export const check = async (file?: string) => {
     allowPrebuiltCircuitJson: true,
   })) as AnyCircuitElement[]
 
-  return formatCircuitJsonDiagnostics(analyzeCircuitJson(circuitJson))
+  const diagnostics = analyzeCircuitJson(circuitJson)
+
+  return {
+    output: formatCircuitJsonDiagnostics(diagnostics),
+    hasErrors: diagnostics.errors.length > 0,
+  }
 }
 
 export const registerCheck = (program: Command) => {
@@ -24,7 +29,9 @@ export const registerCheck = (program: Command) => {
     .argument("[file]", "Path to the entry file")
     .action(async (file?: string) => {
       try {
-        console.log(await check(file))
+        const { output, hasErrors } = await check(file)
+        console.log(output)
+        if (hasErrors) process.exitCode = 1
       } catch (error) {
         console.error(error instanceof Error ? error.message : String(error))
         process.exit(1)
