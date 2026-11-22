@@ -36,6 +36,8 @@ import { registerDoctor } from "./doctor/register"
 import { registerExport } from "./export/register"
 import { registerImport } from "./import/register"
 import { registerInit } from "./init/register"
+import { registerInspectFootprint } from "./inspect/footprint/register"
+import { registerInspect } from "./inspect/register"
 import { registerInstall } from "./install/register"
 import { registerPush } from "./push/register"
 import { registerQuoteCreate } from "./quote/create/register"
@@ -122,6 +124,8 @@ registerRegistryPackagesUpdate(program)
 registerSearch(program)
 registerImport(program)
 registerConvert(program)
+registerInspect(program)
+registerInspectFootprint(program)
 registerSimulate(program)
 
 // Manually handle top-level --version, -v, and -V flags.
