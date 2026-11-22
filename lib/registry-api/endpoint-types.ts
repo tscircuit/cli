@@ -21,7 +21,7 @@ export interface EndpointResponse {
     account: {
       account_id: string
       github_username: string | null
-      tscircuit_handle: string
+      tscircuit_handle: string | null
       personal_org_id: string
       created_at: string
       email: string

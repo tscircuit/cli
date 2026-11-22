@@ -3,7 +3,7 @@ import { setSessionToken, getSessionToken, cliConfig } from "lib/cli-config"
 import delay from "delay"
 import { getRegistryApiKy } from "lib/registry-api/get-ky"
 import type { EndpointResponse } from "lib/registry-api/endpoint-types"
-import { fetchAccount } from "lib/registry-api/fetch-account"
+import { fetchAccountOrThrow } from "lib/registry-api/fetch-account"
 import kleur from "kleur"
 import { setupNpmrc } from "../setup-npmrc/setup-npmrc"
 
@@ -11,12 +11,32 @@ export const registerAuthLogin = (program: Command) => {
   // Define the login action once to share between both commands
   const loginAction = async () => {
     const sessionToken = getSessionToken()
-    const tscircuitHandle = cliConfig.get("tscircuitHandle")
+    const tscircuitHandle = process.env.TSCIRCUIT_TOKEN
+      ? undefined
+      : cliConfig.get("tscircuitHandle")
     if (sessionToken) {
-      const account = await fetchAccount()
+      let account: Awaited<ReturnType<typeof fetchAccountOrThrow>>
+      try {
+        account = await fetchAccountOrThrow()
+      } catch (error) {
+        console.error(
+          kleur.red(
+            `Could not verify your account: ${
+              error instanceof Error ? error.message : String(error)
+            }`,
+          ),
+        )
+        process.exitCode = 1
+        return
+      }
+
+      const identity =
+        tscircuitHandle || account?.tscircuit_handle || account?.account_id
       console.log(
         kleur.yellow(
-          `Already logged in as ${tscircuitHandle ? kleur.bold(`@${tscircuitHandle}`) : kleur.underline(`@${account?.tscircuit_handle ?? account?.account_id}`)}! Use ${kleur.cyan("tsci logout")} to switch accounts.`,
+          identity
+            ? `Already logged in as ${tscircuitHandle ? kleur.bold(`@${tscircuitHandle}`) : kleur.underline(`@${identity}`)}! Use ${kleur.cyan("tsci logout")} to switch accounts.`
+            : `Already logged in! Use ${kleur.cyan("tsci logout")} to switch accounts.`,
         ),
       )
       return

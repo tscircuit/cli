@@ -1,6 +1,6 @@
 import type { Command } from "commander"
 import { cliConfig, getSessionToken } from "lib/cli-config"
-import { fetchAccount } from "lib/registry-api/fetch-account"
+import { fetchAccountOrThrow } from "lib/registry-api/fetch-account"
 import kleur from "kleur"
 
 const formatDate = (date: string | undefined): string | null => {
@@ -25,20 +25,35 @@ export const registerAuthWhoami = (program: Command) => {
         return
       }
 
-      const account = await fetchAccount()
+      let account: Awaited<ReturnType<typeof fetchAccountOrThrow>>
+      try {
+        account = await fetchAccountOrThrow()
+      } catch (error) {
+        console.error(
+          kleur.red(
+            `Could not verify your account: ${
+              error instanceof Error ? error.message : String(error)
+            }`,
+          ),
+        )
+        process.exitCode = 1
+        return
+      }
+
+      const useSavedSession = !process.env.TSCIRCUIT_TOKEN
 
       console.log(kleur.bold().green("\nLogged in user:\n"))
       console.log(
-        `  ${kleur.cyan("TscHandle:")}    @${kleur.white(account?.tscircuit_handle ?? kleur.dim("(not set)"))}`,
+        `  ${kleur.cyan("TscHandle:")}    @${kleur.white(account?.tscircuit_handle || kleur.dim("(not set)"))}`,
       )
       console.log(
-        `  ${kleur.cyan("Account ID:")}   ${kleur.white(account?.account_id ?? cliConfig.get("accountId") ?? kleur.dim("(unknown)"))}`,
+        `  ${kleur.cyan("Account ID:")}   ${kleur.white(account?.account_id ?? (useSavedSession ? cliConfig.get("accountId") : undefined) ?? kleur.dim("(unknown)"))}`,
       )
       console.log(
         `  ${kleur.cyan("Email:")}        ${kleur.white(account?.email ?? kleur.dim("(unknown)"))}`,
       )
       console.log(
-        `  ${kleur.cyan("Session ID:")}   ${kleur.white(cliConfig.get("sessionId") ?? kleur.dim("(unknown)"))}`,
+        `  ${kleur.cyan("Session ID:")}   ${kleur.white((useSavedSession ? cliConfig.get("sessionId") : undefined) ?? kleur.dim("(unknown)"))}`,
       )
       console.log(
         `  ${kleur.cyan("Personal Org:")} ${kleur.white(account?.personal_org_id ?? kleur.dim("(unknown)"))}`,
