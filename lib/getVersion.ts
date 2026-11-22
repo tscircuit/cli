@@ -17,7 +17,21 @@ const resolvePackageVersionFromNodeModules: VersionResolver = (packageName) => {
   }
 }
 
-const getCliVersion = () => semver.inc(pkg.version, "patch") ?? pkg.version
+/**
+ * Resolve the version of the actually-installed @tscircuit/cli package at
+ * runtime.
+ *
+ * The bundled `package.json` version is inlined into `dist/cli/main.js` at
+ * build time. Because the release pipeline runs `bun run build` *before*
+ * `pver release` bumps `package.json`, the inlined value can lag behind the
+ * version that is actually published and installed on disk. Reading the
+ * resolved manifest keeps both the update check and `--version` output honest
+ * and avoids a phantom "new version available" loop. See #4628.
+ */
+export const resolveInstalledCliVersion = (): string | undefined =>
+  resolvePackageVersionFromNodeModules("@tscircuit/cli")
+
+const getCliVersion = () => resolveInstalledCliVersion() ?? pkg.version
 
 type GlobalWithTscircuitVersion = typeof globalThis & {
   TSCIRCUIT_VERSION?: string

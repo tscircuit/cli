@@ -3,12 +3,15 @@ import { getPackageManager } from "./get-package-manager"
 import { program } from "cli/main"
 import semver from "semver"
 import { version as pkgVersion } from "../../package.json"
+import { resolveInstalledCliVersion } from "../getVersion"
 import kleur from "kleur"
 import { prompts } from "lib/utils/prompts"
 import { shouldBeInteractive } from "lib/utils/should-be-interactive"
 
 export const currentCliVersion = () =>
-  program?.version() ?? semver.inc(pkgVersion, "patch") ?? pkgVersion
+  program?.version() ??
+  resolveInstalledCliVersion() ??
+  pkgVersion
 
 export const getLatestVersion = async () => {
   const { version: latestCliVersion } = await ky
