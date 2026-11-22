@@ -87,7 +87,10 @@ export const checkNetlist = async (file?: string) => {
     )
   }
 
-  return `${diagnosticsLines.join("\n")}\n\nReadable Netlist:\n${readableNetlist}`
+  return {
+    output: `${diagnosticsLines.join("\n")}\n\nReadable Netlist:\n${readableNetlist}`,
+    hasErrors: netlistErrors.length > 0,
+  }
 }
 
 export const registerCheckNetlist = (program: Command) => {
@@ -98,8 +101,9 @@ export const registerCheckNetlist = (program: Command) => {
     .argument("[file]", "Path to the entry file")
     .action(async (file?: string) => {
       try {
-        const output = await checkNetlist(file)
+        const { output, hasErrors } = await checkNetlist(file)
         console.log(output)
+        if (hasErrors) process.exitCode = 1
       } catch (error) {
         console.error(error instanceof Error ? error.message : String(error))
         process.exit(1)
