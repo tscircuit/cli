@@ -28,7 +28,7 @@ test.failing(
         format: "gerbers",
         writeFile: false,
         platformConfig: {
-          partsEngine: { fetchPartCircuitJson },
+          partsEngine: { findPart: async () => ({}), fetchPartCircuitJson },
           platformFetch,
         },
         onExit: (code) => {
@@ -85,7 +85,7 @@ test.failing(
           writeFile: false,
           platformConfig: {
             partsEngineDisabled: disabled,
-            partsEngine: { fetchPartCircuitJson },
+            partsEngine: { findPart: async () => ({}), fetchPartCircuitJson },
           },
           onExit: (code) => {
             exitCode = code
