@@ -40,7 +40,9 @@ export default () => <board width={10} height={10} routingDisabled schematicDisa
       ).toMatchObject({ spice_engine: "pcb_spice" })
       expect(simulate).not.toHaveBeenCalled()
       expect(
-        input.circuitJson.filter((e) => e.type === "simulation_voltage_graph"),
+        input.circuitJson.filter(
+          (e) => e.type === "simulation_transient_voltage_graph",
+        ),
       ).toEqual([])
     } finally {
       await rm(dir, { recursive: true, force: true })
