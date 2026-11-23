@@ -26,8 +26,24 @@ const result = await Bun.build({
   ],
   target: "node",
   outdir: "./dist",
+  // The drawing renderer requires a newer schema than the project's tscircuit.
+  // Bundle its private copy and keep other imports on the project schema.
+  plugins: [
+    {
+      name: "drawing-schema",
+      setup(build) {
+        build.onResolve({ filter: /^circuit-json$/ }, ({ importer }) =>
+          /[/\\]@tscircuit[/\\]circuit-json-to-drawing[/\\]/.test(importer)
+            ? undefined
+            : { path: "circuit-json", external: true },
+        )
+      },
+    },
+  ],
   external: [
-    ...tscircuitPackageJsonDeps.filter((dep) => !ALLOW_BUNDLING.includes(dep)),
+    ...tscircuitPackageJsonDeps.filter(
+      (dep) => dep !== "circuit-json" && !ALLOW_BUNDLING.includes(dep),
+    ),
     "zod",
     "tscircuit",
     "typescript",

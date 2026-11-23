@@ -68,6 +68,7 @@ Commands:
                                import a component
   convert [options] <file>     Convert .kicad_mod to TSX, or discover a
                                footprinter string with --footprinter
+  inspect                      Inspect design inputs such as footprints
   simulate [options] <file>    Run a simulation
   version [options]            Print CLI version
   help [command]               display help for command
