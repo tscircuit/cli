@@ -17,7 +17,7 @@
         "@tscircuit/circuit-json-schematic-placement-analysis": "https://jscdn.tscircuit.com/@tscircuit/circuit-json-schematic-placement-analysis/0.0.102.tgz",
         "@tscircuit/circuit-json-to-drawing": "https://jscdn.tscircuit.com/@tscircuit/circuit-json-to-drawing/0.0.8.tgz",
         "@tscircuit/circuit-json-to-jlcpcb-quote": "https://jscdn.tscircuit.com/@tscircuit/circuit-json-to-jlcpcb-quote/0.0.6.tgz",
-        "@tscircuit/fake-snippets": "^0.0.226",
+        "@tscircuit/fake-snippets": "^0.0.229",
         "@tscircuit/file-server": "^0.0.32",
         "@tscircuit/footprinter": "^0.0.451",
         "@tscircuit/schematic-trace-solver": "^0.0.204",
@@ -417,7 +417,7 @@
 
     "@tscircuit/eval": ["@tscircuit/eval@0.0.1794", "", { "peerDependencies": { "@tscircuit/core": ">=0.0.1906", "circuit-json": "*", "typescript": "^5.0.0", "zod": "3" } }, "sha512-bNPshnJaI2k6QicgXk2N7gHtBxQSp0SEUv0xqFba6a6iP79fsGiLUndIdmmDit3c3daOLIX2wFOhGxy14CLWMQ=="],
 
-    "@tscircuit/fake-snippets": ["@tscircuit/fake-snippets@0.0.226", "", {}, "sha512-IxPc5HSaVBTsPuH+4qTSdSDQSiexZSYNBBMAP+wfaFux4bVSk+9b9fzuszIXQ7VtTeMC1qAeAUVHpU4w0sWwDQ=="],
+    "@tscircuit/fake-snippets": ["@tscircuit/fake-snippets@0.0.229", "", {}, "sha512-NFspzdUBZaxkCQJUiNCpVQx/+ZZFiLAn5hi1x3s4g9vpiwxX2Kz4dYOtbEwZ8hMb+2buQTsIAJYezYJdTdi/lg=="],
 
     "@tscircuit/fanout-solver": ["@tscircuit/fanout-solver@0.0.84", "", { "dependencies": { "@tscircuit/capacity-autorouter": "0.0.718", "@tscircuit/solver-utils": "0.0.19", "graphics-debug": "0.0.99" }, "peerDependencies": { "typescript": "^5" } }, "sha512-XzPQMiRL4WbSLoLeiBEHX87atVXSrOkMjT4VmQrXlu8xNpMHtCfH9NZjzjVDL9u1GWmRg6q6T6k0E8oP57CBqQ=="],
 
