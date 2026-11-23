@@ -20,7 +20,16 @@ export const loadAnalogInput = async ({
       ...(await generateCircuitJson({
         filePath: resolve(file),
         projectDir,
-        platformConfig,
+        platformConfig: {
+          ...platformConfig,
+          spiceEngineMap: {
+            ...platformConfig.spiceEngineMap,
+            // The CLI runs pcb_spice after Circuit JSON generation.
+            pcb_spice: {
+              simulate: async () => ({ simulationResultCircuitJson: [] }),
+            },
+          },
+        },
       })),
       baseDir: projectDir,
     }
