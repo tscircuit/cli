@@ -5,9 +5,7 @@
     "ftype": "simple_chip",
     "name": "U3",
     "supplier_part_numbers": {
-      "jlcpcb": [
-        "C916374"
-      ]
+      "jlcpcb": ["C916374"]
     },
     "source_group_id": "source_group_0"
   },
@@ -17,9 +15,7 @@
     "ftype": "simple_chip",
     "name": "U4",
     "supplier_part_numbers": {
-      "jlcpcb": [
-        "C916374"
-      ]
+      "jlcpcb": ["C916374"]
     },
     "source_group_id": "source_group_0"
   },
@@ -82,9 +78,7 @@
     "shape": "rect",
     "width": 1.325,
     "height": 0.6,
-    "port_hints": [
-      "1"
-    ],
+    "port_hints": ["1"],
     "is_covered_with_solder_mask": false,
     "x": 4.1375,
     "y": -3.05,
@@ -99,9 +93,7 @@
     "shape": "rect",
     "width": 1.325,
     "height": 0.6,
-    "port_hints": [
-      "2"
-    ],
+    "port_hints": ["2"],
     "is_covered_with_solder_mask": false,
     "x": 4.1375,
     "y": -4.95,
@@ -116,9 +108,7 @@
     "shape": "rect",
     "width": 1.325,
     "height": 0.6,
-    "port_hints": [
-      "3"
-    ],
+    "port_hints": ["3"],
     "is_covered_with_solder_mask": false,
     "x": 1.8625,
     "y": -4,
@@ -133,9 +123,7 @@
     "shape": "rect",
     "width": 0.6,
     "height": 1.325,
-    "port_hints": [
-      "1"
-    ],
+    "port_hints": ["1"],
     "is_covered_with_solder_mask": false,
     "x": 8.05,
     "y": -2.8625,
@@ -150,9 +138,7 @@
     "shape": "rect",
     "width": 0.6,
     "height": 1.325,
-    "port_hints": [
-      "2"
-    ],
+    "port_hints": ["2"],
     "is_covered_with_solder_mask": false,
     "x": 9.95,
     "y": -2.8625,
@@ -167,9 +153,7 @@
     "shape": "rect",
     "width": 0.6,
     "height": 1.325,
-    "port_hints": [
-      "3"
-    ],
+    "port_hints": ["3"],
     "is_covered_with_solder_mask": false,
     "x": 9,
     "y": -5.1375,
