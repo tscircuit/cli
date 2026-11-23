@@ -2,7 +2,7 @@ import kleur from "kleur"
 import { circuitJsonToFootprinter } from "lib/shared/circuit-json-to-footprinter"
 import fs from "node:fs/promises"
 import path from "node:path"
-import { loadCircuitJsonForFootprinter } from "./load-circuit-json-for-footprinter"
+import { loadFootprintFile } from "./load-circuit-json-for-footprinter"
 
 export const discoverFootprinterFromFile = async ({
   inputPath,
@@ -13,7 +13,7 @@ export const discoverFootprinterFromFile = async ({
   json?: boolean
   output?: string
 }) => {
-  const circuitJson = await loadCircuitJsonForFootprinter(inputPath)
+  const { circuitJson } = await loadFootprintFile(inputPath)
   const inputText = await fs.readFile(inputPath, "utf-8")
   const result = circuitJsonToFootprinter(circuitJson, {
     sourceHints: [path.basename(inputPath), inputText.slice(0, 20_000)],

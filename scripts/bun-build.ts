@@ -47,6 +47,7 @@ const result = await Bun.build({
     "zod",
     "tscircuit",
     "typescript",
+    "manifold-3d", // Resolve the WASM asset beside its runtime package.
     "circuit-to-svg",
     "@types/*",
     "react",

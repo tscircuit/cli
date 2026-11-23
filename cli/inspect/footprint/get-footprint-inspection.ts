@@ -3,6 +3,7 @@ import {
   getPcbElementBounds,
 } from "@tscircuit/circuit-json-util"
 import type { AnyCircuitElement } from "circuit-json"
+import { findFootprinterCandidates } from "../find-footprinter-candidates"
 import type { LoadedFootprint } from "./load-footprint-for-inspection"
 
 export interface FootprintBounds {
@@ -34,6 +35,12 @@ export interface FootprintInspection {
   source: LoadedFootprint["kind"]
   sourceDescription: string
   parameters?: Record<string, unknown>
+  equivalentFootprinter?: {
+    footprinterString: string
+    copperIntersectionOverUnion: number
+    holeIntersectionOverUnion: number
+    pinsMatch: boolean
+  } | null
   padCounts: { smtpad: number; plated_hole: number; hole: number }
   copperBounds: FootprintBounds | null
   courtyardBounds: FootprintBounds | null
@@ -227,6 +234,23 @@ export const getFootprintInspection = (
       courtyardElements.length > 0
         ? toFootprintBounds(getBoundsOfPcbElements(courtyardElements))
         : null,
+    ...(!footprint.declaredFootprinterString && {
+      equivalentFootprinter: getEquivalentFootprinter(footprint),
+    }),
     pads,
   }
+}
+
+function getEquivalentFootprinter(footprint: LoadedFootprint) {
+  const match = findFootprinterCandidates(footprint).find(
+    (candidate) => candidate.copperIntersectionOverUnion >= 0.95,
+  )
+  return match
+    ? {
+        footprinterString: match.footprinterString,
+        copperIntersectionOverUnion: match.copperIntersectionOverUnion,
+        holeIntersectionOverUnion: match.holeIntersectionOverUnion,
+        pinsMatch: match.pinsMatch,
+      }
+    : null
 }

@@ -20,7 +20,7 @@ export const registerInspectFootprint = (program: Command) => {
     .find((c) => c.name() === "inspect")!
     .command("footprint")
     .description(
-      "Print the pins, pad positions and size of a footprint string or file",
+      "Print pins, pad positions, size, and equivalent Footprinter strings (at least 95% copper IoU)",
     )
     .argument(
       "<pathOrString>",

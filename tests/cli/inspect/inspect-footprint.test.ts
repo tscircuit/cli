@@ -1,4 +1,5 @@
 import { expect, test } from "bun:test"
+import { fp } from "@tscircuit/footprinter"
 import { writeFile } from "node:fs/promises"
 import path from "node:path"
 import { getCliTestFixture } from "../../fixtures/get-cli-test-fixture"
@@ -74,6 +75,7 @@ test("inspect footprint --json reports holes for a through-hole string", async (
   expect(stderr).toBe("")
   expect(exitCode).toBe(0)
   const inspection = JSON.parse(stdout)
+  expect(inspection.equivalentFootprinter).toBeUndefined()
   expect(inspection.source).toBe("footprinter_string")
   expect(inspection.parameters.num_pins).toBe(4)
   expect(inspection.padCounts).toEqual({ smtpad: 0, plated_hole: 4, hole: 0 })
@@ -101,6 +103,10 @@ test("inspect footprint reads a .kicad_mod file", async () => {
   expect(stderr).toBe("")
   expect(exitCode).toBe(0)
   const inspection = JSON.parse(stdout)
+  expect(
+    inspection.equivalentFootprinter.copperIntersectionOverUnion,
+  ).toBeGreaterThanOrEqual(0.95)
+  expect(inspection.equivalentFootprinter.footprinterString).toBeTruthy()
   expect(inspection.source).toBe("file")
   expect(inspection.parameters).toBeUndefined()
   expect(inspection.pads.map((pad: any) => [pad.pin[0], pad.x, pad.y])).toEqual(
@@ -135,6 +141,7 @@ export default (props: any) => (
   expect(stderr).toBe("")
   expect(exitCode).toBe(0)
   const inspection = JSON.parse(stdout)
+  expect(inspection.equivalentFootprinter).toBeUndefined()
   expect(inspection.pads.map((pad: any) => pad.pin)).toEqual([
     ["1", "VCC"],
     ["2"],
@@ -169,4 +176,26 @@ test("inspect footprint reports a missing file as a missing file", async () => {
 
   expect(exitCode).toBe(1)
   expect(stderr).toContain("File not found")
+}, 30_000)
+
+test("inspect footprint preserves the pad report for a poor copper match", async () => {
+  const { tmpDir, runCommand } = await getCliTestFixture()
+  const pads = fp
+    .string("soic8")
+    .circuitJson()
+    .filter((e) => e.type === "pcb_smtpad" && e.shape === "rect")
+  pads[0]!.x += 20
+  pads[3]!.y -= 10
+  await writeFile(
+    path.join(tmpDir, "irregular.circuit.json"),
+    JSON.stringify(pads),
+  )
+  const { stdout, exitCode } = await runCommand(
+    "tsci inspect footprint irregular.circuit.json --json",
+  )
+  expect(exitCode).toBe(0)
+  expect(JSON.parse(stdout)).toMatchObject({
+    equivalentFootprinter: null,
+    padCounts: { smtpad: 8 },
+  })
 }, 30_000)

@@ -65,6 +65,15 @@ export const formatFootprintInspection = (inspection: FootprintInspection) => {
     lines.push(`courtyard: ${formatBounds(inspection.courtyardBounds)}`)
   }
 
+  if (inspection.equivalentFootprinter !== undefined) {
+    const match = inspection.equivalentFootprinter
+    lines.push(
+      match
+        ? `equivalent footprint: ${match.footprinterString} (copper IoU ${(match.copperIntersectionOverUnion * 100).toFixed(2)}%${match.pinsMatch ? "" : ", pin numbering differs"}${match.holeIntersectionOverUnion < 0.95 ? `, hole IoU ${(match.holeIntersectionOverUnion * 100).toFixed(2)}%` : ""})`
+        : "equivalent footprint: no match at 95% copper IoU",
+    )
+  }
+
   const rows = [
     ["pin", "kind", "shape", "x", "y", "width", "height", "hole", "layers"],
     ...inspection.pads.map((pad) => [

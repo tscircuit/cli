@@ -1,3 +1,4 @@
+import { isFootprinterString } from "lib/shared/is-footprinter-string"
 import type { AnyCircuitElement } from "circuit-json"
 import { generateCircuitJson } from "lib/shared/generate-circuit-json"
 import { getPlatformConfigWithCliDefaults } from "lib/shared/get-platform-config-with-cli-defaults"
@@ -8,37 +9,57 @@ import { findCircuitProjectDir } from "lib/shared/circuit-json-build-cache"
 
 const componentExtensions = new Set([".js", ".jsx", ".ts", ".tsx"])
 
-export const loadCircuitJsonForFootprinter = async (inputPath: string) => {
+export const loadFootprintFile = async (
+  inputPath: string,
+): Promise<{
+  circuitJson: AnyCircuitElement[]
+  declaredFootprinterString?: string
+}> => {
   const extension = path.extname(inputPath).toLowerCase()
   if (inputPath.toLowerCase().endsWith(".circuit.json")) {
     const parsed = JSON.parse(await fs.readFile(inputPath, "utf-8"))
     if (!Array.isArray(parsed)) {
       throw new Error("Circuit JSON input must contain an array of elements")
     }
-    return parsed as AnyCircuitElement[]
+    return { circuitJson: parsed as AnyCircuitElement[] }
   }
 
   if (extension === ".kicad_mod") {
-    return convertKicadFootprintToCircuitJson(inputPath)
+    return { circuitJson: await convertKicadFootprintToCircuitJson(inputPath) }
   }
 
   if (componentExtensions.has(extension)) {
-    const { circuitJson } = await generateCircuitJson({
+    const { circuitJson, rootCircuit } = await generateCircuitJson({
       filePath: inputPath,
       injectedProps: { name: "CONVERT" },
       platformConfig: getPlatformConfigWithCliDefaults(undefined, {
         projectDir: findCircuitProjectDir(inputPath),
       }),
     })
-    const pcbComponentCount = circuitJson.filter(
+    const pcbComponents = circuitJson.filter(
       (element) => element.type === "pcb_component",
-    ).length
-    if (pcbComponentCount > 1) {
+    )
+    if (pcbComponents.length > 1) {
       throw new Error(
         "TSX input must render one component or footprint, not an entire board",
       )
     }
-    return circuitJson
+    const pcb = pcbComponents[0]
+    const component =
+      pcb &&
+      rootCircuit
+        .selectAll("*")
+        .find(
+          (element: { pcb_component_id?: string }) =>
+            element.pcb_component_id === pcb.pcb_component_id,
+        )
+    const footprint =
+      component?.resolveFootprint?.() ?? component?.props?.footprint
+    const declaredFootprinterString =
+      typeof footprint === "string" && isFootprinterString(footprint)
+        ? footprint
+        : undefined
+    return { circuitJson, declaredFootprinterString }
   }
 
   throw new Error(

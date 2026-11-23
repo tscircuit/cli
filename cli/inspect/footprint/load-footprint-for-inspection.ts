@@ -1,6 +1,6 @@
 import { fp as bundledFp } from "@tscircuit/footprinter"
 import type { AnyCircuitElement } from "circuit-json"
-import { loadCircuitJsonForFootprinter } from "cli/convert/load-circuit-json-for-footprinter"
+import { loadFootprintFile } from "cli/convert/load-circuit-json-for-footprinter"
 import { resolve as resolveModule } from "import-meta-resolve"
 import { findCircuitProjectDir } from "lib/shared/circuit-json-build-cache"
 import { getPlatformConfigWithCliDefaults } from "lib/shared/get-platform-config-with-cli-defaults"
@@ -19,6 +19,7 @@ export interface LoadedFootprint {
   /** One line saying where the footprint came from. */
   sourceDescription: string
   circuitJson: AnyCircuitElement[]
+  declaredFootprinterString?: string
   /** How footprinter parsed the string; only for footprinter strings. */
   parameters?: Record<string, unknown>
 }
@@ -101,7 +102,7 @@ export const loadFootprintForInspection = async (
       input,
       kind: "file",
       sourceDescription: `file ${path.relative(process.cwd(), inputPath) || inputPath}`,
-      circuitJson: await loadCircuitJsonForFootprinter(inputPath),
+      ...(await loadFootprintFile(inputPath)),
     }
   }
 
@@ -134,6 +135,7 @@ export const loadFootprintForInspection = async (
     return {
       input,
       kind: "footprinter_string",
+      declaredFootprinterString: input,
       sourceDescription: `footprinter string (${
         isFromProject
           ? "@tscircuit/footprinter installed in this project"

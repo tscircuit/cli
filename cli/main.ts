@@ -37,6 +37,7 @@ import { registerExport } from "./export/register"
 import { registerImport } from "./import/register"
 import { registerInit } from "./init/register"
 import { registerInspectFootprint } from "./inspect/footprint/register"
+import { registerInspectModel } from "./inspect/model/register"
 import { registerInspect } from "./inspect/register"
 import { registerInstall } from "./install/register"
 import { registerPush } from "./push/register"
@@ -126,6 +127,7 @@ registerImport(program)
 registerConvert(program)
 registerInspect(program)
 registerInspectFootprint(program)
+registerInspectModel(program)
 registerSimulate(program)
 
 // Manually handle top-level --version, -v, and -V flags.

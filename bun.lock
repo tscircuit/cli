@@ -5,6 +5,7 @@
     "": {
       "name": "@tscircuit/cli",
       "dependencies": {
+        "manifold-3d": "3.5.1",
         "typescript": "~5.9.3",
       },
       "devDependencies": {
