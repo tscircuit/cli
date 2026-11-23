@@ -45,6 +45,7 @@ const ALLOWED_FILE_EXTENSIONS = [
 type GenerateCircuitJsonOptions = {
   filePath: string
   projectDir?: string
+  staticAssetBaseDir?: string
   outputDir?: string
   outputFileName?: string
   saveToFile?: boolean
@@ -65,6 +66,7 @@ type GenerateCircuitJsonOptions = {
 export async function generateCircuitJson({
   filePath,
   projectDir: projectDirOption,
+  staticAssetBaseDir,
   outputDir,
   outputFileName,
   saveToFile = false,
@@ -86,7 +88,7 @@ export async function generateCircuitJson({
     (error) => rethrowWithProjectSetupHint(error, projectRootDir),
   )
   ;(globalThis as any).React = React
-  registerStaticAssetLoaders(platformConfig, projectRootDir)
+  registerStaticAssetLoaders(platformConfig, projectRootDir, staticAssetBaseDir)
   const userLandTscircuit = await importFromUserLand(
     "tscircuit",
     projectRootDir,

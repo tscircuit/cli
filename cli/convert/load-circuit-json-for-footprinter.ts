@@ -31,6 +31,8 @@ export const loadFootprintFile = async (
   if (componentExtensions.has(extension)) {
     const { circuitJson, rootCircuit } = await generateCircuitJson({
       filePath: inputPath,
+      // Inspection resolves literal and imported model URLs beside the TSX entrypoint.
+      staticAssetBaseDir: path.dirname(path.resolve(inputPath)),
       injectedProps: { name: "CONVERT" },
       platformConfig: getPlatformConfigWithCliDefaults(undefined, {
         projectDir: findCircuitProjectDir(inputPath),

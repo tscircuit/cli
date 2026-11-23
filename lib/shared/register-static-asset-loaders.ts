@@ -23,6 +23,7 @@ const staticAssetFilter = new RegExp(
 
 let registered = false
 let activePlatformConfig: PlatformConfig | undefined
+let activeAssetBaseDir: string
 
 const TEXT_STATIC_ASSET_EXTENSIONS = new Set([
   ".json",
@@ -100,15 +101,17 @@ const getBaseUrlFromTsConfig = (projectDir: string): string | null => {
 export const registerStaticAssetLoaders = (
   platformConfig?: PlatformConfig,
   projectDir = process.cwd(),
+  assetBaseDir?: string,
 ) => {
   activePlatformConfig = platformConfig
+  activeAssetBaseDir =
+    assetBaseDir ??
+    path.resolve(projectDir, getBaseUrlFromTsConfig(projectDir) ?? ".")
 
   if (registered) return
   registered = true
 
   if (typeof Bun !== "undefined" && typeof Bun.plugin === "function") {
-    const baseUrl = getBaseUrlFromTsConfig(projectDir)
-
     Bun.plugin({
       name: "tsci-static-assets",
       setup(build) {
@@ -125,12 +128,8 @@ export const registerStaticAssetLoaders = (
             }
           }
 
-          const baseDir = baseUrl
-            ? path.resolve(projectDir, baseUrl)
-            : projectDir
-
           const relativePath = path
-            .relative(baseDir, args.path)
+            .relative(activeAssetBaseDir, args.path)
             .split(path.sep)
             .join("/")
 

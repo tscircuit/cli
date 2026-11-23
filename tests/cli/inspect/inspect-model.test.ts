@@ -1,7 +1,7 @@
 import { expect, test } from "bun:test"
 import { fp } from "@tscircuit/footprinter"
 import { loadFootprinterMesh } from "cli/inspect/model/load-model"
-import { copyFile, writeFile } from "node:fs/promises"
+import { copyFile, mkdir, writeFile } from "node:fs/promises"
 import path from "node:path"
 import { getCliTestFixture } from "../../fixtures/get-cli-test-fixture"
 
@@ -30,6 +30,30 @@ test("searches the catalog for a standalone GLB with no footprint hints", async 
   const { equivalentFootprinter } = JSON.parse(stdout)
   expect(equivalentFootprinter.volumeIntersectionOverUnion).toBeGreaterThan(0.9)
   expect(equivalentFootprinter.volumeIntersectionOverUnion).toBeLessThan(0.99)
+}, 30_000)
+
+test("inspect model resolves an imported CAD file beside a nested TSX component", async () => {
+  const { tmpDir, runCommand } = await getCliTestFixture()
+  const partsDir = path.join(tmpDir, "parts")
+  await mkdir(partsDir)
+  await copyFile(
+    path.resolve("examples/glb-loading/soic8.glb"),
+    path.join(partsDir, "body.glb"),
+  )
+  await writeFile(
+    path.join(partsDir, "somefile.tsx"),
+    `
+import bodyUrl from "./body.glb"
+export const Socket = () => <chip name="U1" footprint="soic8" cadModel={<cadmodel modelUrl={bodyUrl} />} />
+`,
+  )
+  const { stdout, stderr, exitCode } = await runCommand(
+    "tsci inspect model ./parts/somefile.tsx",
+  )
+  expect(exitCode).toBe(0)
+  expect(stderr).toBe("")
+  expect(stdout).toContain("triangles: 2220")
+  expect(stdout).toContain("equivalent model: soic8 (volume IoU 92.17%")
 }, 30_000)
 
 test("matches an unnamed, rotated model to a parameterized copper candidate", async () => {
