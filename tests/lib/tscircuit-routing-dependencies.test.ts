@@ -40,7 +40,11 @@ test("installed core and autorouter follow the tscircuit dependency contract", (
   for (const name of Object.keys(tscircuitPackage.dependencies)) {
     // Bun can hoist a helper’s private dependency ahead of tscircuit’s version.
     // This development-only mirror must track tscircuit's range exactly.
-    if (["@tscircuit/footprinter", "poppygl", "circuit-json"].includes(name)) {
+    if (
+      name === "@tscircuit/footprinter" ||
+      name === "poppygl" ||
+      name === "circuit-json"
+    ) {
       expect(cliPackage.devDependencies[name]).toBe(
         tscircuitPackage.dependencies[name],
       )
