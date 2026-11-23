@@ -42,6 +42,7 @@ test("installed core and autorouter follow the tscircuit dependency contract", (
     // This development-only mirror must track tscircuit's range exactly.
     if (
       name === "@tscircuit/footprinter" ||
+      name === "@tscircuit/props" ||
       name === "poppygl" ||
       name === "circuit-json"
     ) {
