@@ -47,7 +47,6 @@ const result = await Bun.build({
     "zod",
     "tscircuit",
     "typescript",
-    "manifold-3d", // Resolve the WASM asset beside its runtime package.
     "circuit-to-svg",
     "@types/*",
     "react",
@@ -62,6 +61,12 @@ if (!success) {
   console.error("Build failed", result.logs)
   process.exit(1)
 }
+
+// The bundled model comparison runtime loads its WASM beside main.js.
+await cp(
+  fileURLToPath(import.meta.resolve("manifold-3d/manifold.wasm")),
+  "./dist/cli/manifold.wasm",
+)
 
 // Palace's bundled orchestration resolves these scripts beside main.js.
 await cp(
