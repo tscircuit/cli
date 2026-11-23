@@ -1,7 +1,7 @@
-import { getCliTestFixture } from "../../fixtures/get-cli-test-fixture"
-import { test, expect } from "bun:test"
-import { writeFile, readFile } from "node:fs/promises"
+import { expect, test } from "bun:test"
+import { readFile, writeFile } from "node:fs/promises"
 import path from "node:path"
+import { getCliTestFixture } from "../../fixtures/get-cli-test-fixture"
 
 const kicadMod = `
 (footprint "R_01005_0402Metric"
@@ -114,6 +114,82 @@ test("convert kicad_mod to tsx", async () => {
   const tsxPath = path.join(tmpDir, "R_01005_0402Metric.tsx")
   const tsx = await readFile(tsxPath, "utf-8")
   expect(tsx).toContain("export const R_01005_0402Metric")
+  expect(tsx).toContain("text={props.name}")
+  expect(tsx).toContain('text="REFERENCE"')
+})
+
+test("convert kicad_mod preserves reference semantics across fp_text reference, %R, and ${REFERENCE}", async () => {
+  const { tmpDir, runCommand } = await getCliTestFixture()
+  const modPath = path.join(tmpDir, "two-pad.kicad_mod")
+  const tsxPath = path.join(tmpDir, "TwoPad.tsx")
+  const boardPath = path.join(tmpDir, "converted-labels.tsx")
+
+  await writeFile(
+    modPath,
+    `
+(footprint "TwoPad"
+  (version 20240108)
+  (generator "pcbnew")
+  (layer "F.Cu")
+  (attr smd)
+  (fp_text reference "REF**" (at 0 -2) (layer "F.SilkS") (effects (font (size 1 1) (thickness 0.15))))
+  (fp_text user "%R" (at 0 0) (layer "F.Fab") (effects (font (size 0.5 0.5) (thickness 0.08))))
+  (fp_text user "\${REFERENCE}" (at 0 1) (layer "F.Fab") (effects (font (size 0.5 0.5) (thickness 0.08))))
+  (fp_text user "PIN1" (at -1 0) (layer "F.SilkS") (effects (font (size 0.6 0.6) (thickness 0.1))))
+  (fp_text user "REF**" (at 1 0) (layer "F.Fab") (effects (font (size 0.5 0.5) (thickness 0.08))))
+  (pad "1" smd rect (at -0.8 0) (size 0.9 1) (layers "F.Cu" "F.Paste" "F.Mask"))
+  (pad "2" smd rect (at 0.8 0) (size 0.9 1) (layers "F.Cu" "F.Paste" "F.Mask"))
+)
+`,
+  )
+
+  const convertRes = await runCommand(
+    `tsci convert ${modPath} --name TwoPad --output ${tsxPath}`,
+  )
+  expect(convertRes.exitCode).toBe(0)
+  expect(convertRes.stderr).toBe("")
+
+  const tsx = await readFile(tsxPath, "utf-8")
+  expect(tsx).toContain("export const TwoPad")
+  expect(tsx.match(/text=\{props\.name\}/g)).toHaveLength(3)
+  expect(tsx).toContain('text="PIN1"')
+  expect(tsx).toContain('text="REF**"')
+  expect(tsx).not.toContain('text="%R"')
+
+  await writeFile(
+    boardPath,
+    `
+import { TwoPad } from "./TwoPad"
+export default () => (
+  <board width={12} height={8} routingDisabled>
+    <TwoPad name="U1" pcbX={-3} schX={-2} />
+    <TwoPad name="U2" pcbX={3} schX={2} />
+  </board>
+)
+`,
+  )
+
+  const buildRes = await runCommand(`tsci build ${boardPath}`)
+  expect(buildRes.exitCode).toBe(0)
+
+  const circuitJson = JSON.parse(
+    await readFile(
+      path.join(tmpDir, "dist", "converted-labels", "circuit.json"),
+      "utf-8",
+    ),
+  ) as Array<{ type: string; text?: string }>
+
+  const silkscreenTexts = circuitJson
+    .filter((el) => el.type === "pcb_silkscreen_text")
+    .map((el) => el.text)
+    .sort()
+  expect(silkscreenTexts).toEqual(["PIN1", "PIN1", "U1", "U2"])
+
+  const fabTexts = circuitJson
+    .filter((el) => el.type === "pcb_fabrication_note_text")
+    .map((el) => el.text)
+    .sort()
+  expect(fabTexts).toEqual(["REF**", "REF**", "U1", "U1", "U2", "U2"])
 })
 
 test("convert kicad_mod to a footprinter string", async () => {
