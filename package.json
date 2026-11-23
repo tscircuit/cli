@@ -39,7 +39,7 @@
     "@types/semver": "^7.5.8",
     "bun-match-svg": "^0.0.12",
     "chokidar": "4.0.1",
-    "circuit-json": "0.0.551",
+    "circuit-json": "https://pkg.pr.new/circuit-json@3df188e106311424843bf1be677b5c54bcbdabe5",
     "circuit-json-to-3d-png": "^0.0.6",
     "circuit-json-to-altium": "github:tscircuit/circuit-json-to-altium#1a50d0dd2c0737cf940d92c0315852dc0111dd87",
     "circuit-json-to-bom-csv": "^0.0.26",
@@ -84,9 +84,11 @@
     "simulate-return-current": "https://pkg.pr.new/tscircuit/simulate-return-current@a3736c708149885c12f17a072b8a60ea4a7cd2b2",
     "stepts": "^0.0.3",
     "tempy": "^3.1.0",
-    "tscircuit": "0.0.3209-libonly",
+    "tscircuit": "0.0.3285-libonly",
     "tsx": "^4.7.1",
-    "typed-ky": "^0.0.4"
+    "typed-ky": "^0.0.4",
+    "@tscircuit/core": "https://pkg.pr.new/@tscircuit/core@1bf60527e728e5fde6fa0b0be2d270ab56c55eaf",
+    "circuit-json-to-pnp-csv": "https://pkg.pr.new/circuit-json-to-pnp-csv@68c7e297f48b2e0031af5854e3c3a29e7b89298f"
   },
   "peerDependencies": {
     "tscircuit": "*"
@@ -106,7 +108,10 @@
     }
   },
   "overrides": {
-    "altiumts": "0.0.59"
+    "altiumts": "0.0.59",
+    "@tscircuit/core": "https://pkg.pr.new/@tscircuit/core@1bf60527e728e5fde6fa0b0be2d270ab56c55eaf",
+    "circuit-json": "https://pkg.pr.new/circuit-json@3df188e106311424843bf1be677b5c54bcbdabe5",
+    "circuit-json-to-pnp-csv": "https://pkg.pr.new/circuit-json-to-pnp-csv@68c7e297f48b2e0031af5854e3c3a29e7b89298f"
   },
   "scripts": {
     "start": "bun run dev",

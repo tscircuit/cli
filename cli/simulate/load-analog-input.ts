@@ -20,7 +20,17 @@ export const loadAnalogInput = async ({
       ...(await generateCircuitJson({
         filePath: resolve(file),
         projectDir,
-        platformConfig,
+        platformConfig: {
+          ...platformConfig,
+          spiceEngineMap: {
+            ...platformConfig.spiceEngineMap,
+            // The CLI executes this native backend after loading Core records.
+            // Keep model processing enabled, but add no render-time results.
+            pcb_spice: {
+              simulate: async () => ({ simulationResultCircuitJson: [] }),
+            },
+          },
+        },
       })),
       baseDir: projectDir,
     }

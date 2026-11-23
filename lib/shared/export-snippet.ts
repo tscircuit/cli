@@ -18,7 +18,10 @@ import {
   CircuitJsonToKicadSchConverter,
   resolveAndLoadKicad3dModelFiles,
 } from "circuit-json-to-kicad"
-import { convertCircuitJsonToPickAndPlaceCsv } from "circuit-json-to-pnp-csv"
+import {
+  convertCircuitJsonToPickAndPlaceCsv,
+  populatePartOrientationMetadata,
+} from "circuit-json-to-pnp-csv"
 import { convertCircuitJsonToReadableNetlist } from "circuit-json-to-readable-netlist"
 import { circuitJsonToStep } from "circuit-json-to-step"
 import { convertCircuitJsonToAssemblyStepFiles } from "./convert-circuit-json-to-assembly-step-files"
@@ -456,9 +459,22 @@ export const exportSnippet = async ({
       const bomCsv = await convertBomRowsToCsv(bomRows)
       zip.file("bom.csv", bomCsv)
 
-      const pnpCsv = await convertCircuitJsonToPickAndPlaceCsv(circuitJson, {
-        supplier: "jlcpcb",
-      })
+      let pnpCsv: string
+      try {
+        const prepared = await populatePartOrientationMetadata(circuitJson, {
+          ...getPlatformConfigWithCliDefaults(platformConfig, { projectDir }),
+          supplier: "jlcpcb",
+        })
+        pnpCsv = convertCircuitJsonToPickAndPlaceCsv(prepared, {
+          supplier: "jlcpcb",
+          onRotationWarning: ({ message }) => console.warn(message),
+        })
+      } catch (error) {
+        onError(
+          `Error preparing JLCPCB placement: ${error instanceof Error ? error.message : String(error)}`,
+        )
+        return onExit(1)
+      }
       zip.file("pick_and_place.csv", pnpCsv)
 
       outputContent = await zip.generateAsync({ type: "nodebuffer" })
