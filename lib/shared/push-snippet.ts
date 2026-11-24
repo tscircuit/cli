@@ -103,12 +103,14 @@ const getUploadFiles = (filePaths: string[], projectDir: string) =>
 const createArchivePayload = (
   files: ReturnType<typeof getUploadFiles>,
   packageNameWithVersion: string,
+  options: { skipCloudBuild?: boolean } = {},
 ) => {
   const archive = gzipSync(JSON.stringify({ files }), { level: 9 })
 
   return {
     package_name_with_version: packageNameWithVersion,
     archive_base64: archive.toString("base64"),
+    ...(options.skipCloudBuild ? { skip_cloud_build: true } : {}),
   }
 }
 
@@ -413,11 +415,26 @@ export const pushSnippet = async ({
 
   const packageNameWithVersion = `${scopedPackageName}@${releaseVersion}`
   const files = getUploadFiles(filePaths, projectDir)
+  // With --include-dist the uploaded dist directory is the build, so the
+  // registry doesn't need to build the package in the cloud
+  const hasLocalBuild =
+    includeDist && files.some((file) => file.file_path.startsWith("dist/"))
+  if (includeDist && !hasLocalBuild) {
+    console.warn(
+      kleur.yellow(
+        "tsci: warning: --include-dist was passed but no dist files were found. The package will be built in the cloud.",
+      ),
+    )
+  }
   let filesToUpload = files
   if (compress) {
     log(kleur.gray("Uploading package archive..."))
     try {
-      const archivePayload = createArchivePayload(files, packageNameWithVersion)
+      const archivePayload = createArchivePayload(
+        files,
+        packageNameWithVersion,
+        { skipCloudBuild: hasLocalBuild },
+      )
       await ky.post("package_files/upload_archive", {
         json: archivePayload,
       })
@@ -545,15 +562,37 @@ export const pushSnippet = async ({
     )
     return onExit(1)
   }
-  await ky.post("package_releases/update", {
-    json: {
-      package_name_with_version: `${scopedPackageName}@${releaseVersion}`,
-      ready_to_build: true,
-      ...(typeof packageJson.license === "string" && packageJson.license.trim()
-        ? { license: packageJson.license.trim() }
-        : {}),
-    },
-  })
+  let isLocalBuildRecorded = false
+  if (hasLocalBuild) {
+    try {
+      await ky.post("package_builds/create_local", {
+        json: { package_name_with_version: packageNameWithVersion },
+      })
+      isLocalBuildRecorded = true
+      log(kleur.gray("Using uploaded dist as the build, skipping cloud build"))
+    } catch (error) {
+      log(
+        kleur.yellow(
+          `Could not use the uploaded dist as the build, the package will be built in the cloud: ${String(error).split("\n\nRequest Body:")[0]}`,
+        ),
+      )
+    }
+  }
+
+  const releaseUpdate = {
+    ...(isLocalBuildRecorded ? {} : { ready_to_build: true }),
+    ...(typeof packageJson.license === "string" && packageJson.license.trim()
+      ? { license: packageJson.license.trim() }
+      : {}),
+  }
+  if (Object.keys(releaseUpdate).length > 0) {
+    await ky.post("package_releases/update", {
+      json: {
+        package_name_with_version: packageNameWithVersion,
+        ...releaseUpdate,
+      },
+    })
+  }
 
   onSuccess(
     [

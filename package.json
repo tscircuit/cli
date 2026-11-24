@@ -23,7 +23,7 @@
     "@tscircuit/circuit-json-schematic-placement-analysis": "https://jscdn.tscircuit.com/@tscircuit/circuit-json-schematic-placement-analysis/0.0.102.tgz",
     "@tscircuit/circuit-json-to-drawing": "https://jscdn.tscircuit.com/@tscircuit/circuit-json-to-drawing/0.0.8.tgz",
     "@tscircuit/circuit-json-to-jlcpcb-quote": "https://jscdn.tscircuit.com/@tscircuit/circuit-json-to-jlcpcb-quote/0.0.6.tgz",
-    "@tscircuit/fake-snippets": "^0.0.226",
+    "@tscircuit/fake-snippets": "^0.0.229",
     "@tscircuit/file-server": "^0.0.32",
     "@tscircuit/footprinter": "^0.0.451",
     "@tscircuit/signal-integrity-pipeline": "https://github.com/tscircuit/signal-integrity-pipeline/releases/download/v0.1.11/tscircuit-signal-integrity-pipeline-0.1.11.tgz",
