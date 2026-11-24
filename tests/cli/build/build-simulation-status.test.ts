@@ -34,41 +34,71 @@ export default {
 }
 `
 
-for (const concurrency of [1, 2]) {
-  test(`build reports simulation status with concurrency ${concurrency}`, async () => {
-    const { tmpDir, runCommand } = await getCliTestFixture({
-      skipSkillSetup: true,
-    })
-    await mkdir(path.join(tmpDir, "node_modules"))
-    await symlink(
-      path.dirname(require.resolve("react/package.json")),
-      path.join(tmpDir, "node_modules", "react"),
-      "dir",
-    )
-    await writeFile(path.join(tmpDir, "package.json"), "{}")
-    await writeFile(path.join(tmpDir, "index.circuit.tsx"), circuitCode)
-    await writeFile(path.join(tmpDir, "tscircuit.config.ts"), platformConfig)
+async function buildSimulation(concurrency: number) {
+  const { tmpDir, runCommand } = await getCliTestFixture({
+    skipSkillSetup: true,
+  })
+  await mkdir(path.join(tmpDir, "node_modules"))
+  await symlink(
+    path.dirname(require.resolve("react/package.json")),
+    path.join(tmpDir, "node_modules", "react"),
+    "dir",
+  )
+  await writeFile(path.join(tmpDir, "package.json"), "{}")
+  await writeFile(path.join(tmpDir, "index.circuit.tsx"), circuitCode)
+  await writeFile(path.join(tmpDir, "tscircuit.config.ts"), platformConfig)
 
-    const { stdout, exitCode } = await runCommand(
-      `tsci build index.circuit.tsx --disable-pcb --concurrency ${concurrency}`,
-    )
+  const { stdout, exitCode } = await runCommand(
+    `tsci build index.circuit.tsx --disable-pcb --concurrency ${concurrency}`,
+  )
 
-    expect(exitCode).toBe(0)
-    expect(stdout).toContain("Running ngspice simulation...")
-    expect(stdout.indexOf("Running ngspice simulation...")).toBeLessThan(
-      stdout.indexOf("Circuit JSON written to"),
-    )
-    expect(stdout).toContain("TEST_SIMULATOR_FINISHED")
-    const circuitJson = JSON.parse(
-      await readFile(
-        path.join(tmpDir, "dist", "index", "circuit.json"),
-        "utf8",
+  expect(exitCode).toBe(0)
+  expect(stdout).toContain("TEST_SIMULATOR_FINISHED")
+  const circuitJson = JSON.parse(
+    await readFile(path.join(tmpDir, "dist", "index", "circuit.json"), "utf8"),
+  )
+  expect(
+    circuitJson.some(
+      (element: { type: string }) => element.type === "simulation_experiment",
+    ),
+  ).toBe(true)
+
+  return stdout
+    .replaceAll("\\", "/")
+    .split("\n")
+    .map((line) => line.trimEnd())
+    .filter((line) =>
+      /^(Building |Generating circuit JSON|Running .* simulation|Circuit JSON written|Build complete| {2}(Circuits|Output)|✓ )/.test(
+        line,
       ),
     )
-    expect(
-      circuitJson.some(
-        (element: { type: string }) => element.type === "simulation_experiment",
-      ),
-    ).toBe(true)
-  }, 30_000)
+    .join("\n")
 }
+
+test("build reports simulation status with concurrency 1", async () => {
+  expect(await buildSimulation(1)).toMatchInlineSnapshot(`
+    "Building 1 file(s)...
+    Building index.circuit.tsx...
+    Generating circuit JSON...
+    Running ngspice simulation...
+    Circuit JSON written to dist/index/circuit.json
+    Build complete
+      Circuits  1 passed
+      Output    dist
+    ✓ Done"
+  `)
+}, 30_000)
+
+test("build reports simulation status with concurrency 2", async () => {
+  expect(await buildSimulation(2)).toMatchInlineSnapshot(`
+    "Building 1 file(s) with concurrency 2...
+    Generating circuit JSON for index.circuit.tsx...
+    Running ngspice simulation...
+    Circuit JSON written to dist/index/circuit.json
+    ✓ index.circuit.tsx
+    Build complete
+      Circuits  1 passed
+      Output    dist
+    ✓ Done"
+  `)
+}, 30_000)

@@ -7,7 +7,9 @@ test("simulation status is logged before entering a blocking engine", async () =
   const engine = {
     calls: 0,
     async simulate(spiceString: string) {
-      expect(logs).toEqual(["Running ngspice simulation..."])
+      expect(logs.join("\n")).toMatchInlineSnapshot(
+        `"Running ngspice simulation..."`,
+      )
       expect(spiceString).toBe("* original netlist\n.END")
       this.calls++
       const until = performance.now() + 20
@@ -44,10 +46,13 @@ test("a quiet simulation reports elapsed time and clears its timer on completion
     expect(intervalMs).toBe(30_000)
     clock.mockReturnValue(31_000)
     heartbeat()
-    expect(logs).toEqual([
-      "Running ngspice simulation...",
-      "Still running ngspice simulation (30s wall-clock elapsed)...",
-    ])
+    clock.mockReturnValue(61_000)
+    heartbeat()
+    expect(logs.join("\n")).toMatchInlineSnapshot(`
+      "Running ngspice simulation...
+      Still running ngspice simulation (30s wall-clock elapsed)...
+      Still running ngspice simulation (60s wall-clock elapsed)..."
+    `)
 
     pending.resolve(result)
     expect(await simulation).toBe(result)
