@@ -62,8 +62,8 @@ function getLocalFileDependencies(pathToTsxFile: string): string[] {
     ]
     let resolvedPath = path.resolve(baseDir, importPath)
 
-    // Check if path exists as-is
-    if (fs.existsSync(resolvedPath)) {
+    // Check if path exists as-is and is a file
+    if (fs.existsSync(resolvedPath) && fs.statSync(resolvedPath).isFile()) {
       dependencies.add(resolvedPath)
       return
     }
