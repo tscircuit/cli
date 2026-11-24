@@ -16,8 +16,11 @@ const fetchSimulation = async (): Promise<
 > => {
   // Using a predictable path in tmp to avoid re-downloading.
   // This is a workaround for Bun's test environment not handling URL imports.
+  const temporaryDirectoryPath = os.tmpdir()
   const tempFilePath = path.join(
-    await fs.realpath(os.tmpdir()),
+    await fs
+      .realpath(temporaryDirectoryPath)
+      .catch(() => temporaryDirectoryPath),
     `tscircuit-eecircuit-engine-1.7.7.mjs`,
   )
 
