@@ -11,6 +11,7 @@ import {
 } from "../../lib/shared/collapse-repeated-issues"
 import { writeBuildErrorsFile } from "../../lib/shared/write-build-errors-file"
 import { generateCircuitJson } from "../../lib/shared/generate-circuit-json"
+import { withSpiceSimulationStatus } from "../../lib/shared/spice-simulation-status"
 import { getPlatformConfigWithCliDefaults } from "../../lib/shared/get-platform-config-with-cli-defaults"
 import { mergePlatformConfigs } from "../../lib/shared/platform-config-utils"
 import { registerStaticAssetLoaders } from "../../lib/shared/register-static-asset-loaders"
@@ -76,7 +77,13 @@ export const handleBuildFile = async (
           await generateCircuitJson({
             filePath,
             projectDir,
-            platformConfig: platformConfigWithCliDefaults,
+            platformConfig: {
+              ...platformConfigWithCliDefaults,
+              spiceEngineMap: withSpiceSimulationStatus(
+                platformConfigWithCliDefaults.spiceEngineMap,
+                (message) => workerLog(message),
+              ),
+            },
             injectedProps: options?.injectedProps,
             autorouterDiagnostics: options?.autorouterDiagnostics
               ? {

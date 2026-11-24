@@ -12,6 +12,7 @@ import {
 import { writeBuildErrorsFile } from "lib/shared/write-build-errors-file"
 import { generateCircuitJson } from "lib/shared/generate-circuit-json"
 import { getPlatformConfigWithCliDefaults } from "lib/shared/get-platform-config-with-cli-defaults"
+import { withSpiceSimulationStatus } from "lib/shared/spice-simulation-status"
 import type { AutorouterDiagnosticsOptions } from "lib/shared/autorouter-diagnostics"
 import type { SolverDiagnosticsOptions } from "lib/shared/solver-diagnostics"
 import {
@@ -68,7 +69,13 @@ export const buildFile = async (
       const result = await generateCircuitJson({
         filePath: input,
         projectDir,
-        platformConfig: platformConfigWithCliDefaults,
+        platformConfig: {
+          ...platformConfigWithCliDefaults,
+          spiceEngineMap: withSpiceSimulationStatus(
+            platformConfigWithCliDefaults.spiceEngineMap,
+            (message) => console.log(message),
+          ),
+        },
         injectedProps: options?.injectedProps,
         autorouterDiagnostics: options?.autorouterDiagnostics,
         solverDiagnostics: options?.solverDiagnostics,
