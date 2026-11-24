@@ -13,14 +13,12 @@ export function withSpiceSimulationStatus(
         ...spiceEngine,
         async simulate(spiceString: string) {
           const startedAt = performance.now()
-          log(`Running ${engineName} simulation...`)
+          log(`Simulating with ${engineName}...`)
           const interval = setInterval(() => {
             const elapsedSeconds = Math.floor(
               (performance.now() - startedAt) / 1000,
             )
-            log(
-              `Still running ${engineName} simulation (${elapsedSeconds}s wall-clock elapsed)...`,
-            )
+            log(`  ${engineName} simulation: elapsed=${elapsedSeconds}s`)
           }, 30_000)
           interval.unref?.()
 
