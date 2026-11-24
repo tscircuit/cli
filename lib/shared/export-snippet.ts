@@ -165,6 +165,16 @@ export const exportSnippet = async ({
       ? outputPath
       : path.join(projectDir, outputPath ?? outputFileName)
 
+  // The altium format produces a zip archive (a project bundle of .PrjPcb,
+  // .PcbDoc, .SchDoc and README.txt), not a single native Altium document.
+  // If the user passes an explicit output path that doesn't end in ".zip"
+  // (e.g. `-o board.PcbDoc`), the zip bytes would be written under a
+  // misleading name and fail to open in Altium tooling. Append ".zip" so the
+  // file extension reflects the actual archive format.
+  if (format === "altium" && !outputDestination.toLowerCase().endsWith(".zip")) {
+    outputDestination = `${outputDestination}.zip`
+  }
+
   // Handle kicad-library separately - it doesn't need generateCircuitJson
   if (format === "kicad-library") {
     try {

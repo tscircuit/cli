@@ -41,3 +41,34 @@ test("export TSX as a native Altium project archive", async () => {
   expect(project).toContain("board.PcbDoc")
   expect(project).toContain("board.SchDoc")
 }, 60_000)
+
+test("export altium with -o board.PcbDoc writes a .zip archive", async () => {
+  const { tmpDir, runCommand } = await getCliTestFixture()
+  const circuitPath = path.join(tmpDir, "board.tsx")
+  await writeFile(
+    circuitPath,
+    `export default () => (
+      <board width="10mm" height="10mm">
+        <resistor name="R1" resistance="1k" footprint="0402" />
+      </board>
+    )`,
+  )
+
+  const { exitCode, stderr } = await runCommand(
+    `tsci export ${circuitPath} --format altium -o board.PcbDoc --disable-parts-engine`,
+  )
+  expect(exitCode).toBe(0)
+  expect(stderr).toBe("")
+
+  // The altium format produces a zip archive, so the output path must end in
+  // ".zip" even when the user passes a native-looking name like "board.PcbDoc".
+  const zip = await JSZip.loadAsync(
+    await readFile(path.join(tmpDir, "board.PcbDoc.zip")),
+  )
+  expect(Object.keys(zip.files).sort()).toEqual([
+    "README.txt",
+    "board.PcbDoc",
+    "board.PrjPcb",
+    "board.SchDoc",
+  ])
+}, 60_000)
