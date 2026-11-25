@@ -21,11 +21,11 @@ const fetchSimulation = async (): Promise<
     await fs
       .realpath(temporaryDirectoryPath)
       .catch(() => temporaryDirectoryPath),
-    `tscircuit-eecircuit-engine-1.7.7.mjs`,
+    `tscircuit-eecircuit-engine-1.7.9.mjs`,
   )
 
   if (!existsSync(tempFilePath)) {
-    const url = `https://jscdn.tscircuit.com/@tscircuit/eecircuit-engine/1.7.7/dist/eecircuit-engine.mjs`
+    const url = `https://jscdn.tscircuit.com/@tscircuit/eecircuit-engine/1.7.9/dist/eecircuit-engine.mjs`
     const response = await fetch(url)
     if (!response.ok) {
       throw new Error(
