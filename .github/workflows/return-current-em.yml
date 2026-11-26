@@ -32,6 +32,7 @@ jobs:
       - name: Install Gmsh and VTK system libraries
         run: |
           sudo apt-get update
+          sudo apt-get install --no-install-recommends -y libglu1-mesa libgl1 libgomp1
       - run: bun install --frozen-lockfile
       - name: Setup Palace Python environment
         run: |
