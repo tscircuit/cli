@@ -87,7 +87,7 @@ export const startFakeCircuithubServer = async ({
 
   /** The scope a request's token carries, or undefined when it is refused. */
   const authorizedScope = (authorization: string | null) => {
-    if (authorization === `Bearer ${token}`) return "read design"
+    if (authorization === `Bearer ${token}`) return "read design issues"
     const accessToken = authorization?.replace(/^Bearer /, "") ?? ""
     const grant = grants.find((candidate) => {
       const expiresAt = candidate.accessTokens.get(accessToken)

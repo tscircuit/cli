@@ -30,14 +30,14 @@ test(
     expect(signedIn.exitCode).toBe(0)
 
     // The sign-in page is asked for tokens for the API (not the MCP
-    // server), for reading and quoting only, with PKCE.
+    // server), for "Engineering" at most (no ordering or billing), with PKCE.
     const params = Object.fromEntries(signedIn.authorizeUrl.searchParams)
     expect(params).toMatchObject({
       response_type: "code",
       client_id: "tscircuit-cli-client",
       code_challenge_method: "S256",
       resource: circuithub.loginUrl,
-      scope: "read design",
+      scope: "read design issues",
     })
     expect(params.redirect_uri).toMatch(/^http:\/\/127\.0\.0\.1:\d+\/callback$/)
     const registration = circuithub.oauthRequests.find(
@@ -61,7 +61,7 @@ test(
       Sign in to CircuitHub to add it as a provider:
         <circuithub>/oauth/authorize?<query>
       If the browser is on another machine, paste the URL it ends up on here.
-      Added CircuitHub (access: read, design)."
+      Added CircuitHub (access: read, design, issues)."
     `)
 
     // Tokens are saved where only the user can read them, never printed.
@@ -73,7 +73,7 @@ test(
       resource: circuithub.loginUrl,
       accessToken: "cha_test_1",
       refreshToken: "chr_test_1",
-      scope: "read design",
+      scope: "read design issues",
     })
     expect(signedIn.stdout + signedIn.stderr).not.toContain("cha_test")
     expect(signedIn.stdout + signedIn.stderr).not.toContain("chr_test")
@@ -82,7 +82,7 @@ test(
     const again = await runCommand(command)
     expect(again.exitCode).toBe(0)
     expect(again.stdout.trim()).toMatchInlineSnapshot(
-      `"CircuitHub is already added (access: read, design)."`,
+      `"CircuitHub is already added (access: read, design, issues)."`,
     )
 
     // Quotes use the saved sign-in's access token without asking again.

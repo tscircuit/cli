@@ -25,10 +25,12 @@ import {
 /** Shown on CircuitHub's sign-in page and under Connected apps. */
 const CLIENT_NAME = "tscircuit CLI"
 /**
- * What the CLI asks for at most: reading, and uploading designs and
- * requesting quotes. Never ordering or billing: the CLI does not place orders.
+ * What the CLI asks for at most. CircuitHub's sign-in page offers only the
+ * choices that fit within it, and quoting needs `design`, which comes with
+ * "Engineering" (read, design, issues). So ask for exactly that: never
+ * ordering or billing, since the CLI does not place orders.
  */
-export const CIRCUITHUB_SCOPE = "read design"
+export const CIRCUITHUB_SCOPE = "read design issues"
 /** An access token is replaced this long before it expires (at most half its life). */
 const REFRESH_MARGIN_MS = 5 * 60_000
 const REQUEST_TIMEOUT_MS = 10_000
