@@ -14,6 +14,20 @@ const SIGN_IN_TIMEOUT_MS = 10 * 60 * 1000
 export const hasCircuithubSession = () =>
   Boolean(getCircuithubEnvToken()) || hasCircuithubSignIn()
 
+/**
+ * Uploading designs and requesting quotes needs `design` access. CircuitHub's
+ * sign-in page lets the user grant less ("Read only"), so say how to fix it.
+ */
+const warnIfCannotQuote = (
+  scope: string | undefined,
+  log: (message: string) => void,
+) => {
+  if (scope === undefined || scope.split(" ").includes("design")) return
+  log(
+    'CircuitHub only allowed reading, so quotes will be refused. Allow "Engineering" access for tscircuit CLI on CircuitHub under Settings → Connected apps, or run `tsci auth remove-provider circuithub` and add it again choosing Engineering.',
+  )
+}
+
 const describeAccess = (scope: string | undefined) =>
   scope ? ` (access: ${scope.split(" ").join(", ")})` : ""
 
@@ -35,6 +49,7 @@ export const addCircuithubProvider = async ({
   const current = getCircuithubSignIn()
   if (current) {
     log(`CircuitHub is already added${describeAccess(current.scope)}.`)
+    warnIfCannotQuote(current.scope, log)
     return
   }
 
@@ -64,6 +79,7 @@ export const addCircuithubProvider = async ({
     if (!signIn)
       throw new Error("Timed out waiting for the CircuitHub sign-in.")
     log(`Added CircuitHub${describeAccess(signIn.scope)}.`)
+    warnIfCannotQuote(signIn.scope, log)
   } finally {
     session.close()
   }

@@ -39,7 +39,13 @@ interface FakeGrant {
 export const startFakeCircuithubServer = async ({
   token = "test-circuithub-token",
   accessTokenLifetimeSeconds = 3600,
-}: { token?: string; accessTokenLifetimeSeconds?: number } = {}) => {
+  grantedScope,
+}: {
+  token?: string
+  accessTokenLifetimeSeconds?: number
+  /** What the user allows on the sign-in page; by default what was asked. */
+  grantedScope?: string
+} = {}) => {
   const port = await getPort()
   const baseUrl = `http://localhost:${port}`
   const requests: FakeCircuithubRequest[] = []
@@ -79,13 +85,17 @@ export const startFakeCircuithubServer = async ({
     }
   }
 
-  const isAuthorized = (authorization: string | null) => {
-    if (authorization === `Bearer ${token}`) return true
+  /** The scope a request's token carries, or undefined when it is refused. */
+  const authorizedScope = (authorization: string | null) => {
+    if (authorization === `Bearer ${token}`) return "read design"
     const accessToken = authorization?.replace(/^Bearer /, "") ?? ""
-    return grants.some((grant) => {
-      const expiresAt = grant.accessTokens.get(accessToken)
-      return !grant.revoked && expiresAt !== undefined && expiresAt > Date.now()
+    const grant = grants.find((candidate) => {
+      const expiresAt = candidate.accessTokens.get(accessToken)
+      return (
+        !candidate.revoked && expiresAt !== undefined && expiresAt > Date.now()
+      )
     })
+    return grant?.scope
   }
 
   const handleOauth = async (req: Request, url: URL) => {
@@ -119,7 +129,7 @@ export const startFakeCircuithubServer = async ({
           challenge: params.code_challenge,
           redirectUri: params.redirect_uri,
           resource: params.resource,
-          scope: params.scope,
+          scope: grantedScope ?? params.scope,
         })
         const back = new URL(params.redirect_uri)
         back.search = new URLSearchParams({
@@ -220,13 +230,26 @@ export const startFakeCircuithubServer = async ({
         authorization: req.headers.get("authorization"),
         body: text ? JSON.parse(text) : null,
       })
-      if (!isAuthorized(req.headers.get("authorization"))) {
+      const scope = authorizedScope(req.headers.get("authorization"))
+      if (scope === undefined) {
         return Response.json(
           { error: { message: "Invalid token" } },
           {
             status: 401,
             headers: { "WWW-Authenticate": 'Bearer error="invalid_token"' },
           },
+        )
+      }
+      // Like CircuitHub: uploads and quotes need `design` access.
+      if (req.method === "POST" && !scope.split(" ").includes("design")) {
+        return json(
+          {
+            error: {
+              message:
+                "This connection may not change designs or request quotes. The user can change what it may do in CircuitHub, under Settings, Connected apps.",
+            },
+          },
+          403,
         )
       }
       const route = `${req.method} ${url.pathname}`
