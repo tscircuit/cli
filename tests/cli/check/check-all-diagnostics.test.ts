@@ -3,7 +3,7 @@ import { writeFile } from "node:fs/promises"
 import path from "node:path"
 import { getCliTestFixture } from "../../fixtures/get-cli-test-fixture"
 
-test("check prints diagnostics from every category including unknown", async () => {
+test("check prints diagnostics from every category including unknown and exits nonzero when errors exist", async () => {
   const { tmpDir, runCommand } = await getCliTestFixture()
   const circuitJsonPath = path.join(tmpDir, "all-diagnostics.circuit.json")
   const diagnosticTypes = [
@@ -29,7 +29,7 @@ test("check prints diagnostics from every category including unknown", async () 
     `tsci check ${circuitJsonPath}`,
   )
 
-  expect(exitCode).toBe(0)
+  expect(exitCode).toBe(1)
   expect(stderr).toBe("")
   expect(stdout).toContain("Errors: 3")
   expect(stdout).toContain("Warnings: 3")
@@ -37,4 +37,32 @@ test("check prints diagnostics from every category including unknown", async () 
   for (const type of diagnosticTypes) {
     expect(stdout).toContain(type)
   }
+})
+
+test("check exits zero when only warnings are reported", async () => {
+  const { tmpDir, runCommand } = await getCliTestFixture()
+  const circuitJsonPath = path.join(tmpDir, "warnings-only.circuit.json")
+
+  await writeFile(
+    circuitJsonPath,
+    JSON.stringify([
+      {
+        type: "source_property_ignored_warning",
+        message: "Ignored source property",
+      },
+      {
+        type: "future_diagnostic_warning",
+        message: "Unknown warning",
+      },
+    ]),
+  )
+
+  const { stdout, stderr, exitCode } = await runCommand(
+    `tsci check ${circuitJsonPath}`,
+  )
+
+  expect(exitCode).toBe(0)
+  expect(stderr).toBe("")
+  expect(stdout).toContain("Errors: 0")
+  expect(stdout).toContain("Warnings: 2")
 })

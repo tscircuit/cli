@@ -1,6 +1,6 @@
 import { expect, test } from "bun:test"
-import path from "node:path"
 import { writeFile } from "node:fs/promises"
+import path from "node:path"
 import { getCliTestFixture } from "../../fixtures/get-cli-test-fixture"
 
 const circuitCode = `
@@ -31,6 +31,24 @@ export default () => (
     <resistor resistance="1k" footprint="0402" name="R1" pcbX={5.2} pcbY={0} />
     <capacitor capacitance="1000pF" footprint="0402" name="C1" pcbX={0} pcbY={0} />
     <trace from=".R1 > .pin1" to=".C1 > .pin1" />
+  </board>
+)
+`
+
+const floatingPinCircuitCode = `
+export default () => (
+  <board width="10mm" height="10mm" routingDisabled>
+    <chip
+      name="U1"
+      footprint="soic8"
+      pinLabels={{ pin1: "EN", pin4: "GND", pin8: "VCC" }}
+      pinAttributes={{
+        EN: { mustBeConnected: true },
+        VCC: { requiresPower: true },
+        GND: { requiresGround: true },
+      }}
+      connections={{ VCC: "net.VCC", GND: "net.GND" }}
+    />
   </board>
 )
 `
@@ -75,3 +93,27 @@ test("check netlist filters out placement diagnostics", async () => {
   expect(stdout).not.toContain("pcb_component_outside_board_error")
   expect(stdout).not.toContain("Component R1 extends outside board boundaries")
 }, 20_000)
+
+test("check netlist and plain check exit nonzero when netlist errors are reported", async () => {
+  const { tmpDir, runCommand } = await getCliTestFixture()
+  const circuitPath = path.join(tmpDir, "floating-pin.circuit.tsx")
+
+  await writeFile(circuitPath, floatingPinCircuitCode)
+
+  const netlistResult = await runCommand(`tsci check netlist ${circuitPath}`)
+  expect(netlistResult.exitCode).toBe(1)
+  expect(netlistResult.stderr).toBe("")
+  expect(netlistResult.stdout).toContain("Errors: 1")
+  expect(netlistResult.stdout).toContain(
+    "source_pin_must_be_connected_error: Port EN on U1 must be connected but is floating",
+  )
+  expect(netlistResult.stdout).toContain("Readable Netlist:")
+
+  const plainCheckResult = await runCommand(`tsci check ${circuitPath}`)
+  expect(plainCheckResult.exitCode).toBe(1)
+  expect(plainCheckResult.stderr).toBe("")
+  expect(plainCheckResult.stdout).toContain("Errors: 1")
+  expect(plainCheckResult.stdout).toContain(
+    "source_pin_must_be_connected_error: Port EN on U1 must be connected but is floating",
+  )
+}, 30_000)

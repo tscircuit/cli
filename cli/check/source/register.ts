@@ -12,7 +12,7 @@ import { getCircuitJsonForCheck, resolveCheckInputFilePath } from "../shared"
 export const isSourceDiagnostic = (issue: CircuitJsonIssue) =>
   categorizeErrorOrWarning(issue) === "source"
 
-export const checkSource = async (file?: string) => {
+export const getCheckSourceResult = async (file?: string) => {
   const resolvedInputFilePath = await resolveCheckInputFilePath(file)
   const circuitJson = (await getCircuitJsonForCheck({
     filePath: resolvedInputFilePath,
@@ -24,12 +24,20 @@ export const checkSource = async (file?: string) => {
     allowPrebuiltCircuitJson: true,
   })) as AnyCircuitElement[]
   const diagnostics = analyzeCircuitJson(circuitJson)
+  const errors = diagnostics.errors.filter(isSourceDiagnostic)
+  const warnings = diagnostics.warnings.filter(isSourceDiagnostic)
 
-  return formatCircuitJsonDiagnostics({
-    errors: diagnostics.errors.filter(isSourceDiagnostic),
-    warnings: diagnostics.warnings.filter(isSourceDiagnostic),
-  })
+  return {
+    output: formatCircuitJsonDiagnostics({
+      errors,
+      warnings,
+    }),
+    hasErrors: errors.length > 0,
+  }
 }
+
+export const checkSource = async (file?: string) =>
+  (await getCheckSourceResult(file)).output
 
 export const registerCheckSource = (program: Command) => {
   program.commands
@@ -39,7 +47,9 @@ export const registerCheckSource = (program: Command) => {
     .argument("[file]", "Path to the entry file")
     .action(async (file?: string) => {
       try {
-        console.log(await checkSource(file))
+        const { output, hasErrors } = await getCheckSourceResult(file)
+        console.log(output)
+        if (hasErrors) process.exitCode = 1
       } catch (error) {
         console.error(error instanceof Error ? error.message : String(error))
         process.exit(1)

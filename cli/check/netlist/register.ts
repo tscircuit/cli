@@ -1,20 +1,20 @@
-import { convertCircuitJsonToReadableNetlist } from "circuit-json-to-readable-netlist"
+import path from "node:path"
 import {
-  categorizeErrorOrWarning,
   type DrcCategory,
+  categorizeErrorOrWarning,
 } from "@tscircuit/circuit-json-util"
 import type { PlatformConfig } from "@tscircuit/props"
 import type { AnyCircuitElement } from "circuit-json"
+import { convertCircuitJsonToReadableNetlist } from "circuit-json-to-readable-netlist"
 import type { Command } from "commander"
+import { findCircuitProjectDir } from "lib/shared/circuit-json-build-cache"
+import {
+  type CircuitJsonIssue,
+  analyzeCircuitJson,
+} from "lib/shared/circuit-json-diagnostics"
+import { getEntrypoint } from "lib/shared/get-entrypoint"
 import { getOrGenerateCircuitJson } from "lib/shared/get-or-generate-circuit-json"
 import { getPlatformConfigWithCliDefaults } from "lib/shared/get-platform-config-with-cli-defaults"
-import { getEntrypoint } from "lib/shared/get-entrypoint"
-import {
-  analyzeCircuitJson,
-  type CircuitJsonIssue,
-} from "lib/shared/circuit-json-diagnostics"
-import path from "node:path"
-import { findCircuitProjectDir } from "lib/shared/circuit-json-build-cache"
 
 const normalizeCategory = (category: string): DrcCategory =>
   category === "netlist" ||
@@ -43,7 +43,7 @@ const resolveInputFilePath = async (file?: string) => {
   return entrypoint
 }
 
-export const checkNetlist = async (file?: string) => {
+export const getCheckNetlistResult = async (file?: string) => {
   const resolvedInputFilePath = await resolveInputFilePath(file)
 
   const platformConfigWithCliDefaults = getPlatformConfigWithCliDefaults(
@@ -87,8 +87,14 @@ export const checkNetlist = async (file?: string) => {
     )
   }
 
-  return `${diagnosticsLines.join("\n")}\n\nReadable Netlist:\n${readableNetlist}`
+  return {
+    output: `${diagnosticsLines.join("\n")}\n\nReadable Netlist:\n${readableNetlist}`,
+    hasErrors: netlistErrors.length > 0,
+  }
 }
+
+export const checkNetlist = async (file?: string) =>
+  (await getCheckNetlistResult(file)).output
 
 export const registerCheckNetlist = (program: Command) => {
   program.commands
@@ -98,8 +104,9 @@ export const registerCheckNetlist = (program: Command) => {
     .argument("[file]", "Path to the entry file")
     .action(async (file?: string) => {
       try {
-        const output = await checkNetlist(file)
+        const { output, hasErrors } = await getCheckNetlistResult(file)
         console.log(output)
+        if (hasErrors) process.exitCode = 1
       } catch (error) {
         console.error(error instanceof Error ? error.message : String(error))
         process.exit(1)
