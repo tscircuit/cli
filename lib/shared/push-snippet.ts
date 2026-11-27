@@ -188,7 +188,10 @@ export const pushSnippet = async ({
   if (process.env.TSCIRCUIT_TOKEN) {
     try {
       const account = await fetchAccount()
-      currentUsername = account?.tscircuit_handle || undefined
+      currentUsername =
+        typeof account?.tscircuit_handle === "string"
+          ? account.tscircuit_handle.trim() || undefined
+          : undefined
     } catch (error) {
       onError(
         formatAccountLookupError(

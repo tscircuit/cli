@@ -183,7 +183,9 @@ test("fetchAccount throws AccountLookupError on network and timeout errors", asy
   cliConfig.set("registryApiUrl", "http://127.0.0.1:1")
 
   globalThis.fetch = (async () => {
-    throw new TypeError("Unable to connect to registry")
+    throw new TypeError("fetch failed", {
+      cause: new Error("ECONNREFUSED 127.0.0.1:1"),
+    })
   }) as unknown as typeof fetch
 
   let networkErr: unknown
@@ -193,9 +195,9 @@ test("fetchAccount throws AccountLookupError on network and timeout errors", asy
     networkErr = error
   }
   expect(networkErr).toBeInstanceOf(AccountLookupError)
-  expect((networkErr as AccountLookupError).message).toContain(
-    "Unable to connect to registry",
-  )
+  expect((networkErr as AccountLookupError).message).toContain("fetch failed")
+  expect((networkErr as AccountLookupError).message).toContain("ECONNREFUSED")
+  expect((networkErr as AccountLookupError).cause).toBeInstanceOf(TypeError)
 
   globalThis.fetch = (async () => {
     const timeoutErr = new Error("The operation timed out")
@@ -239,7 +241,13 @@ test("fetchAccount throws AccountLookupError on malformed JSON or missing accoun
     malformedServer.stop()
   }
 
-  for (const body of [{}, { account: null }, "unexpected"]) {
+  for (const body of [
+    {},
+    { account: null },
+    { account: [] },
+    [],
+    "unexpected",
+  ]) {
     const missingAccountServer = Bun.serve({
       port: 0,
       fetch: () => Response.json(body),

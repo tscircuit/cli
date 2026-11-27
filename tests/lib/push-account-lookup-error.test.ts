@@ -201,6 +201,88 @@ test("pushSnippet still reports missing handle when account lookup succeeds with
   }
 })
 
+test("pushSnippet reports lookup failure for malformed JSON, missing account object, HTTP 403/429, and keeps package.json untouched", async () => {
+  const scenarios: Array<{
+    name: string
+    handler: () => Response
+    expectedSubstring: string
+  }> = [
+    {
+      name: "HTTP 403",
+      handler: () =>
+        Response.json(
+          { error: { error_code: "forbidden", message: "Access denied" } },
+          { status: 403 },
+        ),
+      expectedSubstring: "HTTP 403",
+    },
+    {
+      name: "HTTP 429",
+      handler: () =>
+        Response.json(
+          {
+            error: { error_code: "rate_limited", message: "Too many requests" },
+          },
+          { status: 429 },
+        ),
+      expectedSubstring: "HTTP 429",
+    },
+    {
+      name: "malformed JSON",
+      handler: () =>
+        new Response("{invalid-json", {
+          status: 200,
+          headers: { "Content-Type": "application/json" },
+        }),
+      expectedSubstring: "malformed JSON",
+    },
+    {
+      name: "missing account object",
+      handler: () => Response.json({}),
+      expectedSubstring: "missing account object",
+    },
+  ]
+
+  for (const scenario of scenarios) {
+    const projectDir = createTempProject()
+    const pkgPath = path.join(projectDir, "package.json")
+    const originalPkg = fs.readFileSync(pkgPath, "utf8")
+    process.env.TSCIRCUIT_TOKEN = "placeholder-token"
+
+    const server = Bun.serve({
+      port: 0,
+      fetch: scenario.handler,
+    })
+    cliConfig.set("registryApiUrl", server.url.toString())
+
+    const errors: string[] = []
+    let exitCode: number | undefined
+    const prevCwd = process.cwd()
+
+    try {
+      process.chdir(projectDir)
+      await pushSnippet({
+        filePath: "index.circuit.tsx",
+        onError: (msg) => errors.push(msg),
+        onExit: (code) => {
+          exitCode = code
+        },
+      })
+
+      expect(exitCode).toBe(1)
+      expect(errors[0]).toContain(
+        "Could not verify your account for publishing",
+      )
+      expect(errors[0]).toContain(scenario.expectedSubstring)
+      expect(errors[0]).not.toContain("You need to set your tscircuit handle")
+      expect(fs.readFileSync(pkgPath, "utf8")).toBe(originalPkg)
+    } finally {
+      process.chdir(prevCwd)
+      server.stop()
+    }
+  }
+})
+
 test("auth whoami exits nonzero with error instead of printing @(not set) on lookup failure", async () => {
   process.env.TSCIRCUIT_TOKEN = "placeholder-token"
 

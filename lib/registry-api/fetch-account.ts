@@ -12,7 +12,10 @@ export class AccountLookupError extends Error {
       status?: number
     },
   ) {
-    super(message)
+    super(
+      message,
+      options?.cause !== undefined ? { cause: options.cause } : undefined,
+    )
     this.name = "AccountLookupError"
   }
 
@@ -61,7 +64,14 @@ export const toAccountLookupError = (error: unknown): AccountLookupError => {
   }
 
   if (error instanceof Error) {
-    return new AccountLookupError(error.message || "request failed.", {
+    const baseMessage = error.message || "request failed"
+    const causeMessage =
+      error.cause instanceof Error &&
+      error.cause.message &&
+      !baseMessage.includes(error.cause.message)
+        ? ` (${error.cause.message})`
+        : ""
+    return new AccountLookupError(`${baseMessage}${causeMessage}`, {
       cause: error,
     })
   }
@@ -107,9 +117,11 @@ export const fetchAccount = async (): Promise<Account | null> => {
   if (
     !data ||
     typeof data !== "object" ||
+    Array.isArray(data) ||
     !("account" in data) ||
     !data.account ||
-    typeof data.account !== "object"
+    typeof data.account !== "object" ||
+    Array.isArray(data.account)
   ) {
     throw new AccountLookupError(
       "registry returned an invalid account response (missing account object).",
