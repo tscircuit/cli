@@ -7,7 +7,7 @@ export const registerAuthAddProvider = (program: Command) => {
     .find((c) => c.name() === "auth")!
     .command("add-provider")
     .description(
-      "Connect a manufacturing provider to the CLI by logging in to it (supported: circuithub)",
+      "Connect a manufacturing provider to the CLI by signing in to it (supported: circuithub)",
     )
     .argument("<provider>", "Provider to add: circuithub")
     .action(async (name: string) => {

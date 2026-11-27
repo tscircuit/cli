@@ -1,3 +1,4 @@
+import { createHash } from "node:crypto"
 import getPort from "get-port"
 
 export interface FakeCircuithubRequest {
@@ -7,27 +8,217 @@ export interface FakeCircuithubRequest {
   body: any
 }
 
+export interface FakeCircuithubOauthRequest {
+  method: string
+  path: string
+  /** The query of an authorize request, or the form of a token or revoke one. */
+  params: Record<string, string>
+}
+
+/** One sign-in, as CircuitHub keeps it: its tokens change, it stays. */
+interface FakeGrant {
+  clientId: string
+  scope: string
+  revoked: boolean
+  accessTokens: Map<string, number>
+  refreshToken: string
+  /** The refresh token just replaced, which answers once more for 30 s. */
+  previousRefreshToken?: { token: string; replacedAt: number; reused: boolean }
+}
+
 /**
  * A stand-in for api.circuithub.com that walks a project through import and
  * CAM analysis and answers quote requests with recorded-shape responses.
  * The CAM report is only "ready" on the second board read, so the CLI has
  * to wait for it.
+ *
+ * It is also CircuitHub's OAuth server (the issuer is the server's own
+ * address): the authorize page approves at once and redirects, and the
+ * API accepts the access tokens it issues as well as the static `token`.
  */
 export const startFakeCircuithubServer = async ({
   token = "test-circuithub-token",
-}: { token?: string } = {}) => {
+  accessTokenLifetimeSeconds = 3600,
+  grantedScope,
+}: {
+  token?: string
+  accessTokenLifetimeSeconds?: number
+  /** What the user allows on the sign-in page; by default what was asked. */
+  grantedScope?: string
+} = {}) => {
   const port = await getPort()
   const baseUrl = `http://localhost:${port}`
   const requests: FakeCircuithubRequest[] = []
+  const oauthRequests: FakeCircuithubOauthRequest[] = []
   const uploads = new Map<string, string>()
   let boardReads = 0
+  let issued = 0
+  const clientId = "tscircuit-cli-client"
+  const codes = new Map<
+    string,
+    {
+      challenge: string
+      redirectUri: string
+      resource: string
+      scope: string
+    }
+  >()
+  const grants: FakeGrant[] = []
 
   const json = (body: unknown, status = 200) => Response.json(body, { status })
+  const oauthError = (error: string, status = 400) => json({ error }, status)
+
+  const issueTokens = (grant: FakeGrant) => {
+    issued++
+    const accessToken = `cha_test_${issued}`
+    grant.accessTokens.set(
+      accessToken,
+      Date.now() + accessTokenLifetimeSeconds * 1000,
+    )
+    grant.refreshToken = `chr_test_${issued}`
+    return {
+      access_token: accessToken,
+      token_type: "Bearer",
+      expires_in: accessTokenLifetimeSeconds,
+      refresh_token: grant.refreshToken,
+      scope: grant.scope,
+    }
+  }
+
+  /** The scope a request's token carries, or undefined when it is refused. */
+  const authorizedScope = (authorization: string | null) => {
+    if (authorization === `Bearer ${token}`) return "read design issues"
+    const accessToken = authorization?.replace(/^Bearer /, "") ?? ""
+    const grant = grants.find((candidate) => {
+      const expiresAt = candidate.accessTokens.get(accessToken)
+      return (
+        !candidate.revoked && expiresAt !== undefined && expiresAt > Date.now()
+      )
+    })
+    return grant?.scope
+  }
+
+  const handleOauth = async (req: Request, url: URL) => {
+    const route = `${req.method} ${url.pathname}`
+    const params: Record<string, string> =
+      req.method === "GET"
+        ? Object.fromEntries(url.searchParams)
+        : req.headers.get("content-type")?.includes("json")
+          ? await req.json()
+          : Object.fromEntries(new URLSearchParams(await req.text()))
+    oauthRequests.push({ method: req.method, path: url.pathname, params })
+    switch (route) {
+      case "GET /.well-known/oauth-authorization-server":
+        return json({
+          issuer: baseUrl,
+          authorization_endpoint: `${baseUrl}/oauth/authorize`,
+          token_endpoint: `${baseUrl}/oauth/token`,
+          registration_endpoint: `${baseUrl}/oauth/register`,
+          revocation_endpoint: `${baseUrl}/oauth/revoke`,
+          code_challenge_methods_supported: ["S256"],
+          token_endpoint_auth_methods_supported: ["none"],
+          scopes_supported: ["read", "design", "issues", "ordering", "billing"],
+          authorization_response_iss_parameter_supported: true,
+        })
+      case "POST /oauth/register":
+        return json({ client_id: clientId, ...params }, 201)
+      case "GET /oauth/authorize": {
+        // The user approves at once.
+        const code = `code_${codes.size + 1}`
+        codes.set(code, {
+          challenge: params.code_challenge,
+          redirectUri: params.redirect_uri,
+          resource: params.resource,
+          scope: grantedScope ?? params.scope,
+        })
+        const back = new URL(params.redirect_uri)
+        back.search = new URLSearchParams({
+          code,
+          state: params.state,
+          iss: baseUrl,
+        }).toString()
+        return Response.redirect(back.toString(), 302)
+      }
+      case "POST /oauth/token": {
+        if (params.client_id !== clientId) return oauthError("invalid_client")
+        if (params.grant_type === "authorization_code") {
+          const pending = codes.get(params.code)
+          codes.delete(params.code)
+          const challenge = createHash("sha256")
+            .update(params.code_verifier ?? "")
+            .digest("base64url")
+          if (
+            !pending ||
+            pending.challenge !== challenge ||
+            pending.redirectUri !== params.redirect_uri ||
+            pending.resource !== params.resource
+          ) {
+            return oauthError("invalid_grant")
+          }
+          const grant: FakeGrant = {
+            clientId,
+            scope: pending.scope,
+            revoked: false,
+            accessTokens: new Map(),
+            refreshToken: "",
+          }
+          grants.push(grant)
+          return json(issueTokens(grant))
+        }
+        if (params.grant_type === "refresh_token") {
+          const presented = params.refresh_token
+          const grant = grants.find(
+            (candidate) =>
+              candidate.refreshToken === presented ||
+              candidate.previousRefreshToken?.token === presented,
+          )
+          if (!grant || grant.revoked) return oauthError("invalid_grant")
+          if (grant.refreshToken !== presented) {
+            // The one just replaced: once more within 30 s, then it ends
+            // the sign-in, as a stolen token would be used.
+            const previous = grant.previousRefreshToken!
+            if (previous.reused || Date.now() - previous.replacedAt > 30_000) {
+              grant.revoked = true
+              return oauthError("invalid_grant")
+            }
+            previous.reused = true
+          } else {
+            grant.previousRefreshToken = {
+              token: presented,
+              replacedAt: Date.now(),
+              reused: false,
+            }
+          }
+          return json(issueTokens(grant))
+        }
+        return oauthError("unsupported_grant_type")
+      }
+      case "POST /oauth/revoke": {
+        for (const grant of grants) {
+          if (
+            grant.refreshToken === params.token ||
+            grant.accessTokens.has(params.token)
+          ) {
+            grant.revoked = true
+          }
+        }
+        return new Response(null, { status: 200 })
+      }
+    }
+    return undefined
+  }
 
   const server = Bun.serve({
     port,
     fetch: async (req) => {
       const url = new URL(req.url)
+      if (
+        url.pathname.startsWith("/oauth/") ||
+        url.pathname.startsWith("/.well-known/")
+      ) {
+        const response = await handleOauth(req, url)
+        if (response) return response
+      }
       const text = req.method === "GET" ? "" : await req.text()
       if (url.pathname.startsWith("/s3/")) {
         uploads.set(decodeURIComponent(url.pathname.slice(4)), text)
@@ -39,8 +230,27 @@ export const startFakeCircuithubServer = async ({
         authorization: req.headers.get("authorization"),
         body: text ? JSON.parse(text) : null,
       })
-      if (req.headers.get("authorization") !== `Bearer ${token}`) {
-        return json({ error: { message: "Invalid token" } }, 401)
+      const scope = authorizedScope(req.headers.get("authorization"))
+      if (scope === undefined) {
+        return Response.json(
+          { error: { message: "Invalid token" } },
+          {
+            status: 401,
+            headers: { "WWW-Authenticate": 'Bearer error="invalid_token"' },
+          },
+        )
+      }
+      // Like CircuitHub: uploads and quotes need `design` access.
+      if (req.method === "POST" && !scope.split(" ").includes("design")) {
+        return json(
+          {
+            error: {
+              message:
+                "This connection may not change designs or request quotes. The user can change what it may do in CircuitHub, under Settings, Connected apps.",
+            },
+          },
+          403,
+        )
       }
       const route = `${req.method} ${url.pathname}`
       switch (route) {
@@ -232,5 +442,31 @@ export const startFakeCircuithubServer = async ({
     server.stop(true)
   })
 
-  return { apiUrl: `${baseUrl}/v1`, requests, uploads }
+  return {
+    apiUrl: `${baseUrl}/v1`,
+    /** CIRCUITHUB_LOGIN_URL for signing in to this server. */
+    loginUrl: baseUrl,
+    requests,
+    oauthRequests,
+    uploads,
+    /** Whether a sign-in is still live at the server. */
+    activeSignIns: () => grants.filter((grant) => !grant.revoked).length,
+    /** Refuse the access tokens issued so far, as if they had expired. */
+    expireAccessTokens: () => {
+      for (const grant of grants) {
+        for (const accessToken of grant.accessTokens.keys()) {
+          grant.accessTokens.set(accessToken, 0)
+        }
+      }
+    },
+    /** How many times a refresh token was redeemed. */
+    refreshCount: () =>
+      oauthRequests.filter(
+        (request) => request.params.grant_type === "refresh_token",
+      ).length,
+    /** End every sign-in, as disconnecting the app on CircuitHub does. */
+    disconnectAll: () => {
+      for (const grant of grants) grant.revoked = true
+    },
+  }
 }

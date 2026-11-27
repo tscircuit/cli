@@ -1,37 +1,43 @@
 import { expect, test } from "bun:test"
+import { readFile } from "node:fs/promises"
 import path from "node:path"
-import Conf from "conf"
-import * as jwt from "jsonwebtoken"
 import { getCliTestFixture } from "tests/fixtures/get-cli-test-fixture"
+import { signInToFakeCircuithub } from "tests/fixtures/sign-in-to-fake-circuithub"
+import { startFakeCircuithubServer } from "tests/fixtures/start-fake-circuithub-server"
 
 test(
-  "tsci auth remove-provider circuithub forgets the saved CircuitHub login",
+  "tsci auth remove-provider circuithub ends the CircuitHub sign-in and forgets it",
   async () => {
-    const { tmpDir, runCommand } = await getCliTestFixture({
-      env: { CIRCUITHUB_TOKEN: undefined, CIRCUITHUB_API_KEY: undefined },
-    })
-    // The session `tsci auth add-provider circuithub` would have saved.
-    const circuithubConfig = new Conf<Record<string, string>>({
-      projectName: "tscircuit",
-      configName: "circuithub",
-      cwd: path.join(tmpDir, ".config"),
-    })
-    circuithubConfig.set(
-      "token",
-      jwt.sign({ sub: "44738", name: "Ada Lovelace" }, "test-secret", {
-        expiresIn: "24h",
-      }),
-    )
-    circuithubConfig.set("workspace", "acme")
+    const circuithub = await startFakeCircuithubServer()
+    const env = {
+      CIRCUITHUB_TOKEN: undefined,
+      CIRCUITHUB_API_KEY: undefined,
+      CIRCUITHUB_API_URL: circuithub.apiUrl,
+      CIRCUITHUB_LOGIN_URL: circuithub.loginUrl,
+    }
+    const { tmpDir, runCommand } = await getCliTestFixture({ env })
+    expect((await signInToFakeCircuithub({ tmpDir, env })).exitCode).toBe(0)
+    expect(circuithub.activeSignIns()).toBe(1)
 
     const command = "tsci auth remove-provider circuithub"
     const removed = await runCommand(command)
     expect(removed.exitCode).toBe(0)
     expect(`$ ${command}\n${removed.stdout}`.trim()).toMatchInlineSnapshot(`
       "$ tsci auth remove-provider circuithub
-      Removed CircuitHub (was logged in as Ada Lovelace)."
+      Removed CircuitHub and ended its sign-in."
     `)
-    expect(circuithubConfig.store).toEqual({})
+
+    // The refresh token was revoked at CircuitHub, which ends the sign-in.
+    const revoke = circuithub.oauthRequests.find(
+      (request) => request.path === "/oauth/revoke",
+    )
+    expect(revoke?.params).toEqual({
+      token: "chr_test_1",
+      client_id: "tscircuit-cli-client",
+    })
+    expect(circuithub.activeSignIns()).toBe(0)
+    const configPath = path.join(tmpDir, ".config", "circuithub.json")
+    expect(JSON.parse(await readFile(configPath, "utf8"))).toEqual({})
 
     // Quotes now ask to add CircuitHub again.
     const quote = await runCommand(
@@ -47,5 +53,5 @@ test(
       `"CircuitHub isn't added; nothing to remove."`,
     )
   },
-  { timeout: 60_000 },
+  { timeout: 120_000 },
 )
