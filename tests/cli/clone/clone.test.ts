@@ -38,6 +38,28 @@ test("clone command handles invalid package path", async () => {
   expect(stderr).toContain("Invalid package path")
 })
 
+test.each([
+  "testuser/test2-package@0.0.2",
+  "https://tscircuit.com/testuser/test2-package?version=0.0.2",
+])(
+  "clone fetches the published files for %s",
+  async (packageSpec) => {
+    const { tmpDir, runCommand } = await getCliTestFixture()
+    const { exitCode } = await runCommand(`tsci clone ${packageSpec}`)
+
+    expect(exitCode).toBe(0)
+    const projectDir = join(tmpDir, "test2-package")
+    expect(readFileSync(join(projectDir, "index.tsx"), "utf8")).toContain(
+      'resistance="20k"',
+    )
+    expect(readFileSync(join(projectDir, "utils.ts"), "utf8")).toContain(
+      "formatResistance",
+    )
+    expect(existsSync(join(projectDir, "types.ts"))).toBe(false)
+  },
+  10_000,
+)
+
 test("clone command handles API errors gracefully", async () => {
   const { runCommand } = await getCliTestFixture()
 

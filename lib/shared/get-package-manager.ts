@@ -73,23 +73,23 @@ export function getPackageManager(cwd = process.cwd()): PackageManager {
       execSync(uninstallCommand, { stdio: "pipe", cwd })
     },
     install: async ({ name, cwd }) => {
-      name = Array.isArray(name) ? name.join(" ") : name
-      let installCommand: string
-      if (pm === "yarn") {
-        installCommand = `yarn add ${name}`
-      } else if (pm === "pnpm") {
-        installCommand = `pnpm add ${name}`
-      } else if (pm === "bun") {
-        installCommand = `bun add ${name}`
-      } else {
-        installCommand = `npm install ${name}`
-      }
+      const args = [pm === "npm" ? "install" : "add"].concat(name)
+      const installCommand = `${pm} ${args.join(" ")}`
       console.log(kleur.gray(`> ${installCommand}`))
       // Keep the event loop available for the project lock's heartbeat.
-      const { stdout, stderr } = await execAsync(installCommand, {
-        cwd,
-        maxBuffer: 10 * 1024 * 1024,
-      })
+      const { stdout, stderr, exitCode } = await Bun.$`${pm} ${args}`
+        .cwd(cwd)
+        .quiet()
+        .nothrow()
+      if (exitCode !== 0) {
+        throw Object.assign(
+          new Error(`Command failed: ${installCommand}\n${stderr}`),
+          {
+            stdout,
+            stderr,
+          },
+        )
+      }
       if (stdout) process.stdout.write(stdout)
       if (stderr) process.stderr.write(stderr)
     },

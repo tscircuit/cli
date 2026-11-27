@@ -17,7 +17,7 @@ export const registerClone = (program: Command) => {
     .description("Clone a package from the registry")
     .argument(
       "[package]",
-      "Package to clone (e.g. author/packageName or https://tscircuit.com/author/packageName)",
+      "Package to clone (e.g. author/packageName, author/packageName@1.2.3, or https://tscircuit.com/author/packageName)",
     )
     .option("-a, --include-author", "Include author name in the directory path")
     .option("--bug-report <bugReportId>", "Clone a bug report project")
@@ -26,7 +26,6 @@ export const registerClone = (program: Command) => {
         packagePath: string | undefined,
         options: { includeAuthor?: boolean; bugReport?: string },
       ) => {
-        // First try to match URL format (strict tscircuit.com only)
         const originalCwd = process.cwd()
 
         if (options.bugReport) {
@@ -50,21 +49,29 @@ export const registerClone = (program: Command) => {
         }
 
         const urlMatch = packagePath.match(
-          /^https:\/\/tscircuit\.com\/([^\/]+)\/([^\/]+)\/?$/i,
+          /^https:\/\/tscircuit\.com\/([^/?#]+)\/([^/?#]+)\/?(?:\?([^#]*))?$/i,
         )
-        // Then try the original format
-        const originalMatch =
-          !urlMatch && packagePath.match(/^(?:@tsci\/)?([^/.]+)[/.]([^/.]+)$/)
-
-        const match = urlMatch || originalMatch
+        const match =
+          urlMatch ??
+          packagePath.match(
+            /^(?:@tsci\/)?([^/.@]+)[/.]([^/.@]+)(?:@([^/@\s]+))?$/,
+          )
         if (!match) {
           console.error(
             "Invalid package path. Please use author/packageName or https://tscircuit.com/author/packageName.",
           )
           process.exit(1)
         }
-        const [, author, packageName] = match
-        console.log(`Cloning ${author}/${packageName}...`)
+        const [, author, packageName, suffix] = match
+        const version = urlMatch
+          ? new URLSearchParams(suffix).get("version")
+          : suffix
+        const fullName = `${author}/${packageName}`
+        const releaseSpec = version ? `${fullName}@${version}` : fullName
+        const releaseParams = version
+          ? { package_name_with_version: releaseSpec }
+          : { package_name: fullName, use_latest_version: true }
+        console.log(`Cloning ${releaseSpec}...`)
         const userSettingToIncludeAuthor =
           options.includeAuthor || cliConfig.get("alwaysCloneWithAuthorName")
         const dirPath = userSettingToIncludeAuthor
@@ -81,12 +88,7 @@ export const registerClone = (program: Command) => {
           packageFileList = await ky
             .get<{ package_files: Array<{ file_path: string }> }>(
               "package_files/list",
-              {
-                searchParams: {
-                  package_name: `${author}/${packageName}`,
-                  use_latest_version: true,
-                },
-              },
+              { searchParams: releaseParams },
             )
             .json()
         } catch (error) {
@@ -98,7 +100,7 @@ export const registerClone = (program: Command) => {
             (error as any).response?.status === 404
           ) {
             console.error(
-              `Package "${author}/${packageName}" not found. Please check the name and try again.`,
+              `Package "${releaseSpec}" not found. Please check the name and try again.`,
             )
             process.exit(1)
           }
@@ -128,8 +130,7 @@ export const registerClone = (program: Command) => {
                 }
               }>("package_files/get", {
                 searchParams: {
-                  package_name: `${author}/${packageName}`,
-                  use_latest_version: true,
+                  ...releaseParams,
                   file_path: fileInfo.file_path,
                 },
               })

@@ -35,29 +35,13 @@ export function normalizeTscircuitPackageName(
     return null
   }
 
-  // Check for npm package with version (e.g., lodash@4.17.21) - not a tscircuit component
-  if (packageSpec.includes("@") && !packageSpec.startsWith("@")) {
-    return null
-  }
+  const match = packageSpec.match(/^([^/.@]+)[/.]([^/.@]+)(@[^/@\s]+)?$/)
+  if (!match) return null
 
-  // Check for scoped packages that aren't tscircuit
-  if (
-    packageSpec.startsWith("@") &&
-    !packageSpec.startsWith("@tsci/") &&
-    !packageSpec.startsWith("@tscircuit/")
-  ) {
-    return null
-  }
-
-  // Try to match author/component or author.component format
-  const match = packageSpec.match(/^([^/.@]+)[/.]([^/.@]+)$/)
-  if (match) {
-    const [, author, componentName] = match
-    return `@tsci/${author}.${componentName}`
-  }
-
-  // Anything else is treated as a regular package name
-  return null
+  const [, author, componentName, version = ""] = match
+  // Versioned dotted names can be regular npm package specs.
+  if (version && !packageSpec.includes("/")) return null
+  return `@tsci/${author}.${componentName}${version}`
 }
 
 export async function addPackage(

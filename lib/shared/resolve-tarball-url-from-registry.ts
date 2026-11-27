@@ -1,5 +1,10 @@
 export async function resolveTarballUrlFromRegistry(packageName: string) {
-  const encodedName = encodeURIComponent(packageName)
+  const versionIndex = packageName.indexOf("@", 1)
+  const name =
+    versionIndex === -1 ? packageName : packageName.slice(0, versionIndex)
+  const version =
+    versionIndex === -1 ? undefined : packageName.slice(versionIndex + 1)
+  const encodedName = encodeURIComponent(name)
   const response = await fetch(`https://npm.tscircuit.com/${encodedName}`)
 
   if (!response.ok) {
@@ -9,12 +14,10 @@ export async function resolveTarballUrlFromRegistry(packageName: string) {
   }
 
   const metadata = await response.json()
-  const latestVersion = metadata?.["dist-tags"]?.latest
-  let versionInfo = latestVersion
-    ? metadata?.versions?.[latestVersion]
-    : undefined
+  const selectedVersion = version ?? metadata?.["dist-tags"]?.latest
+  let versionInfo = metadata?.versions?.[selectedVersion]
 
-  if (!versionInfo && metadata?.versions) {
+  if (version === undefined && !versionInfo && metadata?.versions) {
     const versionEntries = Object.entries(metadata.versions) as [
       string,
       { dist?: { tarball?: string } },
