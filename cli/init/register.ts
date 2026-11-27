@@ -95,11 +95,17 @@ export const registerInit = (program: Command) => {
               initial: defaultPackageName,
             })
 
-        let authorName = cliConfig.get("tscircuitHandle")
+        let authorName = process.env.TSCIRCUIT_TOKEN
+          ? undefined
+          : cliConfig.get("tscircuitHandle")
         if (!authorName) {
-          const account = await fetchAccount()
-          if (account?.tscircuit_handle) {
-            authorName = account.tscircuit_handle
+          try {
+            const account = await fetchAccount()
+            if (account?.tscircuit_handle) {
+              authorName = account.tscircuit_handle
+            }
+          } catch {
+            // Optional author lookup should not block project initialization
           }
         }
 
