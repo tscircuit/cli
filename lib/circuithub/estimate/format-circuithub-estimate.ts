@@ -1,3 +1,4 @@
+import { CIRCUITHUB_ESTIMATE_CALIBRATION } from "./circuithub-estimate-calibration"
 import type {
   CircuithubEstimate,
   CircuithubEstimateOffer,
@@ -28,7 +29,7 @@ const formatTable = (header: string[], rows: string[][]) => {
   const formatRow = (row: string[]) =>
     `  ${row
       .map((cell, column) =>
-        column >= 2
+        column >= 3
           ? cell.padStart(widths[column]!)
           : cell.padEnd(widths[column]!),
       )
@@ -48,14 +49,15 @@ export const formatCircuithubEstimate = (estimate: CircuithubEstimate) => {
     "",
     `  Board   ${Number(board.widthMm.toFixed(2))} × ${Number(board.heightMm.toFixed(2))} mm, ${board.layers} layers`,
     `  Parts   ${estimate.placements} placed (${estimate.bomLines} BOM lines), ${estimate.sides === 2 ? "on both sides" : "on one side"}; ${estimate.partsPriced.reference} at reference prices, ${estimate.partsPriced.estimated} priced by type and package`,
-    "  Prices  estimated for CircuitHub's US Grid line, excluding shipping and tax.",
-    "          Checked against real quotes to about ±15%; run `tsci quote create --circuithub` for a real quote.",
+    `  Prices  estimated for CircuitHub's US Grid assembly line, excluding shipping and tax, from quotes of ${CIRCUITHUB_ESTIMATE_CALIBRATION.quotedOn}.`,
+    "          CircuitHub's prices change; run `tsci quote create --circuithub` for a real quote.",
     ...estimate.notes.map((note) => `  Note    ${note}`),
     "",
     `${quantity} board${quantity === 1 ? "" : "s"}`,
   ]
   const rows = estimate.offers.map((offer) => [
     SERVICE_LABELS[offer.service],
+    offer.fab === "us" ? "US" : "overseas",
     formatLeadTime(offer.leadTimeDays),
     money(offer.boards),
     money(offer.parts),
@@ -66,10 +68,11 @@ export const formatCircuithubEstimate = (estimate: CircuithubEstimate) => {
   const gridProto = estimate.gridProto
   if (gridProto.total !== undefined) {
     const express = estimate.offers.find(
-      (offer) => offer.service === "priority_express",
+      (offer) => offer.fab === "us" && offer.service === "priority_express",
     )!
     rows.push([
       "Grid Proto",
+      "US",
       formatLeadTime(express.leadTimeDays),
       money(gridProto.boards!),
       money(gridProto.parts!),
@@ -82,6 +85,7 @@ export const formatCircuithubEstimate = (estimate: CircuithubEstimate) => {
     ...formatTable(
       [
         "Service",
+        "Boards made",
         "Ships in",
         "Boards",
         "Parts",
@@ -94,7 +98,7 @@ export const formatCircuithubEstimate = (estimate: CircuithubEstimate) => {
   )
   if (estimate.gridProto.eligible) {
     lines.push(
-      "  Grid Proto: 75% off boards and assembly at Priority, parts at full price; offered only while CircuitHub has Grid Proto capacity",
+      "  Grid Proto: 75% off boards and assembly at US Priority (fastest), parts at full price; offered only while CircuitHub has Grid Proto capacity",
     )
   } else {
     lines.push(`  No Grid Proto: ${estimate.gridProto.reasons.join("; ")}`)

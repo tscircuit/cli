@@ -40,11 +40,16 @@ test(
       bomLines: 3,
       sides: 2,
     })
-    expect(estimate.offers.map((offer: any) => offer.service)).toEqual([
-      "priority_express",
-      "priority",
-      "standard",
-      "flexible",
+    expect(
+      estimate.offers.map((offer: any) => `${offer.fab} ${offer.service}`),
+    ).toEqual([
+      "us priority_express",
+      "us priority",
+      "us standard",
+      "us flexible",
+      "overseas priority",
+      "overseas standard",
+      "overseas flexible",
     ])
     for (const offer of estimate.offers) {
       expect(offer.total).toBeCloseTo(
@@ -52,7 +57,8 @@ test(
         1,
       )
     }
-    // Grid Proto: 25% of boards and assembly at Priority, plus full-price parts.
+    // Grid Proto: 25% of boards and assembly at US Priority (fastest), plus
+    // full-price parts.
     const express = estimate.offers[0]
     expect(estimate.gridProto.eligible).toBe(true)
     expect(estimate.gridProto.total).toBeCloseTo(
@@ -66,6 +72,7 @@ test(
     expect(table.exitCode).toBe(0)
     expect(table.stdout).toContain("CircuitHub estimate (offline")
     expect(table.stdout).toContain("30 boards")
+    expect(table.stdout).toContain("overseas")
     expect(table.stdout).toContain(
       "No Grid Proto: more than 10 boards (Grid Proto covers 10 or fewer)",
     )

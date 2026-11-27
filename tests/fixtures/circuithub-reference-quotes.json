@@ -1,332 +1,6 @@
 {
-  "description": "Real CircuitHub quotes (US Grid line) used to calibrate and test `tsci quote estimate --circuithub`. input is what the estimate reads from each board's circuit JSON; offers are CircuitHub's prices in USD, excluding shipping and tax.",
+  "description": "Real CircuitHub quotes (assembled on the US Grid line; boards made in the US or overseas) used to calibrate and test `tsci quote estimate --circuithub`. input is what the estimate reads from each board's circuit JSON, or, with inputSource circuithub-bom, what CircuitHub's BOM says (its parts are not used to check part prices); offers are CircuitHub's prices in USD, excluding shipping and tax. Quotes requested on the date in quotedOn; CircuitHub's prices change over time, so refresh them all together.",
   "boards": {
-    "nema8": {
-      "board": {
-        "widthMm": 20,
-        "heightMm": 20,
-        "layers": 4
-      },
-      "parts": [
-        {
-          "ref": "J_USB",
-          "ftype": "simple_chip",
-          "manufacturerPartNumber": "USB4110-GF-A",
-          "side": "top",
-          "padCount": 16,
-          "widthMm": 12.4,
-          "heightMm": 6.079999999999999,
-          "throughHole": false,
-          "minPadMm": 0.3
-        },
-        {
-          "ref": "U_PD",
-          "ftype": "simple_chip",
-          "manufacturerPartNumber": "CYPD3177-24LQXQT",
-          "side": "bottom",
-          "padCount": 25,
-          "widthMm": 4.700000000000001,
-          "heightMm": 4.7,
-          "throughHole": false,
-          "minPadMm": 0.25
-        },
-        {
-          "ref": "C_PD_VBUS",
-          "ftype": "simple_capacitor",
-          "manufacturerPartNumber": "CL05A105KA5NQNC",
-          "value": 0.000001,
-          "side": "bottom",
-          "padCount": 2,
-          "widthMm": 0.6400000000000001,
-          "heightMm": 1.5600000000000003,
-          "throughHole": false,
-          "minPadMm": 0.54
-        },
-        {
-          "ref": "C_PD_VDDD",
-          "ftype": "simple_capacitor",
-          "manufacturerPartNumber": "CL05A105KA5NQNC",
-          "value": 0.000001,
-          "side": "bottom",
-          "padCount": 2,
-          "widthMm": 0.6400000000000006,
-          "heightMm": 1.5599999999999992,
-          "throughHole": false,
-          "minPadMm": 0.54
-        },
-        {
-          "ref": "C_PD_VDDD_HF1",
-          "ftype": "simple_capacitor",
-          "manufacturerPartNumber": "C1005X7R1C104K050BC",
-          "value": 1e-7,
-          "side": "bottom",
-          "padCount": 2,
-          "widthMm": 0.6400000000000006,
-          "heightMm": 1.5599999999999992,
-          "throughHole": false,
-          "minPadMm": 0.54
-        },
-        {
-          "ref": "C_PD_VDDD_HF2",
-          "ftype": "simple_capacitor",
-          "manufacturerPartNumber": "C1005X7R1C104K050BC",
-          "value": 1e-7,
-          "side": "bottom",
-          "padCount": 2,
-          "widthMm": 0.6400000000000006,
-          "heightMm": 1.5599999999999992,
-          "throughHole": false,
-          "minPadMm": 0.54
-        },
-        {
-          "ref": "C_PD_VCCD",
-          "ftype": "simple_capacitor",
-          "manufacturerPartNumber": "CL05A105KA5NQNC",
-          "value": 0.000001,
-          "side": "bottom",
-          "padCount": 2,
-          "widthMm": 0.6399999999999997,
-          "heightMm": 1.5599999999999992,
-          "throughHole": false,
-          "minPadMm": 0.54
-        },
-        {
-          "ref": "R_PD_CFG_TOP",
-          "ftype": "simple_resistor",
-          "manufacturerPartNumber": "RC0402FR-075K1L",
-          "value": 5100,
-          "side": "bottom",
-          "padCount": 2,
-          "widthMm": 0.6399999999999997,
-          "heightMm": 1.5600000000000003,
-          "throughHole": false,
-          "minPadMm": 0.54
-        },
-        {
-          "ref": "R_PD_CFG_BOTTOM",
-          "ftype": "simple_resistor",
-          "manufacturerPartNumber": "RC0402FR-071KL",
-          "value": 1000,
-          "side": "bottom",
-          "padCount": 2,
-          "widthMm": 0.6400000000000006,
-          "heightMm": 1.5600000000000003,
-          "throughHole": false,
-          "minPadMm": 0.54
-        },
-        {
-          "ref": "R_PD_HPI_PU",
-          "ftype": "simple_resistor",
-          "manufacturerPartNumber": "RC0402FR-0710KL",
-          "value": 10000,
-          "side": "bottom",
-          "padCount": 2,
-          "widthMm": 0.6399999999999997,
-          "heightMm": 1.56,
-          "throughHole": false,
-          "minPadMm": 0.54
-        },
-        {
-          "ref": "F1",
-          "ftype": "simple_chip",
-          "manufacturerPartNumber": "1206L110/16WR",
-          "side": "top",
-          "padCount": 2,
-          "widthMm": 1.7280000000000006,
-          "heightMm": 4.0801,
-          "throughHole": false,
-          "minPadMm": 1.1901
-        },
-        {
-          "ref": "D_BLOCK",
-          "ftype": "simple_diode",
-          "manufacturerPartNumber": "PMEG6020ELRX",
-          "side": "top",
-          "padCount": 2,
-          "widthMm": 1.1499999999999995,
-          "heightMm": 4.3347999999999995,
-          "throughHole": false,
-          "minPadMm": 0.95
-        },
-        {
-          "ref": "D_VM_TVS",
-          "ftype": "simple_chip",
-          "manufacturerPartNumber": "SMAJ12A",
-          "side": "bottom",
-          "padCount": 2,
-          "widthMm": 6.1851,
-          "heightMm": 1.6999999999999993,
-          "throughHole": false,
-          "minPadMm": 1.7
-        },
-        {
-          "ref": "C_VM_BULK",
-          "ftype": "simple_capacitor",
-          "manufacturerPartNumber": "TMK107BBJ106MA-T",
-          "value": 0.00001,
-          "side": "bottom",
-          "padCount": 2,
-          "widthMm": 0.9500000000000001,
-          "heightMm": 2.450000000000001,
-          "throughHole": false,
-          "minPadMm": 0.8
-        },
-        {
-          "ref": "C_VM_HF1",
-          "ftype": "simple_capacitor",
-          "manufacturerPartNumber": "CC0603KRX7R9BB104",
-          "value": 1e-7,
-          "side": "top",
-          "padCount": 2,
-          "widthMm": 2.45,
-          "heightMm": 0.9499999999999998,
-          "throughHole": false,
-          "minPadMm": 0.8
-        },
-        {
-          "ref": "C_VM_HF2",
-          "ftype": "simple_capacitor",
-          "manufacturerPartNumber": "CC0603KRX7R9BB104",
-          "value": 1e-7,
-          "side": "top",
-          "padCount": 2,
-          "widthMm": 2.45,
-          "heightMm": 0.9500000000000002,
-          "throughHole": false,
-          "minPadMm": 0.8
-        },
-        {
-          "ref": "U_DRV",
-          "ftype": "simple_chip",
-          "manufacturerPartNumber": "TMC2209-LA-T",
-          "side": "top",
-          "padCount": 29,
-          "widthMm": 5.8999999999999995,
-          "heightMm": 5.8999999999999995,
-          "throughHole": false,
-          "minPadMm": 0.28
-        },
-        {
-          "ref": "C_CP",
-          "ftype": "simple_capacitor",
-          "manufacturerPartNumber": "CL05B223KB5NNNC",
-          "value": 2.2e-8,
-          "side": "bottom",
-          "padCount": 2,
-          "widthMm": 1.5599999999999998,
-          "heightMm": 0.6400000000000006,
-          "throughHole": false,
-          "minPadMm": 0.54
-        },
-        {
-          "ref": "C_VCP",
-          "ftype": "simple_capacitor",
-          "manufacturerPartNumber": "CC0603KRX7R9BB104",
-          "value": 1e-7,
-          "side": "top",
-          "padCount": 2,
-          "widthMm": 2.450000000000001,
-          "heightMm": 0.9500000000000002,
-          "throughHole": false,
-          "minPadMm": 0.8
-        },
-        {
-          "ref": "C_5V",
-          "ftype": "simple_capacitor",
-          "manufacturerPartNumber": "CL10A225KO8NNNC",
-          "value": 0.0000022,
-          "side": "top",
-          "padCount": 2,
-          "widthMm": 2.450000000000001,
-          "heightMm": 0.95,
-          "throughHole": false,
-          "minPadMm": 0.8
-        },
-        {
-          "ref": "C_VIO",
-          "ftype": "simple_capacitor",
-          "manufacturerPartNumber": "C1005X7R1C104K050BC",
-          "value": 1e-7,
-          "side": "top",
-          "padCount": 2,
-          "widthMm": 1.5600000000000005,
-          "heightMm": 0.6400000000000006,
-          "throughHole": false,
-          "minPadMm": 0.54
-        },
-        {
-          "ref": "R_SENSE_A",
-          "ftype": "simple_resistor",
-          "manufacturerPartNumber": "ERJ-8BQFR33V",
-          "value": 0.33,
-          "side": "bottom",
-          "padCount": 2,
-          "widthMm": 4.165099999999999,
-          "heightMm": 1.7010000000000005,
-          "throughHole": false,
-          "minPadMm": 1.2075
-        },
-        {
-          "ref": "R_SENSE_B",
-          "ftype": "simple_resistor",
-          "manufacturerPartNumber": "ERJ-8BQFR33V",
-          "value": 0.33,
-          "side": "bottom",
-          "padCount": 2,
-          "widthMm": 1.7010000000000005,
-          "heightMm": 4.1651,
-          "throughHole": false,
-          "minPadMm": 1.2075
-        },
-        {
-          "ref": "R_VREF_TOP",
-          "ftype": "simple_resistor",
-          "manufacturerPartNumber": "RC0402FR-0710KL",
-          "value": 10000,
-          "side": "top",
-          "padCount": 2,
-          "widthMm": 1.5599999999999987,
-          "heightMm": 0.6400000000000006,
-          "throughHole": false,
-          "minPadMm": 0.54
-        },
-        {
-          "ref": "R_VREF_BOTTOM",
-          "ftype": "simple_resistor",
-          "manufacturerPartNumber": "RC0402FR-0710KL",
-          "value": 10000,
-          "side": "top",
-          "padCount": 2,
-          "widthMm": 1.5600000000000005,
-          "heightMm": 0.6399999999999997,
-          "throughHole": false,
-          "minPadMm": 0.54
-        },
-        {
-          "ref": "C_VREF",
-          "ftype": "simple_capacitor",
-          "manufacturerPartNumber": "C1005X7R1C104K050BC",
-          "value": 1e-7,
-          "side": "top",
-          "padCount": 2,
-          "widthMm": 1.5599999999999987,
-          "heightMm": 0.6399999999999997,
-          "throughHole": false,
-          "minPadMm": 0.54
-        },
-        {
-          "ref": "J_MOTOR",
-          "ftype": "simple_chip",
-          "manufacturerPartNumber": "BM04B-SRSS-TB(LF)(SN)",
-          "side": "top",
-          "padCount": 6,
-          "widthMm": 6.7999355999999995,
-          "heightMm": 4.200017000000001,
-          "throughHole": false,
-          "minPadMm": 0.5999988
-        }
-      ]
-    },
     "nema8-tvs": {
       "board": {
         "widthMm": 20,
@@ -360,7 +34,7 @@
           "ref": "C_PD_VBUS",
           "ftype": "simple_capacitor",
           "manufacturerPartNumber": "CL05A105KA5NQNC",
-          "value": 0.000001,
+          "value": 1e-6,
           "side": "bottom",
           "padCount": 2,
           "widthMm": 0.6400000000000001,
@@ -372,7 +46,7 @@
           "ref": "C_PD_VDDD",
           "ftype": "simple_capacitor",
           "manufacturerPartNumber": "CL05A105KA5NQNC",
-          "value": 0.000001,
+          "value": 1e-6,
           "side": "bottom",
           "padCount": 2,
           "widthMm": 0.6400000000000006,
@@ -408,7 +82,7 @@
           "ref": "C_PD_VCCD",
           "ftype": "simple_capacitor",
           "manufacturerPartNumber": "CL05A105KA5NQNC",
-          "value": 0.000001,
+          "value": 1e-6,
           "side": "bottom",
           "padCount": 2,
           "widthMm": 0.6399999999999997,
@@ -489,7 +163,7 @@
           "ref": "C_VM_BULK",
           "ftype": "simple_capacitor",
           "manufacturerPartNumber": "TMK107BBJ106MA-T",
-          "value": 0.00001,
+          "value": 1e-5,
           "side": "bottom",
           "padCount": 2,
           "widthMm": 0.9500000000000001,
@@ -560,7 +234,7 @@
           "ref": "C_5V",
           "ftype": "simple_capacitor",
           "manufacturerPartNumber": "CL10A225KO8NNNC",
-          "value": 0.0000022,
+          "value": 2.2e-6,
           "side": "top",
           "padCount": 2,
           "widthMm": 2.450000000000001,
@@ -745,7 +419,7 @@
           "ref": "C_VBUS",
           "ftype": "simple_capacitor",
           "manufacturerPartNumber": "CL10A106MA8NRNC",
-          "value": 0.00001,
+          "value": 1e-5,
           "side": "top",
           "padCount": 2,
           "widthMm": 0.9500000000000028,
@@ -922,7 +596,7 @@
           "ref": "C_3V3",
           "ftype": "simple_capacitor",
           "manufacturerPartNumber": "CL10A106MA8NRNC",
-          "value": 0.00001,
+          "value": 1e-5,
           "side": "top",
           "padCount": 2,
           "widthMm": 2.4499999999999993,
@@ -934,7 +608,7 @@
           "ref": "C_USB",
           "ftype": "simple_capacitor",
           "manufacturerPartNumber": "CL05A105KA5NQNC",
-          "value": 0.000001,
+          "value": 1e-6,
           "side": "top",
           "padCount": 2,
           "widthMm": 0.6400000000000006,
@@ -1039,7 +713,7 @@
           "ref": "C_CORE",
           "ftype": "simple_capacitor",
           "manufacturerPartNumber": "CL05A105KA5NQNC",
-          "value": 0.000001,
+          "value": 1e-6,
           "side": "top",
           "padCount": 2,
           "widthMm": 0.6400000000000006,
@@ -1155,7 +829,7 @@
           "ref": "C_PD_VDD",
           "ftype": "simple_capacitor",
           "manufacturerPartNumber": "CL10A105KB8NNNC",
-          "value": 0.000001,
+          "value": 1e-6,
           "side": "bottom",
           "padCount": 2,
           "widthMm": 0.9499999999999993,
@@ -1191,7 +865,7 @@
           "ref": "C_PD_VCCD",
           "ftype": "simple_capacitor",
           "manufacturerPartNumber": "CL10A105KB8NNNC",
-          "value": 0.000001,
+          "value": 1e-6,
           "side": "bottom",
           "padCount": 2,
           "widthMm": 2.450000000000001,
@@ -1260,7 +934,7 @@
           "ref": "C_PD_VBUS",
           "ftype": "simple_capacitor",
           "manufacturerPartNumber": "CL31A106KBHNNNE",
-          "value": 0.00001,
+          "value": 1e-5,
           "side": "bottom",
           "padCount": 2,
           "widthMm": 1.75,
@@ -1272,7 +946,7 @@
           "ref": "C_MOTOR_BULK",
           "ftype": "simple_capacitor",
           "manufacturerPartNumber": "TCJD226M050R0090E",
-          "value": 0.000022,
+          "value": 2.2e-5,
           "side": "top",
           "padCount": 2,
           "widthMm": 2.999994000000001,
@@ -1307,7 +981,7 @@
           "ref": "C_VM_BULK",
           "ftype": "simple_capacitor",
           "manufacturerPartNumber": "CL31A106KBHNNNE",
-          "value": 0.00001,
+          "value": 1e-5,
           "side": "top",
           "padCount": 2,
           "widthMm": 1.75,
@@ -1578,7 +1252,7 @@
           "ref": "C_BUZZER",
           "ftype": "simple_capacitor",
           "manufacturerPartNumber": "CL10A106MA8NRNC",
-          "value": 0.00001,
+          "value": 1e-5,
           "side": "top",
           "padCount": 2,
           "widthMm": 0.9499999999999993,
@@ -1939,1699 +1613,402 @@
         }
       ]
     },
-    "rp2040-motor-controller-optional-parts-dnp": {
+    "voltage-divider": {
+      "inputSource": "circuithub-bom",
       "board": {
-        "widthMm": 42.29999159999999,
-        "heightMm": 42.320006799999994,
-        "layers": 4
+        "widthMm": 22,
+        "heightMm": 14,
+        "layers": 1
       },
       "parts": [
         {
-          "ref": "Y1",
-          "ftype": "simple_chip",
-          "manufacturerPartNumber": "ABM8-272-T3",
+          "ref": "D1",
+          "ftype": "simple_led",
+          "manufacturerPartNumber": "150080RS75000",
+          "side": "top",
+          "padCount": 2,
+          "widthMm": 2.73,
+          "heightMm": 1.36,
+          "throughHole": false
+        },
+        {
+          "ref": "SW1",
+          "ftype": "simple_switch",
+          "manufacturerPartNumber": "PTS645SM43SMTR92 LFS",
           "side": "top",
           "padCount": 4,
-          "widthMm": 2.8999999999999986,
-          "heightMm": 3.599999999999998,
-          "throughHole": false,
-          "minPadMm": 1.2
-        },
-        {
-          "ref": "C_XIN",
-          "ftype": "simple_capacitor",
-          "manufacturerPartNumber": "GRM1555C1H150JA01D",
-          "value": 1.5e-11,
-          "side": "top",
-          "padCount": 2,
-          "widthMm": 1.5599999999999987,
-          "heightMm": 0.6400000000000006,
-          "throughHole": false,
-          "minPadMm": 0.54
-        },
-        {
-          "ref": "C_XOUT",
-          "ftype": "simple_capacitor",
-          "manufacturerPartNumber": "GRM1555C1H150JA01D",
-          "value": 1.5e-11,
-          "side": "top",
-          "padCount": 2,
-          "widthMm": 1.5599999999999987,
-          "heightMm": 0.6400000000000006,
-          "throughHole": false,
-          "minPadMm": 0.54
-        },
-        {
-          "ref": "R_XOUT",
-          "ftype": "simple_resistor",
-          "manufacturerPartNumber": "RC0402FR-071KL",
-          "value": 1000,
-          "side": "top",
-          "padCount": 2,
-          "widthMm": 1.5600000000000005,
-          "heightMm": 0.6400000000000006,
-          "throughHole": false,
-          "minPadMm": 0.54
-        },
-        {
-          "ref": "D_VBUS",
-          "ftype": "simple_diode",
-          "manufacturerPartNumber": "1N5819HW-7-F",
-          "side": "top",
-          "padCount": 2,
-          "widthMm": 4.599999999999998,
-          "heightMm": 0.9499999999999993,
-          "throughHole": false,
-          "minPadMm": 0.95
-        },
-        {
-          "ref": "R_3V3_EN",
-          "ftype": "simple_resistor",
-          "manufacturerPartNumber": "RC0402FR-07100KL",
-          "value": 100000,
-          "side": "top",
-          "padCount": 2,
-          "widthMm": 0.6400000000000006,
-          "heightMm": 1.5599999999999987,
-          "throughHole": false,
-          "minPadMm": 0.54
-        },
-        {
-          "ref": "U3",
-          "ftype": "simple_chip",
-          "manufacturerPartNumber": "AP2112K-3.3TRG1",
-          "side": "top",
-          "padCount": 5,
-          "widthMm": 3.2001459999999984,
-          "heightMm": 2.5001728000000005,
-          "throughHole": false,
-          "minPadMm": 0.5999988
-        },
-        {
-          "ref": "C_VBUS",
-          "ftype": "simple_capacitor",
-          "manufacturerPartNumber": "CL10A106MA8NRNC",
-          "value": 0.00001,
-          "side": "top",
-          "padCount": 2,
-          "widthMm": 0.9500000000000028,
-          "heightMm": 2.450000000000001,
-          "throughHole": false,
-          "minPadMm": 0.8
-        },
-        {
-          "ref": "C_IOVDD1",
-          "ftype": "simple_capacitor",
-          "manufacturerPartNumber": "CL05B104KO5NNNC",
-          "value": 1e-7,
-          "side": "top",
-          "padCount": 2,
-          "widthMm": 1.5599999999999987,
-          "heightMm": 0.6400000000000006,
-          "throughHole": false,
-          "minPadMm": 0.54
-        },
-        {
-          "ref": "C_IOVDD2",
-          "ftype": "simple_capacitor",
-          "manufacturerPartNumber": "CL05B104KO5NNNC",
-          "value": 1e-7,
-          "side": "top",
-          "padCount": 2,
-          "widthMm": 1.5599999999999987,
-          "heightMm": 0.6400000000000001,
-          "throughHole": false,
-          "minPadMm": 0.54
-        },
-        {
-          "ref": "C_IOVDD3",
-          "ftype": "simple_capacitor",
-          "manufacturerPartNumber": "CL05B104KO5NNNC",
-          "value": 1e-7,
-          "side": "top",
-          "padCount": 2,
-          "widthMm": 1.5600000000000023,
-          "heightMm": 0.6400000000000006,
-          "throughHole": false,
-          "minPadMm": 0.54
-        },
-        {
-          "ref": "C_IOVDD4",
-          "ftype": "simple_capacitor",
-          "manufacturerPartNumber": "CL05B104KO5NNNC",
-          "value": 1e-7,
-          "side": "top",
-          "padCount": 2,
-          "widthMm": 1.5599999999999987,
-          "heightMm": 0.6400000000000006,
-          "throughHole": false,
-          "minPadMm": 0.54
-        },
-        {
-          "ref": "C_IOVDD5",
-          "ftype": "simple_capacitor",
-          "manufacturerPartNumber": "CL05B104KO5NNNC",
-          "value": 1e-7,
-          "side": "top",
-          "padCount": 2,
-          "widthMm": 0.6400000000000006,
-          "heightMm": 1.5599999999999987,
-          "throughHole": false,
-          "minPadMm": 0.54
-        },
-        {
-          "ref": "C_IOVDD6",
-          "ftype": "simple_capacitor",
-          "manufacturerPartNumber": "CL05B104KO5NNNC",
-          "value": 1e-7,
-          "side": "top",
-          "padCount": 2,
-          "widthMm": 0.6400000000000006,
-          "heightMm": 1.5599999999999998,
-          "throughHole": false,
-          "minPadMm": 0.54
-        },
-        {
-          "ref": "R_RUN",
-          "ftype": "simple_resistor",
-          "manufacturerPartNumber": "RC0402FR-0710KL",
-          "value": 10000,
-          "side": "top",
-          "padCount": 2,
-          "widthMm": 1.5599999999999996,
-          "heightMm": 0.6400000000000006,
-          "throughHole": false,
-          "minPadMm": 0.54
-        },
-        {
-          "ref": "SW_BOOT",
-          "ftype": "simple_push_button",
-          "manufacturerPartNumber": "SKRPACE010",
-          "side": "top",
-          "padCount": 4,
-          "widthMm": 5.25,
-          "heightMm": 2.849999999999998,
-          "throughHole": false,
-          "minPadMm": 0.7
-        },
-        {
-          "ref": "SW_RUN",
-          "ftype": "simple_push_button",
-          "manufacturerPartNumber": "SKRPACE010",
-          "side": "top",
-          "padCount": 4,
-          "widthMm": 5.25,
-          "heightMm": 2.849999999999998,
-          "throughHole": false,
-          "minPadMm": 0.7
-        },
-        {
-          "ref": "R_BOOT",
-          "ftype": "simple_resistor",
-          "manufacturerPartNumber": "RC0402FR-0710KL",
-          "value": 10000,
-          "side": "top",
-          "padCount": 2,
-          "widthMm": 0.6400000000000006,
-          "heightMm": 1.5599999999999987,
-          "throughHole": false,
-          "minPadMm": 0.54
-        },
-        {
-          "ref": "C_FLASH",
-          "ftype": "simple_capacitor",
-          "manufacturerPartNumber": "CL05B104KO5NNNC",
-          "value": 1e-7,
-          "side": "top",
-          "padCount": 2,
-          "widthMm": 0.6400000000000006,
-          "heightMm": 1.5599999999999998,
-          "throughHole": false,
-          "minPadMm": 0.54
-        },
-        {
-          "ref": "C_USB_VDD",
-          "ftype": "simple_capacitor",
-          "manufacturerPartNumber": "CL05B104KO5NNNC",
-          "value": 1e-7,
-          "side": "top",
-          "padCount": 2,
-          "widthMm": 0.6400000000000006,
-          "heightMm": 1.56,
-          "throughHole": false,
-          "minPadMm": 0.54
-        },
-        {
-          "ref": "C_3V3",
-          "ftype": "simple_capacitor",
-          "manufacturerPartNumber": "CL10A106MA8NRNC",
-          "value": 0.00001,
-          "side": "top",
-          "padCount": 2,
-          "widthMm": 2.4499999999999993,
-          "heightMm": 0.9499999999999993,
-          "throughHole": false,
-          "minPadMm": 0.8
-        },
-        {
-          "ref": "C_USB",
-          "ftype": "simple_capacitor",
-          "manufacturerPartNumber": "CL05A105KA5NQNC",
-          "value": 0.000001,
-          "side": "top",
-          "padCount": 2,
-          "widthMm": 0.6400000000000006,
-          "heightMm": 1.56,
-          "throughHole": false,
-          "minPadMm": 0.54
-        },
-        {
-          "ref": "C_ADC",
-          "ftype": "simple_capacitor",
-          "manufacturerPartNumber": "CL05B104KO5NNNC",
-          "value": 1e-7,
-          "side": "top",
-          "padCount": 2,
-          "widthMm": 1.56,
-          "heightMm": 0.6400000000000006,
-          "throughHole": false,
-          "minPadMm": 0.54
-        },
-        {
-          "ref": "L_AVDD",
-          "ftype": "simple_inductor",
-          "manufacturerPartNumber": "BLM18AG601SN1D",
-          "side": "top",
-          "padCount": 2,
-          "widthMm": 2.1997923999999998,
-          "heightMm": 0.8640064000000001,
-          "throughHole": false,
-          "minPadMm": 0.7999984
-        },
-        {
-          "ref": "J_USB",
-          "ftype": "simple_connector",
-          "manufacturerPartNumber": "USB4110-GF-A",
-          "side": "top",
-          "padCount": 16,
-          "widthMm": 12.4,
-          "heightMm": 6.080000000000002,
-          "throughHole": false,
-          "minPadMm": 0.3
-        },
-        {
-          "ref": "R_CC1",
-          "ftype": "simple_resistor",
-          "manufacturerPartNumber": "RC0402FR-075K1L",
-          "value": 5100,
-          "side": "top",
-          "padCount": 2,
-          "widthMm": 1.5599999999999987,
-          "heightMm": 0.6400000000000006,
-          "throughHole": false,
-          "minPadMm": 0.54
-        },
-        {
-          "ref": "R_CC2",
-          "ftype": "simple_resistor",
-          "manufacturerPartNumber": "RC0402FR-075K1L",
-          "value": 5100,
-          "side": "top",
-          "padCount": 2,
-          "widthMm": 1.5599999999999987,
-          "heightMm": 0.6400000000000006,
-          "throughHole": false,
-          "minPadMm": 0.54
-        },
-        {
-          "ref": "R_USB1",
-          "ftype": "simple_resistor",
-          "manufacturerPartNumber": "RC0402FR-0727RL",
-          "value": 27,
-          "side": "top",
-          "padCount": 2,
-          "widthMm": 1.5600000000000005,
-          "heightMm": 0.6400000000000001,
-          "throughHole": false,
-          "minPadMm": 0.54
-        },
-        {
-          "ref": "R_USB2",
-          "ftype": "simple_resistor",
-          "manufacturerPartNumber": "RC0402FR-0727RL",
-          "value": 27,
-          "side": "top",
-          "padCount": 2,
-          "widthMm": 1.5600000000000005,
-          "heightMm": 0.6400000000000005,
-          "throughHole": false,
-          "minPadMm": 0.54
-        },
-        {
-          "ref": "U1",
-          "ftype": "simple_chip",
-          "manufacturerPartNumber": "SC0914(13)",
-          "side": "top",
-          "padCount": 57,
-          "widthMm": 7.699883000000001,
-          "heightMm": 7.700136999999999,
-          "throughHole": false,
-          "minPadMm": 0.1999996
-        },
-        {
-          "ref": "C_CORE",
-          "ftype": "simple_capacitor",
-          "manufacturerPartNumber": "CL05A105KA5NQNC",
-          "value": 0.000001,
-          "side": "top",
-          "padCount": 2,
-          "widthMm": 0.6400000000000006,
-          "heightMm": 1.56,
-          "throughHole": false,
-          "minPadMm": 0.54
-        },
-        {
-          "ref": "C_DVDD1",
-          "ftype": "simple_capacitor",
-          "manufacturerPartNumber": "CL05B104KO5NNNC",
-          "value": 1e-7,
-          "side": "top",
-          "padCount": 2,
-          "widthMm": 0.6400000000000006,
-          "heightMm": 1.56,
-          "throughHole": false,
-          "minPadMm": 0.54
-        },
-        {
-          "ref": "C_DVDD2",
-          "ftype": "simple_capacitor",
-          "manufacturerPartNumber": "CL05B104KO5NNNC",
-          "value": 1e-7,
-          "side": "top",
-          "padCount": 2,
-          "widthMm": 1.5600000000000005,
-          "heightMm": 0.6400000000000006,
-          "throughHole": false,
-          "minPadMm": 0.54
-        },
-        {
-          "ref": "U2",
-          "ftype": "simple_chip",
-          "manufacturerPartNumber": "W25Q16JVUXIQ TR",
-          "side": "top",
-          "padCount": 9,
-          "widthMm": 3.614978800000003,
-          "heightMm": 1.7801336000000008,
-          "throughHole": false,
-          "minPadMm": 0.2800096
-        },
-        {
-          "ref": "DRIVER",
-          "ftype": "simple_chip",
-          "manufacturerPartNumber": "DRV8825PWPR",
-          "side": "top",
-          "padCount": 29,
-          "widthMm": 7.4630026,
-          "heightMm": 8.7930736,
-          "throughHole": false,
-          "minPadMm": 0.3430016
-        },
-        {
-          "ref": "C_CP",
-          "ftype": "simple_capacitor",
-          "manufacturerPartNumber": "CL05B103KB5NNNC",
-          "value": 1e-8,
-          "side": "top",
-          "padCount": 2,
-          "widthMm": 0.6400000000000006,
-          "heightMm": 1.5600000000000005,
-          "throughHole": false,
-          "minPadMm": 0.54
-        },
-        {
-          "ref": "C_VCP",
-          "ftype": "simple_capacitor",
-          "manufacturerPartNumber": "CL05B104KB5NNNC",
-          "value": 1e-7,
-          "side": "top",
-          "padCount": 2,
-          "widthMm": 0.6400000000000006,
-          "heightMm": 1.5600000000000023,
-          "throughHole": false,
-          "minPadMm": 0.54
-        },
-        {
-          "ref": "R_VCP",
-          "ftype": "simple_resistor",
-          "manufacturerPartNumber": "RC0402FR-071ML",
-          "value": 1000000,
-          "side": "top",
-          "padCount": 2,
-          "widthMm": 0.6400000000000006,
-          "heightMm": 1.5599999999999987,
-          "throughHole": false,
-          "minPadMm": 0.54
-        },
-        {
-          "ref": "J_MOTOR_USB",
-          "ftype": "simple_connector",
-          "manufacturerPartNumber": "USB4110-GF-A",
-          "side": "top",
-          "padCount": 16,
-          "widthMm": 12.4,
-          "heightMm": 6.080000000000002,
-          "throughHole": false,
-          "minPadMm": 0.3
-        },
-        {
-          "ref": "U_PD",
-          "ftype": "simple_chip",
-          "manufacturerPartNumber": "CYPD3177-24LQXQT",
-          "side": "top",
-          "padCount": 25,
-          "widthMm": 4.700000000000002,
-          "heightMm": 4.700000000000002,
-          "throughHole": false,
-          "minPadMm": 0.25
-        },
-        {
-          "ref": "C_PD_VDD",
-          "ftype": "simple_capacitor",
-          "manufacturerPartNumber": "CL10A105KB8NNNC",
-          "value": 0.000001,
-          "side": "bottom",
-          "padCount": 2,
-          "widthMm": 0.9499999999999993,
-          "heightMm": 2.4499999999999993,
-          "throughHole": false,
-          "minPadMm": 0.8
-        },
-        {
-          "ref": "C_PD_VDDD_HF1",
-          "ftype": "simple_capacitor",
-          "manufacturerPartNumber": "CL05B104KO5NNNC",
-          "value": 1e-7,
-          "side": "bottom",
-          "padCount": 2,
-          "widthMm": 1.5599999999999987,
-          "heightMm": 0.6400000000000006,
-          "throughHole": false,
-          "minPadMm": 0.54
-        },
-        {
-          "ref": "C_PD_VDDD_HF2",
-          "ftype": "simple_capacitor",
-          "manufacturerPartNumber": "CL05B104KO5NNNC",
-          "value": 1e-7,
-          "side": "bottom",
-          "padCount": 2,
-          "widthMm": 0.6400000000000006,
-          "heightMm": 1.5599999999999987,
-          "throughHole": false,
-          "minPadMm": 0.54
-        },
-        {
-          "ref": "C_PD_VCCD",
-          "ftype": "simple_capacitor",
-          "manufacturerPartNumber": "CL10A105KB8NNNC",
-          "value": 0.000001,
-          "side": "bottom",
-          "padCount": 2,
-          "widthMm": 2.450000000000001,
-          "heightMm": 0.9499999999999993,
-          "throughHole": false,
-          "minPadMm": 0.8
-        },
-        {
-          "ref": "R_PD_ISNK_TOP",
-          "ftype": "simple_resistor",
-          "manufacturerPartNumber": "RC0402FR-075K1L",
-          "value": 5100,
-          "side": "bottom",
-          "padCount": 2,
-          "widthMm": 0.6400000000000006,
-          "heightMm": 1.5599999999999987,
-          "throughHole": false,
-          "minPadMm": 0.54
-        },
-        {
-          "ref": "R_PD_ISNK_BOT",
-          "ftype": "simple_resistor",
-          "manufacturerPartNumber": "RC0402FR-072K4L",
-          "value": 2400,
-          "side": "bottom",
-          "padCount": 2,
-          "widthMm": 0.6400000000000006,
-          "heightMm": 1.5599999999999987,
-          "throughHole": false,
-          "minPadMm": 0.54
-        },
-        {
-          "ref": "J1",
-          "ftype": "simple_connector",
-          "manufacturerPartNumber": "S4B-PH-SM4-TB(LF)(SN)",
-          "side": "top",
-          "padCount": 6,
-          "widthMm": 9.200000000000003,
-          "heightMm": 12.2,
-          "throughHole": false,
-          "minPadMm": 1
-        },
-        {
-          "ref": "D_MOTOR_BLOCK",
-          "ftype": "simple_diode",
-          "manufacturerPartNumber": "PMEG6020ELRX",
-          "side": "top",
-          "padCount": 2,
-          "widthMm": 4.334799999999999,
-          "heightMm": 1.1500000000000004,
-          "throughHole": false,
-          "minPadMm": 0.95
-        },
-        {
-          "ref": "F_MOTOR_VBUS",
-          "ftype": "simple_fuse",
-          "manufacturerPartNumber": "MF-LSMF200/24X-2",
-          "side": "bottom",
-          "padCount": 2,
-          "widthMm": 5.450000000000001,
-          "heightMm": 8.7,
-          "throughHole": false,
-          "minPadMm": 1.925
-        },
-        {
-          "ref": "C_PD_VBUS",
-          "ftype": "simple_capacitor",
-          "manufacturerPartNumber": "CL31A106KBHNNNE",
-          "value": 0.00001,
-          "side": "bottom",
-          "padCount": 2,
-          "widthMm": 1.75,
-          "heightMm": 4.05,
-          "throughHole": false,
-          "minPadMm": 1.125
-        },
-        {
-          "ref": "C_MOTOR_BULK",
-          "ftype": "simple_capacitor",
-          "manufacturerPartNumber": "TCJD226M050R0090E",
-          "value": 0.000022,
-          "side": "top",
-          "padCount": 2,
-          "widthMm": 2.999994000000001,
-          "heightMm": 9.004833399999999,
-          "throughHole": false,
-          "minPadMm": 2.2999954
-        },
-        {
-          "ref": "D_MOTOR_TVS",
-          "ftype": "simple_diode",
-          "manufacturerPartNumber": "SMBJ22CAQ-13-F",
-          "side": "top",
-          "padCount": 2,
-          "widthMm": 6.800000000000001,
-          "heightMm": 2.3000000000000007,
-          "throughHole": false,
-          "minPadMm": 2.3
-        },
-        {
-          "ref": "C_VMA",
-          "ftype": "simple_capacitor",
-          "manufacturerPartNumber": "CL05B104KB5NNNC",
-          "value": 1e-7,
-          "side": "bottom",
-          "padCount": 2,
-          "widthMm": 1.5599999999999987,
-          "heightMm": 0.6400000000000006,
-          "throughHole": false,
-          "minPadMm": 0.54
-        },
-        {
-          "ref": "C_VM_BULK",
-          "ftype": "simple_capacitor",
-          "manufacturerPartNumber": "CL31A106KBHNNNE",
-          "value": 0.00001,
-          "side": "top",
-          "padCount": 2,
-          "widthMm": 1.75,
-          "heightMm": 4.049999999999997,
-          "throughHole": false,
-          "minPadMm": 1.125
-        },
-        {
-          "ref": "C_VM_HF",
-          "ftype": "simple_capacitor",
-          "manufacturerPartNumber": "CL05B104KB5NNNC",
-          "value": 1e-7,
-          "side": "top",
-          "padCount": 2,
-          "widthMm": 0.6400000000000006,
-          "heightMm": 1.5600000000000005,
-          "throughHole": false,
-          "minPadMm": 0.54
-        },
-        {
-          "ref": "C_DRV_3V3",
-          "ftype": "simple_capacitor",
-          "manufacturerPartNumber": "CL05A474KO5NNNC",
-          "value": 4.7e-7,
-          "side": "top",
-          "padCount": 2,
-          "widthMm": 1.56,
-          "heightMm": 0.6400000000000006,
-          "throughHole": false,
-          "minPadMm": 0.54
-        },
-        {
-          "ref": "R_DRV_REF_TOP",
-          "ftype": "simple_resistor",
-          "manufacturerPartNumber": "RC0402FR-072K4L",
-          "value": 2400,
-          "side": "top",
-          "padCount": 2,
-          "widthMm": 0.6399999999999997,
-          "heightMm": 1.5599999999999987,
-          "throughHole": false,
-          "minPadMm": 0.54
-        },
-        {
-          "ref": "R_DRV_REF_BOTTOM",
-          "ftype": "simple_resistor",
-          "manufacturerPartNumber": "RC0402FR-072KL",
-          "value": 2000,
-          "side": "top",
-          "padCount": 2,
-          "widthMm": 0.6400000000000001,
-          "heightMm": 1.5599999999999987,
-          "throughHole": false,
-          "minPadMm": 0.54
-        },
-        {
-          "ref": "C_DRV_REF",
-          "ftype": "simple_capacitor",
-          "manufacturerPartNumber": "CL05B104KO5NNNC",
-          "value": 1e-7,
-          "side": "top",
-          "padCount": 2,
-          "widthMm": 1.5599999999999998,
-          "heightMm": 0.6400000000000006,
-          "throughHole": false,
-          "minPadMm": 0.54
-        },
-        {
-          "ref": "R_DRV_ENABLE_PU",
-          "ftype": "simple_resistor",
-          "manufacturerPartNumber": "RC0402FR-0710KL",
-          "value": 10000,
-          "side": "top",
-          "padCount": 2,
-          "widthMm": 0.6400000000000001,
-          "heightMm": 1.5599999999999987,
-          "throughHole": false,
-          "minPadMm": 0.54
-        },
-        {
-          "ref": "R_SLEEP_PD",
-          "ftype": "simple_resistor",
-          "manufacturerPartNumber": "RC0402FR-07100KL",
-          "value": 100000,
-          "side": "top",
-          "padCount": 2,
-          "widthMm": 0.6400000000000001,
-          "heightMm": 1.5599999999999987,
-          "throughHole": false,
-          "minPadMm": 0.54
-        },
-        {
-          "ref": "R_FAULT_PU",
-          "ftype": "simple_resistor",
-          "manufacturerPartNumber": "RC0402FR-0710KL",
-          "value": 10000,
-          "side": "top",
-          "padCount": 2,
-          "widthMm": 0.6400000000000001,
-          "heightMm": 1.5600000000000023,
-          "throughHole": false,
-          "minPadMm": 0.54
-        },
-        {
-          "ref": "Q_PD_ENABLE",
-          "ftype": "simple_chip",
-          "manufacturerPartNumber": "BSS84-7-F",
-          "side": "top",
-          "padCount": 3,
-          "widthMm": 2.6999184000000014,
-          "heightMm": 3.2999680000000033,
-          "throughHole": false,
-          "minPadMm": 0.7999984
-        },
-        {
-          "ref": "R_PD_ENABLE_PU",
-          "ftype": "simple_resistor",
-          "manufacturerPartNumber": "RC0402FR-07100KL",
-          "value": 100000,
-          "side": "top",
-          "padCount": 2,
-          "widthMm": 0.6400000000000006,
-          "heightMm": 1.5599999999999992,
-          "throughHole": false,
-          "minPadMm": 0.54
-        },
-        {
-          "ref": "R_ISEN_A",
-          "ftype": "simple_resistor",
-          "manufacturerPartNumber": "RL1632R-R300-F",
-          "value": 0.3,
-          "side": "top",
-          "padCount": 2,
-          "widthMm": 4.165099999999999,
-          "heightMm": 1.7010000000000005,
-          "throughHole": false,
-          "minPadMm": 1.2075
-        },
-        {
-          "ref": "R_ISEN_B",
-          "ftype": "simple_resistor",
-          "manufacturerPartNumber": "RL1632R-R300-F",
-          "value": 0.3,
-          "side": "top",
-          "padCount": 2,
-          "widthMm": 4.1651000000000025,
-          "heightMm": 1.7010000000000005,
-          "throughHole": false,
-          "minPadMm": 1.2075
-        },
-        {
-          "ref": "R_MCU_ENABLE_PD",
-          "ftype": "simple_resistor",
-          "manufacturerPartNumber": "RC0402FR-07100KL",
-          "value": 100000,
-          "side": "top",
-          "padCount": 2,
-          "widthMm": 0.6399999999999999,
-          "heightMm": 1.5600000000000023,
-          "throughHole": false,
-          "minPadMm": 0.54
-        },
-        {
-          "ref": "R_PHASE_A",
-          "ftype": "simple_resistor",
-          "manufacturerPartNumber": "ERJ-8BWFR050V",
-          "value": 0.05,
-          "side": "top",
-          "padCount": 2,
-          "widthMm": 4.165099999999999,
-          "heightMm": 1.7010000000000005,
-          "throughHole": false,
-          "minPadMm": 1.2075
-        },
-        {
-          "ref": "R_PHASE_B",
-          "ftype": "simple_resistor",
-          "manufacturerPartNumber": "ERJ-8BWFR050V",
-          "value": 0.05,
-          "side": "top",
-          "padCount": 2,
-          "widthMm": 4.165099999999999,
-          "heightMm": 1.7010000000000005,
-          "throughHole": false,
-          "minPadMm": 1.2075
-        },
-        {
-          "ref": "U_PD_I2C",
-          "ftype": "simple_chip",
-          "manufacturerPartNumber": "TCA9517ADGKR",
-          "side": "bottom",
-          "padCount": 8,
-          "widthMm": 5.850000000000001,
-          "heightMm": 2.4499999999999997,
-          "throughHole": false,
-          "minPadMm": 0.5
-        },
-        {
-          "ref": "C_PD_I2C_A",
-          "ftype": "simple_capacitor",
-          "manufacturerPartNumber": "CL05B104KO5NNNC",
-          "value": 1e-7,
-          "side": "bottom",
-          "padCount": 2,
-          "widthMm": 0.6400000000000006,
-          "heightMm": 1.56,
-          "throughHole": false,
-          "minPadMm": 0.54
-        },
-        {
-          "ref": "C_PD_I2C_B",
-          "ftype": "simple_capacitor",
-          "manufacturerPartNumber": "CL05B104KO5NNNC",
-          "value": 1e-7,
-          "side": "bottom",
-          "padCount": 2,
-          "widthMm": 0.6400000000000006,
-          "heightMm": 1.56,
-          "throughHole": false,
-          "minPadMm": 0.54
-        },
-        {
-          "ref": "R_PD_HPI_SDA",
-          "ftype": "simple_resistor",
-          "manufacturerPartNumber": "RC0402FR-0710KL",
-          "value": 10000,
-          "side": "bottom",
-          "padCount": 2,
-          "widthMm": 0.6400000000000006,
-          "heightMm": 1.5599999999999987,
-          "throughHole": false,
-          "minPadMm": 0.54
-        },
-        {
-          "ref": "R_PD_HPI_SCL",
-          "ftype": "simple_resistor",
-          "manufacturerPartNumber": "RC0402FR-0710KL",
-          "value": 10000,
-          "side": "bottom",
-          "padCount": 2,
-          "widthMm": 1.5599999999999987,
-          "heightMm": 0.6400000000000006,
-          "throughHole": false,
-          "minPadMm": 0.54
-        },
-        {
-          "ref": "U_PD_PG",
-          "ftype": "simple_chip",
-          "manufacturerPartNumber": "SN74LVC1G97DRLR",
-          "side": "top",
-          "padCount": 6,
-          "widthMm": 1.2800075999999976,
-          "heightMm": 1.9601687999999982,
-          "throughHole": false,
-          "minPadMm": 0.2800096
-        },
-        {
-          "ref": "C_PD_PG",
-          "ftype": "simple_capacitor",
-          "manufacturerPartNumber": "CL05B104KO5NNNC",
-          "value": 1e-7,
-          "side": "bottom",
-          "padCount": 2,
-          "widthMm": 0.6400000000000006,
-          "heightMm": 1.5600000000000005,
-          "throughHole": false,
-          "minPadMm": 0.54
-        },
-        {
-          "ref": "R_PD_GOOD_PD",
-          "ftype": "simple_resistor",
-          "manufacturerPartNumber": "RC0402FR-0710KL",
-          "value": 10000,
-          "side": "top",
-          "padCount": 2,
-          "widthMm": 1.5600000000000005,
-          "heightMm": 0.6400000000000006,
-          "throughHole": false,
-          "minPadMm": 0.54
-        },
-        {
-          "ref": "R_PD_VDD_PD",
-          "ftype": "simple_resistor",
-          "manufacturerPartNumber": "RC0402FR-0747KL",
-          "value": 47000,
-          "side": "top",
-          "padCount": 2,
-          "widthMm": 1.5600000000000023,
-          "heightMm": 0.6400000000000006,
-          "throughHole": false,
-          "minPadMm": 0.54
+          "widthMm": 9.0,
+          "heightMm": 4.5,
+          "throughHole": false
         }
       ]
     },
-    "rp2040-motor-controller-top-side-only": {
+    "nema17": {
+      "inputSource": "circuithub-bom",
       "board": {
-        "widthMm": 42.29999159999999,
-        "heightMm": 42.320006799999994,
-        "layers": 4
+        "widthMm": 56,
+        "heightMm": 44,
+        "layers": 2
       },
       "parts": [
         {
-          "ref": "Y1",
+          "ref": "F1",
+          "ftype": "simple_fuse",
+          "manufacturerPartNumber": "1812L150/33MR",
+          "side": "top",
+          "padCount": 2,
+          "widthMm": 4.55,
+          "heightMm": 2.27,
+          "throughHole": false
+        },
+        {
+          "ref": "RV1",
           "ftype": "simple_chip",
-          "manufacturerPartNumber": "ABM8-272-T3",
+          "manufacturerPartNumber": "3296W-1-103LF",
           "side": "top",
-          "padCount": 4,
-          "widthMm": 2.8999999999999986,
-          "heightMm": 3.599999999999998,
-          "throughHole": false,
-          "minPadMm": 1.2
+          "padCount": 3,
+          "widthMm": 3.3,
+          "heightMm": 1.65,
+          "throughHole": true
         },
         {
-          "ref": "C_XIN",
-          "ftype": "simple_capacitor",
-          "manufacturerPartNumber": "GRM1555C1H150JA01D",
-          "value": 1.5e-11,
-          "side": "top",
-          "padCount": 2,
-          "widthMm": 1.5599999999999987,
-          "heightMm": 0.6400000000000006,
-          "throughHole": false,
-          "minPadMm": 0.54
-        },
-        {
-          "ref": "C_XOUT",
-          "ftype": "simple_capacitor",
-          "manufacturerPartNumber": "GRM1555C1H150JA01D",
-          "value": 1.5e-11,
-          "side": "top",
-          "padCount": 2,
-          "widthMm": 1.5599999999999987,
-          "heightMm": 0.6400000000000006,
-          "throughHole": false,
-          "minPadMm": 0.54
-        },
-        {
-          "ref": "R_XOUT",
-          "ftype": "simple_resistor",
-          "manufacturerPartNumber": "RC0402FR-071KL",
-          "value": 1000,
-          "side": "top",
-          "padCount": 2,
-          "widthMm": 1.5600000000000005,
-          "heightMm": 0.6400000000000006,
-          "throughHole": false,
-          "minPadMm": 0.54
-        },
-        {
-          "ref": "D_VBUS",
-          "ftype": "simple_diode",
-          "manufacturerPartNumber": "1N5819HW-7-F",
-          "side": "top",
-          "padCount": 2,
-          "widthMm": 4.599999999999998,
-          "heightMm": 0.9499999999999993,
-          "throughHole": false,
-          "minPadMm": 0.95
-        },
-        {
-          "ref": "R_3V3_EN",
-          "ftype": "simple_resistor",
-          "manufacturerPartNumber": "RC0402FR-07100KL",
-          "value": 100000,
-          "side": "top",
-          "padCount": 2,
-          "widthMm": 0.6400000000000006,
-          "heightMm": 1.5599999999999987,
-          "throughHole": false,
-          "minPadMm": 0.54
-        },
-        {
-          "ref": "U3",
+          "ref": "TP1",
           "ftype": "simple_chip",
-          "manufacturerPartNumber": "AP2112K-3.3TRG1",
+          "manufacturerPartNumber": "5015",
           "side": "top",
-          "padCount": 5,
-          "widthMm": 3.2001459999999984,
-          "heightMm": 2.5001728000000005,
-          "throughHole": false,
-          "minPadMm": 0.5999988
-        },
-        {
-          "ref": "C_VBUS",
-          "ftype": "simple_capacitor",
-          "manufacturerPartNumber": "CL10A106MA8NRNC",
-          "value": 0.00001,
-          "side": "top",
-          "padCount": 2,
-          "widthMm": 0.9500000000000028,
-          "heightMm": 2.450000000000001,
-          "throughHole": false,
-          "minPadMm": 0.8
-        },
-        {
-          "ref": "C_IOVDD1",
-          "ftype": "simple_capacitor",
-          "manufacturerPartNumber": "CL05B104KO5NNNC",
-          "value": 1e-7,
-          "side": "top",
-          "padCount": 2,
-          "widthMm": 1.5599999999999987,
-          "heightMm": 0.6400000000000006,
-          "throughHole": false,
-          "minPadMm": 0.54
-        },
-        {
-          "ref": "C_IOVDD2",
-          "ftype": "simple_capacitor",
-          "manufacturerPartNumber": "CL05B104KO5NNNC",
-          "value": 1e-7,
-          "side": "top",
-          "padCount": 2,
-          "widthMm": 1.5599999999999987,
-          "heightMm": 0.6400000000000001,
-          "throughHole": false,
-          "minPadMm": 0.54
-        },
-        {
-          "ref": "C_IOVDD3",
-          "ftype": "simple_capacitor",
-          "manufacturerPartNumber": "CL05B104KO5NNNC",
-          "value": 1e-7,
-          "side": "top",
-          "padCount": 2,
-          "widthMm": 1.5600000000000023,
-          "heightMm": 0.6400000000000006,
-          "throughHole": false,
-          "minPadMm": 0.54
-        },
-        {
-          "ref": "C_IOVDD4",
-          "ftype": "simple_capacitor",
-          "manufacturerPartNumber": "CL05B104KO5NNNC",
-          "value": 1e-7,
-          "side": "top",
-          "padCount": 2,
-          "widthMm": 1.5599999999999987,
-          "heightMm": 0.6400000000000006,
-          "throughHole": false,
-          "minPadMm": 0.54
-        },
-        {
-          "ref": "C_IOVDD5",
-          "ftype": "simple_capacitor",
-          "manufacturerPartNumber": "CL05B104KO5NNNC",
-          "value": 1e-7,
-          "side": "top",
-          "padCount": 2,
-          "widthMm": 0.6400000000000006,
-          "heightMm": 1.5599999999999987,
-          "throughHole": false,
-          "minPadMm": 0.54
-        },
-        {
-          "ref": "C_IOVDD6",
-          "ftype": "simple_capacitor",
-          "manufacturerPartNumber": "CL05B104KO5NNNC",
-          "value": 1e-7,
-          "side": "top",
-          "padCount": 2,
-          "widthMm": 0.6400000000000006,
-          "heightMm": 1.5599999999999998,
-          "throughHole": false,
-          "minPadMm": 0.54
-        },
-        {
-          "ref": "R_RUN",
-          "ftype": "simple_resistor",
-          "manufacturerPartNumber": "RC0402FR-0710KL",
-          "value": 10000,
-          "side": "top",
-          "padCount": 2,
-          "widthMm": 1.5599999999999996,
-          "heightMm": 0.6400000000000006,
-          "throughHole": false,
-          "minPadMm": 0.54
-        },
-        {
-          "ref": "SW_BOOT",
-          "ftype": "simple_push_button",
-          "manufacturerPartNumber": "SKRPACE010",
-          "side": "top",
-          "padCount": 4,
-          "widthMm": 5.25,
-          "heightMm": 2.849999999999998,
-          "throughHole": false,
-          "minPadMm": 0.7
-        },
-        {
-          "ref": "SW_RUN",
-          "ftype": "simple_push_button",
-          "manufacturerPartNumber": "SKRPACE010",
-          "side": "top",
-          "padCount": 4,
-          "widthMm": 5.25,
-          "heightMm": 2.849999999999998,
-          "throughHole": false,
-          "minPadMm": 0.7
-        },
-        {
-          "ref": "R_BOOT",
-          "ftype": "simple_resistor",
-          "manufacturerPartNumber": "RC0402FR-0710KL",
-          "value": 10000,
-          "side": "top",
-          "padCount": 2,
-          "widthMm": 0.6400000000000006,
-          "heightMm": 1.5599999999999987,
-          "throughHole": false,
-          "minPadMm": 0.54
-        },
-        {
-          "ref": "C_FLASH",
-          "ftype": "simple_capacitor",
-          "manufacturerPartNumber": "CL05B104KO5NNNC",
-          "value": 1e-7,
-          "side": "top",
-          "padCount": 2,
-          "widthMm": 0.6400000000000006,
-          "heightMm": 1.5599999999999998,
-          "throughHole": false,
-          "minPadMm": 0.54
-        },
-        {
-          "ref": "C_USB_VDD",
-          "ftype": "simple_capacitor",
-          "manufacturerPartNumber": "CL05B104KO5NNNC",
-          "value": 1e-7,
-          "side": "top",
-          "padCount": 2,
-          "widthMm": 0.6400000000000006,
-          "heightMm": 1.56,
-          "throughHole": false,
-          "minPadMm": 0.54
-        },
-        {
-          "ref": "C_3V3",
-          "ftype": "simple_capacitor",
-          "manufacturerPartNumber": "CL10A106MA8NRNC",
-          "value": 0.00001,
-          "side": "top",
-          "padCount": 2,
-          "widthMm": 2.4499999999999993,
-          "heightMm": 0.9499999999999993,
-          "throughHole": false,
-          "minPadMm": 0.8
-        },
-        {
-          "ref": "C_USB",
-          "ftype": "simple_capacitor",
-          "manufacturerPartNumber": "CL05A105KA5NQNC",
-          "value": 0.000001,
-          "side": "top",
-          "padCount": 2,
-          "widthMm": 0.6400000000000006,
-          "heightMm": 1.56,
-          "throughHole": false,
-          "minPadMm": 0.54
-        },
-        {
-          "ref": "C_ADC",
-          "ftype": "simple_capacitor",
-          "manufacturerPartNumber": "CL05B104KO5NNNC",
-          "value": 1e-7,
-          "side": "top",
-          "padCount": 2,
-          "widthMm": 1.56,
-          "heightMm": 0.6400000000000006,
-          "throughHole": false,
-          "minPadMm": 0.54
-        },
-        {
-          "ref": "L_AVDD",
-          "ftype": "simple_inductor",
-          "manufacturerPartNumber": "BLM18AG601SN1D",
-          "side": "top",
-          "padCount": 2,
-          "widthMm": 2.1997923999999998,
-          "heightMm": 0.8640064000000001,
-          "throughHole": false,
-          "minPadMm": 0.7999984
-        },
-        {
-          "ref": "J_USB",
-          "ftype": "simple_connector",
-          "manufacturerPartNumber": "USB4110-GF-A",
-          "side": "top",
-          "padCount": 16,
-          "widthMm": 12.4,
-          "heightMm": 6.080000000000002,
-          "throughHole": false,
-          "minPadMm": 0.3
-        },
-        {
-          "ref": "R_CC1",
-          "ftype": "simple_resistor",
-          "manufacturerPartNumber": "RC0402FR-075K1L",
-          "value": 5100,
-          "side": "top",
-          "padCount": 2,
-          "widthMm": 1.5599999999999987,
-          "heightMm": 0.6400000000000006,
-          "throughHole": false,
-          "minPadMm": 0.54
-        },
-        {
-          "ref": "R_CC2",
-          "ftype": "simple_resistor",
-          "manufacturerPartNumber": "RC0402FR-075K1L",
-          "value": 5100,
-          "side": "top",
-          "padCount": 2,
-          "widthMm": 1.5599999999999987,
-          "heightMm": 0.6400000000000006,
-          "throughHole": false,
-          "minPadMm": 0.54
-        },
-        {
-          "ref": "R_USB1",
-          "ftype": "simple_resistor",
-          "manufacturerPartNumber": "RC0402FR-0727RL",
-          "value": 27,
-          "side": "top",
-          "padCount": 2,
-          "widthMm": 1.5600000000000005,
-          "heightMm": 0.6400000000000001,
-          "throughHole": false,
-          "minPadMm": 0.54
-        },
-        {
-          "ref": "R_USB2",
-          "ftype": "simple_resistor",
-          "manufacturerPartNumber": "RC0402FR-0727RL",
-          "value": 27,
-          "side": "top",
-          "padCount": 2,
-          "widthMm": 1.5600000000000005,
-          "heightMm": 0.6400000000000005,
-          "throughHole": false,
-          "minPadMm": 0.54
-        },
-        {
-          "ref": "U1",
-          "ftype": "simple_chip",
-          "manufacturerPartNumber": "SC0914(13)",
-          "side": "top",
-          "padCount": 57,
-          "widthMm": 7.699883000000001,
-          "heightMm": 7.700136999999999,
-          "throughHole": false,
-          "minPadMm": 0.1999996
-        },
-        {
-          "ref": "C_CORE",
-          "ftype": "simple_capacitor",
-          "manufacturerPartNumber": "CL05A105KA5NQNC",
-          "value": 0.000001,
-          "side": "top",
-          "padCount": 2,
-          "widthMm": 0.6400000000000006,
-          "heightMm": 1.56,
-          "throughHole": false,
-          "minPadMm": 0.54
-        },
-        {
-          "ref": "C_DVDD1",
-          "ftype": "simple_capacitor",
-          "manufacturerPartNumber": "CL05B104KO5NNNC",
-          "value": 1e-7,
-          "side": "top",
-          "padCount": 2,
-          "widthMm": 0.6400000000000006,
-          "heightMm": 1.56,
-          "throughHole": false,
-          "minPadMm": 0.54
-        },
-        {
-          "ref": "C_DVDD2",
-          "ftype": "simple_capacitor",
-          "manufacturerPartNumber": "CL05B104KO5NNNC",
-          "value": 1e-7,
-          "side": "top",
-          "padCount": 2,
-          "widthMm": 1.5600000000000005,
-          "heightMm": 0.6400000000000006,
-          "throughHole": false,
-          "minPadMm": 0.54
-        },
-        {
-          "ref": "U2",
-          "ftype": "simple_chip",
-          "manufacturerPartNumber": "W25Q16JVUXIQ TR",
-          "side": "top",
-          "padCount": 9,
-          "widthMm": 3.614978800000003,
-          "heightMm": 1.7801336000000008,
-          "throughHole": false,
-          "minPadMm": 0.2800096
-        },
-        {
-          "ref": "DRIVER",
-          "ftype": "simple_chip",
-          "manufacturerPartNumber": "DRV8825PWPR",
-          "side": "top",
-          "padCount": 29,
-          "widthMm": 7.4630026,
-          "heightMm": 8.7930736,
-          "throughHole": false,
-          "minPadMm": 0.3430016
-        },
-        {
-          "ref": "C_CP",
-          "ftype": "simple_capacitor",
-          "manufacturerPartNumber": "CL05B103KB5NNNC",
-          "value": 1e-8,
-          "side": "top",
-          "padCount": 2,
-          "widthMm": 0.6400000000000006,
-          "heightMm": 1.5600000000000005,
-          "throughHole": false,
-          "minPadMm": 0.54
-        },
-        {
-          "ref": "C_VCP",
-          "ftype": "simple_capacitor",
-          "manufacturerPartNumber": "CL05B104KB5NNNC",
-          "value": 1e-7,
-          "side": "top",
-          "padCount": 2,
-          "widthMm": 0.6400000000000006,
-          "heightMm": 1.5600000000000023,
-          "throughHole": false,
-          "minPadMm": 0.54
-        },
-        {
-          "ref": "R_VCP",
-          "ftype": "simple_resistor",
-          "manufacturerPartNumber": "RC0402FR-071ML",
-          "value": 1000000,
-          "side": "top",
-          "padCount": 2,
-          "widthMm": 0.6400000000000006,
-          "heightMm": 1.5599999999999987,
-          "throughHole": false,
-          "minPadMm": 0.54
-        },
-        {
-          "ref": "J_MOTOR_USB",
-          "ftype": "simple_connector",
-          "manufacturerPartNumber": "USB4110-GF-A",
-          "side": "top",
-          "padCount": 16,
-          "widthMm": 12.4,
-          "heightMm": 6.080000000000002,
-          "throughHole": false,
-          "minPadMm": 0.3
-        },
-        {
-          "ref": "U_PD",
-          "ftype": "simple_chip",
-          "manufacturerPartNumber": "CYPD3177-24LQXQT",
-          "side": "top",
-          "padCount": 25,
-          "widthMm": 4.700000000000002,
-          "heightMm": 4.700000000000002,
-          "throughHole": false,
-          "minPadMm": 0.25
+          "padCount": 1,
+          "widthMm": 1.3,
+          "heightMm": 0.65,
+          "throughHole": true
         },
         {
           "ref": "J1",
           "ftype": "simple_connector",
-          "manufacturerPartNumber": "S4B-PH-SM4-TB(LF)(SN)",
-          "side": "top",
-          "padCount": 6,
-          "widthMm": 9.200000000000003,
-          "heightMm": 12.2,
-          "throughHole": false,
-          "minPadMm": 1
-        },
-        {
-          "ref": "D_MOTOR_BLOCK",
-          "ftype": "simple_diode",
-          "manufacturerPartNumber": "PMEG6020ELRX",
+          "manufacturerPartNumber": "691137710002",
           "side": "top",
           "padCount": 2,
-          "widthMm": 4.334799999999999,
-          "heightMm": 1.1500000000000004,
-          "throughHole": false,
-          "minPadMm": 0.95
+          "widthMm": 6.6,
+          "heightMm": 3.3,
+          "throughHole": true
         },
         {
-          "ref": "C_MOTOR_BULK",
-          "ftype": "simple_capacitor",
-          "manufacturerPartNumber": "TCJD226M050R0090E",
-          "value": 0.000022,
+          "ref": "J2",
+          "ftype": "simple_connector",
+          "manufacturerPartNumber": "691137710004",
           "side": "top",
-          "padCount": 2,
-          "widthMm": 2.999994000000001,
-          "heightMm": 9.004833399999999,
-          "throughHole": false,
-          "minPadMm": 2.2999954
+          "padCount": 4,
+          "widthMm": 10.16,
+          "heightMm": 5.08,
+          "throughHole": true
         },
         {
-          "ref": "D_MOTOR_TVS",
-          "ftype": "simple_diode",
-          "manufacturerPartNumber": "SMBJ22CAQ-13-F",
-          "side": "top",
-          "padCount": 2,
-          "widthMm": 6.800000000000001,
-          "heightMm": 2.3000000000000007,
-          "throughHole": false,
-          "minPadMm": 2.3
-        },
-        {
-          "ref": "C_VM_BULK",
-          "ftype": "simple_capacitor",
-          "manufacturerPartNumber": "CL31A106KBHNNNE",
-          "value": 0.00001,
-          "side": "top",
-          "padCount": 2,
-          "widthMm": 1.75,
-          "heightMm": 4.049999999999997,
-          "throughHole": false,
-          "minPadMm": 1.125
-        },
-        {
-          "ref": "C_VM_HF",
-          "ftype": "simple_capacitor",
-          "manufacturerPartNumber": "CL05B104KB5NNNC",
-          "value": 1e-7,
-          "side": "top",
-          "padCount": 2,
-          "widthMm": 0.6400000000000006,
-          "heightMm": 1.5600000000000005,
-          "throughHole": false,
-          "minPadMm": 0.54
-        },
-        {
-          "ref": "C_DRV_3V3",
-          "ftype": "simple_capacitor",
-          "manufacturerPartNumber": "CL05A474KO5NNNC",
-          "value": 4.7e-7,
-          "side": "top",
-          "padCount": 2,
-          "widthMm": 1.56,
-          "heightMm": 0.6400000000000006,
-          "throughHole": false,
-          "minPadMm": 0.54
-        },
-        {
-          "ref": "R_DRV_REF_TOP",
-          "ftype": "simple_resistor",
-          "manufacturerPartNumber": "RC0402FR-072K4L",
-          "value": 2400,
-          "side": "top",
-          "padCount": 2,
-          "widthMm": 0.6399999999999997,
-          "heightMm": 1.5599999999999987,
-          "throughHole": false,
-          "minPadMm": 0.54
-        },
-        {
-          "ref": "R_DRV_REF_BOTTOM",
-          "ftype": "simple_resistor",
-          "manufacturerPartNumber": "RC0402FR-072KL",
-          "value": 2000,
-          "side": "top",
-          "padCount": 2,
-          "widthMm": 0.6400000000000001,
-          "heightMm": 1.5599999999999987,
-          "throughHole": false,
-          "minPadMm": 0.54
-        },
-        {
-          "ref": "C_DRV_REF",
-          "ftype": "simple_capacitor",
-          "manufacturerPartNumber": "CL05B104KO5NNNC",
-          "value": 1e-7,
-          "side": "top",
-          "padCount": 2,
-          "widthMm": 1.5599999999999998,
-          "heightMm": 0.6400000000000006,
-          "throughHole": false,
-          "minPadMm": 0.54
-        },
-        {
-          "ref": "R_DRV_ENABLE_PU",
-          "ftype": "simple_resistor",
-          "manufacturerPartNumber": "RC0402FR-0710KL",
-          "value": 10000,
-          "side": "top",
-          "padCount": 2,
-          "widthMm": 0.6400000000000001,
-          "heightMm": 1.5599999999999987,
-          "throughHole": false,
-          "minPadMm": 0.54
-        },
-        {
-          "ref": "R_SLEEP_PD",
-          "ftype": "simple_resistor",
-          "manufacturerPartNumber": "RC0402FR-07100KL",
-          "value": 100000,
-          "side": "top",
-          "padCount": 2,
-          "widthMm": 0.6400000000000001,
-          "heightMm": 1.5599999999999987,
-          "throughHole": false,
-          "minPadMm": 0.54
-        },
-        {
-          "ref": "R_FAULT_PU",
-          "ftype": "simple_resistor",
-          "manufacturerPartNumber": "RC0402FR-0710KL",
-          "value": 10000,
-          "side": "top",
-          "padCount": 2,
-          "widthMm": 0.6400000000000001,
-          "heightMm": 1.5600000000000023,
-          "throughHole": false,
-          "minPadMm": 0.54
-        },
-        {
-          "ref": "Q_PD_ENABLE",
+          "ref": "U1",
           "ftype": "simple_chip",
-          "manufacturerPartNumber": "BSS84-7-F",
+          "manufacturerPartNumber": "DRV8825PWPR",
           "side": "top",
-          "padCount": 3,
-          "widthMm": 2.6999184000000014,
-          "heightMm": 3.2999680000000033,
-          "throughHole": false,
-          "minPadMm": 0.7999984
+          "padCount": 29,
+          "widthMm": 9.42,
+          "heightMm": 4.71,
+          "throughHole": false
         },
         {
-          "ref": "R_PD_ENABLE_PU",
-          "ftype": "simple_resistor",
-          "manufacturerPartNumber": "RC0402FR-07100KL",
-          "value": 100000,
+          "ref": "C1",
+          "ftype": "simple_capacitor",
+          "manufacturerPartNumber": "EEU-FR1H101",
           "side": "top",
           "padCount": 2,
-          "widthMm": 0.6400000000000006,
-          "heightMm": 1.5599999999999992,
-          "throughHole": false,
-          "minPadMm": 0.54
+          "widthMm": 4.55,
+          "heightMm": 2.27,
+          "throughHole": true
         },
         {
-          "ref": "R_ISEN_A",
+          "ref": "R4",
           "ftype": "simple_resistor",
-          "manufacturerPartNumber": "RL1632R-R300-F",
-          "value": 0.3,
+          "manufacturerPartNumber": "RC0805FR-07100KL",
           "side": "top",
           "padCount": 2,
-          "widthMm": 4.165099999999999,
-          "heightMm": 1.7010000000000005,
-          "throughHole": false,
-          "minPadMm": 1.2075
+          "widthMm": 2.6,
+          "heightMm": 1.3,
+          "throughHole": false
         },
         {
-          "ref": "R_ISEN_B",
+          "ref": "R7",
           "ftype": "simple_resistor",
-          "manufacturerPartNumber": "RL1632R-R300-F",
-          "value": 0.3,
+          "manufacturerPartNumber": "RC0805FR-07100KL",
           "side": "top",
           "padCount": 2,
-          "widthMm": 4.1651000000000025,
-          "heightMm": 1.7010000000000005,
-          "throughHole": false,
-          "minPadMm": 1.2075
+          "widthMm": 2.6,
+          "heightMm": 1.3,
+          "throughHole": false
         },
         {
-          "ref": "R_MCU_ENABLE_PD",
+          "ref": "R8",
           "ftype": "simple_resistor",
-          "manufacturerPartNumber": "RC0402FR-07100KL",
-          "value": 100000,
+          "manufacturerPartNumber": "RC0805FR-07100KL",
           "side": "top",
           "padCount": 2,
-          "widthMm": 0.6399999999999999,
-          "heightMm": 1.5600000000000023,
-          "throughHole": false,
-          "minPadMm": 0.54
+          "widthMm": 2.6,
+          "heightMm": 1.3,
+          "throughHole": false
         },
         {
-          "ref": "R_PHASE_A",
+          "ref": "R9",
           "ftype": "simple_resistor",
-          "manufacturerPartNumber": "ERJ-8BWFR050V",
-          "value": 0.05,
+          "manufacturerPartNumber": "RC0805FR-07100KL",
           "side": "top",
           "padCount": 2,
-          "widthMm": 4.165099999999999,
-          "heightMm": 1.7010000000000005,
-          "throughHole": false,
-          "minPadMm": 1.2075
+          "widthMm": 2.6,
+          "heightMm": 1.3,
+          "throughHole": false
         },
         {
-          "ref": "R_PHASE_B",
-          "ftype": "simple_resistor",
-          "manufacturerPartNumber": "ERJ-8BWFR050V",
-          "value": 0.05,
+          "ref": "C2",
+          "ftype": "simple_capacitor",
+          "manufacturerPartNumber": "GRM21BR71H104KA01L",
           "side": "top",
           "padCount": 2,
-          "widthMm": 4.165099999999999,
-          "heightMm": 1.7010000000000005,
-          "throughHole": false,
-          "minPadMm": 1.2075
+          "widthMm": 2.6,
+          "heightMm": 1.3,
+          "throughHole": false
         },
         {
-          "ref": "U_PD_PG",
-          "ftype": "simple_chip",
-          "manufacturerPartNumber": "SN74LVC1G97DRLR",
-          "side": "top",
-          "padCount": 6,
-          "widthMm": 1.2800075999999976,
-          "heightMm": 1.9601687999999982,
-          "throughHole": false,
-          "minPadMm": 0.2800096
-        },
-        {
-          "ref": "R_PD_GOOD_PD",
-          "ftype": "simple_resistor",
-          "manufacturerPartNumber": "RC0402FR-0710KL",
-          "value": 10000,
+          "ref": "C3",
+          "ftype": "simple_capacitor",
+          "manufacturerPartNumber": "GRM21BR71H104KA01L",
           "side": "top",
           "padCount": 2,
-          "widthMm": 1.5600000000000005,
-          "heightMm": 0.6400000000000006,
-          "throughHole": false,
-          "minPadMm": 0.54
+          "widthMm": 2.6,
+          "heightMm": 1.3,
+          "throughHole": false
         },
         {
-          "ref": "R_PD_VDD_PD",
-          "ftype": "simple_resistor",
-          "manufacturerPartNumber": "RC0402FR-0747KL",
-          "value": 47000,
+          "ref": "C5",
+          "ftype": "simple_capacitor",
+          "manufacturerPartNumber": "GRM21BR71H104KA01L",
           "side": "top",
           "padCount": 2,
-          "widthMm": 1.5600000000000023,
-          "heightMm": 0.6400000000000006,
-          "throughHole": false,
-          "minPadMm": 0.54
+          "widthMm": 2.6,
+          "heightMm": 1.3,
+          "throughHole": false
+        },
+        {
+          "ref": "C7",
+          "ftype": "simple_capacitor",
+          "manufacturerPartNumber": "GRM21BR71H104KA01L",
+          "side": "top",
+          "padCount": 2,
+          "widthMm": 2.6,
+          "heightMm": 1.3,
+          "throughHole": false
+        },
+        {
+          "ref": "R10",
+          "ftype": "simple_resistor",
+          "manufacturerPartNumber": "RC0805FR-0710KL",
+          "side": "top",
+          "padCount": 2,
+          "widthMm": 2.6,
+          "heightMm": 1.3,
+          "throughHole": false
+        },
+        {
+          "ref": "C4",
+          "ftype": "simple_capacitor",
+          "manufacturerPartNumber": "GRM21BR71H103KA01L",
+          "side": "top",
+          "padCount": 2,
+          "widthMm": 2.6,
+          "heightMm": 1.3,
+          "throughHole": false
+        },
+        {
+          "ref": "R3",
+          "ftype": "simple_resistor",
+          "manufacturerPartNumber": "RC0805FR-0718KL",
+          "side": "top",
+          "padCount": 2,
+          "widthMm": 2.6,
+          "heightMm": 1.3,
+          "throughHole": false
+        },
+        {
+          "ref": "R14",
+          "ftype": "simple_resistor",
+          "manufacturerPartNumber": "RC0805FR-071ML",
+          "side": "top",
+          "padCount": 2,
+          "widthMm": 2.6,
+          "heightMm": 1.3,
+          "throughHole": false
+        },
+        {
+          "ref": "R11",
+          "ftype": "simple_resistor",
+          "manufacturerPartNumber": "RC0805FR-071KL",
+          "side": "top",
+          "padCount": 2,
+          "widthMm": 2.6,
+          "heightMm": 1.3,
+          "throughHole": false
+        },
+        {
+          "ref": "R12",
+          "ftype": "simple_resistor",
+          "manufacturerPartNumber": "RC0805FR-071KL",
+          "side": "top",
+          "padCount": 2,
+          "widthMm": 2.6,
+          "heightMm": 1.3,
+          "throughHole": false
+        },
+        {
+          "ref": "R13",
+          "ftype": "simple_resistor",
+          "manufacturerPartNumber": "RC0805FR-071KL",
+          "side": "top",
+          "padCount": 2,
+          "widthMm": 2.6,
+          "heightMm": 1.3,
+          "throughHole": false
+        },
+        {
+          "ref": "C6",
+          "ftype": "simple_capacitor",
+          "manufacturerPartNumber": "GRM21BR71C474KA01L",
+          "side": "top",
+          "padCount": 2,
+          "widthMm": 2.6,
+          "heightMm": 1.3,
+          "throughHole": false
+        },
+        {
+          "ref": "R5",
+          "ftype": "simple_resistor",
+          "manufacturerPartNumber": "RC0805FR-0747KL",
+          "side": "top",
+          "padCount": 2,
+          "widthMm": 2.6,
+          "heightMm": 1.3,
+          "throughHole": false
+        },
+        {
+          "ref": "R6",
+          "ftype": "simple_resistor",
+          "manufacturerPartNumber": "RC0805FR-0747KL",
+          "side": "top",
+          "padCount": 2,
+          "widthMm": 2.6,
+          "heightMm": 1.3,
+          "throughHole": false
+        },
+        {
+          "ref": "D2",
+          "ftype": "simple_diode",
+          "manufacturerPartNumber": "SMBJ26A",
+          "side": "top",
+          "padCount": 2,
+          "widthMm": 5.72,
+          "heightMm": 2.86,
+          "throughHole": false
+        },
+        {
+          "ref": "D1",
+          "ftype": "simple_diode",
+          "manufacturerPartNumber": "SS56",
+          "side": "top",
+          "padCount": 2,
+          "widthMm": 5.72,
+          "heightMm": 2.86,
+          "throughHole": false
+        },
+        {
+          "ref": "J3",
+          "ftype": "simple_connector",
+          "manufacturerPartNumber": "TSW-105-07-G-S",
+          "side": "top",
+          "padCount": 5,
+          "widthMm": 6.35,
+          "heightMm": 3.17,
+          "throughHole": true
+        },
+        {
+          "ref": "R1",
+          "ftype": "simple_resistor",
+          "manufacturerPartNumber": "WSL2512R2000FEA",
+          "side": "top",
+          "padCount": 2,
+          "widthMm": 7.28,
+          "heightMm": 3.64,
+          "throughHole": false
+        },
+        {
+          "ref": "R2",
+          "ftype": "simple_resistor",
+          "manufacturerPartNumber": "WSL2512R2000FEA",
+          "side": "top",
+          "padCount": 2,
+          "widthMm": 7.28,
+          "heightMm": 3.64,
+          "throughHole": false
         }
       ]
     }
   },
   "quotes": [
     {
-      "board": "nema8",
-      "quotedOn": "2026-11-17",
-      "quantity": 5,
-      "input": "nema8",
+      "board": "voltage-divider",
+      "quotedOn": "2026-11-27",
+      "revisionId": 82888,
+      "quantity": 1,
+      "input": "voltage-divider",
       "offers": [
         {
           "service": "priority",
           "shipDate": {
-            "earliest": "2026-11-30",
-            "latest": "2026-11-30"
+            "earliest": "2026-12-04",
+            "latest": "2026-12-04"
+          },
+          "fabricationCountry": "US",
+          "boards": 400.25,
+          "parts": 0.21,
+          "assembly": 306.87,
+          "total": 707.33
+        },
+        {
+          "service": "priority",
+          "shipDate": {
+            "earliest": "2026-12-07",
+            "latest": "2026-12-07"
+          },
+          "fabricationCountry": "US",
+          "boards": 400.25,
+          "parts": 0.21,
+          "assembly": 252.08,
+          "total": 652.54
+        },
+        {
+          "service": "priority",
+          "shipDate": {
+            "earliest": "2026-12-08",
+            "latest": "2026-12-08"
           },
           "fabricationCountry": null,
-          "boards": 751.71,
-          "parts": 61.31,
-          "assembly": 625.81,
-          "total": 1438.83
+          "boards": 471.97,
+          "parts": 0.21,
+          "assembly": 307.25,
+          "total": 779.43
+        },
+        {
+          "service": "priority",
+          "shipDate": {
+            "earliest": "2026-12-10",
+            "latest": "2026-12-10"
+          },
+          "fabricationCountry": null,
+          "boards": 411.0,
+          "parts": 0.21,
+          "assembly": 306.89,
+          "total": 718.1
         },
         {
           "service": "standard",
@@ -3639,231 +2016,883 @@
             "earliest": "2026-12-08",
             "latest": "2026-12-15"
           },
+          "fabricationCountry": "US",
+          "boards": 400.25,
+          "parts": 0.21,
+          "assembly": 219.45,
+          "total": 619.91
+        },
+        {
+          "service": "standard",
+          "shipDate": {
+            "earliest": "2026-12-18",
+            "latest": "2026-12-25"
+          },
           "fabricationCountry": null,
-          "boards": 610.4,
-          "parts": 61.31,
-          "assembly": 481.77,
-          "total": 1153.48
+          "boards": 411.0,
+          "parts": 0.21,
+          "assembly": 237.7,
+          "total": 648.91
         },
         {
           "service": "flexible",
           "shipDate": {
-            "earliest": "2026-12-10",
-            "latest": "2026-12-24"
+            "earliest": "2026-12-09",
+            "latest": "2026-12-23"
+          },
+          "fabricationCountry": "US",
+          "boards": 400.25,
+          "parts": 0.21,
+          "assembly": 179.61,
+          "total": 580.07
+        },
+        {
+          "service": "flexible",
+          "shipDate": {
+            "earliest": "2026-12-21",
+            "latest": "2027-01-04"
           },
           "fabricationCountry": null,
-          "boards": 610.4,
-          "parts": 61.31,
-          "assembly": 424.09,
-          "total": 1095.8
+          "boards": 289.07,
+          "parts": 0.21,
+          "assembly": 249.55,
+          "total": 538.83
+        }
+      ],
+      "gridProto": {
+        "status": "out_of_capacity",
+        "total": 176.99,
+        "priorityTotal": 707.33
+      }
+    },
+    {
+      "board": "voltage-divider",
+      "quotedOn": "2026-11-27",
+      "revisionId": 82888,
+      "quantity": 3,
+      "input": "voltage-divider",
+      "offers": [
+        {
+          "service": "priority",
+          "shipDate": {
+            "earliest": "2026-12-04",
+            "latest": "2026-12-04"
+          },
+          "fabricationCountry": "US",
+          "boards": 400.25,
+          "parts": 0.63,
+          "assembly": 309.73,
+          "total": 710.61
+        },
+        {
+          "service": "priority",
+          "shipDate": {
+            "earliest": "2026-12-07",
+            "latest": "2026-12-07"
+          },
+          "fabricationCountry": "US",
+          "boards": 400.25,
+          "parts": 0.63,
+          "assembly": 254.44,
+          "total": 655.32
+        },
+        {
+          "service": "priority",
+          "shipDate": {
+            "earliest": "2026-12-08",
+            "latest": "2026-12-08"
+          },
+          "fabricationCountry": null,
+          "boards": 472.38,
+          "parts": 0.63,
+          "assembly": 310.11,
+          "total": 783.12
+        },
+        {
+          "service": "priority",
+          "shipDate": {
+            "earliest": "2026-12-10",
+            "latest": "2026-12-10"
+          },
+          "fabricationCountry": null,
+          "boards": 411.35,
+          "parts": 0.63,
+          "assembly": 309.75,
+          "total": 721.73
+        },
+        {
+          "service": "standard",
+          "shipDate": {
+            "earliest": "2026-12-08",
+            "latest": "2026-12-15"
+          },
+          "fabricationCountry": "US",
+          "boards": 400.25,
+          "parts": 0.63,
+          "assembly": 221.67,
+          "total": 622.55
+        },
+        {
+          "service": "standard",
+          "shipDate": {
+            "earliest": "2026-12-18",
+            "latest": "2026-12-25"
+          },
+          "fabricationCountry": null,
+          "boards": 411.35,
+          "parts": 0.63,
+          "assembly": 239.92,
+          "total": 651.9
+        },
+        {
+          "service": "flexible",
+          "shipDate": {
+            "earliest": "2026-12-09",
+            "latest": "2026-12-23"
+          },
+          "fabricationCountry": "US",
+          "boards": 400.25,
+          "parts": 0.63,
+          "assembly": 181.74,
+          "total": 582.62
+        },
+        {
+          "service": "flexible",
+          "shipDate": {
+            "earliest": "2026-12-21",
+            "latest": "2027-01-04"
+          },
+          "fabricationCountry": null,
+          "boards": 289.3,
+          "parts": 0.63,
+          "assembly": 251.89,
+          "total": 541.82
+        }
+      ],
+      "gridProto": {
+        "status": "out_of_capacity",
+        "total": 178.12,
+        "priorityTotal": 710.61
+      }
+    },
+    {
+      "board": "voltage-divider",
+      "quotedOn": "2026-11-27",
+      "revisionId": 82888,
+      "quantity": 5,
+      "input": "voltage-divider",
+      "offers": [
+        {
+          "service": "priority",
+          "shipDate": {
+            "earliest": "2026-12-04",
+            "latest": "2026-12-04"
+          },
+          "fabricationCountry": "US",
+          "boards": 400.25,
+          "parts": 1.06,
+          "assembly": 312.46,
+          "total": 713.77
+        },
+        {
+          "service": "priority",
+          "shipDate": {
+            "earliest": "2026-12-07",
+            "latest": "2026-12-07"
+          },
+          "fabricationCountry": "US",
+          "boards": 400.25,
+          "parts": 1.06,
+          "assembly": 256.69,
+          "total": 658.0
+        },
+        {
+          "service": "priority",
+          "shipDate": {
+            "earliest": "2026-12-08",
+            "latest": "2026-12-08"
+          },
+          "fabricationCountry": null,
+          "boards": 472.79,
+          "parts": 1.06,
+          "assembly": 312.85,
+          "total": 786.7
+        },
+        {
+          "service": "priority",
+          "shipDate": {
+            "earliest": "2026-12-10",
+            "latest": "2026-12-10"
+          },
+          "fabricationCountry": null,
+          "boards": 411.7,
+          "parts": 1.06,
+          "assembly": 312.48,
+          "total": 725.24
+        },
+        {
+          "service": "standard",
+          "shipDate": {
+            "earliest": "2026-12-08",
+            "latest": "2026-12-15"
+          },
+          "fabricationCountry": "US",
+          "boards": 400.25,
+          "parts": 1.06,
+          "assembly": 223.79,
+          "total": 625.1
+        },
+        {
+          "service": "standard",
+          "shipDate": {
+            "earliest": "2026-12-18",
+            "latest": "2026-12-25"
+          },
+          "fabricationCountry": null,
+          "boards": 411.7,
+          "parts": 1.06,
+          "assembly": 242.04,
+          "total": 654.8
+        },
+        {
+          "service": "flexible",
+          "shipDate": {
+            "earliest": "2026-12-09",
+            "latest": "2026-12-23"
+          },
+          "fabricationCountry": "US",
+          "boards": 400.25,
+          "parts": 1.06,
+          "assembly": 183.78,
+          "total": 585.09
+        },
+        {
+          "service": "flexible",
+          "shipDate": {
+            "earliest": "2026-12-21",
+            "latest": "2027-01-04"
+          },
+          "fabricationCountry": null,
+          "boards": 289.53,
+          "parts": 1.06,
+          "assembly": 254.11,
+          "total": 544.7
+        }
+      ],
+      "gridProto": {
+        "status": "out_of_capacity",
+        "total": 179.24,
+        "priorityTotal": 713.77
+      }
+    },
+    {
+      "board": "voltage-divider",
+      "quotedOn": "2026-11-27",
+      "revisionId": 82888,
+      "quantity": 10,
+      "input": "voltage-divider",
+      "offers": [
+        {
+          "service": "priority",
+          "shipDate": {
+            "earliest": "2026-12-04",
+            "latest": "2026-12-04"
+          },
+          "fabricationCountry": "US",
+          "boards": 400.25,
+          "parts": 2.11,
+          "assembly": 319.27,
+          "total": 721.63
+        },
+        {
+          "service": "priority",
+          "shipDate": {
+            "earliest": "2026-12-07",
+            "latest": "2026-12-07"
+          },
+          "fabricationCountry": "US",
+          "boards": 400.25,
+          "parts": 2.11,
+          "assembly": 262.28,
+          "total": 664.64
+        },
+        {
+          "service": "priority",
+          "shipDate": {
+            "earliest": "2026-12-08",
+            "latest": "2026-12-08"
+          },
+          "fabricationCountry": null,
+          "boards": 473.81,
+          "parts": 2.11,
+          "assembly": 319.67,
+          "total": 795.59
+        },
+        {
+          "service": "priority",
+          "shipDate": {
+            "earliest": "2026-12-10",
+            "latest": "2026-12-10"
+          },
+          "fabricationCountry": null,
+          "boards": 412.58,
+          "parts": 2.11,
+          "assembly": 319.29,
+          "total": 733.98
+        },
+        {
+          "service": "standard",
+          "shipDate": {
+            "earliest": "2026-12-08",
+            "latest": "2026-12-15"
+          },
+          "fabricationCountry": "US",
+          "boards": 400.25,
+          "parts": 2.11,
+          "assembly": 229.04,
+          "total": 631.4
+        },
+        {
+          "service": "standard",
+          "shipDate": {
+            "earliest": "2026-12-18",
+            "latest": "2026-12-25"
+          },
+          "fabricationCountry": null,
+          "boards": 412.58,
+          "parts": 2.11,
+          "assembly": 247.32,
+          "total": 662.01
+        },
+        {
+          "service": "flexible",
+          "shipDate": {
+            "earliest": "2026-12-09",
+            "latest": "2026-12-23"
+          },
+          "fabricationCountry": "US",
+          "boards": 400.25,
+          "parts": 2.11,
+          "assembly": 188.83,
+          "total": 591.19
+        },
+        {
+          "service": "flexible",
+          "shipDate": {
+            "earliest": "2026-12-21",
+            "latest": "2027-01-04"
+          },
+          "fabricationCountry": null,
+          "boards": 290.12,
+          "parts": 2.11,
+          "assembly": 259.65,
+          "total": 551.88
+        }
+      ],
+      "gridProto": {
+        "status": "out_of_capacity",
+        "total": 181.99,
+        "priorityTotal": 721.63
+      }
+    },
+    {
+      "board": "voltage-divider",
+      "quotedOn": "2026-11-27",
+      "revisionId": 82888,
+      "quantity": 20,
+      "input": "voltage-divider",
+      "offers": [
+        {
+          "service": "priority",
+          "shipDate": {
+            "earliest": "2026-12-08",
+            "latest": "2026-12-08"
+          },
+          "fabricationCountry": null,
+          "boards": 475.86,
+          "parts": 4.23,
+          "assembly": 333.22,
+          "total": 813.31
+        },
+        {
+          "service": "priority",
+          "shipDate": {
+            "earliest": "2026-12-10",
+            "latest": "2026-12-10"
+          },
+          "fabricationCountry": null,
+          "boards": 414.33,
+          "parts": 4.23,
+          "assembly": 332.81,
+          "total": 751.37
+        },
+        {
+          "service": "standard",
+          "shipDate": {
+            "earliest": "2026-12-18",
+            "latest": "2026-12-25"
+          },
+          "fabricationCountry": null,
+          "boards": 414.33,
+          "parts": 4.23,
+          "assembly": 257.8,
+          "total": 676.36
+        },
+        {
+          "service": "flexible",
+          "shipDate": {
+            "earliest": "2026-12-21",
+            "latest": "2027-01-04"
+          },
+          "fabricationCountry": null,
+          "boards": 291.29,
+          "parts": 4.23,
+          "assembly": 270.66,
+          "total": 566.18
         }
       ],
       "gridProto": null
     },
     {
-      "board": "nema8-tvs",
-      "quotedOn": "2026-11-17",
-      "quantity": 5,
-      "input": "nema8-tvs",
+      "board": "voltage-divider",
+      "quotedOn": "2026-11-27",
+      "revisionId": 82888,
+      "quantity": 30,
+      "input": "voltage-divider",
       "offers": [
         {
           "service": "priority",
           "shipDate": {
-            "earliest": "2026-11-30",
-            "latest": "2026-11-30"
+            "earliest": "2026-12-08",
+            "latest": "2026-12-08"
           },
           "fabricationCountry": null,
-          "boards": 751.71,
-          "parts": 63.22,
-          "assembly": 625.81,
-          "total": 1440.74
+          "boards": 477.9,
+          "parts": 6.34,
+          "assembly": 346.49,
+          "total": 830.73
+        },
+        {
+          "service": "priority",
+          "shipDate": {
+            "earliest": "2026-12-10",
+            "latest": "2026-12-10"
+          },
+          "fabricationCountry": null,
+          "boards": 416.09,
+          "parts": 6.34,
+          "assembly": 346.05,
+          "total": 768.48
         },
         {
           "service": "standard",
           "shipDate": {
-            "earliest": "2026-12-08",
-            "latest": "2026-12-15"
+            "earliest": "2026-12-18",
+            "latest": "2026-12-25"
           },
           "fabricationCountry": null,
-          "boards": 610.4,
-          "parts": 63.22,
-          "assembly": 481.77,
-          "total": 1155.39
+          "boards": 416.09,
+          "parts": 6.34,
+          "assembly": 268.06,
+          "total": 690.49
         },
         {
           "service": "flexible",
           "shipDate": {
-            "earliest": "2026-12-10",
+            "earliest": "2026-12-21",
+            "latest": "2027-01-04"
+          },
+          "fabricationCountry": null,
+          "boards": 292.46,
+          "parts": 6.34,
+          "assembly": 281.44,
+          "total": 580.24
+        }
+      ],
+      "gridProto": null
+    },
+    {
+      "board": "voltage-divider",
+      "quotedOn": "2026-11-27",
+      "revisionId": 82888,
+      "quantity": 50,
+      "input": "voltage-divider",
+      "offers": [
+        {
+          "service": "priority",
+          "shipDate": {
+            "earliest": "2026-12-09",
+            "latest": "2026-12-09"
+          },
+          "fabricationCountry": null,
+          "boards": 482.0,
+          "parts": 12.32,
+          "assembly": 419.93,
+          "total": 914.25
+        },
+        {
+          "service": "standard",
+          "shipDate": {
+            "earliest": "2026-12-17",
             "latest": "2026-12-24"
           },
           "fabricationCountry": null,
-          "boards": 610.4,
-          "parts": 63.22,
-          "assembly": 424,
-          "total": 1097.62
+          "boards": 482.0,
+          "parts": 12.32,
+          "assembly": 327.42,
+          "total": 821.74
+        },
+        {
+          "service": "flexible",
+          "shipDate": {
+            "earliest": "2026-12-21",
+            "latest": "2027-01-04"
+          },
+          "fabricationCountry": null,
+          "boards": 294.8,
+          "parts": 12.32,
+          "assembly": 341.58,
+          "total": 648.7
         }
       ],
       "gridProto": null
     },
     {
       "board": "rp2040-motor-controller",
-      "quotedOn": "2026-11-18",
+      "quotedOn": "2026-11-27",
+      "revisionId": 82519,
+      "quantity": 1,
+      "input": "rp2040-motor-controller",
+      "offers": [
+        {
+          "service": "priority",
+          "shipDate": {
+            "earliest": "2026-12-04",
+            "latest": "2026-12-04"
+          },
+          "fabricationCountry": "US",
+          "boards": 552.19,
+          "parts": 50.58,
+          "assembly": 1074.02,
+          "total": 1676.79
+        },
+        {
+          "service": "priority",
+          "shipDate": {
+            "earliest": "2026-12-07",
+            "latest": "2026-12-07"
+          },
+          "fabricationCountry": "US",
+          "boards": 552.19,
+          "parts": 50.58,
+          "assembly": 926.16,
+          "total": 1528.93
+        },
+        {
+          "service": "priority",
+          "shipDate": {
+            "earliest": "2026-12-10",
+            "latest": "2026-12-10"
+          },
+          "fabricationCountry": null,
+          "boards": 917.35,
+          "parts": 50.58,
+          "assembly": 1075.89,
+          "total": 2043.82
+        },
+        {
+          "service": "standard",
+          "shipDate": {
+            "earliest": "2026-12-08",
+            "latest": "2026-12-15"
+          },
+          "fabricationCountry": "US",
+          "boards": 552.19,
+          "parts": 50.58,
+          "assembly": 849.71,
+          "total": 1452.48
+        },
+        {
+          "service": "standard",
+          "shipDate": {
+            "earliest": "2026-12-18",
+            "latest": "2026-12-25"
+          },
+          "fabricationCountry": null,
+          "boards": 917.35,
+          "parts": 50.58,
+          "assembly": 883.33,
+          "total": 1851.26
+        },
+        {
+          "service": "flexible",
+          "shipDate": {
+            "earliest": "2026-12-09",
+            "latest": "2026-12-23"
+          },
+          "fabricationCountry": "US",
+          "boards": 552.19,
+          "parts": 50.58,
+          "assembly": 777.08,
+          "total": 1379.85
+        },
+        {
+          "service": "flexible",
+          "shipDate": {
+            "earliest": "2026-12-21",
+            "latest": "2027-01-04"
+          },
+          "fabricationCountry": null,
+          "boards": 543.57,
+          "parts": 50.58,
+          "assembly": 915.88,
+          "total": 1510.03
+        }
+      ],
+      "gridProto": {
+        "status": "out_of_capacity",
+        "total": 396.24,
+        "priorityTotal": 1676.79
+      }
+    },
+    {
+      "board": "rp2040-motor-controller",
+      "quotedOn": "2026-11-27",
+      "revisionId": 82519,
+      "quantity": 3,
+      "input": "rp2040-motor-controller",
+      "offers": [
+        {
+          "service": "priority",
+          "shipDate": {
+            "earliest": "2026-12-04",
+            "latest": "2026-12-04"
+          },
+          "fabricationCountry": "US",
+          "boards": 552.19,
+          "parts": 130.44,
+          "assembly": 1064.37,
+          "total": 1747.0
+        },
+        {
+          "service": "priority",
+          "shipDate": {
+            "earliest": "2026-12-07",
+            "latest": "2026-12-07"
+          },
+          "fabricationCountry": "US",
+          "boards": 552.19,
+          "parts": 130.44,
+          "assembly": 901.73,
+          "total": 1584.36
+        },
+        {
+          "service": "priority",
+          "shipDate": {
+            "earliest": "2026-12-10",
+            "latest": "2026-12-10"
+          },
+          "fabricationCountry": null,
+          "boards": 922.58,
+          "parts": 130.44,
+          "assembly": 1066.4,
+          "total": 2119.42
+        },
+        {
+          "service": "standard",
+          "shipDate": {
+            "earliest": "2026-12-08",
+            "latest": "2026-12-15"
+          },
+          "fabricationCountry": "US",
+          "boards": 552.19,
+          "parts": 130.44,
+          "assembly": 822.51,
+          "total": 1505.14
+        },
+        {
+          "service": "standard",
+          "shipDate": {
+            "earliest": "2026-12-18",
+            "latest": "2026-12-25"
+          },
+          "fabricationCountry": null,
+          "boards": 922.58,
+          "parts": 130.44,
+          "assembly": 854.33,
+          "total": 1907.35
+        },
+        {
+          "service": "flexible",
+          "shipDate": {
+            "earliest": "2026-12-09",
+            "latest": "2026-12-23"
+          },
+          "fabricationCountry": "US",
+          "boards": 552.19,
+          "parts": 130.44,
+          "assembly": 747.25,
+          "total": 1429.88
+        },
+        {
+          "service": "flexible",
+          "shipDate": {
+            "earliest": "2026-12-21",
+            "latest": "2027-01-04"
+          },
+          "fabricationCountry": null,
+          "boards": 546.56,
+          "parts": 130.44,
+          "assembly": 890.3,
+          "total": 1567.3
+        }
+      ],
+      "gridProto": {
+        "status": "out_of_capacity",
+        "total": 497.4,
+        "priorityTotal": 1747.0
+      }
+    },
+    {
+      "board": "rp2040-motor-controller",
+      "quotedOn": "2026-11-27",
+      "revisionId": 82519,
       "quantity": 5,
       "input": "rp2040-motor-controller",
       "offers": [
         {
           "service": "priority",
           "shipDate": {
-            "earliest": "2026-11-24",
-            "latest": "2026-11-24"
+            "earliest": "2026-12-04",
+            "latest": "2026-12-04"
           },
           "fabricationCountry": "US",
           "boards": 552.19,
-          "parts": 217.76,
-          "assembly": 1085.65,
-          "total": 1855.6
+          "parts": 217.85,
+          "assembly": 1138.48,
+          "total": 1908.52
         },
         {
           "service": "priority",
           "shipDate": {
-            "earliest": "2026-11-30",
-            "latest": "2026-11-30"
+            "earliest": "2026-12-07",
+            "latest": "2026-12-07"
           },
           "fabricationCountry": "US",
           "boards": 552.19,
-          "parts": 217.76,
-          "assembly": 879.22,
-          "total": 1649.17
+          "parts": 217.85,
+          "assembly": 962.02,
+          "total": 1732.06
+        },
+        {
+          "service": "priority",
+          "shipDate": {
+            "earliest": "2026-12-10",
+            "latest": "2026-12-10"
+          },
+          "fabricationCountry": null,
+          "boards": 927.82,
+          "parts": 217.85,
+          "assembly": 1140.67,
+          "total": 2286.34
         },
         {
           "service": "standard",
           "shipDate": {
-            "earliest": "2026-12-01",
-            "latest": "2026-12-08"
+            "earliest": "2026-12-08",
+            "latest": "2026-12-15"
           },
           "fabricationCountry": "US",
           "boards": 552.19,
-          "parts": 217.76,
-          "assembly": 796.76,
-          "total": 1566.71
+          "parts": 217.85,
+          "assembly": 875.41,
+          "total": 1645.45
+        },
+        {
+          "service": "standard",
+          "shipDate": {
+            "earliest": "2026-12-18",
+            "latest": "2026-12-25"
+          },
+          "fabricationCountry": null,
+          "boards": 927.82,
+          "parts": 217.85,
+          "assembly": 910.24,
+          "total": 2055.91
         },
         {
           "service": "flexible",
           "shipDate": {
-            "earliest": "2026-12-02",
-            "latest": "2026-12-16"
+            "earliest": "2026-12-09",
+            "latest": "2026-12-23"
           },
           "fabricationCountry": "US",
           "boards": 552.19,
-          "parts": 217.76,
-          "assembly": 718.42,
-          "total": 1488.37
+          "parts": 217.85,
+          "assembly": 793.13,
+          "total": 1563.17
+        },
+        {
+          "service": "flexible",
+          "shipDate": {
+            "earliest": "2026-12-21",
+            "latest": "2027-01-04"
+          },
+          "fabricationCountry": null,
+          "boards": 549.56,
+          "parts": 217.85,
+          "assembly": 949.44,
+          "total": 1716.85
         }
       ],
-      "gridProto": null
+      "gridProto": {
+        "status": "out_of_capacity",
+        "total": 604.76,
+        "priorityTotal": 1908.52
+      }
     },
     {
       "board": "rp2040-motor-controller",
-      "quotedOn": "2026-11-18",
+      "quotedOn": "2026-11-27",
+      "revisionId": 82519,
       "quantity": 10,
       "input": "rp2040-motor-controller",
       "offers": [
         {
           "service": "priority",
           "shipDate": {
-            "earliest": "2026-11-24",
-            "latest": "2026-11-24"
+            "earliest": "2026-12-04",
+            "latest": "2026-12-04"
           },
           "fabricationCountry": "US",
           "boards": 552.19,
-          "parts": 419.16,
-          "assembly": 1341.96,
-          "total": 2313.31
+          "parts": 419.84,
+          "assembly": 1431.98,
+          "total": 2404.01
         },
         {
           "service": "priority",
           "shipDate": {
-            "earliest": "2026-11-30",
-            "latest": "2026-11-30"
+            "earliest": "2026-12-07",
+            "latest": "2026-12-07"
           },
           "fabricationCountry": "US",
           "boards": 552.19,
-          "parts": 419.16,
-          "assembly": 1051.99,
-          "total": 2023.34
-        },
-        {
-          "service": "standard",
-          "shipDate": {
-            "earliest": "2026-12-01",
-            "latest": "2026-12-08"
-          },
-          "fabricationCountry": "US",
-          "boards": 552.19,
-          "parts": 419.16,
-          "assembly": 950.82,
-          "total": 1922.17
-        },
-        {
-          "service": "flexible",
-          "shipDate": {
-            "earliest": "2026-12-02",
-            "latest": "2026-12-16"
-          },
-          "fabricationCountry": "US",
-          "boards": 552.19,
-          "parts": 419.16,
-          "assembly": 854.71,
-          "total": 1826.06
-        }
-      ],
-      "gridProto": {
-        "status": "out_of_capacity",
-        "total": 850.95,
-        "priorityTotal": 2313.31
-      }
-    },
-    {
-      "board": "rp2040-motor-controller",
-      "quotedOn": "2026-11-18",
-      "quantity": 30,
-      "input": "rp2040-motor-controller",
-      "offers": [
-        {
-          "service": "priority",
-          "shipDate": {
-            "earliest": "2026-11-24",
-            "latest": "2026-11-24"
-          },
-          "fabricationCountry": "US",
-          "boards": 1970.19,
-          "parts": 1203.91,
-          "assembly": 2183,
-          "total": 5357.1
+          "parts": 419.84,
+          "assembly": 1206.49,
+          "total": 2178.52
         },
         {
           "service": "priority",
           "shipDate": {
-            "earliest": "2026-11-30",
-            "latest": "2026-11-30"
-          },
-          "fabricationCountry": "US",
-          "boards": 1773.24,
-          "parts": 1203.91,
-          "assembly": 1674.98,
-          "total": 4652.13
-        },
-        {
-          "service": "standard",
-          "shipDate": {
-            "earliest": "2026-12-03",
+            "earliest": "2026-12-10",
             "latest": "2026-12-10"
           },
-          "fabricationCountry": "US",
-          "boards": 1427.28,
-          "parts": 1203.91,
-          "assembly": 1670.7,
-          "total": 4301.89
+          "fabricationCountry": null,
+          "boards": 940.91,
+          "parts": 419.84,
+          "assembly": 1434.51,
+          "total": 2795.26
         },
         {
           "service": "standard",
@@ -3871,23 +2900,215 @@
             "earliest": "2026-12-08",
             "latest": "2026-12-15"
           },
+          "fabricationCountry": "US",
+          "boards": 552.19,
+          "parts": 419.84,
+          "assembly": 1097.56,
+          "total": 2069.59
+        },
+        {
+          "service": "standard",
+          "shipDate": {
+            "earliest": "2026-12-18",
+            "latest": "2026-12-25"
+          },
           "fabricationCountry": null,
-          "boards": 659.01,
-          "parts": 1203.91,
-          "assembly": 1695.87,
-          "total": 3558.79
+          "boards": 940.91,
+          "parts": 419.84,
+          "assembly": 1139.81,
+          "total": 2500.56
         },
         {
           "service": "flexible",
           "shipDate": {
-            "earliest": "2026-12-07",
-            "latest": "2026-12-21"
+            "earliest": "2026-12-09",
+            "latest": "2026-12-23"
           },
           "fabricationCountry": "US",
-          "boards": 1427.28,
-          "parts": 1203.91,
-          "assembly": 1455.6,
-          "total": 4086.79
+          "boards": 552.19,
+          "parts": 419.84,
+          "assembly": 994.08,
+          "total": 1966.11
+        },
+        {
+          "service": "flexible",
+          "shipDate": {
+            "earliest": "2026-12-22",
+            "latest": "2027-01-05"
+          },
+          "fabricationCountry": null,
+          "boards": 557.04,
+          "parts": 419.84,
+          "assembly": 1150.13,
+          "total": 2127.01
+        }
+      ],
+      "gridProto": {
+        "status": "out_of_capacity",
+        "total": 876.93,
+        "priorityTotal": 2404.01
+      }
+    },
+    {
+      "board": "rp2040-motor-controller",
+      "quotedOn": "2026-11-27",
+      "revisionId": 82519,
+      "quantity": 20,
+      "input": "rp2040-motor-controller",
+      "offers": [
+        {
+          "service": "priority",
+          "shipDate": {
+            "earliest": "2026-12-04",
+            "latest": "2026-12-04"
+          },
+          "fabricationCountry": "US",
+          "boards": 1538.86,
+          "parts": 798.08,
+          "assembly": 1793.35,
+          "total": 4130.29
+        },
+        {
+          "service": "priority",
+          "shipDate": {
+            "earliest": "2026-12-07",
+            "latest": "2026-12-07"
+          },
+          "fabricationCountry": "US",
+          "boards": 1538.86,
+          "parts": 798.08,
+          "assembly": 1498.75,
+          "total": 3835.69
+        },
+        {
+          "service": "priority",
+          "shipDate": {
+            "earliest": "2026-12-10",
+            "latest": "2026-12-10"
+          },
+          "fabricationCountry": null,
+          "boards": 967.09,
+          "parts": 798.08,
+          "assembly": 1796.29,
+          "total": 3561.46
+        },
+        {
+          "service": "standard",
+          "shipDate": {
+            "earliest": "2026-12-09",
+            "latest": "2026-12-16"
+          },
+          "fabricationCountry": "US",
+          "boards": 1388.58,
+          "parts": 798.08,
+          "assembly": 1403.42,
+          "total": 3590.08
+        },
+        {
+          "service": "standard",
+          "shipDate": {
+            "earliest": "2026-12-18",
+            "latest": "2026-12-25"
+          },
+          "fabricationCountry": null,
+          "boards": 967.09,
+          "parts": 798.08,
+          "assembly": 1410.29,
+          "total": 3175.46
+        },
+        {
+          "service": "flexible",
+          "shipDate": {
+            "earliest": "2026-12-10",
+            "latest": "2026-12-24"
+          },
+          "fabricationCountry": "US",
+          "boards": 1388.58,
+          "parts": 798.08,
+          "assembly": 1223.91,
+          "total": 3410.57
+        },
+        {
+          "service": "flexible",
+          "shipDate": {
+            "earliest": "2026-12-29",
+            "latest": "2027-01-12"
+          },
+          "fabricationCountry": null,
+          "boards": 572.0,
+          "parts": 798.08,
+          "assembly": 1286.71,
+          "total": 2656.79
+        }
+      ],
+      "gridProto": null
+    },
+    {
+      "board": "rp2040-motor-controller",
+      "quotedOn": "2026-11-27",
+      "revisionId": 82519,
+      "quantity": 30,
+      "input": "rp2040-motor-controller",
+      "offers": [
+        {
+          "service": "priority",
+          "shipDate": {
+            "earliest": "2026-12-04",
+            "latest": "2026-12-04"
+          },
+          "fabricationCountry": "US",
+          "boards": 1970.19,
+          "parts": 1198.95,
+          "assembly": 2232.0,
+          "total": 5401.14
+        },
+        {
+          "service": "priority",
+          "shipDate": {
+            "earliest": "2026-12-07",
+            "latest": "2026-12-07"
+          },
+          "fabricationCountry": "US",
+          "boards": 1970.19,
+          "parts": 1198.95,
+          "assembly": 1860.86,
+          "total": 5030.0
+        },
+        {
+          "service": "priority",
+          "shipDate": {
+            "earliest": "2026-12-10",
+            "latest": "2026-12-10"
+          },
+          "fabricationCountry": null,
+          "boards": 993.27,
+          "parts": 1198.95,
+          "assembly": 2235.61,
+          "total": 4427.83
+        },
+        {
+          "service": "standard",
+          "shipDate": {
+            "earliest": "2026-12-09",
+            "latest": "2026-12-16"
+          },
+          "fabricationCountry": "US",
+          "boards": 1773.24,
+          "parts": 1198.95,
+          "assembly": 1741.99,
+          "total": 4714.18
+        },
+        {
+          "service": "standard",
+          "shipDate": {
+            "earliest": "2026-12-18",
+            "latest": "2026-12-25"
+          },
+          "fabricationCountry": null,
+          "boards": 993.27,
+          "parts": 1198.95,
+          "assembly": 1749.95,
+          "total": 3942.17
         },
         {
           "service": "flexible",
@@ -3895,136 +3116,1500 @@
             "earliest": "2026-12-14",
             "latest": "2026-12-28"
           },
+          "fabricationCountry": "US",
+          "boards": 1365.13,
+          "parts": 1198.95,
+          "assembly": 1636.36,
+          "total": 4200.44
+        },
+        {
+          "service": "flexible",
+          "shipDate": {
+            "earliest": "2026-12-29",
+            "latest": "2027-01-12"
+          },
           "fabricationCountry": null,
-          "boards": 659.01,
-          "parts": 1203.91,
-          "assembly": 1517.93,
-          "total": 3380.85
+          "boards": 586.96,
+          "parts": 1198.95,
+          "assembly": 1595.74,
+          "total": 3381.65
         }
       ],
       "gridProto": null
     },
     {
-      "board": "rp2040-motor-controller-optional-parts-dnp",
-      "quotedOn": "2026-11-18",
-      "quantity": 10,
-      "input": "rp2040-motor-controller-optional-parts-dnp",
+      "board": "rp2040-motor-controller",
+      "quotedOn": "2026-11-27",
+      "revisionId": 82519,
+      "quantity": 50,
+      "input": "rp2040-motor-controller",
       "offers": [
         {
           "service": "priority",
           "shipDate": {
-            "earliest": "2026-11-24",
-            "latest": "2026-11-24"
+            "earliest": "2026-12-04",
+            "latest": "2026-12-04"
           },
           "fabricationCountry": "US",
-          "boards": 552.19,
-          "parts": 263.32,
-          "assembly": 975.98,
-          "total": 1791.49
+          "boards": 2647.28,
+          "parts": 1898.45,
+          "assembly": 2944.83,
+          "total": 7490.56
         },
         {
           "service": "priority",
           "shipDate": {
-            "earliest": "2026-11-25",
-            "latest": "2026-11-25"
-          },
-          "fabricationCountry": "US",
-          "boards": 552.19,
-          "parts": 263.32,
-          "assembly": 885.16,
-          "total": 1700.67
-        },
-        {
-          "service": "standard",
-          "shipDate": {
-            "earliest": "2026-11-30",
+            "earliest": "2026-12-07",
             "latest": "2026-12-07"
           },
           "fabricationCountry": "US",
-          "boards": 552.19,
-          "parts": 263.32,
-          "assembly": 739.23,
-          "total": 1554.74
-        },
-        {
-          "service": "flexible",
-          "shipDate": {
-            "earliest": "2026-12-01",
-            "latest": "2026-12-15"
-          },
-          "fabricationCountry": "US",
-          "boards": 552.19,
-          "parts": 263.32,
-          "assembly": 661.49,
-          "total": 1477
-        }
-      ],
-      "gridProto": {
-        "status": "out_of_capacity",
-        "total": 645.37,
-        "priorityTotal": 1791.49
-      }
-    },
-    {
-      "board": "rp2040-motor-controller-top-side-only",
-      "quotedOn": "2026-11-18",
-      "quantity": 10,
-      "input": "rp2040-motor-controller-top-side-only",
-      "offers": [
-        {
-          "service": "priority",
-          "shipDate": {
-            "earliest": "2026-11-24",
-            "latest": "2026-11-24"
-          },
-          "fabricationCountry": "US",
-          "boards": 552.19,
-          "parts": 235.07,
-          "assembly": 755.3,
-          "total": 1542.56
+          "boards": 2647.28,
+          "parts": 1898.45,
+          "assembly": 2427.76,
+          "total": 6973.49
         },
         {
           "service": "priority",
           "shipDate": {
-            "earliest": "2026-11-30",
-            "latest": "2026-11-30"
+            "earliest": "2026-12-10",
+            "latest": "2026-12-10"
           },
-          "fabricationCountry": "US",
-          "boards": 552.19,
-          "parts": 235.07,
-          "assembly": 579.79,
-          "total": 1367.05
+          "fabricationCountry": null,
+          "boards": 1045.63,
+          "parts": 1898.45,
+          "assembly": 2950.2,
+          "total": 5894.28
         },
         {
           "service": "standard",
           "shipDate": {
-            "earliest": "2026-12-01",
-            "latest": "2026-12-08"
+            "earliest": "2026-12-09",
+            "latest": "2026-12-16"
           },
           "fabricationCountry": "US",
-          "boards": 552.19,
-          "parts": 235.07,
-          "assembly": 511.43,
-          "total": 1298.69
+          "boards": 2237.67,
+          "parts": 1898.45,
+          "assembly": 2265.57,
+          "total": 6401.69
+        },
+        {
+          "service": "standard",
+          "shipDate": {
+            "earliest": "2026-12-18",
+            "latest": "2026-12-25"
+          },
+          "fabricationCountry": null,
+          "boards": 1045.63,
+          "parts": 1898.45,
+          "assembly": 2274.39,
+          "total": 5218.47
         },
         {
           "service": "flexible",
           "shipDate": {
-            "earliest": "2026-12-02",
-            "latest": "2026-12-16"
+            "earliest": "2026-12-14",
+            "latest": "2026-12-28"
           },
           "fabricationCountry": "US",
-          "boards": 552.19,
-          "parts": 235.07,
-          "assembly": 446.49,
-          "total": 1233.75
+          "boards": 1722.39,
+          "parts": 1898.45,
+          "assembly": 2121.14,
+          "total": 5741.98
+        },
+        {
+          "service": "flexible",
+          "shipDate": {
+            "earliest": "2026-12-29",
+            "latest": "2027-01-12"
+          },
+          "fabricationCountry": null,
+          "boards": 616.88,
+          "parts": 1898.45,
+          "assembly": 2063.56,
+          "total": 4578.89
+        }
+      ],
+      "gridProto": null
+    },
+    {
+      "board": "nema8-tvs",
+      "quotedOn": "2026-11-27",
+      "revisionId": 82391,
+      "quantity": 1,
+      "input": "nema8-tvs",
+      "offers": [
+        {
+          "service": "priority",
+          "shipDate": {
+            "earliest": "2026-12-04",
+            "latest": "2026-12-04"
+          },
+          "fabricationCountry": "US",
+          "boards": 432.64,
+          "parts": 13.51,
+          "assembly": 602.46,
+          "total": 1048.61
+        },
+        {
+          "service": "priority",
+          "shipDate": {
+            "earliest": "2026-12-07",
+            "latest": "2026-12-07"
+          },
+          "fabricationCountry": "US",
+          "boards": 432.64,
+          "parts": 13.51,
+          "assembly": 495.57,
+          "total": 941.72
+        },
+        {
+          "service": "priority",
+          "shipDate": {
+            "earliest": "2026-12-10",
+            "latest": "2026-12-10"
+          },
+          "fabricationCountry": null,
+          "boards": 915.42,
+          "parts": 13.51,
+          "assembly": 602.71,
+          "total": 1531.64
+        },
+        {
+          "service": "standard",
+          "shipDate": {
+            "earliest": "2026-12-08",
+            "latest": "2026-12-15"
+          },
+          "fabricationCountry": "US",
+          "boards": 432.64,
+          "parts": 13.51,
+          "assembly": 448.48,
+          "total": 894.63
+        },
+        {
+          "service": "standard",
+          "shipDate": {
+            "earliest": "2026-12-18",
+            "latest": "2026-12-25"
+          },
+          "fabricationCountry": null,
+          "boards": 915.42,
+          "parts": 13.51,
+          "assembly": 466.35,
+          "total": 1395.28
+        },
+        {
+          "service": "flexible",
+          "shipDate": {
+            "earliest": "2026-12-09",
+            "latest": "2026-12-23"
+          },
+          "fabricationCountry": "US",
+          "boards": 432.64,
+          "parts": 13.51,
+          "assembly": 400.62,
+          "total": 846.77
+        },
+        {
+          "service": "flexible",
+          "shipDate": {
+            "earliest": "2026-12-21",
+            "latest": "2027-01-04"
+          },
+          "fabricationCountry": null,
+          "boards": 542.47,
+          "parts": 13.51,
+          "assembly": 489.88,
+          "total": 1045.86
         }
       ],
       "gridProto": {
         "status": "out_of_capacity",
-        "total": 561.94,
-        "priorityTotal": 1542.56
+        "total": 272.29,
+        "priorityTotal": 1048.61
       }
+    },
+    {
+      "board": "nema8-tvs",
+      "quotedOn": "2026-11-27",
+      "revisionId": 82391,
+      "quantity": 3,
+      "input": "nema8-tvs",
+      "offers": [
+        {
+          "service": "priority",
+          "shipDate": {
+            "earliest": "2026-12-04",
+            "latest": "2026-12-04"
+          },
+          "fabricationCountry": "US",
+          "boards": 432.64,
+          "parts": 38.6,
+          "assembly": 636.25,
+          "total": 1107.49
+        },
+        {
+          "service": "priority",
+          "shipDate": {
+            "earliest": "2026-12-07",
+            "latest": "2026-12-07"
+          },
+          "fabricationCountry": "US",
+          "boards": 432.64,
+          "parts": 38.6,
+          "assembly": 523.43,
+          "total": 994.67
+        },
+        {
+          "service": "priority",
+          "shipDate": {
+            "earliest": "2026-12-10",
+            "latest": "2026-12-10"
+          },
+          "fabricationCountry": null,
+          "boards": 916.79,
+          "parts": 38.6,
+          "assembly": 636.55,
+          "total": 1591.94
+        },
+        {
+          "service": "standard",
+          "shipDate": {
+            "earliest": "2026-12-08",
+            "latest": "2026-12-15"
+          },
+          "fabricationCountry": "US",
+          "boards": 432.64,
+          "parts": 38.6,
+          "assembly": 473.69,
+          "total": 944.93
+        },
+        {
+          "service": "standard",
+          "shipDate": {
+            "earliest": "2026-12-18",
+            "latest": "2026-12-25"
+          },
+          "fabricationCountry": null,
+          "boards": 916.79,
+          "parts": 38.6,
+          "assembly": 492.45,
+          "total": 1447.84
+        },
+        {
+          "service": "flexible",
+          "shipDate": {
+            "earliest": "2026-12-09",
+            "latest": "2026-12-23"
+          },
+          "fabricationCountry": "US",
+          "boards": 432.64,
+          "parts": 38.6,
+          "assembly": 424.5,
+          "total": 895.74
+        },
+        {
+          "service": "flexible",
+          "shipDate": {
+            "earliest": "2026-12-21",
+            "latest": "2027-01-04"
+          },
+          "fabricationCountry": null,
+          "boards": 543.25,
+          "parts": 38.6,
+          "assembly": 517.33,
+          "total": 1099.18
+        }
+      ],
+      "gridProto": {
+        "status": "out_of_capacity",
+        "total": 305.82,
+        "priorityTotal": 1107.49
+      }
+    },
+    {
+      "board": "nema8-tvs",
+      "quotedOn": "2026-11-27",
+      "revisionId": 82391,
+      "quantity": 5,
+      "input": "nema8-tvs",
+      "offers": [
+        {
+          "service": "priority",
+          "shipDate": {
+            "earliest": "2026-12-04",
+            "latest": "2026-12-04"
+          },
+          "fabricationCountry": "US",
+          "boards": 432.64,
+          "parts": 62.01,
+          "assembly": 660.11,
+          "total": 1154.76
+        },
+        {
+          "service": "priority",
+          "shipDate": {
+            "earliest": "2026-12-07",
+            "latest": "2026-12-07"
+          },
+          "fabricationCountry": "US",
+          "boards": 432.64,
+          "parts": 62.01,
+          "assembly": 543.14,
+          "total": 1037.79
+        },
+        {
+          "service": "priority",
+          "shipDate": {
+            "earliest": "2026-12-10",
+            "latest": "2026-12-10"
+          },
+          "fabricationCountry": null,
+          "boards": 918.17,
+          "parts": 62.01,
+          "assembly": 660.41,
+          "total": 1640.59
+        },
+        {
+          "service": "standard",
+          "shipDate": {
+            "earliest": "2026-12-08",
+            "latest": "2026-12-15"
+          },
+          "fabricationCountry": "US",
+          "boards": 432.64,
+          "parts": 62.01,
+          "assembly": 491.25,
+          "total": 985.9
+        },
+        {
+          "service": "standard",
+          "shipDate": {
+            "earliest": "2026-12-18",
+            "latest": "2026-12-25"
+          },
+          "fabricationCountry": null,
+          "boards": 918.17,
+          "parts": 62.01,
+          "assembly": 510.98,
+          "total": 1491.16
+        },
+        {
+          "service": "flexible",
+          "shipDate": {
+            "earliest": "2026-12-09",
+            "latest": "2026-12-23"
+          },
+          "fabricationCountry": "US",
+          "boards": 432.64,
+          "parts": 62.01,
+          "assembly": 441.01,
+          "total": 935.66
+        },
+        {
+          "service": "flexible",
+          "shipDate": {
+            "earliest": "2026-12-21",
+            "latest": "2027-01-04"
+          },
+          "fabricationCountry": null,
+          "boards": 544.04,
+          "parts": 62.01,
+          "assembly": 536.8,
+          "total": 1142.85
+        }
+      ],
+      "gridProto": {
+        "status": "out_of_capacity",
+        "total": 335.2,
+        "priorityTotal": 1154.76
+      }
+    },
+    {
+      "board": "nema8-tvs",
+      "quotedOn": "2026-11-27",
+      "revisionId": 82391,
+      "quantity": 10,
+      "input": "nema8-tvs",
+      "offers": [
+        {
+          "service": "priority",
+          "shipDate": {
+            "earliest": "2026-12-04",
+            "latest": "2026-12-04"
+          },
+          "fabricationCountry": "US",
+          "boards": 432.64,
+          "parts": 122.0,
+          "assembly": 716.61,
+          "total": 1271.25
+        },
+        {
+          "service": "priority",
+          "shipDate": {
+            "earliest": "2026-12-07",
+            "latest": "2026-12-07"
+          },
+          "fabricationCountry": "US",
+          "boards": 432.64,
+          "parts": 122.0,
+          "assembly": 589.82,
+          "total": 1144.46
+        },
+        {
+          "service": "priority",
+          "shipDate": {
+            "earliest": "2026-12-10",
+            "latest": "2026-12-10"
+          },
+          "fabricationCountry": null,
+          "boards": 921.6,
+          "parts": 122.0,
+          "assembly": 716.91,
+          "total": 1760.51
+        },
+        {
+          "service": "standard",
+          "shipDate": {
+            "earliest": "2026-12-08",
+            "latest": "2026-12-15"
+          },
+          "fabricationCountry": "US",
+          "boards": 432.64,
+          "parts": 122.0,
+          "assembly": 532.59,
+          "total": 1087.23
+        },
+        {
+          "service": "standard",
+          "shipDate": {
+            "earliest": "2026-12-18",
+            "latest": "2026-12-25"
+          },
+          "fabricationCountry": null,
+          "boards": 921.6,
+          "parts": 122.0,
+          "assembly": 554.83,
+          "total": 1598.43
+        },
+        {
+          "service": "flexible",
+          "shipDate": {
+            "earliest": "2026-12-09",
+            "latest": "2026-12-23"
+          },
+          "fabricationCountry": "US",
+          "boards": 432.64,
+          "parts": 122.0,
+          "assembly": 478.22,
+          "total": 1032.86
+        },
+        {
+          "service": "flexible",
+          "shipDate": {
+            "earliest": "2026-12-21",
+            "latest": "2027-01-04"
+          },
+          "fabricationCountry": null,
+          "boards": 546.0,
+          "parts": 122.0,
+          "assembly": 582.91,
+          "total": 1250.91
+        }
+      ],
+      "gridProto": {
+        "status": "out_of_capacity",
+        "total": 409.31,
+        "priorityTotal": 1271.25
+      }
+    },
+    {
+      "board": "nema8-tvs",
+      "quotedOn": "2026-11-27",
+      "revisionId": 82391,
+      "quantity": 20,
+      "input": "nema8-tvs",
+      "offers": [
+        {
+          "service": "priority",
+          "shipDate": {
+            "earliest": "2026-12-04",
+            "latest": "2026-12-04"
+          },
+          "fabricationCountry": "US",
+          "boards": 1538.86,
+          "parts": 229.61,
+          "assembly": 823.06,
+          "total": 2591.53
+        },
+        {
+          "service": "priority",
+          "shipDate": {
+            "earliest": "2026-12-07",
+            "latest": "2026-12-07"
+          },
+          "fabricationCountry": "US",
+          "boards": 1538.86,
+          "parts": 229.61,
+          "assembly": 677.78,
+          "total": 2446.25
+        },
+        {
+          "service": "priority",
+          "shipDate": {
+            "earliest": "2026-12-10",
+            "latest": "2026-12-10"
+          },
+          "fabricationCountry": null,
+          "boards": 928.47,
+          "parts": 229.61,
+          "assembly": 823.35,
+          "total": 1981.43
+        },
+        {
+          "service": "standard",
+          "shipDate": {
+            "earliest": "2026-12-09",
+            "latest": "2026-12-16"
+          },
+          "fabricationCountry": "US",
+          "boards": 1388.58,
+          "parts": 229.61,
+          "assembly": 632.4,
+          "total": 2250.59
+        },
+        {
+          "service": "standard",
+          "shipDate": {
+            "earliest": "2026-12-18",
+            "latest": "2026-12-25"
+          },
+          "fabricationCountry": null,
+          "boards": 928.47,
+          "parts": 229.61,
+          "assembly": 637.41,
+          "total": 1795.49
+        },
+        {
+          "service": "flexible",
+          "shipDate": {
+            "earliest": "2026-12-10",
+            "latest": "2026-12-24"
+          },
+          "fabricationCountry": "US",
+          "boards": 1238.3,
+          "parts": 229.61,
+          "assembly": 646.67,
+          "total": 2114.58
+        },
+        {
+          "service": "flexible",
+          "shipDate": {
+            "earliest": "2026-12-21",
+            "latest": "2027-01-04"
+          },
+          "fabricationCountry": null,
+          "boards": 549.92,
+          "parts": 229.61,
+          "assembly": 669.77,
+          "total": 1449.3
+        }
+      ],
+      "gridProto": null
+    },
+    {
+      "board": "nema8-tvs",
+      "quotedOn": "2026-11-27",
+      "revisionId": 82391,
+      "quantity": 30,
+      "input": "nema8-tvs",
+      "offers": [
+        {
+          "service": "priority",
+          "shipDate": {
+            "earliest": "2026-12-04",
+            "latest": "2026-12-04"
+          },
+          "fabricationCountry": "US",
+          "boards": 1538.86,
+          "parts": 348.78,
+          "assembly": 934.18,
+          "total": 2821.82
+        },
+        {
+          "service": "priority",
+          "shipDate": {
+            "earliest": "2026-12-07",
+            "latest": "2026-12-07"
+          },
+          "fabricationCountry": "US",
+          "boards": 1538.86,
+          "parts": 348.78,
+          "assembly": 769.64,
+          "total": 2657.28
+        },
+        {
+          "service": "priority",
+          "shipDate": {
+            "earliest": "2026-12-10",
+            "latest": "2026-12-10"
+          },
+          "fabricationCountry": null,
+          "boards": 935.33,
+          "parts": 348.78,
+          "assembly": 934.54,
+          "total": 2218.65
+        },
+        {
+          "service": "standard",
+          "shipDate": {
+            "earliest": "2026-12-09",
+            "latest": "2026-12-16"
+          },
+          "fabricationCountry": "US",
+          "boards": 1388.58,
+          "parts": 348.78,
+          "assembly": 717.86,
+          "total": 2455.22
+        },
+        {
+          "service": "standard",
+          "shipDate": {
+            "earliest": "2026-12-18",
+            "latest": "2026-12-25"
+          },
+          "fabricationCountry": null,
+          "boards": 935.33,
+          "parts": 348.78,
+          "assembly": 723.45,
+          "total": 2007.56
+        },
+        {
+          "service": "flexible",
+          "shipDate": {
+            "earliest": "2026-12-10",
+            "latest": "2026-12-24"
+          },
+          "fabricationCountry": "US",
+          "boards": 1238.3,
+          "parts": 348.78,
+          "assembly": 734.72,
+          "total": 2321.8
+        },
+        {
+          "service": "flexible",
+          "shipDate": {
+            "earliest": "2026-12-21",
+            "latest": "2027-01-04"
+          },
+          "fabricationCountry": null,
+          "boards": 553.85,
+          "parts": 348.78,
+          "assembly": 760.31,
+          "total": 1662.94
+        }
+      ],
+      "gridProto": null
+    },
+    {
+      "board": "nema8-tvs",
+      "quotedOn": "2026-11-27",
+      "revisionId": 82391,
+      "quantity": 50,
+      "input": "nema8-tvs",
+      "offers": [
+        {
+          "service": "priority",
+          "shipDate": {
+            "earliest": "2026-12-04",
+            "latest": "2026-12-04"
+          },
+          "fabricationCountry": "US",
+          "boards": 1538.86,
+          "parts": 572.49,
+          "assembly": 1258.76,
+          "total": 3370.11
+        },
+        {
+          "service": "priority",
+          "shipDate": {
+            "earliest": "2026-12-07",
+            "latest": "2026-12-07"
+          },
+          "fabricationCountry": "US",
+          "boards": 1538.86,
+          "parts": 572.49,
+          "assembly": 1037.43,
+          "total": 3148.78
+        },
+        {
+          "service": "priority",
+          "shipDate": {
+            "earliest": "2026-12-10",
+            "latest": "2026-12-10"
+          },
+          "fabricationCountry": null,
+          "boards": 949.07,
+          "parts": 572.49,
+          "assembly": 1259.19,
+          "total": 2780.75
+        },
+        {
+          "service": "standard",
+          "shipDate": {
+            "earliest": "2026-12-09",
+            "latest": "2026-12-16"
+          },
+          "fabricationCountry": "US",
+          "boards": 1388.58,
+          "parts": 572.49,
+          "assembly": 966.99,
+          "total": 2928.06
+        },
+        {
+          "service": "standard",
+          "shipDate": {
+            "earliest": "2026-12-18",
+            "latest": "2026-12-25"
+          },
+          "fabricationCountry": null,
+          "boards": 949.07,
+          "parts": 572.49,
+          "assembly": 974.29,
+          "total": 2495.85
+        },
+        {
+          "service": "flexible",
+          "shipDate": {
+            "earliest": "2026-12-10",
+            "latest": "2026-12-24"
+          },
+          "fabricationCountry": "US",
+          "boards": 1388.58,
+          "parts": 572.49,
+          "assembly": 820.58,
+          "total": 2781.65
+        },
+        {
+          "service": "flexible",
+          "shipDate": {
+            "earliest": "2026-12-22",
+            "latest": "2027-01-05"
+          },
+          "fabricationCountry": null,
+          "boards": 561.7,
+          "parts": 572.49,
+          "assembly": 984.35,
+          "total": 2118.54
+        }
+      ],
+      "gridProto": null
+    },
+    {
+      "board": "nema17",
+      "quotedOn": "2026-11-27",
+      "revisionId": 81503,
+      "quantity": 1,
+      "input": "nema17",
+      "offers": [
+        {
+          "service": "priority",
+          "shipDate": {
+            "earliest": "2026-12-04",
+            "latest": "2026-12-04"
+          },
+          "fabricationCountry": "US",
+          "boards": 923.45,
+          "parts": 11.59,
+          "assembly": 734.25,
+          "total": 1669.29
+        },
+        {
+          "service": "priority",
+          "shipDate": {
+            "earliest": "2026-12-07",
+            "latest": "2026-12-07"
+          },
+          "fabricationCountry": "US",
+          "boards": 923.45,
+          "parts": 11.59,
+          "assembly": 602.92,
+          "total": 1537.96
+        },
+        {
+          "service": "priority",
+          "shipDate": {
+            "earliest": "2026-12-09",
+            "latest": "2026-12-09"
+          },
+          "fabricationCountry": null,
+          "boards": 473.16,
+          "parts": 11.59,
+          "assembly": 735.04,
+          "total": 1219.79
+        },
+        {
+          "service": "priority",
+          "shipDate": {
+            "earliest": "2026-12-11",
+            "latest": "2026-12-11"
+          },
+          "fabricationCountry": null,
+          "boards": 412.02,
+          "parts": 11.59,
+          "assembly": 732.7,
+          "total": 1156.31
+        },
+        {
+          "service": "standard",
+          "shipDate": {
+            "earliest": "2026-12-09",
+            "latest": "2026-12-16"
+          },
+          "fabricationCountry": "US",
+          "boards": 831.28,
+          "parts": 11.59,
+          "assembly": 562.98,
+          "total": 1405.85
+        },
+        {
+          "service": "standard",
+          "shipDate": {
+            "earliest": "2026-12-17",
+            "latest": "2026-12-24"
+          },
+          "fabricationCountry": null,
+          "boards": 473.16,
+          "parts": 11.59,
+          "assembly": 570.99,
+          "total": 1055.74
+        },
+        {
+          "service": "flexible",
+          "shipDate": {
+            "earliest": "2026-12-10",
+            "latest": "2026-12-24"
+          },
+          "fabricationCountry": "US",
+          "boards": 739.1,
+          "parts": 11.59,
+          "assembly": 575.4,
+          "total": 1326.09
+        },
+        {
+          "service": "flexible",
+          "shipDate": {
+            "earliest": "2026-12-21",
+            "latest": "2027-01-04"
+          },
+          "fabricationCountry": null,
+          "boards": 289.75,
+          "parts": 11.59,
+          "assembly": 595.83,
+          "total": 897.17
+        }
+      ],
+      "gridProto": null
+    },
+    {
+      "board": "nema17",
+      "quotedOn": "2026-11-27",
+      "revisionId": 81503,
+      "quantity": 3,
+      "input": "nema17",
+      "offers": [
+        {
+          "service": "priority",
+          "shipDate": {
+            "earliest": "2026-12-04",
+            "latest": "2026-12-04"
+          },
+          "fabricationCountry": "US",
+          "boards": 923.45,
+          "parts": 31.5,
+          "assembly": 784.36,
+          "total": 1739.31
+        },
+        {
+          "service": "priority",
+          "shipDate": {
+            "earliest": "2026-12-07",
+            "latest": "2026-12-07"
+          },
+          "fabricationCountry": "US",
+          "boards": 923.45,
+          "parts": 31.5,
+          "assembly": 643.98,
+          "total": 1598.93
+        },
+        {
+          "service": "priority",
+          "shipDate": {
+            "earliest": "2026-12-09",
+            "latest": "2026-12-09"
+          },
+          "fabricationCountry": null,
+          "boards": 475.95,
+          "parts": 31.5,
+          "assembly": 785.34,
+          "total": 1292.79
+        },
+        {
+          "service": "standard",
+          "shipDate": {
+            "earliest": "2026-12-09",
+            "latest": "2026-12-16"
+          },
+          "fabricationCountry": "US",
+          "boards": 831.28,
+          "parts": 31.5,
+          "assembly": 601.27,
+          "total": 1464.05
+        },
+        {
+          "service": "standard",
+          "shipDate": {
+            "earliest": "2026-12-17",
+            "latest": "2026-12-24"
+          },
+          "fabricationCountry": null,
+          "boards": 475.95,
+          "parts": 31.5,
+          "assembly": 609.79,
+          "total": 1117.24
+        },
+        {
+          "service": "flexible",
+          "shipDate": {
+            "earliest": "2026-12-10",
+            "latest": "2026-12-24"
+          },
+          "fabricationCountry": "US",
+          "boards": 739.1,
+          "parts": 31.5,
+          "assembly": 614.8,
+          "total": 1385.4
+        },
+        {
+          "service": "flexible",
+          "shipDate": {
+            "earliest": "2026-12-22",
+            "latest": "2027-01-05"
+          },
+          "fabricationCountry": null,
+          "boards": 291.34,
+          "parts": 31.5,
+          "assembly": 612.14,
+          "total": 934.98
+        }
+      ],
+      "gridProto": null
+    },
+    {
+      "board": "nema17",
+      "quotedOn": "2026-11-27",
+      "revisionId": 81503,
+      "quantity": 5,
+      "input": "nema17",
+      "offers": [
+        {
+          "service": "priority",
+          "shipDate": {
+            "earliest": "2026-12-04",
+            "latest": "2026-12-04"
+          },
+          "fabricationCountry": "US",
+          "boards": 923.45,
+          "parts": 54.21,
+          "assembly": 856.61,
+          "total": 1834.27
+        },
+        {
+          "service": "priority",
+          "shipDate": {
+            "earliest": "2026-12-07",
+            "latest": "2026-12-07"
+          },
+          "fabricationCountry": "US",
+          "boards": 923.45,
+          "parts": 54.21,
+          "assembly": 703.27,
+          "total": 1680.93
+        },
+        {
+          "service": "priority",
+          "shipDate": {
+            "earliest": "2026-12-09",
+            "latest": "2026-12-09"
+          },
+          "fabricationCountry": null,
+          "boards": 478.74,
+          "parts": 54.21,
+          "assembly": 857.83,
+          "total": 1390.78
+        },
+        {
+          "service": "standard",
+          "shipDate": {
+            "earliest": "2026-12-09",
+            "latest": "2026-12-16"
+          },
+          "fabricationCountry": "US",
+          "boards": 831.28,
+          "parts": 54.21,
+          "assembly": 656.43,
+          "total": 1541.92
+        },
+        {
+          "service": "standard",
+          "shipDate": {
+            "earliest": "2026-12-17",
+            "latest": "2026-12-24"
+          },
+          "fabricationCountry": null,
+          "boards": 478.74,
+          "parts": 54.21,
+          "assembly": 665.54,
+          "total": 1198.49
+        },
+        {
+          "service": "flexible",
+          "shipDate": {
+            "earliest": "2026-12-10",
+            "latest": "2026-12-24"
+          },
+          "fabricationCountry": "US",
+          "boards": 831.28,
+          "parts": 54.21,
+          "assembly": 579.33,
+          "total": 1464.82
+        },
+        {
+          "service": "flexible",
+          "shipDate": {
+            "earliest": "2026-12-22",
+            "latest": "2027-01-05"
+          },
+          "fabricationCountry": null,
+          "boards": 292.93,
+          "parts": 54.21,
+          "assembly": 668.11,
+          "total": 1015.25
+        }
+      ],
+      "gridProto": null
+    },
+    {
+      "board": "nema17",
+      "quotedOn": "2026-11-27",
+      "revisionId": 81503,
+      "quantity": 10,
+      "input": "nema17",
+      "offers": [
+        {
+          "service": "priority",
+          "shipDate": {
+            "earliest": "2026-12-04",
+            "latest": "2026-12-04"
+          },
+          "fabricationCountry": "US",
+          "boards": 923.45,
+          "parts": 109.53,
+          "assembly": 996.75,
+          "total": 2029.73
+        },
+        {
+          "service": "priority",
+          "shipDate": {
+            "earliest": "2026-12-07",
+            "latest": "2026-12-07"
+          },
+          "fabricationCountry": "US",
+          "boards": 923.45,
+          "parts": 109.53,
+          "assembly": 818.09,
+          "total": 1851.07
+        },
+        {
+          "service": "priority",
+          "shipDate": {
+            "earliest": "2026-12-09",
+            "latest": "2026-12-09"
+          },
+          "fabricationCountry": null,
+          "boards": 485.71,
+          "parts": 109.53,
+          "assembly": 998.64,
+          "total": 1593.88
+        },
+        {
+          "service": "standard",
+          "shipDate": {
+            "earliest": "2026-12-09",
+            "latest": "2026-12-16"
+          },
+          "fabricationCountry": "US",
+          "boards": 831.28,
+          "parts": 109.53,
+          "assembly": 763.27,
+          "total": 1704.08
+        },
+        {
+          "service": "standard",
+          "shipDate": {
+            "earliest": "2026-12-17",
+            "latest": "2026-12-24"
+          },
+          "fabricationCountry": null,
+          "boards": 485.71,
+          "parts": 109.53,
+          "assembly": 773.6,
+          "total": 1368.84
+        },
+        {
+          "service": "flexible",
+          "shipDate": {
+            "earliest": "2026-12-10",
+            "latest": "2026-12-24"
+          },
+          "fabricationCountry": "US",
+          "boards": 831.28,
+          "parts": 109.53,
+          "assembly": 678.06,
+          "total": 1618.87
+        },
+        {
+          "service": "flexible",
+          "shipDate": {
+            "earliest": "2026-12-29",
+            "latest": "2027-01-12"
+          },
+          "fabricationCountry": null,
+          "boards": 296.92,
+          "parts": 109.53,
+          "assembly": 696.54,
+          "total": 1102.99
+        }
+      ],
+      "gridProto": null
+    },
+    {
+      "board": "nema17",
+      "quotedOn": "2026-11-27",
+      "revisionId": 81503,
+      "quantity": 20,
+      "input": "nema17",
+      "offers": [
+        {
+          "service": "priority",
+          "shipDate": {
+            "earliest": "2026-12-04",
+            "latest": "2026-12-04"
+          },
+          "fabricationCountry": "US",
+          "boards": 1153.65,
+          "parts": 187.91,
+          "assembly": 1308.08,
+          "total": 2649.64
+        },
+        {
+          "service": "priority",
+          "shipDate": {
+            "earliest": "2026-12-07",
+            "latest": "2026-12-07"
+          },
+          "fabricationCountry": "US",
+          "boards": 1153.65,
+          "parts": 187.91,
+          "assembly": 1072.84,
+          "total": 2414.4
+        },
+        {
+          "service": "priority",
+          "shipDate": {
+            "earliest": "2026-12-11",
+            "latest": "2026-12-11"
+          },
+          "fabricationCountry": null,
+          "boards": 434.73,
+          "parts": 187.91,
+          "assembly": 1301.26,
+          "total": 1923.9
+        },
+        {
+          "service": "priority",
+          "shipDate": {
+            "earliest": "2026-12-15",
+            "latest": "2026-12-15"
+          },
+          "fabricationCountry": null,
+          "boards": 499.66,
+          "parts": 187.91,
+          "assembly": 1106.88,
+          "total": 1794.45
+        },
+        {
+          "service": "standard",
+          "shipDate": {
+            "earliest": "2026-12-09",
+            "latest": "2026-12-16"
+          },
+          "fabricationCountry": "US",
+          "boards": 1069.05,
+          "parts": 187.91,
+          "assembly": 1000.36,
+          "total": 2257.32
+        },
+        {
+          "service": "standard",
+          "shipDate": {
+            "earliest": "2026-12-17",
+            "latest": "2026-12-24"
+          },
+          "fabricationCountry": null,
+          "boards": 499.66,
+          "parts": 187.91,
+          "assembly": 1013.65,
+          "total": 1701.22
+        },
+        {
+          "service": "flexible",
+          "shipDate": {
+            "earliest": "2026-12-10",
+            "latest": "2026-12-24"
+          },
+          "fabricationCountry": "US",
+          "boards": 1069.05,
+          "parts": 187.91,
+          "assembly": 887.49,
+          "total": 2144.45
+        },
+        {
+          "service": "flexible",
+          "shipDate": {
+            "earliest": "2026-12-29",
+            "latest": "2027-01-12"
+          },
+          "fabricationCountry": null,
+          "boards": 304.89,
+          "parts": 187.91,
+          "assembly": 911.78,
+          "total": 1404.58
+        }
+      ],
+      "gridProto": null
+    },
+    {
+      "board": "nema17",
+      "quotedOn": "2026-11-27",
+      "revisionId": 81503,
+      "quantity": 30,
+      "input": "nema17",
+      "offers": [
+        {
+          "service": "priority",
+          "shipDate": {
+            "earliest": "2026-12-04",
+            "latest": "2026-12-04"
+          },
+          "fabricationCountry": "US",
+          "boards": 1153.65,
+          "parts": 281.9,
+          "assembly": 1600.31,
+          "total": 3035.86
+        },
+        {
+          "service": "priority",
+          "shipDate": {
+            "earliest": "2026-12-07",
+            "latest": "2026-12-07"
+          },
+          "fabricationCountry": "US",
+          "boards": 1153.65,
+          "parts": 281.9,
+          "assembly": 1309.79,
+          "total": 2745.34
+        },
+        {
+          "service": "priority",
+          "shipDate": {
+            "earliest": "2026-12-11",
+            "latest": "2026-12-11"
+          },
+          "fabricationCountry": null,
+          "boards": 446.69,
+          "parts": 281.9,
+          "assembly": 1589.18,
+          "total": 2317.77
+        },
+        {
+          "service": "priority",
+          "shipDate": {
+            "earliest": "2026-12-15",
+            "latest": "2026-12-15"
+          },
+          "fabricationCountry": null,
+          "boards": 513.6,
+          "parts": 281.9,
+          "assembly": 1350.94,
+          "total": 2146.44
+        },
+        {
+          "service": "standard",
+          "shipDate": {
+            "earliest": "2026-12-09",
+            "latest": "2026-12-16"
+          },
+          "fabricationCountry": "US",
+          "boards": 1069.05,
+          "parts": 281.9,
+          "assembly": 1221.04,
+          "total": 2571.99
+        },
+        {
+          "service": "standard",
+          "shipDate": {
+            "earliest": "2026-12-17",
+            "latest": "2026-12-24"
+          },
+          "fabricationCountry": null,
+          "boards": 513.6,
+          "parts": 281.9,
+          "assembly": 1236.73,
+          "total": 2032.23
+        },
+        {
+          "service": "flexible",
+          "shipDate": {
+            "earliest": "2026-12-10",
+            "latest": "2026-12-24"
+          },
+          "fabricationCountry": "US",
+          "boards": 1069.05,
+          "parts": 281.9,
+          "assembly": 1092.44,
+          "total": 2443.39
+        },
+        {
+          "service": "flexible",
+          "shipDate": {
+            "earliest": "2026-12-29",
+            "latest": "2027-01-12"
+          },
+          "fabricationCountry": null,
+          "boards": 312.86,
+          "parts": 281.9,
+          "assembly": 1112.11,
+          "total": 1706.87
+        }
+      ],
+      "gridProto": null
+    },
+    {
+      "board": "nema17",
+      "quotedOn": "2026-11-27",
+      "revisionId": 81503,
+      "quantity": 50,
+      "input": "nema17",
+      "offers": [
+        {
+          "service": "priority",
+          "shipDate": {
+            "earliest": "2026-12-04",
+            "latest": "2026-12-04"
+          },
+          "fabricationCountry": "US",
+          "boards": 1468.31,
+          "parts": 447.62,
+          "assembly": 2130.75,
+          "total": 4046.68
+        },
+        {
+          "service": "priority",
+          "shipDate": {
+            "earliest": "2026-12-07",
+            "latest": "2026-12-07"
+          },
+          "fabricationCountry": "US",
+          "boards": 1468.31,
+          "parts": 447.62,
+          "assembly": 1737.75,
+          "total": 3653.68
+        },
+        {
+          "service": "priority",
+          "shipDate": {
+            "earliest": "2026-12-11",
+            "latest": "2026-12-11"
+          },
+          "fabricationCountry": null,
+          "boards": 478.8,
+          "parts": 447.62,
+          "assembly": 2108.22,
+          "total": 3034.64
+        },
+        {
+          "service": "priority",
+          "shipDate": {
+            "earliest": "2026-12-15",
+            "latest": "2026-12-15"
+          },
+          "fabricationCountry": null,
+          "boards": 549.7,
+          "parts": 447.62,
+          "assembly": 1791.87,
+          "total": 2789.19
+        },
+        {
+          "service": "standard",
+          "shipDate": {
+            "earliest": "2026-12-09",
+            "latest": "2026-12-16"
+          },
+          "fabricationCountry": "US",
+          "boards": 1263.41,
+          "parts": 447.62,
+          "assembly": 1618.94,
+          "total": 3329.97
+        },
+        {
+          "service": "standard",
+          "shipDate": {
+            "earliest": "2026-12-17",
+            "latest": "2026-12-24"
+          },
+          "fabricationCountry": null,
+          "boards": 549.7,
+          "parts": 447.62,
+          "assembly": 1638.39,
+          "total": 2635.71
+        },
+        {
+          "service": "flexible",
+          "shipDate": {
+            "earliest": "2026-12-14",
+            "latest": "2026-12-28"
+          },
+          "fabricationCountry": "US",
+          "boards": 1030.05,
+          "parts": 447.62,
+          "assembly": 1513.52,
+          "total": 2991.19
+        },
+        {
+          "service": "flexible",
+          "shipDate": {
+            "earliest": "2026-12-29",
+            "latest": "2027-01-12"
+          },
+          "fabricationCountry": null,
+          "boards": 337.0,
+          "parts": 447.62,
+          "assembly": 1471.6,
+          "total": 2256.22
+        }
+      ],
+      "gridProto": null
     }
   ]
 }
