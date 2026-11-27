@@ -395,7 +395,10 @@ export const exportSnippet = async ({
       break
     }
     case "kicad_pcb": {
-      const converter = new CircuitJsonToKicadPcbConverter(circuitJson)
+      const converter = new CircuitJsonToKicadPcbConverter(circuitJson, {
+        includeBuiltin3dModels: true,
+        projectName: outputBaseName,
+      })
       converter.runUntilFinished()
       outputContent = converter.getOutputString()
       break
