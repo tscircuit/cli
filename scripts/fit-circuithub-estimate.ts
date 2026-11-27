@@ -379,13 +379,21 @@ const inSample = compare(allQuotes, calibration, console.log)
 console.log(`\nFitted on all boards: ${summarize(inSample)}`)
 
 // Leave one board out: fit without it and estimate it, as for a new board.
+// A board with a layer count no other board has can't be: there would be
+// no price for its layer count.
 const boards = [...new Set(allQuotes.map((quote) => quote.board))]
 const heldOut = boards.flatMap((board) => {
-  const errors = compare(
-    allQuotes.filter((quote) => quote.board === board),
-    fitCalibration(allQuotes.filter((quote) => quote.board !== board)),
-  )
+  const own = allQuotes.filter((quote) => quote.board === board)
+  const others = allQuotes.filter((quote) => quote.board !== board)
+  const layers = own[0]!.input.board.layers
+  if (!others.some((quote) => quote.input.board.layers === layers)) {
+    console.log(
+      `${board}: the only ${layers}-layer board, so it can't be left out`,
+    )
+    return []
+  }
+  const errors = compare(own, fitCalibration(others))
   console.log(`Fitted without ${board}, estimating it: ${summarize(errors)}`)
   return errors
 })
-console.log(`Each board fitted without itself: ${summarize(heldOut)}`)
+console.log(`Boards fitted without themselves, together: ${summarize(heldOut)}`)
