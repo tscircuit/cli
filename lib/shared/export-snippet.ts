@@ -380,12 +380,38 @@ export const exportSnippet = async ({
       }
       break
     case "altium": {
-      const { convertCircuitJsonToAltiumZip } = await import(
-        "circuit-json-to-altium"
-      )
-      outputContent = Buffer.from(
-        await convertCircuitJsonToAltiumZip(circuitJson, outputBaseName),
-      )
+      const { CircuitJsonToAltiumConverter, convertCircuitJsonToAltiumZip } =
+        await import("circuit-json-to-altium")
+      const outputExtension = path.extname(outputDestination).toLowerCase()
+      if (outputExtension === ".pcbdoc") {
+        const converter = new CircuitJsonToAltiumConverter(circuitJson, {
+          projectName: outputBaseName,
+        })
+        converter.runUntilFinished()
+        outputContent = Buffer.from(converter.getOutput().pcb.content)
+      } else if (outputExtension === ".schdoc") {
+        const converter = new CircuitJsonToAltiumConverter(circuitJson, {
+          projectName: outputBaseName,
+        })
+        converter.runUntilFinished()
+        const { schematics } = converter.getOutput()
+        if (schematics.length !== 1) {
+          onError(
+            "Altium export produced multiple schematic sheets; use a .zip output path to export the full project archive.",
+          )
+          return onExit(1)
+        }
+        outputContent = Buffer.from(schematics[0]!.content)
+      } else if (outputExtension && outputExtension !== ".zip") {
+        onError(
+          `Altium export with --output expects a .zip, .PcbDoc, or .SchDoc path (received "${path.basename(outputDestination)}").`,
+        )
+        return onExit(1)
+      } else {
+        outputContent = Buffer.from(
+          await convertCircuitJsonToAltiumZip(circuitJson, outputBaseName),
+        )
+      }
       break
     }
     case "kicad_sch": {
