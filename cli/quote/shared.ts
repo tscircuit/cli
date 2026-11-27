@@ -1,10 +1,5 @@
 import { type Command, InvalidArgumentError } from "commander"
 import kleur from "kleur"
-import { CircuithubApiError } from "lib/circuithub/circuithub-api"
-import {
-  clearCircuithubToken,
-  getCircuithubToken,
-} from "lib/circuithub/circuithub-config"
 
 export type PcbaType = "auto" | "economic" | "standard"
 export type SurfaceFinish = "hasl_lead_free" | "hasl_leaded" | "enig"
@@ -127,15 +122,8 @@ export const parseCamTimeoutMinutes = (text: string) => {
 
 /** Print a CircuitHub command's error and set a failing exit code. */
 export const reportCircuithubError = (error: unknown) => {
-  // A saved session CircuitHub rejects is useless; forget it so
-  // `tsci auth add-provider circuithub` logs in again.
-  if (
-    error instanceof CircuithubApiError &&
-    error.status === 401 &&
-    getCircuithubToken()?.source === "login"
-  ) {
-    clearCircuithubToken()
-  }
+  // A sign-in CircuitHub has ended is already removed by the time it says so
+  // (see getCircuithubAccessToken), so there is nothing to clean up here.
   console.error(
     kleur.red(error instanceof Error ? error.message : String(error)),
   )

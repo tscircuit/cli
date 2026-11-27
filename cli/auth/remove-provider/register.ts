@@ -7,7 +7,7 @@ export const registerAuthRemoveProvider = (program: Command) => {
     .find((c) => c.name() === "auth")!
     .command("remove-provider")
     .description(
-      "Disconnect a manufacturing provider: forget its saved login (supported: circuithub)",
+      "Disconnect a manufacturing provider: end and forget its sign-in (supported: circuithub)",
     )
     .argument("<provider>", "Provider to remove: circuithub")
     .action(async (name: string) => {

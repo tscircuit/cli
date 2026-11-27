@@ -1,12 +1,28 @@
 import Conf from "conf"
-import { jwtDecode } from "jwt-decode"
 
 export const DEFAULT_CIRCUITHUB_API_URL = "https://api.circuithub.com/v1"
-export const DEFAULT_CIRCUITHUB_LOGIN_URL =
-  "https://app.circuithub.com/platform/v1/auth/cli"
+/** CircuitHub's OAuth server (the issuer in its authorization server metadata). */
+export const DEFAULT_CIRCUITHUB_LOGIN_URL = "https://app.circuithub.com"
+
+/** A CircuitHub sign-in saved by `tsci auth add-provider circuithub`. */
+export interface CircuithubSignIn {
+  clientId: string
+  tokenEndpoint: string
+  revocationEndpoint: string
+  /** The API the tokens are for. */
+  resource: string
+  accessToken: string
+  /** Works once: each refresh answers a new one, saved in its place. */
+  refreshToken: string
+  /** When `accessToken` expires, in milliseconds since the epoch. */
+  expiresAt: number
+  /** When to replace `accessToken`: a little before it expires. */
+  renewAt: number
+  scope?: string
+}
 
 interface CircuithubConfig {
-  token?: string
+  signIn?: CircuithubSignIn
   workspace?: string
   /** The revision `tsci quote create --circuithub` uploaded last. */
   lastRevision?: { projectId: number; revisionId: number }
@@ -15,55 +31,19 @@ interface CircuithubConfig {
 /**
  * CircuitHub credentials live in their own file next to the registry config,
  * so `tsci logout` (which clears the registry session) leaves them alone.
+ * Only the user can read it: a refresh token keeps working for months.
  */
 export const getCircuithubConfig = (): Conf<CircuithubConfig> =>
   new Conf<CircuithubConfig>({
     projectName: "tscircuit",
     configName: "circuithub",
     cwd: process.env.TSCIRCUIT_CONFIG_DIR || undefined,
+    configFileMode: 0o600,
   })
 
-export interface CircuithubTokenClaims {
-  sub?: string
-  name?: string
-  exp?: number
-}
-
-export const decodeCircuithubToken = (
-  token: string,
-): CircuithubTokenClaims | null => {
-  try {
-    return jwtDecode<CircuithubTokenClaims>(token)
-  } catch {
-    return null
-  }
-}
-
-export const isCircuithubTokenExpired = (
-  claims: CircuithubTokenClaims | null,
-  now = Date.now(),
-) => typeof claims?.exp === "number" && claims.exp * 1000 <= now
-
-export type CircuithubTokenSource = "env" | "login"
-
-/**
- * The token to call CircuitHub with: `CIRCUITHUB_TOKEN` (an API key or a
- * session token) wins over the one saved by `tsci auth add-provider circuithub`.
- */
-export const getCircuithubToken = ():
-  | { token: string; source: CircuithubTokenSource }
-  | undefined => {
-  const envToken =
-    process.env.CIRCUITHUB_TOKEN || process.env.CIRCUITHUB_API_KEY
-  if (envToken) return { token: envToken, source: "env" }
-  const saved = getCircuithubConfig().get("token")
-  return saved ? { token: saved, source: "login" } : undefined
-}
-
-export const setCircuithubToken = (token: string) =>
-  getCircuithubConfig().set("token", token)
-
-export const clearCircuithubToken = () => getCircuithubConfig().delete("token")
+/** A token set in the environment, used as is instead of the saved sign-in. */
+export const getCircuithubEnvToken = () =>
+  process.env.CIRCUITHUB_TOKEN || process.env.CIRCUITHUB_API_KEY || undefined
 
 export const getCircuithubApiUrl = () =>
   (process.env.CIRCUITHUB_API_URL || DEFAULT_CIRCUITHUB_API_URL).replace(
@@ -71,8 +51,18 @@ export const getCircuithubApiUrl = () =>
     "",
   )
 
+/**
+ * The API that sign-in tokens are requested for (OAuth `resource`): the API
+ * URL without its version path, e.g. https://api.circuithub.com.
+ */
+export const getCircuithubResource = () =>
+  getCircuithubApiUrl().replace(/\/v\d+$/, "")
+
 export const getCircuithubLoginUrl = () =>
-  process.env.CIRCUITHUB_LOGIN_URL || DEFAULT_CIRCUITHUB_LOGIN_URL
+  (process.env.CIRCUITHUB_LOGIN_URL || DEFAULT_CIRCUITHUB_LOGIN_URL).replace(
+    /\/+$/,
+    "",
+  )
 
 export const getSavedCircuithubWorkspace = () =>
   process.env.CIRCUITHUB_WORKSPACE || getCircuithubConfig().get("workspace")

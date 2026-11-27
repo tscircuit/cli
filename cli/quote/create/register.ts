@@ -117,7 +117,7 @@ export const registerQuoteCreate = (program: Command) => {
       }
       if (!options.dryRun && !hasCircuithubSession()) {
         console.error(
-          "CircuitHub isn't added yet (or its session expired). Run `tsci auth add-provider circuithub` to log in, then try again.",
+          "CircuitHub isn't added yet. Run `tsci auth add-provider circuithub` to sign in, then try again.",
         )
         process.exitCode = 1
         return

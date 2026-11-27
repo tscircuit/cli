@@ -164,7 +164,7 @@ test(
 )
 
 test(
-  "tsci quote create --circuithub checks its options before logging in",
+  "tsci quote create --circuithub checks its options before signing in",
   async () => {
     const { tmpDir, runCommand } = await getCliTestFixture({
       env: { CIRCUITHUB_TOKEN: undefined, CIRCUITHUB_API_KEY: undefined },
@@ -176,9 +176,9 @@ test(
     )
 
     expect(exitCode).toBe(1)
-    expect(stderr).not.toContain("Log in to CircuitHub")
+    expect(stderr).not.toContain("Sign in to CircuitHub")
     expect(stderr.trim()).toMatchInlineSnapshot(
-      `"CircuitHub isn't added yet (or its session expired). Run \`tsci auth add-provider circuithub\` to log in, then try again."`,
+      `"CircuitHub isn't added yet. Run \`tsci auth add-provider circuithub\` to sign in, then try again."`,
     )
   },
   { timeout: 60_000 },
@@ -197,7 +197,7 @@ test(
 
     expect(exitCode).toBe(1)
     expect(stderr.trim()).toMatchInlineSnapshot(
-      `"CircuitHub isn't added yet (or its session expired). Run \`tsci auth add-provider circuithub\` to log in, then try again."`,
+      `"CircuitHub isn't added yet. Run \`tsci auth add-provider circuithub\` to sign in, then try again."`,
     )
   },
   { timeout: 30_000 },

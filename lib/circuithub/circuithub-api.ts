@@ -119,31 +119,58 @@ export class CircuithubApiError extends Error {
   }
 }
 
-export interface CircuithubApiOptions {
+/**
+ * Answers the access token to send. `rejected` is a token the API has just
+ * refused as expired or revoked: answer a renewed one instead.
+ */
+export type CircuithubTokenProvider = (options: {
+  rejected?: string
+}) => Promise<string>
+
+export type CircuithubApiOptions = {
   apiUrl: string
-  token: string
   fetch?: typeof fetch
-}
+} & (
+  | { token: string; getToken?: undefined }
+  | { getToken: CircuithubTokenProvider; token?: undefined }
+)
+
+/** Whether a 401 says the access token expired or was revoked (RFC 6750 3.1). */
+const isInvalidTokenResponse = (response: Response) =>
+  response.status === 401 &&
+  /invalid_token/.test(response.headers.get("WWW-Authenticate") ?? "")
 
 export const createCircuithubApi = ({
   apiUrl,
-  token,
   fetch: fetchFn = globalThis.fetch,
+  ...auth
 }: CircuithubApiOptions) => {
+  const getToken: CircuithubTokenProvider =
+    auth.getToken ?? (async () => auth.token as string)
+
   const call = async <T>(
     method: string,
     path: string,
     body?: unknown,
   ): Promise<T> => {
-    const response = await fetchFn(`${apiUrl}${path}`, {
-      method,
-      headers: {
-        Authorization: `Bearer ${token}`,
-        Accept: "application/json",
-        ...(body === undefined ? {} : { "Content-Type": "application/json" }),
-      },
-      body: body === undefined ? undefined : JSON.stringify(body),
-    })
+    const send = (token: string) =>
+      fetchFn(`${apiUrl}${path}`, {
+        method,
+        headers: {
+          Authorization: `Bearer ${token}`,
+          Accept: "application/json",
+          ...(body === undefined ? {} : { "Content-Type": "application/json" }),
+        },
+        body: body === undefined ? undefined : JSON.stringify(body),
+      })
+    const token = await getToken({})
+    let response = await send(token)
+    // A token can stop working before its expiry (the user disconnected the
+    // app, or the clock is off): renew it once and try again.
+    if (auth.getToken && isInvalidTokenResponse(response)) {
+      await response.body?.cancel()
+      response = await send(await getToken({ rejected: token }))
+    }
     const text = await response.text()
     if (!response.ok) {
       let detail = text.slice(0, 500)
@@ -158,7 +185,7 @@ export const createCircuithubApi = ({
       } catch {}
       const hint =
         response.status === 401
-          ? " The CircuitHub login was rejected; run `tsci auth add-provider circuithub` to log in again."
+          ? " CircuitHub refused the sign-in; run `tsci auth add-provider circuithub` to sign in again."
           : ""
       throw new CircuithubApiError(
         `CircuitHub ${method} ${path} failed with HTTP ${response.status}: ${detail}${hint}`,

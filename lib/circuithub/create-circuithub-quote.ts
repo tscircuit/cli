@@ -8,13 +8,15 @@ import {
   createCircuithubApi,
 } from "./circuithub-api"
 import {
-  decodeCircuithubToken,
   getCircuithubApiUrl,
-  getCircuithubToken,
+  getCircuithubEnvToken,
   getLastCircuithubRevision,
-  isCircuithubTokenExpired,
   saveLastCircuithubRevision,
 } from "./circuithub-config"
+import {
+  getCircuithubAccessToken,
+  hasCircuithubSignIn,
+} from "./circuithub-oauth"
 import {
   type CircuithubProjectFile,
   generateCircuithubProjectFiles,
@@ -97,7 +99,7 @@ export const isBoardMeasured = (board: CircuithubBoard) => {
 
 /**
  * Check the options an upload needs, so the command can fail before asking
- * the user to log in or generating anything.
+ * the user to sign in or generating anything.
  */
 export const validateCircuithubQuoteOptions = (
   options: Pick<
@@ -118,30 +120,25 @@ export const validateCircuithubQuoteOptions = (
   }
 }
 
-const getAuthenticatedApi = (fetchFn?: typeof fetch): CircuithubApi | null => {
-  const current = getCircuithubToken()
-  if (!current) return null
-  if (
-    current.source === "login" &&
-    isCircuithubTokenExpired(decodeCircuithubToken(current.token))
-  ) {
-    return null
-  }
-  return createCircuithubApi({
-    apiUrl: getCircuithubApiUrl(),
-    token: current.token,
-    fetch: fetchFn,
-  })
-}
-
+/**
+ * A client for CircuitHub's API: with `CIRCUITHUB_TOKEN` when set, otherwise
+ * with the saved sign-in, whose access token is renewed as needed.
+ */
 const requireAuthenticatedApi = (fetchFn?: typeof fetch): CircuithubApi => {
-  const api = getAuthenticatedApi(fetchFn)
-  if (!api) {
+  const apiUrl = getCircuithubApiUrl()
+  const envToken = getCircuithubEnvToken()
+  if (envToken)
+    return createCircuithubApi({ apiUrl, token: envToken, fetch: fetchFn })
+  if (!hasCircuithubSignIn()) {
     throw new Error(
-      "Not logged in to CircuitHub (or the session expired). Run `tsci auth add-provider circuithub`, or set CIRCUITHUB_TOKEN.",
+      "Not signed in to CircuitHub. Run `tsci auth add-provider circuithub`, or set CIRCUITHUB_TOKEN.",
     )
   }
-  return api
+  return createCircuithubApi({
+    apiUrl,
+    getToken: getCircuithubAccessToken,
+    fetch: fetchFn,
+  })
 }
 
 /**
