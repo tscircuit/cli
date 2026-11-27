@@ -1,22 +1,50 @@
 import type { Command } from "commander"
-import { setSessionToken, getSessionToken, cliConfig } from "lib/cli-config"
 import delay from "delay"
-import { getRegistryApiKy } from "lib/registry-api/get-ky"
-import type { EndpointResponse } from "lib/registry-api/endpoint-types"
-import { fetchAccount } from "lib/registry-api/fetch-account"
 import kleur from "kleur"
+import { cliConfig, getSessionToken, setSessionToken } from "lib/cli-config"
+import type { EndpointResponse } from "lib/registry-api/endpoint-types"
+import {
+  type Account,
+  fetchAccount,
+  formatAccountLookupError,
+} from "lib/registry-api/fetch-account"
+import { getRegistryApiKy } from "lib/registry-api/get-ky"
 import { setupNpmrc } from "../setup-npmrc/setup-npmrc"
 
 export const registerAuthLogin = (program: Command) => {
   // Define the login action once to share between both commands
   const loginAction = async () => {
     const sessionToken = getSessionToken()
-    const tscircuitHandle = cliConfig.get("tscircuitHandle")
+    const isEnvToken = Boolean(process.env.TSCIRCUIT_TOKEN)
+    const tscircuitHandle = isEnvToken
+      ? undefined
+      : cliConfig.get("tscircuitHandle")
     if (sessionToken) {
-      const account = await fetchAccount()
+      let account: Account | null
+      try {
+        account = await fetchAccount()
+      } catch (error) {
+        console.error(
+          kleur.red(
+            formatAccountLookupError(
+              "Could not verify your current session",
+              error,
+            ),
+          ),
+        )
+        process.exit(1)
+      }
+
+      const displayIdentity =
+        tscircuitHandle ??
+        (account?.tscircuit_handle || undefined) ??
+        account?.account_id
+      const loggedInLabel = displayIdentity
+        ? `Already logged in as ${tscircuitHandle ? kleur.bold(`@${tscircuitHandle}`) : kleur.underline(`@${displayIdentity}`)}!`
+        : "Already logged in!"
       console.log(
         kleur.yellow(
-          `Already logged in as ${tscircuitHandle ? kleur.bold(`@${tscircuitHandle}`) : kleur.underline(`@${account?.tscircuit_handle ?? account?.account_id}`)}! Use ${kleur.cyan("tsci logout")} to switch accounts.`,
+          `${loggedInLabel} Use ${kleur.cyan("tsci logout")} to switch accounts.`,
         ),
       )
       return

@@ -1,5 +1,8 @@
 import { cliConfig, getSessionToken } from "lib/cli-config"
-import { fetchAccount } from "lib/registry-api/fetch-account"
+import {
+  fetchAccount,
+  formatAccountLookupError,
+} from "lib/registry-api/fetch-account"
 import { getRegistryApiKy } from "lib/registry-api/get-ky"
 import * as fs from "node:fs"
 import * as path from "node:path"
@@ -181,9 +184,23 @@ export const pushSnippet = async ({
   }
 
   const ky = getRegistryApiKy({ sessionToken })
-  const currentUsername = process.env.TSCIRCUIT_TOKEN
-    ? (await fetchAccount())?.tscircuit_handle
-    : cliConfig.get("tscircuitHandle")
+  let currentUsername: string | undefined
+  if (process.env.TSCIRCUIT_TOKEN) {
+    try {
+      const account = await fetchAccount()
+      currentUsername = account?.tscircuit_handle || undefined
+    } catch (error) {
+      onError(
+        formatAccountLookupError(
+          "Could not verify your account for publishing",
+          error,
+        ),
+      )
+      return onExit(1)
+    }
+  } else {
+    currentUsername = cliConfig.get("tscircuitHandle")
+  }
   if (!currentUsername) {
     onError("You need to set your tscircuit handle to publish packages")
     return onExit(1)
