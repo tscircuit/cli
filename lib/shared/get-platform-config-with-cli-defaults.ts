@@ -72,27 +72,41 @@ export function getPlatformConfigWithCliDefaults(
       ...basePlatformConfig.footprintFileParserMap,
       kicad_mod: {
         loadFromUrl: async (url: string) => {
-          // Convert file paths to file:// URLs for Bun's fetch
+          // Convert file paths to file:// URLs for Bun's fetch (or data URLs under Node)
+          let localFilePath: string | null = null
           let fetchUrl = url
           if (url.startsWith("./") || url.startsWith("../")) {
             // Relative path - resolve to absolute first
-            const absolutePath = path.resolve(projectDir, url)
-            fetchUrl = `file://${absolutePath}`
+            localFilePath = path.resolve(projectDir, url)
+            fetchUrl = `file://${localFilePath}`
           } else if (url.startsWith("/")) {
             // Absolute path - check if it exists, otherwise try resolving as relative
             if (fs.existsSync(url)) {
+              localFilePath = url
               fetchUrl = `file://${url}`
             } else {
               // Try treating it as a relative path (strip leading / and resolve from cwd)
               const relativePath = `.${url}`
               const absolutePath = path.resolve(projectDir, relativePath)
               if (fs.existsSync(absolutePath)) {
+                localFilePath = absolutePath
                 fetchUrl = `file://${absolutePath}`
               } else {
                 // Fall back to original path
+                localFilePath = url
                 fetchUrl = `file://${url}`
               }
             }
+          }
+          if (
+            typeof Bun === "undefined" &&
+            localFilePath &&
+            fs.existsSync(localFilePath)
+          ) {
+            const base64Content = fs
+              .readFileSync(localFilePath)
+              .toString("base64")
+            fetchUrl = `data:text/plain;base64,${base64Content}`
           }
           // Delegate to the original loadFromUrl from eval
           return basePlatformConfig.footprintFileParserMap!.kicad_mod.loadFromUrl(
