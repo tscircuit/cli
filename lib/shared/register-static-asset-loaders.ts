@@ -1,6 +1,7 @@
 import fs from "node:fs"
 import path from "node:path"
 import type { PlatformConfig } from "@tscircuit/props"
+import { registerNodeTsxLoader } from "./register-node-tsx-loader"
 
 const STATIC_ASSET_EXTENSIONS = [
   ".glb",
@@ -102,6 +103,23 @@ export const registerStaticAssetLoaders = (
   projectDir = process.cwd(),
 ) => {
   activePlatformConfig = platformConfig
+
+  if (typeof Bun === "undefined") {
+    registerNodeTsxLoader({
+      projectDir,
+      getBaseUrl: getBaseUrlFromTsConfig,
+      staticAssetFilter,
+      resolveStaticAssetPath: (filePath: string) => {
+        const baseUrl = getBaseUrlFromTsConfig(projectDir)
+        const baseDir = baseUrl ? path.resolve(projectDir, baseUrl) : projectDir
+        const relativePath = path
+          .relative(baseDir, filePath)
+          .split(path.sep)
+          .join("/")
+        return `./${relativePath}`
+      },
+    })
+  }
 
   if (registered) return
   registered = true

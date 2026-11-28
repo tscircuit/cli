@@ -1,5 +1,6 @@
 import fs from "node:fs"
 import path from "node:path"
+import { fileURLToPath } from "node:url"
 import type { ProcessSnapshotFileOptions } from "lib/shared/process-snapshot-file"
 import { ThreadWorkerPool } from "lib/shared/thread-worker-pool"
 import type {
@@ -20,21 +21,19 @@ type SnapshotJob = {
 }
 
 const getWorkerEntrypointPath = (): string => {
-  const tsPath = path.join(import.meta.dir, "snapshot.worker.ts")
-  if (fs.existsSync(tsPath)) {
+  const currentDir =
+    import.meta.dir ?? path.dirname(fileURLToPath(import.meta.url))
+  const tsPath = path.join(currentDir, "snapshot.worker.ts")
+  if (typeof Bun !== "undefined" && fs.existsSync(tsPath)) {
     return tsPath
   }
 
-  const jsBundledPath = path.join(
-    import.meta.dir,
-    "snapshot",
-    "snapshot.worker.js",
-  )
+  const jsBundledPath = path.join(currentDir, "snapshot", "snapshot.worker.js")
   if (fs.existsSync(jsBundledPath)) {
     return jsBundledPath
   }
 
-  return path.join(import.meta.dir, "snapshot.worker.js")
+  return path.join(currentDir, "snapshot.worker.js")
 }
 
 export const snapshotFilesWithWorkerPool = async (options: {
